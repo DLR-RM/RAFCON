@@ -251,21 +251,21 @@ class ListViewController(ExtendedController):
     def get_state_machine_selection(self):
         """An abstract getter method for state machine selection
 
-        The method has to be implemented by inherit classes and hands generally a filtered list of selected elements.
+        The method maybe has to be re-implemented by inherit classes and hands generally a filtered set of
+        selected elements.
 
-
-        :return: selection object it self, filtered list of selected elements
-        :rtype: rafcon.gui.selection.Selection
+        :return: selection object it self, filtered set of selected elements
+        :rtype: rafcon.gui.selection.Selection, set
         """
         sm_selection = self.model.get_state_machine_m().selection if self.model.get_state_machine_m() else None
-        return sm_selection, sm_selection.get_selected_elements_of_core_class(self.CORE_ELEMENT_CLASS) if sm_selection else []
+        return sm_selection, sm_selection.get_selected_elements_of_core_class(self.CORE_ELEMENT_CLASS) if sm_selection else set()
 
     def get_selections(self):
         """Get current model selection status in state machine selection (filtered according the purpose of the widget)
         and tree selection of the widget"""
-        sm_selection, sm_filtered_selected_model_list = self.get_state_machine_selection()
+        sm_selection, sm_filtered_selected_model_set = self.get_state_machine_selection()
         tree_selection, selected_model_list = self.get_view_selection()
-        return tree_selection, selected_model_list, sm_selection, sm_filtered_selected_model_list
+        return tree_selection, selected_model_list, sm_selection, sm_filtered_selected_model_set
 
     def mouse_click(self, widget, event=None):
         """Implements shift- and control-key handling features for mouse button press events explicit
@@ -602,19 +602,19 @@ class TreeViewController(ExtendedController):
     def get_state_machine_selection(self):
         """An abstract getter method for state machine selection
 
-        The method has to be implemented by inherit classes and hands generally a filtered list of selected elements.
+        The method has to be implemented by inherit classes and hands generally a filtered set of selected elements.
 
-        :return: selection object, filtered list of selected elements
-        :rtype: rafcon.gui.selection.Selection, list
+        :return: selection object, filtered set of selected elements
+        :rtype: rafcon.gui.selection.Selection, set
         """
         raise NotImplementedError
 
     def get_selections(self):
         """Get current model selection status in state machine selection (filtered according the purpose of the widget)
         and tree selection of the widget"""
-        sm_selection, sm_filtered_selected_model_list = self.get_state_machine_selection()
+        sm_selection, sm_filtered_selected_model_set = self.get_state_machine_selection()
         tree_selection, selected_model_list = self.get_view_selection()
-        return tree_selection, selected_model_list, sm_selection, sm_filtered_selected_model_list
+        return tree_selection, selected_model_list, sm_selection, sm_filtered_selected_model_set
 
     def iter_tree_with_handed_function(self, function, *function_args):
         """Iterate tree view with condition check function"""
@@ -643,18 +643,16 @@ class TreeViewController(ExtendedController):
             self.tree_view.expand_to_path(selected_path)
             self._tree_selection.select_iter(state_row_iter)
 
-    def update_selection_self_prior_condition(self, state_row_iter, sm_selection, selected_model_list, sm_selected_model_list):
+    def update_selection_self_prior_condition(self, state_row_iter, sm_selected_model_set, selected_model_list):
         """Tree view prior update of one model in the state machine selection"""
         selected_path = self.tree_store.get_path(state_row_iter)
         tree_model_row = self.tree_store[selected_path]
         model = tree_model_row[self.MODEL_STORAGE_ID]
 
-        if model in sm_selected_model_list and model not in selected_model_list:
-            # print type(self).__name__, "unselect model", model
-            sm_selection.remove(model)
-        elif model not in sm_selected_model_list and model in selected_model_list:
-            # print type(self).__name__, "select model", model
-            sm_selection.add(model)
+        if model in sm_selected_model_set and model not in selected_model_list:
+            sm_selected_model_set.remove(model)
+        elif model not in sm_selected_model_set and model in selected_model_list:
+            sm_selected_model_set.add(model)
 
     def check_selection_consistency(self, sm_check=True, tree_check=True):
         tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
@@ -671,14 +669,18 @@ class TreeViewController(ExtendedController):
         if self._do_selection_update:
             return
         self._do_selection_update = True
-        tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
+        tree_selection, selected_model_list, sm_selection, sm_selected_model_set = self.get_selections()
         if isinstance(sm_selection, Selection):
-            # self._logger.info("SELF SELECTION IS: {2}\nSELF {0}, \nSM   {1}".format(selected_model_list, sm_selected_model_list,
-            #                                                                         tree_selection.get_mode()))
-            # TODO make that the next line works -> tests are not running with it
-            # sm_selection.handle_prepared_selection_of_core_class_elements(self.CORE_ELEMENT_CLASS, selected_model_list)
+            # current sm_selected_model_set will be updated and hand it back
             self.iter_tree_with_handed_function(self.update_selection_self_prior_condition,
-                                                sm_selection, selected_model_list, sm_selected_model_list)
+                                                sm_selected_model_set, selected_model_list)
+            sm_selection.handle_prepared_selection_of_core_class_elements(self.CORE_ELEMENT_CLASS, sm_selected_model_set)
+            # TODO check if we can solve the difference that occurs e.g. while complex actions
+            # -> models in selection for core element not in the tree the function iter tree + condition tolerates this
+            if not set(selected_model_list) == sm_selected_model_set:
+                self._logger.debug("Difference between tree view selection: \n{0} \nand state machine selection: \n{1}"
+                                   "".format(selected_model_list, sm_selected_model_set))
+
         # TODO check why sometimes not consistent with sm selection. e.g while modification history test
         if self.check_selection_consistency(sm_check=False):
             self.update_selection_sm_prior()

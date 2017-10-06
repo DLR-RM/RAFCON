@@ -115,7 +115,7 @@ class StateMachineTreeController(TreeViewController):
     def paste_action_callback(self, *event):
         """Callback method for paste action"""
         if react_to_event(self.view, self.tree_view, event):
-            sm_selection, sm_selected_model_list = self.get_state_machine_selection()
+            sm_selection, _ = self.get_state_machine_selection()
             # only list specific elements are cut by widget
             if len(sm_selection.states) == 1:
                 global_clipboard.paste(sm_selection.get_selected_state(), limited=['states', 'transitions', 'data_flows'])
@@ -427,10 +427,15 @@ class StateMachineTreeController(TreeViewController):
             # self.tree_store.remove(child_iter)
 
     def get_state_machine_selection(self):
+        """Getter state machine selection
+
+        :return: selection object, filtered set of selected states
+        :rtype: rafcon.gui.selection.Selection, set
+        """
         if self._selected_sm_model:
             return self._selected_sm_model.selection, self._selected_sm_model.selection.states
         else:
-            return None, []
+            return None, set()
 
     def mouse_click(self, widget, event=None):
         # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}"
