@@ -14,7 +14,6 @@
 import os
 
 from gtkmvc import ModelMT
-from gtkmvc import Observable
 
 from rafcon.core.state_machine_manager import StateMachineManager
 
@@ -26,7 +25,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateMachineManagerModel(ModelMT, Observable):
+class StateMachineManagerModel(ModelMT):
     """This model class manages a StateMachineManager
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state machine
@@ -52,7 +51,6 @@ class StateMachineManagerModel(ModelMT, Observable):
     def __init__(self, state_machine_manager, meta=None):
         """Constructor"""
         ModelMT.__init__(self)  # pass columns as separate parameters
-        Observable.__init__(self)
         self.register_observer(self)
 
         assert isinstance(state_machine_manager, StateMachineManager)
@@ -136,15 +134,14 @@ class StateMachineManagerModel(ModelMT, Observable):
 
         return self.state_machines[self.selected_state_machine_id]
 
-    @property
+    @ModelMT.getter
     def selected_state_machine_id(self):
         """Property for the _selected_state_machine_id field
         :rtype: int
         """
         return self._selected_state_machine_id
 
-    @selected_state_machine_id.setter
-    @Observable.observed
+    @ModelMT.setter
     def selected_state_machine_id(self, selected_state_machine_id):
         if selected_state_machine_id is not None:
             if not isinstance(selected_state_machine_id, int):
