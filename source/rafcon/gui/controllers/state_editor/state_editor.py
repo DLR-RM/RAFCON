@@ -180,3 +180,11 @@ class StateEditorController(ExtendedController):
             new_state_m = msg.affected_models[-1]
             states_editor_ctrl = gui_singletons.main_window_controller.get_controller('states_editor_ctrl')
             states_editor_ctrl.recreate_state_editor(self.model, new_state_m)
+
+    @ExtendedController.observe("destruction_signal", signal=True)
+    def state_destruction(self, model, prop_name, info):
+        """ Close state editor when state is being destructed """
+        import rafcon.gui.singleton as gui_singletons
+        states_editor_ctrl = gui_singletons.main_window_controller.get_controller('states_editor_ctrl')
+        state_identifier = states_editor_ctrl.get_state_identifier(self.model)
+        states_editor_ctrl.close_page(state_identifier, delete=True)
