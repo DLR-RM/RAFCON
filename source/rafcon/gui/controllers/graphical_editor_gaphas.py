@@ -421,10 +421,7 @@ class GraphicalEditorController(ExtendedController):
                 if not self.perform_drag_and_drop:
                     self.canvas.perform_update()
             elif method_name == 'remove_state':
-                parent_state = arguments[0]
-                state_id = arguments[1]
-                parent_v = self.canvas.get_view_for_core_element(parent_state)
-                state_v = self.canvas.get_view_for_id(StateView, state_id, parent_v)
+                state_v = self.canvas.get_view_for_core_element(result)
                 if state_v:
                     parent_v = self.canvas.get_parent(state_v)
                     state_v.remove()
@@ -444,8 +441,11 @@ class GraphicalEditorController(ExtendedController):
                         self.canvas.perform_update()
                         break
             elif method_name == 'remove_transition':
-                self.remove_obsolete_transition_views_from_state(model)
-                self.canvas.perform_update()
+                transition_v = self.canvas.get_view_for_core_element(result)
+                if transition_v:
+                    transition_v.prepare_destruction()
+                    self.canvas.remove(transition_v)
+                    self.canvas.perform_update()
             elif method_name == 'transition_change':
                 transition_m = model
                 transition_v = self.canvas.get_view_for_model(transition_m)
@@ -464,8 +464,11 @@ class GraphicalEditorController(ExtendedController):
                         self.canvas.perform_update()
                         break
             elif method_name == 'remove_data_flow':
-                self.remove_obsolete_data_flow_views_from_state(model)
-                self.canvas.perform_update()
+                data_flow_v = self.canvas.get_view_for_core_element(result)
+                if data_flow_v:
+                    data_flow_v.prepare_destruction()
+                    self.canvas.remove(data_flow_v)
+                    self.canvas.perform_update()
             elif method_name == 'data_flow_change':
                 data_flow_m = model
                 data_flow_v = self.canvas.get_view_for_model(data_flow_m)
@@ -490,12 +493,11 @@ class GraphicalEditorController(ExtendedController):
                 if state_v is None:
                     logger.debug("no state_v found for method_name '{}'".format(method_name))
                 else:
-                    for outcome_v in state_v.outcomes:
-                        if outcome_v.outcome_id == arguments[1]:
-                            state_v.remove_outcome(outcome_v)
-                            self.canvas.request_update(state_v, matrix=False)
-                            self.canvas.perform_update()
-                            break
+                    outcome_v = self.canvas.get_view_for_core_element(result)
+                    if outcome_v:
+                        state_v.remove_outcome(outcome_v)
+                        self.canvas.request_update(state_v, matrix=False)
+                        self.canvas.perform_update()
 
             # ----------------------------------
             #           DATA PORTS
@@ -524,24 +526,22 @@ class GraphicalEditorController(ExtendedController):
                 if state_v is None:
                     logger.debug("no state_v found for method_name '{}'".format(method_name))
                 else:
-                    for input_port_v in state_v.inputs:
-                        if input_port_v.port_id == arguments[1]:
-                            state_v.remove_input_port(input_port_v)
-                            self.canvas.request_update(state_v, matrix=False)
-                            self.canvas.perform_update()
-                            break
+                    input_port_v = self.canvas.get_view_for_core_element(result)
+                    if input_port_v:
+                        state_v.remove_input_port(input_port_v)
+                        self.canvas.request_update(state_v, matrix=False)
+                        self.canvas.perform_update()
             elif method_name == 'remove_output_data_port':
                 state_m = model
                 state_v = self.canvas.get_view_for_model(state_m)
                 if state_v is None:
                     logger.debug("no state_v found for method_name '{}'".format(method_name))
                 else:
-                    for output_port_v in state_v.outputs:
-                        if output_port_v.port_id == arguments[1]:
-                            state_v.remove_output_port(output_port_v)
-                            self.canvas.request_update(state_v, matrix=False)
-                            self.canvas.perform_update()
-                            break
+                    output_port_v = self.canvas.get_view_for_core_element(result)
+                    if output_port_v:
+                        state_v.remove_output_port(output_port_v)
+                        self.canvas.request_update(state_v, matrix=False)
+                        self.canvas.perform_update()
             elif method_name in ['data_type', 'change_data_type']:
                 pass
             elif method_name == 'default_value':
@@ -565,12 +565,11 @@ class GraphicalEditorController(ExtendedController):
                 if state_v is None:
                     logger.debug("no state_v found for method_name '{}'".format(method_name))
                 else:
-                    for scoped_variable_v in state_v.scoped_variables:
-                        if scoped_variable_v.port_id == arguments[1]:
-                            state_v.remove_scoped_variable(scoped_variable_v)
-                            self.canvas.request_update(state_v, matrix=False)
-                            self.canvas.perform_update()
-                            break
+                    scoped_variable_v = self.canvas.get_view_for_core_element(result)
+                    if scoped_variable_v:
+                        state_v.remove_scoped_variable(scoped_variable_v)
+                        self.canvas.request_update(state_v, matrix=False)
+                        self.canvas.perform_update()
 
             # ----------------------------------
             #        STATE MISCELLANEOUS
@@ -805,32 +804,6 @@ class GraphicalEditorController(ExtendedController):
         # Draw data flow above NameView but beneath all other state elements
         self.canvas.add(data_flow_v, parent_state_v, index=1)
         self._connect_data_flow_to_ports(data_flow_m, data_flow_v, parent_state_m)
-
-    @lock_state_machine
-    def _remove_obsolete_connections_views_of_state(self, parent_state_m, transitions=True):
-        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
-
-        if transitions:
-            available_connections = parent_state_m.transitions
-        else:
-            available_connections = parent_state_m.data_flows
-
-        children = self.canvas.get_children(parent_state_v)
-        for child in list(children):
-            if transitions and isinstance(child, TransitionView) and child.model not in available_connections:
-                child.prepare_destruction()
-                self.canvas.remove(child)
-            elif not transitions and isinstance(child, DataFlowView) and child.model not in available_connections:
-                child.prepare_destruction()
-                self.canvas.remove(child)
-
-    @lock_state_machine
-    def remove_obsolete_data_flow_views_from_state(self, parent_state_m):
-        self._remove_obsolete_connections_views_of_state(parent_state_m, False)
-
-    @lock_state_machine
-    def remove_obsolete_transition_views_from_state(self, parent_state_m):
-        self._remove_obsolete_connections_views_of_state(parent_state_m)
 
     @lock_state_machine
     def add_state_view_with_meta_data_for_model(self, state_m, parent_state_m):
