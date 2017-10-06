@@ -251,19 +251,21 @@ class ListViewController(ExtendedController):
     def get_state_machine_selection(self):
         """An abstract getter method for state machine selection
 
-        The method has to be implemented by inherit classes
+        The method has to be implemented by inherit classes and hands generally a filtered list of selected elements.
 
-        :return: selection
+
+        :return: selection object it self, filtered list of selected elements
         :rtype: rafcon.gui.selection.Selection
         """
         sm_selection = self.model.get_state_machine_m().selection if self.model.get_state_machine_m() else None
         return sm_selection, sm_selection.get_selected_elements_of_core_class(self.CORE_ELEMENT_CLASS) if sm_selection else []
 
     def get_selections(self):
-        """Get actual model selection status in state machine selection and tree selection of the widget"""
-        sm_selection, sm_selected_model_list = self.get_state_machine_selection()
+        """Get current model selection status in state machine selection (filtered according the purpose of the widget)
+        and tree selection of the widget"""
+        sm_selection, sm_filtered_selected_model_list = self.get_state_machine_selection()
         tree_selection, selected_model_list = self.get_view_selection()
-        return tree_selection, selected_model_list, sm_selection, sm_selected_model_list
+        return tree_selection, selected_model_list, sm_selection, sm_filtered_selected_model_list
 
     def mouse_click(self, widget, event=None):
         """Implements shift- and control-key handling features for mouse button press events explicit
@@ -373,12 +375,7 @@ class ListViewController(ExtendedController):
         self._do_selection_update = True
         tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
         if isinstance(sm_selection, Selection):
-            for row in self.list_store:
-                model = row[self.MODEL_STORAGE_ID]
-                if model in sm_selected_model_list and model not in selected_model_list:
-                    sm_selection.remove(model)
-                if model not in sm_selected_model_list and model in selected_model_list:
-                    sm_selection.add(model)
+            sm_selection.handle_prepared_selection_of_core_class_elements(self.CORE_ELEMENT_CLASS, selected_model_list)
         self._do_selection_update = False
 
     @ExtendedController.observe("sm_selection_changed_signal", signal=True)
