@@ -81,8 +81,6 @@ class DataPortListController(ListViewController):
 
         self._apply_value_on_edited_and_focus_out(view['name_text'], self._apply_new_data_port_name)
         self._apply_value_on_edited_and_focus_out(view['data_type_text'], self._apply_new_data_port_type)
-        view.get_top_widget().connect('button_press_event', self.mouse_click)
-        view.get_top_widget().get_selection().connect('changed', self.selection_changed)
 
         if isinstance(self.model.state, LibraryState):
             view['use_runtime_value_toggle'] = CellRendererToggle()
