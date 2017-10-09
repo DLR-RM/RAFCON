@@ -659,7 +659,7 @@ def trigger_state_type_change_tests(*args):
 
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        call_gui_callback(menubar_ctrl.prepare_destruction)
+        call_gui_callback(main_window_controller.prepare_destruction)
 
 
 def test_state_type_change_test(caplog):

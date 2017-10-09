@@ -22,6 +22,7 @@ import os
 import sys
 import logging
 import gtk
+import glib
 import threading
 import signal
 from yaml_configuration.config import config_path
@@ -132,7 +133,8 @@ def setup_argument_parser():
 
     :return: The parser object
     """
-    home_path = filesystem.get_home_path()
+    default_config_path = filesystem.get_default_config_path()
+    filesystem.create_path(default_config_path)
 
     parser = core_singletons.argument_parser
     parser.add_argument('-n', '--new', action='store_true', help=_("whether to create a new state-machine"))
@@ -141,13 +143,15 @@ def setup_argument_parser():
                         help=_("specify directories of state-machines that shall be opened. Paths must contain a "
                                "statemachine.json file"))
     parser.add_argument('-c', '--config', action='store', type=config_path, metavar='path', dest='config_path',
-                        default=home_path, nargs='?', const=home_path,
+                        default=default_config_path, nargs='?', const=default_config_path,
                         help=_("path to the configuration file config.yaml. Use 'None' to prevent the generation of a "
-                               "config file and use the default configuration. Default: {0}").format(home_path))
+                               "config file and use the default configuration. Default: {0}"
+                               "").format(default_config_path))
     parser.add_argument('-g', '--gui_config', action='store', type=config_path, metavar='path', dest='gui_config_path',
-                        default=home_path, nargs='?', const=home_path,
-                        help=_("path to the configuration file gui_config.yaml. Use 'None' to prevent the generation of"
-                               " a config file and use the default configuration. Default: {0}").format(home_path))
+                        default=default_config_path, nargs='?', const=default_config_path,
+                        help=_("path to the configuration file gui_config.yaml. "
+                               "Use 'None' to prevent the generation of a config file and use the default "
+                               "configuration. Default: {0}").format(default_config_path))
     parser.add_argument('-ss', '--start_state_machine', dest='start_state_machine_flag', action='store_true',
                         help=_("a flag to specify if the first state machine of -o should be started after opening"))
     parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path', default=None, nargs='?',
@@ -222,7 +226,7 @@ def signal_handler(signal, frame):
         print _("Could not stop state machine: {0} {1}").format(e.message, traceback.format_exc())
 
     logger.info(_("RAFCON launcher"))
-    gui_singletons.main_window_controller.get_controller('menu_bar_controller').prepare_destruction()
+    gui_singletons.main_window_controller.prepare_destruction()
 
     # shutdown twisted correctly
     if reactor_required():
@@ -284,11 +288,10 @@ def main():
     if user_input.new:
         create_new_state_machine()
 
-    # TODO find out why this works and rearrange it -> most proper because of the pending gtk events
     # initiate stored session # TODO think about a controller for this
     if not user_input.new and not user_input.state_machine_paths \
             and rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
-        backup_session.restore_session_from_runtime_config()
+        glib.idle_add(backup_session.restore_session_from_runtime_config, priority=glib.PRIORITY_LOW)
 
     log_ready_output()
 
