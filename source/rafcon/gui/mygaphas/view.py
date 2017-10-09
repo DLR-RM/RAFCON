@@ -11,18 +11,26 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from contextlib import contextmanager
+from gtkmvc.observer import Observer
+
 from gaphas.view import GtkView
 from gaphas.item import Element
 
 from rafcon.gui.mygaphas.painter import BoundingBoxPainter
 
 
-class ExtendedGtkView(GtkView):
+
+class ExtendedGtkView(GtkView, Observer):
 
     hovered_handle = None
+    _selection = None
 
-    def __init__(self, graphical_editor_v, *args):
-        super(ExtendedGtkView, self).__init__(*args)
+    def __init__(self, graphical_editor_v, selection_m, *args):
+        GtkView.__init__(self, *args)
+        Observer.__init__(self, selection_m, True)
+        self.observe_model(selection_m)
+        self._selection = selection_m
         self._bounding_box_painter = BoundingBoxPainter(self)
         self.graphical_editor = graphical_editor_v
 
@@ -145,3 +153,102 @@ class ExtendedGtkView(GtkView):
                 except AttributeError:
                     pass
         super(ExtendedGtkView, self).queue_draw_item(*gaphas_items)
+
+    @Observer.observe("selection_changed_signal", signal=True)
+    def _on_selection_changed_externally(self, selection_m, signal_name, signal_msg):
+        selected_items = self._get_selected_items()
+        previously_selected_items = set(self.canvas.get_view_for_model(model) for model in signal_msg.arg.old_selection)
+        affected_items = selected_items ^ previously_selected_items
+        self.queue_draw_item(*affected_items)
+        self.emit('selection-changed', selected_items)
+
+    @contextmanager
+    def _suppress_selection_events(self):
+        self.relieve_model(self._selection)
+        try:
+            yield
+        finally:
+            self.observe_model(self._selection)
+
+    def select_item(self, items):
+        """ Select an items. This adds `items` to the set of selected items. """
+        if not items:
+            return
+        elif not hasattr(items, "__iter__"):
+            items = (items,)
+        selection_changed = False
+        with self._suppress_selection_events():
+            for item in items:
+                self.queue_draw_item(item)
+                if item.model not in self._selection:
+                    self._selection.add(item.model)
+                    selection_changed = True
+        if selection_changed:
+            self.emit('selection-changed', self._get_selected_items())
+
+    def unselect_item(self, item):
+        """ Unselect an item. """
+        self.queue_draw_item(item)
+        if item.model in self._selection:
+            with self._suppress_selection_events():
+                self._selection.remove(item.model)
+            self.emit('selection-changed', self._get_selected_items())
+
+    def unselect_all(self):
+        """ Clearing the selected_item also clears the focused_item. """
+        items = self._get_selected_items()
+        with self._suppress_selection_events():
+            self._selection.clear()
+        self.queue_draw_item(*items)
+        self.emit('selection-changed', self._get_selected_items())
+
+    def _get_selected_items(self):
+        """ Return an Item (e.g. StateView) for each model (e.g. StateModel) in the current selection """
+        return set(self.canvas.get_view_for_model(model) for model in self._selection)
+
+    def handle_new_selection(self, items):
+        """ Determines the selection
+
+        The selection is based on the previous selection, the currently pressed keys and the passes newly selected items
+
+        :param items: The newly selected item(s)
+        """
+        if items is None:
+            items = ()
+        elif not hasattr(items, "__iter__"):
+            items = (items,)
+        models = set(item.model for item in items)
+        self._selection.handle_new_selection(models)
+
+    selected_items = property(_get_selected_items, select_item, unselect_all, "Items selected by the view")
+
+    @Observer.observe("focus_signal", signal=True)
+    def _on_focus_changed_externally(self, selection_m, signal_name, signal_msg):
+        previous_focus = self.canvas.get_view_for_model(signal_msg.arg.old_focus)
+        current_focus = self.canvas.get_view_for_model(signal_msg.arg.new_focus)
+        self.queue_draw_item(previous_focus, current_focus)
+        self.emit('focus-changed', current_focus)
+
+    def _get_focused_item(self):
+        """ Returns the currently focused item """
+        focused_model = self._selection.focus
+        if not focused_model:
+            return None
+        return self.canvas.get_view_for_model(focused_model)
+
+    def _set_focused_item(self, item):
+        """ Sets the focus to the passed item"""
+        if not item:
+            return self._del_focused_item()
+
+        if item.model is not self._selection.focus:
+            self.queue_draw_item(self._focused_item, item)
+            self._selection.focus = item.model
+            self.emit('focus-changed', item)
+
+    def _del_focused_item(self):
+        """ Clears the focus """
+        del self._selection.focus
+
+    focused_item = property(_get_focused_item, _set_focused_item, _del_focused_item,
+                            "The item with focus (receives key events a.o.)")

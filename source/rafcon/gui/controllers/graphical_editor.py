@@ -909,8 +909,7 @@ class GraphicalEditorController(ExtendedController):
             selected_models.difference_update(models_to_remove)
 
             if selected_models is not None:
-                self.model.selection.clear()
-                self.model.selection.append(selected_models)
+                self.model.set(selected_models)
         # If so, select models beneath frame
         self.multi_selection_started = False
         self.model.temp['gui']['editor']['selection_frame'] = None
@@ -1573,7 +1572,7 @@ class GraphicalEditorController(ExtendedController):
         state_temp['pos'] = pos
 
         # Was the state selected?
-        selected_states = self.model.selection.get_states()
+        selected_states = self.model.selection.states
         selected = False if state_m not in selected_states else True
         selected = selected if not (state_m.state.is_root_state_of_library and state_m.parent in selected_states) \
             else True
@@ -1845,7 +1844,7 @@ class GraphicalEditorController(ExtendedController):
 
             # Let the view draw the transition and store the returned OpenGL object id
             selected = False
-            if transition_m in self.model.selection.get_transitions():
+            if transition_m in self.model.selection.transitions:
                 selected = True
             line_width = self.view.editor.transition_stroke_width(parent_state_m)
             opengl_id = self.view.editor.draw_transition(from_pos, to_pos, line_width, waypoints,
@@ -1908,7 +1907,7 @@ class GraphicalEditorController(ExtendedController):
                 waypoints.append(waypoint_pos)
 
             selected = False
-            if data_flow_m in self.model.selection.get_data_flows():
+            if data_flow_m in self.model.selection.data_flows:
                 selected = True
             line_width = self.view.editor.data_flow_stroke_width(parent_state_m)
             opengl_id = self.view.editor.draw_data_flow(from_pos, to_pos, line_width, waypoints,

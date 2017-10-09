@@ -80,9 +80,10 @@ class AbstractStateModel(MetaModel, Hashable):
     output_data_ports = []
     meta_signal = Signal()
     action_signal = Signal()
+    destruction_signal = Signal()
 
     __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start", "meta_signal",
-                       "action_signal")
+                       "action_signal", "destruction_signal")
 
     def __init__(self, state, parent=None, meta=None):
         if type(self) == AbstractStateModel:
@@ -98,6 +99,7 @@ class AbstractStateModel(MetaModel, Hashable):
 
         self.meta_signal = Signal()
         self.action_signal = Signal()
+        self.destruction_signal = Signal()
 
         self.register_observer(self)
 
@@ -187,6 +189,7 @@ class AbstractStateModel(MetaModel, Hashable):
 
         Recursively un-registers all observers and removes references to child models
         """
+        self.destruction_signal.emit()
         try:
             self.unregister_observer(self)
         except KeyError:  # Might happen if the observer was already unregistered

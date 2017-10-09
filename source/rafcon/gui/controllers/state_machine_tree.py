@@ -115,7 +115,7 @@ class StateMachineTreeController(TreeViewController):
     def paste_action_callback(self, *event):
         """Callback method for paste action"""
         if react_to_event(self.view, self.tree_view, event):
-            sm_selection, sm_selected_model_list = self.get_state_machine_selection()
+            sm_selection, _ = self.get_state_machine_selection()
             # only list specific elements are cut by widget
             if len(sm_selection.states) == 1:
                 global_clipboard.paste(sm_selection.get_selected_state(), limited=['states', 'transitions', 'data_flows'])
@@ -427,10 +427,15 @@ class StateMachineTreeController(TreeViewController):
             # self.tree_store.remove(child_iter)
 
     def get_state_machine_selection(self):
+        """Getter state machine selection
+
+        :return: selection object, filtered set of selected states
+        :rtype: rafcon.gui.selection.Selection, set
+        """
         if self._selected_sm_model:
             return self._selected_sm_model.selection, self._selected_sm_model.selection.states
         else:
-            return None, []
+            return None, set()
 
     def mouse_click(self, widget, event=None):
         # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}"
@@ -451,9 +456,10 @@ class StateMachineTreeController(TreeViewController):
             return True
 
     @TreeViewController.observe("sm_selection_changed_signal", signal=True)
-    def assign_notification_selection(self, model, prop_name, info):
-        if model is None and self._selected_sm_model and self._selected_sm_model.selection.get_selected_state() or \
-                info and self.tree_store.get_iter_root() and self.CORE_ELEMENT_CLASS in info.arg.core_element_types:
-            assert self._selected_sm_model is model or model is None
-            # logger.info("selection state {0}".format(info))
+    def assign_notification_selection(self, state_machine_m, signal_name, signal_msg):
+        if state_machine_m is None and self._selected_sm_model and \
+                self._selected_sm_model.selection.get_selected_state():
             self.update_selection_sm_prior()
+        elif signal_msg and self.tree_store.get_iter_root():
+            if any(issubclass(cls, self.CORE_ELEMENT_CLASS) for cls in signal_msg.arg.affected_core_element_classes):
+                self.update_selection_sm_prior()

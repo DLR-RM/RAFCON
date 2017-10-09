@@ -21,7 +21,7 @@ from gaphas import painter
 
 from rafcon.gui.mygaphas.view import ExtendedGtkView
 from rafcon.gui.mygaphas.tools import HoverItemTool, ConnectionCreationTool, ConnectionModificationTool, \
-    RemoveItemTool, MoveItemTool, MultiSelectionTool, RightClickTool, MoveHandleTool, ZoomTool, PanTool, ToolChain
+    MoveItemTool, MultiSelectionTool, RightClickTool, MoveHandleTool, ZoomTool, PanTool, ToolChain
 from rafcon.gui.mygaphas.painter import StateCornerHandlePainter, NameCornerHandlePainter
 
 from rafcon.gui.config import global_gui_config
@@ -32,7 +32,7 @@ logger = log.get_logger(__name__)
 
 class GraphicalEditorView(View, gobject.GObject):
 
-    def __init__(self):
+    def __init__(self, selection_m):
         """View holding the graphical editor
 
         The purpose of the view is only to hold the graphical editor. The class ob the actual editor with the OpenGL
@@ -44,7 +44,7 @@ class GraphicalEditorView(View, gobject.GObject):
         self.v_box = gtk.VBox()
         self.scroller = gtk.ScrolledWindow()
         self.scroller.set_name('graphical_editor_scroller')
-        self.editor = ExtendedGtkView(self)
+        self.editor = ExtendedGtkView(self, selection_m)
         self.editor.modify_bg(gtk.STATE_NORMAL, global_gui_config.gtk_colors['INPUT_BACKGROUND'])
         self.editor.tool = ToolChain(self.editor). \
             append(HoverItemTool()). \
@@ -55,7 +55,6 @@ class GraphicalEditorView(View, gobject.GObject):
             append(ZoomTool()). \
             append(MoveItemTool()). \
             append(MultiSelectionTool()). \
-            append(RemoveItemTool()). \
             append(RightClickTool())
         self.editor.painter = painter.PainterChain(). \
             append(painter.ItemPainter()). \
@@ -76,7 +75,5 @@ class GraphicalEditorView(View, gobject.GObject):
 
 
 gobject.type_register(GraphicalEditorView)
-gobject.signal_new('remove_state_from_state_machine', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
-                   ())
 gobject.signal_new('meta_data_changed', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
                    (gobject.TYPE_PYOBJECT, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN,))

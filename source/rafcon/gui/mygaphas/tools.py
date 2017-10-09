@@ -22,10 +22,9 @@ import gaphas.tool
 
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGaphas
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.mygaphas.aspect import HandleInMotion
 from rafcon.gui.mygaphas.items.connection import ConnectionView, TransitionPlaceholderView, DataFlowPlaceholderView, \
-    TransitionView, DataFlowView
+    TransitionView
 from rafcon.gui.mygaphas.items.ports import InputPortView, PortView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils import gap_helper
@@ -44,11 +43,9 @@ class ToolChain(gaphas.tool.ToolChain):
         """
         Handle the event by calling each tool until the event is handled
         or grabbed.
-
         If a tool is returning True on a button press event, the motion and
         button release events are also passed to this
         """
-
         # Allow to handle a subset of events while having a grabbed tool (between a button press & release event)
         suppressed_grabbed_tool = None
         if event.type in (gtk.gdk.SCROLL, gtk.gdk.KEY_PRESS, gtk.gdk.KEY_RELEASE):
@@ -87,43 +84,18 @@ class ZoomTool(gaphas.tool.ZoomTool):
             return super(ZoomTool, self).on_scroll(event)
 
 
-class RemoveItemTool(gaphas.tool.Tool):
-    """This tool is responsible of deleting the selected item
-    """
-
-    def on_key_release(self, event):
-        if gtk.gdk.keyval_name(event.keyval) == "Delete":
-            # Delete Transition from state machine
-            if isinstance(self.view.focused_item, TransitionView):
-                gui_helper_state_machine.delete_core_element_of_model(self.view.focused_item.model)
-                return True
-            # Delete DataFlow from state machine
-            if isinstance(self.view.focused_item, DataFlowView):
-                gui_helper_state_machine.delete_core_element_of_model(self.view.focused_item.model)
-                return True
-            # Delete selected state(s) from state machine
-            if isinstance(self.view.focused_item, StateView):
-                if react_to_event(self.view, self.view, event):
-                    self.view.graphical_editor.emit('remove_state_from_state_machine')
-                    return True
-
-
 class MoveItemTool(gaphas.tool.ItemTool):
-    """This class is responsible of moving states, names, connections, etc.
+    """This class is responsible for moving states, names, connections, etc.
     """
 
     def __init__(self, view=None, buttons=(1,)):
         super(MoveItemTool, self).__init__(view, buttons)
-        self._move_name_v = False
-
         self._item = None
-        self._do_not_unselect = None
+        self._move_name_v = False
+        self._old_selection = None
 
     def movable_items(self):
         view = self.view
-
-        if self._do_not_unselect:
-            view.focused_item = self._do_not_unselect
 
         if self._move_name_v:
             yield InMotion(self._item, view)
@@ -144,20 +116,25 @@ class MoveItemTool(gaphas.tool.ItemTool):
         if event.state & constants.RUBBERBAND_MODIFIER:
             return False  # Mouse clicks with pressed shift key are handled in another tool
 
+        # Special case: moving the NameView
+        # This is only allowed, if the hovered item is a NameView and the Ctrl-key is pressed and the only selected
+        # item is the parental StateView. In this case, the selection and _item will no longer be looked at,
+        # but only _move_name_v
         self._item = self.get_item()
+        if isinstance(self._item, NameView):
+            selected_items = self.view.selected_items
+            if event.state & gtk.gdk.CONTROL_MASK and len(selected_items) == 1 and next(iter(selected_items)) is \
+                    self._item.parent:
+                self._move_name_v = True
+            else:
+                self._item = self._item.parent
 
-        # NameView can only be moved when the Ctrl-key is pressed
-        self._move_name_v = isinstance(self._item, NameView) and event.state & gtk.gdk.CONTROL_MASK
-        if self._item in self.view.selected_items and \
-                isinstance(self._item, NameView) and event.state & gtk.gdk.CONTROL_MASK:
-            # self.view.unselect_item(self._item)
-            pass
-        else:
-            if not event.state & constants.EXTEND_SELECTION_MODIFIER and self._item not in self.view.selected_items:
-                self.view.unselect_all()
-            if self._item not in self.view.selected_items:
-                # remember items that should not be unselected and maybe focused if movement occur
-                self._do_not_unselect = self._item
+        if not self._move_name_v:
+            self._old_selection = self.view.selected_items
+            if not self._item in self.view.selected_items:
+                # When items are to be moved, a button-press should not cause any deselection.
+                # However, the selection is stored, in case no move operation is performed.
+                self.view.handle_new_selection(self._item)
 
         if not self.view.is_focus():
             self.view.grab_focus()
@@ -203,15 +180,13 @@ class MoveItemTool(gaphas.tool.ItemTool):
             if position_changed:
                 self.view.graphical_editor.emit('meta_data_changed', self._item.model, "waypoints", False)
 
-        if not position_changed:
-            if self._item in self.view.selected_items and event.state & constants.EXTEND_SELECTION_MODIFIER:
-                if self._do_not_unselect is not self._item:
-                    self.view.unselect_item(self._item)
-            else:
-                if not event.state & constants.EXTEND_SELECTION_MODIFIER:
-                    self.view.unselect_all()
-                self.view.focused_item = self._item
-        self._do_not_unselect = None
+        if not position_changed and self._old_selection is not None:
+            # The selection is handled differently depending on whether states were moved or not
+            # If no move operation was performed, we reset the selection to that is was before the button-press event
+            # and let the state machine selection handle the selection
+            self.view.unselect_all()
+            self.view.select_item(self._old_selection)
+            self.view.handle_new_selection(self._item)
 
         return super(MoveItemTool, self).on_button_release(event)
 
@@ -337,48 +312,9 @@ class MultiSelectionTool(gaphas.tool.RubberbandTool):
          """
         self.queue_draw(self.view)
         x0, y0, x1, y1 = self.x0, self.y0, self.x1, self.y1
-        # Hold down Ctrl-key to add selection to current selection
-        if event.state & constants.EXTEND_SELECTION_MODIFIER:
-            old_items_selected = []
-        else:
-            old_items_selected = list(self.view.selected_items)
-        for item in old_items_selected:
-            if item in self.view.selected_items:
-                self.view.unselect_item(item)
-        self.view.select_in_rectangle((min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0)))
-
-        old_items_in_new_selection = [item in self.view.selected_items for item in old_items_selected]
-        current_items_which_are_old_selection = [item in old_items_selected for item in self.view.selected_items]
-        rubber_band_selection = list(self.view.selected_items)
-        new_selection = old_items_selected
-        if any(old_items_in_new_selection) and not all(current_items_which_are_old_selection):  # reselect elements
-            # add new  rubber band selection by preserving old state selection
-            for item in rubber_band_selection:
-                if item not in old_items_selected:
-                    old_items_selected.append(item)
-        else:
-            if not any(current_items_which_are_old_selection):
-                # add rubber band selection
-                for item in rubber_band_selection:
-                    old_items_selected.append(item)
-            else:
-                # remove rubber band selection
-                for item in rubber_band_selection:
-                    old_items_selected.remove(item)
-
-        # unselect views that are not representing states or old states -> unselect all
-        items_intermediate_selected = list(old_items_selected) + list(rubber_band_selection)
-        for item in self.view.selected_items:
-            if not isinstance(item, StateView):
-                items_intermediate_selected.append(item)
-
-        for item in items_intermediate_selected:
-            if item in self.view.selected_items:
-                self.view.unselect_item(item)
-
-        # select actual selection
-        for item in new_selection:
-            self.view.select_item(item)
+        rectangle = (min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0))
+        selected_items = self.view.get_items_in_rectangle(rectangle, intersect=False)
+        self.view.handle_new_selection(selected_items)
 
         return True
 
@@ -421,12 +357,6 @@ class MoveHandleTool(gaphas.tool.HandleTool):
             return False
 
         if handle:
-            # Deselect all items unless EXTEND_SELECTION_MODIFIER or RUBBERBAND_MODIFIER is pressed
-            # or the item is already selected.
-            if not (event.state & (constants.EXTEND_SELECTION_MODIFIER | constants.RUBBERBAND_MODIFIER)
-                    or view.hovered_item in view.selected_items):
-                self.view.unselect_all()
-
             view.hovered_item = item
 
             self.motion_handle = None
@@ -475,17 +405,9 @@ class MoveHandleTool(gaphas.tool.HandleTool):
             else:
                 # Only handles belonging to a state (i.e. port handles) can be selected
                 if isinstance(item, StateView):
-                    for port in item.get_all_ports():
-                        if port.handle is self.grabbed_handle:
-                            if event.state & constants.EXTEND_SELECTION_MODIFIER:
-                                if port in self.view.selected_items:
-                                    self.view.unselect_item(port)
-                                else:
-                                    self.view.select_item(port)
-                            else:
-                                self.view.unselect_all()
-                                self.view.focused_item = port
-                            break
+                    corresponding_ports = [port for port in item.get_all_ports() if port.handle is self.grabbed_handle]
+                    if corresponding_ports:  # should be exactly one
+                        self.view.handle_new_selection(corresponding_ports[0])
 
         super(MoveHandleTool, self).on_button_release(event)
 
@@ -669,14 +591,7 @@ class ConnectionCreationTool(ConnectionTool):
 
         # No connection was created, but only a handle was clicked on. Check whether it is to be selected
         else:
-            if event.state & constants.EXTEND_SELECTION_MODIFIER:
-                if self._start_port_v in self.view.selected_items:
-                    self.view.unselect_item(self._start_port_v)
-                else:
-                    self.view.select_item(self._start_port_v)
-            else:
-                self.view.unselect_all()
-                self.view.focused_item = self._start_port_v
+            self.view.handle_new_selection(self._start_port_v)
 
         super(ConnectionCreationTool, self).on_button_release(event)
 
