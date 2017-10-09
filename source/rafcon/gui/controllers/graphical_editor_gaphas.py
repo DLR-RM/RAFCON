@@ -264,7 +264,7 @@ class GraphicalEditorController(ExtendedController):
         else:
             state = item
         viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
-        state_size = self.view.editor.get_matrix_i2v(item).transform_distance(state.width, state.height)
+        state_size = self.view.editor.get_matrix_i2v(state).transform_distance(state.width, state.height)
         min_relative_size = min(viewport_size[i] / state_size[i] for i in [HORIZONTAL, VERTICAL])
         if min_relative_size < 1 or min_relative_size > 2:
             # Allow margin around state
@@ -275,8 +275,8 @@ class GraphicalEditorController(ExtendedController):
             # bars)
             self.canvas.perform_update()
 
-        state_pos = self.view.editor.get_matrix_i2v(item).transform_point(0, 0)
-        state_size = self.view.editor.get_matrix_i2v(item).transform_distance(state.width, state.height)
+        state_pos = self.view.editor.get_matrix_i2v(state).transform_point(0, 0)
+        state_size = self.view.editor.get_matrix_i2v(state).transform_distance(state.width, state.height)
         viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
 
         # Calculate offset around state so that the state is centered in the viewport
