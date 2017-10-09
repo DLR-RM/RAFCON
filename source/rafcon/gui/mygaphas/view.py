@@ -12,13 +12,13 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from contextlib import contextmanager
+from gtkmvc.observer import Observer
 
 from gaphas.view import GtkView
 from gaphas.item import Element
 
-from gtkmvc.observer import Observer
+from rafcon.gui.mygaphas.painter import BoundingBoxPainter
 
-from rafcon.gui.mygaphas.painter import RAFCONBoundingBoxPainter
 
 
 class ExtendedGtkView(GtkView, Observer):
@@ -31,7 +31,7 @@ class ExtendedGtkView(GtkView, Observer):
         Observer.__init__(self, selection_m, True)
         self.observe_model(selection_m)
         self._selection = selection_m
-        self._bounding_box_painter = RAFCONBoundingBoxPainter(self)
+        self._bounding_box_painter = BoundingBoxPainter(self)
         self.graphical_editor = graphical_editor_v
 
     def get_port_at_point(self, vpos, distance=10, exclude=None, exclude_port_fun=None):

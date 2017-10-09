@@ -136,7 +136,9 @@ class ListViewController(ExtendedController):
             """
             # secure scrollbar adjustments on active cell
             [path, focus_column] = self.tree_view.get_cursor()
-            self.tree_view.scroll_to_cell(path, self.widget_columns[self.widget_columns.index(focus_column)], use_align=False)
+            if path:
+                self.tree_view.scroll_to_cell(path, self.widget_columns[self.widget_columns.index(focus_column)],
+                                              use_align=False)
 
             editing_cancelled_handler_id = renderer.connect('editing-canceled', on_editing_canceled)
             focus_out_handler_id = editable.connect('focus-out-event', on_focus_out)
@@ -204,7 +206,7 @@ class ListViewController(ExtendedController):
         raise NotImplementedError
 
     def remove_core_element(self, model):
-        """An abstract remove method that removes respective core element by handed core element id
+        """An abstract remove method that removes respective core element by handed model or object
 
         The method has to be implemented by inherit classes
 
@@ -213,9 +215,18 @@ class ListViewController(ExtendedController):
         """
         raise NotImplementedError
 
+    def remove_core_elements(self, models):
+        """An abstract remove method that removes respective core element by handed models or objects
+
+        :param list models: Model which core element should be removed
+        :return:
+        """
+        for model in models:
+            self.remove_core_element(model)
+
     def on_remove(self, widget, data=None):
         """Remove respective selected core elements and select the next one"""
-        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+
         path_list = None
         if self.view is not None:
             model, path_list = self.tree_view.get_selection().get_selected_rows()
@@ -223,7 +234,7 @@ class ListViewController(ExtendedController):
         models = [self.list_store[path][self.MODEL_STORAGE_ID] for path in path_list] if path_list else []
         if models:
             try:
-                gui_helper_state_machine.delete_core_elements_of_models(models)
+                self.remove_core_elements(models)
             except AttributeError as e:
                 self._logger.warn("The respective core element of {1}.list_store couldn't be removed. -> {0}"
                                   "".format(e, self.__class__.__name__))

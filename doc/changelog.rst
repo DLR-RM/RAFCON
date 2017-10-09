@@ -26,6 +26,19 @@ Next release
 Patch releases 0.11.\*
 ----------------------
 
+0.11.3
+""""""
+
+- Improvements:
+    - :issue:`405`
+    - :issue:`404`
+    - :issue:`403`
+
+- Bug Fixes:
+    - :issue:`412`
+    - :issue:`413`
+    - :issue:`406`
+
 0.11.2
 """"""
 

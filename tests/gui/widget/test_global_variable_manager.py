@@ -53,6 +53,9 @@ def trigger_gvm_signals(main_window_controller):
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
+# TODO this needs a test run from the widget view site
+
+
 def test_gui(caplog):
     testing_utils.initialize_environment(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
 
