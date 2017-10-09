@@ -142,16 +142,22 @@ def generate_sm_for_garbage_collector():
 
 
 def get_log_elements(elements, with_prints=False, print_method=None):
+
     log_result_dict = {}
-    for element_name, with_assert in elements:
+    for element_name, with_assert, object_class in elements:
         gen_file = os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, GENERATION_LOG_FILE_APPENDIX))
-        del_file = os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, DELETION_LOG_FILE_APPENDIX))
         with open(gen_file) as f:
             element_gen_file = f.readlines()
-        with open(del_file) as f:
-            element_del_file = f.readlines()
         element_gen_file = [line.replace('\n', '') for line in element_gen_file]
-        element_del_file = [line.replace('\n', '') for line in element_del_file]
+
+        # TODO find not deleted by checking still existing if this is useful to know
+        # del_file = os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, DELETION_LOG_FILE_APPENDIX))
+        # with open(del_file) as f:
+        #     element_del_file = f.readlines()
+        # element_del_file = [line.replace('\n', '') for line in element_del_file]
+        with_prints = False
+        element_del_file = []
+
         # if element_name == 'state':
         for elem in element_gen_file:
             mem_id = elem.split(" ")
@@ -182,7 +188,7 @@ def check_log_files(elements):
     files = []
     for element_name in elements:
         files.append(os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, GENERATION_LOG_FILE_APPENDIX)))
-        files.append(os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, DELETION_LOG_FILE_APPENDIX)))
+        # files.append(os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, DELETION_LOG_FILE_APPENDIX)))
 
     for file_path in files:
         print "check file: ", file_path
@@ -198,7 +204,7 @@ def remove_log_files(elements):
     files = []
     for element_name in elements:
         files.append(os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, GENERATION_LOG_FILE_APPENDIX)))
-        files.append(os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, DELETION_LOG_FILE_APPENDIX)))
+        # files.append(os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, DELETION_LOG_FILE_APPENDIX)))
     print "REMOVE: \n{}".format('\n'.join([log_file_path for log_file_path in files]))
     for log_file_path in files:
         if os.path.exists(log_file_path):
@@ -208,18 +214,34 @@ def remove_log_files(elements):
 def check_destruction_logs(elements, print_method=None):
     print_method = logger.warning if print_method is None else print_method
     result_dict = get_log_elements(elements, with_prints=True, print_method=print_method)
-    for element_name, with_assert in elements:
-        print "finally ", element_name, "__init__:", len(result_dict[element_name]['gen_file']), "__del__:", \
-            len(result_dict[element_name]['del_file']), "check with assert: ", with_assert
-        ratio = float(len(result_dict[element_name]['del_file']))/float(len(result_dict[element_name]['gen_file']))
-        diff = len(result_dict[element_name]['gen_file']) - len(result_dict[element_name]['del_file'])
-        print "Ratio of destroyed/generated {0} objects is: {1} and diff: {2}".format(element_name, ratio, diff)
-        if diff > 0:
-            print "## WARNING ## We have more created then destroyed elements {0} < {1} -> diff {2} of kine: {3}" \
-                  "".format(len(result_dict[element_name]['del_file']), len(result_dict[element_name]['gen_file']),
-                            diff, element_name)
-        if with_assert:
-            assert 0 == diff
+    for name, check_it, object_class in elements:
+        found_objects_of_kind = [o for o in gc.get_objects() if isinstance(o, object_class)]
+        if not len(found_objects_of_kind) == 0:
+            collection_counts = [len(gc.get_referrers(o)) for o in found_objects_of_kind]
+            class_types_found = set([o.__class__.__name__ for o in found_objects_of_kind])
+            print_method("of object of kind '{0}' have been generated {3} and there are {1} left over instances "
+                         "with respective reference numbers of {2} and those types {4}"
+                         "".format(object_class, len(found_objects_of_kind), collection_counts,
+                                   len(result_dict[name]['gen_file']), class_types_found))
+        else:
+            print "of object of kind '{0}' have been generated {2} and there are {1} left over instances " \
+                  "".format(object_class, len(found_objects_of_kind), len(result_dict[name]['gen_file']))
+        if check_it:
+            assert len(found_objects_of_kind) == 0
+    return
+
+    # for element_name, with_assert, object_class in elements:
+    #     print "finally ", element_name, "__init__:", len(result_dict[element_name]['gen_file']), "__del__:", \
+    #         len(result_dict[element_name]['del_file']), "check with assert: ", with_assert
+    #     ratio = float(len(result_dict[element_name]['del_file']))/float(len(result_dict[element_name]['gen_file']))
+    #     diff = len(result_dict[element_name]['gen_file']) - len(result_dict[element_name]['del_file'])
+    #     print "Ratio of destroyed/generated {0} objects is: {1} and diff: {2}".format(element_name, ratio, diff)
+    #     if diff > 0:
+    #         print "## WARNING ## We have more created then destroyed elements {0} < {1} -> diff {2} of kine: {3}" \
+    #               "".format(len(result_dict[element_name]['del_file']), len(result_dict[element_name]['gen_file']),
+    #                         diff, element_name)
+    #     if with_assert:
+    #         assert 0 == diff
 
 
 def run_model_construction():
@@ -328,16 +350,16 @@ def patch_core_classes_with_log():
                 f.write("RUN {2} of {0} {3} {1}\n".format(self, id(self), "state_element", self.gen_time_stamp))
 
     rafcon.core.states.state.State.__init__ = state_init
-    rafcon.core.states.state.State.__del__ = state_del
+    # rafcon.core.states.state.State.__del__ = state_del
     rafcon.core.state_elements.state_element.StateElement.__init__ = state_element_init
-    rafcon.core.state_elements.state_element.StateElement.__del__ = state_element_del
+    # rafcon.core.state_elements.state_element.StateElement.__del__ = state_element_del
 
 
 def un_patch_core_classes_from_log():
     rafcon.core.states.state.State.__init__ = old_state_init
-    unpatch_del_method_of_class(rafcon.core.states.state.State, old_state_del)
+    # unpatch_del_method_of_class(rafcon.core.states.state.State, old_state_del)
     rafcon.core.state_elements.state_element.StateElement.__init__ = old_state_element_init
-    unpatch_del_method_of_class(rafcon.core.state_elements.state_element.StateElement, old_state_element_del)
+    # unpatch_del_method_of_class(rafcon.core.state_elements.state_element.StateElement, old_state_element_del)
     remove_log_files(CORE_FILES)
 
 
@@ -355,6 +377,7 @@ def patch_model_classes_with_log():
         self.__del_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
                                                                                    DELETION_LOG_FILE_APPENDIX))
         with open(self.__gen_log_file, 'a+') as f:
+            print self.__kind, "write into", self.__gen_log_file
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
         old_abstract_state_model_init(self, state, parent, meta)
@@ -388,16 +411,16 @@ def patch_model_classes_with_log():
                 f.write("RUN {2} of {0} {3} {1}\n".format(self, id(self), self.__kind, self.__gen_time_stamp))
 
     rafcon.gui.models.abstract_state.AbstractStateModel.__init__ = abstract_state_model_init
-    rafcon.gui.models.abstract_state.AbstractStateModel.__del__ = abstract_state_model_del
+    # rafcon.gui.models.abstract_state.AbstractStateModel.__del__ = abstract_state_model_del
     rafcon.gui.models.state_element.StateElementModel.__init__ = state_element_model_init
-    rafcon.gui.models.state_element.StateElementModel.__del__ = state_element_model_del
+    # rafcon.gui.models.state_element.StateElementModel.__del__ = state_element_model_del
 
 
 def un_patch_model_classes_from_log():
     rafcon.gui.models.abstract_state.AbstractStateModel.__init__ = old_abstract_state_model_init
-    unpatch_del_method_of_class(rafcon.gui.models.abstract_state.AbstractStateModel, old_abstract_state_model_del)
+    # unpatch_del_method_of_class(rafcon.gui.models.abstract_state.AbstractStateModel, old_abstract_state_model_del)
     rafcon.gui.models.state_element.StateElementModel.__init__ = old_state_element_model_init
-    unpatch_del_method_of_class(rafcon.gui.models.state_element.StateElementModel, old_state_element_model_del)
+    # unpatch_del_method_of_class(rafcon.gui.models.state_element.StateElementModel, old_state_element_model_del)
     remove_log_files(MODEL_FILES)
 
 
@@ -436,8 +459,8 @@ def patch_ctrl_classes_with_log():
 
 def un_patch_ctrl_classes_from_log():
     rafcon.gui.controllers.utils.extended_controller.ExtendedController.__init__ = old_extended_controller_init
-    unpatch_del_method_of_class(class_=rafcon.gui.controllers.utils.extended_controller.ExtendedController,
-                                old_del_method=old_extended_controller_del)
+    # unpatch_del_method_of_class(class_=rafcon.gui.controllers.utils.extended_controller.ExtendedController,
+    #                             old_del_method=old_extended_controller_del)
     remove_log_files(CTRL_FILES)
 
 
@@ -486,22 +509,26 @@ def patch_gtkmvc_classes_with_log():
                 f.write("RUN {2} of {0} {3} {1}\n".format(self, id(self), self.__kind, self.__gen_time_stamp))
 
     gtkmvc.View.__init__ = gtkmvc_view_init
-    gtkmvc.View.__del__ = gtkmvc_view_del
+    # gtkmvc.View.__del__ = gtkmvc_view_del
     gtkmvc.Controller.__init__ = gtkmvc_controller_init
-    gtkmvc.Controller.__del__ = gtkmvc_controller_del
+    # gtkmvc.Controller.__del__ = gtkmvc_controller_del
 
 
 def un_patch_gtkmvc_classes_from_log():
     gtkmvc.View.__init__ = old_gtkmvc_view_init
-    unpatch_del_method_of_class(gtkmvc.View, old_gtkmvc_view_del)
+    # unpatch_del_method_of_class(gtkmvc.View, old_gtkmvc_view_del)
     gtkmvc.Controller.__init__ = old_gtkmvc_controller_init
-    unpatch_del_method_of_class(gtkmvc.Controller, old_gtkmvc_controller_del)
+    # unpatch_del_method_of_class(gtkmvc.Controller, old_gtkmvc_controller_del)
     remove_log_files(GTKMVC_FILES)
+
+
+def print_func(s):
+    print s
 
 
 def test_core_destruct(caplog):
 
-    testing_utils.initialize_environment()
+    testing_utils.initialize_environment_only_core()
 
     patch_core_classes_with_log()
 
@@ -516,13 +543,15 @@ def test_core_destruct(caplog):
 
     gc.collect()
 
-    elements = [('state', True), ('state_element', True)]
+    elements = [('state', True, rafcon.core.states.state.State),
+                ('state_element', True, rafcon.core.state_elements.state_element.StateElement),
+                ]
 
-    check_destruction_logs(elements, logger.debug)
+    check_destruction_logs(elements)
 
     un_patch_core_classes_from_log()
 
-    testing_utils.shutdown_environment(caplog=caplog)
+    testing_utils.shutdown_environment_only_core(caplog=caplog)
 
 
 def test_model_and_core_destruct(caplog):
@@ -537,30 +566,16 @@ def test_model_and_core_destruct(caplog):
     gc.collect()
 
     # TODO make this test at least run with all flags True
-    elements = [('state', False), ('state_element', False),
-                ('abstract_state_model', False), ('state_element_model', False)]
+    elements = [('state', False, rafcon.core.states.state.State),
+                ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
+                ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
+                ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
+                ]
 
     check_destruction_logs(elements, logger.debug)
 
     un_patch_core_classes_from_log()
     un_patch_model_classes_from_log()
-    # import time
-    # time.sleep(3)
-    # print gc.collect(), gc.get_count()
-    # time.sleep(3)
-    # print gc.collect(), gc.get_count()
-    # for o in gc.get_objects():
-    #     if isinstance(o, rafcon.gui.models.state.StateModel):
-    #         s_m = o
-    #         print s_m, gc.get_count()
-    #         # print '\n'.join([str(num) + ": " + str(elem) for num, elem in enumerate(gc.get_referents(s_m))]), "\n \n"
-    #         print '\n'.join([str(num) + ": " + str(elem) for num, elem in enumerate(gc.get_referrers(s_m)) if num > 0]), "\n \n"
-    #         # for numx, oo in enumerate(gc.get_referrers(s_m)):
-    #         #     if numx > 0:
-    #         #         print "#####" + str(numx) + ": " + str(oo) + "\n" + '\n'.join([str(num) + ": " + str(elem) for num, elem in enumerate(gc.get_referrers(oo)) if num > 1]), "\n \n"
-    #         #         for numxx, ooo in enumerate(gc.get_referrers(oo)):
-    #         #             if numxx > 1:
-    #         #                 print "#########" + str(numxx) + ": " + str(ooo) + "\n" + '\n'.join([str(num) + ": " + str(elem) for num, elem in enumerate(gc.get_referrers(oo)) if num > 3]), "\n \n"
 
     testing_utils.shutdown_environment(caplog=caplog)
 
@@ -569,7 +584,7 @@ def _test_model_and_core_destruct_with_gui(caplog):
 
     # TODO make it fully working
 
-    testing_utils.initialize_environment()
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
     patch_core_classes_with_log()
     patch_model_classes_with_log()
@@ -577,11 +592,14 @@ def _test_model_and_core_destruct_with_gui(caplog):
 
     run_controller_construction(caplog, with_gui=True)
 
-    elements = [('state', False), ('state_element', False),
-                ('abstract_state_model', False), ('state_element_model', False),
-                ('extended_controller', False)]
+    elements = [('state', False, rafcon.core.states.state.State),
+                ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
+                ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
+                ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
+                ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
+                ]
 
-    check_destruction_logs(elements, logger.debug)
+    check_destruction_logs(elements)
 
     un_patch_core_classes_from_log()
     un_patch_model_classes_from_log()
@@ -603,11 +621,16 @@ def _test_widget_destruct(caplog):
 
     run_controller_construction(caplog, with_gui=True)
 
-    elements = [('state', False), ('state_element', False),
-                ('abstract_state_model', False), ('state_element_model', False),
-                ('extended_controller', False), ('gtkmvc_view', False), ('gtkmvc_controller', False)]
+    elements = [('state', False, rafcon.core.states.state.State),
+                ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
+                ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
+                ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
+                ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
+                ('gtkmvc_view', False, gtkmvc.view.View),
+                ('gtkmvc_controller', False, gtkmvc.controller.Controller),
+                ]
 
-    check_destruction_logs(elements, logger.debug)
+    check_destruction_logs(elements)
 
     un_patch_core_classes_from_log()
     un_patch_model_classes_from_log()
@@ -620,7 +643,7 @@ def _test_widget_destruct(caplog):
 if __name__ == '__main__':
     test_core_destruct(None)
     test_model_and_core_destruct(None)
-    # _test_model_and_core_destruct_with_gui(None)
-    # _test_widget_destruct(None)
+    # test_model_and_core_destruct_with_gui(None)
+    # test_widget_destruct(None)
     # import pytest
     # pytest.main(['-s', __file__])
