@@ -51,6 +51,7 @@ import rafcon.gui.helpers.meta_data as gui_helper_meta_data
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
@@ -324,7 +325,8 @@ class GraphicalEditorController(ExtendedController):
                                    "".format(library_state_m))
                 logger.debug("Show content of {}".format(library_state_m.state))
                 gui_helper_meta_data.scale_library_content(library_state_m)
-                self.add_state_view_for_model(library_state_m.state_copy, view, hierarchy_level=library_state_v.hierarchy_level + 1)
+                self.add_state_view_for_model(library_state_m.state_copy, view,
+                                              hierarchy_level=library_state_v.hierarchy_level + 1)
             else:
                 logger.debug("Hide content of {}".format(library_state_m.state))
                 state_copy_v = self.canvas.get_view_for_model(library_state_m.state_copy)
@@ -363,14 +365,15 @@ class GraphicalEditorController(ExtendedController):
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
         # print "GSME action_signal: ", self.__class__.__name__, "action_signal check", info
-        if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and\
-                info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
+        if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
+                        info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut',
+                                               'undo/redo']:
 
             old_state_m = self.state_action_signal.__func__.target
             new_state_m = info['arg'].action_parent_m
 
         elif isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
-                info['arg'].action in ['change_state_type', 'change_root_state_type']:
+                        info['arg'].action in ['change_state_type', 'change_root_state_type']:
 
             old_state_m = model
             new_state_m = info['arg'].affected_models[-1]
@@ -636,9 +639,29 @@ class GraphicalEditorController(ExtendedController):
         else:
             # TODO make the redraw again not recursive for all elements because that is expansive (longer drawing waits)
             # TODO use the handed affected_models list
+
+            # 1st Recreate StateView by removing the old one and adding the new one
             parent_v = self.canvas.get_view_for_model(state_v.model.parent)
             state_v.remove()
             self.add_state_view_with_meta_data_for_model(new_state_m, parent_v.model)
+
+            # 2nd Recreate connections to the replaced StateView to ensure correct connectivity
+            parent_state = parent_v.model.state
+            connected_transitions, connected_data_flows = parent_state.related_linkage_state(new_state_m.state.state_id)
+            external_connections = connected_transitions['external']['ingoing'] + \
+                                   connected_transitions['external']['outgoing'] + \
+                                   connected_data_flows['external']['ingoing'] + \
+                                   connected_data_flows['external']['outgoing']
+            for connection in external_connections:
+                connection_v = self.canvas.get_view_for_core_element(connection)
+                connection_m = connection_v.model
+                connection_v.prepare_destruction()
+                self.canvas.remove(connection_v)
+                if isinstance(connection_m, TransitionModel):
+                    self.add_transition_view_for_model(connection_m, parent_v.model)
+                else:
+                    self.add_data_flow_view_for_model(connection_m, parent_v.model)
+
             self.canvas.request_update(parent_v)
 
         self.canvas.perform_update()
@@ -844,10 +867,12 @@ class GraphicalEditorController(ExtendedController):
             return self.add_state_view_for_model(state_m, parent_state_v, size=new_state_size, rel_pos=child_rel_pos,
                                                  hierarchy_level=parent_state_m.hierarchy_level + 1)
         else:
-            return self.add_state_view_for_model(state_m, parent_state_v, hierarchy_level=parent_state_m.hierarchy_level + 1)
+            return self.add_state_view_for_model(state_m, parent_state_v,
+                                                 hierarchy_level=parent_state_m.hierarchy_level + 1)
 
     @lock_state_machine
-    def _connect_transition_to_ports(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
+    def _connect_transition_to_ports(self, transition_m, transition_v, parent_state_m, parent_state_v,
+                                     use_waypoints=True):
 
         transition_meta = transition_m.get_meta_data_editor()
         # The state_copy (root_state_of_library) is not shown, therefore transitions to the state_copy are connected
