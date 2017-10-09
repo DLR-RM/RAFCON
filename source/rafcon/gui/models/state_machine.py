@@ -124,9 +124,6 @@ class StateMachineModel(ModelMT, Hashable):
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
 
-    def __del__(self):
-        self.destroy()
-
     @property
     def core_element(self):
         return self.state_machine
@@ -155,6 +152,8 @@ class StateMachineModel(ModelMT, Hashable):
             pass
         with self.state_machine.modification_lock():
             self.root_state.prepare_destruction()
+        self.root_state = None
+        self.state_machine = None
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.root_state)

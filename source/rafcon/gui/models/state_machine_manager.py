@@ -112,7 +112,6 @@ class StateMachineManagerModel(ModelMT):
                 sm_m.prepare_destruction()
                 del self.state_machines[sm_id_to_delete]
                 sm_m.destroy()
-                sm_m.selection.clear()
 
     def get_state_machine_model(self, state_m):
         """ Get respective state machine model for handed state model
