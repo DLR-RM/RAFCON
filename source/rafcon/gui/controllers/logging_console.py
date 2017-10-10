@@ -40,9 +40,6 @@ class LoggingConsoleController(ExtendedController):
 
         self.update_filtered_buffer()
 
-    def register_adapters(self):
-        pass
-
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 

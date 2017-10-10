@@ -127,6 +127,9 @@ class ExtendedController(Controller):
         assert isinstance(controller, ExtendedController)
         self.__parent = controller
 
+    def register_adapters(self):
+        """Adapters should be registered in this method call"""
+
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions in all child controllers.
 
