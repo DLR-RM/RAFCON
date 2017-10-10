@@ -321,20 +321,22 @@ class StateOutcomesListController(ListViewController):
     def outcomes_changed(self, model, prop_name, info):
         self.update()
 
+    @ExtendedController.observe("destruction_signal", signal=True)
+    def get_destruction_signal(self, model, prop_name, info):
+        """ Close state editor when state is being destructed """
+        # TODO why the controller is not already destroyed before all transitions or outcomes are deleted
+        # therefore the models are relieved here -> points on the fact that the controllers are not proper destroyed
+        self.relieve_all_models()
+
 
 class StateOutcomesEditorController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor
         """
-        ExtendedController.__init__(self, model, view)
+        super(StateOutcomesEditorController, self).__init__(model, view)
         self.oc_list_ctrl = StateOutcomesListController(model, view.treeView)
-        # self.add_controller('oc_list_ctrl', self.oc_list_ctrl)
-
-    def destroy(self):
-        # TODO maybe refactor widget to use ExtendedController destruct method
-        self.oc_list_ctrl.relieve_all_models()
-        super(StateOutcomesEditorController, self).destroy()
+        self.add_controller('oc_list_ctrl', self.oc_list_ctrl)
 
     def register_view(self, view):
         """Called when the View was registered
