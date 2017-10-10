@@ -349,13 +349,6 @@ class StateOutcomesEditorController(ExtendedController):
                 view['add_button'].set_sensitive(False)
                 view['remove_button'].set_sensitive(False)
 
-    def register_adapters(self):
-        """Adapters should be registered in this method call
-
-        Each property of the state should have its own adapter, connecting a label in the View with the attribute of
-        the State.
-        """
-
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 

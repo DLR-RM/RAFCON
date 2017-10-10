@@ -72,9 +72,6 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         self.update()
 
-    def register_adapters(self):
-        pass
-
     def register_view(self, view):
         self.history_tree.connect('button_press_event', self.mouse_click)
         view['reload_button'].connect('clicked', self.reload_history)

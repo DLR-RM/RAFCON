@@ -44,9 +44,6 @@ class LoggingConsoleController(ExtendedController):
         self.view.set_enables(self._enables)
         self.update_filtered_buffer()
 
-    def register_adapters(self):
-        pass
-
     def print_message(self, message, log_level, new=True):
         if self.view is None:
             return

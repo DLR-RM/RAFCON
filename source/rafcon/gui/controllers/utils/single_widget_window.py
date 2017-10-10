@@ -44,14 +44,6 @@ class SingleWidgetWindowController(ExtendedController):
         view['main_window'].connect('destroy', gtk.main_quit)
         # view.get_top_widget().connect('destroy', gtk.main_quit)
 
-    def register_adapters(self):
-        """Adapters should be registered in this method call
-
-        Each property of the state should have its own adapter, connecting a label in the View with the attribute of
-        the State.
-        """
-        # self.adapt(self.__state_property_adapter("name", "input_name"))
-
     pass  # class end
 
 # Example

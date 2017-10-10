@@ -273,10 +273,6 @@ class MenuBarController(ExtendedController):
         for handler_id in self.handler_ids.iterkeys():
             self.view[handler_id].disconnect(self.handler_ids[handler_id])
 
-    def register_adapters(self):
-        """Adapters should be registered in this method call"""
-        pass
-
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 

@@ -150,10 +150,6 @@ class GraphicalEditorController(ExtendedController):
 
         self.setup_opengl()
 
-    def register_adapters(self):
-        """Adapters should be registered in this method call"""
-        pass
-
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 
