@@ -1065,22 +1065,23 @@ class ContainerState(State):
         return self.states[self.start_state_id]
 
     @lock_state_machine
-    def remove(self, state_element, force=False):
+    def remove(self, state_element, force=False, destruct=True):
         """Remove item from state
 
         :param StateElement state_element: State or state element to be removed
         :param bool force: if the removal should be forced without checking constraints
+        :param bool destruct:
         """
         if isinstance(state_element, State):
-            self.remove_state(state_element.state_id, force=force)
+            self.remove_state(state_element.state_id, force=force, destruct=destruct)
         elif isinstance(state_element, Transition):
-            self.remove_transition(state_element.transition_id, force)
+            self.remove_transition(state_element.transition_id, force, destruct=destruct)
         elif isinstance(state_element, DataFlow):
-            self.remove_data_flow(state_element.data_flow_id)
+            self.remove_data_flow(state_element.data_flow_id, destruct=destruct)
         elif isinstance(state_element, ScopedVariable):
-            self.remove_scoped_variable(state_element.data_port_id)
+            self.remove_scoped_variable(state_element.data_port_id, destruct=destruct)
         else:
-            super(ContainerState, self).remove(state_element, force)
+            super(ContainerState, self).remove(state_element, force, destruct=destruct)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------- transition functions -------------------------------------
