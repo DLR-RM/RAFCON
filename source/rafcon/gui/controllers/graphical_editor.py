@@ -325,6 +325,9 @@ class GraphicalEditorController(ExtendedController):
         redraw_after = 1 / 50.  # sec
         # Check if initialized
         # and whether the last redraw was more than redraw_after ago
+        if self.model.state_machine is None:
+            logger.info("This notification should not occur")
+            return
         if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after) and \
                         rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id == \
                         self.model.state_machine.state_machine_id \
@@ -1512,6 +1515,13 @@ class GraphicalEditorController(ExtendedController):
         if isinstance(frame, list):
             self.view.editor.draw_frame(frame[0], frame[1], 10)
 
+    @ExtendedController.observe("destruction_signal", signal=True)
+    def state_machine_destruction(self, model, prop_name, info):
+        """ Close state editor when state is being destructed """
+        # TODO fix this -> this has to be performed by the state machines editor
+        if self.model is model:
+            self.relieve_all_models()
+
     @lock_state_machine
     def draw_state(self, state_m, rel_pos=(0, 0), size=(100, 100), depth=1):
         """Draws a (container) state with all its content
@@ -1549,7 +1559,9 @@ class GraphicalEditorController(ExtendedController):
                     state_meta = state_m.set_meta_data_editor('size', size, from_gaphas=False)
 
         size = state_meta['size']
-
+        if state_m.state is None:
+            logger.info("The notification which cause this has to be avoided")
+            return
         # Root state is always in the origin
         if state_m.state.is_root_state:
             pos = (0, 0)
