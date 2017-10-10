@@ -75,6 +75,27 @@ class LibraryStateModel(AbstractStateModel):
         else:
             logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(self.state)))
 
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        Recursively un-registers all observers and removes references to child models
+        """
+        self.destruction_signal.emit()
+        try:
+            self.unregister_observer(self)
+        except KeyError:  # Might happen if the observer was already unregistered
+            pass
+        for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
+            if port.core_element is not None:
+                # TODO setting data ports None in a Library state cause gtkmvc attribute getter problems
+                # port.prepare_destruction()
+                pass
+
+        del self.input_data_ports[:]
+        del self.output_data_ports[:]
+        del self.outcomes[:]
+        self.state = None
+
     def __eq__(self, other):
         # logger.info("compare method")
         if isinstance(other, LibraryStateModel):
