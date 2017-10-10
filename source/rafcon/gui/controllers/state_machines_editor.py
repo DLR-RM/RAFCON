@@ -174,6 +174,9 @@ class StateMachinesEditorController(ExtendedController):
         page = notebook.get_nth_page(page_num)
         for tab_info in self.tabs.itervalues():
             if tab_info['page'] is page:
+                if tab_info['state_machine_m'].state_machine is None:
+                    logger.info("This notification should not occur.")
+                    break
                 new_sm_id = get_state_machine_id(tab_info['state_machine_m'])
                 if self.model.selected_state_machine_id != new_sm_id:
                     self.model.selected_state_machine_id = new_sm_id
@@ -188,7 +191,10 @@ class StateMachinesEditorController(ExtendedController):
             tab, tab_label = create_tab_header('', self.on_close_clicked, state_machine_m, 'refused')
             set_tab_label_texts(tab_label, state_machine_m, state_machine_m.state_machine.marked_dirty)
             page = self.tabs[sm_id]['page']
-            self.view.notebook.remove_page(self.get_page_num(sm_id))
+            if sm_id not in self.tabs:
+                logger.info("This notification should not happen")
+            else:
+                self.view.notebook.remove_page(self.get_page_num(sm_id))
             self.view.notebook.insert_page(page, tab, page_num)
 
     def get_page_num(self, state_machine_id):
@@ -274,6 +280,10 @@ class StateMachinesEditorController(ExtendedController):
 
     @ExtendedController.observe("state_machines", after=True)
     def model_changed(self, model, prop_name, info):
+        from rafcon.gui.utils.notification_overview import NotificationOverview
+        overview = NotificationOverview(info, initiator_string=self.__class__.__name__)
+        if isinstance(overview['result'][-1], Exception):
+            logger.info("This notification should not occur {0}".format(overview))
         # Check for new state machines
         for sm_id, sm in self.model.state_machine_manager.state_machines.iteritems():
             if sm_id not in self.tabs:
@@ -285,6 +295,9 @@ class StateMachinesEditorController(ExtendedController):
             if sm_id not in self.model.state_machine_manager.state_machines:
                 state_machines_to_be_deleted.append(self.tabs[sm_id]['state_machine_m'])
         for state_machine_m in state_machines_to_be_deleted:
+            if state_machine_m.state_machine is None:
+                logger.info("This notification should not occur.")
+                continue
             self.remove_state_machine(state_machine_m)
 
     @ExtendedController.observe("state_machine_mark_dirty", assign=True)
