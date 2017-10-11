@@ -203,13 +203,32 @@ def check_state_storage(state, parent_path, missing_elements, existing_elements=
             check_state_storage(child_state, folder_path, missing_elements, existing_elements, check_meta_data)
 
 
-def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, with_print=False,
-                                   old_exists=None, old_base_path=None):
-    root_state = sm_m.state_machine.root_state
-    base_path = sm_m.state_machine.file_system_path
+def collect_all_files(sm_m, base_path=None, check_meta_data=False, nothing_exists=False):
+    if base_path is None:
+        base_path = sm_m.state_machine.file_system_path
+    assert base_path is not None
+
     missing_elements = []
     existing_elements = []
     check_state_machine_storage(sm_m.state_machine, base_path, missing_elements, existing_elements, check_meta_data)
+
+    # maybe check that those files are not existing except base_path
+    if nothing_exists:
+        assert len(existing_elements) == 1 if base_path in existing_elements else not existing_elements
+
+    return missing_elements
+
+
+def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, with_print=False,
+                                   old_exists=None, old_base_path=None, supposed_elements=None,
+                                   state_machine_id=None, root_state_id=None):
+    missing_elements = []
+    existing_elements = []
+    for file_path in supposed_elements:
+        if not os.path.exists(file_path):
+            missing_elements.append(file_path)
+        else:
+            existing_elements.append(file_path)
 
     if old_exists is not None and old_base_path:
         old_without_base = [old_path.replace(old_base_path, "") for old_path in old_exists]
@@ -217,8 +236,8 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, 
         old_without_base = None
     if with_print and missing_elements:
         logger.debug(30*"#")
-        logger.debug("State machine %s with root_state.state_id %s MISSING the following FILES" % \
-              (sm_m.state_machine.state_machine_id, root_state.state_id))
+        logger.debug("State machine {0} with root_state.state_id {1} MISSING the following FILES"
+                     "".format(state_machine_id, root_state_id))
         logger.debug(30*"#")
         for path in missing_elements:
             if old_without_base is not None and path.replace(base_path, "") in old_without_base:
@@ -227,8 +246,8 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, 
                 logger.debug(path, " ... but does not exist before")
     else:
         logger.debug(30*"#")
-        logger.debug("All Files and Folders where Found of state machine %s with root_state.state_id %s" % \
-              (sm_m.state_machine.state_machine_id, root_state.state_id))
+        logger.debug("All Files and Folders where Found of state machine {0} with root_state.state_id {1}"
+                     "".format(state_machine_id, root_state_id))
         logger.debug(30*"#")
 
     return missing_elements, existing_elements
@@ -272,8 +291,8 @@ def test_storage_without_gui(caplog):
     try:
         save_state_machine(sm_model=sm_m, path=testing_utils.get_unique_temp_path(), logger=logger, with_gui=with_gui,
                            menubar_ctrl=None)
-
-        missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
+        supposed_files = collect_all_files(sm_m, nothing_exists=False)
+        missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False, supposed_elements=supposed_files)
 
         assert len(missing_elements) == 0
     finally:
@@ -308,8 +327,10 @@ def test_storage_with_gui(caplog):
 
     logger.debug("start thread")
     import threading
+    path = testing_utils.get_unique_temp_path()
+    supposed_files = collect_all_files(sm_m, path, check_meta_data=True, nothing_exists=True)
     thread = threading.Thread(target=save_state_machine,
-                              args=[sm_m, testing_utils.get_unique_temp_path(), logger, with_gui, menubar_ctrl])
+                              args=[sm_m, path, logger, with_gui, menubar_ctrl])
     thread.start()
 
     if with_gui:
@@ -318,7 +339,8 @@ def test_storage_with_gui(caplog):
 
     thread.join()
 
-    missing_elements, _ = check_that_all_files_are_there(sm_m, check_meta_data=True, with_print=False)
+    missing_elements, _ = check_that_all_files_are_there(sm_m, check_meta_data=True, with_print=False,
+                                                         supposed_elements=supposed_files)
     try:
         assert len(missing_elements) == 0
     finally:
@@ -338,7 +360,7 @@ def check_state_recursively_if_state_scripts_are_valid(state):
 
 
 def test_on_clean_storing_with_name_in_path(caplog):
-    testing_utils.initialize_environment(gui_config={"AUTO_BACKUP_ENABLED": True})
+    testing_utils.initialize_environment_only_core()
 
     path_old_format = testing_utils.get_test_sm_path(
         os.path.join("unit_test_state_machines", "id_to_name_plus_id_storage_format_test_do_not_update"))
@@ -352,13 +374,14 @@ def test_on_clean_storing_with_name_in_path(caplog):
     try:
         on_save_activate(sm_m, logger)
 
-        missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
+        supposed_files = collect_all_files(sm_m, nothing_exists=False)
+        missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False, supposed_elements=supposed_files)
 
         assert len(missing_elements) == 0
 
         check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m)
     finally:
-        testing_utils.shutdown_environment(caplog=caplog)
+        testing_utils.shutdown_environment_only_core(caplog=caplog)
 
 
 if __name__ == '__main__':
