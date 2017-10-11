@@ -86,7 +86,8 @@ class MainWindowController(ExtendedController):
         ######################################################
         # logging console
         ######################################################
-        self.logging_console_controller = LoggingConsoleController(None, view.logging_console_view)
+        self.logging_console_controller = LoggingConsoleController(gui_singletons.gui_config_model,
+                                                                   view.logging_console_view)
         self.add_controller('logging_console_controller', self.logging_console_controller)
 
         ######################################################
@@ -589,7 +590,7 @@ class MainWindowController(ExtendedController):
 
     def on_log_button_toggled(self, log_button, config_key):
         gui_config.set_config_value(config_key, log_button.get_active())
-        self.logging_console_controller.update_filtered_buffer()
+        gui_config.save_configuration()
 
     def update_log_button_state(self):
         for level in ["debug", "info", "warning", "error"]:
