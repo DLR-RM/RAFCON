@@ -132,17 +132,12 @@ class ExtendedController(Controller):
         assert isinstance(controller, ExtendedController)
         self.__parent = controller
 
-    def register_adapters(self):
-        """Adapters should be registered in this method call"""
-
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions in all child controllers.
 
         :param rafcon.gui.shortcut_manager.ShortcutManager shortcut_manager: Shortcut Manager Object holding mappings
             between shortcuts and actions.
         """
-        if shortcut_manager is None:
-            logger.info("{0} try to register actions without short cut manager".format(self.__class__.__name__))
         assert isinstance(shortcut_manager, ShortcutManager)
         self.__shortcut_manager = shortcut_manager
 
