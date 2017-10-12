@@ -187,8 +187,8 @@ class MainWindowController(ExtendedController):
         self.add_controller('right_window_controller', right_undocked_window_controller)
 
         console_undocked_window_controller = UndockedWindowController(state_machine_manager_model,
-                                                                      view.console_bar_window,
-                                                                      partial(self.redock_sidebar, "CONSOLE_BAR_WINDOW",
+                                                                      view.console_window,
+                                                                      partial(self.redock_sidebar, "CONSOLE_WINDOW",
                                                                               "console", "console_container",
                                                                               "undock_console_button",
                                                                               self.on_console_return_clicked,
@@ -219,12 +219,11 @@ class MainWindowController(ExtendedController):
         # Initialize the Left-Bar un-docked window title
         view.left_bar_window.initialize_title(gui_helper_label.create_left_bar_window_title(upper_title, lower_title))
         view.right_bar_window.initialize_title('STATE EDITOR')
-        view.console_bar_window.initialize_title('CONSOLE')
+        view.console_window.initialize_title('CONSOLE')
 
         self.left_bar_hidden = False
         self.right_bar_hidden = False
         self.console_hidden = False
-
 
     @staticmethod
     def configure_event(widget, event, name):
@@ -270,7 +269,7 @@ class MainWindowController(ExtendedController):
                                                 "undock_right_bar_button", "right_bar_return_button",
                                                 self.on_right_bar_hide_clicked, "right_bar_replacement"))
         self.connect_button_to_function('undock_console_button', "clicked",
-                                        partial(self.undock_sidebar, "CONSOLE_BAR_WINDOW", "console",
+                                        partial(self.undock_sidebar, "CONSOLE_WINDOW", "console",
                                                 "undock_console_button", "console_return_button",
                                                 self.on_console_hide_clicked, None))
         self.connect_button_to_function('collapse_tree_button', "clicked", self.on_collapse_button_clicked)
@@ -313,7 +312,7 @@ class MainWindowController(ExtendedController):
         view.get_top_widget().connect("configure-event", self.configure_event, "MAIN_WINDOW")
         view.left_bar_window.get_top_widget().connect("configure-event", self.configure_event, "LEFT_BAR_WINDOW")
         view.right_bar_window.get_top_widget().connect("configure-event", self.configure_event, "RIGHT_BAR_WINDOW")
-        view.console_bar_window.get_top_widget().connect("configure-event", self.configure_event, "CONSOLE_BAR_WINDOW")
+        view.console_window.get_top_widget().connect("configure-event", self.configure_event, "CONSOLE_WINDOW")
 
         # hide not usable buttons
         self.view['step_buttons'].hide()
@@ -339,9 +338,9 @@ class MainWindowController(ExtendedController):
             if global_runtime_config.get_config_value("RIGHT_BAR_WINDOW_UNDOCKED"):
                 self.undock_sidebar("RIGHT_BAR_WINDOW", "right_bar", "undock_right_bar_button", "right_bar_return_button",
                                     self.on_right_bar_hide_clicked, "right_bar_replacement", view.right_bar_window)
-            if global_runtime_config.get_config_value("CONSOLE_BAR_WINDOW_UNDOCKED"):
-                self.undock_sidebar("CONSOLE_BAR_WINDOW", "console", "undock_console_button", "console_return_button",
-                                    self.on_console_hide_clicked, None, view.console_bar_window)
+            if global_runtime_config.get_config_value("CONSOLE_WINDOW_UNDOCKED"):
+                self.undock_sidebar("CONSOLE_WINDOW", "console", "undock_console_button", "console_return_button",
+                                    self.on_console_hide_clicked, None, view.console_window)
 
         # secure maximized state
         if global_runtime_config.get_config_value("MAIN_WINDOW_MAXIMIZED"):

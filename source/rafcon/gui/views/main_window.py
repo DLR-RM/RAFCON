@@ -242,7 +242,7 @@ class MainWindowView(View):
 
         self.left_bar_window = UndockedWindowView('left_bar_window')
         self.right_bar_window = UndockedWindowView('right_bar_window')
-        self.console_bar_window = UndockedWindowView('console_window')
+        self.console_window = UndockedWindowView('console_window')
 
     def rotate_and_detach_tab_labels(self):
         """Rotates tab labels of a given notebook by 90 degrees and makes them detachable.
