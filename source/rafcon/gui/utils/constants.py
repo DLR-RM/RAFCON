@@ -93,9 +93,10 @@ PANE_ID = {'LEFT_BAR_DOCKED_POS': 'top_level_h_pane',
 
 # a mapping of runtime config values for the hidden status of all three main bars (left, right and console)
 # to hide functions (located in the main_window controller)
-WIDGET_HIDE_FUNCTIONS = {'LEFT_BAR_HIDDEN': 'on_left_bar_hide_clicked',
-                         'RIGHT_BAR_HIDDEN': 'on_right_bar_hide_clicked',
-                         'CONSOLE_HIDDEN': 'on_console_hide_clicked'}
+UNDOCKABLE_WINDOW_KEYS = ["LEFT_BAR", "RIGHT_BAR", "CONSOLE"]
+
+WIDGET_HIDE_FUNCTIONS = {window_key + '_HIDDEN': 'on_{}_hide_clicked'.format(window_key.lower())
+                         for window_key in UNDOCKABLE_WINDOW_KEYS}
 
 DEFAULT_PANE_POS = {'LEFT_BAR_DOCKED_POS': 300,
                     'RIGHT_BAR_DOCKED_POS': 1000,

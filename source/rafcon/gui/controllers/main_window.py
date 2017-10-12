@@ -318,16 +318,20 @@ class MainWindowController(ExtendedController):
         self.view['step_buttons'].hide()
 
         # Initializing Main Window Size & Position
-        gui_helper_label.set_window_size_and_position(view.get_top_widget(), 'MAIN_WINDOW')
+        gui_helper_label.set_window_size_and_position(view.get_top_widget(), 'MAIN')
 
         # Initializing Pane positions
         for config_id in constants.PANE_ID.keys():
             self.set_pane_position(config_id)
 
         # set the hidden status of all bars
-        for config_value in constants.WIDGET_HIDE_FUNCTIONS.keys():
-            if global_runtime_config.get_config_value(config_value):
-                func = getattr(self, constants.WIDGET_HIDE_FUNCTIONS[config_value])
+        for window_key in constants.UNDOCKABLE_WINDOW_KEYS:
+            config_parameter_for_hidden = window_key + '_HIDDEN'
+            config_parameter_for_undocked = window_key + 'WINDOW_UNDOCKED'
+            if global_runtime_config.get_config_value(config_parameter_for_undocked):
+                continue
+            if global_runtime_config.get_config_value(config_parameter_for_hidden):
+                func = getattr(self, constants.WIDGET_HIDE_FUNCTIONS[config_parameter_for_hidden])
                 func(None)
 
         # restore undock state of bar windows
@@ -521,7 +525,7 @@ class MainWindowController(ExtendedController):
         self.docked[widget_name] = False
         window_view = getattr(self.view, window_name.lower())
         window = window_view.get_top_widget()
-        gui_helper_label.set_window_size_and_position(window, window_name.upper())
+        gui_helper_label.set_window_size_and_position(window, widget_name.upper())
         self.view[widget_name].reparent(window_view['central_eventbox'])
         self.view[undock_button_name].hide()
         hide_function(None)

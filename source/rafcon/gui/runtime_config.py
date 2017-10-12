@@ -38,7 +38,7 @@ class RuntimeConfig(ObservableConfig):
         super(RuntimeConfig, self).load(config_file, path)
         self.clean_recently_opened_state_machines()
 
-    def store_widget_properties(self, widget, title):
+    def store_widget_properties(self, widget, window_key):
         """Sets configuration values for widgets
 
         If the widget is a window, then the size and position are stored. If the widget is a pane, then only the
@@ -47,17 +47,17 @@ class RuntimeConfig(ObservableConfig):
         separated by this.
 
         :param widget: The widget, for which the position (and possibly the size) will be stored.
-        :param title: The title of the widget, which constitutes a part of its key in the configuration file.
+        :param window_key: The window key of the widget, which constitutes a part of its key in the configuration file.
         """
         if isinstance(widget, gtk.Window):
             maximized = bool(widget.maximize_initially)
-            self.set_config_value('{0}_MAXIMIZED'.format(title), maximized)
+            self.set_config_value('{0}_MAXIMIZED'.format(window_key), maximized)
             if maximized:
                 return
             size = widget.get_size()
-            self.set_config_value('{0}_SIZE'.format(title), size)
+            self.set_config_value('{0}_SIZE'.format(window_key), size)
         position = widget.get_position()
-        self.set_config_value('{0}_POS'.format(title), position)
+        self.set_config_value('{0}_POS'.format(window_key), position)
 
     def save_configuration(self):
         # if the runtime_config was not loaded in some startup routine then load it explicitly (= create it)

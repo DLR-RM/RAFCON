@@ -214,11 +214,11 @@ def set_window_size_and_position(window, window_key):
     :param window: The GTK Window to be adjusted
     :param window_key: The window's key stored in the runtime config file
      """
-    size = global_runtime_config.get_config_value(window_key+'_SIZE')
-    position = global_runtime_config.get_config_value(window_key+'_POS')
-    maximized = global_runtime_config.get_config_value(window_key+'_MAXIMIZED')
+    size = global_runtime_config.get_config_value(window_key + '_WINDOW_SIZE')
+    position = global_runtime_config.get_config_value(window_key + '_WINDOW_POS')
+    maximized = global_runtime_config.get_config_value(window_key + '_WINDOW_MAXIMIZED')
     if not size:
-        size = constants.WINDOW_SIZE[window_key]
+        size = constants.WINDOW_SIZE[window_key + '_WINDOW']
     window.resize(*size)
     if position:
         position = (max(0, position[0]), max(0, position[1]))
