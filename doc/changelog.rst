@@ -30,6 +30,19 @@ Patch releases 0.11.\*
 """"""
 
 - Improvements:
+    - :issue:`411`
+    - :issue:`410`
+    - :issue:`403`
+
+- Bug Fixes:
+    - :issue:`402`
+    - :issue:`417`
+    - :issue:`421`
+
+0.11.3
+""""""
+
+- Improvements:
     - :issue:`405`
     - :issue:`404`
     - :issue:`403`
