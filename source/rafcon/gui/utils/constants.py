@@ -95,9 +95,6 @@ PANE_ID = {'LEFT_BAR_DOCKED_POS': 'top_level_h_pane',
 # to hide functions (located in the main_window controller)
 UNDOCKABLE_WINDOW_KEYS = ["LEFT_BAR", "RIGHT_BAR", "CONSOLE"]
 
-WIDGET_HIDE_FUNCTIONS = {window_key + '_HIDDEN': 'on_{}_hide_clicked'.format(window_key.lower())
-                         for window_key in UNDOCKABLE_WINDOW_KEYS}
-
 DEFAULT_PANE_POS = {'LEFT_BAR_DOCKED_POS': 300,
                     'RIGHT_BAR_DOCKED_POS': 1000,
                     'CONSOLE_DOCKED_POS': 600,
