@@ -285,6 +285,8 @@ class MainWindowController(ExtendedController):
         self.view['step_buttons'].hide()
 
         # Initializing Main Window Size & Position
+        # secure un maximize in initial condition to restore correct position and size
+        view.get_top_widget().unmaximize()
         gui_helper_label.set_window_size_and_position(view.get_top_widget(), 'MAIN')
 
         # Initializing Pane positions

@@ -217,6 +217,11 @@ def set_window_size_and_position(window, window_key):
     size = global_runtime_config.get_config_value(window_key + '_WINDOW_SIZE')
     position = global_runtime_config.get_config_value(window_key + '_WINDOW_POS')
     maximized = global_runtime_config.get_config_value(window_key + '_WINDOW_MAXIMIZED')
+
+    # un-maximize here on purpose otherwise resize and reposition fails
+    if not maximized:
+        window.unmaximize()
+
     if not size:
         size = constants.WINDOW_SIZE[window_key + '_WINDOW']
     window.resize(*size)
