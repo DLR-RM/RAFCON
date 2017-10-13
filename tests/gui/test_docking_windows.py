@@ -50,14 +50,15 @@ def undock_sidebars():
     from rafcon.gui.singleton import main_window_controller
     debug_sleep_time = 0
 
-    def test_bar(window, window_name, window_key):
+    def test_bar(window, window_key):
+        attribute_name_of_undocked_window_view = window_name = window_key.lower() + "_window"
         configure_handler_id = window.connect('configure-event', notify_on_resize_event)
         hide_handler_id = window.connect('hide', notify_on_event)
 
         logger.info("undocking...")
         time.sleep(debug_sleep_time)
         ready.clear()
-        call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key)].emit, "clicked")
+        call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key.lower())].emit, "clicked")
         wait_for_event_notification()
         assert window.get_property('visible') is True
         expected_size = get_stored_window_size(window_name)
@@ -65,7 +66,7 @@ def undock_sidebars():
         if not bool(window.maximize_initially):
             assert_size_equality(new_size, expected_size)
         else:
-            maximized_parameter_name = window_key.upper() + "_WINDOW_MAXIMIZED"
+            maximized_parameter_name = window_key + "_WINDOW_MAXIMIZED"
             assert bool(window.maximize_initially) and global_runtime_config.get_config_value(maximized_parameter_name)
 
         logger.info("resizing...")
@@ -87,7 +88,7 @@ def undock_sidebars():
             logger.info("got additional configure-event")
 
         logger.info("docking...")
-        undocked_window_view = getattr(main_window_controller.view, window_name.lower())
+        undocked_window_view = getattr(main_window_controller.view, attribute_name_of_undocked_window_view)
         redock_button = getattr(undocked_window_view, "top_tool_bar")['redock_button']
         time.sleep(debug_sleep_time)
         ready.clear()
@@ -99,7 +100,7 @@ def undock_sidebars():
         time.sleep(debug_sleep_time)
         ready.clear()
         show_handler_id = window.connect('show', notify_on_event)
-        main_window_controller.view["undock_{}_button".format(window_key)].emit("clicked")
+        main_window_controller.view["undock_{}_button".format(window_key.lower())].emit("clicked")
         wait_for_event_notification()
         assert window.get_property('visible') is True
         assert_size_equality(window.get_size(), target_size)
@@ -116,11 +117,11 @@ def undock_sidebars():
         window.disconnect(hide_handler_id)
 
     print "=> test left_bar_window"
-    test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR_WINDOW", 'left_bar')
+    test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR")
     print "=> test right_bar_window"
-    test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR_WINDOW", 'right_bar')
-    print "=> test console_bar_window"
-    test_bar(main_window_controller.view.console_bar_window.get_top_widget(), "CONSOLE_BAR_WINDOW", 'console')
+    test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
+    print "=> test console_window"
+    test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
 
 
 def check_pane_positions():
@@ -136,20 +137,21 @@ def check_pane_positions():
             logging.warning("runtime_config-file has missing values?")
             return
 
-    def test_bar(window, window_name, window_key):
+    def test_bar(window, window_key):
         configure_handler_id = window.connect('configure-event', notify_on_event)
         hide_handler_id = window.connect('hide', notify_on_event)
 
         print "undocking..."
         time.sleep(debug_sleep_time)
         ready.clear()
-        call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key)].emit, "clicked")
+        call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key.lower())].emit, "clicked")
         wait_for_event_notification()
 
         print "docking..."
         time.sleep(debug_sleep_time)
         ready.clear()
-        undocked_window_view = getattr(main_window_controller.view, window_name.lower())
+        attribute_name_of_undocked_window_view = window_key.lower() + "_window"
+        undocked_window_view = getattr(main_window_controller.view, attribute_name_of_undocked_window_view)
         redock_button = getattr(undocked_window_view, "top_tool_bar")['redock_button']
         call_gui_callback(redock_button.emit, "clicked")
         wait_for_event_notification()
@@ -158,11 +160,11 @@ def check_pane_positions():
         window.disconnect(hide_handler_id)
 
     print "=> test left_bar_window"
-    test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR_WINDOW", 'left_bar')
+    test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR")
     print "=> test right_bar_window"
-    test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR_WINDOW", 'right_bar')
-    print "=> test console_bar_window"
-    test_bar(main_window_controller.view.console_bar_window.get_top_widget(), "CONSOLE_BAR_WINDOW", 'console')
+    test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
+    print "=> test console_window"
+    test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
 
     print "check if pane positions are still like in runtime_config.yaml"
     for config_id, pane_id in constants.PANE_ID.iteritems():
