@@ -258,7 +258,6 @@ class Selection(ModelMT):
         return self._focus
 
     @focus.setter
-    @updates_selection
     def focus(self, model):
         """Sets the passed model as focused element
 
@@ -269,9 +268,11 @@ class Selection(ModelMT):
             return
 
         self._check_model_types(model)
+        self.add(model)
         focus_msg = FocusSignalMsg(model, self._focus)
         self._focus = model
         self._selected.add(model)
+        self._selected = reduce_to_parent_states(self._selected)
         self.focus_signal.emit(focus_msg)
 
     @focus.deleter
