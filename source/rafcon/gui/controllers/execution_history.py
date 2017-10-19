@@ -161,9 +161,9 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.append_string_to_menu(popup_menu, menu_item_string)
 
                 if state_reference:
-                    if state_reference.final_outcome:
+                    if history_item.outcome:
                         self.append_string_to_menu(popup_menu, "------------------------")
-                        final_outcome_menu_item_string = "Final outcome: " + str(state_reference.final_outcome)
+                        final_outcome_menu_item_string = "Final outcome: " + str(history_item.outcome)
                         self.append_string_to_menu(popup_menu, final_outcome_menu_item_string)
                         self.append_string_to_menu(popup_menu, "------------------------")
 
