@@ -66,6 +66,7 @@ class GraphicalEditorController(ExtendedController):
     """
 
     _complex_action = False
+    drag_motion_handler_id = None
 
     def __init__(self, model, view):
         """Constructor"""
@@ -91,7 +92,7 @@ class GraphicalEditorController(ExtendedController):
         self.view.connect('meta_data_changed', self._meta_data_changed)
         self.view.editor.connect('focus-changed', self._move_focused_item_into_viewport)
         self.view.editor.connect("drag-data-received", self.on_drag_data_received)
-        self.view.editor.connect("drag-motion", self.on_drag_motion)
+        self.drag_motion_handler_id = self.view.editor.connect("drag-motion", self.on_drag_motion)
 
         self.setup_canvas()
 
@@ -244,7 +245,9 @@ class GraphicalEditorController(ExtendedController):
         :param view:
         :param StateView | ConnectionView | PortView focused_item: The focused item
         """
+        self.view.editor.handler_block(self.drag_motion_handler_id)
         self.move_item_into_viewport(focused_item)
+        self.view.editor.handler_unblock(self.drag_motion_handler_id)
 
     def move_item_into_viewport(self, item):
         """Causes the `item` to be moved into the viewport
