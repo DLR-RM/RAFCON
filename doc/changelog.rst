@@ -7,24 +7,33 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 - New Features:
-    - Move into viewport: Double click on elements in several widgets cause the element to moved into the viewport
-    (not yet supported by all widgets)
-    - Usage of selection modifiers (e.g. <Ctrl>, <Shift>) should now be more consistent
-    - Ports in the graphical editor can now be selection
-    - The port selection is synchronized between the graphical editor and the other widgets
-    - Ports can be removed from within the graphical editor
+
+    -
 
 - Improvements:
-    - Refactoring of the selection
-    - Unit tests for selection
+
+    -
 
 - Bug Fixes:
-    - Memory leak fixes
+
+    -
 
 
 
 Patch releases 0.11.\*
 ----------------------
+
+0.11.6
+""""""
+
+- Bug Fixes:
+
+    - :issue:`427`
+
+- Improvements:
+
+    - drag'n drop with focus can be enabled and disabled by using the gui config flag DRAG_N_DROP_WITH_FOCUS
+    - graphical editor add way points around the state for self transitions as support for the user
 
 0.11.5
 """"""
@@ -35,12 +44,26 @@ Patch releases 0.11.\*
 0.11.4
 """"""
 
+- New Features:
+
+    - Move into viewport: Double click on elements in several widgets cause the element to moved into the viewport
+    (not yet supported by all widgets)
+    - Usage of selection modifiers (e.g. <Ctrl>, <Shift>) should now be more consistent
+    - Ports in the graphical editor can now be selection
+    - The port selection is synchronized between the graphical editor and the other widgets
+    - Ports can be removed from within the graphical editor
+
 - Improvements:
+
+    - Refactoring of the selection
+    - Unit tests for selection
     - :issue:`411`
     - :issue:`410`
     - :issue:`403`
 
 - Bug Fixes:
+
+    - Memory leak fixes
     - :issue:`402`
     - :issue:`417`
     - :issue:`421`
@@ -49,11 +72,13 @@ Patch releases 0.11.\*
 """"""
 
 - Improvements:
+
     - :issue:`405`
     - :issue:`404`
     - :issue:`403`
 
 - Bug Fixes:
+
     - :issue:`412`
     - :issue:`413`
     - :issue:`406`
@@ -62,9 +87,11 @@ Patch releases 0.11.\*
 """"""
 
 - Improvements:
+
     - meta data scaling more robust and protect other elements from side effects of it
 
 - Bug Fixes:
+
     - :issue:`393` $HOME/.config/rafcon is not generated initially + tests
     - :issue:`406` Empty library root state without child states cause meta data resize problems with side effects in
       gaphas drawing
