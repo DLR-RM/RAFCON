@@ -166,6 +166,7 @@ class GraphicalEditorController(ExtendedController):
         state_v.model.set_meta_data_editor('rel_pos', motion.item.position)
         self.canvas.perform_update()
         self._meta_data_changed(None, state_v.model, 'append_to_last_change', True)
+        self.view.editor.no_focus_change = False
 
     @lock_state_machine
     def on_drag_motion(self, widget, context, x, y, time):
@@ -177,6 +178,8 @@ class GraphicalEditorController(ExtendedController):
         :param y: Integer: y-position of mouse
         :param time:
         """
+        if not rafcon.gui.singleton.global_gui_config.get_config_value('DRAG_N_DROP_WITH_FOCUS'):
+            self.view.editor.no_focus_change = True
         hovered_item = ItemFinder(self.view.editor).get_item_at_point((x, y))
         if isinstance(hovered_item, NameView):
             hovered_item = hovered_item.parent

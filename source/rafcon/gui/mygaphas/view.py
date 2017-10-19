@@ -31,6 +31,7 @@ class ExtendedGtkView(GtkView, Observer):
         Observer.__init__(self, selection_m, True)
         self.observe_model(selection_m)
         self._selection = selection_m
+        self.no_focus_change = False
         self._bounding_box_painter = BoundingBoxPainter(self)
         self.graphical_editor = graphical_editor_v
 
@@ -243,6 +244,9 @@ class ExtendedGtkView(GtkView, Observer):
 
         if item.model is not self._selection.focus:
             self.queue_draw_item(self._focused_item, item)
+            if self.no_focus_change:
+                self._selection.set(item.model)
+                return
             self._selection.focus = item.model
             self.emit('focus-changed', item)
 
