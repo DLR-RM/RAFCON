@@ -25,6 +25,7 @@ from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
 from gaphas.item import Item
 from gtk.gdk import ACTION_COPY
+import math
 
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.state import StateType
@@ -266,10 +267,14 @@ class GraphicalEditorController(ExtendedController):
         viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
         state_size = self.view.editor.get_matrix_i2v(item).transform_distance(state.width, state.height)
         min_relative_size = min(viewport_size[i] / state_size[i] for i in [HORIZONTAL, VERTICAL])
-        if min_relative_size < 1 or min_relative_size > 2:
+
+        if min_relative_size != 1:
             # Allow margin around state
             margin_relative = 1. / gui_constants.BORDER_WIDTH_STATE_SIZE_FACTOR
             zoom_factor = min_relative_size * (1 - margin_relative)
+            if zoom_factor > 1:
+                zoom_base = 4
+                zoom_factor = max(1, math.log(zoom_factor*zoom_base, zoom_base))
             self.view.editor.zoom(zoom_factor)
             # The zoom operation must be performed before the pan operation to work on updated GtkAdjustments (scroll
             # bars)
