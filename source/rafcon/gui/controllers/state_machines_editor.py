@@ -39,6 +39,7 @@ from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.graphical_editor import GraphicalEditorView
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
 from gtk.gdk import SHIFT_MASK, CONTROL_MASK
+from rafcon.gui.helpers.label import create_image_menu_item
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -70,11 +71,13 @@ def create_tab_close_button(callback, *additional_parameters):
     return close_button
 
 
-def create_tab_header(title, close_callback, *additional_parameters):
-    def handle_middle_click(widget, event, callback, *additional_parameters):
-        """Calls `callback` in case the middle mouse button was pressed"""
-        if event.button == 2 and callback:
-            callback(event, *additional_parameters)
+def create_tab_header(title, close_callback, right_click_callback, *additional_parameters):
+    def handle_click(widget, event, *additional_parameters):
+        """Calls `callback` in case the mouse button was pressed"""
+        if event.button == 2 and close_callback:
+            close_callback(event, *additional_parameters)
+        if event.button == 3 and right_click_callback:
+            right_click_callback(event, *additional_parameters)
 
     label = gtk.Label(title)
     close_button = create_tab_close_button(close_callback, *additional_parameters)
@@ -85,7 +88,7 @@ def create_tab_header(title, close_callback, *additional_parameters):
 
     event_box = gtk.EventBox()
     event_box.set_name("tab_label")  # required for gtkrc
-    event_box.connect('button-press-event', handle_middle_click, close_callback, *additional_parameters)
+    event_box.connect('button-press-event', handle_click, *additional_parameters)
     event_box.tab_label = label
     event_box.add(hbox)
     event_box.show_all()
@@ -193,7 +196,8 @@ class StateMachinesEditorController(ExtendedController):
     def rearrange_state_machines(self, page_num_by_sm_id):
         for sm_id, page_num in page_num_by_sm_id.iteritems():
             state_machine_m = self.tabs[sm_id]['state_machine_m']
-            tab, tab_label = create_tab_header('', self.on_close_clicked, state_machine_m, 'refused')
+            tab, tab_label = create_tab_header('', self.on_close_clicked, self.on_mouse_right_click,
+                                               state_machine_m, 'refused')
             set_tab_label_texts(tab_label, state_machine_m, state_machine_m.state_machine.marked_dirty)
             page = self.tabs[sm_id]['page']
             self.view.notebook.remove_page(self.get_page_num(sm_id))
@@ -233,7 +237,8 @@ class StateMachinesEditorController(ExtendedController):
 
         self.add_controller(sm_id, graphical_editor_ctrl)
 
-        tab, tab_label = create_tab_header('', self.on_close_clicked, state_machine_m, 'refused')
+        tab, tab_label = create_tab_header('', self.on_close_clicked, self.on_mouse_right_click,
+                                           state_machine_m, 'refused')
         set_tab_label_texts(tab_label, state_machine_m, state_machine_m.state_machine.marked_dirty)
 
         page = graphical_editor_view['main_frame']
@@ -308,6 +313,32 @@ class StateMachinesEditorController(ExtendedController):
         if sm_id in self.model.state_machine_manager.state_machines:
             label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_child().get_children()[0]
             set_tab_label_texts(label, self.tabs[sm_id]["state_machine_m"], False)
+
+    def on_mouse_right_click(self, event, state_machine_m, result):
+        number_of_pages = self.view.notebook.get_n_pages()
+        menu = gtk.Menu()
+        for p in range(number_of_pages):
+            page = self.view.notebook.get_nth_page(p)
+            eventbox_tab_label = self.view.notebook.get_tab_label(page)
+            text = eventbox_tab_label.tab_label.get_text()
+            menu_item = create_image_menu_item(text, constants.BUTTON_EXCHANGE,
+                                               callback=self.view.notebook.change_page, callback_args=[p])
+            menu.append(menu_item)
+
+        menu_item = create_image_menu_item("New State Machine", constants.BUTTON_ADD,
+                                           callback=add_state_machine, callback_args=[])
+        menu.append(menu_item)
+
+        page_number = self.view.notebook.get_current_page()
+        if page_number is not None:
+            menu_item = create_image_menu_item("Close State Machine", constants.BUTTON_CLOSE,
+                                               callback=self.on_close_clicked,
+                                               callback_args=[state_machine_m, None])
+            menu.append(menu_item)
+
+        menu.show_all()
+        menu.popup(None, None, None, event.button, event.time)
+        return True
 
     def on_close_clicked(self, event, state_machine_m, result, force=False):
         """Triggered when the close button of a state machine tab is clicked

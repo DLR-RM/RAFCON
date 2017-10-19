@@ -90,34 +90,6 @@ class PlusAddNotebook(gtk.Notebook):
             self.emit("add_state_machine")
             return True
 
-        elif pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN and \
-                event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
-
-            number_of_pages = self.get_n_pages()
-            menu = gtk.Menu()
-            for p in range(number_of_pages):
-                page = self.get_nth_page(p)
-                eventbox_tab_label = self.get_tab_label(page)
-                text = eventbox_tab_label.tab_label.get_text()
-                menu_item = create_image_menu_item(text, constants.BUTTON_EXCHANGE,
-                                                   callback=self.change_page, callback_args=[p])
-                menu.append(menu_item)
-
-            menu_item = create_image_menu_item("New State Machine", constants.BUTTON_ADD,
-                                               callback=self.do_emit, callback_args=["add_state_machine"])
-            menu.append(menu_item)
-
-            page_number = self.get_current_page()
-            if page_number is not None:
-                menu_item = create_image_menu_item("Close State Machine", constants.BUTTON_CLOSE,
-                                                   callback=self.do_emit, callback_args=["close_state_machine",
-                                                                                         page_number, event])
-                menu.append(menu_item)
-
-            menu.show_all()
-            menu.popup(None, None, None, event.button, event.time)
-            return True
-
     def do_emit(self, *args):
         self.emit(*args[1:])
 
