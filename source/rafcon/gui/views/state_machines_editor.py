@@ -126,13 +126,26 @@ class PlusAddNotebook(gtk.Notebook):
 
     def get_page_number_of_the_page_below_the_cursor(self, widget, event):
         x, y = event.x, event.y
-        for i in range(0, self.get_n_pages()):
-            alloc = self.get_tab_label(self.get_nth_page(i)).get_allocation()
-            widget_position = widget.get_allocation()
-            mouse_x = widget_position.x + x
-            mouse_y = widget_position.y + y
-            if alloc.x < mouse_x < alloc.x + alloc.width and alloc.y < mouse_y < alloc.y + alloc.height:
-                return i
+        widget_position = widget.get_allocation()
+        mouse_x = widget_position.x + x
+        mouse_y = widget_position.y + y
+        number_of_pages = self.get_n_pages()
+
+        # determine which tab label's last position is under the current cursor position
+        last_position_under_cursor = []
+        for i in range(0, number_of_pages):
+            page = self.get_nth_page(i)
+            label = self.get_tab_label(page)
+            l_alloc = label.get_allocation()
+            if l_alloc.x < mouse_x < l_alloc.x + l_alloc.width and l_alloc.y < mouse_y < l_alloc.y + l_alloc.height:
+                last_position_under_cursor.append(i)
+
+        if len(last_position_under_cursor) > 1 and not last_position_under_cursor[-1] == number_of_pages - 1:
+            # case some on the left can not been seen
+            return last_position_under_cursor[-1]
+        elif last_position_under_cursor:
+            # general case and case if some pages on the right can not been seen
+            return last_position_under_cursor[0]
         return None
 
     def on_button_release(self, widget, event):
