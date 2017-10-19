@@ -267,6 +267,7 @@ style "rafcon-notebook" {
     bg[SELECTED]      = @accent
 }
 widget_class "*Notebook" style : highest "rafcon-notebook"
+widget "*.tab_label" style : highest "rafcon-notebook"
 
 style "rafcon-space" {
     bg[ACTIVE]        = @accent

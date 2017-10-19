@@ -71,18 +71,26 @@ def create_tab_close_button(callback, *additional_parameters):
 
 
 def create_tab_header(title, close_callback, *additional_parameters):
+    def handle_middle_click(widget, event, callback, *additional_parameters):
+        """Calls `callback` in case the middle mouse button was pressed"""
+        if event.button == 2 and callback:
+            callback(event, *additional_parameters)
+
     label = gtk.Label(title)
     close_button = create_tab_close_button(close_callback, *additional_parameters)
 
     hbox = gtk.HBox()
-    hbox.set_name("tab_label")
-
     hbox.pack_start(label, expand=True, fill=True, padding=constants.GRID_SIZE)
     hbox.pack_start(close_button, expand=False, fill=False, padding=0)
-    hbox.show_all()
-    hbox.tab_label = label
 
-    return hbox, label
+    event_box = gtk.EventBox()
+    event_box.set_name("tab_label")  # required for gtkrc
+    event_box.connect('button-press-event', handle_middle_click, close_callback, *additional_parameters)
+    event_box.tab_label = label
+    event_box.add(hbox)
+    event_box.show_all()
+
+    return event_box, label
 
 
 def set_tab_label_texts(label, state_machine_m, unsaved_changes=False):
@@ -255,7 +263,7 @@ class StateMachinesEditorController(ExtendedController):
         old_label_colors = range(number_of_pages)
         for p in range(number_of_pages):
             page = self.view["notebook"].get_nth_page(p)
-            label = self.view["notebook"].get_tab_label(page).get_children()[0]
+            label = self.view["notebook"].get_tab_label(page).get_child().get_children()[0]
             old_label_colors[p] = label.get_style().fg[gtk.STATE_NORMAL]
 
         if not self.view.notebook.get_current_page() == page_id:
@@ -264,7 +272,7 @@ class StateMachinesEditorController(ExtendedController):
         # set the old colors
         for p in range(number_of_pages):
             page = self.view["notebook"].get_nth_page(p)
-            label = self.view["notebook"].get_tab_label(page).get_children()[0]
+            label = self.view["notebook"].get_tab_label(page).get_child().get_children()[0]
             label.modify_fg(gtk.STATE_ACTIVE, old_label_colors[p])
             label.modify_fg(gtk.STATE_INSENSITIVE, old_label_colors[p])
 
@@ -291,14 +299,14 @@ class StateMachinesEditorController(ExtendedController):
     def sm_marked_dirty(self, model, prop_name, info):
         sm_id = self.model.state_machine_mark_dirty
         if sm_id in self.model.state_machine_manager.state_machines:
-            label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_children()[0]
+            label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_child().get_children()[0]
             set_tab_label_texts(label, self.tabs[sm_id]["state_machine_m"], True)
 
     @ExtendedController.observe("state_machine_un_mark_dirty", assign=True)
     def sm_un_marked_dirty(self, model, prop_name, info):
         sm_id = self.model.state_machine_un_mark_dirty
         if sm_id in self.model.state_machine_manager.state_machines:
-            label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_children()[0]
+            label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_child().get_children()[0]
             set_tab_label_texts(label, self.tabs[sm_id]["state_machine_m"], False)
 
     def on_close_clicked(self, event, state_machine_m, result, force=False):
@@ -309,6 +317,7 @@ class StateMachinesEditorController(ExtendedController):
 
         :param state_machine_m: The selected state machine model.
         """
+        print "event", event
         from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
         force = True if event is not None and hasattr(event, 'state') and \
                         event.state & SHIFT_MASK and event.state & CONTROL_MASK else force
@@ -423,7 +432,7 @@ class StateMachinesEditorController(ExtendedController):
                 # logger.warning("No state machine open {0}".format(page_num))
                 return
 
-        label = notebook.get_tab_label(page).get_children()[0]
+        label = notebook.get_tab_label(page).get_child().get_children()[0]
         if active:
             draw_for_all_gtk_states(label,
                                     "modify_fg",

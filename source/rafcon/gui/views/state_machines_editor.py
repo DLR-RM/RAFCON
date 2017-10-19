@@ -97,8 +97,8 @@ class PlusAddNotebook(gtk.Notebook):
             menu = gtk.Menu()
             for p in range(number_of_pages):
                 page = self.get_nth_page(p)
-                hbox_tab_label = self.get_tab_label(page)
-                text = hbox_tab_label.tab_label.get_text()
+                eventbox_tab_label = self.get_tab_label(page)
+                text = eventbox_tab_label.tab_label.get_text()
                 menu_item = create_image_menu_item(text, constants.BUTTON_EXCHANGE,
                                                    callback=self.change_page, callback_args=[p])
                 menu.append(menu_item)
@@ -124,30 +124,6 @@ class PlusAddNotebook(gtk.Notebook):
     def change_page(self, widget, new_page_number):
         self.set_current_page(new_page_number)
 
-    def get_page_number_of_the_page_below_the_cursor(self, widget, event):
-        x, y = event.x, event.y
-        widget_position = widget.get_allocation()
-        mouse_x = widget_position.x + x
-        mouse_y = widget_position.y + y
-        number_of_pages = self.get_n_pages()
-
-        # determine which tab label's last position is under the current cursor position
-        last_position_under_cursor = []
-        for i in range(0, number_of_pages):
-            page = self.get_nth_page(i)
-            label = self.get_tab_label(page)
-            l_alloc = label.get_allocation()
-            if l_alloc.x < mouse_x < l_alloc.x + l_alloc.width and l_alloc.y < mouse_y < l_alloc.y + l_alloc.height:
-                last_position_under_cursor.append(i)
-
-        if len(last_position_under_cursor) > 1 and not last_position_under_cursor[-1] == number_of_pages - 1:
-            # case some on the left can not been seen
-            return last_position_under_cursor[-1]
-        elif last_position_under_cursor:
-            # general case and case if some pages on the right can not been seen
-            return last_position_under_cursor[0]
-        return None
-
     def on_button_release(self, widget, event):
         """ Emit an add_state_machine signal if a left click is performed on the drawn pix-buffer add button area and 
         emit a close_state_machine signal if a middle click is performed on a state machine tab-label.
@@ -162,12 +138,6 @@ class PlusAddNotebook(gtk.Notebook):
                 and self._add_button_drawn and event.state & gtk.gdk.BUTTON1_MASK:
             self.emit("add_state_machine")
             return True
-
-        if event.state & gtk.gdk.BUTTON2_MASK:
-            page_number = self.get_page_number_of_the_page_below_the_cursor(widget, event)
-            if page_number is not None:
-                self.emit("close_state_machine", page_number, event)
-                return True
 
     def on_expose_event(self, widget, event):
         if self.get_n_pages() > 0 and self.enable_add_button:
