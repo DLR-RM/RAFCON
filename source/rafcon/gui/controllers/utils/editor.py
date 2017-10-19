@@ -47,9 +47,6 @@ class EditorController(ExtendedController):
         if hasattr(view.get_buffer(), 'end_not_undoable_action'):
             view.get_buffer().end_not_undoable_action()
 
-    def register_adapters(self):
-        pass
-
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 

@@ -56,7 +56,7 @@ class MenuBarController(ExtendedController):
 
     :param rafcon.gui.models.state_machine_manager.StateMachineManagerModel state_machine_manager_model: The state
         machine manager model, holding data regarding state machines. Should be exchangeable.
-    :param rafcon.gui.views.menu_bar.MenuBarView view: The GTK View showing the Menu Bar and Menu Items.
+    :param rafcon.gui.views.main_window.MainWindowView view: The GTK View showing the Menu Bar and Menu Items.
     """
 
     def __init__(self, state_machine_manager_model, view, shortcut_manager, sm_execution_engine):
@@ -83,7 +83,7 @@ class MenuBarController(ExtendedController):
         self.full_screen_window.add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.right_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.left_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
-        self.main_window_view.console_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
+        self.main_window_view.console_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -272,10 +272,6 @@ class MenuBarController(ExtendedController):
         """
         for handler_id in self.handler_ids.iterkeys():
             self.view[handler_id].disconnect(self.handler_ids[handler_id])
-
-    def register_adapters(self):
-        """Adapters should be registered in this method call"""
-        pass
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions

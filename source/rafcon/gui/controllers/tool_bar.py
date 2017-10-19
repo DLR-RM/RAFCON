@@ -47,10 +47,6 @@ class ToolBarController(ExtendedController):
         self.view['button_refresh_selected'].connect('clicked', self.on_button_refresh_selected_clicked)
         self.view['button_refresh_libs'].connect('clicked', self.on_button_refresh_libs_clicked)
 
-    def register_adapters(self):
-        """Adapters should be registered in this method call"""
-        pass
-
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 

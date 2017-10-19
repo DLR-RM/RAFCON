@@ -4,19 +4,39 @@
 
 PTVERSION           = 2
 NAME                = rafcon 
-MAINTAINER          = Sebastian Brunner <sebastian.brunner@dlr.de>, Rico Belder <rico.belder@dlr.de>, Franz Steinmetz <franz.steinmetz@dlr.de>
-DESCRIPTION         = RMC awesome flow control -- This is a package to program and visualize complex robot tasks.
+MAINTAINER          = Sebastian Brunner <sebastian.brunner@dlr.de>,
+                      Rico Belder <rico.belder@dlr.de>,
+                      Franz Steinmetz <franz.steinmetz@dlr.de>
+DESCRIPTION         = Develop your robotic tasks using an intuitive graphical user interface
+
+  RAFCON (RMC awesome [or advanced] flow control tool) uses hierarchical state machines, featuring
+  concurrent state execution, to represent robot programs. It ships with a graphical user interface supporting the
+  creation of state machines and contains IDE like debugging mechanisms. Alternatively, state machines can
+  programmatically be generated using RAFCON's API.
+
 DOCUMENTATION       = https://rmintra01.robotic.dlr.de/wiki/RAFCON
 MANTIS_PROJECT      = DLR Flow-Control
 SUPPORTED_LANGUAGES = python
-DEPENDS = 
-DEPENDS.sled11*     = gtk_etc==0, gtk_etc_python==0, python-jsonconversion==0.2, python_yaml_configuration==0.0
-DEPENDS.osl*        = python-gtkmvc==1.99, python-gaphas==0.7, python-jsonconversion==0.2, python_yaml_configuration==0.0, sw.common.pango==1.40
+
+DEPENDS             =
+DEPENDS.sled11*     = gtk_etc==0,
+                      gtk_etc_python==0,
+                      python-jsonconversion==0.2,
+                      python_yaml_configuration==0.0
+DEPENDS.osl*        = python-gtkmvc==1.99,
+                      python-gaphas==0.7,
+                      python-jsonconversion==0.2,
+                      python_yaml_configuration==0.0,
+                      sw.common.pango==1.40
 
 ARCHS               = sled11-x86-gcc4.x, sled11-x86_64-gcc4.x, osl42-x86_64
 PYTHON_PATHS        = ${PKGROOT}/source
-ADDITIONAL_ENV.osl* = RAFCON_LIB_PATH=${PKGROOT}/share/libraries, RAFCON_CHECK_INSTALLATION=True, PATH=${PKGROOT}/bin:$${PATH}
-ADDITIONAL_ENV.sled11* = RAFCON_LIB_PATH=${PKGROOT}/share/libraries, RAFCON_CHECK_INSTALLATION=True, PATH=${PKGROOT}/bin:/opt/python/python2.7/bin:$${PATH}
+ADDITIONAL_ENV.osl* = RAFCON_LIB_PATH=${PKGROOT}/share/libraries,
+                      RAFCON_CHECK_INSTALLATION=True,
+                      PATH=${PKGROOT}/bin:$${PATH}
+ADDITIONAL_ENV.sled11* = RAFCON_LIB_PATH=${PKGROOT}/share/libraries,
+                         RAFCON_CHECK_INSTALLATION=True,
+                         PATH=${PKGROOT}/bin:/opt/python/python2.7/bin:$${PATH}
 
 [pre-install]
 python -m compileall -fq ./source/rafcon

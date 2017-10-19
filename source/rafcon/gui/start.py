@@ -174,6 +174,11 @@ def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_pa
 def setup_gui():
     # Create the GUI-View
     main_window_view = MainWindowView()
+
+    # set the gravity of the main window controller to static to ignore window manager decorations and get
+    # a correct position of the main window on the screen (else there are offsets for some window managers)
+    main_window_view.get_top_widget().set_gravity(gtk.gdk.GRAVITY_STATIC)
+
     sm_manager_model = gui_singletons.state_machine_manager_model
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
     return main_window_controller

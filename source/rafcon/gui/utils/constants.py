@@ -84,7 +84,7 @@ MAXIMUM_CHILD_TO_PARENT_STATE_SIZE_RATIO = 50.
 MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO = 8.
 
 WINDOW_SIZE = {'MAIN_WINDOW': (1800, 900), 'LEFT_BAR_WINDOW': (300, 800), 'RIGHT_BAR_WINDOW': (300, 800),
-               'CONSOLE_BAR_WINDOW': (800, 300)}
+               'CONSOLE_WINDOW': (800, 300)}
 
 PANE_ID = {'LEFT_BAR_DOCKED_POS': 'top_level_h_pane',
            'RIGHT_BAR_DOCKED_POS': 'right_h_pane',
@@ -93,9 +93,7 @@ PANE_ID = {'LEFT_BAR_DOCKED_POS': 'top_level_h_pane',
 
 # a mapping of runtime config values for the hidden status of all three main bars (left, right and console)
 # to hide functions (located in the main_window controller)
-WIDGET_HIDE_FUNCTIONS = {'LEFT_BAR_HIDDEN': 'on_left_bar_hide_clicked',
-                         'RIGHT_BAR_HIDDEN': 'on_right_bar_hide_clicked',
-                         'CONSOLE_HIDDEN': 'on_console_hide_clicked'}
+UNDOCKABLE_WINDOW_KEYS = ["LEFT_BAR", "RIGHT_BAR", "CONSOLE"]
 
 DEFAULT_PANE_POS = {'LEFT_BAR_DOCKED_POS': 300,
                     'RIGHT_BAR_DOCKED_POS': 1000,

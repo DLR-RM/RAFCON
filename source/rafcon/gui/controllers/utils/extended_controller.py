@@ -29,7 +29,7 @@ logger = log.get_logger(__name__)
 class ExtendedController(Controller):
     def __init__(self, model, view, spurious=False):
         self.__registered_models = set()
-        Controller.__init__(self, model, view, spurious=spurious)
+        super(ExtendedController, self).__init__(model, view, spurious=spurious)
         self.__action_registered_controllers = []
         self.__child_controllers = dict()
         self.__shortcut_manager = None
@@ -185,7 +185,7 @@ class ExtendedController(Controller):
     def relieve_model(self, model):
         """Do no longer observe the model
 
-        The model is also removed from the internal list of tracked models.
+        The model is also removed from the internal set of tracked models.
 
         :param gtkmvc.Model model: The model to be relieved
         """
@@ -195,10 +195,9 @@ class ExtendedController(Controller):
     def relieve_all_models(self):
         """Relieve all registered models
 
-        The method uses the list of registered models to relieve them.
+        The method uses the set of registered models to relieve them.
         """
-        models = [model for model in self.__registered_models]
-        map(self.relieve_model, models)
+        map(self.relieve_model, list(self.__registered_models))
         self.__registered_models.clear()
 
     def get_root_window(self):
