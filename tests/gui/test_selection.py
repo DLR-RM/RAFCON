@@ -261,7 +261,8 @@ def test_selection_reduction():
 
 def test_focus():
     selection = Selection()
-    signal_observer = SignalCounter(selection, "focus_signal")
+    focus_signal_observer = SignalCounter(selection, "focus_signal")
+    selection_signal_observer = SignalCounter(selection, "selection_changed_signal")
     states_m, outcomes_e_m, outcomes_h_m = get_models()
     root_state_m, execution_state_m, hierarchy_state_m, child_state_m = states_m
 
@@ -272,18 +273,21 @@ def test_focus():
     assert selection.focus is execution_state_m
     assert len(selection) == 1
     assert len(selection.states) == 1
-    assert signal_observer.count == 1
+    assert focus_signal_observer.count == 1
+    assert selection_signal_observer.count == 1
 
     # Set focus to same element
     selection.focus = execution_state_m
     assert selection.focus is execution_state_m
     assert len(selection) == 1
     assert len(selection.states) == 1
-    assert signal_observer.count == 2
+    assert focus_signal_observer.count == 2
+    assert selection_signal_observer.count == 1
 
     # Clear selection => causes focus to me removed
     selection.clear()
     assert selection.focus is None
     assert len(selection) == 0
     assert len(selection.states) == 0
-    assert signal_observer.count == 3
+    assert focus_signal_observer.count == 3
+    assert selection_signal_observer.count == 2

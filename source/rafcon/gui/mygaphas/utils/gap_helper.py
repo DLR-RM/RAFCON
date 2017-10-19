@@ -13,6 +13,7 @@
 
 from rafcon.gui.mygaphas.items.connection import ConnectionView
 from rafcon.utils import log
+import rafcon.gui.helpers.meta_data as gui_helper_meta_data
 logger = log.get_logger(__name__)
 
 
@@ -250,7 +251,10 @@ def add_transition_to_state(from_port, to_port):
         return False
 
     try:
-        responsible_parent_m.state.add_transition(from_state_id, from_outcome_id, to_state_id, to_outcome_id)
+        t_id = responsible_parent_m.state.add_transition(from_state_id, from_outcome_id, to_state_id, to_outcome_id)
+        if from_state_id == to_state_id:
+            gui_helper_meta_data.insert_self_transition_meta_data(responsible_parent_m.states[from_state_id], t_id,
+                                                                  combined_action=True)
         return True
     except (ValueError, AttributeError, TypeError) as e:
         logger.error("Transition couldn't be added: {0}".format(e))

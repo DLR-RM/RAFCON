@@ -25,16 +25,22 @@ class BasicTreeViewExample:
     def add_collapsed_key(self, parent, key):
         piter = self.treestore.append(parent, ["%s (%s)" % (self.items[key]['state_name'],self.items[key]['state_type']), str(key)])
 
+        returns = []
         if key in self.next_:
-            self.add_collapsed_key(parent, self.next_[key])
+            # self.add_collapsed_key(parent, self.next_[key])
+            returns.append((parent, self.next_[key]))
 
         if key in self.hierarchy:
-            self.add_collapsed_key(piter, self.hierarchy[key])
+            # self.add_collapsed_key(piter, self.hierarchy[key])
+            returns.append((piter, self.hierarchy[key]))
 
         if key in self.concurrent:
             for i, next_key in enumerate(self.concurrent[key]):
                 tmppiter = self.treestore.append(piter, [str(i), None])
-                self.add_collapsed_key(tmppiter, next_key)
+                # self.add_collapsed_key(tmppiter, next_key)
+                returns.append((tmppiter, next_key))
+
+        return returns
 
     def add_key(self, parent, key):
         piter = self.treestore.append(parent, [str(key)])
@@ -90,7 +96,15 @@ class BasicTreeViewExample:
         self.treestore = gtk.TreeStore(str, str)
 
         # we'll aidd some data now - 4 rows with 3 child rows each
-        self.add_collapsed_key(None, self.start['run_id'])
+        elements = [(None, self.start['run_id'])]
+        while True:
+            new_elements = []
+            for e in elements:
+                new_elements.extend(self.add_collapsed_key(e[0], e[1]))
+            if len(new_elements) == 0:
+                break
+            else:
+                elements = new_elements
 #        for parent in range(4):
 #            piter = self.treestore.append(None, ['parent %i' % parent])
 #            for child in range(3):
