@@ -352,17 +352,14 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
-        # print "GSME state_action_signal: ", info['arg'] if 'arg' in info else "XXX" + str(info)
         if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state',
                                                     'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
             if info['arg'].after is False:
                 self._complex_action = True
                 if info['arg'].action in ['group_states', 'paste', 'cut']:
                     self.observe_model(info['arg'].action_parent_m)
-                    # print "GSME observe: ", info['arg'].action_parent_m
                 else:
                     self.observe_model(info['arg'].affected_models[0])
-                    # print "GSME observe: ", info['arg'].affected_models[0]
 
                 # assert not hasattr(self.state_action_signal.__func__, "affected_models")
                 # assert not hasattr(self.state_action_signal.__func__, "target")
@@ -371,7 +368,6 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
-        # print "GSME action_signal: ", self.__class__.__name__, "action_signal check", info
         if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
                         info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut',
                                                'undo/redo']:
@@ -387,15 +383,11 @@ class GraphicalEditorController(ExtendedController):
 
         else:
             return
-        # print self.__class__.__name__, "action_signal ####", "\n", model, "\n", old_state_m, "\n", new_state_m, "\n"
 
         self._complex_action = False
         self.relieve_model(model)
 
-        # print "state_type_changed relieve observer"
         self.adapt_complex_action(old_state_m, new_state_m)
-
-        # print "GSME ACTION adapt to change"
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
