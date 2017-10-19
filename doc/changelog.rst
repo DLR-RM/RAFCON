@@ -38,6 +38,7 @@ Patch releases 0.11.\*
     - drag'n drop with focus can be enabled and disabled by using the gui config flag DRAG_N_DROP_WITH_FOCUS
     - graphical editor add way points around the state for self transitions as support for the user
     - refactor state machines editor tab click methods and small fixing
+    - better on double click focus by gaphas editor and now also triggered by state machine tree
 
 0.11.5
 """"""
