@@ -86,9 +86,6 @@ class PlusAddNotebook(gtk.Notebook):
     def do_emit(self, *args):
         self.emit(*args[1:])
 
-    def change_page(self, widget, new_page_number):
-        self.set_current_page(new_page_number)
-
     def on_button_release(self, widget, event):
         """ Emit an add_state_machine signal if a left click is performed on the drawn pix-buffer add button area and 
         emit a close_state_machine signal if a middle click is performed on a state machine tab-label.

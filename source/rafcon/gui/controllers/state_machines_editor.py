@@ -314,22 +314,18 @@ class StateMachinesEditorController(ExtendedController):
             set_tab_label_texts(label, self.tabs[sm_id]["state_machine_m"], False)
 
     def on_mouse_right_click(self, event, state_machine_m, result):
-        number_of_pages = self.view.notebook.get_n_pages()
+
         menu = gtk.Menu()
-        for p in range(number_of_pages):
-            page = self.view.notebook.get_nth_page(p)
-            eventbox_tab_label = self.view.notebook.get_tab_label(page)
-            text = eventbox_tab_label.tab_label.get_text()
-            menu_item = create_image_menu_item(text, constants.BUTTON_EXCHANGE,
-                                               callback=self.view.notebook.change_page, callback_args=[p])
+        for sm_id, sm_m in self.model.state_machines.iteritems():
+            menu_item = create_image_menu_item(sm_m.root_state.state.name, constants.BUTTON_EXCHANGE,
+                                               callback=self.change_selected_state_machine_id, callback_args=[sm_id])
             menu.append(menu_item)
 
         menu_item = create_image_menu_item("New State Machine", constants.BUTTON_ADD,
                                            callback=add_state_machine, callback_args=[])
         menu.append(menu_item)
 
-        page_number = self.view.notebook.get_current_page()
-        if page_number is not None:
+        if self.model.state_machines:
             menu_item = create_image_menu_item("Close State Machine", constants.BUTTON_CLOSE,
                                                callback=self.on_close_clicked,
                                                callback_args=[state_machine_m, None])
@@ -338,6 +334,9 @@ class StateMachinesEditorController(ExtendedController):
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
         return True
+
+    def change_selected_state_machine_id(self, widget, new_selected_state_machine_id):
+        self.model.selected_state_machine_id = new_selected_state_machine_id
 
     def on_close_clicked(self, event, state_machine_m, result, force=False):
         """Triggered when the close button of a state machine tab is clicked
