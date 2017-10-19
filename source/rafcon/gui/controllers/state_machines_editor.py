@@ -140,8 +140,7 @@ class StateMachinesEditorController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
-        self.view['notebook'].connect("add_state_machine", add_state_machine)
-        self.view['notebook'].connect("close_state_machine", self.close_state_machine)
+        self.view['notebook'].connect("add_clicked", add_state_machine)
         self.view['notebook'].connect('switch-page', self.on_switch_page)
 
         # Add all already open state machines

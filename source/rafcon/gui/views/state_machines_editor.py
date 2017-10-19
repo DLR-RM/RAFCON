@@ -16,7 +16,6 @@ import gobject
 from gtkmvc import View
 from rafcon.gui.utils import constants
 from rafcon.gui.config import global_gui_config as gui_config
-from rafcon.gui.helpers.label import create_image_menu_item
 
 
 class StateMachinesEditorView(View):
@@ -34,13 +33,7 @@ class StateMachinesEditorView(View):
         self.top = 'notebook'
 
 
-# gobject.signal_new("add_state_machine", gtk.VBox, gobject.SIGNAL_RUN_FIRST, None, (gtk.VBox,))
-# gobject.signal_new("switch-page", gtk.VBox, gobject.SIGNAL_RUN_LAST, None,
-#                    (gtk.Notebook, gobject.GPointer, gobject.TYPE_UINT))
-
-
-gobject.signal_new("add_state_machine", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, ())
-gobject.signal_new("close_state_machine", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, (int, gobject.TYPE_PYOBJECT))
+gobject.signal_new("add_clicked", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, ())
 
 
 class PlusAddNotebook(gtk.Notebook):
@@ -87,7 +80,7 @@ class PlusAddNotebook(gtk.Notebook):
         if pb_x - constants.ICON_MARGIN <= event.x <= right_row_end_x and \
                 pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN and \
                 event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
-            self.emit("add_state_machine")
+            self.emit("add_clicked")
             return True
 
     def do_emit(self, *args):
@@ -108,7 +101,7 @@ class PlusAddNotebook(gtk.Notebook):
         if pb_x - constants.ICON_MARGIN <= event.x <= pb_x + pb_width + constants.ICON_MARGIN and \
                 pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN \
                 and self._add_button_drawn and event.state & gtk.gdk.BUTTON1_MASK:
-            self.emit("add_state_machine")
+            self.emit("add_clicked")
             return True
 
     def on_expose_event(self, widget, event):
