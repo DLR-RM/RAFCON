@@ -28,18 +28,22 @@ Patch releases 0.11.\*
 
 - Bug Fixes:
 
-    - :issue:`427`
+    - :issue:`428` fix recursion problem in execution log viewer
+    - :issue:`427` Middle click on state machine tab label close wrong state machine
+    - :issue:`419` wrong outcome data in execution history
 
 - Improvements:
 
+    - :issue:`411` Allow outputting data from preempted states
     - drag'n drop with focus can be enabled and disabled by using the gui config flag DRAG_N_DROP_WITH_FOCUS
     - graphical editor add way points around the state for self transitions as support for the user
+    - refactor state machines editor tab click methods and small fixing
 
 0.11.5
 """"""
 
 - Bug Fixes:
-    - :issue:`421`
+    - :issue:`421` RAFCON does not remember window size after closing -> final part
 
 0.11.4
 """"""
@@ -57,31 +61,30 @@ Patch releases 0.11.\*
 
     - Refactoring of the selection
     - Unit tests for selection
-    - :issue:`411`
-    - :issue:`410`
-    - :issue:`403`
+    - :issue:`411` Allow outputting data from preempted states
+    - :issue:`410` Refactor selection
+    - :issue:`403` Incomes and outcomes cannot be differentiated visually
 
 - Bug Fixes:
 
     - Memory leak fixes
-    - :issue:`402`
-    - :issue:`417`
-    - :issue:`421`
+    - :issue:`402` Connections end in nowhere
+    - :issue:`417` ports of root state do not move with roots state
+    - :issue:`421` RAFCON does not remeber window size after closing -> first part
 
 0.11.3
 """"""
 
 - Improvements:
 
-    - :issue:`405`
-    - :issue:`404`
-    - :issue:`403`
+    - :issue:`405` Possibility to zoom in and out while drawing a connection
+    - :issue:`404` Possibility to scroll left and right in graphical editor
+    - :issue:`403` Incomes and outcomes cannot be differentiated visually
 
 - Bug Fixes:
 
-    - :issue:`412`
-    - :issue:`413`
-    - :issue:`406`
+    - :issue:`412` global variables cannot be removed
+    - :issue:`413` tree view controller error
 
 0.11.2
 """"""
