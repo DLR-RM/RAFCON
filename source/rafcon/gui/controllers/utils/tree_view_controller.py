@@ -353,8 +353,12 @@ class ListViewController(ExtendedController):
                     self._tree_selection.select_path(pthinfo[0])
                     return True
 
-        # Double click with left mouse button focuses the element
-        elif event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
+        elif event.type == gtk.gdk._2BUTTON_PRESS:
+            self._handle_double_click(event)
+
+    def _handle_double_click(self, event):
+        """ Double click with left mouse button focuses the element"""
+        if event.button == 1:  # Left mouse button
             path_info = self.tree_view.get_path_at_pos(int(event.x), int(event.y))
             if path_info:  # Valid entry was clicked on
                 path = path_info[0]

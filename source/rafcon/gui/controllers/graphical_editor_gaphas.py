@@ -265,13 +265,13 @@ class GraphicalEditorController(ExtendedController):
         HORIZONTAL = 0
         VERTICAL = 1
         if not isinstance(item, Item):
-            state = item.parent
+            state_v = item.parent
         elif not isinstance(item, StateView):
-            state = self.canvas.get_parent(item)
+            state_v = self.canvas.get_parent(item)
         else:
-            state = item
+            state_v = item
         viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
-        state_size = self.view.editor.get_matrix_i2v(item).transform_distance(state.width, state.height)
+        state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
         min_relative_size = min(viewport_size[i] / state_size[i] for i in [HORIZONTAL, VERTICAL])
 
         if min_relative_size != 1:
@@ -286,8 +286,8 @@ class GraphicalEditorController(ExtendedController):
             # bars)
             self.canvas.perform_update()
 
-        state_pos = self.view.editor.get_matrix_i2v(item).transform_point(0, 0)
-        state_size = self.view.editor.get_matrix_i2v(item).transform_distance(state.width, state.height)
+        state_pos = self.view.editor.get_matrix_i2v(state_v).transform_point(0, 0)
+        state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
         viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
 
         # Calculate offset around state so that the state is centered in the viewport
