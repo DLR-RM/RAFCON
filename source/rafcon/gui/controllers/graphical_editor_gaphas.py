@@ -67,6 +67,7 @@ class GraphicalEditorController(ExtendedController):
 
     _complex_action = False
     drag_motion_handler_id = None
+    focus_changed_handler_id = None
 
     def __init__(self, model, view):
         """Constructor"""
@@ -90,7 +91,7 @@ class GraphicalEditorController(ExtendedController):
         assert self.view == view
 
         self.view.connect('meta_data_changed', self._meta_data_changed)
-        self.view.editor.connect('focus-changed', self._move_focused_item_into_viewport)
+        self.focus_changed_handler_id = self.view.editor.connect('focus-changed', self._move_focused_item_into_viewport)
         self.view.editor.connect("drag-data-received", self.on_drag_data_received)
         self.drag_motion_handler_id = self.view.editor.connect("drag-motion", self.on_drag_motion)
 
@@ -168,7 +169,6 @@ class GraphicalEditorController(ExtendedController):
         state_v.model.set_meta_data_editor('rel_pos', motion.item.position)
         self.canvas.perform_update()
         self._meta_data_changed(None, state_v.model, 'append_to_last_change', True)
-        self.view.editor.no_focus_change = False
 
     @lock_state_machine
     def on_drag_motion(self, widget, context, x, y, time):
@@ -180,8 +180,6 @@ class GraphicalEditorController(ExtendedController):
         :param y: Integer: y-position of mouse
         :param time:
         """
-        if not rafcon.gui.singleton.global_gui_config.get_config_value('DRAG_N_DROP_WITH_FOCUS'):
-            self.view.editor.no_focus_change = True
         hovered_item = ItemFinder(self.view.editor).get_item_at_point((x, y))
         if isinstance(hovered_item, NameView):
             hovered_item = hovered_item.parent
@@ -192,7 +190,12 @@ class GraphicalEditorController(ExtendedController):
                 return
             if len(self.view.editor.selected_items) > 0:
                 self.view.editor.unselect_all()
+
+            if not rafcon.gui.singleton.global_gui_config.get_config_value('DRAG_N_DROP_WITH_FOCUS'):
+                self.view.editor.handler_block(self.focus_changed_handler_id)
             self.view.editor.focused_item = hovered_item
+            if not rafcon.gui.singleton.global_gui_config.get_config_value('DRAG_N_DROP_WITH_FOCUS'):
+                self.view.editor.handler_unblock(self.focus_changed_handler_id)
 
     def update_view(self, *args):
         self.canvas.update_root_items()
@@ -262,13 +265,13 @@ class GraphicalEditorController(ExtendedController):
         HORIZONTAL = 0
         VERTICAL = 1
         if not isinstance(item, Item):
-            state = item.parent
+            state_v = item.parent
         elif not isinstance(item, StateView):
-            state = self.canvas.get_parent(item)
+            state_v = self.canvas.get_parent(item)
         else:
-            state = item
+            state_v = item
         viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
-        state_size = self.view.editor.get_matrix_i2v(item).transform_distance(state.width, state.height)
+        state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
         min_relative_size = min(viewport_size[i] / state_size[i] for i in [HORIZONTAL, VERTICAL])
 
         if min_relative_size != 1:
@@ -283,8 +286,8 @@ class GraphicalEditorController(ExtendedController):
             # bars)
             self.canvas.perform_update()
 
-        state_pos = self.view.editor.get_matrix_i2v(item).transform_point(0, 0)
-        state_size = self.view.editor.get_matrix_i2v(item).transform_distance(state.width, state.height)
+        state_pos = self.view.editor.get_matrix_i2v(state_v).transform_point(0, 0)
+        state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
         viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
 
         # Calculate offset around state so that the state is centered in the viewport

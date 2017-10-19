@@ -438,22 +438,29 @@ class StateMachineTreeController(TreeViewController):
             return None, set()
 
     def mouse_click(self, widget, event=None):
-        # logger.info("press id: {0}, type: {1} goal: {2} {3} {4}"
-        #             "".format(event.button, gtk.gdk.BUTTON_PRESS, event.type == gtk.gdk._2BUTTON_PRESS,
-        #                       event.type == gtk.gdk.BUTTON_PRESS, event.button == 1))
-        (model, paths) = self.view.get_selection().get_selected_rows()
-        if paths and event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
-            state_model = model[paths[0]][self.MODEL_STORAGE_ID]
-            # logger.info("left double click event detected -> unfold state tree: {0}/{1}".format(model[row][self.TYPE_NAME_STORAGE_ID],
-            #                                                                                     model[row][self.NAME_STORAGE_ID]))
-            if self.view.row_expanded(paths[0]):
-                self.view.collapse_row(paths[0])
-            else:
-                if isinstance(state_model, ContainerStateModel) or \
-                        isinstance(state_model, LibraryStateModel) and self.show_content(state_model):
-                    self.view.expand_to_path(paths[0])
+        if event.type == gtk.gdk._2BUTTON_PRESS:
+            return self._handle_double_click(event)
 
-            return True
+    def _handle_double_click(self, event):
+        """ Double click with left mouse button focuses the state and toggles the collapse status"""
+        if event.button == 1:  # Left mouse button
+            path_info = self.tree_view.get_path_at_pos(int(event.x), int(event.y))
+            if path_info:  # Valid entry was clicked on
+                path = path_info[0]
+                iter = self.tree_store.get_iter(path)
+                state_model = self.tree_store.get_value(iter, self.MODEL_STORAGE_ID)
+
+                # Set focus to StateModel
+                selection = self._selected_sm_model.selection
+                selection.focus = state_model
+
+                # Toggle collapse status if applicable for this kind of state
+                if self.view.row_expanded(path):
+                    self.view.collapse_row(path)
+                else:
+                    if isinstance(state_model, ContainerStateModel) or \
+                                    isinstance(state_model, LibraryStateModel) and self.show_content(state_model):
+                        self.view.expand_to_path(path)
 
     @TreeViewController.observe("sm_selection_changed_signal", signal=True)
     def assign_notification_selection(self, state_machine_m, signal_name, signal_msg):
