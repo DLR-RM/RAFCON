@@ -61,6 +61,7 @@ def new_state_machine():
     root_state = HierarchyState("new root state")
     state_machine = StateMachine(root_state)
     state_machine_manager.add_state_machine(state_machine)
+
     state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
     state_machine_m = state_machine_manager_model.get_selected_state_machine_model()
     # If idle_add isn't used, gaphas crashes, as the view is not ready
@@ -71,7 +72,7 @@ def new_state_machine():
         editor_controller.view.editor.grab_focus()
 
     # The editor parameter of view is created belated, thus we have to use idle_add again
-    glib.idle_add(grab_focus)
+    glib.idle_add(grab_focus, priority=glib.PRIORITY_LOW)
 
 
 def open_state_machine(path=None, recent_opened_notification=False):
