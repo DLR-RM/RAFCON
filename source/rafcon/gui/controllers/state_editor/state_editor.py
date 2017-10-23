@@ -33,6 +33,7 @@ from rafcon.gui.controllers.state_editor.scoped_variable_list import ScopedVaria
 from rafcon.gui.controllers.state_editor.source_editor import SourceEditorController
 from rafcon.gui.controllers.state_editor.transitions import StateTransitionsEditorController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.controllers.state_editor.semantic_data_editor import SemanticDataEditorController
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, LibraryStateModel
 from rafcon.gui.views.state_editor.state_editor import StateEditorView
 
@@ -75,6 +76,7 @@ class StateEditorController(ExtendedController):
         if not isinstance(model, ContainerStateModel) and not isinstance(model, LibraryStateModel) or \
                 isinstance(model, LibraryStateModel) and not isinstance(model.state_copy, ContainerStateModel):
             self.add_controller('source_ctrl', SourceEditorController(sv_and_source_script_state_m, view.source_view))
+        self.add_controller('semantic_data_ctrl', SemanticDataEditorController(model, view.semantic_data_view))
 
     def register_view(self, view):
         """Called when the View was registered

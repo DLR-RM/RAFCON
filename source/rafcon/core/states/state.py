@@ -26,6 +26,7 @@ import os
 import threading
 from __builtin__ import staticmethod
 from weakref import ref
+import copy
 
 from enum import Enum
 from gtkmvc import Observable
@@ -43,6 +44,7 @@ from rafcon.utils import log
 from rafcon.utils import multi_event
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils.hashable import Hashable
+from rafcon.utils.vividict import Vividict
 from rafcon.core.decorators import lock_state_machine
 
 logger = log.get_logger(__name__)
@@ -106,6 +108,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         self.thread = None
         self._run_id = None
+
+        self._semantic_data = Vividict()
 
         if name is None:
             name = "Untitled"
@@ -850,6 +854,57 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         return 0
 
+    def get_semantic_data(self, path_as_list):
+        """ Retrieves an entry of the semantic data.
+
+        :param path_as_list: The path in the vividict to retrieve the value from
+        :return:
+        """
+        target_dict = self.semantic_data
+        for element in path_as_list[0:len(path_as_list) - 1]:
+            target_dict = target_dict[element]
+
+        return target_dict[path_as_list[len(path_as_list) - 1]]
+
+    # @Observable.observed
+    def add_semantic_data(self, path_as_list, value, key=None):
+        """ Adds a semantic data entry.
+
+        :param path_as_list: The path in the vividict to enter the value
+        :param value: The value of the new entry.
+        :param key: The key of the new entry.
+        :return:
+        """
+        final_dict = copy.deepcopy(self.semantic_data)
+        target_dict = final_dict
+        for element in path_as_list[0:len(path_as_list)]:
+            target_dict = target_dict[element]
+        # print target_dict
+        # print dict_path_as_list[len(dict_path_as_list)-1]
+        if key:
+            target_dict[key] = value
+        else:
+            target_dict[generate_semantic_data_key(target_dict.keys())] = value
+        # overwriting the whole dict is necessary for modification history support
+        self.semantic_data = final_dict
+
+    # @Observable.observed
+    def remove_semantic_data(self, path_as_list):
+        """ Removes a entry from the semantic data vividict.
+
+        :param path_as_list: The path of the vividict to delete.
+        :return:
+        """
+        final_dict = copy.deepcopy(self.semantic_data)
+        target_dict = final_dict
+        for element in path_as_list[0:len(path_as_list) - 1]:
+            target_dict = target_dict[element]
+        # print target_dict
+        # print dict_path_as_list[len(dict_path_as_list)-1]
+        del target_dict[path_as_list[len(path_as_list) - 1]]
+        # overwriting the whole dict is necessary for modification history support
+        self.semantic_data = final_dict
+
     @lock_state_machine
     def destruct(self):
         """ Removes all the state elements.
@@ -1352,6 +1407,24 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         """
         return self._run_id
+
+    @property
+    def semantic_data(self):
+        """Property for the _semantic_data field
+
+        """
+        return self._semantic_data
+
+    @semantic_data.setter
+    @lock_state_machine
+    @Observable.observed
+    def semantic_data(self, semantic_data):
+        if not (isinstance(semantic_data, Vividict) or isinstance(semantic_data, dict)):
+            raise TypeError("semantic_data must be of type Vividict or dict")
+        if isinstance(semantic_data, dict):
+            self._semantic_data = Vividict(semantic_data)
+        else:
+            self._semantic_data = semantic_data
 
 
 StateType = Enum('STATE_TYPE', 'EXECUTION HIERARCHY BARRIER_CONCURRENCY PREEMPTION_CONCURRENCY LIBRARY DECIDER_STATE')
