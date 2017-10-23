@@ -83,9 +83,9 @@ def generate_semantic_data_key(used_semantic_keys):
     semantic_data_id_counter = -1
     while True:
         semantic_data_id_counter += 1
-        if "Semantic Data Key " + str(semantic_data_id_counter) not in used_semantic_keys:
+        if "semantic data key " + str(semantic_data_id_counter) not in used_semantic_keys:
             break
-    return "Semantic Data Key " + str(semantic_data_id_counter)
+    return "semantic data key " + str(semantic_data_id_counter)
 
 
 def generate_script_id():
