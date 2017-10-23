@@ -40,7 +40,6 @@ class SemanticDataEditorController(ExtendedController):
 
         self.tree_store = None
         self.set_tree_store()
-        # self.initialize_data()
         self.reload_tree_store()
         self.semantic_data_counter = 0
 
@@ -54,8 +53,6 @@ class SemanticDataEditorController(ExtendedController):
         :param info: all infos regarding the observable
         :return:
         """
-        # print "checkpoint 1"
-        # print self.model.state.semantic_data
         if "semantic_data" in info["method_name"]:
             self.reload_tree_store()
 
@@ -70,21 +67,6 @@ class SemanticDataEditorController(ExtendedController):
         view['new_entry'].connect('clicked', self.on_add, False)
         view['new_dict_entry'].connect('clicked', self.on_add, True)
         view['delete_entry'].connect('clicked', self.on_remove)
-
-    def initialize_data(self):
-        """ Sets some dummy values into the dict. Only for debugging purposes
-
-        :return:
-        """
-        data = Vividict()
-        data["key 1"] = "value 1"
-        data["key 2"] = "value 2"
-        data["key 3"] = "value 3"
-        data["dict 1"] = dict()
-        data["dict 1"]["dkey 1"] = "dvalue 1"
-        data["dict 1"]["dkey 2"] = "dvalue 2"
-        data["dict 2"] = dict()
-        self.model.state.semantic_data = data
 
     def set_tree_store(self):
         """ Creates the tree store for the treeview which stores the entrys of the semantic data of a state
