@@ -71,7 +71,7 @@ def change_semantic_data_values():
     assert len(root_state.semantic_data.keys()) == 5
 
     # test add dictionary entry in second hierarchy
-    tree_test_path = [1]
+    tree_test_path = [0]
     assert len(root_state.semantic_data["dict 1"].keys()) == 2
     semantic_data_controller.tree_view.get_selection().select_path(tuple(tree_test_path))
     semantic_data_controller.on_add(None, False)
