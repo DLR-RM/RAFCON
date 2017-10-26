@@ -12,6 +12,8 @@ import gtk
 import copy
 from gtkmvc import ModelMT
 
+from rafcon.core.id_generator import generate_semantic_data_key
+
 from rafcon.gui.controllers.utils.tree_view_controller import TreeViewController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models import AbstractStateModel
@@ -116,10 +118,16 @@ class SemanticDataEditorController(ExtendedController):
             if not selection_is_dict:
                 path = path[0:-1]
             dict_path_as_list = self.get_dict_path_from_tree_path_as_list(path)
-            self.model.state.add_semantic_data(dict_path_as_list, value)
+            # generate key
+            target_dict = self.model.state.semantic_data
+            for element in dict_path_as_list:
+                target_dict = target_dict[element]
+            new_key_string = generate_semantic_data_key(target_dict.keys())
+            self.model.state.add_semantic_data(dict_path_as_list, value, new_key_string)
             self.reload_tree_store()
         else:
-            self.model.state.add_semantic_data("", value)
+            new_key_string = generate_semantic_data_key(self.model.state.semantic_data.keys())
+            self.model.state.add_semantic_data("", value, new_key_string)
             self.reload_tree_store()
         # TODO: jump with selection to new element
         # self.tree_view.get_selection().select_iter(treeiter)
@@ -214,6 +222,13 @@ class SemanticDataEditorController(ExtendedController):
         dict_path = self.get_dict_path_from_tree_path_as_list(tree_store_path)
         old_value = self.model.state.get_semantic_data(dict_path)
         self.model.state.remove_semantic_data(dict_path)
+
+        if new_key_string == "":
+            target_dict = self.model.state.semantic_data
+            for element in dict_path[0:-1]:
+                target_dict = target_dict[element]
+            new_key_string = generate_semantic_data_key(target_dict.keys())
+
         self.model.state.add_semantic_data(dict_path[0:-1], old_value, key=new_key_string)
         self.reload_tree_store()
 

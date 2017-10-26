@@ -867,7 +867,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return target_dict[path_as_list[-1]]
 
     # @Observable.observed
-    def add_semantic_data(self, path_as_list, value, key=None):
+    def add_semantic_data(self, path_as_list, value, key):
         """ Adds a semantic data entry.
 
         :param path_as_list: The path in the vividict to enter the value
@@ -881,11 +881,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             target_dict = target_dict[element]
         # print target_dict
         # print dict_path_as_list[len(dict_path_as_list)-1]
-        if key:
-            assert isinstance(key, basestring)
-            target_dict[key] = value
-        else:
-            target_dict[generate_semantic_data_key(target_dict.keys())] = value
+        assert isinstance(key, basestring)
+        target_dict[key] = value
         # overwriting the whole dict is necessary for modification history support
         self.semantic_data = final_dict
 
