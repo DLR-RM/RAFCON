@@ -861,10 +861,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :return:
         """
         target_dict = self.semantic_data
-        for element in path_as_list[0:len(path_as_list) - 1]:
+        for element in path_as_list[0:-1]:
             target_dict = target_dict[element]
 
-        return target_dict[path_as_list[len(path_as_list) - 1]]
+        return target_dict[path_as_list[-1]]
 
     # @Observable.observed
     def add_semantic_data(self, path_as_list, value, key=None):
@@ -877,11 +877,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         final_dict = copy.deepcopy(self.semantic_data)
         target_dict = final_dict
-        for element in path_as_list[0:len(path_as_list)]:
+        for element in path_as_list:
             target_dict = target_dict[element]
         # print target_dict
         # print dict_path_as_list[len(dict_path_as_list)-1]
         if key:
+            assert isinstance(key, basestring)
             target_dict[key] = value
         else:
             target_dict[generate_semantic_data_key(target_dict.keys())] = value
@@ -897,11 +898,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         final_dict = copy.deepcopy(self.semantic_data)
         target_dict = final_dict
-        for element in path_as_list[0:len(path_as_list) - 1]:
+        for element in path_as_list[0:-1]:
             target_dict = target_dict[element]
         # print target_dict
         # print dict_path_as_list[len(dict_path_as_list)-1]
-        del target_dict[path_as_list[len(path_as_list) - 1]]
+        del target_dict[path_as_list[-1]]
         # overwriting the whole dict is necessary for modification history support
         self.semantic_data = final_dict
 
@@ -1419,7 +1420,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     @lock_state_machine
     @Observable.observed
     def semantic_data(self, semantic_data):
-        if not (isinstance(semantic_data, Vividict) or isinstance(semantic_data, dict)):
+        if not isinstance(semantic_data, dict):
             raise TypeError("semantic_data must be of type Vividict or dict")
         if isinstance(semantic_data, dict):
             self._semantic_data = Vividict(semantic_data)
