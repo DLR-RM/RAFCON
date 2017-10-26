@@ -43,7 +43,7 @@ class SemanticDataEditorController(ExtendedController):
         self.reload_tree_store()
         self.semantic_data_counter = 0
 
-    @ModelMT.observe("state", after=True, before=True)
+    @ModelMT.observe("state", after=True)
     def model_changed(self, model, prop_name, info):
         """ This functions listens to all changes regarding the semantic_data field of the state and updates the
         tree store.
@@ -114,7 +114,7 @@ class SemanticDataEditorController(ExtendedController):
         if treeiter:
             selection_is_dict = self.tree_store.get_value(treeiter, 2)
             if not selection_is_dict:
-                path = path[0:len(path)-1]
+                path = path[0:-1]
             dict_path_as_list = self.get_dict_path_from_tree_path_as_list(path)
             self.model.state.add_semantic_data(dict_path_as_list, value)
             self.reload_tree_store()
@@ -146,7 +146,7 @@ class SemanticDataEditorController(ExtendedController):
         dict_path = list()
         while len(tmp_path) > 0:
             dict_path.insert(0, self.get_key_of_path(tmp_path))
-            tmp_path = tmp_path[0:len(tmp_path) - 1]
+            tmp_path = tmp_path[0:-1]
         return dict_path
 
     def on_remove(self, widget):
@@ -214,7 +214,7 @@ class SemanticDataEditorController(ExtendedController):
         dict_path = self.get_dict_path_from_tree_path_as_list(tree_store_path)
         old_value = self.model.state.get_semantic_data(dict_path)
         self.model.state.remove_semantic_data(dict_path)
-        self.model.state.add_semantic_data(dict_path[0:len(dict_path) - 1], old_value, key=new_key_string)
+        self.model.state.add_semantic_data(dict_path[0:-1], old_value, key=new_key_string)
         self.reload_tree_store()
 
     def value_edited(self, renderer, path, new_value_str):
@@ -227,6 +227,5 @@ class SemanticDataEditorController(ExtendedController):
         """
         tree_store_path = self.craete_tree_store_path_from_key_string(path)
         dict_path = self.get_dict_path_from_tree_path_as_list(tree_store_path)
-        self.model.state.add_semantic_data(dict_path[0:len(dict_path) - 1],
-                                           new_value_str, key=dict_path[len(dict_path) - 1])
+        self.model.state.add_semantic_data(dict_path[0:-1], new_value_str, key=dict_path[-1])
         self.reload_tree_store()
