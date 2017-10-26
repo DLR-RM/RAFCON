@@ -229,7 +229,7 @@ def save_semantic_data_for_state(state, state_path_full):
 
     try:
         storage_utils.write_dict_to_json(state.semantic_data, destination_script_file)
-    except Exception:
+    except IOError:
         logger.exception("Storing of semantic data for state {0} failed! Destination path: {1}".
                          format(state.get_path(), destination_script_file))
         raise
