@@ -243,7 +243,6 @@ class SemanticDataEditorController(ExtendedController):
         tree_store_path = self.craete_tree_store_path_from_key_string(path)
         dict_path = self.get_dict_path_from_tree_path_as_list(tree_store_path)
         old_value = self.model.state.get_semantic_data(dict_path)
-        print old_value
         if isinstance(old_value, dict) and new_value_str == "":
             # do not "delete" the old dict in the case the value field of a dict entry is focused an then unfocused
             return
