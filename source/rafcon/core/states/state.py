@@ -857,51 +857,47 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def get_semantic_data(self, path_as_list):
         """ Retrieves an entry of the semantic data.
 
-        :param path_as_list: The path in the vividict to retrieve the value from
+        :param list path_as_list: The path in the vividict to retrieve the value from
         :return:
         """
         target_dict = self.semantic_data
-        for element in path_as_list[0:-1]:
-            target_dict = target_dict[element]
+        for path_element in path_as_list:
+            if path_element in target_dict:
+                target_dict = target_dict[path_element]
+            else:
+                raise KeyError("The state with name {1} and id {2} holds no semantic data with path {0}."
+                               "".format(path_as_list[:path_as_list.index(path_element) + 1], self.name, self.state_id))
 
-        return target_dict[path_as_list[-1]]
+        return target_dict
 
-    # @Observable.observed
+    @Observable.observed
     def add_semantic_data(self, path_as_list, value, key):
         """ Adds a semantic data entry.
 
-        :param path_as_list: The path in the vividict to enter the value
+        :param list path_as_list: The path in the vividict to enter the value
         :param value: The value of the new entry.
         :param key: The key of the new entry.
         :return:
         """
-        final_dict = copy.deepcopy(self.semantic_data)
-        target_dict = final_dict
-        for element in path_as_list:
-            target_dict = target_dict[element]
-        # print target_dict
-        # print dict_path_as_list[len(dict_path_as_list)-1]
         assert isinstance(key, basestring)
+        target_dict = self.get_semantic_data(path_as_list)
         target_dict[key] = value
-        # overwriting the whole dict is necessary for modification history support
-        self.semantic_data = final_dict
+        return path_as_list + [key]
 
-    # @Observable.observed
+    @Observable.observed
     def remove_semantic_data(self, path_as_list):
         """ Removes a entry from the semantic data vividict.
 
-        :param path_as_list: The path of the vividict to delete.
-        :return:
+        :param list path_as_list: The path of the vividict to delete.
+        :return: removed value or dict
         """
-        final_dict = copy.deepcopy(self.semantic_data)
-        target_dict = final_dict
-        for element in path_as_list[0:-1]:
-            target_dict = target_dict[element]
-        # print target_dict
-        # print dict_path_as_list[len(dict_path_as_list)-1]
+        if len(path_as_list) == 0:
+            raise AttributeError("The argument path_as_list is empty but but the method remove_semantic_data needs a "
+                                 "valid path to remove a vividict item.")
+        target_dict = self.get_semantic_data(path_as_list[0:-1])
+        removed_element = target_dict[path_as_list[-1]]
         del target_dict[path_as_list[-1]]
-        # overwriting the whole dict is necessary for modification history support
-        self.semantic_data = final_dict
+        return removed_element
 
     @lock_state_machine
     def destruct(self):

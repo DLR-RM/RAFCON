@@ -1456,7 +1456,7 @@ class StateAction(Action):
                              'input_data_port_runtime_values', 'output_data_port_runtime_values',
                              'use_runtime_value_input_data_ports', 'use_runtime_value_output_data_ports',
                              'group_states', 'ungroup_state', 'substitute_state', 'paste', 'cut',
-                             'semantic_data'
+                             'semantic_data', 'add_semantic_data', 'remove_semantic_data'
                              ]
     possible_args = ['name', 'description', 'script_text', 'start_state_id',  # ContainerState
                      'library_name', 'library_path', 'version', 'state_copy',  # LibraryState
@@ -1505,6 +1505,8 @@ class StateAction(Action):
             self.description_diff = '\n'.join(diff)
         else:
             self.description_diff = None
+        if 'semantic_data' in overview['method_name'][-1]:
+            self.action_type = 'semantic_data'
 
     def as_dict(self):
         d = Action.as_dict(self)
