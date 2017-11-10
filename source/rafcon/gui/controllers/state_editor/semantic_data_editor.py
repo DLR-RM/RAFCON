@@ -9,7 +9,6 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import gtk
-import copy
 from gtkmvc import ModelMT
 
 from rafcon.core.id_generator import generate_semantic_data_key
@@ -18,6 +17,8 @@ from rafcon.gui.controllers.utils.tree_view_controller import TreeViewController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models import AbstractStateModel
 from rafcon.gui.views.state_editor.semantic_data_editor import SemanticDataEditorView
+from rafcon.gui.helpers.label import react_to_event, is_event_of_key_string
+from functools import partial
 
 from rafcon.utils import log
 from rafcon.utils.vividict import Vividict
@@ -58,11 +59,17 @@ class SemanticDataEditorController(ExtendedController):
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
 
         :param rafcon.gui.views.state_editor.semantic_data_editor.SemanticDataEditorView view: An view to show all
-                semantic data of a state
+            semantic data of a state
         """
         view['new_entry'].connect('clicked', self.on_add, False)
         view['new_dict_entry'].connect('clicked', self.on_add, True)
         view['delete_entry'].connect('clicked', self.on_remove)
+
+    def register_actions(self, shortcut_manager):
+        shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)
+        shortcut_manager.add_callback_for_action("add", self.add_action_callback)
+        shortcut_manager.add_callback_for_action("add_hierarchy_state", partial(self.add_action_callback, a_dict=True))
+        # TODO integrate into clipboard with cut, copy and paste
 
     @ModelMT.observe("state", after=True)
     def model_changed(self, model, prop_name, info):
@@ -142,6 +149,15 @@ class SemanticDataEditorController(ExtendedController):
         logger.debug("Added new semantic data entry!")
         return True
 
+    def add_action_callback(self, key_value, modifier_mask, a_dict=False):
+        """Callback method for add action"""
+        # TODO integrate with active entry widget -> better refactor tree view controllers to do so.
+        if react_to_event(self.view, self.tree_view, event=(key_value, modifier_mask)):  # and self.active_entry_widget is None:
+            self.on_add(None, a_dict)
+            return True
+
+    # TODO add right click menu for more control e.g. insert of value element on root level if there are only dict values
+
     def get_key_of_path(self, path):
         """ Gets the key entry of a tree store path
 
@@ -158,10 +174,12 @@ class SemanticDataEditorController(ExtendedController):
         :return:
         """
         tmp_path = path
+        print tmp_path
         dict_path = list()
         while len(tmp_path) > 0:
             dict_path.insert(0, self.get_key_of_path(tmp_path))
             tmp_path = tmp_path[0:-1]
+            print tmp_path
         return dict_path
 
     def on_remove(self, widget):
@@ -178,6 +196,18 @@ class SemanticDataEditorController(ExtendedController):
             self.model.state.remove_semantic_data(dict_path_as_list)
             self.reload_tree_store_data()
         return True
+
+    def remove_action_callback(self, *event):
+        """Callback method for remove action
+
+        The method checks whether a shortcut ('Delete') is in the gui config model which shadow the delete functionality
+        of maybe active a entry widget. If a entry widget is active the remove callback return with None.
+        """
+        # TODO integrate with active entry widget -> better refactor tree view controllers to do so.
+        if react_to_event(self.view, self.tree_view, event):  # and \
+            #    not (self.active_entry_widget and not is_event_of_key_string(event, 'Delete')):
+            self.on_remove(None)
+            return True
 
     def add_items_to_tree_iter(self, input_dict, treeiter):
         """ Adds all values of the input dict to self.tree_store
