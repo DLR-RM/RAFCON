@@ -31,6 +31,9 @@ class SemanticDataEditorController(ExtendedController):
     """ A controller class to visualize and edit the semantic data of a state
 
     """
+    KEY_STORAGE_ID = 0
+    VALUE_STORAGE_ID = 1
+    IS_DICT_STORAGE_ID = 2
 
     def __init__(self, model, view):
         """Constructor
@@ -40,23 +43,14 @@ class SemanticDataEditorController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         self.tree_view = view["semantic_data_tree_view"]
 
-        self.tree_store = None
-        self.set_tree_store()
-        self.reload_tree_store()
+        # prepare view -> can be moved into view
+        self.set_tree_view_columns()
+
+        # define tree store with the values in [key, value Is Dict]
+        self.tree_store = gtk.TreeStore(str, str, bool)
+        self.tree_view.set_model(self.tree_store)
+        self.reload_tree_store_data()
         self.semantic_data_counter = 0
-
-    @ModelMT.observe("state", after=True)
-    def model_changed(self, model, prop_name, info):
-        """ This functions listens to all changes regarding the semantic_data field of the state and updates the
-        tree store.
-
-        :param model: the state model
-        :param prop_name: the changed property
-        :param info: all infos regarding the observable
-        :return:
-        """
-        if "semantic_data" in info["method_name"]:
-            self.reload_tree_store()
 
     def register_view(self, view):
         """Called when the View was registered
@@ -70,23 +64,36 @@ class SemanticDataEditorController(ExtendedController):
         view['new_dict_entry'].connect('clicked', self.on_add, True)
         view['delete_entry'].connect('clicked', self.on_remove)
 
-    def set_tree_store(self):
+    @ModelMT.observe("state", after=True)
+    def model_changed(self, model, prop_name, info):
+        """ This functions listens to all changes regarding the semantic_data field of the state and updates the
+        tree store.
+
+        :param model: the state model
+        :param prop_name: the changed property
+        :param info: all infos regarding the observable
+        :return:
+        """
+        if "semantic_data" in info["method_name"]:
+            self.reload_tree_store_data()
+
+    def set_tree_view_columns(self):
         """ Creates the tree store for the treeview which stores the entrys of the semantic data of a state
 
         :return:
         """
         key_renderer = gtk.CellRendererText()
         key_renderer.set_property('editable', True)
-        col = gtk.TreeViewColumn('Key', key_renderer, text=0)
+        col = gtk.TreeViewColumn('Key', key_renderer, text=self.KEY_STORAGE_ID)
         self.tree_view.append_column(col)
 
         value_renderer = gtk.CellRendererText()
         value_renderer.set_property('editable', True)
-        col = gtk.TreeViewColumn('Value', value_renderer, text=1)
+        col = gtk.TreeViewColumn('Value', value_renderer, text=self.VALUE_STORAGE_ID)
         self.tree_view.append_column(col)
 
         is_dict_renderer = gtk.CellRendererText()
-        col = gtk.TreeViewColumn('Is Dict', is_dict_renderer, text=2)
+        col = gtk.TreeViewColumn('Is Dict', is_dict_renderer, text=self.IS_DICT_STORAGE_ID)
         self.tree_view.append_column(col)
 
         key_renderer.connect('edited', self.key_edited)
@@ -114,7 +121,7 @@ class SemanticDataEditorController(ExtendedController):
         treeiter, path = self.get_selected_object()
         value = dict() if new_dict else "New Value"
         if treeiter:
-            selection_is_dict = self.tree_store.get_value(treeiter, 2)
+            selection_is_dict = self.tree_store.get_value(treeiter, self.IS_DICT_STORAGE_ID)
             if not selection_is_dict:
                 path = path[0:-1]
             dict_path_as_list = self.get_dict_path_from_tree_path_as_list(path)
@@ -124,11 +131,11 @@ class SemanticDataEditorController(ExtendedController):
                 target_dict = target_dict[element]
             new_key_string = generate_semantic_data_key(target_dict.keys())
             self.model.state.add_semantic_data(dict_path_as_list, value, new_key_string)
-            self.reload_tree_store()
+            self.reload_tree_store_data()
         else:
             new_key_string = generate_semantic_data_key(self.model.state.semantic_data.keys())
             self.model.state.add_semantic_data("", value, new_key_string)
-            self.reload_tree_store()
+            self.reload_tree_store_data()
         # TODO: jump with selection to new element
         # self.tree_view.get_selection().select_iter(treeiter)
         # self.select_entry(meta_name)
@@ -142,12 +149,12 @@ class SemanticDataEditorController(ExtendedController):
         :return:
         """
         treeiter = self.tree_store.get_iter(path)
-        return self.tree_store.get_value(treeiter, 0)
+        return self.tree_store.get_value(treeiter, self.KEY_STORAGE_ID)
 
     def get_dict_path_from_tree_path_as_list(self, path):
         """ Gets a key list of a tree store path. This key list can be used to access a vividict.
 
-        :param path: The tree store path
+        :param tuple path: The tree store path
         :return:
         """
         tmp_path = path
@@ -169,7 +176,7 @@ class SemanticDataEditorController(ExtendedController):
             dict_path_as_list = self.get_dict_path_from_tree_path_as_list(path)
             logger.debug("Deleting semantic data entry with name {}!".format(dict_path_as_list[-1]))
             self.model.state.remove_semantic_data(dict_path_as_list)
-            self.reload_tree_store()
+            self.reload_tree_store_data()
         return True
 
     def add_items_to_tree_iter(self, input_dict, treeiter):
@@ -186,27 +193,24 @@ class SemanticDataEditorController(ExtendedController):
             else:
                 self.tree_store.append(treeiter, [key, value, False])
 
-    def reload_tree_store(self):
+    def reload_tree_store_data(self):
         """ Reloads the data of the tree store
 
         :return:
         """
-        self.tree_store = gtk.TreeStore(str, str, bool)
-        self.tree_view.set_model(self.tree_store)
+        self.tree_store.clear()
         self.add_items_to_tree_iter(self.model.state.semantic_data, None)
         self.tree_view.expand_all()
 
-    def craete_tree_store_path_from_key_string(self, path):
+    @staticmethod
+    def create_tree_store_path_from_key_string(path):
         """ Creates a tree store path from a path string
 
-        :param path: The input path string
+        :param str path: The input path string
+        :rtype: tuple
         :return:
         """
-        path_as_string_list = path.split(":")
-        path_as_int_list = []
-        for elem in path_as_string_list:
-            path_as_int_list.append(int(elem))
-        return tuple(path_as_int_list)
+        return (int(path_elem_str) for path_elem_str in path.split(":"))
 
     def key_edited(self, renderer, path, new_key_string):
         """ Edits the key of a semantic data entry
@@ -218,7 +222,7 @@ class SemanticDataEditorController(ExtendedController):
         """
         # treeiter = self.tree_store.get_iter(path)
         # self.tree_store.set_value(treeiter, 0, new_value_str)
-        tree_store_path = self.craete_tree_store_path_from_key_string(path)
+        tree_store_path = self.create_tree_store_path_from_key_string(path)
         dict_path = self.get_dict_path_from_tree_path_as_list(tree_store_path)
         old_value = self.model.state.get_semantic_data(dict_path)
         self.model.state.remove_semantic_data(dict_path)
@@ -230,7 +234,7 @@ class SemanticDataEditorController(ExtendedController):
             new_key_string = generate_semantic_data_key(target_dict.keys())
 
         self.model.state.add_semantic_data(dict_path[0:-1], old_value, key=new_key_string)
-        self.reload_tree_store()
+        self.reload_tree_store_data()
 
     def value_edited(self, renderer, path, new_value_str):
         """ Adds the value of the semantic data entry
@@ -240,11 +244,11 @@ class SemanticDataEditorController(ExtendedController):
         :param new_value_str: The new value of the target cell
         :return:
         """
-        tree_store_path = self.craete_tree_store_path_from_key_string(path)
+        tree_store_path = self.create_tree_store_path_from_key_string(path)
         dict_path = self.get_dict_path_from_tree_path_as_list(tree_store_path)
         old_value = self.model.state.get_semantic_data(dict_path)
         if isinstance(old_value, dict) and new_value_str == "":
             # do not "delete" the old dict in the case the value field of a dict entry is focused an then unfocused
             return
         self.model.state.add_semantic_data(dict_path[0:-1], new_value_str, key=dict_path[-1])
-        self.reload_tree_store()
+        self.reload_tree_store_data()
