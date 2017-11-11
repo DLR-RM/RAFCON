@@ -26,9 +26,7 @@ class SemanticDataEditorView(View):
 
     def __init__(self):
         super(SemanticDataEditorView, self).__init__()
-
+        self.scrollbar_widget = self['semantic_data_scroller']
         self['delete_entry'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['new_dict_entry'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['new_entry'].set_border_width(constants.BUTTON_BORDER_WIDTH)
-
-
