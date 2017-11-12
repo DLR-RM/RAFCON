@@ -180,6 +180,15 @@ class AbstractTreeViewController(ExtendedController):
                 global_clipboard.cut(sm_selection)
                 return True
 
+    def get_path(self):
+        """Get path to the currently selected entry row
+
+        :return: path to the tree view cursor row, None if there is no selection
+        :rtype: tuple
+        """
+        # the cursor is a tuple containing the current path and the focused column
+        return self.tree_view.get_cursor()[0]
+
     def _apply_value_on_edited_and_focus_out(self, renderer, apply_method):
         """Sets up the renderer to apply changed when loosing focus
 
@@ -526,15 +535,6 @@ class ListViewController(AbstractTreeViewController):
         path = self.get_path()
         if path is not None:
             return self.list_store[path]
-
-    def get_path(self):
-        """Get path to the currently selected entry row
-
-        :return: path to the tree view cursor row, None if there is no selection
-        :rtype: tuple
-        """
-        # the cursor is a tuple containing the current path and the focused column
-        return self.tree_view.get_cursor()[0]
 
     def tree_view_keypress_callback(self, widget, event):
         """Tab back and forward tab-key motion in list widget and the scrollbar motion to follow key cursor motions
