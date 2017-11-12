@@ -14,7 +14,6 @@ from gtkmvc import ModelMT
 from rafcon.core.id_generator import generate_semantic_data_key
 
 from rafcon.gui.controllers.utils.tree_view_controller import TreeViewController
-from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models import AbstractStateModel
 from rafcon.gui.views.state_editor.semantic_data_editor import SemanticDataEditorView
 from rafcon.gui.helpers.label import react_to_event
@@ -42,15 +41,12 @@ class SemanticDataEditorController(TreeViewController):
         """
         assert isinstance(model, AbstractStateModel)
         assert isinstance(view, SemanticDataEditorView)
-        # prepare view -> can be moved into view
-        self.set_tree_view_columns(view["semantic_data_tree_view"])
 
         # define tree store with the values in [key, value Is Dict]
         tree_store = gtk.TreeStore(str, str, bool)
 
         super(SemanticDataEditorController, self).__init__(model, view, view["semantic_data_tree_view"],
                                                            tree_store, logger)
-        self.reload_tree_store_data()
         self.semantic_data_counter = 0
 
     def register_view(self, view):
@@ -65,10 +61,11 @@ class SemanticDataEditorController(TreeViewController):
         view['new_entry'].connect('clicked', self.on_add, False)
         view['new_dict_entry'].connect('clicked', self.on_add, True)
         view['delete_entry'].connect('clicked', self.on_remove)
-        self._apply_value_on_edited_and_focus_out(self.widget_columns[self.KEY_STORAGE_ID].get_cell_renderers()[0],
+        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.KEY_COLUMN_ID].get_cell_renderers()[0],
                                                   self.key_edited)
-        self._apply_value_on_edited_and_focus_out(self.widget_columns[self.VALUE_STORAGE_ID].get_cell_renderers()[0],
+        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.VALUE_COLUMN_ID].get_cell_renderers()[0],
                                                   self.value_edited)
+        self.reload_tree_store_data()
 
     def register_actions(self, shortcut_manager):
         shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)
@@ -88,25 +85,6 @@ class SemanticDataEditorController(TreeViewController):
         """
         if "semantic_data" in info["method_name"]:
             self.reload_tree_store_data()
-
-    def set_tree_view_columns(self, tree_view):
-        """ Creates the tree store for the treeview which stores the entrys of the semantic data of a state
-
-        :return:
-        """
-        key_renderer = gtk.CellRendererText()
-        key_renderer.set_property('editable', True)
-        col = gtk.TreeViewColumn('Key', key_renderer, text=self.KEY_STORAGE_ID)
-        tree_view.append_column(col)
-
-        value_renderer = gtk.CellRendererText()
-        value_renderer.set_property('editable', True)
-        col = gtk.TreeViewColumn('Value', value_renderer, text=self.VALUE_STORAGE_ID)
-        tree_view.append_column(col)
-
-        is_dict_renderer = gtk.CellRendererText()
-        col = gtk.TreeViewColumn('Is Dict', is_dict_renderer, text=self.IS_DICT_STORAGE_ID)
-        tree_view.append_column(col)
 
     def get_selected_object(self):
         """ Gets the selected object in the treeview
