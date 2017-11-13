@@ -345,9 +345,6 @@ class ListViewController(AbstractTreeViewController):
     :ivar int MODEL_STORAGE_ID: Index of model represented by row in list store and
         used to update selections in state machine or tree view set by inherit class
     """
-    ID_STORAGE_ID = None
-    MODEL_STORAGE_ID = None
-    CORE_ELEMENT_CLASS = None
     _logger = None
 
     def __init__(self, model, view, tree_view, list_store, logger=None):
@@ -624,9 +621,6 @@ class TreeViewController(AbstractTreeViewController):
     :ivar int MODEL_STORAGE_ID: Index of model represented by row in list store and
         used to update selections in state machine or tree view set by inherit class
     """
-    ID_STORAGE_ID = None
-    MODEL_STORAGE_ID = None
-    CORE_ELEMENT_CLASS = None
     _logger = None
 
     def __init__(self, model, view, tree_view, tree_store, logger=None):
@@ -646,22 +640,24 @@ class TreeViewController(AbstractTreeViewController):
         :rtype: tuple
         :return: path
         """
-        self._logger.info("get_path_for_core_element needs implementation")  # TODO do it different
+        raise NotImplementedError  # TODO do it better maybe by reusing the method written for semantic data editor
 
     def iter_tree_with_handed_function(self, function, *function_args):
         """Iterate tree view with condition check function"""
-        def iter_all_children(state_row_iter, function, function_args):
-
-            if isinstance(state_row_iter, gtk.TreeIter):
-                function(state_row_iter, *function_args)
-                for n in reversed(range(self.tree_store.iter_n_children(state_row_iter))):
-                    child_iter = self.tree_store.iter_nth_child(state_row_iter, n)
+        def iter_all_children(row_iter, function, function_args):
+            if isinstance(row_iter, gtk.TreeIter):
+                function(row_iter, *function_args)
+                for n in reversed(range(self.tree_store.iter_n_children(row_iter))):
+                    child_iter = self.tree_store.iter_nth_child(row_iter, n)
                     iter_all_children(child_iter, function, function_args)
             else:
-                self._logger.warning("Iter has to be TreeIter -> handed argument is: {0}".format(state_row_iter))
+                self._logger.warning("Iter has to be TreeIter -> handed argument is: {0}".format(row_iter))
 
-        if self.tree_store.get_iter_root():
-            iter_all_children(self.tree_store.get_iter_root(), function, function_args)
+        # iter on root level of tree
+        next_iter = self.tree_store.get_iter_root()
+        while next_iter:
+            iter_all_children(next_iter, function, function_args)
+            next_iter = self.tree_store.iter_next(next_iter)
 
     def update_selection_sm_prior_condition(self, state_row_iter, selected_model_list, sm_selected_model_list):
         """State machine prior update of tree selection for one tree model row"""
@@ -732,16 +728,6 @@ class TreeViewController(AbstractTreeViewController):
             self.check_selection_consistency()
         self._do_selection_update = False
 
-    def get_path(self):
-        """Get path to the currently selected entry row
-
-        :return: path to the tree view cursor row, None if there is no selection
-        :rtype: tuple
-        """
-        # the cursor is a tuple containing the current path and the focused column
-        # print "focus path", self.tree_view.get_cursor(), self.tree_view.get_cursor()[0]
-        return self.tree_view.get_cursor()[0]
-
     def on_add(self, widget, data=None):
         """An abstract add method for a respective new core element and final selection of those"""
         raise NotImplementedError
@@ -749,3 +735,88 @@ class TreeViewController(AbstractTreeViewController):
     def on_remove(self, widget, data=None):
         """Remove respective selected core elements and select the next one"""
         raise NotImplementedError
+
+    def tree_view_keypress_callback(self, widget, event):
+        """Tab back and forward tab-key motion in list widget and the scrollbar motion to follow key cursor motions
+
+         The method introduce motion and edit functionality by using "tab"- or "shift-tab"-key for a gtk.TreeView.
+         It is designed to work with a gtk.TreeView which model is a gtk.ListStore and only uses text cell renderer.
+         Additional, the TreeView is assumed to be used as a list not as a tree.
+         With the "tab"-key the cell on the right site of the actual focused cell is started to be edit. Changes in the
+         gtk.Entry-Widget are confirmed by emitting a 'edited'-signal. If the row ends the edit process continues
+         with the first cell of the next row. With the "shift-tab"-key the inverse functionality of the "tab"-key is
+         provided.
+         The Controller over steps not editable cells.
+
+        :param gtk.TreeView widget: The tree view the controller use
+        :param gtk.gdk.Event event: The key press event
+        :return:
+        """
+        # self._logger.info("key_value: " + str(event.keyval if event is not None else ''))
+        # TODO works for root level or other single level of tree view but not for switching in between levels
+        if event and (event.keyval == Key_Tab or event.keyval == ISO_Left_Tab):
+            [path, focus_column] = self.tree_view.get_cursor()
+            # print "cursor ", path, focus_column
+            model, paths = self.tree_view.get_selection().get_selected_rows()
+            if paths:
+                path = paths[0]
+                # print "tree selection", path, focus_column, paths
+            if not path:
+                return False
+            self.tree_view_keypress_callback.__func__.core_element_id = self.store[path][self.ID_STORAGE_ID]
+            # print "core id", self.store[path][self.ID_STORAGE_ID], path, type(path)
+            # finish active edit process
+            if self.active_entry_widget is not None:
+                text = self.active_entry_widget.get_buffer().get_text()
+                if focus_column in self.widget_columns:
+                    # print "path", ':'.join([str(elem) for elem in path])
+                    focus_column.get_cell_renderers()[0].emit('edited', ':'.join([str(elem) for elem in path]), text)
+
+            # row could be updated by other call_backs caused by emitting 'edited' signal but selection stays an editable neighbor
+            path = self.get_path_for_core_element(self.tree_view_keypress_callback.__func__.core_element_id)
+            if event.keyval == Key_Tab:
+                # logger.info("move right")
+                direction = +1
+            else:
+                # logger.info("move left")
+                direction = -1
+
+            # print "old_path", path
+            # get next row_id for focus
+            if direction < 0 and focus_column is self.widget_columns[0] \
+                    or direction > 0 and focus_column is self.widget_columns[-1]:
+                if direction < 0 < path[-1] or direction > 0 and not path[-1] + 1 > len(self.widget_columns):
+                    next_row = path[-1] + direction
+                else:
+                    return False
+            else:
+                next_row = path[-1]
+            new_path = tuple(list(path[:-1]) + [next_row])
+            # print "new path", new_path, path[:-1]
+            # get next column_id for focus
+            focus_column_id = self.widget_columns.index(focus_column)
+            if focus_column_id is not None:
+                # search all columns for next editable cell renderer
+                next_focus_column_id = 0
+                for index in range(len(self.tree_view.get_model())):
+                    test_id = focus_column_id + direction * index + direction
+                    next_focus_column_id = test_id % len(self.widget_columns)
+                    if test_id > len(self.widget_columns) - 1 or test_id < 0:
+                        next_row = path[-1] + direction
+                        if next_row < 0 or next_row > len(self.tree_store[path[:-1]] if len(path) > 1 else self.tree_store) - 1:
+                            return False
+
+                    if self.widget_columns[next_focus_column_id].get_cell_renderers()[0].get_property('editable'):
+                        break
+            else:
+                return False
+            new_path = tuple(list(path[:-1]) + [next_row])
+            # print "nnew path", new_path
+            del self.tree_view_keypress_callback.__func__.core_element_id
+            # self._logger.info("self.tree_view.scroll_to_cell(next_row={0}, self.widget_columns[{1}] , use_align={2})"
+            #              "".format(next_row, next_focus_column_id, False))
+            self.tree_view.scroll_to_cell(new_path, self.widget_columns[next_focus_column_id], use_align=False)
+            self.tree_view.set_cursor_on_cell(new_path, self.widget_columns[next_focus_column_id], start_editing=True)
+            return True
+        else:
+            super(TreeViewController, self).tree_view_keypress_callback(widget, event)
