@@ -200,33 +200,25 @@ class AbstractTreeViewController(ExtendedController):
         """
         assert isinstance(renderer, gtk.CellRenderer)
 
-        def remove_handler(widget, data_name):
-            """Remove handler from given widget
-
-            :param gtk.Widget widget: Widget from which a handler is to be removed
-            :param data_name: Name of the data of the widget in which the handler id is stored
-            """
-            handler_id = widget.get_data(data_name)
-            if widget.handler_is_connected(handler_id):
-                widget.disconnect(handler_id)
-
         def remove_all_handler(renderer):
             """Remove all handler for given renderer and its editable
 
             :param renderer: Renderer of the respective column which is edit by a entry widget, at the moment
             """
+            def remove_handler(widget, data_name):
+                """Remove handler from given widget
+
+                :param gtk.Widget widget: Widget from which a handler is to be removed
+                :param data_name: Name of the data of the widget in which the handler id is stored
+                """
+                handler_id = widget.get_data(data_name)
+                if widget.handler_is_connected(handler_id):
+                    widget.disconnect(handler_id)
+
             editable = renderer.get_data("editable")
             remove_handler(editable, "focus_out_handler_id")
             remove_handler(editable, "cursor_move_handler_id")
             remove_handler(renderer, "editing_cancelled_handler_id")
-
-        def on_editing_canceled(renderer):
-            """Disconnects the focus-out-event handler of cancelled editable
-
-            :param gtk.CellRendererText renderer: The cell renderer who's editing was cancelled
-            """
-            remove_all_handler(renderer)
-            self.active_entry_widget = None
 
         def on_focus_out(entry, event):
             """Applies the changes to the entry
@@ -234,13 +226,13 @@ class AbstractTreeViewController(ExtendedController):
             :param gtk.Entry entry: The entry that was focused out
             :param gtk.Event event: Event object with information about the event
             """
-            remove_all_handler(renderer)
+            renderer.remove_all_handler(renderer)
 
-            if self.get_path() is None:
+            if renderer.ctrl.get_path() is None:
                 return
             # We have to use idle_add to prevent core dumps:
             # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
-            glib.idle_add(apply_method, self.get_path(), entry.get_text())
+            glib.idle_add(apply_method, renderer.ctrl.get_path(), entry.get_text())
 
         def on_cursor_move_in_entry_widget(entry, step, count, extend_selection):
             """Trigger scroll bar adjustments according active entry widgets cursor change
@@ -255,9 +247,10 @@ class AbstractTreeViewController(ExtendedController):
             :param str path: the path identifying the edited cell
             """
             # secure scrollbar adjustments on active cell
-            [path, focus_column] = self.tree_view.get_cursor()
+            ctrl = renderer.ctrl
+            [path, focus_column] = ctrl.tree_view.get_cursor()
             if path:
-                self.tree_view.scroll_to_cell(path, self.widget_columns[self.widget_columns.index(focus_column)],
+                ctrl.tree_view.scroll_to_cell(path, ctrl.widget_columns[ctrl.widget_columns.index(focus_column)],
                                               use_align=False)
 
             editing_cancelled_handler_id = renderer.connect('editing-canceled', on_editing_canceled)
@@ -268,7 +261,7 @@ class AbstractTreeViewController(ExtendedController):
             renderer.set_data("editing_cancelled_handler_id", editing_cancelled_handler_id)
             editable.set_data("focus_out_handler_id", focus_out_handler_id)
             editable.set_data("cursor_move_handler_id", cursor_move_handler_id)
-            self.active_entry_widget = editable
+            ctrl.active_entry_widget = editable
 
         def on_edited(renderer, path, new_value_str):
             """Calls the apply method with the new value
@@ -277,10 +270,20 @@ class AbstractTreeViewController(ExtendedController):
             :param str path: The path string of the renderer
             :param str new_value_str: The new value as string
             """
-            remove_all_handler(renderer)
+            renderer.remove_all_handler(renderer)
             apply_method(path, new_value_str)
-            self.active_entry_widget = None
+            renderer.ctrl.active_entry_widget = None
 
+        def on_editing_canceled(renderer):
+            """Disconnects the focus-out-event handler of cancelled editable
+
+            :param gtk.CellRendererText renderer: The cell renderer who's editing was cancelled
+            """
+            remove_all_handler(renderer)
+            renderer.ctrl.active_entry_widget = None
+
+        renderer.remove_all_handler = remove_all_handler
+        renderer.ctrl = self
         renderer.connect('editing-started', on_editing_started)
         renderer.connect('edited', on_edited)
 
