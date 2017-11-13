@@ -141,7 +141,7 @@ class SemanticDataEditorController(ExtendedController):
             self.reload_tree_store_data()
         else:
             new_key_string = generate_semantic_data_key(self.model.state.semantic_data.keys())
-            self.model.state.add_semantic_data("", value, new_key_string)
+            self.model.state.add_semantic_data([], value, new_key_string)
             self.reload_tree_store_data()
         # TODO: jump with selection to new element
         # self.tree_view.get_selection().select_iter(treeiter)
@@ -174,12 +174,12 @@ class SemanticDataEditorController(ExtendedController):
         :return:
         """
         tmp_path = path
-        print tmp_path
+        # print tmp_path
         dict_path = list()
         while len(tmp_path) > 0:
             dict_path.insert(0, self.get_key_of_path(tmp_path))
             tmp_path = tmp_path[0:-1]
-            print tmp_path
+            # print tmp_path
         return dict_path
 
     def on_remove(self, widget):
@@ -240,7 +240,7 @@ class SemanticDataEditorController(ExtendedController):
         :rtype: tuple
         :return:
         """
-        return (int(path_elem_str) for path_elem_str in path.split(":"))
+        return tuple((int(path_elem_str) for path_elem_str in path.split(":")))
 
     def key_edited(self, renderer, path, new_key_string):
         """ Edits the key of a semantic data entry

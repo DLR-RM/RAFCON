@@ -612,7 +612,8 @@ class GraphicalEditorController(ExtendedController):
                                      'semantic_data', 'add_semantic_data', 'remove_semantic_data']
                 if method_name in known_ignore_list:
                     # TODO: please omit this print in future!
-                    logger.debug("Method {0} not caught in GraphicalViewer, details: {1}".format(method_name, info))
+                    # logger.debug("Method {0} not caught in GraphicalViewer, details: {1}".format(method_name, info))
+                    pass
                 else:
                     logger.warning("Method {0} not caught in GraphicalViewer, details: {1}".format(method_name, info))
 
