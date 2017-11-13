@@ -149,12 +149,28 @@ class SemanticDataEditorController(TreeViewController):
         :return:
         """
         treeiter, path = self.get_selected_object()
+        if not treeiter:
+            return
+
         # check if an element is selected
-        if treeiter:
-            dict_path_as_list = self.tree_store[path][self.ID_STORAGE_ID]
-            logger.debug("Deleting semantic data entry with name {}!".format(dict_path_as_list[-1]))
-            self.model.state.remove_semantic_data(dict_path_as_list)
-            self.reload_tree_store_data()
+        dict_path_as_list = self.tree_store[path][self.ID_STORAGE_ID]
+        logger.debug("Deleting semantic data entry with name {}!".format(dict_path_as_list[-1]))
+        self.model.state.remove_semantic_data(dict_path_as_list)
+        self.reload_tree_store_data()
+
+        # hold cursor position where the last element was removed
+        try:
+            self.select_entry(self.tree_store[path][self.ID_STORAGE_ID])
+        except IndexError:
+            if len(self.tree_store):
+                if len(path) > 1:
+                    possible_before_path = tuple(list(path[:-1]) + [path[-1] - 1])
+                    if possible_before_path[-1] > -1:
+                        self.select_entry(self.tree_store[possible_before_path][self.ID_STORAGE_ID])
+                    else:
+                        self.select_entry(self.tree_store[path[:-1]][self.ID_STORAGE_ID])
+                else:
+                    self.select_entry(self.tree_store[path[0] - 1][self.ID_STORAGE_ID])
         return True
 
     def add_items_to_tree_iter(self, input_dict, treeiter, parent_dict_path=None):
@@ -180,9 +196,17 @@ class SemanticDataEditorController(TreeViewController):
 
         :return:
         """
+        model, paths = self.tree_view.get_selection().get_selected_rows()
+
         self.tree_store.clear()
         self.add_items_to_tree_iter(self.model.state.semantic_data, None)
         self.tree_view.expand_all()
+
+        try:
+            for path in paths:
+                self.tree_view.get_selection().select_path(path)
+        except ValueError:
+            pass
 
     @staticmethod
     def create_tree_store_path_from_key_string(path):
