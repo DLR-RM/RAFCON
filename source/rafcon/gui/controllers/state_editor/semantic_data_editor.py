@@ -109,23 +109,26 @@ class SemanticDataEditorController(TreeViewController):
         """
         self.semantic_data_counter += 1
         treeiter, path = self.get_selected_object()
+
         value = dict() if new_dict else "New Value"
+
+        # get target dict path
         if treeiter:
             target_dict_path_as_list = self.tree_store[path][self.ID_STORAGE_ID]
             if not self.tree_store[path][self.IS_DICT_STORAGE_ID]:
                 target_dict_path_as_list.pop()
-            # generate key
-            target_dict = self.model.state.get_semantic_data(target_dict_path_as_list)
-            new_key_string = generate_semantic_data_key(target_dict.keys())
-            self.model.state.add_semantic_data(target_dict_path_as_list, value, new_key_string)
         else:
-            new_key_string = generate_semantic_data_key(self.model.state.semantic_data.keys())
-            self.model.state.add_semantic_data([], value, new_key_string)
+            target_dict_path_as_list = []
+
+        # generate key
+        target_dict = self.model.state.get_semantic_data(target_dict_path_as_list)
+        new_key_string = generate_semantic_data_key(target_dict.keys())
+        self.model.state.add_semantic_data(target_dict_path_as_list, value, new_key_string)
+
         self.reload_tree_store_data()
 
-        # TODO: jump with selection to new element
-        # self.tree_view.get_selection().select_iter(treeiter)
-        # self.select_entry(meta_name)
+        # jump to new element
+        self.select_entry(target_dict_path_as_list + [new_key_string])
         logger.debug("Added new semantic data entry!")
         return True
 
@@ -135,7 +138,9 @@ class SemanticDataEditorController(TreeViewController):
             self.on_add(None, a_dict)
             return True
 
-    # TODO add right click menu for more control e.g. insert of value element on root level if there are only dict values
+    def on_right_click_menu(self):
+        # TODO add right click menu for more control e.g. insert of value element on root level if there are only dict values
+        pass
 
     def on_remove(self, widget, data=None):
         """ Removes an entry of semantic data of a state.

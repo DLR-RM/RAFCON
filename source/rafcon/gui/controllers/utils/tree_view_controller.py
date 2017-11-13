@@ -739,6 +739,15 @@ class TreeViewController(AbstractTreeViewController):
         """Remove respective selected core elements and select the next one"""
         raise NotImplementedError
 
+    def select_entry(self, core_element_id, by_cursor=True):
+        """Selects the row entry belonging to the given core_element_id by cursor or tree selection"""
+        path = self.get_path_for_core_element(core_element_id)
+        if path:
+            if by_cursor:
+                self.tree_view.set_cursor(path)
+            else:
+                self.tree_view.get_selection().select_path(path)
+
     def tree_view_keypress_callback(self, widget, event):
         """Tab back and forward tab-key motion in list widget and the scrollbar motion to follow key cursor motions
 
