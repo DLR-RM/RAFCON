@@ -612,11 +612,7 @@ class GraphicalEditorController(ExtendedController):
                                      'input_data_port_runtime_values', 'use_runtime_value_input_data_ports',
                                      'output_data_port_runtime_values', 'use_runtime_value_output_data_ports',
                                      'semantic_data', 'add_semantic_data', 'remove_semantic_data']
-                if method_name in known_ignore_list:
-                    # TODO: please omit this print in future!
-                    # logger.debug("Method {0} not caught in GraphicalViewer, details: {1}".format(method_name, info))
-                    pass
-                else:
+                if method_name not in known_ignore_list:
                     logger.warning("Method {0} not caught in GraphicalViewer, details: {1}".format(method_name, info))
 
             if method_name in ['add_state', 'add_transition', 'add_data_flow', 'add_outcome', 'add_input_data_port',

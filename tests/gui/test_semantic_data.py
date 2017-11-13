@@ -53,27 +53,30 @@ def change_semantic_data_values():
     semantic_data_controller = state_editor_controller.get_controller("semantic_data_ctrl")
 
     assert isinstance(semantic_data_controller, SemanticDataEditorController)
-    tree_test_path = [1]
-    # options for selection: select_all, select_iter, select_path, select_range
-    semantic_data_controller.tree_view.get_selection().select_path(tuple(tree_test_path))
-    model, paths = semantic_data_controller.tree_view.get_selection().get_selected_rows()
+    print
+    tree_test_path = (1, )
+    call_gui_callback(semantic_data_controller.select_entry, ['key 2'])
+    # model, paths = semantic_data_controller.tree_view.get_selection().get_selected_rows()
     # print model, paths
     # print root_state.semantic_data
 
     # test delete
     assert len(root_state.semantic_data.keys()) == 5
+    call_gui_callback(semantic_data_controller.select_entry, ['dict 2'])
     semantic_data_controller.on_remove(None)
-    assert len(root_state.semantic_data.keys()) == 4
+    assert len(root_state.semantic_data.keys()) == 4 and 'dict 2' not in root_state.semantic_data.keys()
 
     # test add normal entry into first hierarchy
-    semantic_data_controller.tree_view.get_selection().select_path(tuple(tree_test_path))
+    semantic_data_controller.tree_view.get_selection().select_path(tree_test_path)
     semantic_data_controller.on_add(None, False)
     assert len(root_state.semantic_data.keys()) == 5
 
     # test add dictionary entry in second hierarchy
-    tree_test_path = [0]
+    # tree_test_path = semantic_data_controller.get_path_for_core_element(["dict 1"])
+    # print "second hierarchy: ", tree_test_path
     assert len(root_state.semantic_data["dict 1"].keys()) == 2
-    semantic_data_controller.tree_view.get_selection().select_path(tuple(tree_test_path))
+    # call_gui_callback(semantic_data_controller.tree_view.get_selection().select_path, tree_test_path)
+    call_gui_callback(semantic_data_controller.select_entry, ['dict 1'])
     semantic_data_controller.on_add(None, False)
     assert len(root_state.semantic_data.keys()) == 5
     assert len(root_state.semantic_data["dict 1"].keys()) == 3
