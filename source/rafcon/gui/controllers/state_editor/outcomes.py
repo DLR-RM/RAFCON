@@ -127,7 +127,7 @@ class StateOutcomesListController(ListViewController):
         def do_self_transition_check(t_id, new_state_identifier):
             # add self transition meta data
             if 'self' in new_state_identifier.split('.'):
-                insert_self_transition_meta_data(self.model, t_id, 'outcomes_widget', 'append_to_last_change')
+                insert_self_transition_meta_data(self.model, t_id, 'outcomes_widget', combined_action=True)
 
         outcome_id = self.list_store[path][self.ID_STORAGE_ID]
         if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
@@ -348,13 +348,6 @@ class StateOutcomesEditorController(ExtendedController):
             if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
                 view['add_button'].set_sensitive(False)
                 view['remove_button'].set_sensitive(False)
-
-    def register_adapters(self):
-        """Adapters should be registered in this method call
-
-        Each property of the state should have its own adapter, connecting a label in the View with the attribute of
-        the State.
-        """
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions

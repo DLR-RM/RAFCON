@@ -63,9 +63,6 @@ class LibraryTreeController(ExtendedController):
 
         self.update()
 
-    def register_adapters(self):
-        pass
-
     def register_view(self, view):
         self.view.connect('button_press_event', self.mouse_click)
 

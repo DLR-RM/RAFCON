@@ -72,9 +72,6 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         self.update()
 
-    def register_adapters(self):
-        pass
-
     def register_view(self, view):
         self.history_tree.connect('button_press_event', self.mouse_click)
         view['reload_button'].connect('clicked', self.reload_history)
@@ -164,9 +161,9 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.append_string_to_menu(popup_menu, menu_item_string)
 
                 if state_reference:
-                    if state_reference.final_outcome:
+                    if history_item.outcome:
                         self.append_string_to_menu(popup_menu, "------------------------")
-                        final_outcome_menu_item_string = "Final outcome: " + str(state_reference.final_outcome)
+                        final_outcome_menu_item_string = "Final outcome: " + str(history_item.outcome)
                         self.append_string_to_menu(popup_menu, final_outcome_menu_item_string)
                         self.append_string_to_menu(popup_menu, "------------------------")
 

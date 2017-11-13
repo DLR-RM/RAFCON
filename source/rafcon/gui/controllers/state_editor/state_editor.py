@@ -137,14 +137,6 @@ class StateEditorController(ExtendedController):
         if isinstance(self.model, ContainerStateModel):
             self.scopes_ctrl.reload_scoped_variables_list_store()
 
-    def register_adapters(self):
-        """Adapters should be registered in this method call
-
-        Each property of the state should have its own adapter, connecting a label in the View with the attribute of
-        the State.
-        """
-        # self.adapt(self.__state_property_adapter("name", "input_name"))
-
     def rename(self):
         state_overview_controller = self.get_controller('properties_ctrl')
         state_overview_controller.rename()

@@ -159,7 +159,7 @@ class BoundingBoxPainter(gaphas.painter.BoundingBoxPainter):
 
     def _draw_item(self, item, cairo, area=None):
         cairo = gaphas.painter.CairoBoundingBoxContext(cairo)
-        super(BoundingBoxPainter, self)._draw_item(item, cairo)
+        super(gaphas.painter.BoundingBoxPainter, self)._draw_item(item, cairo)
         bounds = cairo.get_bounds()
 
         view = self.view

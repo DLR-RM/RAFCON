@@ -117,9 +117,6 @@ class ModificationHistoryTreeController(ExtendedController):
         view['folded_checkbox'].connect('toggled', self.on_toggle_tree_folded)
         self.view_is_registered = True
 
-    def register_adapters(self):
-        pass
-
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
 

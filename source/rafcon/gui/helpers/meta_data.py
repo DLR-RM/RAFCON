@@ -183,12 +183,28 @@ def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', c
 
         transition_m = state_m.parent.get_transition_m(t_id)
         margin = min(state_meta['size']) / 10.
-        first_point_x = state_meta['rel_pos'][0] + state_meta['size'][0] + margin
-        first_point_y = state_meta['rel_pos'][1] - y_axis_mirror * margin
-        second_point_x = state_meta['rel_pos'][0] - margin
-        second_point_y = state_meta['rel_pos'][1] - y_axis_mirror * margin
+        if gaphas_editor:
+            origin_port_m = state_m.get_outcome_m(transition_m.transition.from_outcome)
+            origin_port_x, origin_port_y = origin_port_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
+            target_port_x, target_port_y = state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['income']['rel_pos']
+            x_osign = 1 if origin_port_x/state_meta['size'][0] > 0.5 else -1
+            x_tsign = -1 if target_port_x/state_meta['size'][0] < 0.5 else 1
+            y_osign = 1 if origin_port_y/state_meta['size'][1] > 0.5 else -1
+            y_tsign = -1 if target_port_y/state_meta['size'][1] < 0.5 else 1
+            first_point_x = state_meta['rel_pos'][0] + x_osign*margin + (state_meta['size'][0] if x_osign == 1 else 0.)
+            first_point_y = state_meta['rel_pos'][1] + y_osign*margin + (state_meta['size'][1] if y_osign == 1 else 0.)
+            second_point_x = state_meta['rel_pos'][0] + x_tsign*margin + (state_meta['size'][0] if x_tsign == 1 else 0.)
+            second_point_y = state_meta['rel_pos'][1] + y_tsign*margin + (state_meta['size'][1] if y_tsign == 1 else 0.)
+        else:
+            first_point_x = state_meta['rel_pos'][0] + state_meta['size'][0] + margin
+            first_point_y = state_meta['rel_pos'][1] - y_axis_mirror * margin
+            second_point_x = state_meta['rel_pos'][0] - margin
+            second_point_y = state_meta['rel_pos'][1] - y_axis_mirror * margin
 
-        waypoints = [(first_point_x, first_point_y), (second_point_x, second_point_y)]
+        if gaphas_editor and (first_point_x, first_point_y) == (second_point_x, second_point_y):
+            waypoints = [(first_point_x, first_point_y)]
+        else:
+            waypoints = [(first_point_x, first_point_y), (second_point_x, second_point_y)]
         transition_m.set_meta_data_editor('waypoints', waypoints, from_gaphas=gaphas_editor)
 
         if combined_action:

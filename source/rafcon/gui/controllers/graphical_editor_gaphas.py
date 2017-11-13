@@ -25,6 +25,7 @@ from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
 from gaphas.item import Item
 from gtk.gdk import ACTION_COPY
+import math
 
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.state import StateType
@@ -65,6 +66,8 @@ class GraphicalEditorController(ExtendedController):
     """
 
     _complex_action = False
+    drag_motion_handler_id = None
+    focus_changed_handler_id = None
 
     def __init__(self, model, view):
         """Constructor"""
@@ -88,15 +91,11 @@ class GraphicalEditorController(ExtendedController):
         assert self.view == view
 
         self.view.connect('meta_data_changed', self._meta_data_changed)
-        self.view.editor.connect('focus-changed', self._move_focused_item_into_viewport)
+        self.focus_changed_handler_id = self.view.editor.connect('focus-changed', self._move_focused_item_into_viewport)
         self.view.editor.connect("drag-data-received", self.on_drag_data_received)
-        self.view.editor.connect("drag-motion", self.on_drag_motion)
+        self.drag_motion_handler_id = self.view.editor.connect("drag-motion", self.on_drag_motion)
 
         self.setup_canvas()
-
-    def register_adapters(self):
-        """Adapters should be registered in this method call"""
-        pass
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -191,7 +190,12 @@ class GraphicalEditorController(ExtendedController):
                 return
             if len(self.view.editor.selected_items) > 0:
                 self.view.editor.unselect_all()
+
+            if not rafcon.gui.singleton.global_gui_config.get_config_value('DRAG_N_DROP_WITH_FOCUS'):
+                self.view.editor.handler_block(self.focus_changed_handler_id)
             self.view.editor.focused_item = hovered_item
+            if not rafcon.gui.singleton.global_gui_config.get_config_value('DRAG_N_DROP_WITH_FOCUS'):
+                self.view.editor.handler_unblock(self.focus_changed_handler_id)
 
     def update_view(self, *args):
         self.canvas.update_root_items()
@@ -244,7 +248,9 @@ class GraphicalEditorController(ExtendedController):
         :param view:
         :param StateView | ConnectionView | PortView focused_item: The focused item
         """
+        self.view.editor.handler_block(self.drag_motion_handler_id)
         self.move_item_into_viewport(focused_item)
+        self.view.editor.handler_unblock(self.drag_motion_handler_id)
 
     def move_item_into_viewport(self, item):
         """Causes the `item` to be moved into the viewport
@@ -259,25 +265,29 @@ class GraphicalEditorController(ExtendedController):
         HORIZONTAL = 0
         VERTICAL = 1
         if not isinstance(item, Item):
-            state = item.parent
+            state_v = item.parent
         elif not isinstance(item, StateView):
-            state = self.canvas.get_parent(item)
+            state_v = self.canvas.get_parent(item)
         else:
-            state = item
+            state_v = item
         viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
-        state_size = self.view.editor.get_matrix_i2v(item).transform_distance(state.width, state.height)
+        state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
         min_relative_size = min(viewport_size[i] / state_size[i] for i in [HORIZONTAL, VERTICAL])
-        if min_relative_size < 1 or min_relative_size > 2:
+
+        if min_relative_size != 1:
             # Allow margin around state
             margin_relative = 1. / gui_constants.BORDER_WIDTH_STATE_SIZE_FACTOR
             zoom_factor = min_relative_size * (1 - margin_relative)
+            if zoom_factor > 1:
+                zoom_base = 4
+                zoom_factor = max(1, math.log(zoom_factor*zoom_base, zoom_base))
             self.view.editor.zoom(zoom_factor)
             # The zoom operation must be performed before the pan operation to work on updated GtkAdjustments (scroll
             # bars)
             self.canvas.perform_update()
 
-        state_pos = self.view.editor.get_matrix_i2v(item).transform_point(0, 0)
-        state_size = self.view.editor.get_matrix_i2v(item).transform_distance(state.width, state.height)
+        state_pos = self.view.editor.get_matrix_i2v(state_v).transform_point(0, 0)
+        state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
         viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
 
         # Calculate offset around state so that the state is centered in the viewport
@@ -345,17 +355,14 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
-        # print "GSME state_action_signal: ", info['arg'] if 'arg' in info else "XXX" + str(info)
         if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state',
                                                     'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
             if info['arg'].after is False:
                 self._complex_action = True
                 if info['arg'].action in ['group_states', 'paste', 'cut']:
                     self.observe_model(info['arg'].action_parent_m)
-                    # print "GSME observe: ", info['arg'].action_parent_m
                 else:
                     self.observe_model(info['arg'].affected_models[0])
-                    # print "GSME observe: ", info['arg'].affected_models[0]
 
                 # assert not hasattr(self.state_action_signal.__func__, "affected_models")
                 # assert not hasattr(self.state_action_signal.__func__, "target")
@@ -364,7 +371,6 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
-        # print "GSME action_signal: ", self.__class__.__name__, "action_signal check", info
         if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
                         info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut',
                                                'undo/redo']:
@@ -380,15 +386,11 @@ class GraphicalEditorController(ExtendedController):
 
         else:
             return
-        # print self.__class__.__name__, "action_signal ####", "\n", model, "\n", old_state_m, "\n", new_state_m, "\n"
 
         self._complex_action = False
         self.relieve_model(model)
 
-        # print "state_type_changed relieve observer"
         self.adapt_complex_action(old_state_m, new_state_m)
-
-        # print "GSME ACTION adapt to change"
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
