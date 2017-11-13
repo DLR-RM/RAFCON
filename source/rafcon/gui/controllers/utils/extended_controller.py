@@ -141,7 +141,7 @@ class ExtendedController(Controller):
                 try:
                     controller.register_actions(shortcut_manager)
                 except Exception as e:
-                    logger.error("Error while registering action for {0}: {1}".format(controller.__name__, e))
+                    logger.error("Error while registering action for {0}: {1}".format(controller.__class__.__name__, e))
                 self.__action_registered_controllers.append(controller)
 
     def unregister_actions(self, shortcut_manager):

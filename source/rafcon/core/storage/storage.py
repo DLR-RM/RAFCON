@@ -46,6 +46,7 @@ FILE_NAME_META_DATA_OLD = 'gui_gtk.json'
 FILE_NAME_CORE_DATA = 'core_data.json'
 FILE_NAME_CORE_DATA_OLD = 'meta.json'
 SCRIPT_FILE = 'script.py'
+SEMANTIC_DATA_FILE = 'semantic_data.json'
 STATEMACHINE_FILE = 'statemachine.json'
 STATEMACHINE_FILE_OLD = 'statemachine.yaml'
 ID_NAME_DELIMITER = "_"
@@ -217,6 +218,24 @@ def save_script_file_for_state_and_source_path(state, state_path_full, as_copy=F
             state.script.path = state_path_full
 
 
+def save_semantic_data_for_state(state, state_path_full):
+    """Saves the semantic data in a separate json file.
+
+    :param state: The state of which the script file should be saved
+    :param str state_path_full: The path to the file system storage location of the state
+    """
+
+    destination_script_file = os.path.join(state_path_full, SEMANTIC_DATA_FILE)
+
+    try:
+        storage_utils.write_dict_to_json(state.semantic_data, destination_script_file)
+    except IOError:
+        logger.exception("Storing of semantic data for state {0} failed! Destination path: {1}".
+                         format(state.get_path(), destination_script_file))
+        raise
+
+
+
 def save_state_recursively(state, base_path, parent_path, as_copy=False):
     """Recursively saves a state to a json file
 
@@ -242,6 +261,8 @@ def save_state_recursively(state, base_path, parent_path, as_copy=False):
 
     if isinstance(state, ExecutionState):
         save_script_file_for_state_and_source_path(state, state_path_full, as_copy)
+
+    save_semantic_data_for_state(state, state_path_full)
 
     # create yaml files for all children
     if isinstance(state, ContainerState):
@@ -415,6 +436,16 @@ def load_state_recursively(parent, state_path=None):
     if isinstance(state, ExecutionState):
         script_text = read_file(state_path, state.script.filename)
         state.script_text = script_text
+
+    # load semantic data
+    try:
+        semantic_data = load_data_file(os.path.join(state_path, SEMANTIC_DATA_FILE))
+        state.semantic_data = semantic_data
+    except Exception, e:
+        # semantic data file does not have to be there
+        pass
+
+
 
     one_of_my_child_states_not_found = False
 

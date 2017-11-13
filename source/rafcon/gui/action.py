@@ -1455,13 +1455,17 @@ class StateAction(Action):
                              'set_use_input_runtime_value', 'set_use_output_runtime_value',
                              'input_data_port_runtime_values', 'output_data_port_runtime_values',
                              'use_runtime_value_input_data_ports', 'use_runtime_value_output_data_ports',
-                             'group_states', 'ungroup_state', 'substitute_state', 'paste', 'cut']
+                             'group_states', 'ungroup_state', 'substitute_state', 'paste', 'cut',
+                             'semantic_data', 'add_semantic_data', 'remove_semantic_data'
+                             ]
     possible_args = ['name', 'description', 'script_text', 'start_state_id',  # ContainerState
                      'library_name', 'library_path', 'version', 'state_copy',  # LibraryState
                      'input_data_port_runtime_values', 'output_data_port_runtime_values',
                      'use_runtime_value_input_data_ports', 'use_runtime_value_output_data_ports',
                      'set_input_runtime_value', 'set_output_runtime_value',
-                     'set_use_input_runtime_value', 'set_use_output_runtime_value']
+                     'set_use_input_runtime_value', 'set_use_output_runtime_value',
+                     'semantic_data'
+                     ]
     substitute_dict = {'set_input_runtime_value': 'input_data_port_runtime_values',
                        'set_output_runtime_value': 'output_data_port_runtime_values',
                        'set_use_input_runtime_value': 'use_runtime_value_input_data_ports',
@@ -1501,6 +1505,8 @@ class StateAction(Action):
             self.description_diff = '\n'.join(diff)
         else:
             self.description_diff = None
+        if 'semantic_data' in overview['method_name'][-1]:
+            self.action_type = 'semantic_data'
 
     def as_dict(self):
         d = Action.as_dict(self)
@@ -1510,9 +1516,11 @@ class StateAction(Action):
     @staticmethod
     def get_set_of_arguments(s):
         if isinstance(s, ContainerState):
-            return {'name': s.name, 'description': s.description, 'state_id': s.state_id, 'start_state_id': s.start_state_id}
+            return {'name': s.name, 'description': s.description, 'state_id': s.state_id,
+                    'start_state_id': s.start_state_id, 'semantic_data': copy.deepcopy(s.semantic_data)}
         elif isinstance(s, LibraryState):
             return {'name': s.name, 'description': s.description, 'state_id': s.state_id,
+                    'semantic_data': copy.deepcopy(s.semantic_data),
                     'library_name': s.library_name, 'library_path': s.library_path, 'version': s.version, # LibraryState
                     'state_copy': s.state_copy,
                     'input_data_port_runtime_values': copy.deepcopy(s.input_data_port_runtime_values),
@@ -1520,7 +1528,8 @@ class StateAction(Action):
                     'use_runtime_value_input_data_ports': copy.deepcopy(s.use_runtime_value_input_data_ports),
                     'use_runtime_value_output_data_ports': copy.deepcopy(s.use_runtime_value_output_data_ports)}
         else:
-            return {'name': s.name, 'description': s.description, 'script_text': s.script_text, 'state_id': s.state_id}
+            return {'name': s.name, 'description': s.description, 'script_text': s.script_text,
+                    'state_id': s.state_id, 'semantic_data': copy.deepcopy(s.semantic_data)}
 
     def set_after(self, overview):
         Action.set_after(self, overview)

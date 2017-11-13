@@ -29,6 +29,7 @@ from rafcon.gui.views.state_editor.overview import StateOverviewView
 from rafcon.gui.views.state_editor.scoped_variables_list import ScopedVariablesListView
 from rafcon.gui.views.state_editor.source_editor import SourceEditorView
 from rafcon.gui.views.state_editor.transitions import StateTransitionsEditorView
+from rafcon.gui.views.state_editor.semantic_data_editor import SemanticDataEditorView
 
 
 class StateEditorView(View):
@@ -40,7 +41,8 @@ class StateEditorView(View):
         "Data Linkage": constants.ICON_DLINK,
         "Logical Linkage": constants.ICON_LLINK,
         "Linkage Overview": constants.ICON_OVERV,
-        "Description": constants.ICON_DESC
+        "Description": constants.ICON_DESC,
+        "Semantic Data": constants.ICON_SEMANTICS
     }
 
     def __init__(self):
@@ -62,6 +64,7 @@ class StateEditorView(View):
         self.data_flows_view = StateDataFlowsEditorView()
         self.linkage_overview = LinkageOverviewView()
         self.description_view = DescriptionEditorView()
+        self.semantic_data_view = SemanticDataEditorView()
 
         self['properties_viewport'].add(self.properties_view.get_top_widget())
         self['input_ports_scroller'].add(self.inputs_view.get_top_widget())
@@ -73,6 +76,7 @@ class StateEditorView(View):
         self['data_flows_viewport'].add(self.data_flows_view.get_top_widget())
         self['linkage_overview_viewport'].add(self.linkage_overview.get_top_widget())
         self['description_viewport'].add(self.description_view.get_top_widget())
+        self['semantic_data_viewport'].add(self.semantic_data_view.get_top_widget())
 
         self.inputs_view.scrollbar_widget = self['input_ports_scroller']
         self.outputs_view.scrollbar_widget = self['output_ports_scroller']
@@ -92,6 +96,7 @@ class StateEditorView(View):
         self.page_dict["Data Linkage"] = self['main_notebook_1'].get_nth_page(2)
         self.page_dict["Linkage Overview"] = self['main_notebook_2'].get_nth_page(0)
         self.page_dict["Description"] = self['main_notebook_2'].get_nth_page(1)
+        self.page_dict["Semantic Data"] = self['main_notebook_2'].get_nth_page(2)
         self['main_notebook_1'].set_current_page(self['main_notebook_1'].page_num(self.page_dict["Source"]))
         self['main_notebook_2'].set_current_page(self['main_notebook_2'].page_num(self.page_dict["Description"]))
 
