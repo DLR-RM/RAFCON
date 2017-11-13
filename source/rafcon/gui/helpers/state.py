@@ -119,6 +119,7 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
 
     if source_state.description is not None and len(source_state.description) > 0:
         new_state.description = source_state.description
+    new_state.semantic_data = source_state.semantic_data
 
     return new_state
 

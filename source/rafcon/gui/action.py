@@ -69,7 +69,8 @@ STATE_TUPLE_CHILD_STATES_INDEX = 1
 STATE_TUPLE_META_DICT_INDEX = 2
 STATE_TUPLE_PATH_INDEX = 3
 STATE_TUPLE_SCRIPT_TEXT_INDEX = 4
-STATE_TUPLE_FILE_SYSTEM_PATH_INDEX = 4
+STATE_TUPLE_FILE_SYSTEM_PATH_INDEX = 5
+STATE_TUPLE_SEMANTIC_DATA_INDEX = 6
 
 
 def get_state_tuple(state, state_m=None):
@@ -80,6 +81,8 @@ def get_state_tuple(state, state_m=None):
     [2] dict of model_meta-data of self and elements
     [3] path of state in state machine
     [4] script_text
+    [5] file system path
+    [6] semantic data
     #   states-meta - [state-, transitions-, data_flows-, outcomes-, inputs-, outputs-, scopes, states-meta]
 
     :param rafcon.core.states.state.State state: The state that should be stored
@@ -100,7 +103,7 @@ def get_state_tuple(state, state_m=None):
     script_content = state.script.script if isinstance(state, ExecutionState) else None
 
     state_tuple = (state_str, state_tuples_dict, state_meta_dict, state.get_path(), script_content,
-                   state.file_system_path)
+                   state.file_system_path, copy.deepcopy(state.semantic_data))
 
     return state_tuple
 
@@ -119,6 +122,8 @@ def get_state_from_state_tuple(state_tuple):
         data_flows = state_info[2]
 
     state._file_system_path = state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX]
+    print "got state tuple with sd", state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX], state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX]
+    state.semantic_data = state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX]
 
     if isinstance(state, BarrierConcurrencyState):
         # logger.debug("\n\ninsert decider_state\n\n")
@@ -738,6 +743,7 @@ class Action(ModelMT, AbstractAction):
                 state.remove_scoped_variable(dp_id)
 
         state.name = stored_state.name
+        state.semantic_data = stored_state.semantic_data
         # state.script = stored_state.script
         # logger.debug("script0: " + stored_state.script.script)
         if isinstance(state, ExecutionState):
