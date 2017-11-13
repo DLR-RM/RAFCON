@@ -634,6 +634,7 @@ class TreeViewController(AbstractTreeViewController):
         assert isinstance(tree_store, gtk.TreeStore)
         super(TreeViewController, self).__init__(model, view, tree_view, tree_store, logger)
         self.tree_store = tree_store
+        self._changed_id_to = {}
 
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
@@ -791,6 +792,9 @@ class TreeViewController(AbstractTreeViewController):
                     focus_column.get_cell_renderers()[0].emit('edited', ':'.join([str(elem) for elem in path]), text)
 
             # row could be updated by other call_backs caused by emitting 'edited' signal but selection stays an editable neighbor
+            core_element_id = ':'.join([str(key) for key in self.tree_view_keypress_callback.__func__.core_element_id])
+            if core_element_id in self._changed_id_to:
+                self.tree_view_keypress_callback.__func__.core_element_id = self._changed_id_to[core_element_id]
             path = self.get_path_for_core_element(self.tree_view_keypress_callback.__func__.core_element_id)
             if event.keyval == Key_Tab:
                 # logger.info("move right")

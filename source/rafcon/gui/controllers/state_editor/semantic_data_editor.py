@@ -239,7 +239,8 @@ class SemanticDataEditorController(TreeViewController):
                 target_dict = target_dict[element]
             new_key_str = generate_semantic_data_key(target_dict.keys())
 
-        self.model.state.add_semantic_data(dict_path[0:-1], old_value, key=new_key_str)
+        new_dict_path = self.model.state.add_semantic_data(dict_path[0:-1], old_value, key=new_key_str)
+        self._changed_id_to = {':'.join(dict_path): new_dict_path}  # use hashable key (workaround for tree view ctrl)
         self.reload_tree_store_data()
 
     def value_edited(self, path, new_value_str):
