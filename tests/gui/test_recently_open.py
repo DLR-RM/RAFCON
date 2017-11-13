@@ -260,4 +260,5 @@ def test_recent_opened_state_machine_list(caplog):
 
 
 if __name__ == '__main__':
+    # test_recent_opened_state_machine_list(None)
     pytest.main(['-s', __file__])

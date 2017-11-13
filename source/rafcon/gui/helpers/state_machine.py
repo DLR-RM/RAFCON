@@ -40,6 +40,7 @@ from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateMode
 from rafcon.gui.singleton import library_manager_model
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
 from rafcon.utils import log
+import rafcon.gui.utils
 
 logger = log.get_logger(__name__)
 
@@ -61,18 +62,15 @@ def new_state_machine():
     root_state = HierarchyState("new root state")
     state_machine = StateMachine(root_state)
     state_machine_manager.add_state_machine(state_machine)
-
     state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
+
+    # this is needed in order that the model is already there, when it is access via get_selected_state_machine_model()
+    rafcon.gui.utils.wait_for_gui()
     state_machine_m = state_machine_manager_model.get_selected_state_machine_model()
-    # If idle_add isn't used, gaphas crashes, as the view is not ready
-    glib.idle_add(state_machine_m.selection.set, state_machine_m.root_state)
+    state_machine_m.selection.set(state_machine_m.root_state)
 
-    def grab_focus():
-        editor_controller = state_machines_editor_ctrl.get_controller(state_machine.state_machine_id)
-        editor_controller.view.editor.grab_focus()
-
-    # The editor parameter of view is created belated, thus we have to use idle_add again
-    glib.idle_add(grab_focus, priority=glib.PRIORITY_LOW)
+    editor_controller = state_machines_editor_ctrl.get_controller(state_machine.state_machine_id)
+    editor_controller.view.editor.grab_focus()
 
 
 def open_state_machine(path=None, recent_opened_notification=False):
@@ -108,12 +106,12 @@ def open_state_machine(path=None, recent_opened_notification=False):
         if recent_opened_notification:
             sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
             global_runtime_config.update_recently_opened_state_machines_with(sm_m)
+        duration = time.time() - start_time
+        stat = state_machine.root_state.get_states_statistics(0)
+        logger.info("It took {0} seconds to load {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
     except (AttributeError, ValueError, IOError) as e:
         logger.error('Error while trying to open state machine: {0}'.format(e))
 
-    duration = time.time() - start_time
-    stat = state_machine.root_state.get_states_statistics(0)
-    logger.info("It took {0} seconds to load {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
     return state_machine
 
 

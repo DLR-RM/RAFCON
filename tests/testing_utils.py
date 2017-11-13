@@ -88,7 +88,7 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
     assert counted_errors == expected_errors
 
 
-def call_gui_callback(callback, *args):
+def call_gui_callback(callback, *args, **kwargs):
     """Wrapper method for glib.idle_add
 
     This method is intended as replacement for idle_add. It wraps the method with a callback option. The advantage is
@@ -118,7 +118,12 @@ def call_gui_callback(callback, *args):
             condition.notify()
             condition.release()
 
-    glib.idle_add(fun, priority=glib.PRIORITY_LOW)
+    if "priority" in kwargs:
+        priority = kwargs["priority"]
+    else:
+        priority = glib.PRIORITY_LOW
+
+    glib.idle_add(fun, priority=priority)
     # Wait for the condition to be notified
     condition.acquire()
     # TODO: implement timeout that raises an exception
@@ -251,6 +256,9 @@ def wait_for_gui():
 
 def run_gui_thread():
     global gui_ready
+    # see https://stackoverflow.com/questions/35700140/pygtk-run-gtk-main-loop-in-a-seperate-thread
+    import gobject
+    gobject.threads_init()
     import gtk
     from rafcon.gui.controllers.main_window import MainWindowController
     from rafcon.gui.views.main_window import MainWindowView

@@ -122,7 +122,7 @@ def get_state_from_state_tuple(state_tuple):
         data_flows = state_info[2]
 
     state._file_system_path = state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX]
-    print "got state tuple with sd", state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX], state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX]
+    # print "got state tuple with sd", state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX], state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX]
     state.semantic_data = state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX]
 
     if isinstance(state, BarrierConcurrencyState):
