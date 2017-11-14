@@ -59,6 +59,12 @@ class ToolChain(gaphas.tool.ToolChain):
 
         return rt
 
+    def ungrab(self, tool):
+        """Fixes parental ungrab method for the case `tool` is None"""
+        if tool is None:
+            return
+        super(ToolChain, self).ungrab(tool)
+
 
 class PanTool(gaphas.tool.PanTool):
     def __init__(self, view=None):
@@ -135,6 +141,7 @@ class MoveItemTool(gaphas.tool.ItemTool):
                 # When items are to be moved, a button-press should not cause any deselection.
                 # However, the selection is stored, in case no move operation is performed.
                 self.view.handle_new_selection(self._item)
+                self.view.focused_item = self._item
 
         if not self.view.is_focus():
             self.view.grab_focus()
