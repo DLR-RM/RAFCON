@@ -18,6 +18,7 @@ from rafcon.gui.utils import constants
 from gaphas.aspect import PaintFocused, ItemPaintFocused
 import gaphas.painter
 
+from rafcon.gui.mygaphas.aspect import PaintHovered
 from rafcon.gui.mygaphas.items.connection import ConnectionView, DataFlowView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils.gap_draw_helper import get_col_rgba, get_side_length_of_resize_handle
@@ -179,3 +180,16 @@ class BoundingBoxPainter(gaphas.painter.BoundingBoxPainter):
 
         bounds.expand(1)
         view.set_item_bounding_box(item, bounds)
+
+
+class HoveredItemPainter(gaphas.painter.Painter):
+    """
+    This painter allows for drawing on top off all other layers for the
+    hovered item.
+    """
+
+    def paint(self, context):
+        view = self.view
+        item = view.hovered_item
+        if item:
+            PaintHovered(item, view).paint(context)
