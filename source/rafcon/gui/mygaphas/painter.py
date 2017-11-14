@@ -18,7 +18,7 @@ from rafcon.gui.utils import constants
 from gaphas.aspect import PaintFocused, ItemPaintFocused
 import gaphas.painter
 
-from rafcon.gui.mygaphas.aspect import PaintHovered
+from rafcon.gui.mygaphas.aspect import PaintHovered, ItemPaintHovered
 from rafcon.gui.mygaphas.items.connection import ConnectionView, DataFlowView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils.gap_draw_helper import get_col_rgba, get_side_length_of_resize_handle
@@ -29,21 +29,17 @@ from rafcon.gui.mygaphas.utils.gap_draw_helper import get_col_rgba, get_side_len
 # painter.DEBUG_DRAW_BOUNDING_BOX = True
 
 
-class CornerHandlePainter(gaphas.painter.HandlePainter):
-    """Base class for drawing corner handle for resize operations
+class CornerHandlePainter(ItemPaintHovered):
+    """Base class for drawing corner handles for resize operations
     """
 
     fill_color = gui_config.gtk_colors['STATE_RESIZE_HANDLE_FILL']
     border_color = gui_config.gtk_colors['STATE_RESIZE_HANDLE_BORDER']
 
-    def __init__(self, view=None, item_type=type(None)):
-        super(gaphas.painter.HandlePainter, self).__init__(view)
-        self._item_type = item_type
-
     def _get_handle_side_length(self, item):
         return get_side_length_of_resize_handle(self.view, item)
 
-    def _draw_handles(self, item, cairo, opacity=None, inner=False):
+    def _draw_handles(self, item, cairo, opacity=None):
         view = self.view
         cairo.save()
         i2v = view.get_matrix_i2v(item)
@@ -71,40 +67,28 @@ class CornerHandlePainter(gaphas.painter.HandlePainter):
             cairo.stroke()
         cairo.restore()
 
-    def paint(self, context):
-        view = self.view
-        canvas = view.canvas
-        cairo = context.cairo
-        # Order matters here:
-        for item in canvas.sort(view.selected_items):
-            if isinstance(item, self._item_type):
-                self._draw_handles(item, cairo)
-        # Draw nice opaque handles when hovering an item:
-        item = view.hovered_item
-        if item and item not in view.selected_items and isinstance(item, self._item_type):
-            self._draw_handles(item, cairo, opacity=.25)
+    def paint(self, context, selected):
+        if selected:
+            self._draw_handles(self.item, context.cairo)
+        else:
+            # Draw nice opaque handles when hovering an non-selected item:
+            self._draw_handles(self.item, context.cairo, opacity=.25)
 
 
+@PaintHovered.when_type(StateView)
 class StateCornerHandlePainter(CornerHandlePainter):
-    """Draw corner handles of StateViews
-    """
+    """ Draw corner handles of StateViews """
 
     fill_color = gui_config.gtk_colors['STATE_RESIZE_HANDLE_FILL']
     border_color = gui_config.gtk_colors['STATE_RESIZE_HANDLE_BORDER']
 
-    def __init__(self, view=None):
-        super(StateCornerHandlePainter, self).__init__(view, StateView)
 
-
+@PaintHovered.when_type(NameView)
 class NameCornerHandlePainter(CornerHandlePainter):
-    """Draw corner handles of NameViews
-    """
+    """ Draw corner handles of NameViews """
 
     fill_color = gui_config.gtk_colors['NAME_RESIZE_HANDLE_FILL']
     border_color = gui_config.gtk_colors['NAME_RESIZE_HANDLE_BORDER']
-
-    def __init__(self, view=None):
-        super(NameCornerHandlePainter, self).__init__(view, NameView)
 
 
 @PaintFocused.when_type(ConnectionView)
