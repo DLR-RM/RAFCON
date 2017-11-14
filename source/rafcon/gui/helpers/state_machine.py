@@ -843,7 +843,7 @@ def substitute_selected_state(state, as_template=False, keep_name=False):
 
 
 def substitute_selected_library_state_with_template(keep_name=True):
-    selection = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selections
+    selection = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection
     selected_state_m = selection.get_selected_state()
     if len(selection.states) == 1 and isinstance(selected_state_m, LibraryStateModel):
         # print "start substitute library state with template"
