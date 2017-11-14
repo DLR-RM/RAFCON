@@ -192,4 +192,5 @@ class HoveredItemPainter(gaphas.painter.Painter):
         view = self.view
         item = view.hovered_item
         if item:
-            PaintHovered(item, view).paint(context)
+            selected = item in view.selected_items
+            PaintHovered(item, view).paint(context, selected)

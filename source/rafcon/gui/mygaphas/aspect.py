@@ -205,7 +205,7 @@ class ItemPaintHovered(object):
         self.item = item
         self.view = view
 
-    def paint(self, context):
+    def paint(self, context, selected):
         pass
 
 
