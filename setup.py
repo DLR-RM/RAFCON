@@ -21,7 +21,8 @@ class PyTest(TestCommand):
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
-        self.pytest_args = '-vxs -p no:pytest_capturelog'
+        # Add further test folder with 'or my_test_folder'
+        self.pytest_args = '-vxs -p no:pytest_capturelog -k "core or gui"'
 
     def run_tests(self):
         import shlex
@@ -31,24 +32,10 @@ class PyTest(TestCommand):
         sys.path.insert(0, test_path)
         sys.path.insert(0, rafcon_path)
         os.environ["PYTHONPATH"] = rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
-        # Disable network tests for now
-        # print "=== Running network tests ==="
-        # error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'network')])
-        # if not error_number:
         print
-        print "=== Running core tests ==="
+        print "Running pytest with the following arguments:", shlex.split(self.pytest_args) + ['tests']
         print
-        error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'core')])
-        if not error_number:
-            print
-            print "=== Running GUI tests ==="
-            print
-            error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'gui')])
-        if not error_number:
-            print
-            print "=== Running 'share elements' tests ==="
-            print
-            error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'share_elements_test')])
+        error_number = pytest.main(shlex.split(self.pytest_args) + ['tests'])
         sys.exit(error_number)
 
 
