@@ -256,7 +256,11 @@ def signal_handler(signal, frame):
         import traceback
         print _("Could not stop state machine: {0} {1}").format(e.message, traceback.format_exc())
 
-    gui_singletons.main_window_controller.prepare_destruction()
+    try:
+        gui_singletons.main_window_controller.prepare_destruction()
+    except Exception as e:
+        print "Exception while preparing destruction", e
+        os._exit(1)
 
     stop_gtk()
 
