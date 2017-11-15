@@ -213,7 +213,7 @@ def trigger_state_type_change_tests(*args):
 
     if with_gui:
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        call_gui_callback(main_window_controller.prepare_destruction)
+        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
 
 @pytest.mark.parametrize("with_gui", [True])
