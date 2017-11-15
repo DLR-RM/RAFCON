@@ -219,9 +219,6 @@ class MainWindowController(ExtendedController):
         self.connect_button_to_function('main_window',
                                         "delete_event",
                                         self.get_controller('menu_bar_controller').on_delete_event)
-        self.connect_button_to_function('main_window',
-                                        "destroy",
-                                        self.get_controller('menu_bar_controller').on_destroy)
 
         # connect left bar, right bar and console hide buttons' signals to their corresponding methods
         self.connect_button_to_function('left_bar_hide_button', "clicked", self.on_left_bar_hide_clicked)
