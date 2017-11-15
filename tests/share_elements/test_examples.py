@@ -4,6 +4,7 @@ import sys
 import time
 import threading
 import subprocess
+import select
 
 # core elements
 import rafcon.core.singleton
@@ -109,19 +110,38 @@ def test_plugins_example(caplog):
     testing_utils.test_multithreading_lock.acquire()
     try:
         cmd = join(testing_utils.RAFCON_PATH, 'gui', 'start.py')
-        rafcon_gui_process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        start_time = time.time()
+        rafcon_gui_process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # See https://stackoverflow.com/a/36477512 for details
+        # Note: This (select and poll) only works on POSIX systems, not on Windows!
+        poller = select.poll()
+        poller.register(rafcon_gui_process.stdout, select.POLLIN)
 
-        time.sleep(3)
-        rafcon_gui_process.terminate()
-        rafcon_gui_process.wait()
-        assert rafcon_gui_process.returncode == 0
-
-        process_output, _ = rafcon_gui_process.communicate()
-
-        print '#check if PLUGINS have been run:'
-        assert any(["Successfully loaded plugin 'templates'" in line for line in process_output.split('\n')])
-        print "#process PID: ", rafcon_gui_process.pid
-        # testing_utils.run_gui()
+        plugin_loaded = False
+        while True:
+            if poller.poll(0.1):
+                line = rafcon_gui_process.stdout.readline().rstrip()
+                print "process:", line
+                if "Successfully loaded plugin 'templates'" in line:
+                    print "=> plugin loaded"
+                    plugin_loaded = True
+                if "rafcon.gui.controllers.main_window" in line and "Ready" in line:
+                    print "=> ready"
+                    assert plugin_loaded
+                    time.sleep(0.2)  # safety margin...
+                    print "=> RAFCON is now terminated"
+                    rafcon_gui_process.terminate()
+                    stdout, _ = rafcon_gui_process.communicate()
+                    for line in stdout.rstrip().split("\n"):
+                        print "process:", line
+                    assert rafcon_gui_process.returncode == 0
+                    break
+            else:
+                # kill process after 10 seconds and return with a failure
+                if time.time() - start_time > 10:
+                    rafcon_gui_process.kill()
+                    rafcon_gui_process.communicate()
+                    assert False, "RAFCON did not start in time"
     finally:
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
