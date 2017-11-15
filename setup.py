@@ -22,7 +22,7 @@ class PyTest(TestCommand):
     def initialize_options(self):
         TestCommand.initialize_options(self)
         # Add further test folder with 'or my_test_folder'
-        self.pytest_args = '-vxs -p no:pytest_capturelog -k "core or gui"'
+        self.pytest_args = '-vxs -k "core or gui"'
 
     def run_tests(self):
         import shlex
