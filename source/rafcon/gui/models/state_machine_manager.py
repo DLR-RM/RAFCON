@@ -42,11 +42,8 @@ class StateMachineManagerModel(ModelMT):
     state_machine_manager = None
     selected_state_machine_id = None
     state_machines = {}
-    state_machine_mark_dirty = 0
-    state_machine_un_mark_dirty = 0
 
-    __observables__ = ("state_machine_manager", "selected_state_machine_id", "state_machines",
-                       "state_machine_mark_dirty", "state_machine_un_mark_dirty")
+    __observables__ = ("state_machine_manager", "selected_state_machine_id", "state_machines")
 
     def __init__(self, state_machine_manager, meta=None):
         """Constructor"""

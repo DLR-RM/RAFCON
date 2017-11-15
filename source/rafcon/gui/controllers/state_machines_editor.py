@@ -220,7 +220,7 @@ class StateMachinesEditorController(ExtendedController):
 
         If a new state machine was added, a new tab is created with a graphical editor for this state machine.
 
-        :param state_machine_m: The new state machine model
+        :param StateMachineModel state_machine_m: The new state machine model
         """
         assert isinstance(state_machine_m, StateMachineModel)
 
@@ -247,7 +247,10 @@ class StateMachinesEditorController(ExtendedController):
         page.show_all()
 
         self.tabs[sm_id] = {'page': page,
-                            'state_machine_m': state_machine_m}
+                            'state_machine_m': state_machine_m,
+                            'file_system_path': state_machine_m.state_machine.file_system_path,
+                            'marked_dirty': state_machine_m.state_machine.marked_dirty,
+                            'root_state_name': state_machine_m.state_machine.root_state.name}
 
         graphical_editor_view.show()
         self.view.notebook.show()
@@ -290,6 +293,7 @@ class StateMachinesEditorController(ExtendedController):
         for sm_id, sm in self.model.state_machine_manager.state_machines.iteritems():
             if sm_id not in self.tabs:
                 self.add_graphical_state_machine_editor(self.model.state_machines[sm_id])
+                self.observe_model(self.model.state_machines[sm_id])
 
         # Check for removed state machines
         state_machines_to_be_deleted = []
@@ -299,19 +303,35 @@ class StateMachinesEditorController(ExtendedController):
         for state_machine_m in state_machines_to_be_deleted:
             self.remove_state_machine(state_machine_m)
 
-    @ExtendedController.observe("state_machine_mark_dirty", assign=True)
-    def sm_marked_dirty(self, model, prop_name, info):
-        sm_id = self.model.state_machine_mark_dirty
-        if sm_id in self.model.state_machine_manager.state_machines:
-            label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_child().get_children()[0]
-            set_tab_label_texts(label, self.tabs[sm_id]["state_machine_m"], True)
+    @ExtendedController.observe("state_machine", after=True)
+    def change_in_state_machine_data(self, model, prop_name, info):
+        root_state_name_changed = 'root_state_change' == info['method_name'] and 'state' == info['kwargs']['prop_name'] \
+                                  and 'name' == info['kwargs']['method_name']
+        if info['method_name'] in ['file_system_path', 'marked_dirty'] or root_state_name_changed:
+            self.update_state_machine_tab_label(model)
 
-    @ExtendedController.observe("state_machine_un_mark_dirty", assign=True)
-    def sm_un_marked_dirty(self, model, prop_name, info):
-        sm_id = self.model.state_machine_un_mark_dirty
-        if sm_id in self.model.state_machine_manager.state_machines:
-            label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_child().get_children()[0]
-            set_tab_label_texts(label, self.tabs[sm_id]["state_machine_m"], False)
+    def update_state_machine_tab_label(self, state_machine_m):
+        """ Updates tab label if needed because system path, root state name or marked_dirty flag changed
+
+        :param StateMachineModel state_machine_m: State machine model that has changed
+        :return:
+        """
+        sm_id = state_machine_m.state_machine.state_machine_id
+        if sm_id in self.tabs:
+            sm = state_machine_m.state_machine
+            # create new tab label if tab label properties are not up to date
+            if not self.tabs[sm_id]['marked_dirty'] == sm.marked_dirty or \
+                    not self.tabs[sm_id]['file_system_path'] == sm.file_system_path or \
+                    not self.tabs[sm_id]['root_state_name'] == sm.root_state.name:
+
+                label = self.view["notebook"].get_tab_label(self.tabs[sm_id]["page"]).get_child().get_children()[0]
+                set_tab_label_texts(label, state_machine_m, unsaved_changes=sm.marked_dirty)
+
+                self.tabs[sm_id]['file_system_path'] = sm.file_system_path
+                self.tabs[sm_id]['marked_dirty'] = sm.marked_dirty
+                self.tabs[sm_id]['root_state_name'] = sm.root_state.name
+        else:
+            logger.warning("State machine '{0}' tab label can not be updated there is no tab.".format(sm_id))
 
     def on_mouse_right_click(self, event, state_machine_m, result):
 
@@ -404,6 +424,7 @@ class StateMachinesEditorController(ExtendedController):
         :param state_machine_m: The selected state machine model.
         """
         sm_id = get_state_machine_id(state_machine_m)
+        self.relieve_model(state_machine_m)
 
         copy_of_last_opened_state_machines = copy.deepcopy(self.last_focused_state_machine_ids)
 

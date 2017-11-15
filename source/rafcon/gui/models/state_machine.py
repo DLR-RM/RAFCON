@@ -160,26 +160,6 @@ class StateMachineModel(ModelMT, Hashable):
         self.update_hash_from_dict(obj_hash, self.root_state)
         self.update_hash_from_dict(obj_hash, self.meta)
 
-    @ModelMT.observe("state_machine", after=True)
-    def marked_dirty_flag_changed(self, model, prop_name, info):
-        from rafcon.gui.singleton import state_machine_manager_model
-        if info.method_name != 'marked_dirty':
-            return
-        if not self.state_machine.old_marked_dirty == self.state_machine.marked_dirty:
-            if self.state_machine.marked_dirty:
-                state_machine_manager_model.state_machine_mark_dirty = self.state_machine.state_machine_id
-            else:
-                state_machine_manager_model.state_machine_un_mark_dirty = self.state_machine.state_machine_id
-
-    @ModelMT.observe("state", after=True)
-    def name_of_root_state_changed(self, model, prop_name, info):
-        from rafcon.gui.singleton import state_machine_manager_model
-        if info["method_name"] is "name":
-            if self.state_machine.marked_dirty:
-                state_machine_manager_model.state_machine_mark_dirty = self.state_machine.state_machine_id
-            else:
-                state_machine_manager_model.state_machine_un_mark_dirty = self.state_machine.state_machine_id
-
     @ModelMT.observe("state", before=True)
     @ModelMT.observe("outcomes", before=True)
     @ModelMT.observe("is_start", before=True)
