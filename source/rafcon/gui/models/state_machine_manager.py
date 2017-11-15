@@ -131,14 +131,14 @@ class StateMachineManagerModel(ModelMT):
 
         return self.state_machines[self.selected_state_machine_id]
 
-    @ModelMT.getter
+    @property
     def selected_state_machine_id(self):
         """Property for the _selected_state_machine_id field
         :rtype: int
         """
         return self._selected_state_machine_id
 
-    @ModelMT.setter
+    @selected_state_machine_id.setter
     def selected_state_machine_id(self, selected_state_machine_id):
         if selected_state_machine_id is not None:
             if not isinstance(selected_state_machine_id, int):
