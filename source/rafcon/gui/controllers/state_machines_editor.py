@@ -252,6 +252,7 @@ class StateMachinesEditorController(ExtendedController):
                             'marked_dirty': state_machine_m.state_machine.marked_dirty,
                             'root_state_name': state_machine_m.state_machine.root_state.name}
 
+        self.observe_model(state_machine_m)
         graphical_editor_view.show()
         self.view.notebook.show()
         self.last_focused_state_machine_ids.append(sm_id)
@@ -293,7 +294,6 @@ class StateMachinesEditorController(ExtendedController):
         for sm_id, sm in self.model.state_machine_manager.state_machines.iteritems():
             if sm_id not in self.tabs:
                 self.add_graphical_state_machine_editor(self.model.state_machines[sm_id])
-                self.observe_model(self.model.state_machines[sm_id])
 
         # Check for removed state machines
         state_machines_to_be_deleted = []
