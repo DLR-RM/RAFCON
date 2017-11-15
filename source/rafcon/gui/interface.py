@@ -41,14 +41,14 @@ def open_folder(query, default_path=None):
     :return: Path selected by the user or `default_path` if no path was specified or None if none of the paths is valid
     :rtype: str
     """
-    from os.path import expanduser, pathsep
-    last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
+    from os.path import expanduser, pathsep, dirname, isdir
+    last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', "")
     selected_filename = None
-    if not last_path:
-        last_path = expanduser('~')
+    if last_path and isdir(last_path):
+        selected_filename = last_path.split(pathsep)[-1]
+        last_path = dirname(last_path)
     else:
-        selected_filename = last_path.split()[-1]
-        last_path = pathsep.join(last_path.split()[:-1])
+        last_path = expanduser('~')
 
     dialog = gtk.FileChooserDialog(query,
                                    None,
@@ -107,7 +107,7 @@ def create_folder(query, default_name=None, default_path=None):
     from rafcon.core.storage.storage import STATEMACHINE_FILE
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', "")
 
-    if isdir(last_path) and not exists(join(last_path, STATEMACHINE_FILE)):
+    if last_path and isdir(last_path) and not exists(join(last_path, STATEMACHINE_FILE)):
         pass
     elif last_path:
         last_path = dirname(last_path)
@@ -171,7 +171,7 @@ def save_folder(query, default_name=None):
     from rafcon.core.storage.storage import STATEMACHINE_FILE
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', "")
 
-    if isdir(last_path) and not exists(join(last_path, STATEMACHINE_FILE)):
+    if last_path and isdir(last_path) and not exists(join(last_path, STATEMACHINE_FILE)):
         pass
     elif last_path:
         last_path = dirname(last_path)
