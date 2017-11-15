@@ -49,7 +49,7 @@ import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.shortcut_manager import ShortcutManager
-from rafcon.gui.utils import constants
+from rafcon.gui.utils import constants, wait_for_gui
 from rafcon.utils import log, log_helpers
 from rafcon.utils import plugins
 
@@ -306,8 +306,7 @@ class MainWindowController(ExtendedController):
 
         # secure maximized state
         if global_runtime_config.get_config_value("MAIN_WINDOW_MAXIMIZED"):
-            while gtk.events_pending():
-                gtk.main_iteration(False)
+            wait_for_gui()
             view.get_top_widget().maximize()
 
         # check for auto backups
@@ -317,6 +316,7 @@ class MainWindowController(ExtendedController):
 
         plugins.run_hook("main_window_setup", self)
 
+        wait_for_gui()
         # Ensure that the next message is being printed (needed for LN manager to detect finished startup)
         level = logger.level
         logger.setLevel(logging.INFO)

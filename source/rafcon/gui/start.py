@@ -35,6 +35,7 @@ from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.runtime_config import global_runtime_config
 import rafcon.gui.models.auto_backup
+from rafcon.gui.utils import wait_for_gui
 from rafcon.gui.utils.splash_screen import SplashScreen
 from rafcon.gui.helpers import installation
 import rafcon.gui.backup.session as backup_session
@@ -112,9 +113,7 @@ def start_state_machine(state_machine, start_state_path, quit_flag):
 
 
 def start_stop_state_machine(state_machine, start_state_path, quit_flag):
-    # Wait for GUI to initialize
-    while gtk.events_pending():
-        gtk.main_iteration(False)
+    wait_for_gui()
 
     state_machine_execution_engine = core_singletons.state_machine_execution_engine
     state_machine_execution_engine.execute_state_machine_from_path(state_machine=state_machine,
