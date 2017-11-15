@@ -35,7 +35,6 @@ from rafcon.gui.controllers.main_window import MainWindowController
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.runtime_config import global_runtime_config
 import rafcon.gui.models.auto_backup
-from rafcon.gui.utils import wait_for_gui
 from rafcon.gui.utils.splash_screen import SplashScreen
 from rafcon.gui.helpers import installation
 import rafcon.gui.backup.session as backup_session
@@ -50,6 +49,7 @@ from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.config import global_config
 
 # utils
+from rafcon.gui.utils import wait_for_gui
 import rafcon.utils.filesystem as filesystem
 from rafcon.utils import profiler
 from rafcon.utils import plugins
@@ -193,8 +193,7 @@ def stop_gtk():
         glib.idle_add(gtk.main_quit)
 
     # Run the GTK loop until no more events are being generated and thus the GUI is fully destroyed
-    while gtk.events_pending():
-        gtk.main_iteration(False)
+    wait_for_gui()
 
 
 def post_gui_destruction():
@@ -299,8 +298,7 @@ def main():
     splash_screen.set_text("Loading GUI...")
     setup_gui()
 
-    while gtk.events_pending():
-        gtk.main_iteration(False)
+    wait_for_gui()
 
     post_setup_plugins(user_input)
 
