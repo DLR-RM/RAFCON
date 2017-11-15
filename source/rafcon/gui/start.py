@@ -218,10 +218,11 @@ def signal_handler(signal, frame):
     state_machine_execution_engine = core_singletons.state_machine_execution_engine
     core_singletons.shut_down_signal = signal
 
+    # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
+    print _("Signal '{}' received.\nExecution engine will be stopped and program will be shutdown!").format(
+        SIGNALS_TO_NAMES_DICT.get(signal, "[unknown]"))
+
     try:
-        # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
-        print _("Signal '{}' received.\nExecution engine will be stopped and program will be shutdown!").format(
-            SIGNALS_TO_NAMES_DICT.get(signal, "[unknown]"))
         if not state_machine_execution_engine.finished_or_stopped():
             state_machine_execution_engine.stop()
             state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
