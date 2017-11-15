@@ -184,6 +184,18 @@ def setup_gui():
     return main_window_controller
 
 
+def post_gui_destruction():
+    plugins.run_hook("post_destruction")
+
+    if global_config.get_config_value("PROFILER_RUN", False):
+        result_path = global_config.get_config_value("PROFILER_RESULT_PATH")
+        view = global_config.get_config_value("PROFILER_VIEWER")
+        profiler.stop("global", result_path, view)
+
+    if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
+        rafcon.gui.models.auto_backup.remove_rafcon_instance_lock_file()
+
+
 def open_state_machines(paths):
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     first_sm = None
@@ -240,7 +252,7 @@ def signal_handler(signal, frame):
 
     gtk.main_quit()
 
-    plugins.run_hook("post_destruction")
+    post_gui_destruction()
 
 
 def main():
@@ -317,15 +329,7 @@ def main():
         logger.info(_("Main window was closed"))
 
     finally:
-        plugins.run_hook("post_destruction")
-
-        if global_config.get_config_value("PROFILER_RUN", False):
-            result_path = global_config.get_config_value("PROFILER_RESULT_PATH")
-            view = global_config.get_config_value("PROFILER_VIEWER")
-            profiler.stop("global", result_path, view)
-
-        if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
-            rafcon.gui.models.auto_backup.remove_rafcon_instance_lock_file()
+        post_gui_destruction()
 
     if core_singletons.state_machine_execution_engine.status.execution_mode == StateMachineExecutionStatus.STARTED:
         logger.info(_("Waiting for the state machine execution to finish"))
