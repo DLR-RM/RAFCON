@@ -215,7 +215,6 @@ SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n) for n in dir(signal) if n.s
 
 
 def signal_handler(signal, frame):
-    from rafcon.core.execution.execution_status import StateMachineExecutionStatus
     state_machine_execution_engine = core_singletons.state_machine_execution_engine
     core_singletons.shut_down_signal = signal
 
@@ -230,7 +229,6 @@ def signal_handler(signal, frame):
         import traceback
         print _("Could not stop state machine: {0} {1}").format(e.message, traceback.format_exc())
 
-    logger.info(_("RAFCON launcher"))
     gui_singletons.main_window_controller.prepare_destruction()
 
     # shutdown twisted correctly
