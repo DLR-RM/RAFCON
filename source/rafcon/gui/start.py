@@ -229,14 +229,6 @@ def create_new_state_machine():
     core_singletons.state_machine_manager.add_state_machine(state_machine)
 
 
-def log_ready_output():
-    # Ensure that the next message is being printed (needed for LN manager to detect finished startup)
-    level = logger.level
-    logger.setLevel(logging.INFO)
-    logger.info("Ready")
-    logger.setLevel(level)
-
-
 SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n) for n in dir(signal) if n.startswith('SIG') and '_' not in n)
 
 
@@ -324,8 +316,6 @@ def main():
     if not user_input.new and not user_input.state_machine_paths \
             and rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
         glib.idle_add(backup_session.restore_session_from_runtime_config, priority=glib.PRIORITY_LOW)
-
-    log_ready_output()
 
     if global_config.get_config_value("PROFILER_RUN", False):
         profiler.start("global")

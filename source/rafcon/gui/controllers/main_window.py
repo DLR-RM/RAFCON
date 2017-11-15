@@ -21,6 +21,7 @@
 
 """
 
+import logging
 import gtk
 from functools import partial
 
@@ -318,6 +319,12 @@ class MainWindowController(ExtendedController):
             auto_backup.check_for_crashed_rafcon_instances()
 
         plugins.run_hook("main_window_setup", self)
+
+        # Ensure that the next message is being printed (needed for LN manager to detect finished startup)
+        level = logger.level
+        logger.setLevel(logging.INFO)
+        logger.info("Ready")
+        logger.setLevel(level)
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
