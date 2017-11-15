@@ -262,9 +262,9 @@ def run_gui_thread():
     import gtk
     from rafcon.gui.controllers.main_window import MainWindowController
     from rafcon.gui.views.main_window import MainWindowView
-    from rafcon.gui.singleton import state_machine_manager_model
+    import rafcon.gui.singleton
 
-    MainWindowController(state_machine_manager_model, MainWindowView())
+    MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
     # Wait for GUI to initialize
     wait_for_gui()
@@ -293,7 +293,7 @@ def wait_for_gui_quit(timeout=5):
 def close_gui():
     from rafcon.core.singleton import state_machine_execution_engine
     from rafcon.gui.singleton import main_window_controller
-    state_machine_execution_engine.stop()
+    call_gui_callback(state_machine_execution_engine.stop)
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
