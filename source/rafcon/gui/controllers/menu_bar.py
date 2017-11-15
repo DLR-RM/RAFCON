@@ -485,23 +485,12 @@ class MenuBarController(ExtendedController):
         return False
 
     def on_destroy(self, widget, data=None):
-        from rafcon.core.start import reactor_required
+        from rafcon.gui.start import stop_gtk
 
         logger.debug("The GUI is being closed now")
         self.main_window_view.hide()
 
-        if reactor_required():  # shutdown reactor
-            from twisted.internet import reactor
-            if reactor.running:
-                reactor.callFromThread(reactor.stop)
-            else:
-                glib.idle_add(gtk.main_quit)
-        else:  # shutdown gtk
-            glib.idle_add(gtk.main_quit)
-
-        # Run the GTK loop until no more events are being generated and thus the GUI is fully destroyed
-        while gtk.events_pending():
-            gtk.main_iteration(False)
+        stop_gtk()
 
     ######################################################
     # menu bar functionality - Edit

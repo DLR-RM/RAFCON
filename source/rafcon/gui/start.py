@@ -184,6 +184,20 @@ def setup_gui():
     return main_window_controller
 
 
+def stop_gtk():
+    # shutdown twisted correctly
+    if reactor_required():
+        from twisted.internet import reactor
+        if reactor.running:
+            reactor.callFromThread(reactor.stop)
+    else:
+        glib.idle_add(gtk.main_quit)
+
+    # Run the GTK loop until no more events are being generated and thus the GUI is fully destroyed
+    while gtk.events_pending():
+        gtk.main_iteration(False)
+
+
 def post_gui_destruction():
     plugins.run_hook("post_destruction")
 
@@ -244,15 +258,13 @@ def signal_handler(signal, frame):
 
     gui_singletons.main_window_controller.prepare_destruction()
 
-    # shutdown twisted correctly
-    if reactor_required():
-        from twisted.internet import reactor
-        if reactor.running:
-            reactor.callFromThread(reactor.stop)
-
-    gtk.main_quit()
+    stop_gtk()
 
     post_gui_destruction()
+
+    # Do not use sys.exit() in signal handler:
+    # http://thushw.blogspot.de/2010/12/python-dont-use-sysexit-inside-signal.html
+    os._exit(0)
 
 
 def main():
