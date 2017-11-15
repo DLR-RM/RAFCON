@@ -1,19 +1,6 @@
-import os
-import time
-import datetime
-import glib
-import gobject
-
 # state machine elements
 from docutils.statemachine import StateMachine
-from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
-from rafcon.core.storage import storage
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.state_machine import StateMachine
-
-# gui elements
-import rafcon.gui.singleton as gui_singleton
-from rafcon.gui.controllers.state_editor.semantic_data_editor import SemanticDataEditorController
+from rafcon.core.singleton import state_machine_manager
 
 # test environment elements
 import testing_utils
@@ -35,6 +22,11 @@ def initialize_data(state):
 
 
 def change_semantic_data_values():
+    # gui elements
+    import rafcon.gui.singleton as gui_singleton
+    from rafcon.gui.controllers.state_editor.semantic_data_editor import SemanticDataEditorController
+    import threading
+    # print "WT: ", threading.currentThread()
     menu_bar_controller = gui_singleton.main_window_controller.get_controller("menu_bar_controller")
     # All executions from a thread which is not the gtk main thread must be called via "idle_add" or call_gui_callback
     # see https://developer.gnome.org/gdk3/stable/gdk3-Threads.html#gdk-threads-add-idle-full
@@ -82,7 +74,7 @@ def change_semantic_data_values():
     assert len(root_state.semantic_data.keys()) == 5
     call_gui_callback(semantic_data_controller.select_entry, ['dict 2'])
     # semantic_data_controller.select_entry(['dict 2'])
-    semantic_data_controller.on_remove(None)
+    call_gui_callback(semantic_data_controller.on_remove, None)
     assert len(root_state.semantic_data.keys()) == 4 and 'dict 2' not in root_state.semantic_data.keys()
 
     # test add normal entry into first hierarchy
