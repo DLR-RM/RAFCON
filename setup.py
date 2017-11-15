@@ -35,11 +35,20 @@ class PyTest(TestCommand):
         # print "=== Running network tests ==="
         # error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'network')])
         # if not error_number:
+        print
         print "=== Running core tests ==="
+        print
         error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'core')])
         if not error_number:
+            print
             print "=== Running GUI tests ==="
+            print
             error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'gui')])
+        if not error_number:
+            print
+            print "=== Running 'share elements' tests ==="
+            print
+            error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'share_elements_test')])
         sys.exit(error_number)
 
 
