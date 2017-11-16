@@ -104,8 +104,7 @@ def open_state_machine(path=None, recent_opened_notification=False):
         state_machine = storage.load_state_machine_from_path(load_path)
         state_machine_manager.add_state_machine(state_machine)
         if recent_opened_notification:
-            sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
-            global_runtime_config.update_recently_opened_state_machines_with(sm_m)
+            global_runtime_config.update_recently_opened_state_machines_with(state_machine)
         duration = time.time() - start_time
         stat = state_machine.root_state.get_states_statistics(0)
         logger.info("It took {0} seconds to load {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
@@ -188,7 +187,7 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
                                        delete_old_state_machine=delete_old_state_machine, as_copy=as_copy)
     if recent_opened_notification and \
             (not previous_path == save_path or previous_path == save_path and previous_marked_dirty):
-        global_runtime_config.update_recently_opened_state_machines_with(state_machine_m)
+        global_runtime_config.update_recently_opened_state_machines_with(state_machine_m.state_machine)
     state_machine_m.store_meta_data(copy_path=copy_path if as_copy else None)
     logger.debug("Saved state machine and its meta data.")
     library_manager_model.state_machine_was_stored(state_machine_m, old_file_system_path)

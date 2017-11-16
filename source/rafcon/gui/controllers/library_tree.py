@@ -282,8 +282,7 @@ class LibraryTreeController(ExtendedController):
 
         logger.debug("Opening library as state-machine from path '{0}'".format(physical_library_path))
         state_machine = gui_helper_state_machine.open_state_machine(physical_library_path)
-        sm_m = gui_singletons.state_machine_manager_model.state_machines[state_machine.state_machine_id]
-        global_runtime_config.update_recently_opened_state_machines_with(sm_m)
+        global_runtime_config.update_recently_opened_state_machines_with(state_machine)
         return state_machine
 
     def add_button_clicked(self, widget):

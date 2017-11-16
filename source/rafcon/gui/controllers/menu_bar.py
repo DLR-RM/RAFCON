@@ -21,6 +21,7 @@
 
 """
 
+import os
 import glib
 import gtk
 from functools import partial
@@ -190,6 +191,8 @@ class MenuBarController(ExtendedController):
         for sm_path in global_runtime_config.get_config_value("recently_opened_state_machines", []):
             # define label string
             root_state_name = gui_helper_state_machine.get_root_state_name_of_sm_file_system_path(sm_path)
+            if root_state_name is None and not os.path.isdir(sm_path):
+                root_state_name = 'NOT_ACCESSIBLE'
             label_string = "'{0}' in {1}".format(root_state_name, sm_path) if root_state_name is not None else sm_path
 
             # define icon of menu item
