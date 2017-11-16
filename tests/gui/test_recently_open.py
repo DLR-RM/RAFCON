@@ -1,16 +1,6 @@
-import gtk
 import threading
 import shutil
 from os.path import join
-
-# gui elements
-import rafcon.gui.singleton
-from rafcon.gui.controllers.main_window import MainWindowController, MenuBarController
-from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
-from rafcon.gui.views.main_window import MainWindowView
-from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
-from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
-import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 # core elements
 import rafcon.core.config
@@ -63,6 +53,8 @@ def create_state_machine(*args, **kargs):
 
 
 def focus_graphical_editor_in_page(page):
+    from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
+    from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
     graphical_controller = page.children()[0]
     if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
         graphical_controller = graphical_controller.children()[0]
@@ -70,11 +62,14 @@ def focus_graphical_editor_in_page(page):
 
 
 def check_order_and_consistency_of_menu(menubar_ctrl):
+    import rafcon.gui.singleton
+    from rafcon.gui.controllers.main_window import MenuBarController
     assert isinstance(menubar_ctrl, MenuBarController)
     recently_opened = rafcon.gui.singleton.global_runtime_config.get_config_value('recently_opened_state_machines')
     for index, elem in enumerate(menubar_ctrl.view.sub_menu_open_recently):
         if index in [0, 1]:
             continue
+        print elem.get_label()
         assert recently_opened[index - 2] in elem.get_label()
 
 
@@ -102,6 +97,13 @@ def trigger_gui_signals(*args):
     - THOUGHT tool-bar: refresh
     - THOUGHT tool-bar: refresh selected
     """
+    # gui elements
+    import rafcon.gui.singleton
+    from rafcon.gui.controllers.main_window import MenuBarController
+    from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
+    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+
+    print "WT: ", threading.currentThread()
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_controller = rafcon.gui.singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
@@ -115,11 +117,13 @@ def trigger_gui_signals(*args):
     ####################
 
     # menu-bar: New State Machine and save state machine (check in list and in menu) -> after save list updated
+    call_gui_callback(testing_utils.wait_for_gui)
     current_sm_length = len(sm_manager_model.state_machines)
     first_sm_id = sm_manager_model.state_machines.keys()[0]
     call_gui_callback(menubar_ctrl.on_new_activate, None)
     sm_manager_model.selected_state_machine_id = first_sm_id
 
+    call_gui_callback(testing_utils.wait_for_gui)
     assert len(sm_manager_model.state_machines) == current_sm_length + 1
 
     call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
@@ -130,12 +134,14 @@ def trigger_gui_signals(*args):
     sm_manager_model.selected_state_machine_id = first_sm_id + 1
 
     call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
+    call_gui_callback(testing_utils.wait_for_gui)
     recently_opened_state_machines_paths = global_runtime_config.get_config_value('recently_opened_state_machines')
     assert sm_manager_model.state_machines[first_sm_id+1].state_machine.file_system_path == recently_opened_state_machines_paths[0]
 
     # menu-bar: Open State Machine no library (check in list and in menu)
     basic_turtle_sm_path = join(testing_utils.TUTORIAL_PATH, "basic_turtle_demo_sm")
     call_gui_callback(menubar_ctrl.on_open_activate, None, None, basic_turtle_sm_path)
+    call_gui_callback(testing_utils.wait_for_gui)
     recently_opened_state_machines_paths = global_runtime_config.get_config_value('recently_opened_state_machines')
     assert basic_turtle_sm_path == recently_opened_state_machines_paths[0]
     check_order_and_consistency_of_menu(menubar_ctrl)
@@ -155,39 +161,49 @@ def trigger_gui_signals(*args):
     library_os_path = rafcon.gui.singleton.library_manager.get_os_path_to_library(library_path, library_name)[0]
     call_gui_callback(menubar_ctrl.on_open_activate, None, None, library_os_path)
     recently_opened_state_machines_paths = global_runtime_config.get_config_value('recently_opened_state_machines')
+    call_gui_callback(testing_utils.wait_for_gui)
     lib_sm_m = sm_manager_model.get_selected_state_machine_model()
     assert library_os_path == recently_opened_state_machines_paths[0]
+    assert lib_sm_m.state_machine.file_system_path == library_os_path
     check_order_and_consistency_of_menu(menubar_ctrl)
 
     sm_manager_model.selected_state_machine_id = first_sm_id
     sm_manager_model.get_selected_state_machine_model().selection.set(sm_manager_model.get_selected_state_machine_model().root_state)
     call_gui_callback(menubar_ctrl.on_add_state_activate, None, None)
-    # import time
-    # time.sleep(0.1)
+
     call_gui_callback(menubar_ctrl.on_save_activate, None, None)
     assert sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path == recently_opened_state_machines_paths[0]
     assert library_os_path == recently_opened_state_machines_paths[1]
     check_order_and_consistency_of_menu(menubar_ctrl)
 
     # open state machine by recent opened sub-menu in menu bar
-    global_runtime_config.update_recently_opened_state_machines_with(sm_manager_model.state_machines[first_sm_id])
+    call_gui_callback(global_runtime_config.update_recently_opened_state_machines_with,
+                      sm_manager_model.state_machines[first_sm_id].state_machine)
     first_sm_path = sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path
+    call_gui_callback(testing_utils.wait_for_gui)
     assert first_sm_path in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
     call_gui_callback(sm_manager_model.state_machine_manager.remove_state_machine, first_sm_id)
     call_gui_callback(menubar_ctrl.view.sub_menu_open_recently.get_children()[2].activate)
-    first_sm_id = sm_manager_model.selected_state_machine_id
-    assert sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path == first_sm_path
+    call_gui_callback(testing_utils.wait_for_gui)
+    reopen_first_sm_id = sm_manager_model.selected_state_machine_id
+    assert sm_manager_model.state_machines[reopen_first_sm_id].state_machine.file_system_path == first_sm_path
     check_order_and_consistency_of_menu(menubar_ctrl)
 
-    # clean check after every update and re-save of library (both paths are in)
-    shutil.rmtree(sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path)
+    # clean check after every update and re-save of library (both paths are in -> after enforcing by marked dirty flag)
+    # TODO think about to remove this enforcement by marked dirty flag
+    # change name to set marked dirty flag and enforce update of recent opened
+    lib_sm_m.state_machine.root_state.name = "Different"
+    shutil.rmtree(sm_manager_model.state_machines[reopen_first_sm_id].state_machine.file_system_path)
     sm_manager_model.selected_state_machine_id = lib_sm_m.state_machine.state_machine_id
+    call_gui_callback(testing_utils.wait_for_gui)
     call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
+    print recently_opened_state_machines_paths
+
     assert lib_sm_m.state_machine.file_system_path == recently_opened_state_machines_paths[0]
-    print recently_opened_state_machines_paths, library_os_path, sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path
-    assert sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path == recently_opened_state_machines_paths[1]
+    print recently_opened_state_machines_paths, library_os_path, sm_manager_model.state_machines[reopen_first_sm_id].state_machine.file_system_path
+    assert sm_manager_model.state_machines[reopen_first_sm_id].state_machine.file_system_path == recently_opened_state_machines_paths[1]
     call_gui_callback(global_runtime_config.clean_recently_opened_state_machines)
-    assert not sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path == recently_opened_state_machines_paths[1]
+    assert not sm_manager_model.state_machines[reopen_first_sm_id].state_machine.file_system_path == recently_opened_state_machines_paths[1]
     assert library_os_path == recently_opened_state_machines_paths[1]
     check_order_and_consistency_of_menu(menubar_ctrl)
 
@@ -204,10 +220,11 @@ def trigger_gui_signals(*args):
 
     # try to open state machine that is not there -> no fatal failure
     print "OPEN FAILURE CASE"
-    global_runtime_config.update_recently_opened_state_machines_with(lib_sm_m)
+    call_gui_callback(global_runtime_config.update_recently_opened_state_machines_with, lib_sm_m.state_machine)
     lib_sm_path = lib_sm_m.state_machine.file_system_path
     shutil.rmtree(lib_sm_m.state_machine.file_system_path)
     call_gui_callback(sm_manager_model.state_machine_manager.remove_state_machine, lib_sm_m.state_machine.state_machine_id)
+    call_gui_callback(testing_utils.wait_for_gui)
     call_gui_callback(menubar_ctrl.view.sub_menu_open_recently.get_children()[2].activate)
     # was not open
     selected_sm_id = sm_manager_model.selected_state_machine_id
@@ -216,28 +233,25 @@ def trigger_gui_signals(*args):
     assert lib_sm_path in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
     call_gui_callback(global_runtime_config.clean_recently_opened_state_machines)
     assert lib_sm_path not in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
+    call_gui_callback(global_runtime_config.update_recently_opened_state_machines_with, lib_sm_m.state_machine)
+    assert 'NOT_ACCESSIBLE' in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
 
     # TODO maybe finally move this into the auto-backup or restore test module
     print "AUTO BACKUP TEST"
     number_of_open_sm = len(sm_manager_model.state_machines)
-    backup_path = sm_manager_model.state_machines[first_sm_id].auto_backup.meta['last_backup']['file_system_path']
+    backup_path = sm_manager_model.state_machines[reopen_first_sm_id].auto_backup.meta['last_backup']['file_system_path']
     from rafcon.gui.models import auto_backup
-    auto_backup.recover_state_machine_from_backup(sm_path=backup_path)
-    assert recently_opened_state_machines_paths == global_runtime_config.get_config_value('recently_opened_state_machines')
-    assert number_of_open_sm == len(sm_manager_model.state_machines)
-    call_gui_callback(sm_manager_model.state_machine_manager.remove_state_machine, first_sm_id)
-    assert recently_opened_state_machines_paths == global_runtime_config.get_config_value('recently_opened_state_machines')
-    assert number_of_open_sm == len(sm_manager_model.state_machines) + 1
     call_gui_callback(auto_backup.recover_state_machine_from_backup, backup_path)
     assert recently_opened_state_machines_paths == global_runtime_config.get_config_value('recently_opened_state_machines')
     assert number_of_open_sm == len(sm_manager_model.state_machines)
+    call_gui_callback(sm_manager_model.state_machine_manager.remove_state_machine, reopen_first_sm_id)
+    call_gui_callback(testing_utils.wait_for_gui)
+    assert recently_opened_state_machines_paths == global_runtime_config.get_config_value('recently_opened_state_machines')
+    assert number_of_open_sm == len(sm_manager_model.state_machines) + 1
+    auto_backup.recover_state_machine_from_backup(backup_path)
+    assert recently_opened_state_machines_paths == global_runtime_config.get_config_value('recently_opened_state_machines')
+    assert number_of_open_sm == len(sm_manager_model.state_machines)
     check_order_and_consistency_of_menu(menubar_ctrl)
-
-    ####################
-    # shout down gui
-    ####################
-    call_gui_callback(menubar_ctrl.on_stop_activate, None)
-    call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
 
 def test_recent_opened_state_machine_list(caplog):
@@ -246,17 +260,13 @@ def test_recent_opened_state_machine_list(caplog):
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
                  "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
-    testing_utils.initialize_environment(gui_config=change_in_gui_config, libraries=libraries)
+    testing_utils.run_gui(gui_config=change_in_gui_config, libraries=libraries)
 
-    MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
-    testing_utils.wait_for_gui()
-
-    thread = threading.Thread(target=trigger_gui_signals)
-    thread.start()
-    gtk.main()
-    thread.join()
-
-    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
+    try:
+        trigger_gui_signals()
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 
 if __name__ == '__main__':
