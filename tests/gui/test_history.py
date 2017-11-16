@@ -78,10 +78,10 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
     check_that_all_files_are_there(sm_model, path, False, True)
 
 
-def save_and_quit(sm_model, path, main_window_controller, with_gui):
+def save_and_quit(sm_model, path, menubar_ctrl, with_gui):
     if with_gui:
         sm_model.state_machine.file_system_path = path
-        call_gui_callback(main_window_controller.prepare_destruction)
+        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
 
 def create_models(*args, **kargs):
@@ -1786,7 +1786,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
-    save_and_quit(sm_model, TEST_PATH + '_state_type_change', main_window_controller, with_gui)
+    save_and_quit(sm_model, TEST_PATH + '_state_type_change', menubar_ctrl, with_gui)
 
     check_elements_ignores.remove("internal_transitions")
     print check_elements_ignores

@@ -92,7 +92,7 @@ def trigger_copy_delete_bug_signals():
     if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR'):
         assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
 
-    call_gui_callback(rafcon.gui.singleton.main_window_controller.prepare_destruction)
+    call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
 
 def test_copy_delete_bug(caplog):

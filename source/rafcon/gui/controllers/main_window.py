@@ -21,6 +21,7 @@
 
 """
 
+import logging
 import gtk
 from functools import partial
 
@@ -48,7 +49,7 @@ import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.shortcut_manager import ShortcutManager
-from rafcon.gui.utils import constants
+from rafcon.gui.utils import constants, wait_for_gui
 from rafcon.utils import log, log_helpers
 from rafcon.utils import plugins
 
@@ -218,9 +219,6 @@ class MainWindowController(ExtendedController):
         self.connect_button_to_function('main_window',
                                         "delete_event",
                                         self.get_controller('menu_bar_controller').on_delete_event)
-        self.connect_button_to_function('main_window',
-                                        "destroy",
-                                        self.get_controller('menu_bar_controller').on_destroy)
 
         # connect left bar, right bar and console hide buttons' signals to their corresponding methods
         self.connect_button_to_function('left_bar_hide_button', "clicked", self.on_left_bar_hide_clicked)
@@ -308,8 +306,7 @@ class MainWindowController(ExtendedController):
 
         # secure maximized state
         if global_runtime_config.get_config_value("MAIN_WINDOW_MAXIMIZED"):
-            while gtk.events_pending():
-                gtk.main_iteration(False)
+            wait_for_gui()
             view.get_top_widget().maximize()
 
         # check for auto backups
@@ -318,6 +315,13 @@ class MainWindowController(ExtendedController):
             auto_backup.check_for_crashed_rafcon_instances()
 
         plugins.run_hook("main_window_setup", self)
+
+        wait_for_gui()
+        # Ensure that the next message is being printed (needed for LN manager to detect finished startup)
+        level = logger.level
+        logger.setLevel(logging.INFO)
+        logger.info("Ready")
+        logger.setLevel(level)
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):

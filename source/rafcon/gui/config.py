@@ -20,6 +20,7 @@ from rafcon.utils.resources import resource_filename, resource_exists, resource_
 from yaml_configuration.config import ConfigError
 
 import rafcon.gui
+from rafcon.gui.utils import wait_for_gui
 from rafcon.core.config import ObservableConfig
 from rafcon.utils import storage_utils
 from rafcon.utils import log
@@ -85,8 +86,7 @@ class GuiConfig(ObservableConfig):
         gtk.window_set_default_icon_from_file(filename)
 
         # wait for all gtk events being processed before parsing the gtkrc file
-        while gtk.events_pending():
-            gtk.main_iteration(False)
+        wait_for_gui()
         gtk.rc_parse(gtkrc_file_path)
 
     def configure_colors(self):

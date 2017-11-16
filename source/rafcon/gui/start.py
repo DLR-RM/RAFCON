@@ -49,6 +49,7 @@ from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.config import global_config
 
 # utils
+from rafcon.gui.utils import wait_for_gui
 import rafcon.utils.filesystem as filesystem
 from rafcon.utils import profiler
 from rafcon.utils import plugins
@@ -112,9 +113,7 @@ def start_state_machine(state_machine, start_state_path, quit_flag):
 
 
 def start_stop_state_machine(state_machine, start_state_path, quit_flag):
-    # Wait for GUI to initialize
-    while gtk.events_pending():
-        gtk.main_iteration(False)
+    wait_for_gui()
 
     state_machine_execution_engine = core_singletons.state_machine_execution_engine
     state_machine_execution_engine.execute_state_machine_from_path(state_machine=state_machine,
@@ -184,6 +183,31 @@ def setup_gui():
     return main_window_controller
 
 
+def stop_gtk():
+    # shutdown twisted correctly
+    if reactor_required():
+        from twisted.internet import reactor
+        if reactor.running:
+            reactor.callFromThread(reactor.stop)
+    else:
+        glib.idle_add(gtk.main_quit)
+
+    # Run the GTK loop until no more events are being generated and thus the GUI is fully destroyed
+    wait_for_gui()
+
+
+def post_gui_destruction():
+    plugins.run_hook("post_destruction")
+
+    if global_config.get_config_value("PROFILER_RUN", False):
+        result_path = global_config.get_config_value("PROFILER_RESULT_PATH")
+        view = global_config.get_config_value("PROFILER_VIEWER")
+        profiler.stop("global", result_path, view)
+
+    if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
+        rafcon.gui.models.auto_backup.remove_rafcon_instance_lock_file()
+
+
 def open_state_machines(paths):
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     first_sm = None
@@ -203,26 +227,18 @@ def create_new_state_machine():
     core_singletons.state_machine_manager.add_state_machine(state_machine)
 
 
-def log_ready_output():
-    # Ensure that the next message is being printed (needed for LN manager to detect finished startup)
-    level = logger.level
-    logger.setLevel(logging.INFO)
-    logger.info("Ready")
-    logger.setLevel(level)
-
-
 SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n) for n in dir(signal) if n.startswith('SIG') and '_' not in n)
 
 
 def signal_handler(signal, frame):
-    from rafcon.core.execution.execution_status import StateMachineExecutionStatus
     state_machine_execution_engine = core_singletons.state_machine_execution_engine
     core_singletons.shut_down_signal = signal
 
+    # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
+    print _("Signal '{}' received.\nExecution engine will be stopped and program will be shutdown!").format(
+        SIGNALS_TO_NAMES_DICT.get(signal, "[unknown]"))
+
     try:
-        # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
-        print _("Signal '{}' received.\nExecution engine will be stopped and program will be shutdown!").format(
-            SIGNALS_TO_NAMES_DICT.get(signal, "[unknown]"))
         if not state_machine_execution_engine.finished_or_stopped():
             state_machine_execution_engine.stop()
             state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
@@ -230,18 +246,19 @@ def signal_handler(signal, frame):
         import traceback
         print _("Could not stop state machine: {0} {1}").format(e.message, traceback.format_exc())
 
-    logger.info(_("RAFCON launcher"))
-    gui_singletons.main_window_controller.prepare_destruction()
+    try:
+        gui_singletons.main_window_controller.prepare_destruction()
+    except Exception as e:
+        print "Exception while preparing destruction", e
+        os._exit(1)
 
-    # shutdown twisted correctly
-    if reactor_required():
-        from twisted.internet import reactor
-        if reactor.running:
-            reactor.callFromThread(reactor.stop)
+    stop_gtk()
 
-    gtk.main_quit()
+    post_gui_destruction()
 
-    plugins.run_hook("post_destruction")
+    # Do not use sys.exit() in signal handler:
+    # http://thushw.blogspot.de/2010/12/python-dont-use-sysexit-inside-signal.html
+    os._exit(0)
 
 
 def main():
@@ -281,8 +298,7 @@ def main():
     splash_screen.set_text("Loading GUI...")
     setup_gui()
 
-    while gtk.events_pending():
-        gtk.main_iteration(False)
+    wait_for_gui()
 
     post_setup_plugins(user_input)
 
@@ -297,8 +313,6 @@ def main():
     if not user_input.new and not user_input.state_machine_paths \
             and rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
         glib.idle_add(backup_session.restore_session_from_runtime_config, priority=glib.PRIORITY_LOW)
-
-    log_ready_output()
 
     if global_config.get_config_value("PROFILER_RUN", False):
         profiler.start("global")
@@ -318,15 +332,7 @@ def main():
         logger.info(_("Main window was closed"))
 
     finally:
-        plugins.run_hook("post_destruction")
-
-        if global_config.get_config_value("PROFILER_RUN", False):
-            result_path = global_config.get_config_value("PROFILER_RESULT_PATH")
-            view = global_config.get_config_value("PROFILER_VIEWER")
-            profiler.stop("global", result_path, view)
-
-        if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
-            rafcon.gui.models.auto_backup.remove_rafcon_instance_lock_file()
+        post_gui_destruction()
 
     if core_singletons.state_machine_execution_engine.status.execution_mode == StateMachineExecutionStatus.STARTED:
         logger.info(_("Waiting for the state machine execution to finish"))
