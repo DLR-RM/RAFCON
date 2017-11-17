@@ -59,6 +59,12 @@ class ToolChain(gaphas.tool.ToolChain):
 
         return rt
 
+    def ungrab(self, tool):
+        """Fixes parental ungrab method for the case `tool` is None"""
+        if tool is None:
+            return
+        super(ToolChain, self).ungrab(tool)
+
 
 class PanTool(gaphas.tool.PanTool):
     def __init__(self, view=None):

@@ -11,6 +11,7 @@
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from simplegeneric import generic
 from gaphas.geometry import distance_line_point, distance_rectangle_point
 from gaphas.segment import Segment
 from gaphas.aspect import HandleFinder, ItemHandleFinder, HandleSelection, ItemHandleSelection, ItemHandleInMotion, \
@@ -193,3 +194,19 @@ class SegmentHandleSelection(ItemHandleSelection):
 
         if handle:
             item.request_update()
+
+
+class ItemPaintHovered(object):
+    """
+    Paints on top of all items, just for the hovered item (see painter.HoveredItemPainter)
+    """
+
+    def __init__(self, item, view):
+        self.item = item
+        self.view = view
+
+    def paint(self, context, selected):
+        pass
+
+
+PaintHovered = generic(ItemPaintHovered)
