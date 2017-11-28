@@ -75,7 +75,6 @@ class StateView(Element):
         self.port_constraints = {}
 
         self._moving = False
-        self._transparent = False
 
         self._view = None
         self._parent = None
@@ -302,8 +301,14 @@ class StateView(Element):
         return self._name_view
 
     @property
-    def transparent(self):
-        return self._transparent
+    def transparency(self):
+        """Calculates the transparency for the state
+
+        :return: State transparency
+        :rtype: float
+        """
+        # TODO: Implement transparency logic here (e.g. for different viewing modes)
+        return 0.
 
     def child_state_views(self):
         for child in self.canvas.get_children(self):
@@ -323,12 +328,6 @@ class StateView(Element):
         state_se_pos = Position((state_se_pos_x, state_se_pos_y))
 
         return state_nw_pos, state_se_pos
-
-    def foreground(self):
-        self._transparent = False
-
-    def background(self):
-        self._transparent = True
 
     def apply_meta_data(self, recursive=False):
         state_meta = self.model.get_meta_data_editor()
@@ -385,7 +384,7 @@ class StateView(Element):
             'selected': self.selected,
             'moving': self.moving,
             'border_width': border_width,
-            'transparent': self._transparent
+            'transparency': self.transparency
         }
 
         upper_left_corner = (nw.x.value, nw.y.value)
@@ -418,9 +417,9 @@ class StateView(Element):
                 state_border_color = gui_config.gtk_colors['STATE_SELECTED_BORDER']
                 state_border_outline_color = gui_config.gtk_colors['STATE_SELECTED_BORDER_OUTLINE']
 
-            c.set_source_rgba(*get_col_rgba(state_border_color, self._transparent))
+            c.set_source_rgba(*get_col_rgba(state_border_color, self.transparency))
             c.fill_preserve()
-            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self._transparent))
+            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self.transparency))
             # The line gets cropped at the context border, therefore the line width must be doubled
             c.set_line_width(default_line_width * 2)
             c.stroke()
@@ -429,7 +428,7 @@ class StateView(Element):
             c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
             c.set_source_rgba(*get_col_rgba(state_background_color))
             c.fill_preserve()
-            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self._transparent))
+            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self.transparency))
             c.set_line_width(default_line_width)
             c.stroke()
 
@@ -454,14 +453,14 @@ class StateView(Element):
         if isinstance(self.model, LibraryStateModel) and not self.moving:
             max_width = width / 2.
             max_height = height / 2.
-            self._draw_symbol(context, constants.SIGN_LIB, True, (max_width, max_height))
+            self._draw_symbol(context, constants.SIGN_LIB, gui_config.gtk_colors['STATE_NAME'], 0.75)
 
         if self.moving:
             max_width = width - 2 * border_width
             max_height = height - 2 * border_width
-            self._draw_symbol(context, constants.SIGN_ARROW, False, (max_width, max_height))
+            self._draw_symbol(context, constants.SIGN_ARROW, gui_config.gtk_colors['STATE_NAME'])
 
-    def _draw_symbol(self, context, symbol, is_library_state, max_size):
+    def _draw_symbol(self, context, symbol, color, transparency=0.):
         c = context.cairo
         width = self.width
         height = self.height
@@ -498,14 +497,7 @@ class StateView(Element):
         c.move_to(width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
                   height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
 
-        alpha = 1.
-        if is_library_state and self.transparent:
-            alpha = 0.0625
-        elif is_library_state:
-            alpha = 0.25
-
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['STATE_NAME'], is_library_state,
-                                                         alpha=alpha))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.update_layout(layout)
         c.show_layout(layout)
 
@@ -938,8 +930,9 @@ class NameView(Element):
             c = self._image_cache.get_context_for_image(current_zoom)
 
             if context.selected:
+                # Draw light background color if selected
                 c.rectangle(0, 0, width, height)
-                c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], alpha=.1))
+                c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], transparency=.9))
                 c.fill_preserve()
                 c.set_source_rgba(0, 0, 0, 0)
                 c.stroke()
@@ -972,7 +965,7 @@ class NameView(Element):
                 self._value_cache.store_value("font_size", font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
-            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], self.parent.transparent))
+            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], self.parent.transparency))
             c.update_layout(layout)
             c.show_layout(layout)
 

@@ -223,7 +223,7 @@ class PortView(object):
     def draw(self, context, state):
         raise NotImplementedError
 
-    def draw_port(self, context, fill_color, transparent, value=None):
+    def draw_port(self, context, fill_color, transparency, value=None):
         c = context.cairo
         view = self._parent.canvas.get_first_view()
         side_length = self.port_side_size
@@ -242,7 +242,7 @@ class PortView(object):
             'direction': self.direction,
             'side_length': side_length,
             'fill_color': fill_color,
-            'transparency': transparent,
+            'transparency': transparency,
             'incoming': self.connected_incoming,
             'outgoing': self.connected_outgoing,
             'is_library_state_with_content_shown': is_library_state_with_content_shown
@@ -266,19 +266,19 @@ class PortView(object):
             c.move_to(0, 0)
 
             if isinstance(parent_state_m, ContainerStateModel) or is_library_state_with_content_shown:
-                self._draw_container_state_port(c, self.direction, fill_color, transparent)
+                self._draw_container_state_port(c, self.direction, fill_color, transparency)
             else:
-                self._draw_simple_state_port(c, self.direction, fill_color, transparent)
+                self._draw_simple_state_port(c, self.direction, fill_color, transparency)
 
             # Copy image surface to current cairo context
             self._port_image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
         if self.name and self.has_label():
-            self.draw_name(context, transparent, value)
+            self.draw_name(context, transparency, value)
 
         if self.is_selected() or self.handle is view.hovered_handle or context.draw_all:
             context.cairo.move_to(*self.pos)
-            self._draw_hover_effect(context.cairo, self.direction, fill_color, transparent)
+            self._draw_hover_effect(context.cairo, self.direction, fill_color, transparency)
 
     def draw_name(self, context, transparency, value):
         c = context.cairo
@@ -395,7 +395,7 @@ class PortView(object):
         :param context: Cairo context
         :param direction: The direction the port is pointing to
         :param color: Desired color of the port
-        :param transparency: The level of transparency
+        :param float transparency: The level of transparency
         """
         c = context
 
@@ -590,7 +590,7 @@ class IncomeView(LogicPortView):
         super(IncomeView, self).__init__(in_port=True, parent=parent, side=SnappedSide.LEFT)
 
     def draw(self, context, state, highlight=False):
-        self.draw_port(context, self.fill_color, state.transparent)
+        self.draw_port(context, self.fill_color, state.transparency)
 
 
 class OutcomeView(LogicPortView):
@@ -630,7 +630,7 @@ class OutcomeView(LogicPortView):
         else:
             fill_color = gui_config.gtk_colors['LABEL']
 
-        self.draw_port(context, fill_color, state.transparent)
+        self.draw_port(context, fill_color, state.transparency)
 
 
 class ScopedVariablePortView(PortView):
@@ -669,7 +669,7 @@ class ScopedVariablePortView(PortView):
             'side': self.side,
             'side_length': side_length,
             'selected': self.is_selected(),
-            'transparency': state.transparent
+            'transparency': state.transparency
         }
         current_zoom = view.get_zoom_factor()
         from_cache, image, zoom = self._port_image_cache.get_cached_image(self._last_label_size[0],
@@ -686,7 +686,7 @@ class ScopedVariablePortView(PortView):
         else:
             # First we have to do a "dry run", in order to determine the size of the port
             c.move_to(*self.pos)
-            name_size = self.draw_name(c, state.transparent, only_calculate_size=True)
+            name_size = self.draw_name(c, state.transparency, only_calculate_size=True)
             extents = self._draw_rectangle_path(c, name_size[0], side_length, only_get_extents=True)
 
             port_size = extents[2] - extents[0], extents[3] - extents[1]
@@ -703,14 +703,14 @@ class ScopedVariablePortView(PortView):
             c.move_to(port_size[0] / 2., port_size[1] / 2.)
             self._draw_rectangle_path(c, name_size[0], side_length)
             c.set_line_width(self.port_side_size / 50. * self._port_image_cache.multiplicator)
-            c.set_source_rgba(*gap_draw_helper.get_col_rgba(self.fill_color, state.transparent))
+            c.set_source_rgba(*gap_draw_helper.get_col_rgba(self.fill_color, state.transparency))
             c.fill_preserve()
             c.stroke()
 
             # Second, write the text in the rectangle (scoped variable name)
             # Set the current point to be in the center of the rectangle
             c.move_to(port_size[0] / 2., port_size[1] / 2.)
-            self.draw_name(c, state.transparent)
+            self.draw_name(c, state.transparency)
 
             # Copy image surface to current cairo context
             center_pos = self._get_port_center_position(name_size[0])
@@ -719,7 +719,7 @@ class ScopedVariablePortView(PortView):
 
         if self.is_selected() or self.handle is view.hovered_handle or context.draw_all:
             context.cairo.move_to(*self._get_port_center_position(self._last_label_span))
-            self._draw_hover_effect(context.cairo, self.direction, self.fill_color, state.transparent)
+            self._draw_hover_effect(context.cairo, self.direction, self.fill_color, state.transparency)
 
     def draw_name(self, context, transparency, only_calculate_size=False):
         """Draws the name of the port
@@ -846,7 +846,7 @@ class DataPortView(PortView):
         return self.parent.selected or self.parent.show_data_port_label
 
     def draw(self, context, state):
-        self.draw_port(context, self.fill_color, state.transparent, self._value)
+        self.draw_port(context, self.fill_color, state.transparency, self._value)
 
 
 class InputPortView(DataPortView):

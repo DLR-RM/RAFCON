@@ -40,25 +40,33 @@ def limit_value_string_length(value):
     return final_string
 
 
-def get_col_rgba(color, transparent=False, alpha=None):
+def get_col_rgba(color, transparency=None, opacity=None):
     """This class converts a gtk.gdk.Color into its r, g, b parts and adds an alpha according to needs
 
+    If both transparency and opacity is None, alpha is set to 1 => opaque
+
     :param gtk.gdk.Color color: Color to extract r, g and b from
-    :param transparent: Whether the color shoud be tranparent or not (used for selection in "data-flow-mode"
-    :return: Red, Green, Blue and Alpha value (all betwenn 0.0 - 1.0)
+    :param float | None  transparency: Value between 0 (opaque) and 1 (transparent) or None if opacity is to be used
+    :param float | None opacity: Value between 0 (transparent) and 1 (opaque) or None if transparency is to be used
+    :return: Red, Green, Blue and Alpha value (all between 0.0 - 1.0)
     """
     r, g, b = color.red, color.green, color.blue
+    # Convert from 0-6535 to 0-1
     r /= 65535.
     g /= 65535.
     b /= 65535.
-    if transparent:
-        a = .25
-    else:
-        a = 1.
 
-    if alpha:
-        a = alpha
-    return r, g, b, a
+    if transparency is not None or opacity is None:
+        transparency = 0 if transparency is None else transparency  # default value
+        if transparency < 0 or transparency > 1:
+            raise ValueError("Transparency must be between 0 and 1")
+        alpha = 1 - transparency
+    else:
+        if opacity < 0 or opacity > 1:
+            raise ValueError("Opacity must be between 0 and 1")
+        alpha = opacity
+
+    return r, g, b, alpha
 
 
 def get_side_length_of_resize_handle(view, item):
