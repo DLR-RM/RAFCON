@@ -889,6 +889,10 @@ class NameView(Element):
             self._view = self.canvas.get_first_view()
         return self._view
 
+    @property
+    def transparency(self):
+        return self.parent.transparency
+
     def apply_meta_data(self):
         name_meta = self.parent.model.get_meta_data_editor()['name']
         # logger.info("name rel_pos {}".format(name_meta['rel_pos']))
@@ -965,7 +969,7 @@ class NameView(Element):
                 self._value_cache.store_value("font_size", font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
-            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], self.parent.transparency))
+            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], self.transparency))
             c.update_layout(layout)
             c.show_layout(layout)
 
