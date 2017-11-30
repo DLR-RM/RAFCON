@@ -451,13 +451,9 @@ class StateView(Element):
             scoped_variable_v.draw(context, self)
 
         if isinstance(self.model, LibraryStateModel) and not self.moving:
-            max_width = width / 2.
-            max_height = height / 2.
             self._draw_symbol(context, constants.SIGN_LIB, gui_config.gtk_colors['STATE_NAME'], 0.75)
 
         if self.moving:
-            max_width = width - 2 * border_width
-            max_height = height - 2 * border_width
             self._draw_symbol(context, constants.SIGN_ARROW, gui_config.gtk_colors['STATE_NAME'])
 
     def _draw_symbol(self, context, symbol, color, transparency=0.):
