@@ -891,6 +891,9 @@ class NameView(Element):
 
     @property
     def transparency(self):
+        parent_m = self.parent.model
+        if isinstance(parent_m, LibraryStateModel) and parent_m.show_content():
+            return gui_config.get_config_value('SHOW_CONTENT_LIBRARY_NAME_TRANSPARENCY', 0.5)
         return self.parent.transparency
 
     def apply_meta_data(self):
@@ -913,11 +916,13 @@ class NameView(Element):
         view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
         if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY:
             return
+        font_transparency = self.transparency
 
         c = context.cairo
         parameters = {
             'name': self.name,
-            'selected': context.selected
+            'selected': context.selected,
+            'transparency': font_transparency
         }
 
         upper_left_corner = (0, 0)
@@ -969,7 +974,7 @@ class NameView(Element):
                 self._value_cache.store_value("font_size", font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
-            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], self.transparency))
+            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
             c.update_layout(layout)
             c.show_layout(layout)
 
