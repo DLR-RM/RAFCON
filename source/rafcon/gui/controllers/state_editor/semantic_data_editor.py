@@ -15,6 +15,7 @@ import copy
 from gtkmvc import ModelMT
 
 from rafcon.core.id_generator import generate_semantic_data_key
+from rafcon.core.states.library_state import LibraryState
 
 from rafcon.gui.controllers.utils.tree_view_controller import TreeViewController
 from rafcon.gui.models import AbstractStateModel
@@ -45,10 +46,15 @@ class SemanticDataEditorController(TreeViewController):
         assert isinstance(model, AbstractStateModel)
         assert isinstance(view, SemanticDataEditorView)
 
+        if isinstance(model.state, LibraryState):
+            model_to_observe = model.state_copy
+        else:
+            model_to_observe = model
+
         # define tree store with the values in [key, value Is Dict]
         tree_store = gtk.TreeStore(str, str, bool, gobject.TYPE_PYOBJECT)
 
-        super(SemanticDataEditorController, self).__init__(model, view, view["semantic_data_tree_view"],
+        super(SemanticDataEditorController, self).__init__(model_to_observe, view, view["semantic_data_tree_view"],
                                                            tree_store, logger)
         self.semantic_data_counter = 0
 
@@ -61,6 +67,18 @@ class SemanticDataEditorController(TreeViewController):
             semantic data of a state
         """
         super(SemanticDataEditorController, self).register_view(view)
+
+        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
+            view['new_entry'].set_sensitive(False)
+            view['new_dict_entry'].set_sensitive(False)
+            view['delete_entry'].set_sensitive(False)
+
+            for i in range(len(view['semantic_data_tree_view'].get_columns())):
+                current_column = view['semantic_data_tree_view'].get_column(i)
+                print current_column, dir(current_column)
+                current_column.get_cell_renderers()[0].set_property('editable', False)
+
+
         view['new_entry'].connect('clicked', self.on_add, False)
         view['new_dict_entry'].connect('clicked', self.on_add, True)
         view['delete_entry'].connect('clicked', self.on_remove)
