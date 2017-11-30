@@ -451,7 +451,8 @@ class StateView(Element):
             scoped_variable_v.draw(context, self)
 
         if isinstance(self.model, LibraryStateModel) and not self.moving:
-            self._draw_symbol(context, constants.SIGN_LIB, gui_config.gtk_colors['STATE_NAME'], 0.75)
+            symbol_transparency = 0.9 if self.model.show_content() else 0.75
+            self._draw_symbol(context, constants.SIGN_LIB, gui_config.gtk_colors['STATE_NAME'], symbol_transparency)
 
         if self.moving:
             self._draw_symbol(context, constants.SIGN_ARROW, gui_config.gtk_colors['STATE_NAME'])
