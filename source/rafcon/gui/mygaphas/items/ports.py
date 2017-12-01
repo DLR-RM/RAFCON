@@ -234,8 +234,7 @@ class PortView(object):
             return
 
         parent_state_m = self._parent.model
-        is_library_state_with_content_shown = isinstance(parent_state_m, LibraryStateModel) and \
-                                              parent_state_m.show_content()
+        is_library_state_with_content_shown = self._parent.show_content()
 
         parameters = {
             'selected': self.is_selected(),

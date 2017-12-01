@@ -315,10 +315,16 @@ class StateView(Element):
             if isinstance(child, StateView):
                 yield child
 
-    def has_shown_content(self):
-        """Checks whether the state is a library that has content which is shown"""
-        return isinstance(self.model, LibraryStateModel) and self.model.show_content() and \
-               isinstance(self.model.state_copy, ContainerStateModel)
+    def show_content(self, with_content=False):
+        """Checks if the state is a library with the `show_content` flag set
+
+        :param with_content: If this parameter is `True`, the method return only True if the library represents a
+          ContainerState
+        :return: Whether the content of a library state is shown
+        """
+        if isinstance(self.model, LibraryStateModel) and self.model.show_content():
+            return not with_content or isinstance(self.model.state_copy, ContainerStateModel)
+        return False
 
     @staticmethod
     def get_state_drawing_area(state):
@@ -456,7 +462,7 @@ class StateView(Element):
             scoped_variable_v.draw(context, self)
 
         if isinstance(self.model, LibraryStateModel) and not self.moving:
-            symbol_transparency = 0.9 if self.has_shown_content() else 0.75
+            symbol_transparency = 0.9 if self.show_content(with_content=True) else 0.75
             self._draw_symbol(context, constants.SIGN_LIB, gui_config.gtk_colors['STATE_NAME'], symbol_transparency)
 
         if self.moving:
@@ -824,10 +830,9 @@ class StateView(Element):
 
                 for child_state_v in state_v.child_state_views():
                     resize_child_state_v(child_state_v)
-            elif isinstance(state_v.model, LibraryStateModel):
-                if state_v.model.meta['gui']["show_content"]:
-                    state_copy_v = self.canvas.get_view_for_model(state_v.model.state_copy)
-                    resize_child_state_v(state_copy_v)
+            elif state_v.show_content():
+                state_copy_v = self.canvas.get_view_for_model(state_v.model.state_copy)
+                resize_child_state_v(state_copy_v)
 
         new_size = (self.width, self.height)
         resize_state_v(self, old_size, new_size, paste)
@@ -893,7 +898,7 @@ class NameView(Element):
 
     @property
     def transparency(self):
-        if self.parent.has_shown_content():
+        if self.parent.show_content(with_content=True):
             return gui_config.get_config_value('SHOW_CONTENT_LIBRARY_NAME_TRANSPARENCY', 0.5)
         return self.parent.transparency
 
