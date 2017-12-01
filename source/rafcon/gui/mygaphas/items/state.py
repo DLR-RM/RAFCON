@@ -315,6 +315,11 @@ class StateView(Element):
             if isinstance(child, StateView):
                 yield child
 
+    def has_shown_content(self):
+        """Checks whether the state is a library that has content which is shown"""
+        return isinstance(self.model, LibraryStateModel) and self.model.show_content() and \
+               isinstance(self.model.state_copy, ContainerStateModel)
+
     @staticmethod
     def get_state_drawing_area(state):
         assert isinstance(state, StateView)
@@ -451,7 +456,7 @@ class StateView(Element):
             scoped_variable_v.draw(context, self)
 
         if isinstance(self.model, LibraryStateModel) and not self.moving:
-            symbol_transparency = 0.9 if self.model.show_content() else 0.75
+            symbol_transparency = 0.9 if self.has_shown_content() else 0.75
             self._draw_symbol(context, constants.SIGN_LIB, gui_config.gtk_colors['STATE_NAME'], symbol_transparency)
 
         if self.moving:
@@ -888,8 +893,7 @@ class NameView(Element):
 
     @property
     def transparency(self):
-        parent_m = self.parent.model
-        if isinstance(parent_m, LibraryStateModel) and parent_m.show_content():
+        if self.parent.has_shown_content():
             return gui_config.get_config_value('SHOW_CONTENT_LIBRARY_NAME_TRANSPARENCY', 0.5)
         return self.parent.transparency
 
