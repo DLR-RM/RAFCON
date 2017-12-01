@@ -75,7 +75,6 @@ class SemanticDataEditorController(TreeViewController):
 
             for i in range(len(view['semantic_data_tree_view'].get_columns())):
                 current_column = view['semantic_data_tree_view'].get_column(i)
-                print current_column, dir(current_column)
                 current_column.get_cell_renderers()[0].set_property('editable', False)
 
 
