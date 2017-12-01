@@ -31,6 +31,7 @@ class ExtendedGtkView(GtkView, Observer):
         Observer.__init__(self)
         self._selection = state_machine_m.selection
         self.observe_model(self._selection)
+        self.observe_model(state_machine_m.root_state)
         self._bounding_box_painter = BoundingBoxPainter(self)
         self.graphical_editor = graphical_editor_v
 
@@ -153,6 +154,12 @@ class ExtendedGtkView(GtkView, Observer):
                 except AttributeError:
                     pass
         super(ExtendedGtkView, self).queue_draw_item(*gaphas_items)
+
+    @Observer.observe("destruction_signal", signal=True)
+    def _on_root_state_destruction(self, root_state_m, signal_name, signal_msg):
+        """Ignore future selection changes when state machine is being destroyed"""
+        self.relieve_model(self._selection)
+        self.relieve_model(root_state_m)
 
     @Observer.observe("selection_changed_signal", signal=True)
     def _on_selection_changed_externally(self, selection_m, signal_name, signal_msg):
