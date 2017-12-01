@@ -56,6 +56,8 @@ STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED: True
 
 ZOOM_WITH_CTRL: False
 
+SEMANTIC_DATA_MODE: False
+
 SHORTCUTS:
     abort: Escape
     add: <Control>A

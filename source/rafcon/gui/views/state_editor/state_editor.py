@@ -142,7 +142,10 @@ class StateEditorView(View):
                 break
 
     def set_default_paned_positions(self):
-        self['vpaned'].set_position(575)
+        if global_gui_config.get_config_value("SEMANTIC_DATA_MODE", False):
+            self['vpaned'].set_position(200)
+        else:
+            self['vpaned'].set_position(575)
         self['logic_vpaned'].set_position(300)
         self['data_vpaned'].set_position(300)
 
