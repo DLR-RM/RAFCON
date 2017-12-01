@@ -26,11 +26,11 @@ class ExtendedGtkView(GtkView, Observer):
     hovered_handle = None
     _selection = None
 
-    def __init__(self, graphical_editor_v, selection_m, *args):
+    def __init__(self, graphical_editor_v, state_machine_m, *args):
         GtkView.__init__(self, *args)
-        Observer.__init__(self, selection_m, True)
-        self.observe_model(selection_m)
-        self._selection = selection_m
+        Observer.__init__(self)
+        self._selection = state_machine_m.selection
+        self.observe_model(self._selection)
         self._bounding_box_painter = BoundingBoxPainter(self)
         self.graphical_editor = graphical_editor_v
 
