@@ -228,7 +228,7 @@ class StateMachinesEditorController(ExtendedController):
         logger.debug("Create new graphical editor for state machine with id %s" % str(sm_id))
 
         if global_gui_config.get_config_value('GAPHAS_EDITOR', False) and GAPHAS_AVAILABLE:
-            graphical_editor_view = GraphicalEditorGaphasView(state_machine_m.selection)
+            graphical_editor_view = GraphicalEditorGaphasView(state_machine_m)
             graphical_editor_ctrl = GraphicalEditorGaphasController(state_machine_m, graphical_editor_view)
         else:
             graphical_editor_view = GraphicalEditorView()
