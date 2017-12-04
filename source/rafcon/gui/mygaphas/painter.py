@@ -59,10 +59,10 @@ class CornerHandlePainter(ItemPaintHovered):
             cairo.translate(*i2v.transform_point(*handle.pos))
             cairo.rectangle(-side_length / 2., -side_length / 2., side_length, side_length)
             # Fill
-            cairo.set_source_rgba(*get_col_rgba(self.fill_color, alpha=opacity))
+            cairo.set_source_rgba(*get_col_rgba(self.fill_color, opacity=opacity))
             cairo.fill_preserve()
             # Border
-            cairo.set_source_rgba(*get_col_rgba(self.border_color, alpha=opacity))
+            cairo.set_source_rgba(*get_col_rgba(self.border_color, opacity=opacity))
             cairo.stroke()
         cairo.restore()
 
