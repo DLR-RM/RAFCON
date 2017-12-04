@@ -660,5 +660,7 @@ class MainWindowController(ExtendedController):
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
         # Recursively destroys the main window
         self.get_controller('menu_bar_controller').logging_console_view.quit_flag = True
-        glib.idle_add(log_helpers.LoggingViewHandler.remove_logging_view, 'main')
+        # idle_add seems not to be necessary here
+        # glib.idle_add(log_helpers.LoggingViewHandler.remove_logging_view, 'main')
+        log_helpers.LoggingViewHandler.remove_logging_view('main')
         self.destroy()
