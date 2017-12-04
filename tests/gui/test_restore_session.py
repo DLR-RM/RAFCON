@@ -80,6 +80,12 @@ def check_order_and_consistency_of_menu(menubar_ctrl):
             continue
         assert recently_opened[index - 2] in elem.get_label()
 
+CORE_HASH_INDEX = 0
+GUI_HASH_INDEX = 1
+PATH_INDEX = 2
+PAGE_NUMBER_INDEX = 3
+MARKED_DIRTY_INDEX = 4
+
 
 def prepare_tab_data_of_open_state_machines(main_window_controller, sm_manager_model, open_state_machines):
     testing_utils.wait_for_gui()
@@ -224,6 +230,7 @@ def trigger_gui_signals_first_run(*args):
     ####################
     # collect open state machine data
     ####################
+    testing_utils.wait_for_gui()
     prepare_tab_data_of_open_state_machines(main_window_controller, sm_manager_model, open_state_machines)
 
     ####################
@@ -242,7 +249,18 @@ def trigger_gui_signals_second_run(*args):
     import rafcon.gui.backup.session as backup_session
     if rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
         call_gui_callback(backup_session.restore_session_from_runtime_config)
+    print rafcon.gui.singleton.global_runtime_config.config_file_path
+    with open(rafcon.gui.singleton.global_runtime_config.config_file_path, 'r') as f:
+        found_flag = False
+        print "\n"*5, "#"*20
+        for line in f:
+            if "open_tabs" in line:
+                found_flag = True
+            if found_flag:
+                print line
+        print "#"*20, "\n"*5
 
+    testing_utils.wait_for_gui()
     prepare_tab_data_of_open_state_machines(main_window_controller, sm_manager_model, open_state_machines)
 
     backup_session.reset_session()
@@ -311,11 +329,6 @@ def test_restore_session(caplog):
 
     assert open_state_machines['selection_state_machine'] == final_open_state_machines['selection_state_machine']
 
-    CORE_HASH_INDEX = 0
-    GUI_HASH_INDEX = 1
-    PATH_INDEX = 2
-    PAGE_NUMBER_INDEX = 3
-    MARKED_DIRTY_INDEX = 4
     order_of_pages_to_be_dirty = [False, True, False, False, True, False, True]
     for index, sm_tuple in enumerate(open_state_machines['list_of_hash_path_tab_page_number_tuple']):
         assert index == sm_tuple[PAGE_NUMBER_INDEX]
@@ -323,13 +336,15 @@ def test_restore_session(caplog):
             print "CORE hashes page {4} are not equal: {0} != {1}, path: {2} {3}" \
                   "".format(final_tuple_list[index][CORE_HASH_INDEX], sm_tuple[CORE_HASH_INDEX],
                             sm_tuple[PATH_INDEX], sm_tuple[MARKED_DIRTY_INDEX], sm_tuple[PAGE_NUMBER_INDEX])
-            print sm_tuple[PATH_INDEX], storage.STATEMACHINE_FILE
-            sm_file_path = join(sm_tuple[PATH_INDEX], storage.STATEMACHINE_FILE)
-            if exists(sm_tuple[PATH_INDEX]) and exists(sm_file_path):
-                print "sm_file_path: ", sm_file_path
-                print storage.load_data_file(join(sm_tuple[PATH_INDEX], storage.STATEMACHINE_FILE))
+            if sm_tuple[PATH_INDEX]:
+                sm_file_path = join(sm_tuple[PATH_INDEX], storage.STATEMACHINE_FILE)
+                if exists(sm_tuple[PATH_INDEX]) and exists(sm_file_path):
+                    print "sm_file_path: ", sm_file_path
+                    print storage.load_data_file(join(sm_tuple[PATH_INDEX], storage.STATEMACHINE_FILE))
+                else:
+                    print "does not exist sm_file_path ", sm_file_path
             else:
-                print "does not exist sm_file_path ", sm_file_path
+                print "state machine was NOT stored"
         # assert final_tuple_list[index][CORE_HASH_INDEX] == sm_tuple[CORE_HASH_INDEX]
         assert final_tuple_list[index][PATH_INDEX] == sm_tuple[PATH_INDEX]
         if not final_tuple_list[index][GUI_HASH_INDEX] == sm_tuple[GUI_HASH_INDEX]:
