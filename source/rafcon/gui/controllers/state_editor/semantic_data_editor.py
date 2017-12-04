@@ -27,7 +27,7 @@ from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
 from rafcon.gui.views.state_editor.semantic_data_editor import SemanticDataEditorView
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.singleton import global_gui_config, state_machine_manager_model
-from rafcon.gui.utils.external_editor import ExternalEditor
+from rafcon.gui.utils.external_editor import AbstractExternalEditor
 
 import rafcon.utils.storage_utils as storage_utils
 from rafcon.utils import log
@@ -38,7 +38,7 @@ from rafcon.utils import filesystem
 logger = log.get_logger(__name__)
 
 
-class SemanticDataEditorController(TreeViewController, ExternalEditor):
+class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
     """ A controller class to visualize and edit the semantic data of a state
 
     """
@@ -64,7 +64,7 @@ class SemanticDataEditorController(TreeViewController, ExternalEditor):
         # unfortunately this cannot be down with super, as gtkmvc does not use super() consistently
         TreeViewController.__init__(self, model_to_observe, view,
                                     view["semantic_data_tree_view"], tree_store, logger)
-        ExternalEditor.__init__(self)
+        AbstractExternalEditor.__init__(self)
 
         self.semantic_data_counter = 0
 
@@ -99,8 +99,7 @@ class SemanticDataEditorController(TreeViewController, ExternalEditor):
         self.view['delete_entry'].set_sensitive(not locked)
         # self.view['open_externally'].set_sensitive(not locked)
 
-        for i in range(len(self.view['semantic_data_tree_view'].get_columns())):
-            current_column = self.view['semantic_data_tree_view'].get_column(i)
+        for current_column in self.view['semantic_data_tree_view'].get_columns():
             current_column.get_cell_renderers()[0].set_property('editable', not locked)
 
     def register_actions(self, shortcut_manager):

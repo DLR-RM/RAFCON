@@ -21,7 +21,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class ExternalEditor(object):
+class AbstractExternalEditor(object):
     """ A class which enables the use of an external editor. Data can be passed to an external editor and loaded back
     into RAFCON. This class expects the inheriting subclass being a gtkmvc model.
     This is currently used by the source editor and semantic data editor.
@@ -29,7 +29,7 @@ class ExternalEditor(object):
     """
 
     def __init__(self):
-        super(ExternalEditor, self).__init__()
+        super(AbstractExternalEditor, self).__init__()
 
     def execute_shell_command_with_path(self, command, path):
         """ Executes a specific command in the shell (in our case an editor).

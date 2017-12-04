@@ -39,7 +39,7 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel
 from rafcon.gui.views.utils.editor import EditorView
-from rafcon.gui.utils.external_editor import ExternalEditor
+from rafcon.gui.utils.external_editor import AbstractExternalEditor
 
 from rafcon.utils import filesystem
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
@@ -48,7 +48,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class SourceEditorController(EditorController, ExternalEditor):
+class SourceEditorController(EditorController, AbstractExternalEditor):
     """Controller handling the source editor in Execution States.
 
     :param
@@ -68,7 +68,7 @@ class SourceEditorController(EditorController, ExternalEditor):
 
         # unfortunately this cannot be down with super, as gtkmvc does not use super() consistently
         EditorController.__init__(self, model, view, observed_method="script_text")
-        ExternalEditor.__init__(self)
+        AbstractExternalEditor.__init__(self)
         self.saved_initial = False
 
     def register_view(self, view):
