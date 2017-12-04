@@ -36,6 +36,7 @@ from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.controllers.state_editor.semantic_data_editor import SemanticDataEditorController
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, LibraryStateModel
 from rafcon.gui.views.state_editor.state_editor import StateEditorView
+from rafcon.gui.config import global_gui_config
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -129,10 +130,13 @@ class StateEditorController(ExtendedController):
                 view.remove_scoped_variables_tab()
             view.remove_source_tab()
 
-        if isinstance(self.model.state, LibraryState):
-            view.bring_tab_to_the_top('Description')
+        if global_gui_config.get_config_value("SEMANTIC_DATA_MODE", False):
+            view.bring_tab_to_the_top('Semantic Data')
         else:
-            view.bring_tab_to_the_top('Linkage Overview')
+            if isinstance(self.model.state, LibraryState):
+                view.bring_tab_to_the_top('Description')
+            else:
+                view.bring_tab_to_the_top('Linkage Overview')
 
         if isinstance(self.model, ContainerStateModel):
             self.scopes_ctrl.reload_scoped_variables_list_store()
