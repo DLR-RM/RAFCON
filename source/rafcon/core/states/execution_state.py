@@ -64,8 +64,9 @@ class ExecutionState(State):
     def __copy__(self):
         input_data_ports = {elem_id: copy(elem) for elem_id, elem in self._input_data_ports.iteritems()}
         output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.iteritems()}
+        income = self._income
         outcomes = {elem_id: copy(elem) for elem_id, elem in self._outcomes.iteritems()}
-        state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, outcomes, None)
+        state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, None)
         state.script_text = deepcopy(self.script_text)
         state.description = deepcopy(self.description)
         state._file_system_path = self.file_system_path

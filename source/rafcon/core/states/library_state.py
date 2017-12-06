@@ -144,10 +144,11 @@ class LibraryState(State):
         return str(self) == str(other) and self._state_copy == other.state_copy
 
     def __copy__(self):
+        income = self._income
         outcomes = {elem_id: copy(elem) for elem_id, elem in self.outcomes.iteritems()}
         state = self.__class__(self._library_path, self._library_name, self._version,  # library specific attributes
                                # the following are the container state specific attributes
-                               self._name, self._state_id, outcomes,
+                               self._name, self._state_id, income, outcomes,
                                copy(self.input_data_port_runtime_values), copy(self.use_runtime_value_input_data_ports),
                                copy(self.output_data_port_runtime_values), copy(self.use_runtime_value_output_data_ports),
                                False)
