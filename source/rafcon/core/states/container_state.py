@@ -67,7 +67,8 @@ class ContainerState(State):
     _state_element_attrs = ['outcomes', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'states',
                             'transitions', 'data_flows']
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                 income=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None,
                  scoped_variables=None):
 
@@ -81,7 +82,7 @@ class ContainerState(State):
         self._transitions_cv = Condition()
         self._child_execution = False
 
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes)
 
         self.scoped_variables = scoped_variables if scoped_variables is not None else {}
         self.states = states if states is not None else {}
@@ -108,6 +109,7 @@ class ContainerState(State):
             'description': state.description,
             'input_data_ports': state.input_data_ports,
             'output_data_ports': state.output_data_ports,
+            'income': state.income,
             'outcomes': state.outcomes,
             'transitions': state.transitions,
             'data_flows': state.data_flows,
@@ -124,6 +126,7 @@ class ContainerState(State):
                     state_id=dictionary['state_id'],
                     input_data_ports=dictionary['input_data_ports'],
                     output_data_ports=dictionary['output_data_ports'],
+                    income=dictionary.get('income', None),  # older state machine versions don't have this set
                     outcomes=dictionary['outcomes'],
                     states=None,
                     transitions=transitions if states else None,

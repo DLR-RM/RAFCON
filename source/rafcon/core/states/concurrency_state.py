@@ -31,9 +31,10 @@ class ConcurrencyState(ContainerState):
     The concurrency state holds several child states, that can be container states again
     """
 
-    def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None, outcomes=None,
+    def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None,
+                 income=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None):
-        ContainerState.__init__(self, name, state_id, input_keys, output_keys, outcomes, states, transitions,
+        ContainerState.__init__(self, name, state_id, input_keys, output_keys, income, outcomes, states, transitions,
                                 data_flows, start_state_id, scoped_variables)
 
     def run(self, *args, **kwargs):

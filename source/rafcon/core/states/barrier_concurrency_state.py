@@ -61,7 +61,8 @@ class BarrierConcurrencyState(ConcurrencyState):
     """
     yaml_tag = u'!BarrierConcurrencyState'
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                 income=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None,
                  decider_state=None, load_from_storage=False):
 
@@ -76,7 +77,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             if states is not None and UNIQUE_DECIDER_STATE_ID not in states:
                 states[UNIQUE_DECIDER_STATE_ID] = (DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID))
 
-        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes,
+        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes,
                                   states, transitions, data_flows, start_state_id, scoped_variables)
 
         if not load_from_storage and UNIQUE_DECIDER_STATE_ID not in self.states:
@@ -323,12 +324,13 @@ class DeciderState(ExecutionState):
 
     yaml_tag = u'!DeciderState'
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                 income=None, outcomes=None,
                  path=None, filename=None, check_path=True):
 
         if state_id is None:
             state_id = UNIQUE_DECIDER_STATE_ID
-        ExecutionState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path,
+        ExecutionState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, path,
                                 filename, check_path)
 
         self.child_errors = {}

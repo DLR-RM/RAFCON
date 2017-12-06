@@ -36,7 +36,7 @@ from yaml import YAMLObject
 from rafcon.core.id_generator import *
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
-from rafcon.core.state_elements.logical_port import Outcome
+from rafcon.core.state_elements.logical_port import Income, Outcome
 from rafcon.core.state_elements.scope import ScopedData
 from rafcon.core.storage import storage
 from rafcon.utils import classproperty
@@ -69,16 +69,17 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     """
 
     _parent = None
-    _state_element_attrs = ['outcomes', 'input_data_ports', 'output_data_ports']
+    _state_element_attrs = ['income', 'outcomes', 'input_data_ports', 'output_data_ports']
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 parent=None):
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                 income=None, outcomes=None, parent=None):
 
         Observable.__init__(self)
         self._state_id = None
         self._name = None
         self._input_data_ports = {}
         self._output_data_ports = {}
+        self._income = None
         self._outcomes = {}
         # the input data of the state during execution
         self._input_data = {}
@@ -123,6 +124,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.input_data_ports = input_data_ports if input_data_ports is not None else {}
         self.output_data_ports = output_data_ports if output_data_ports is not None else {}
 
+        self.income = income if income is not None else Income()
         self.outcomes = outcomes if outcomes is not None else {0: Outcome(outcome_id=0, name="success")}
         self.state_execution_status = StateExecutionStatus.INACTIVE
 
@@ -130,7 +132,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.execution_history = None
         self.backward_execution = False
 
-        # logger.debug("New {0} created".format(self))
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- generic methods -----------------------------------------
@@ -194,6 +195,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             'description': state.description,
             'input_data_ports': state.input_data_ports,
             'output_data_ports': state.output_data_ports,
+            'income': state.income,
             'outcomes': state.outcomes
         }
         return dict_representation
@@ -688,6 +690,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             information especially if the child is not valid
         """
         # Check type of child and call appropriate validity test
+        if isinstance(child, Income):
+            return self._check_income_validity(child)
         if isinstance(child, Outcome):
             return self._check_outcome_validity(child)
         if isinstance(child, DataPort):
@@ -695,6 +699,17 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if isinstance(child, ScopedData):
             return self._check_scoped_data_validity(child)
         return False, "Invalid state element for state of type {}".format(self.__class__.__name__)
+
+    def _check_income_validity(self, check_income):
+        """Checks the validity of an income
+
+        Currently, an income cannot be invalid
+
+        :param Income check_income: Income to check for validity
+        :return: Validity of Income
+        :rtype: bool
+        """
+        return True, "valid"
 
     def _check_outcome_validity(self, check_outcome):
         """Checks the validity of an outcome
@@ -1079,6 +1094,31 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             except ValueError:
                 self._output_data_ports = old_output_data_ports
                 raise
+
+    @property
+    def income(self):
+        """Returns the Income of the state
+
+        :return: Income of the state
+        :rtype: Income
+        """
+        return self._income
+
+    @income.setter
+    @lock_state_machine
+    @Observable.observed
+    def income(self, income):
+        """Setter for the state's income"""
+        if not isinstance(income, Income):
+            raise ValueError("income must be of type Income")
+
+        old_income = self.income
+        self._income = income
+        try:
+            income.parent = self
+        except ValueError:
+            self._income = old_income
+            raise
 
     @property
     def outcomes(self):

@@ -66,7 +66,8 @@ class LibraryState(State):
 
     def __init__(self, library_path=None, library_name=None, version=None,  # library state specific attributes
                  # the following are the container state specific attributes
-                 name=None, state_id=None, outcomes=None,
+                 name=None, state_id=None,
+                 income=None, outcomes=None,
                  input_data_port_runtime_values=None, use_runtime_value_input_data_ports=None,
                  output_data_port_runtime_values=None, use_runtime_value_output_data_ports=None,
                  allow_user_interaction=True):
@@ -74,7 +75,7 @@ class LibraryState(State):
         # this variable is set to true if the state initialization is finished! after initialization no change to the
         # library state is allowed any more
         self.initialized = False
-        State.__init__(self, name, state_id, None, None, outcomes)
+        State.__init__(self, name, state_id, None, None, income, outcomes)
 
         self.library_path = library_path
         self.library_name = library_name
@@ -301,6 +302,7 @@ class LibraryState(State):
         version = dictionary['version']
         name = dictionary['name']
         state_id = dictionary['state_id']
+        income = dictionary.get('income', None)  # older state machine versions don't have this set
         outcomes = dictionary['outcomes']
 
         input_data_port_runtime_values = {}
@@ -322,7 +324,7 @@ class LibraryState(State):
             output_data_port_runtime_values = dictionary['output_data_port_runtime_values']
             use_runtime_value_output_data_ports = dictionary['use_runtime_value_output_data_ports']
 
-        return cls(library_path, library_name, version, name, state_id, outcomes,
+        return cls(library_path, library_name, version, name, state_id, income, outcomes,
                    input_data_port_runtime_values, use_runtime_value_input_data_ports,
                    output_data_port_runtime_values, use_runtime_value_output_data_ports)
 

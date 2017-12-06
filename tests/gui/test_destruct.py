@@ -289,7 +289,8 @@ def patch_core_classes_with_log():
 
     check_log_files(CORE_FILES)
 
-    def state_init(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+    def state_init(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                   income=None, outcomes=None,
                    parent=None):
         self._patch = None
         self._name = name
@@ -301,7 +302,7 @@ def patch_core_classes_with_log():
         gen_file = os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format("state", GENERATION_LOG_FILE_APPENDIX))
         with open(gen_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(self, id(self), "state", self.gen_time_stamp))
-        old_state_init(self, name, self._state_id, input_data_ports, output_data_ports, outcomes, parent)
+        old_state_init(self, name, self._state_id, input_data_ports, output_data_ports, income, outcomes, parent)
 
     def state_element_init(self, parent=None):
         self._patch = None
