@@ -11,9 +11,28 @@ Next release
 Patch releases 0.12.\*
 ----------------------
 
-0.12.0
+0.12.1
 """"""
 
+- New Features:
+
+    - Semantic data editor supports external editor
+    - Transparency of library states improved when content is shown
+
+- Improvements:
+
+    -
+
+- Bug Fixes:
+
+    - :issue:`427`
+    - :issue:`428`
+    - :issue:`430`
+    - :issue:`431`
+
+
+0.12.0
+""""""
 
 - New Features:
 
