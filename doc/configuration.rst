@@ -340,6 +340,12 @@ ROTATE\_NAMES\_ON\_CONNECTIONS
   | If True, connection labels will be parallel to the connection.
     Otherwise, they are horizontally aligned.
 
+SHOW\_CONTENT\_LIBRARY\_NAME\_TRANSPARENCY
+  | Type: float
+  | Default: ``0.5``
+  | Set to a value between 0 and 1. Defines the transparency of the name of a LibraryState in the graphical editor,
+    of which the content is shown.
+
 HISTORY\_ENABLED
   | Type: boolean
   | Default: ``True``
