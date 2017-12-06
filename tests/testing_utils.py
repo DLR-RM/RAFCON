@@ -151,7 +151,7 @@ def rewind_and_set_libraries(libraries=None):
     rafcon.core.singleton.library_manager.initialize()
 
 
-def initiate_signal_handler():
+def initialize_signal_handler():
     # IMPORTANT avoid second signal initialization to indicate bad bad testing_utils usage
     # -> TODO cleanup with app-class creation
     global GUI_SIGNAL_INITIALIZED
@@ -181,7 +181,7 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
 
     initialize_environment_gui(gui_config, runtime_config)
 
-    initiate_signal_handler()
+    initialize_signal_handler()
 
 
 def initialize_environment_core(core_config=None, libraries=None):
@@ -312,7 +312,7 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
 
     # IMPORTANT signal handler and respective import of gui.start to avoid that singletons are created in this thread
     # -> TODO cleanup with app-class creation
-    initiate_signal_handler()
+    initialize_signal_handler()
 
 
 def wait_for_gui_quit(timeout=5):
