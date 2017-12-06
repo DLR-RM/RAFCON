@@ -60,8 +60,9 @@ def patch_gtkmvc_model_mt():
             print "{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \
                   "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
                             _threading.currentThread(), self.__observer_threads[observer], (args, kwargs))
-            gobject.idle_add(self.__idle_callback, observer, method, args, kwargs)
-            return
+            raise RuntimeError("This test should not have multi-threading constellations.")
+            # gobject.idle_add(self.__idle_callback, observer, method, args, kwargs)
+            # return
 
         def __idle_callback(self, observer, method, args, kwargs):
             method(*args, **kwargs)
@@ -88,13 +89,16 @@ def run_create():
     import rafcon.core.singleton
     import rafcon.gui.singleton
 
-    print "WT: ", threading.currentThread()
+    print "WT_ident: ", threading.currentThread().ident
+    print "CORE_singleton_init_thread_ident: ", rafcon.core.singleton.thread_identifier
+    print "GUI_singleton_init_thread_ident: ", rafcon.gui.singleton.thread_identifier
     main_window_controller = rafcon.gui.singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     call_gui_callback(menubar_ctrl.on_new_activate, None)
 
     print "\n"*10, "WT generated object", "\n"*5
-    rafcon.core.singleton.state_machine_manager.add_state_machine(StateMachine(HierarchyState("new root state")))
+    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine,
+                      StateMachine(HierarchyState("new root state")))
 
 
 def test_thread_observer_creation_list(caplog):
