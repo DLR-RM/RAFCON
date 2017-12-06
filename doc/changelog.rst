@@ -6,6 +6,15 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 
 Next release
 ------------
+
+
+Patch releases 0.12.\*
+----------------------
+
+0.12.0
+""""""
+
+
 - New Features:
 
     - Semantic meta data editor and storage for every state
