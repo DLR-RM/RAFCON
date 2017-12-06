@@ -72,7 +72,7 @@ class Income(LogicalPort):
 
     @classmethod
     def from_dict(cls, dictionary):
-        return Outcome()
+        return Income()
 
     @staticmethod
     def state_element_to_dict(state_element):
