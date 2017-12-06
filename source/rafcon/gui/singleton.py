@@ -16,6 +16,8 @@
    :synopsis: A module to hold all singletons of the GTK GUI
 
 """
+import threading
+
 from rafcon.core.config import global_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.core.singleton import state_machine_manager,\
@@ -29,6 +31,8 @@ from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 
 global_focus = None
 
+# thread id of the thread which created the gui singletons -> supposed to be used to hold all mvc objects in one thread
+thread_identifier = threading.currentThread().ident
 
 # This variable holds the global state machine manager model as long as only one StateMachineMangerModel is allowed
 state_machine_manager_model = StateMachineManagerModel(state_machine_manager)
