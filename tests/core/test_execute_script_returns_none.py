@@ -10,7 +10,7 @@ import testing_utils
 
 
 def test_execute_script_returns_none(caplog):
-    testing_utils.initialize_environment_only_core()
+    testing_utils.initialize_environment_core()
 
     state_machine_path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "return_none_test_sm"))
 

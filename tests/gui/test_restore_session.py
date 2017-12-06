@@ -1,17 +1,6 @@
 import gtk
 import threading
-import shutil
-import time
 from os.path import join, exists
-
-# gui elements
-import rafcon.gui.singleton
-from rafcon.gui.controllers.main_window import MainWindowController, MenuBarController
-from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
-from rafcon.gui.views.main_window import MainWindowView
-from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
-from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
-import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
 # core elements
 import rafcon.core.config
@@ -66,6 +55,8 @@ def create_state_machine(*args, **kargs):
 
 
 def focus_graphical_editor_in_page(page):
+    from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
+    from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
     graphical_controller = page.children()[0]
     if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
         graphical_controller = graphical_controller.children()[0]
@@ -73,6 +64,7 @@ def focus_graphical_editor_in_page(page):
 
 
 def check_order_and_consistency_of_menu(menubar_ctrl):
+    from rafcon.gui.controllers.main_window import MenuBarController
     assert isinstance(menubar_ctrl, MenuBarController)
     recently_opened = rafcon.gui.singleton.global_runtime_config.get_config_value('recently_opened_state_machines')
     for index, elem in enumerate(menubar_ctrl.view.sub_menu_open_recently):
@@ -127,10 +119,13 @@ def trigger_gui_signals_first_run(*args):
     - SHOULD stored state machine and no changes that was removed/moved before restart
     - SHOULD stored state machine and no changes that was removed/moved before restart
     """
-
-    sm_manager_model = args[0]
-    main_window_controller = args[1]
-    open_state_machines = args[2]
+    import rafcon.gui.singleton
+    from rafcon.gui.controllers.main_window import MenuBarController
+    from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
+    testing_utils.wait_for_gui()
+    main_window_controller = rafcon.gui.singleton.main_window_controller
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    open_state_machines = args[0]
     library_manager = rafcon.gui.singleton.library_manager
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     assert isinstance(menubar_ctrl, MenuBarController)
@@ -152,6 +147,7 @@ def trigger_gui_signals_first_run(*args):
     # new state machine without storage
     state_machine = create_state_machine()
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, state_machine)
+    print sm_manager_model.state_machines.keys()
     current_sm_id = sm_manager_model.state_machines.keys()[0]
     current_number_of_sm = len(sm_manager_model.state_machines)
 
@@ -242,9 +238,10 @@ def trigger_gui_signals_first_run(*args):
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals_second_run(*args):
-    sm_manager_model = args[0]
-    main_window_controller = args[1]
-    open_state_machines = args[2]
+    import rafcon.gui.singleton
+    main_window_controller = rafcon.gui.singleton.main_window_controller
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    open_state_machines = args[0]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     import rafcon.gui.backup.session as backup_session
     if rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
@@ -270,6 +267,9 @@ def trigger_gui_signals_second_run(*args):
 
 
 def test_restore_session(caplog):
+
+    from rafcon.gui.controllers.main_window import MainWindowController, MainWindowView
+
     change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False,
                             'SESSION_RESTORE_ENABLED': True, 'GAPHAS_EDITOR': False}
 
@@ -280,15 +280,12 @@ def test_restore_session(caplog):
 
     testing_utils.initialize_environment(gui_config=change_in_gui_config, libraries=libraries)
 
-    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
+    MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
     # Wait for GUI to initialize
     testing_utils.wait_for_gui()
     open_state_machines = {'list_of_hash_path_tab_page_number_tuple': [], 'selected_sm_page_number': None}
-    thread = threading.Thread(target=trigger_gui_signals_first_run,
-                              args=[rafcon.gui.singleton.state_machine_manager_model,
-                                    main_window_controller,
-                                    open_state_machines])
+    thread = threading.Thread(target=trigger_gui_signals_first_run, args=[open_state_machines])
     thread.start()
     gtk.main()
     logger.debug("after gtk main")
@@ -302,15 +299,12 @@ def test_restore_session(caplog):
                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
     testing_utils.initialize_environment(gui_config=change_in_gui_config, libraries=libraries)
 
-    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
+    MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
     # Wait for GUI to initialize
     testing_utils.wait_for_gui()
     final_open_state_machines = {'list_of_hash_path_tab_page_number_tuple': [], 'selected_sm_page_number': None}
-    thread = threading.Thread(target=trigger_gui_signals_second_run,
-                              args=[rafcon.gui.singleton.state_machine_manager_model,
-                                    main_window_controller,
-                                    final_open_state_machines])
+    thread = threading.Thread(target=trigger_gui_signals_second_run, args=[final_open_state_machines])
     thread.start()
     gtk.main()
     logger.debug("after gtk main")

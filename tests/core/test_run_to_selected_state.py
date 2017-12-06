@@ -17,7 +17,7 @@ logger = log.get_logger(__name__)
 
 
 def test_run_to_selected_state(caplog):
-    testing_utils.initialize_environment_only_core()
+    testing_utils.initialize_environment_core()
 
     sm_path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "run_to_selected_state_test"))
     sm = storage.load_state_machine_from_path(sm_path)

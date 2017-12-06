@@ -8,7 +8,7 @@ import testing_utils
 
 
 def test_custom_entry_point(caplog):
-    testing_utils.initialize_environment_only_core()
+    testing_utils.initialize_environment_core()
 
     start_state_id = "RWUZOP/ZDWBKU/HADSLI"
     sm = rafcon.core.singleton.state_machine_execution_engine.execute_state_machine_from_path(

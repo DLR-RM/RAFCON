@@ -6,9 +6,6 @@ import datetime
 from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
 from rafcon.core.storage import storage
 
-# gui elements
-import rafcon.gui.singleton as gui_singleton
-
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
@@ -19,6 +16,7 @@ logger = log.get_logger(__name__)
 
 
 def initialize_global_variables():
+    import rafcon.gui.singleton as gui_singleton
     gui_singleton.global_variable_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     gui_singleton.global_variable_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
@@ -39,6 +37,7 @@ def wait_for_execution_engine_sync_counter(target_value, logger, timeout=5):
 
 
 def execute_library_state_forwards_backwards():
+    import rafcon.gui.singleton as gui_singleton
     menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
     # reset the synchronization counter; although the tests run in different processes they share their memory
     # as the import statements are at the top of the file and not inside the parallel called functions
@@ -93,6 +92,7 @@ def test_backward_stepping_library_state(caplog):
 
 
 def execute_preemptive_state_forwards_backwards():
+    import rafcon.gui.singleton as gui_singleton
     menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
     gvm = gui_singleton.global_variable_manager_model
 
@@ -153,6 +153,7 @@ def test_backward_stepping_preemptive_state(caplog):
 
 
 def execute_barrier_state_forwards_backwards():
+    import rafcon.gui.singleton as gui_singleton
     menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
 
     # reset the synchronization counter; although the tests run in different processes they share their memory

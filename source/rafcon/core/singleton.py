@@ -17,14 +17,16 @@
 
 """
 
-import sys
 import argparse
+import threading
 
 from rafcon.core.global_variable_manager import GlobalVariableManager
 from rafcon.core.library_manager import LibraryManager
 from rafcon.core.execution.execution_engine import ExecutionEngine
 from rafcon.core.state_machine_manager import StateMachineManager
 
+# thread id of the thread which created the core singletons
+thread_identifier = threading.currentThread().ident
 
 # This variable holds the global variable manager singleton
 global_variable_manager = GlobalVariableManager()

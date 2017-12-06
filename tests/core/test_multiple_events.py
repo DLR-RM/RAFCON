@@ -33,7 +33,7 @@ def trigger_exectuion_engine(gvm, execution_engine):
 
 
 def test_multi_events(caplog):
-    testing_utils.initialize_environment_only_core()
+    testing_utils.initialize_environment_core()
 
     execution_trigger_thread = threading.Thread(target=trigger_exectuion_engine,
                                                 args=[global_variable_manager, state_machine_execution_engine])
