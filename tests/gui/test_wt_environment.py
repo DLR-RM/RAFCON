@@ -102,6 +102,7 @@ def run_create():
 
 
 def test_thread_observer_creation_list(caplog):
+    # TODO use the patch/unpatch support of py.test
     patch_gtkmvc_model_mt()
     testing_utils.run_gui()
 
