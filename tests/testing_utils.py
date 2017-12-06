@@ -37,6 +37,8 @@ print RAFCON_SHARED_LIBRARY_PATH
 
 # from rafcon.core.config import global_config
 # global_config.load(path=join(TESTS_PATH, "assets", "configs", "valid_config"))
+GUI_INITIALIZED = False
+GUI_SIGNAL_INITIALIZED = False
 
 
 def get_unique_temp_path():
@@ -149,8 +151,19 @@ def rewind_and_set_libraries(libraries=None):
     rafcon.core.singleton.library_manager.initialize()
 
 
+def initiate_signal_handler():
+    # IMPORTANT avoid second signal initialization to indicate bad bad testing_utils usage
+    # -> TODO cleanup with app-class creation
+    global GUI_SIGNAL_INITIALIZED
+    if GUI_SIGNAL_INITIALIZED:
+        raise DeprecationWarning("Second signal handler initialization before call of shut_down_environment.")
+    from rafcon.gui.start import signal_handler
+    signal.signal(signal.SIGINT, signal_handler)
+    GUI_SIGNAL_INITIALIZED = True
+
+
 def initialize_environment(core_config=None, gui_config=None, runtime_config=None, libraries=None, only_core=False):
-    """ Initialize global configs, libraries and aquire multi threading lock
+    """ Initialize global configs, libraries and acquire multi threading lock
 
      The function accepts tuples as arguments to load a config with (config-file, path) as tuple or a
      dictionary that sets partly or all parameters of the config dictionary.
@@ -164,6 +177,14 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
     :param libraries: Dictionary with library mounting labels and hard drive paths.
     :return:
     """
+    initialize_environment_core(core_config, libraries)
+
+    initialize_environment_gui(gui_config, runtime_config)
+
+    initiate_signal_handler()
+
+
+def initialize_environment_core(core_config=None, libraries=None):
     from rafcon.core.config import global_config
     from rafcon.core.singleton import state_machine_manager
 
@@ -187,12 +208,16 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
     rewind_and_set_libraries(libraries=libraries)
 
     state_machine_manager.delete_all_state_machines()
-    if only_core:
-        return
+
+
+def initialize_environment_gui(gui_config=None, runtime_config=None):
 
     from rafcon.gui.config import global_gui_config
     from rafcon.gui.runtime_config import global_runtime_config
-    from rafcon.gui.start import signal_handler
+    global GUI_INITIALIZED
+
+    if GUI_INITIALIZED:
+        raise DeprecationWarning("Deprecated use of environment initialization. The gui was already initialized.")
 
     # initialize global gui config
     if isinstance(gui_config, tuple) and exists(join(gui_config[1], gui_config[0])):
@@ -212,11 +237,7 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
             for key, value in runtime_config.iteritems():
                 global_runtime_config.set_config_value(key, value)
 
-    signal.signal(signal.SIGINT, signal_handler)
-
-
-def initialize_environment_only_core(core_config=None, libraries=None):
-    initialize_environment(core_config=core_config, libraries=libraries, only_core=True)
+    GUI_INITIALIZED = True
 
 
 def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0):
@@ -235,12 +256,15 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
     :param bool gui_config: Flag to reload gui config from default path.
     :return:
     """
+    global GUI_INITIALIZED, GUI_SIGNAL_INITIALIZED
+
     try:
         if caplog is not None:
             assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors)
     finally:
         rewind_and_set_libraries()
         reload_config(config, gui_config)
+        GUI_INITIALIZED = GUI_SIGNAL_INITIALIZED = False
         test_multithreading_lock.release()
 
 
@@ -254,7 +278,7 @@ def wait_for_gui():
         gtk.main_iteration(False)
 
 
-def run_gui_thread():
+def run_gui_thread(gui_config=None, runtime_config=None):
     global gui_ready
     # see https://stackoverflow.com/questions/35700140/pygtk-run-gtk-main-loop-in-a-seperate-thread
     import gobject
@@ -262,7 +286,8 @@ def run_gui_thread():
     import gtk
     from rafcon.gui.controllers.main_window import MainWindowController
     from rafcon.gui.views.main_window import MainWindowView
-    import rafcon.gui.singleton
+
+    initialize_environment_gui(gui_config, runtime_config)
 
     MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
@@ -274,14 +299,20 @@ def run_gui_thread():
 
 def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=None, timeout=5):
     global gui_ready, gui_thread
-    initialize_environment(core_config, gui_config, runtime_config, libraries)
+    # IMPORTANT enforce gtk.gtkgl import in the python main thread to avoid segfaults
+    import gtk.gtkgl
+    initialize_environment_core(core_config, libraries)
     gui_ready = Event()
-    gui_thread = Thread(target=run_gui_thread)
+    gui_thread = Thread(target=run_gui_thread, args=[gui_config, runtime_config])
     gui_thread.start()
     if not gui_ready.wait(timeout):
         import gtk
         gtk.idle_add(gtk.main_quit)
         raise RuntimeError("Could not start GUI")
+
+    # IMPORTANT signal handler and respective import of gui.start to avoid that singletons are created in this thread
+    # -> TODO cleanup with app-class creation
+    initiate_signal_handler()
 
 
 def wait_for_gui_quit(timeout=5):

@@ -21,7 +21,6 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-# from gdk import eve
 import gtk
 import gtk.gtkgl
 import gtk.gdkgl
@@ -29,8 +28,8 @@ from gtkmvc import View
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.utils.geometry import dist
-from rafcon.utils import log
 
+from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 # Activate the following line in the production code th increase speed

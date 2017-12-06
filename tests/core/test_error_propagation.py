@@ -8,7 +8,7 @@ from rafcon.core.singleton import state_machine_manager, state_machine_execution
 import testing_utils
 
 def test_error_propagation(caplog):
-    testing_utils.initialize_environment_only_core()
+    testing_utils.initialize_environment_core()
 
     sm = state_machine_execution_engine.execute_state_machine_from_path(
         path=testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "error_propagation_test")))

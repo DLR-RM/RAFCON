@@ -173,10 +173,7 @@ def check_pane_positions():
 
 
 def test_window_positions(caplog):
-    run_gui(None, {
-                    'HISTORY_ENABLED': False,
-                    'AUTO_BACKUP_ENABLED': False
-                  }, {})
+    run_gui(core_config=None, gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False}, runtime_config={})
     original_runtime_config = global_runtime_config.as_dict()
 
     try:
