@@ -39,6 +39,8 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel
 from rafcon.gui.views.utils.editor import EditorView
+from rafcon.gui.utils.external_editor import AbstractExternalEditor
+
 from rafcon.utils import filesystem
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils import log
@@ -46,7 +48,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class SourceEditorController(EditorController):
+class SourceEditorController(EditorController, AbstractExternalEditor):
     """Controller handling the source editor in Execution States.
 
     :param
@@ -63,13 +65,16 @@ class SourceEditorController(EditorController):
         assert isinstance(view, EditorView)
         lib_with_show_content = isinstance(model, LibraryStateModel) and not model.show_content()
         model = model.state_copy if lib_with_show_content else model
-        super(SourceEditorController, self).__init__(model, view, observed_method="script_text")
+
+        # unfortunately this cannot be down with super, as gtkmvc does not use super() consistently
+        EditorController.__init__(self, model, view, observed_method="script_text")
+        AbstractExternalEditor.__init__(self)
         self.saved_initial = False
 
     def register_view(self, view):
         super(SourceEditorController, self).register_view(view)
 
-        view['open_external_button'].connect('clicked', self.open_external_clicked)
+        view['open_external_button'].connect('clicked', self.open_externally_clicked)
         view['apply_button'].connect('clicked', self.apply_clicked)
         view['cancel_button'].connect('clicked', self.cancel_clicked)
 
@@ -95,130 +100,43 @@ class SourceEditorController(EditorController):
     def source_text(self, text):
         self.model.state.script_text = text
 
-    # ===============================================================
-    def execute_shell_command_with_path(self, command, path):
+    # ==================================== External Editor functions start ====================================
 
-        logger.debug("Opening path with command: {}".format(command))
+    def get_file_name(self):
+        """ Implements the abstract method of the ExternalEditor class.
+        """
+        return storage.SCRIPT_FILE
 
-        # This splits the command in a matter so that the editor gets called in a separate shell and thus
-        # does not lock the window.
-        args = shlex.split('{0} "{1}"'.format(command, os.path.join(path, storage.SCRIPT_FILE)))
+    def save_file_data(self, path):
+        """ Implements the abstract method of the ExternalEditor class.
+        """
+        sm = state_machine_manager_model.state_machine_manager.get_active_state_machine()
+        if sm.marked_dirty and not self.saved_initial:
+            try:
+                # Save the file before opening it to update the applied changes. Use option create_full_path=True
+                # to assure that temporary state_machines' script files are saved to
+                # (their path doesnt exist when not saved)
+                filesystem.write_file(os.path.join(path, storage.SCRIPT_FILE),
+                                      self.view.get_text(), create_full_path=True)
+            except IOError as e:
+                # Only happens if the file doesnt exist yet and would be written to the temp folder.
+                # The method write_file doesnt create the path
+                logger.error('The operating system raised an error: {}'.format(e))
+            self.saved_initial = True
 
-        try:
-            subprocess.Popen(args)
-            return True
-        except OSError as e:
+    def set_editor_lock(self, lock):
+        """ Implements the abstract method of the ExternalEditor class.
+        """
+        self.view.set_enabled(not lock)
 
-            # This catches most of the errors being returned from the shell, destroys the old textfield and
-            # opens the dialog again, so the user can specify a new command. Its a bit dirty...
-            # The if is required to catch the case that a OSerror occurs due to other reasons than
-            # the specified command
-            logger.error('The operating system raised an error: {}'.format(e))
-        return False
+    def load_and_set_file_content(self, file_system_path):
+        """ Implements the abstract method of the ExternalEditor class.
+        """
+        content = filesystem.read_file(file_system_path, storage.SCRIPT_FILE)
+        if content is not None:
+            self.set_script_text(content)
 
-    def save_script(self, path):
-
-        try:
-            # Save the file before opening it to update the applied changes. Use option create_full_path=True
-            # to assure that temporary state_machines' script files are saved to
-            # (their path doesnt exist when not saved)
-            filesystem.write_file(os.path.join(path, storage.SCRIPT_FILE),
-                                  self.view.get_text(), create_full_path=True)
-        except IOError as e:
-            # Only happens if the file doesnt exist yet and would be written to the temp folder.
-            # The method write_file doesnt create the path
-            logger.error('The operating system raised an error: {}'.format(e))
-
-    def open_external_clicked(self, button):
-
-        prefer_external_editor = global_gui_config.get_config_value("PREFER_EXTERNAL_EDITOR")
-
-        # TODO the chosen path is partly insecure as long as the path could change (by saving state machine or state)
-        # TODO -> additionally, in case temporary file is used the root state id is not globally unique
-        # TODO further the current path violates the state machine save encapsulation
-        file_system_path = self.model.state.file_system_path
-        if file_system_path is None:
-            file_system_path = self.model.state.get_temp_file_system_path()
-            logger.info("External source editor uses temporary storage path {0}.".format(file_system_path))
-
-        def set_editor_lock(lock):
-            if lock:
-                button.set_label('Reload' if prefer_external_editor else 'Unlock')
-            else:
-                button.set_label('Open externally')
-            button.set_active(lock)
-            self.view.set_enabled(not lock)
-
-        if button.get_active():
-            # Get the specified "Editor" as in shell command from the gui config yaml
-            external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')
-
-            def open_file_in_editor(cmd_to_open_editor, test_command=False):
-
-                sm = state_machine_manager_model.state_machine_manager.get_active_state_machine()
-                if sm.marked_dirty and not self.saved_initial:
-                    self.save_script(file_system_path)
-                    self.saved_initial = True
-
-                if not self.execute_shell_command_with_path(cmd_to_open_editor, file_system_path) and test_command:
-                    # If a text field exists destroy it. Errors can occur with a specified editor as well
-                    # e.g Permission changes or sth.
-                    global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', None)
-                    global_gui_config.save_configuration()
-
-                    set_editor_lock(False)
-                    return
-
-                # Set the text on the button to 'Unlock' instead of 'Open externally'
-                set_editor_lock(True)
-
-            def open_text_window():
-
-                markup_text = "No external editor specified. Please specify a shell command to open scripts externally"
-
-                # create a new RAFCONButtonInputDialog, add a checkbox and add the text 'remember' to it
-                text_input = RAFCONInputDialog(markup_text, ["Apply", "Cancel"], checkbox_text='remember')
-
-                # Run the text_input Dialog until a response is emitted. The apply button and the 'activate' signal of
-                # the textinput send response 1
-                if text_input.run() == 1:
-                    # If the response emitted from the Dialog is 1 than handle the 'OK'
-
-                    # If the checkbox is activated, also save the textinput the the config
-                    if text_input.get_checkbox_state():
-                        global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', text_input.get_entry_text())
-                        global_gui_config.save_configuration()
-                    open_file_in_editor(text_input.get_entry_text(), test_command=True)
-
-                else:
-                    # If Dialog is canceled either by the button or the cross, toggle back the button again and revert the
-                    # lock, which is not implemented yet
-                    set_editor_lock(False)
-
-                text_input.destroy()
-
-            if not external_editor:
-
-                # If no external editor is specified in the gui_config.yaml, open the Dialog and let the user choose
-                # a shell command to apply to the file path
-                open_text_window()
-
-            else:
-
-                # If an editor is specified, open the path with the specified command. Also text_field is None, there is
-                # no active text field in the case of an already specified editor. Its needed for the SyntaxError catch
-                open_file_in_editor(external_editor)
-        else:
-            # If button is clicked after one open a file in the external editor, unlock the internal editor to reload
-            set_editor_lock(False)
-
-            # Load file contents after unlocking
-            content = filesystem.read_file(file_system_path, storage.SCRIPT_FILE)
-            if content is not None:
-                self.set_script_text(content)
-
-            # After reload internal editor and external editor is preferred lock internal editor again
-            set_editor_lock(prefer_external_editor)
+    # ==================================== External Editor functions end ====================================
 
     def apply_clicked(self, button):
         """Triggered when the Apply button in the source editor is clicked.

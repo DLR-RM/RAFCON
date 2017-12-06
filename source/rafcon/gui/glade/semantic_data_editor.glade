@@ -77,6 +77,22 @@
             <property name="position">2</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkToggleButton" id="open_externally">
+            <property name="label" translatable="yes">Open externally</property>
+            <property name="width_request">140</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="border_width">5</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
       </object>
       <packing>
         <property name="expand">False</property>

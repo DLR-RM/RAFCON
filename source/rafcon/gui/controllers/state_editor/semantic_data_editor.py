@@ -11,26 +11,34 @@
 import gtk
 import gobject
 import copy
+import os
+from functools import partial
 
 from gtkmvc import ModelMT
 
 from rafcon.core.id_generator import generate_semantic_data_key
+from rafcon.core.states.library_state import LibraryState
+from rafcon.core.storage import storage
+from rafcon.core.storage.storage import load_data_file
 
 from rafcon.gui.controllers.utils.tree_view_controller import TreeViewController
 from rafcon.gui.models import AbstractStateModel
+from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
 from rafcon.gui.views.state_editor.semantic_data_editor import SemanticDataEditorView
 from rafcon.gui.helpers.label import react_to_event
-from functools import partial
+from rafcon.gui.singleton import global_gui_config, state_machine_manager_model
+from rafcon.gui.utils.external_editor import AbstractExternalEditor
 
+import rafcon.utils.storage_utils as storage_utils
 from rafcon.utils import log
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import type_helpers
+from rafcon.utils import filesystem
 
 logger = log.get_logger(__name__)
 
 
-class SemanticDataEditorController(TreeViewController):
-
+class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
     """ A controller class to visualize and edit the semantic data of a state
 
     """
@@ -45,11 +53,19 @@ class SemanticDataEditorController(TreeViewController):
         assert isinstance(model, AbstractStateModel)
         assert isinstance(view, SemanticDataEditorView)
 
+        if isinstance(model.state, LibraryState):
+            model_to_observe = model.state_copy
+        else:
+            model_to_observe = model
+
         # define tree store with the values in [key, value Is Dict]
         tree_store = gtk.TreeStore(str, str, bool, gobject.TYPE_PYOBJECT)
 
-        super(SemanticDataEditorController, self).__init__(model, view, view["semantic_data_tree_view"],
-                                                           tree_store, logger)
+        # unfortunately this cannot be down with super, as gtkmvc does not use super() consistently
+        TreeViewController.__init__(self, model_to_observe, view,
+                                    view["semantic_data_tree_view"], tree_store, logger)
+        AbstractExternalEditor.__init__(self)
+
         self.semantic_data_counter = 0
 
     def register_view(self, view):
@@ -61,6 +77,11 @@ class SemanticDataEditorController(TreeViewController):
             semantic data of a state
         """
         super(SemanticDataEditorController, self).register_view(view)
+
+        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
+            self.set_editor_lock(True)
+
+        view['open_externally'].connect('clicked', self.open_externally_clicked)
         view['new_entry'].connect('clicked', self.on_add, False)
         view['new_dict_entry'].connect('clicked', self.on_add, True)
         view['delete_entry'].connect('clicked', self.on_remove)
@@ -69,6 +90,17 @@ class SemanticDataEditorController(TreeViewController):
         self._apply_value_on_edited_and_focus_out(self.widget_columns[view.VALUE_COLUMN_ID].get_cell_renderers()[0],
                                                   self.value_edited)
         self.reload_tree_store_data()
+
+    def set_editor_lock(self, locked=True):
+        """ Implements the abstract method of the ExternalEditor class.
+        """
+        self.view['new_entry'].set_sensitive(not locked)
+        self.view['new_dict_entry'].set_sensitive(not locked)
+        self.view['delete_entry'].set_sensitive(not locked)
+        # self.view['open_externally'].set_sensitive(not locked)
+
+        for current_column in self.view['semantic_data_tree_view'].get_columns():
+            current_column.get_cell_renderers()[0].set_property('editable', not locked)
 
     def register_actions(self, shortcut_manager):
         shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)
@@ -285,3 +317,26 @@ class SemanticDataEditorController(TreeViewController):
         found_paths = []
         self.iter_tree_with_handed_function(check_function, found_paths)
         return found_paths[0] if found_paths else None
+
+    def get_file_name(self):
+        """ Implements the abstract method of the ExternalEditor class.
+        """
+        return storage.SEMANTIC_DATA_FILE
+
+    def save_file_data(self, path):
+        """ Implements the abstract method of the ExternalEditor class.
+        """
+        try:
+            # just create file with empty text first; this command also creates the whole path to the file
+            filesystem.write_file(os.path.join(path, storage.SCRIPT_FILE), "", create_full_path=True)
+            storage_utils.write_dict_to_json(self.model.state.semantic_data, os.path.join(path, storage.SEMANTIC_DATA_FILE))
+        except IOError as e:
+            # Only happens if the file doesnt exist yet and would be written to the temp folder.
+            # The method write_file doesn't create the path
+            logger.error('The operating system raised an error: {}'.format(e))
+
+    def load_and_set_file_content(self, file_system_path):
+        """ Implements the abstract method of the ExternalEditor class.
+        """
+        semantic_data = load_data_file(os.path.join(file_system_path, storage.SEMANTIC_DATA_FILE))
+        self.model.state.semantic_data = semantic_data

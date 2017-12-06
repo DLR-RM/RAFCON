@@ -8,7 +8,8 @@ Next release
 ------------
 - New Features:
 
-    -
+    - Semantic meta data editor and storage for every state
+    - :issue:`411` Allow outputting data from preempted states
 
 - Improvements:
 
@@ -16,7 +17,11 @@ Next release
 
 - Bug Fixes:
 
-    -
+    - :issue:`426` Again meta data of library ports are screwed after insertion
+    - :issue:`425` Connection via points not visible
+    - :issue:`424` Wrong path for tooltip for state machines editor tabs
+    - :issue:`431` Test for recently opened state machine fails
+    - :issue:`430` Selection test fails
 
 
 

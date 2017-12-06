@@ -19,6 +19,7 @@ import threading
 import time
 
 from rafcon.utils import log
+from rafcon.gui.utils import wait_for_gui
 
 from rafcon.core.config import global_config
 import rafcon.core.singleton as core_singletons
@@ -146,9 +147,7 @@ def convert(config_path, source_path, target_path=None):
         if position[0] < screen_width and position[1] < screen_height:
             main_window.move(position[0], position[1])
 
-    # Wait for GUI to initialize
-    while gtk.events_pending():
-        gtk.main_iteration(False)
+    wait_for_gui()
     thread = threading.Thread(target=trigger_gui_signals, args=[sm_manager_model,
                                                                 main_window_controller,
                                                                 setup_config,
