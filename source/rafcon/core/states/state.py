@@ -36,7 +36,7 @@ from yaml import YAMLObject
 from rafcon.core.id_generator import *
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.state_elements.scope import ScopedData
 from rafcon.core.storage import storage
 from rafcon.utils import classproperty
@@ -1089,7 +1089,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         The method does check validity of the elements by calling the parent-setter and in case of failure cancel
         the operation and recover old outcomes.
 
-        :return: Dictionary outcomes[:class:`int`, :class:`rafcon.core.state_elements.outcome.Outcome`]
+        :return: Dictionary outcomes[:class:`int`, :class:`rafcon.core.state_elements.logical_port.Outcome`]
                  that maps :class:`int` outcome_ids onto values of type Outcome
         :rtype: dict
         """
@@ -1104,7 +1104,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         See property.
 
         :param dict outcomes: Dictionary outcomes[outcome_id] that maps :class:`int` outcome_ids onto values of type
-                              :class:`rafcon.core.state_elements.outcome.Outcome`
+                              :class:`rafcon.core.state_elements.logical_port.Outcome`
         :raises exceptions.TypeError: if outcomes parameter has the wrong type
         :raises exceptions.AttributeError: if the key of the outcome dictionary and the id of the outcome do not match
         """

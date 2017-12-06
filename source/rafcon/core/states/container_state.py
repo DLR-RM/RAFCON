@@ -31,7 +31,7 @@ from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.id_generator import *
 from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.state_elements.data_flow import DataFlow
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.state_elements.scope import ScopedData, ScopedVariable
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.state_elements.state_element import StateElement

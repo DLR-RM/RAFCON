@@ -14,7 +14,7 @@ from copy import copy, deepcopy
 from gtkmvc import ModelMT
 
 from rafcon.gui.models.state_element import StateElementModel
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

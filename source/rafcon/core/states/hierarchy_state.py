@@ -21,7 +21,7 @@ import copy
 
 from rafcon.utils import log
 from rafcon.core.states.container_state import ContainerState
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 import rafcon.core.singleton as singleton
 from rafcon.core.execution.execution_history import CallItem, ReturnItem
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus

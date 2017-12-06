@@ -24,7 +24,7 @@ import traceback
 from gtkmvc import Observable
 
 from rafcon.core.custom_exceptions import RecoveryModeException
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.concurrency_state import ConcurrencyState
 from rafcon.core.states.state import StateExecutionStatus
