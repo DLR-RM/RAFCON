@@ -14,15 +14,60 @@ from copy import copy, deepcopy
 from gtkmvc import ModelMT
 
 from rafcon.gui.models.state_element import StateElementModel
-from rafcon.core.state_elements.logical_port import Outcome
+from rafcon.core.state_elements.logical_port import Income, Outcome
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class OutcomeModel(StateElementModel):
-    """This model class manages a Outcome
+class LogicalPortModel(StateElementModel):
+    """This model class serves as base class for all logical ports"""
 
-    :param rafcon.core.outcome.Outcome outcome: The outcome to be wrapped
+    def __copy__(self):
+        data_port = copy(self.core_element)
+        data_port_m = self.__class__(data_port, parent=None, meta=None)
+        data_port_m.meta = deepcopy(self.meta)
+        return data_port_m
+
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
+
+
+class IncomeModel(LogicalPortModel):
+    """This model class manages an Income
+
+    :param rafcon.core.logical_port.Income income: The income to be wrapped
+    :param rafcon.gui.models.abstract_state.AbstractStateModel parent: The state model of the state element
+    :param rafcon.utils.vividict.Vividict meta: The meta data of the state element model
+     """
+
+    income = None
+
+    __observables__ = ("income",)
+
+    def __init__(self, income, parent, meta=None):
+        """Constructor
+        """
+        super(IncomeModel, self).__init__(parent, meta)
+
+        assert isinstance(income, Income)
+        self.income = income
+
+    def __str__(self):
+        return "Model of Income: {0}".format(self.outcome)
+
+    @property
+    def core_element(self):
+        return self.income
+
+    @ModelMT.observe("income", before=True, after=True)
+    def model_changed(self, model, prop_name, info):
+        super(IncomeModel, self).model_changed(model, prop_name, info)
+
+
+class OutcomeModel(LogicalPortModel):
+    """This model class manages an Outcome
+
+    :param rafcon.core.logical_port.Outcome outcome: The outcome to be wrapped
     :param rafcon.gui.models.abstract_state.AbstractStateModel parent: The state model of the state element
     :param rafcon.utils.vividict.Vividict meta: The meta data of the state element model
      """
@@ -41,15 +86,6 @@ class OutcomeModel(StateElementModel):
 
     def __str__(self):
         return "Model of Outcome: {0}".format(self.outcome)
-
-    def __copy__(self):
-        outcome = copy(self.outcome)
-        outcome_m = self.__class__(outcome, parent=None, meta=None)
-        outcome_m.meta = deepcopy(self.meta)
-        return outcome_m
-
-    def __deepcopy__(self, memo=None, _nil=[]):
-        return self.__copy__()
 
     @property
     def core_element(self):
