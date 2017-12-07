@@ -716,7 +716,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         Checks whether the id or the name of the outcome is already used by another outcome within the state.
 
-        :param rafcon.core.outcome.Outcome check_outcome: The outcome to be checked
+        :param rafcon.core.logical_port.Outcome check_outcome: The outcome to be checked
         :return bool validity, str message: validity is True, when the outcome is valid, False else. message gives more
             information especially if the outcome is not valid
         """
@@ -1408,7 +1408,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         This method is called when the run method finishes
 
-        :param rafcon.core.outcome.Outcome outcome: final outcome of the state
+        :param rafcon.core.logical_port.Outcome outcome: final outcome of the state
         :return: Nothing for the moment
         """
 
