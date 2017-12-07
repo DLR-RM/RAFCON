@@ -24,7 +24,7 @@ from rafcon.utils.geometry import deg2rad
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.runtime_config import global_runtime_config
-from rafcon.gui.models.outcome import OutcomeModel
+from rafcon.gui.models.logical_port import OutcomeModel
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.container_state import ContainerStateModel

@@ -17,7 +17,7 @@ from library_state import LibraryStateModel
 from transition import TransitionModel
 from data_flow import DataFlowModel
 from data_port import DataPortModel
-from outcome import OutcomeModel
+from logical_port import OutcomeModel
 from scoped_variable import ScopedVariableModel
 from global_variable_manager import GlobalVariableManagerModel
 from library_manager import LibraryManagerModel

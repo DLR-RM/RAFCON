@@ -16,7 +16,7 @@ from gtkmvc import ModelMT
 
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.data_port import DataPortModel
-from rafcon.gui.models.outcome import OutcomeModel
+from rafcon.gui.models.logical_port import OutcomeModel
 from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.utils import log
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
