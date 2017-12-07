@@ -60,7 +60,8 @@ class StateElementModel(MetaModel, Hashable):
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.core_element)
-        self.update_hash_from_dict(obj_hash, self.meta)
+        if self.parent and not self.parent.state.get_library_root_state():
+            self.update_hash_from_dict(obj_hash, self.meta)
 
     @property
     def parent(self):
