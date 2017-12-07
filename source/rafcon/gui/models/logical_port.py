@@ -53,7 +53,7 @@ class IncomeModel(LogicalPortModel):
         self.income = income
 
     def __str__(self):
-        return "Model of Income: {0}".format(self.outcome)
+        return "Model of Income: {0}".format(self.income)
 
     @property
     def core_element(self):
