@@ -16,7 +16,7 @@ from gtkmvc import ModelMT
 
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.data_port import DataPortModel
-from rafcon.gui.models.logical_port import OutcomeModel
+from rafcon.gui.models.logical_port import IncomeModel, OutcomeModel
 from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.utils import log
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
@@ -167,9 +167,12 @@ class StateModel(AbstractStateModel):
         for output_data_port in self.state.output_data_ports.itervalues():
             self.output_data_ports.append(DataPortModel(output_data_port, self))
 
+    def _load_income_model(self):
+        """ Create income model from core income """
+        self.income = IncomeModel(self.state.income, self)
+
     def _load_outcome_models(self):
-        """Reloads the input data port models directly from the the state
-        """
+        """ Create outcome models from core outcomes """
         self.outcomes = []
         for outcome in self.state.outcomes.itervalues():
             self.outcomes.append(OutcomeModel(outcome, self))

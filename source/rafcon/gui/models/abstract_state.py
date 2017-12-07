@@ -75,6 +75,7 @@ class AbstractStateModel(MetaModel, Hashable):
     _parent = None
     is_start = None
     state = None
+    income = None
     outcomes = []
     input_data_ports = []
     output_data_ports = []
@@ -82,8 +83,8 @@ class AbstractStateModel(MetaModel, Hashable):
     action_signal = Signal()
     destruction_signal = Signal()
 
-    __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start", "meta_signal",
-                       "action_signal", "destruction_signal")
+    __observables__ = ("state", "input_data_ports", "output_data_ports", "income", "outcomes", "is_start",
+                       "meta_signal", "action_signal", "destruction_signal")
 
     def __init__(self, state, parent=None, meta=None):
         if type(self) == AbstractStateModel:
@@ -108,6 +109,7 @@ class AbstractStateModel(MetaModel, Hashable):
         self.outcomes = []
         self._load_input_data_port_models()
         self._load_output_data_port_models()
+        self._load_income_model()
         self._load_outcome_models()
 
     def __str__(self):
@@ -294,6 +296,9 @@ class AbstractStateModel(MetaModel, Hashable):
         raise NotImplementedError
 
     def _load_output_data_port_models(self):
+        raise NotImplementedError
+
+    def _load_income_model(self):
         raise NotImplementedError
 
     def _load_outcome_models(self):

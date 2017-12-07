@@ -57,6 +57,7 @@ class LibraryStateModel(AbstractStateModel):
 
         self._load_input_data_port_models()
         self._load_output_data_port_models()
+        self._load_income_model()
         self._load_outcome_models()
 
         if load_meta_data:
@@ -115,8 +116,18 @@ class LibraryStateModel(AbstractStateModel):
             new_op_m.data_port = output_data_port_m.data_port
             self.output_data_ports.append(new_op_m)
 
+    def _load_income_model(self):
+        """Reloads the income model directly from the state"""
+        if not self.state_copy_initialized:
+            return
+        self.income = None
+        income_m = deepcopy(self.state_copy.income)
+        income_m.parent = self
+        income_m.income = income_m.income
+        self.income = income_m
+
     def _load_outcome_models(self):
-        """Reloads the outcome models directly from the the state"""
+        """Reloads the outcome models directly from the state"""
         if not self.state_copy_initialized:
             return
         self.outcomes = []
