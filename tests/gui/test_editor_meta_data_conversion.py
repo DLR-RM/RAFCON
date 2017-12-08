@@ -31,8 +31,10 @@ def test_income():
     state = State()
     state_m = StateModel(state, parent=None)
     state_m.meta["gui"]["editor_opengl"]["size"] = (50, 50)
-    meta_data = state_m.get_meta_data_editor(for_gaphas=True)
-    assert meta_data["income"]["rel_pos"] == (0, 25)
+    state_m.get_meta_data_editor(for_gaphas=True)
+
+    meta_data = state_m.income.get_meta_data_editor(for_gaphas=True)
+    assert meta_data["rel_pos"] == (0, 25)
 
 
 def test_state_property_deletion():
