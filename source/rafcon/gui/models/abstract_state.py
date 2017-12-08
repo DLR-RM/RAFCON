@@ -205,10 +205,13 @@ class AbstractStateModel(MetaModel, Hashable):
             self.unregister_observer(self)
         except KeyError:  # Might happen if the observer was already unregistered
             pass
+        if self.income:
+            self.income.prepare_destruction()
         for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
             port.prepare_destruction()
         del self.input_data_ports[:]
         del self.output_data_ports[:]
+        self.income = None
         del self.outcomes[:]
 
     def update_hash(self, obj_hash):

@@ -17,7 +17,7 @@ from gtkmvc import ModelMT
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.logical_port import IncomeModel, OutcomeModel
-from rafcon.core.state_elements.logical_port import Outcome
+from rafcon.core.state_elements.logical_port import Income, Outcome
 from rafcon.utils import log
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 
@@ -93,13 +93,15 @@ class StateModel(AbstractStateModel):
                 changed_list = self.output_data_ports
                 cause = "output_data_port_change"
 
-        # Outcomes are not modelled as class, therefore the model passed when adding/removing an outcome is the
-        # parent StateModel. Thus we have to look at the method that caused a property change.
+        elif isinstance(info.instance, Income) and self is model.parent:
+            changed_list = self.income
+            cause = "income_change"
+
         elif isinstance(info.instance, Outcome) and self is model.parent:
             changed_list = self.outcomes
             cause = "outcome_change"
 
-        if not (cause is None or changed_list is None):
+        if not (cause is None or cause is "income_change" or changed_list is None):
             if 'before' in info:
                 changed_list._notify_method_before(self.state, cause, (self.state,), info)
             elif 'after' in info:
@@ -120,6 +122,11 @@ class StateModel(AbstractStateModel):
             data_list = self.state.output_data_ports
             model_name = "data_port"
             model_class = DataPortModel
+        elif model == "income":
+            model_list = self.income
+            data_list = self.state.income
+            model_name = "income"
+            model_class = IncomeModel
         elif model == "outcome":
             model_list = self.outcomes
             data_list = self.state.outcomes
@@ -142,6 +149,8 @@ class StateModel(AbstractStateModel):
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("input_data_port")
         elif info.method_name in ["add_output_data_port", "remove_output_data_port", "output_data_ports"]:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("output_data_port")
+        elif info.method_name in ["add_income", "remove_income", "income"]:
+            (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("income")
         elif info.method_name in ["add_outcome", "remove_outcome", "outcomes"]:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("outcome")
 
@@ -150,7 +159,7 @@ class StateModel(AbstractStateModel):
                 self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
             elif "remove" in info.method_name:
                 self.remove_additional_model(model_list, data_list, model_name, model_key)
-            elif info.method_name in ["input_data_ports", "output_data_ports", "outcomes"]:
+            elif info.method_name in ["input_data_ports", "output_data_ports", "income", "outcomes"]:
                 self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
 
     def _load_input_data_port_models(self):
@@ -190,6 +199,11 @@ class StateModel(AbstractStateModel):
                           (e.g. 'state_id')
         :return:
         """
+        if model_name == "income":
+            if self.income.income != self.state.income:
+                self.income = self._create_model(self.state.income, IncomeModel)
+            return
+
         for _ in range(len(model_list_or_dict)):
             self.remove_additional_model(model_list_or_dict, core_objects_dict, model_name, model_key)
 
@@ -221,17 +235,15 @@ class StateModel(AbstractStateModel):
                     return True
             return False
 
+        if model_name == "income":
+            self.income = self._create_model(self.state.income, IncomeModel)
+            return
+
         for core_element in core_elements_dict.itervalues():
             if core_element_has_model(core_element):
                 continue
 
-            # get expected model and connect it to self or create a new model
-            new_model = self._get_future_expected_model(core_element)
-            if new_model:
-                new_model.parent = self
-            else:
-                new_model = model_class(core_element, self)
-
+            new_model = self._create_model(core_element, model_class)
             # insert new model into list or dict
             if model_key is None:
                 model_list_or_dict.append(new_model)
@@ -254,6 +266,11 @@ class StateModel(AbstractStateModel):
                           (e.g. 'state_id')
         :return:
         """
+        if model_name == "income":
+            self.income.prepare_destruction()
+            self.income = None
+            return
+
         for model_or_key in model_list_or_dict:
             model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
             found = False
@@ -270,11 +287,26 @@ class StateModel(AbstractStateModel):
                     del model_list_or_dict[model_or_key]
                 return
 
+    def _create_model(self, core_element, model_class):
+        """Get model from future_expected_models or create it
+
+        :param core_element: Core element which model is to be created
+        :param model_class: The model class
+        :return: Model for the core element
+        :rtype: model_class
+        """
+        new_model = self._get_future_expected_model(core_element)
+        if new_model:
+            new_model.parent = self
+        else:
+            new_model = model_class(core_element, self)
+
+        return new_model
+
     def _get_future_expected_model(self, core_element):
         """Hand model for an core element from expected model list and remove the model from this list"""
         for model in self.expected_future_models:
             if model.core_element is core_element:
-                # print "expected_future_models -> remove model:", model
                 self.expected_future_models.remove(model)
                 return model
         return None

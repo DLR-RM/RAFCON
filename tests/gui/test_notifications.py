@@ -1321,15 +1321,15 @@ def test_state_add_remove_notification(caplog):
 
     # check state
     state_model_observer = states_observer_dict[state_dict['Nested'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'state': 1, 'states': 5})
+    check_count_of_model_notifications(state_model_observer, {'state': 1, 'states': 6})
 
     # check parent
     state_model_observer = states_observer_dict[state_dict['State3'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 5})
+    check_count_of_model_notifications(state_model_observer, {'states': 6})
 
     # check grand parent
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 5})
+    check_count_of_model_notifications(state_model_observer, {'states': 6})
 
     sm_model.destroy()
     rafcon.gui.singleton.global_gui_config.load()
