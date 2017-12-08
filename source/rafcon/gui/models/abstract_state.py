@@ -606,9 +606,7 @@ class AbstractStateModel(MetaModel, Hashable):
         vividict = mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
         if contains_geometric_info(vividict['size']):
             self.temp['conversion_from_opengl'] = True
-            # Determine income position
             size = vividict['size']
-            vividict['income']['rel_pos'] = (0, size[1] / 2.)
 
             # Determine size and position of NameView
             margin = min(size) / 12.

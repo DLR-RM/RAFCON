@@ -76,7 +76,6 @@ class MyCanvas(gaphas.canvas.Canvas):
         if not isinstance(item, Item):
             return item.parent
         return super(MyCanvas, self).get_parent(item)
-            
 
     def get_first_view(self):
         """Return first registered view object

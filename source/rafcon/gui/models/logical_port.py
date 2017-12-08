@@ -63,6 +63,14 @@ class IncomeModel(LogicalPortModel):
     def model_changed(self, model, prop_name, info):
         super(IncomeModel, self).model_changed(model, prop_name, info)
 
+    def _meta_data_editor_opengl2gaphas(self, vividict):
+        from rafcon.gui.helpers.meta_data import contains_geometric_info
+        if self.parent:
+            state_size = self.parent.get_meta_data_editor()['size']
+            if contains_geometric_info(state_size):
+                vividict['rel_pos'] = (0, state_size[1] / 2.)
+        return vividict
+
 
 class OutcomeModel(LogicalPortModel):
     """This model class manages an Outcome

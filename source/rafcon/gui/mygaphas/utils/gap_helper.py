@@ -308,15 +308,8 @@ def update_meta_data_for_port(graphical_editor_view, item, handle):
     for port in item.get_all_ports():
         if not handle or handle is port.handle:
             rel_pos = (port.handle.pos.x.value, port.handle.pos.y.value)
-            # meta data of incomes are stored in the parental state model
-            if isinstance(port, IncomeView):
-                cur_rel_pos = item.model.get_meta_data_editor()['income']['rel_pos']
-                if rel_pos != cur_rel_pos:
-                    item.model.set_meta_data_editor('income.rel_pos', rel_pos)
-                    if handle:
-                        graphical_editor_view.emit('meta_data_changed', item.model, "income position", True)
 
-            elif isinstance(port, (OutcomeView, InputPortView, OutputPortView, ScopedVariablePortView)):
+            if isinstance(port, (IncomeView, OutcomeView, InputPortView, OutputPortView, ScopedVariablePortView)):
                 port_m = port.model
                 cur_rel_pos = port_m.get_meta_data_editor()['rel_pos']
                 if rel_pos != cur_rel_pos:

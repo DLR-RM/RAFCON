@@ -752,9 +752,10 @@ class GraphicalEditorController(ExtendedController):
         self.canvas.add(state_v, parent_v, index=index)
         state_v.matrix.translate(*rel_pos)
 
+        state_v.add_income(state_m.income)
+
         for outcome_m in state_m.outcomes:
             state_v.add_outcome(outcome_m)
-            # state_v.add_double_port_outcome(outcome_m)
 
         for input_port_m in state_m.input_data_ports:
             state_v.add_input_port(input_port_m)
