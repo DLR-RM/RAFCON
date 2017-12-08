@@ -35,7 +35,7 @@ from rafcon.core.script import Script
 from rafcon.core.state_elements.data_flow import DataFlow
 from rafcon.core.state_elements.data_port import DataPort
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
-from rafcon.core.state_elements.logical_port import Outcome
+from rafcon.core.state_elements.logical_port import Income, Outcome
 from rafcon.core.state_elements.scope import ScopedData, ScopedVariable
 from rafcon.core.state_elements.transition import Transition
 from rafcon.core.state_machine import StateMachine
@@ -841,6 +841,8 @@ class Action(ModelMT, AbstractAction):
             state.remove_state(core_obj.state_id, force=True)
         elif isinstance(core_obj, Transition):
             state.remove_transition(core_obj.transition_id)
+        elif isinstance(core_obj, Income):
+            state.remove_income()
         elif isinstance(core_obj, Outcome):
             state.remove_outcome(core_obj.outcome_id)
         elif isinstance(core_obj, DataFlow):

@@ -626,6 +626,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param StateElement state_element: State element to be removed
         :param bool force: if the removal should be forced without checking constraints
         """
+        if isinstance(state_element, Income):
+            self.remove_income(force)
         if isinstance(state_element, Outcome):
             self.remove_outcome(state_element.outcome_id, force)
         elif isinstance(state_element, InputDataPort):
@@ -634,6 +636,13 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self.remove_output_data_port(state_element.data_port_id, force)
         else:
             raise ValueError("Cannot remove state_element with invalid type")
+
+    @lock_state_machine
+    @Observable.observed
+    def remove_income(self, force=False):
+        if not force:
+            raise AttributeError("The income of a state cannot be removed")
+        self._income = None
 
     @lock_state_machine
     @Observable.observed
@@ -925,6 +934,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         for out_key in self.output_data_ports.keys():
             self.remove_output_data_port(out_key, True)
+
+        self.remove_income(True)
 
         for outcome_key in self.outcomes.keys():
             self.remove_outcome(outcome_key, True)
