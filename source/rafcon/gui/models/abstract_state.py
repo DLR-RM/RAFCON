@@ -14,6 +14,7 @@ import os.path
 from copy import copy, deepcopy
 from weakref import ref
 from gtkmvc import ModelMT, Signal
+import gtkmvc.support.wrappers as wrappers
 
 from rafcon.gui.models.signals import MetaSignalMsg, Notification
 from rafcon.gui.models.meta import MetaModel
@@ -123,17 +124,25 @@ class AbstractStateModel(MetaModel, Hashable):
         if self.meta != other.meta:
             return False
         for attr in self.state.state_element_attrs:
-            # E.g. compare lists of outcomes and data ports. The lists are converted to sets, as those are unordered
-            if hasattr(getattr(self, attr), "__radd__"):  # elements are stored in a list (ObsListWrapper)
-                elements = getattr(self, attr)
-                other_elements = getattr(other, attr)
-            else:  # elements are stored in a dict (ObsMapWrapper)
-                elements = getattr(self, attr).items()
-                other_elements = getattr(other, attr).items()
-            if len(elements) != len(other_elements):
-                return False
-            if not all([element in other_elements for element in other_elements]):
-                return False
+            # some state element attributes are wrapped in a wrappers.ObsWrapperBase class, some of which are held in
+            # lists or dicts. Those need to be compared element-wise.
+            my_attr = getattr(self, attr)
+            other_attr = getattr(other, attr)
+            if isinstance(my_attr, wrappers.ObsSeqWrapper):
+                if isinstance(my_attr, wrappers.ObsListWrapper):  # elements are stored in a list
+                    elements = my_attr
+                    other_elements = other_attr
+                elif isinstance(my_attr, wrappers.ObsMapWrapper):  # elements are stored in a dict
+                    elements = my_attr.items()
+                    other_elements = other_attr.items()
+                else:
+                    raise ValueError("Unsupported state element type: " + str(type(my_attr)))
+                if len(elements) != len(other_elements):
+                    return False
+                if not all([element in other_elements for element in other_elements]):
+                    return False
+            else:
+                return my_attr == other_attr
         return True
 
     def __ne__(self, other):
