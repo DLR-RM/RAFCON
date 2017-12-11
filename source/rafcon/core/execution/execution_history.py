@@ -250,8 +250,10 @@ class HistoryItem(object):
         # the wrapper state (i.e. the description of the Library developer and not that one of the user)
         from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
         if isinstance(self.state_reference, LibraryState):
+            record['semantic_data'] = self.state_reference.state_copy.semantic_data
             record['description'] = self.state_reference.state_copy.description
         else:
+            record['semantic_data'] = self.state_reference.semantic_data
             record['description'] = self.state_reference.description
 
         if self.prev is not None:

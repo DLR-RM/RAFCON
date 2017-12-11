@@ -97,7 +97,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             if gitems[0]['item_type'] == 'StateMachineStartItem':
                 item = gitems[0]
                 execution_item = {}
-                for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
+                for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type',
                           'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
                           'used_rafcon_version', 'creation_time', 'last_update']:
                     execution_item[l] = item[l]
@@ -109,7 +109,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
         if gitems[0]['item_type'] == 'StateMachineStartItem':
             item = gitems[0]
             execution_item = {}
-            for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type', \
+            for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type', \
                       'path', 'timestamp', 'root_state_storage_id', 'state_machine_version', \
                       'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
                 try:
@@ -179,7 +179,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
 
             # assemble grouped item
             execution_item = {}
-            for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type', 'path']:
+            for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type', 'path']:
                 execution_item[l] = call_item[l]
             for l in ['outcome_name', 'outcome_id']:
                 execution_item[l] = return_item[l]
