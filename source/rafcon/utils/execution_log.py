@@ -219,7 +219,11 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
     return start_item, collapsed_next, collapsed_concurrent, collapsed_hierarchy, collapsed_items
 
 
-def log_to_DataFrame(execution_history_items):
+def log_to_DataFrame(execution_history_items,
+                     data_in_columns = [],
+                     data_out_columns = [],
+                     scoped_in_columns = [],
+                     scoped_out_columns = []):
     """
     Returns all collapsed items in a table-like structure (pandas.DataFrame). The data flow is
     omitted from this table as the different states have different ports defined. The available
@@ -240,9 +244,23 @@ def log_to_DataFrame(execution_history_items):
     df_keys.sort()
 
     df_items = []
-    for rid, item in gitems.items():
-        df_items.append([item[k] for k in df_keys])
 
+    for rid, item in gitems.items():
+        row_data = [item[k] for k in df_keys]
+
+        for key, selected_columns in [('data_ins', data_in_columns),
+                                 ('data_outs', data_out_columns),
+                                 ('scoped_data_ins', scoped_in_columns),
+                                 ('scoped_data_outs', scoped_out_columns)]:
+            for column_key in selected_columns:
+                row_data.append(item[key].get(column_key, None))
+        df_items.append(row_data)
+
+    for key, selected_columns in [('data_ins', data_in_columns),
+                             ('data_outs', data_out_columns),
+                             ('scoped_data_ins', scoped_in_columns),
+                             ('scoped_data_outs', scoped_out_columns)]:
+        df_keys.extend([key + '__' + s for s in selected_columns])
     df = pd.DataFrame(df_items, columns=df_keys)
     # convert epoch to datetime
     df.timestamp_call = pd.to_datetime(df.timestamp_call, unit='s')
