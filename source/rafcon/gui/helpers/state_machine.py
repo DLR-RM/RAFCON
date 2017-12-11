@@ -39,6 +39,7 @@ from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateMode
     DataFlowModel, DataPortModel, ScopedVariableModel, OutcomeModel, StateMachineModel
 from rafcon.gui.singleton import library_manager_model
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
+from rafcon.utils.filesystem import make_tarfile
 from rafcon.utils import log
 import rafcon.gui.utils
 
@@ -377,6 +378,42 @@ def is_state_machine_stopped_to_proceed(selected_sm_id=None, root_window=None):
 
 def refresh_libraries():
     library_manager.refresh_libraries()
+
+
+def replace_all_libraries_by_template(state_model):
+    for s_id, child_state_model in state_model.states.iteritems():
+        if isinstance(child_state_model, LibraryStateModel):
+            library_name = child_state_model.state.library_name
+            library_path = child_state_model.state.library_path
+            library_state = LibraryState(library_path, library_name, "0.1", library_name)
+            gui_helper_state.substitute_state_as(child_state_model, library_state, True)
+        if isinstance(child_state_model, ContainerStateModel):
+            replace_all_libraries_by_template(child_state_model)
+
+
+def bake_selected_state_machine():
+    logger.debug("Baking state machine ...")
+    selected_sm_id = rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id
+    # selected_sm = state_machine_manager.state_machines[selected_sm_id]
+    selected_sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[selected_sm_id]
+    assert isinstance(selected_sm_m, StateMachineModel)
+    root_state_m = selected_sm_m.root_state
+    if isinstance(root_state_m, ContainerStateModel):
+        replace_all_libraries_by_template(root_state_m)
+
+    # generate path
+    selected_state_machine_model = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    folder_name = selected_state_machine_model.state_machine.root_state.name
+    path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
+                                        "The default folder name is the name of the root state.",
+                                        folder_name)
+    if path is None:
+        logger.warning("Baking canceled!")
+        return False
+
+    save_state_machine_as(path, as_copy=True)
+    make_tarfile(path+".tar", path)
+    logger.debug("Baking finished!")
 
 
 def refresh_selected_state_machine():

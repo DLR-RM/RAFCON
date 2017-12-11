@@ -17,6 +17,7 @@
 
 """
 import os
+import tarfile
 import shutil
 from os.path import realpath, dirname, join, expanduser
 
@@ -130,3 +131,8 @@ def clean_file_system_paths_from_not_existing_paths(file_system_paths):
             paths_to_delete.append(path)
     for path in paths_to_delete:
         file_system_paths.remove(path)
+
+
+def make_tarfile(output_filename, source_dir):
+    with tarfile.open(output_filename, "w:gz") as tar:
+        tar.add(source_dir, arcname=os.path.basename(source_dir))

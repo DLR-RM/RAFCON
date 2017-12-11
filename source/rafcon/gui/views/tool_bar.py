@@ -51,4 +51,7 @@ class ToolBarView(View):
         button_refresh_libs.set_label_widget(
             create_label_widget_with_icon(constants.BUTTON_REFR, _("Refresh Libraries"), "Refresh all Libraries"))
 
+        button_bake_state_machine = self['button_bake_state_machine']
+        button_bake_state_machine.set_label_widget(
+            create_label_widget_with_icon(constants.BUTTON_BAKE, _("Bake Selected")))
         # self.get_top_widget().set_border_width(constants.BORDER_WIDTH)
