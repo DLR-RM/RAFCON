@@ -711,11 +711,11 @@ class TreeViewController(AbstractTreeViewController):
             self.iter_tree_with_handed_function(self.update_selection_self_prior_condition,
                                                 sm_selected_model_set, selected_model_list)
             sm_selection.handle_prepared_selection_of_core_class_elements(self.CORE_ELEMENT_CLASS, sm_selected_model_set)
-            # TODO check if we can solve the difference that occurs e.g. while complex actions
+            # TODO check if we can solve the difference that occurs e.g. while complex actions?, or same state paths!
             # -> models in selection for core element not in the tree the function iter tree + condition tolerates this
             if not set(selected_model_list) == sm_selected_model_set:
                 self._logger.debug("Difference between tree view selection: \n{0} \nand state machine selection: \n{1}"
-                                   "".format(selected_model_list, sm_selected_model_set))
+                                   "".format(set(selected_model_list), sm_selected_model_set))
 
         # TODO check why sometimes not consistent with sm selection. e.g while modification history test
         if self.check_selection_consistency(sm_check=False):
