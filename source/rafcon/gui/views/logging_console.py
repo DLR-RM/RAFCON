@@ -16,7 +16,6 @@ import threading
 from gtkmvc import View
 import glib
 from rafcon.utils import log
-from rafcon.gui.config import global_gui_config
 
 
 class LoggingConsoleView(View):
@@ -35,14 +34,13 @@ class LoggingConsoleView(View):
 
         self.text_view.set_border_width(10)
 
+        self._enables = {}
+
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrollable.set_name('console_scroller')
         scrollable.add(self.text_view)
         self.text_view.show()
-
-        self.info = self.debug = self.warning = self.error = True
-        self.read_enables()
 
         self['scrollable'] = scrollable
         self.top = 'scrollable'
@@ -56,16 +54,16 @@ class LoggingConsoleView(View):
 
     def print_message(self, message, log_level):
         self._lock.acquire()
-        if log_level <= log.logging.DEBUG and self.debug:
+        if log_level <= log.logging.DEBUG and self._enables.get('DEBUG', True):
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
                           priority=glib.PRIORITY_LOW)
-        elif log.logging.DEBUG < log_level <= log.logging.INFO and self.info:
+        elif log.logging.DEBUG < log_level <= log.logging.INFO and self._enables.get('INFO', True):
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_info_color",
                           priority=glib.PRIORITY_LOW)
-        elif log.logging.INFO < log_level <= log.logging.WARNING and self.warning:
+        elif log.logging.INFO < log_level <= log.logging.WARNING and self._enables.get('WARNING', True):
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_warning_color",
                           priority=glib.PRIORITY_LOW)
-        elif log.logging.WARNING < log_level and self.error:
+        elif log.logging.WARNING < log_level and self._enables.get('ERROR', True):
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_error_color",
                           priority=glib.PRIORITY_LOW)
         self._lock.release()
@@ -115,8 +113,5 @@ class LoggingConsoleView(View):
         text_buffer.create_tag("set_white_text", foreground="#ffffff")
         return text_buffer
 
-    def read_enables(self):
-        self.info = global_gui_config.get_config_value('LOGGING_SHOW_INFO', True)
-        self.debug = global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True)
-        self.warning = global_gui_config.get_config_value('LOGGING_SHOW_WARNING', True)
-        self.error = global_gui_config.get_config_value('LOGGING_SHOW_ERROR', True)
+    def set_enables(self, enables):
+        self._enables = enables

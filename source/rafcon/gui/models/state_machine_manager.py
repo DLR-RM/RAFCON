@@ -14,7 +14,6 @@
 import os
 
 from gtkmvc import ModelMT
-from gtkmvc import Observable
 
 from rafcon.core.state_machine_manager import StateMachineManager
 
@@ -26,7 +25,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class StateMachineManagerModel(ModelMT, Observable):
+class StateMachineManagerModel(ModelMT):
     """This model class manages a StateMachineManager
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state machine
@@ -52,7 +51,6 @@ class StateMachineManagerModel(ModelMT, Observable):
     def __init__(self, state_machine_manager, meta=None):
         """Constructor"""
         ModelMT.__init__(self)  # pass columns as separate parameters
-        Observable.__init__(self)
         self.register_observer(self)
 
         assert isinstance(state_machine_manager, StateMachineManager)
@@ -81,16 +79,14 @@ class StateMachineManagerModel(ModelMT, Observable):
     def core_element(self):
         return self.state_machine_manager
 
-    def delete_state_machine_models(self):
-        for sm_id_to_delete in self.state_machines.keys():
-            sm_m = self.state_machines[sm_id_to_delete]
-            with sm_m.state_machine.modification_lock():
-                sm_m.prepare_destruction()
-                del self.state_machines[sm_id_to_delete]
-                sm_m.destroy()
-
     @ModelMT.observe("state_machine_manager", after=True)
     def model_changed(self, model, prop_name, info):
+        from rafcon.gui.utils.notification_overview import NotificationOverview
+        overview = NotificationOverview(info)
+        if isinstance(overview['result'][-1], Exception):
+            logger.info("result type is {0} and the full notification {1}".format(type(overview['result'][-1]),
+                                                                                  overview))
+            return
         if info["method_name"] == "add_state_machine":
             logger.debug("Add new state machine model ... ")
             for sm_id, sm in self.state_machine_manager.state_machines.iteritems():
@@ -143,7 +139,6 @@ class StateMachineManagerModel(ModelMT, Observable):
         return self._selected_state_machine_id
 
     @selected_state_machine_id.setter
-    @Observable.observed
     def selected_state_machine_id(self, selected_state_machine_id):
         if selected_state_machine_id is not None:
             if not isinstance(selected_state_machine_id, int):

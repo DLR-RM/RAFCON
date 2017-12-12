@@ -471,7 +471,7 @@ def refresh_all(force=False):
     state_machines_editor_ctrl.refresh_all_state_machines()
 
 
-def delete_core_element_of_model(model, raise_exceptions=False):
+def delete_core_element_of_model(model, raise_exceptions=False, destruct=True):
     """Deletes respective core element of handed model of its state machine
 
     If the model is one of state, data flow or transition, it is tried to delete that model together with its
@@ -479,6 +479,7 @@ def delete_core_element_of_model(model, raise_exceptions=False):
 
     :param model: The model of respective core element to delete
     :param bool raise_exceptions: Whether to raise exceptions or only log errors in case of failures
+    :param bool destruct: Access the destruct flag of the core remove methods
     :return: True if successful, False else
     """
     state_m = model.parent
@@ -498,7 +499,7 @@ def delete_core_element_of_model(model, raise_exceptions=False):
 
     try:
         if core_element in state:
-            state.remove(core_element)
+            state.remove(core_element, destruct=destruct)
             return True
         return False
     except (AttributeError, ValueError) as e:
@@ -508,19 +509,20 @@ def delete_core_element_of_model(model, raise_exceptions=False):
         return False
 
 
-def delete_core_elements_of_models(models, raise_exceptions=False):
+def delete_core_elements_of_models(models, raise_exceptions=False, destruct=True):
     """Deletes all respective core elements for the given models
 
     Calls the :func:`delete_core_element_of_model` for all given models.
 
     :param models: A single model or a list of models of respective core element to be deleted
     :param bool raise_exceptions: Whether to raise exceptions or log error messages in case of an error
+    :param bool destruct:  Access the destruct flag of the core remove methods
     :return: The number of models that were successfully deleted
     """
     # If only one model is given, make a list out of it
     if not hasattr(models, '__iter__'):
         models = [models]
-    return sum(delete_core_element_of_model(model, raise_exceptions) for model in models)
+    return sum(delete_core_element_of_model(model, raise_exceptions, destruct=destruct) for model in models)
 
 
 def is_selection_inside_of_library_state(state_machine_m=None, selected_elements=None):

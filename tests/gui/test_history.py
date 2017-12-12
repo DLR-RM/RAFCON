@@ -63,7 +63,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
                 print_states(child_state)
     print_states(sm_model.state_machine.root_state)
 
-    print "do SAVING OF STATEMACHINE"
+    print "perform SAVE STATE MACHINE"
     if with_gui:
         sm_model.state_machine.file_system_path = path
         print "by Menubar_ctrl"
@@ -73,15 +73,15 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
         print "by Function"
         on_save_activate(sm_model, logger)
 
-    from test_storage import check_that_all_files_are_there
+    from test_storage import check_that_all_files_are_there, collect_all_files
+    supposed_files = collect_all_files(sm_model, path)
+    check_that_all_files_are_there(sm_model, path, False, True, supposed_elements=supposed_files)
 
-    check_that_all_files_are_there(sm_model, path, False, True)
 
-
-def save_and_quit(sm_model, path, menubar_ctrl, with_gui):
+def save_and_quit(sm_model, path, main_window_controller, with_gui):
     if with_gui:
         sm_model.state_machine.file_system_path = path
-        call_gui_callback(menubar_ctrl.prepare_destruction)
+        call_gui_callback(main_window_controller.prepare_destruction)
 
 
 def create_models(*args, **kargs):
@@ -1402,9 +1402,10 @@ def trigger_state_type_change_tests(*args):
     [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
 
     print "\n\n ###### State: %s" % state_dict[state_of_type_change]
-    from test_storage import check_that_all_files_are_there
-    check_that_all_files_are_there(sm_model, state_machine_path + '_before2', False, True)
-    check_that_all_files_are_there(sm_model, state_machine_path + '_after2', False, True)
+    from test_storage import check_that_all_files_are_there, collect_all_files
+    for path in [state_machine_path + '_before2', state_machine_path + '_after2']:
+        supposed_files = collect_all_files(sm_model, path)
+        check_that_all_files_are_there(sm_model, path, False, True, supposed_elements=supposed_files)
 
     save_state_machine(sm_model, state_machine_path + '_after2', logger, with_gui, menubar_ctrl)
 
@@ -1786,7 +1787,7 @@ def trigger_state_type_change_tests(*args):
     if with_gui:
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
 
-    save_and_quit(sm_model, TEST_PATH + '_state_type_change', menubar_ctrl, with_gui)
+    save_and_quit(sm_model, TEST_PATH + '_state_type_change', main_window_controller, with_gui)
 
     check_elements_ignores.remove("internal_transitions")
     print check_elements_ignores

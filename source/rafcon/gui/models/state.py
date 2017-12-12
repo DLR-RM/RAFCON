@@ -260,10 +260,10 @@ class StateModel(AbstractStateModel):
                     break
             if not found:
                 if model_key is None:
-                    model.prepare_destruction()
+                    # model.prepare_destruction()
                     model_list_or_dict.remove(model)
                 else:
-                    model_list_or_dict[model_or_key].prepare_destruction()
+                    # model_list_or_dict[model_or_key].prepare_destruction()
                     del model_list_or_dict[model_or_key]
                 return
 

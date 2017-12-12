@@ -21,7 +21,7 @@ from gaphas import painter
 
 from rafcon.gui.mygaphas.view import ExtendedGtkView
 from rafcon.gui.mygaphas.tools import HoverItemTool, ConnectionCreationTool, ConnectionModificationTool, \
-    MoveItemTool, MultiSelectionTool, RightClickTool, MoveHandleTool
+    MoveItemTool, MultiSelectionTool, RightClickTool, MoveHandleTool, ZoomTool, PanTool, ToolChain
 from rafcon.gui.mygaphas.painter import StateCornerHandlePainter, NameCornerHandlePainter
 
 from rafcon.gui.config import global_gui_config
@@ -46,13 +46,13 @@ class GraphicalEditorView(View, gobject.GObject):
         self.scroller.set_name('graphical_editor_scroller')
         self.editor = ExtendedGtkView(self, selection_m)
         self.editor.modify_bg(gtk.STATE_NORMAL, global_gui_config.gtk_colors['INPUT_BACKGROUND'])
-        self.editor.tool = tool.ToolChain(self.editor). \
+        self.editor.tool = ToolChain(self.editor). \
             append(HoverItemTool()). \
             append(MoveHandleTool()). \
             append(ConnectionCreationTool()). \
             append(ConnectionModificationTool()). \
-            append(tool.PanTool()). \
-            append(tool.ZoomTool()). \
+            append(PanTool()). \
+            append(ZoomTool()). \
             append(MoveItemTool()). \
             append(MultiSelectionTool()). \
             append(RightClickTool())

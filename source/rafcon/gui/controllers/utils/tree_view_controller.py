@@ -136,7 +136,9 @@ class ListViewController(ExtendedController):
             """
             # secure scrollbar adjustments on active cell
             [path, focus_column] = self.tree_view.get_cursor()
-            self.tree_view.scroll_to_cell(path, self.widget_columns[self.widget_columns.index(focus_column)], use_align=False)
+            if path:
+                self.tree_view.scroll_to_cell(path, self.widget_columns[self.widget_columns.index(focus_column)],
+                                              use_align=False)
 
             editing_cancelled_handler_id = renderer.connect('editing-canceled', on_editing_canceled)
             focus_out_handler_id = editable.connect('focus-out-event', on_focus_out)
@@ -204,7 +206,7 @@ class ListViewController(ExtendedController):
         raise NotImplementedError
 
     def remove_core_element(self, model):
-        """An abstract remove method that removes respective core element by handed core element id
+        """An abstract remove method that removes respective core element by handed model or object
 
         The method has to be implemented by inherit classes
 
@@ -213,9 +215,18 @@ class ListViewController(ExtendedController):
         """
         raise NotImplementedError
 
+    def remove_core_elements(self, models):
+        """An abstract remove method that removes respective core element by handed models or objects
+
+        :param list models: Model which core element should be removed
+        :return:
+        """
+        for model in models:
+            self.remove_core_element(model)
+
     def on_remove(self, widget, data=None):
         """Remove respective selected core elements and select the next one"""
-        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+
         path_list = None
         if self.view is not None:
             model, path_list = self.tree_view.get_selection().get_selected_rows()
@@ -223,7 +234,7 @@ class ListViewController(ExtendedController):
         models = [self.list_store[path][self.MODEL_STORAGE_ID] for path in path_list] if path_list else []
         if models:
             try:
-                gui_helper_state_machine.delete_core_elements_of_models(models)
+                self.remove_core_elements(models)
             except AttributeError as e:
                 self._logger.warn("The respective core element of {1}.list_store couldn't be removed. -> {0}"
                                   "".format(e, self.__class__.__name__))
@@ -251,19 +262,21 @@ class ListViewController(ExtendedController):
     def get_state_machine_selection(self):
         """An abstract getter method for state machine selection
 
-        The method has to be implemented by inherit classes
+        The method maybe has to be re-implemented by inherit classes and hands generally a filtered set of
+        selected elements.
 
-        :return: selection
-        :rtype: rafcon.gui.selection.Selection
+        :return: selection object it self, filtered set of selected elements
+        :rtype: rafcon.gui.selection.Selection, set
         """
         sm_selection = self.model.get_state_machine_m().selection if self.model.get_state_machine_m() else None
-        return sm_selection, sm_selection.get_selected_elements_of_core_class(self.CORE_ELEMENT_CLASS) if sm_selection else []
+        return sm_selection, sm_selection.get_selected_elements_of_core_class(self.CORE_ELEMENT_CLASS) if sm_selection else set()
 
     def get_selections(self):
-        """Get actual model selection status in state machine selection and tree selection of the widget"""
-        sm_selection, sm_selected_model_list = self.get_state_machine_selection()
+        """Get current model selection status in state machine selection (filtered according the purpose of the widget)
+        and tree selection of the widget"""
+        sm_selection, sm_filtered_selected_model_set = self.get_state_machine_selection()
         tree_selection, selected_model_list = self.get_view_selection()
-        return tree_selection, selected_model_list, sm_selection, sm_selected_model_list
+        return tree_selection, selected_model_list, sm_selection, sm_filtered_selected_model_set
 
     def mouse_click(self, widget, event=None):
         """Implements shift- and control-key handling features for mouse button press events explicit
@@ -373,12 +386,7 @@ class ListViewController(ExtendedController):
         self._do_selection_update = True
         tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
         if isinstance(sm_selection, Selection):
-            for row in self.list_store:
-                model = row[self.MODEL_STORAGE_ID]
-                if model in sm_selected_model_list and model not in selected_model_list:
-                    sm_selection.remove(model)
-                if model not in sm_selected_model_list and model in selected_model_list:
-                    sm_selection.add(model)
+            sm_selection.handle_prepared_selection_of_core_class_elements(self.CORE_ELEMENT_CLASS, selected_model_list)
         self._do_selection_update = False
 
     @ExtendedController.observe("sm_selection_changed_signal", signal=True)
@@ -550,6 +558,7 @@ class TreeViewController(ExtendedController):
     """
     ID_STORAGE_ID = None
     MODEL_STORAGE_ID = None
+    CORE_ELEMENT_CLASS = None
     _logger = None
 
     def __init__(self, model, view, tree_view, tree_store, logger=None):
@@ -604,18 +613,19 @@ class TreeViewController(ExtendedController):
     def get_state_machine_selection(self):
         """An abstract getter method for state machine selection
 
-        The method has to be implemented by inherit classes
+        The method has to be implemented by inherit classes and hands generally a filtered set of selected elements.
 
-        :return: selection
-        :rtype: rafcon.gui.selection.Selection
+        :return: selection object, filtered set of selected elements
+        :rtype: rafcon.gui.selection.Selection, set
         """
         raise NotImplementedError
 
     def get_selections(self):
-        """Get actual model selection status in state machine selection and tree selection of the widget"""
-        sm_selection, sm_selected_model_list = self.get_state_machine_selection()
+        """Get current model selection status in state machine selection (filtered according the purpose of the widget)
+        and tree selection of the widget"""
+        sm_selection, sm_filtered_selected_model_set = self.get_state_machine_selection()
         tree_selection, selected_model_list = self.get_view_selection()
-        return tree_selection, selected_model_list, sm_selection, sm_selected_model_list
+        return tree_selection, selected_model_list, sm_selection, sm_filtered_selected_model_set
 
     def iter_tree_with_handed_function(self, function, *function_args):
         """Iterate tree view with condition check function"""
@@ -637,73 +647,68 @@ class TreeViewController(ExtendedController):
         selected_path = self.tree_store.get_path(state_row_iter)
         tree_model_row = self.tree_store[selected_path]
         model = tree_model_row[self.MODEL_STORAGE_ID]
-        # self._logger.info("check state {1} {2} {0}".format([model],
-        #                                                    model in sm_selected_model_list,
-        #                                                    model in selected_model_list))
 
         if model not in sm_selected_model_list and model in selected_model_list:
-            # print type(self).__name__, "sm un-select model", model
             self._tree_selection.unselect_iter(state_row_iter)
         elif model in sm_selected_model_list and model not in selected_model_list:
-            # print type(self).__name__, "sm select model", model
             self.tree_view.expand_to_path(selected_path)
             self._tree_selection.select_iter(state_row_iter)
 
-    def update_selection_self_prior_condition(self, state_row_iter, sm_selection, selected_model_list, sm_selected_model_list):
+    def update_selection_self_prior_condition(self, state_row_iter, sm_selected_model_set, selected_model_list):
         """Tree view prior update of one model in the state machine selection"""
         selected_path = self.tree_store.get_path(state_row_iter)
         tree_model_row = self.tree_store[selected_path]
         model = tree_model_row[self.MODEL_STORAGE_ID]
-        # self._logger.info("check state {1} {2} {0}".format([model],
-        #                                                    model in sm_selected_model_list,
-        #                                                    model in selected_model_list))
 
-        if model in sm_selected_model_list and model not in selected_model_list:
-            # print type(self).__name__, "unselect model", model
-            sm_selection.remove(model)
-        elif model not in sm_selected_model_list and model in selected_model_list:
-            # print type(self).__name__, "select model", model
-            sm_selection.add(model)
+        if model in sm_selected_model_set and model not in selected_model_list:
+            sm_selected_model_set.remove(model)
+        elif model not in sm_selected_model_set and model in selected_model_list:
+            sm_selected_model_set.add(model)
 
     def check_selection_consistency(self, sm_check=True, tree_check=True):
         tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        selected_model_list = reduce_to_parent_states(selected_model_list)
+        selected_model_list = list(reduce_to_parent_states(set(selected_model_list)))
         if not ((all([model in selected_model_list for model in sm_selected_model_list]) or not sm_check) and
                 (all([model in sm_selected_model_list for model in selected_model_list]) or not tree_check)):
             self._logger.warning("Elements of sm and tree selection are not identical: \ntree: {0}\nsm:   {1}"
                                  "".format(selected_model_list, sm_selected_model_list))
+            return False
+        return True
 
     def update_selection_self_prior(self):
         """Tree view prior update of state machine selection"""
         if self._do_selection_update:
             return
-        tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        if sm_selection is None:
-            return
-
-        # self._logger.info("SELF SELECTION IS: {2}\nSELF {0}, \nSM   {1}".format(selected_model_list, sm_selected_model_list,
-        #                                                                         tree_selection.get_mode()))
         self._do_selection_update = True
-        self.iter_tree_with_handed_function(self.update_selection_self_prior_condition,
-                                            sm_selection, selected_model_list, sm_selected_model_list)
+        tree_selection, selected_model_list, sm_selection, sm_selected_model_set = self.get_selections()
+        if isinstance(sm_selection, Selection):
+            # current sm_selected_model_set will be updated and hand it back
+            self.iter_tree_with_handed_function(self.update_selection_self_prior_condition,
+                                                sm_selected_model_set, selected_model_list)
+            sm_selection.handle_prepared_selection_of_core_class_elements(self.CORE_ELEMENT_CLASS, sm_selected_model_set)
+            # TODO check if we can solve the difference that occurs e.g. while complex actions
+            # -> models in selection for core element not in the tree the function iter tree + condition tolerates this
+            if not set(selected_model_list) == sm_selected_model_set:
+                self._logger.debug("Difference between tree view selection: \n{0} \nand state machine selection: \n{1}"
+                                   "".format(selected_model_list, sm_selected_model_set))
+
         # TODO check why sometimes not consistent with sm selection. e.g while modification history test
-        self.check_selection_consistency(sm_check=False)
+        if self.check_selection_consistency(sm_check=False):
+            self.update_selection_sm_prior()
         self._do_selection_update = False
 
     def update_selection_sm_prior(self):
         """State machine prior update of tree selection"""
         if self._do_selection_update:
             return
-        tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
-        if sm_selection is None:
-            return
-
-        # self._logger.info("SM SELECTION IS: {2}\n{0}, \n{1}".format(selected_model_list, sm_selected_model_list,
-        #                                                             tree_selection.get_mode()))
         self._do_selection_update = True
-        self.iter_tree_with_handed_function(self.update_selection_sm_prior_condition,
-                                            selected_model_list, sm_selected_model_list)
-        self.check_selection_consistency()
+        tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
+        if tree_selection is not None:
+            # self._logger.info("SM SELECTION IS: {2}\n{0}, \n{1}".format(selected_model_list, sm_selected_model_list,
+            #                                                             tree_selection.get_mode()))
+            self.iter_tree_with_handed_function(self.update_selection_sm_prior_condition,
+                                                selected_model_list, sm_selected_model_list)
+            self.check_selection_consistency()
         self._do_selection_update = False
 
     def selection_changed(self, widget, event=None):

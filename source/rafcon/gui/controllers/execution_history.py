@@ -72,9 +72,6 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         self.update()
 
-    def register_adapters(self):
-        pass
-
     def register_view(self, view):
         self.history_tree.connect('button_press_event', self.mouse_click)
         view['reload_button'].connect('clicked', self.reload_history)
@@ -222,12 +219,8 @@ class ExecutionHistoryTreeController(ExtendedController):
         state_machine = self.get_history_item_for_tree_iter(root_iter).state_reference.get_state_machine()
         self._expansion_state[state_machine.state_machine_id] = current_expansion_state
         while root_iter:
-            try:
-                store_tree_expansion(root_iter, current_expansion_state)
-                root_iter = self.history_tree_store.iter_next(root_iter)
-            except TypeError:
-                logger.error("Expansion state of state machine {0} could not be stored"
-                             "".format(state_machine.state_machine_id))
+            store_tree_expansion(root_iter, current_expansion_state)
+            root_iter = self.history_tree_store.iter_next(root_iter)
 
     def _restore_expansion_state(self):
         """Iter recursively all tree items and restore expansion state"""
@@ -252,12 +245,8 @@ class ExecutionHistoryTreeController(ExtendedController):
         if state_machine.state_machine_id not in self._expansion_state:
             return
         while root_iter:
-            try:
-                restore_tree_expansion(root_iter, self._expansion_state[state_machine.state_machine_id])
-                root_iter = self.history_tree_store.iter_next(root_iter)
-            except TypeError:
-                logger.error("Expansion state of state machine {0} could not be restored"
-                             "".format(state_machine.state_machine_id))
+            restore_tree_expansion(root_iter, self._expansion_state[state_machine.state_machine_id])
+            root_iter = self.history_tree_store.iter_next(root_iter)
 
     @ExtendedController.observe("selected_state_machine_id", assign=True)
     def notification_selected_sm_changed(self, model, prop_name, info):

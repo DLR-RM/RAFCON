@@ -72,6 +72,22 @@ PROFILER\_RESULT\_PATH
   | Path pointing to where the profiler will dump its results. The files
     in the path can be used for later evaluation.
 
+LIBRARY\_RECOVERY\_MODE
+  | Type: boolean
+  | Default: ``False``
+  | If this flag is activated, state machine with consistency erros concerning their data ports can be loaded.
+    Erros are just printed out as warnings. This can be used to fix erroneous state machines.
+
+EXECUTION_LOG_ENABLE
+  | Type: boolean
+  | Default: ``True``
+  | Enables the logging of rafcon exeuction histories to the file system. Every time a statemachine is executed, a python shelve is created in the execution log directory, e.g. ``/tmp/rafcon_execution_logs/rafcon_execution_log_99-Bottles-of-Beer_2017-08-31-16-07-17.shelve``. Some helpful utility functions for working with log files through python are in: ``import rafcon.utils.execution_log``. A tiny tiny code snippet which shows how to use the pandas.DataFrame representation to query the outcomes of a state named ‘CheckFinished’ is here: ``https://rmc-github.robotic.dlr.de/common/rafcon/pull/324#issuecomment-2520``
+
+EXECUTION_LOG_PATH:
+  | Type: String
+  | Default: ``"/tmp/"``
+  | Sets the target path of the execution logs
+
 GUI configuration
 -----------------
 

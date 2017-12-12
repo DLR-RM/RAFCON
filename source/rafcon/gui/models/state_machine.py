@@ -53,11 +53,12 @@ class StateMachineModel(ModelMT, Hashable):
     action_signal = Signal()
     state_action_signal = Signal()
     sm_selection_changed_signal = Signal()
+    destruction_signal = Signal()
 
     suppress_new_root_state_model_one_time = False
 
     __observables__ = ("state_machine", "root_state", "meta_signal", "state_meta_signal", "sm_selection_changed_signal",
-                       "action_signal", "state_action_signal")
+                       "action_signal", "state_action_signal", "destruction_signal")
 
     def __init__(self, state_machine, meta=None, load_meta_data=True):
         """Constructor
@@ -83,6 +84,7 @@ class StateMachineModel(ModelMT, Hashable):
         self.action_signal = Signal()
         self.state_action_signal = Signal()
         self.sm_selection_changed_signal = Signal()
+        self.destruction_signal = Signal()
 
         self.temp = Vividict()
 
@@ -141,6 +143,7 @@ class StateMachineModel(ModelMT, Hashable):
 
         Unregister itself as observer from the state machine and the root state
         """
+        self.destruction_signal.emit()
         if self.history is not None:
             self.history.prepare_destruction()
         if self.auto_backup is not None:

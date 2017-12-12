@@ -123,7 +123,11 @@ class GlobalVariableManagerController(ListViewController):
         """
         gv_name = model
         if self.global_variable_is_editable(gv_name, "Deletion"):
-            self.model.global_variable_manager.delete_variable(gv_name)
+            try:
+                self.model.global_variable_manager.delete_variable(gv_name)
+            except AttributeError as e:
+                logger.warn("The respective global variable '{1}' couldn't be removed. -> {0}"
+                            "".format(e, model))
 
     def apply_new_global_variable_name(self, path, new_gv_name):
         """Change global variable name/key according handed string
@@ -145,7 +149,7 @@ class GlobalVariableManagerController(ListViewController):
             self.model.global_variable_manager.set_variable(new_gv_name, data_value, data_type=data_type)
             gv_name = new_gv_name
         except (AttributeError, RuntimeError, TypeError) as e:
-            logger.warning(str(e))
+            logger.warning("Can not apply new name '{0}'".format(e))
         self.update_global_variables_list_store()
         self.select_entry(gv_name)
 

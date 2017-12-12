@@ -152,7 +152,7 @@ def trigger_repetitive_group_ungroup(*args):
     # time.sleep(5)
     print "quitting"
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    call_gui_callback(menubar_ctrl.prepare_destruction)
+    call_gui_callback(main_window_controller.prepare_destruction)
 
 
 def test_repetitive_ungroup_state_and_group_states(caplog):

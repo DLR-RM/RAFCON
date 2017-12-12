@@ -94,7 +94,7 @@ class Clipboard(Observable):
                                                            affected_models=[], after=False,
                                                            kwargs={'remove': non_empty_lists_dict}))
         for state_element_attr, models_list in selection_dict_of_copied_models.iteritems():
-            gui_helper_state_machine.delete_core_elements_of_models(models_list)
+            gui_helper_state_machine.delete_core_elements_of_models(models_list, destruct=False)
         affected_models = [model for models in non_empty_lists_dict.itervalues() for model in models]
         action_parent_m.action_signal.emit(ActionSignalMsg(action='cut', origin='clipboard',
                                                            action_parent_m=action_parent_m,
@@ -210,7 +210,10 @@ class Clipboard(Observable):
                 if isinstance(elems_list, list) else gui_helpers_meta_data.model_has_empty_meta(elems_list)
                 for elems_list in insert_dict.itervalues()]) or \
                 len(non_empty_lists_dict) == 1 and 'states' in non_empty_lists_dict:
-            gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
+            try:
+                gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
+            except:
+                logger.exception("Scale of pasted content {0} cause a problems.".format(models_dict))
         else:
             # TODO this should be come a warning in the future or the meta module has to handle the empty data fields
             logger.info("Paste miss meta to scale. {0}".format(affected_models))

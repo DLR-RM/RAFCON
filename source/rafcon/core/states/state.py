@@ -126,7 +126,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.execution_history = None
         self.backward_execution = False
 
-        logger.debug("New {0} created".format(self))
+        # logger.debug("New {0} created".format(self))
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- generic methods -----------------------------------------
@@ -614,18 +614,19 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return outcome_id
 
     @lock_state_machine
-    def remove(self, state_element, force=False):
+    def remove(self, state_element, force=False, destruct=True):
         """Remove item from state
 
         :param StateElement state_element: State element to be removed
         :param bool force: if the removal should be forced without checking constraints
+        :param bool destruct:
         """
         if isinstance(state_element, Outcome):
-            self.remove_outcome(state_element.outcome_id, force)
+            self.remove_outcome(state_element.outcome_id, force, destruct=destruct)
         elif isinstance(state_element, InputDataPort):
-            self.remove_input_data_port(state_element.data_port_id, force)
+            self.remove_input_data_port(state_element.data_port_id, force, destruct=destruct)
         elif isinstance(state_element, OutputDataPort):
-            self.remove_output_data_port(state_element.data_port_id, force)
+            self.remove_output_data_port(state_element.data_port_id, force, destruct=destruct)
         else:
             raise ValueError("Cannot remove state_element with invalid type")
 

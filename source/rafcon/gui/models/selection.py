@@ -154,8 +154,8 @@ class Selection(ModelMT):
     def _check_model_types(self, models):
         """ Check types of passed models for correctness and in case raise exception
 
-        :rtype set:
-        :returns set of models that are valid for the class"""
+        :rtype: set
+        :returns: set of models that are valid for the class"""
         if not hasattr(models, "__iter__"):
             models = {models}
         if not all([isinstance(model, (AbstractStateModel, StateElementModel)) for model in models]):
@@ -203,7 +203,7 @@ class Selection(ModelMT):
     def handle_prepared_selection_of_core_class_elements(self, core_class, models):
         """Handles the selection for TreeStore widgets maintaining lists of a specific `core_class` elements
 
-        If a widgets hold a TreeStore with elements of a specific `core_class`, the local selection of that element
+        If widgets hold a TreeStore with elements of a specific `core_class`, the local selection of that element
         type is handled by that widget. This method is called to integrate the local selection with the overall
         selection of the state machine.
 

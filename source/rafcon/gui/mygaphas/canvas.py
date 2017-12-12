@@ -11,11 +11,11 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gaphas.canvas import Canvas, VariableProjection
+import gaphas.canvas
 from gaphas.item import Item
 
 
-class MyCanvas(Canvas):
+class MyCanvas(gaphas.canvas.Canvas):
 
     _core_view_map = None
     _model_view_map = None
@@ -183,7 +183,7 @@ class ItemProjection(object):
                                                                     self._item_target).transform_point(x, y)
         return self._px, self._py
 
-    pos = property(lambda self: map(VariableProjection,
+    pos = property(lambda self: map(gaphas.canvas.VariableProjection,
                                     self._point, self._get_value(),
                                     (self._on_change_x, self._on_change_y)))
 
