@@ -97,7 +97,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             if gitems[0]['item_type'] == 'StateMachineStartItem':
                 item = gitems[0]
                 execution_item = {}
-                for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
+                for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type',
                           'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
                           'used_rafcon_version', 'creation_time', 'last_update']:
                     execution_item[l] = item[l]
@@ -109,7 +109,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
         if gitems[0]['item_type'] == 'StateMachineStartItem':
             item = gitems[0]
             execution_item = {}
-            for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type', \
+            for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type', \
                       'path', 'timestamp', 'root_state_storage_id', 'state_machine_version', \
                       'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
                 try:
@@ -179,7 +179,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
 
             # assemble grouped item
             execution_item = {}
-            for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type', 'path']:
+            for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type', 'path']:
                 execution_item[l] = call_item[l]
             for l in ['outcome_name', 'outcome_id']:
                 execution_item[l] = return_item[l]
@@ -219,13 +219,19 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
     return start_item, collapsed_next, collapsed_concurrent, collapsed_hierarchy, collapsed_items
 
 
-def log_to_DataFrame(execution_history_items):
+def log_to_DataFrame(execution_history_items,
+                     data_in_columns = [],
+                     data_out_columns = [],
+                     scoped_in_columns = [],
+                     scoped_out_columns = [],
+                     semantic_data_columns = [],
+                     throw_on_pickle_error=True):
     """
     Returns all collapsed items in a table-like structure (pandas.DataFrame). The data flow is
     omitted from this table as the different states have different ports defined. The available
     data per execution item (row in the table) can be printed using pandas.DataFrame.columns.
     """
-    start, next_, concurrenty, hierarchy, gitems = log_to_collapsed_structure(execution_history_items)
+    start, next_, concurrenty, hierarchy, gitems = log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=throw_on_pickle_error)
     gitems.pop(start['run_id'])
     if len(gitems) == 0:
         return pd.DataFrame()
@@ -237,12 +243,29 @@ def log_to_DataFrame(execution_history_items):
     df_keys.remove('data_outs')
     df_keys.remove('scoped_data_ins')
     df_keys.remove('scoped_data_outs')
+    df_keys.remove('semantic_data')
     df_keys.sort()
 
     df_items = []
-    for rid, item in gitems.items():
-        df_items.append([item[k] for k in df_keys])
 
+    for rid, item in gitems.items():
+        row_data = [item[k] for k in df_keys]
+
+        for key, selected_columns in [('data_ins', data_in_columns),
+                                      ('data_outs', data_out_columns),
+                                      ('scoped_data_ins', scoped_in_columns),
+                                      ('scoped_data_outs', scoped_out_columns),
+                                      ('semantic_data', semantic_data_columns)]:
+            for column_key in selected_columns:
+                row_data.append(item[key].get(column_key, None))
+        df_items.append(row_data)
+
+    for key, selected_columns in [('data_ins', data_in_columns),
+                                  ('data_outs', data_out_columns),
+                                  ('scoped_data_ins', scoped_in_columns),
+                                  ('scoped_data_outs', scoped_out_columns),
+                                  ('semantic_data', semantic_data_columns)]:
+        df_keys.extend([key + '__' + s for s in selected_columns])
     df = pd.DataFrame(df_items, columns=df_keys)
     # convert epoch to datetime
     df.timestamp_call = pd.to_datetime(df.timestamp_call, unit='s')

@@ -63,7 +63,9 @@ class BasicTreeViewExample:
     def __init__(self, filename):
         self.hist_items = shelve.open(filename, 'r')
         self.start, self.next_, self.concurrent, self.hierarchy, self.items = \
-            log_helper.log_to_collapsed_structure(self.hist_items)
+            log_helper.log_to_collapsed_structure(self.hist_items,
+                                                  throw_on_pickle_error=False,
+                                                  include_erronous_data_ports=True)
 
         # Create a new window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
