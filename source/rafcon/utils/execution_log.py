@@ -227,9 +227,17 @@ def log_to_DataFrame(execution_history_items,
                      semantic_data_columns = [],
                      throw_on_pickle_error=True):
     """
-    Returns all collapsed items in a table-like structure (pandas.DataFrame). The data flow is
-    omitted from this table as the different states have different ports defined. The available
-    data per execution item (row in the table) can be printed using pandas.DataFrame.columns.
+    Returns all collapsed items in a table-like structure (pandas.DataFrame) with one row per executed 
+    state and a set of properties resp. columns (e.g. state_name, outcome, run_id) for this state.
+    The data flow (data_in/out, scoped_data_in/out, semantic_data) is omitted from this table
+    representation by default, as the different states have different data in-/out-port, scoped_data-
+    ports and semantic_data defined. However, you can ask specific data-/scoped_data-ports and semantic
+    data to be exported as table column, given they are primitive-valued, by including the port / key
+    names in the *_selected-parameters. These table-columns will obviously only be well-defined for
+    states having this kind of port-name-/semantic-key and otherwise will contain a None-like value,
+    indicating missing data.
+
+    The available data per execution item (row in the table) can be printed using pandas.DataFrame.columns.
     """
     start, next_, concurrenty, hierarchy, gitems = log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=throw_on_pickle_error)
     gitems.pop(start['run_id'])
