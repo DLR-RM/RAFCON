@@ -18,6 +18,7 @@
 """
 import os
 import tarfile
+import stat
 import shutil
 from os.path import realpath, dirname, join, expanduser
 import shutil, errno
@@ -146,3 +147,8 @@ def copy_file_or_folder(src, dst):
         if exc.errno == errno.ENOTDIR:
             shutil.copy(src, dst)
         else: raise
+
+def make_file_executable(filename):
+    st = os.stat(filename)
+    os.chmod(filename, st.st_mode | stat.S_IEXEC)
+

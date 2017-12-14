@@ -19,8 +19,6 @@ import copy
 import time
 import os
 import gtk
-import glib
-import stat
 
 import rafcon.gui.helpers.state as gui_helper_state
 import rafcon.gui.singleton
@@ -43,7 +41,7 @@ from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateMode
     DataFlowModel, DataPortModel, ScopedVariableModel, OutcomeModel, StateMachineModel
 from rafcon.gui.singleton import library_manager_model
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
-from rafcon.utils.filesystem import make_tarfile, copy_file_or_folder, create_path
+from rafcon.utils.filesystem import make_tarfile, copy_file_or_folder, create_path, make_file_executable
 from rafcon.utils import log
 import rafcon.gui.utils
 
@@ -425,25 +423,28 @@ def save_library_config(target_path):
     return config_file_path
 
 
-def generate_linux_launch_file(target_path, config_path, state_machine_path):
-    file_name = os.path.join(target_path, "launch_rafcon_generated.sh")
-    with open(file_name, 'w') as file_pointer:
-        file_pointer.write("#!/bin/bash\n\n")
+def generate_linux_launch_files(target_path, config_path, state_machine_path):
+    launch_command = "{} -c {} -o {}".format(
+        "/volume/software/common/packages/rafcon/latest/source/rafcon/gui/start.py",
+        os.path.relpath(config_path, target_path),
+        os.path.relpath(state_machine_path, target_path))
+    she_bang = "#!/bin/bash\n\n"
+
+    launch_file_with_env = os.path.join(target_path, "launch_rafcon_with_env_generated.sh")
+    with open(launch_file_with_env, 'w') as file_pointer:
+        file_pointer.write(she_bang)
         for key, value in os.environ.iteritems():
             if key not in ["PWD", "BASH_FUNC_mc%%", "BASH_FUNC_module%%", "RAFCON_LIBRARY_PATH"]:
                 file_pointer.write("export {}=\"{}\"\n".format(key, value))
-
         file_pointer.write("\n")
-        from rafcon.gui import start
-        file_pointer.write("{} -c {} -o {}".format(
-            # str(start.__file__).replace("start.pyc", "start.py"),
-            "/volume/software/common/packages/rafcon/latest/source/rafcon/gui/start.py",
-            os.path.relpath(config_path, target_path),
-            os.path.relpath(state_machine_path, target_path)))
+        file_pointer.write(launch_command)
+    make_file_executable(launch_file_with_env)
 
-    # make launch file executable
-    st = os.stat(file_name)
-    os.chmod(file_name, st.st_mode | stat.S_IEXEC)
+    launch_file_without_env = os.path.join(target_path, "launch_rafcon_generated.sh")
+    with open(launch_file_without_env, 'w') as file_pointer:
+        file_pointer.write(she_bang)
+        file_pointer.write(launch_command)
+    make_file_executable(launch_file_without_env)
 
 
 def bake_selected_state_machine():
@@ -471,7 +472,7 @@ def bake_selected_state_machine():
     save_all_libraries(path)
     config_path = save_library_config(path)
     state_machine_path = os.path.join(path, "__generated__state_machine")
-    generate_linux_launch_file(path, config_path, state_machine_path)
+    generate_linux_launch_files(path, config_path, state_machine_path)
 
     save_state_machine_as(state_machine_path, as_copy=True)
     make_tarfile(path+".tar", path)
