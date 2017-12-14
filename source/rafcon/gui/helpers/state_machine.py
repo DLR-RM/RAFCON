@@ -436,8 +436,9 @@ def generate_linux_launch_file(target_path, config_path, state_machine_path):
         file_pointer.write("\n")
         from rafcon.gui import start
         file_pointer.write("{} -c {} -o {}".format(
-            str(start.__file__).replace("start.pyc", "start.py"),
-            config_path,
+            # str(start.__file__).replace("start.pyc", "start.py"),
+            "/volume/software/common/packages/rafcon/latest/source/rafcon/gui/start.py",
+            os.path.relpath(config_path, target_path),
             os.path.relpath(state_machine_path, target_path)))
 
     # make launch file executable
