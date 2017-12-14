@@ -428,6 +428,7 @@ def save_library_config(target_path):
 def generate_linux_launch_file(target_path, config_path, state_machine_path):
     file_name = os.path.join(target_path, "launch_rafcon_generated.sh")
     with open(file_name, 'w') as file_pointer:
+        file_pointer.write("#!/bin/bash\n\n")
         for key, value in os.environ.iteritems():
             if key not in ["PWD", "BASH_FUNC_mc%%", "BASH_FUNC_module%%", "RAFCON_LIBRARY_PATH"]:
                 file_pointer.write("export {}=\"{}\"\n".format(key, value))
