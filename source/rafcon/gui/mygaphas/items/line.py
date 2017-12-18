@@ -13,7 +13,7 @@
 from math import atan2, pi
 
 from gaphas.item import Line, NW, SE
-from cairo import ANTIALIAS_SUBPIXEL, LINE_CAP_ROUND
+from cairo import ANTIALIAS_SUBPIXEL, LINE_CAP_ROUND, LINE_CAP_BUTT
 from pango import SCALE
 
 from rafcon.gui.config import global_gui_config
@@ -163,6 +163,7 @@ class PerpLine(Line):
         cr.line_to(offset, 0)
         cr.set_source_rgba(*self._arrow_color)
         cr.set_line_width(self._calc_line_width(port))
+        cr.set_line_cap(LINE_CAP_BUTT)
         cr.stroke()
 
     def draw_tail(self, context, port):
@@ -173,6 +174,7 @@ class PerpLine(Line):
         cr.line_to(length, 0)
         cr.set_source_rgba(*self._arrow_color)
         cr.set_line_width(self._calc_line_width(port))
+        cr.set_line_cap(LINE_CAP_BUTT)
         cr.stroke()
 
     def draw(self, context):
@@ -305,14 +307,10 @@ class PerpLine(Line):
 
 
     def _head_offset(self, port):
-        """How far away from the prot center does the line begin"""
+        """How far away from the port center does the line begin"""
         if not port:
             return 0.
-        factor = 1.25
-        parent_state_v = self.get_parent_state_v()
-        if parent_state_v == port.parent:
-            factor = 2
-        return port.parent.border_width / factor
+        return port.parent.border_width / 2
 
     def _update_ports(self):
         assert len(self._handles) >= 2, 'Not enough segments'
