@@ -287,9 +287,8 @@ class PerpLine(Line):
             return 0
         line_width = parent_state_v.border_width / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR
         if for_port:
-            return min(line_width, for_port.port_side_size)
+            return min(line_width, for_port.port_size[0])
         return line_width
-
 
     def _head_length(self, port):
         """Distance from the center of the port to the perpendicular waypoint"""
@@ -300,11 +299,10 @@ class PerpLine(Line):
         if parent_state_v == port.parent:
             length = port.port_side_size
         elif port.has_label():
-            length =port.port_side_size
+            length = port.port_side_size
         else:
             length = port.port_side_size * 2
         return max(length, self._calc_line_width())
-
 
     def _head_offset(self, port):
         """How far away from the port center does the line begin"""
