@@ -156,23 +156,23 @@ class PerpLine(Line):
         return self._parent_state_v
 
     def draw_head(self, context, port):
-        length = self._head_length(port)
         offset = self._head_offset(port)
+        length = self._head_length(port)
         cr = context.cairo
-        cr.line_to(length, 0)
-        cr.stroke()
         cr.move_to(length, 0)
         cr.line_to(offset, 0)
         cr.set_source_rgba(*self._arrow_color)
+        cr.set_line_width(self._calc_line_width(port))
         cr.stroke()
 
     def draw_tail(self, context, port):
-        length = self._head_length(port)
         offset = self._head_offset(port)
+        length = self._head_length(port)
         cr = context.cairo
         cr.move_to(offset, 0)
         cr.line_to(length, 0)
         cr.set_source_rgba(*self._arrow_color)
+        cr.set_line_width(self._calc_line_width(port))
         cr.stroke()
 
     def draw(self, context):
@@ -279,23 +279,33 @@ class PerpLine(Line):
 
             self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, angle, zoom=current_zoom)
 
-    def _calc_line_width(self):
+    def _calc_line_width(self, for_port=None):
         parent_state_v = self.get_parent_state_v()
         if not parent_state_v:
             return 0
-        return parent_state_v.border_width / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR
+        line_width = parent_state_v.border_width / constants.BORDER_WIDTH_LINE_WIDTH_FACTOR
+        if for_port:
+            return min(line_width, for_port.port_side_size)
+        return line_width
+
 
     def _head_length(self, port):
+        """Distance from the center of the port to the perpendicular waypoint"""
         if not port:
             return 0.
+
         parent_state_v = self.get_parent_state_v()
         if parent_state_v == port.parent:
-            return port.port_side_size
-        if port.has_label():
-            return port.port_side_size
-        return port.port_side_size * 2
+            length = port.port_side_size
+        elif port.has_label():
+            length =port.port_side_size
+        else:
+            length = port.port_side_size * 2
+        return max(length, self._calc_line_width())
+
 
     def _head_offset(self, port):
+        """How far away from the prot center does the line begin"""
         if not port:
             return 0.
         factor = 1.25
