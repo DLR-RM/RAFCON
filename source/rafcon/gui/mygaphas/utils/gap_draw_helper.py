@@ -17,8 +17,8 @@ from pango import SCALE, FontDescription
 from cairo import ANTIALIAS_SUBPIXEL
 
 from rafcon.gui.config import global_gui_config as gui_config
-from rafcon.gui.mygaphas.utils.enums import SnappedSide
 from rafcon.gui.utils import constants
+from rafcon.gui.mygaphas.utils.enums import SnappedSide
 from rafcon.utils.geometry import deg2rad
 
 
@@ -239,20 +239,15 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
     return rot_angle, move_x, move_y
 
 
-def draw_port_label(context, text, label_color, text_color, transparency, fill, label_position, port_side_length,
-                    draw_connection_to_port=False, show_additional_value=False, additional_value=None,
-                    only_extent_calculations=False):
+def draw_port_label(context, port, transparency, fill, label_position, show_additional_value=False,
+                    additional_value=None, only_extent_calculations=False):
     """Draws a normal label indicating the port name.
 
     :param context: Draw Context
-    :param text: Text to display
-    :param gtk.gdk.Color label_color: Color of the label (border and background if fill is set to True)
-    :param gtk.gdk.Color text_color: Color of the text
+    :param port: The PortView
     :param transparency: Transparency of the text
     :param fill: Whether the label should be filled or not
     :param label_position: Side on which the label should be drawn
-    :param port_side_length: Side length of port
-    :param draw_connection_to_port: Whether there should be a line connecting the label to the port
     :param show_additional_value: Whether to show an additional value (for data ports)
     :param additional_value: The additional value to be shown
     :param only_extent_calculations: Calculate only the extends and do not actually draw
@@ -260,24 +255,30 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
     c = context
     c.set_antialias(ANTIALIAS_SUBPIXEL)
 
+    text = port.name
+    label_color = get_col_rgba(port.fill_color, transparency)
+    text_color = port.text_color
+    port_height = port.port_size[1]
+
     port_position = c.get_current_point()
 
     layout = c.create_layout()
     layout.set_text(text)
 
     font_name = constants.INTERFACE_FONT
-    font_size = port_side_length
+    font_size = port_height
     font = FontDescription(font_name + " " + str(font_size))
     layout.set_font_description(font)
     text_size = (layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE))
 
     # margin is the distance between the text and the border line
-    margin = port_side_length / 4.
+    margin = port_height / 4.
     # The text_size dimensions are rotated by 90 deg compared to the label, as the label is drawn upright
     width = text_size[1] + 2 * margin
-    arrow_height = port_side_length
+    arrow_height = port_height
     height = arrow_height + text_size[0] + 2 * margin
-    port_distance = port_side_length
+    port_offset = port_height / 2.
+    port_distance = port_height
 
     if label_position is SnappedSide.RIGHT:
         label_angle = deg2rad(-90)
@@ -296,10 +297,10 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
     c.move_to(*port_position)
     c.save()
     c.rotate(label_angle)
-    draw_label_path(c, width, height, arrow_height, port_distance, draw_connection_to_port)
+    draw_label_path(c, width, height, arrow_height, port_distance, port_offset)
     c.restore()
 
-    c.set_line_width(port_side_length * .03)
+    c.set_line_width(port_height * .03)
     c.set_source_rgba(*label_color)
     label_extents = c.stroke_extents()
 
@@ -382,24 +383,23 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
     return label_extents
 
 
-def draw_label_path(context, width, height, arrow_height, distance_to_port, draw_connection_to_port):
+def draw_label_path(context, width, height, arrow_height, distance_to_port, port_offset):
     """Draws the path for an upright label
 
     :param context: The Cairo context
     :param float width: Width of the label
     :param float height: Height of the label
     :param float distance_to_port: Distance to the port related to the label
+    :param float port_offset: Distance from the port center to its border
     :param bool draw_connection_to_port: Whether to draw a line from the tip of the label to the port
     """
     c = context
     # The current point is the port position
 
-    # If a connector is to be drawn, the first command is a line to the tip of the label
-    if draw_connection_to_port:
-        c.rel_line_to(0, distance_to_port)
-    # Otherwise we first move the current point to the tip of the label
-    else:
-        c.rel_move_to(0, distance_to_port)
+    # Mover to outer border of state
+    c.rel_move_to(0, port_offset)
+    # Draw line to arrow tip of label
+    c.rel_line_to(0, distance_to_port)
 
     # Line to upper left corner
     c.rel_line_to(-width / 2., arrow_height)

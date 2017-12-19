@@ -90,7 +90,8 @@ class PerpLine(Line):
         if not self._from_waypoint:
             self._from_waypoint = self.add_perp_waypoint()
             self._from_port_constraint = KeepPortDistanceConstraint(self.from_handle().pos, self._from_waypoint.pos,
-                                                                    port, lambda: self._head_length(self.from_port),
+                                                                    port, lambda: self._head_length(self.from_port) +
+                                                                                  self._head_offset(self.from_port),
                                                                     self.is_out_port(port))
             self.canvas.solver.add_constraint(self._from_port_constraint)
 
@@ -101,7 +102,8 @@ class PerpLine(Line):
         if not self._to_waypoint:
             self._to_waypoint = self.add_perp_waypoint(begin=False)
             self._to_port_constraint = KeepPortDistanceConstraint(self.to_handle().pos, self._to_waypoint.pos, port,
-                                                                  lambda: self._head_length(self.to_port),
+                                                                  lambda: self._head_length(self.to_port) +
+                                                                          self._head_offset(self.to_port),
                                                                   self.is_in_port(port))
             self.canvas.solver.add_constraint(self._to_port_constraint)
 
@@ -159,8 +161,8 @@ class PerpLine(Line):
         offset = self._head_offset(port)
         length = self._head_length(port)
         cr = context.cairo
-        cr.move_to(length, 0)
-        cr.line_to(offset, 0)
+        cr.move_to(offset, 0)
+        cr.line_to(offset + length, 0)
         cr.set_source_rgba(*self._arrow_color)
         cr.set_line_width(self._calc_line_width(port))
         cr.set_line_cap(LINE_CAP_BUTT)
@@ -171,7 +173,7 @@ class PerpLine(Line):
         length = self._head_length(port)
         cr = context.cairo
         cr.move_to(offset, 0)
-        cr.line_to(length, 0)
+        cr.line_to(offset + length, 0)
         cr.set_source_rgba(*self._arrow_color)
         cr.set_line_width(self._calc_line_width(port))
         cr.set_line_cap(LINE_CAP_BUTT)
@@ -294,21 +296,16 @@ class PerpLine(Line):
         """Distance from the center of the port to the perpendicular waypoint"""
         if not port:
             return 0.
-
         parent_state_v = self.get_parent_state_v()
-        if parent_state_v == port.parent:
-            length = port.port_side_size
-        elif port.has_label():
-            length = port.port_side_size
-        else:
-            length = port.port_side_size * 2
-        return max(length, self._calc_line_width())
+        if parent_state_v is port.parent:  # port of connection's parent state
+            return port.port_size[1]
+        return max(port.port_size[1] * 1.5, self._calc_line_width() / 1.3)
 
     def _head_offset(self, port):
         """How far away from the port center does the line begin"""
         if not port:
             return 0.
-        return port.parent.border_width / 2
+        return port.port_size[1] / 2
 
     def _update_ports(self):
         assert len(self._handles) >= 2, 'Not enough segments'
