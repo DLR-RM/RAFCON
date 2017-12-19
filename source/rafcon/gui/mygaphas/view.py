@@ -155,6 +155,26 @@ class ExtendedGtkView(GtkView, Observer):
                     pass
         super(ExtendedGtkView, self).queue_draw_item(*gaphas_items)
 
+    def get_items_at_point(self, pos, selected=True, distance=0.5):
+        """
+        Return the items located at ``pos`` (x, y).
+
+        Parameters:
+         - selected: if False returns first non-selected item
+         - selected: Maximum distance to be considered as "at point"
+        """
+        items = self._qtree.find_intersect((pos[0] - distance, pos[1] - distance, 2 * distance, 2 * distance))
+        filtered_items = []
+        for item in self._canvas.sort(items, reverse=True):
+            if not selected and item in self.selected_items:
+                continue  # skip selected items
+
+            v2i = self.get_matrix_v2i(item)
+            ix, iy = v2i.transform_point(*pos)
+            if item.point((ix, iy)) < distance:
+                filtered_items.append(item)
+        return filtered_items
+
     @Observer.observe("destruction_signal", signal=True)
     def _on_root_state_destruction(self, root_state_m, signal_name, signal_msg):
         """Ignore future selection changes when state machine is being destroyed"""
