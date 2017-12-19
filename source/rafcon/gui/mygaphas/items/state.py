@@ -379,7 +379,8 @@ class StateView(Element):
         # * state (or its parent) is currently moved
         # * is root state of a library (drawing would hide the LibraryState itself)
         if self.moving and self.parent and self.parent.moving or self.model.state.is_root_state_of_library:
-            return
+            if not context.draw_all:
+                return
 
         width = self.width
         height = self.height
