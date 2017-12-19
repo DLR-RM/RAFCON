@@ -192,6 +192,10 @@ class PortView(object):
         self._tmp_outgoing_connected = False
 
     @property
+    def connected(self):
+        return self.connected_incoming or self.connected_outgoing
+
+    @property
     def connected_outgoing(self):
         if len(self._outgoing_handles) == 0:
             return self._tmp_outgoing_connected
@@ -377,8 +381,7 @@ class PortView(object):
         c.restore()
 
         # Colorize the generated connector path
-        if isinstance(self, IncomeView) and self.connected_incoming or \
-                isinstance(self, OutcomeView) and self.connected_outgoing:
+        if self.connected:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
             c.set_source_color(gui_config.gtk_colors['BLACK'])
