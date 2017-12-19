@@ -216,11 +216,14 @@ class HoverItemTool(gaphas.tool.HoverTool):
             return items
 
         def dismiss_upper_items(item):
-            return items[items.index(item):]
+            try:
+                return items[items.index(item):]
+            except ValueError:
+                return []
 
         top_most_item = items[0]
         # If the hovered item is e.g. a connection, we need to get the parental state
-        top_most_state_v = top_most_item if isinstance(top_most_item, StateView) else items[1]
+        top_most_state_v = top_most_item if isinstance(top_most_item, StateView) else top_most_item.parent
         state = top_most_state_v.model.state
 
         global_gui_config = gui_helper_state_machine.global_gui_config
@@ -249,10 +252,9 @@ class HoverItemTool(gaphas.tool.HoverTool):
         :return: filtered items
         :rtype: list
         """
+        items = self._filter_library_state(items)
         if not items:
             return items
-
-        items = self._filter_library_state(items)
         top_most_item = items[0]
         second_top_most_item = items[1] if len(items) > 1 else None
 
