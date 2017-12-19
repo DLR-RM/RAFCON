@@ -338,7 +338,7 @@ class HoverItemTool(gaphas.tool.HoverTool):
             else:
                 name_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos)
                 # Hover over corner/resize handles => show with cursor
-                if hovered_handle:
+                if name_v:
                     index = name_v.handles().index(hovered_handle)
                     cursors = ElementHandleSelection.CURSORS
                     self.view.window.set_cursor(cursors[index])
