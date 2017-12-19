@@ -150,6 +150,9 @@ class ExecutionHistory(Observable, Iterable, Sized):
             (e.g. backward stepping)
         """
         last_history_item = self.get_last_history_item()
+        from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
+        if isinstance(state_for_scoped_data, LibraryState):
+            state_for_scoped_data = state_for_scoped_data.state_copy
         return_item = CallItem(state, last_history_item, call_type, state_for_scoped_data, input_data,
                                state.run_id)
         return self._push_item(last_history_item, return_item)
@@ -168,6 +171,9 @@ class ExecutionHistory(Observable, Iterable, Sized):
             backward stepping)
         """
         last_history_item = self.get_last_history_item()
+        from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
+        if isinstance(state_for_scoped_data, LibraryState):
+            state_for_scoped_data = state_for_scoped_data.state_copy
         return_item = ReturnItem(state, last_history_item, call_type, state_for_scoped_data, output_data,
                                  state.run_id)
         return self._push_item(last_history_item, return_item)
@@ -239,22 +245,31 @@ class HistoryItem(object):
 
     def to_dict(self):
         record = dict()
-        record['state_name'] = self.state_reference.name
-        record['state_type'] = self.state_type
-        record['path'] = self.path
-        record['path_by_name'] = self.state_reference.get_path(by_name=True)
-        record['timestamp'] = self.timestamp
-        record['run_id'] = self.run_id
-        record['history_item_id'] = self.history_item_id
-        # in case of a Library State, the description of the Library itself should be used and not the description of
-        # the wrapper state (i.e. the description of the Library developer and not that one of the user)
+
         from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
         if isinstance(self.state_reference, LibraryState):
-            record['semantic_data'] = self.state_reference.state_copy.semantic_data
-            record['description'] = self.state_reference.state_copy.description
+            # in case of a Library State, all the data of the library itself should be used
+            target_state = self.state_reference.state_copy
+            record['is_library'] = True
+            record['library_state_name'] = self.state_reference.name
+            record['library_name'] = self.state_reference.library_name
+            record['library_path'] = self.state_reference.library_path
         else:
-            record['semantic_data'] = self.state_reference.semantic_data
-            record['description'] = self.state_reference.description
+            target_state = self.state_reference
+            record['is_library'] = False
+            record['library_state_name'] = None
+            record['library_name'] = None
+            record['library_path'] = None
+
+        record['state_name'] = target_state.name
+        record['state_type'] = str(type(target_state).__name__)
+        record['path'] = target_state.get_path()
+        record['path_by_name'] = target_state.get_path(by_name=True)
+        record['timestamp'] = self.timestamp
+        record['run_id'] = self.run_id  # library state and state copy have the same run_id
+        record['history_item_id'] = self.history_item_id
+        record['semantic_data'] = target_state.semantic_data
+        record['description'] = target_state.description
 
         if self.prev is not None:
             record['prev_history_item_id'] = self.prev.history_item_id
@@ -388,6 +403,7 @@ class ReturnItem(ScopedDataItem):
             record['outcome_name'] = 'None'
             record['outcome_id'] = -1
         return record
+
 
 class ConcurrencyItem(HistoryItem):
     """A class to hold all the data for an invocation of several concurrent threads.
