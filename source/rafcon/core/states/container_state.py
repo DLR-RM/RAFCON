@@ -97,8 +97,10 @@ class ContainerState(State):
     @lock_state_machine
     def update_hash(self, obj_hash):
         super(ContainerState, self).update_hash(obj_hash)
-        for child in sorted(self.states.itervalues()):
-            child.update_hash(obj_hash)
+        for state_element in sorted(self.states.values()) + sorted(self.transitions.values() +
+                                                                   self.data_flows.values() + \
+                                                                   self.scoped_variables.values()):
+            self.update_hash_from_dict(obj_hash, state_element)
 
     @staticmethod
     def state_to_dict(state):
