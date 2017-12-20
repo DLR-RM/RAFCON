@@ -205,7 +205,7 @@ class AbstractStateModel(MetaModel, Hashable):
         del self.outcomes[:]
 
     def update_hash(self, obj_hash):
-        for state_element in self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]:
+        for state_element in sorted(self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
             self.update_hash_from_dict(obj_hash, state_element)
         self.update_hash_from_dict(obj_hash, self.meta)
 

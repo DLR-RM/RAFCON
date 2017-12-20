@@ -97,7 +97,7 @@ class ContainerState(State):
     @lock_state_machine
     def update_hash(self, obj_hash):
         super(ContainerState, self).update_hash(obj_hash)
-        for child in self.states.itervalues():
+        for child in sorted(self.states.itervalues()):
             child.update_hash(obj_hash)
 
     @staticmethod
