@@ -205,7 +205,7 @@ class AbstractStateModel(MetaModel, Hashable):
         del self.outcomes[:]
 
     def update_hash(self, obj_hash):
-	    self.update_hash_from_dict(obj_hash, self.core_element)
+        self.update_hash_from_dict(obj_hash, self.core_element)
         for state_element in sorted(self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
             self.update_hash_from_dict(obj_hash, state_element)
         if not self.state.get_library_root_state():
