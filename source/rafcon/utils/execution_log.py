@@ -9,7 +9,7 @@ logger = log.get_logger(__name__)
 
 def log_to_raw_structure(execution_history_items):
     """
-    :param dict executiion_history_items: history items, in the simplest case
+    :param dict execution_history_items: history items, in the simplest case
            directly the opened shelve log file
     :return: start_item, the StateMachineStartItem of the log file
              previous, a dict mapping history_item_id --> history_item_id of previous history item
@@ -32,7 +32,6 @@ def log_to_raw_structure(execution_history_items):
             if v['item_type'] == 'StateMachineStartItem':
                 start_item = v
             else:
-
                 # connect the item to its predecessor
                 prev_item_id = v['prev_history_item_id']
                 previous[k] = prev_item_id
@@ -62,15 +61,20 @@ def log_to_raw_structure(execution_history_items):
     return start_item, previous, next_, concurrent, grouped_by_run_id
 
 
-def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=True, include_erronous_data_ports=False, full_next=False):
+def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=True,
+                               include_erroneous_data_ports=False, full_next=False):
     """
     Collapsed structure means that all history items belonging the same state execution are
     merged together into one object (e.g. CallItem and ReturnItem of an ExecutionState). This
     is based on the log structure in which all Items which belong together have the same run_id.
     The collapsed items hold input as well as output data (direct and scoped), and the outcome
     the state execution.
-    :param dict executiion_history_items: history items, in the simplest case
+    :param dict execution_history_items: history items, in the simplest case
            directly the opened shelve log file
+    :param bool throw_on_pickle_error: flag if an error is thrown if an object cannot be un-pickled
+    :param bool include_erroneous_data_ports: flag if to include erroneous data ports
+    :param bool full_next: flag to indicate if the next relationship has also to be created at the end
+           of container states
     :return: start_item, the StateMachineStartItem of the log file
              next_, a dict mapping run_id --> run_id of the next executed state on the same
                     hierarchy level
@@ -97,9 +101,10 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             if gitems[0]['item_type'] == 'StateMachineStartItem':
                 item = gitems[0]
                 execution_item = {}
-                for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
+                for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type',
                           'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
-                          'used_rafcon_version', 'creation_time', 'last_update']:
+                          'used_rafcon_version', 'creation_time', 'last_update',
+                          'is_library', 'library_state_name', 'library_name', 'library_path']:
                     execution_item[l] = item[l]
                 start_item = execution_item
         return start_item, collapsed_next, collapsed_concurrent, collapsed_hierarchy, collapsed_items
@@ -109,8 +114,8 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
         if gitems[0]['item_type'] == 'StateMachineStartItem':
             item = gitems[0]
             execution_item = {}
-            for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type', \
-                      'path', 'timestamp', 'root_state_storage_id', 'state_machine_version', \
+            for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type',
+                      'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
                       'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
                 try:
                     execution_item[l] = item[l]
@@ -141,7 +146,6 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                 call_item = gitems[[gitems[i]['item_type'] == 'CallItem' and \
                                     gitems[i]['call_type'] == 'CONTAINER' \
                                     for i in range(len(gitems))].index(True)]
-
 
             try:
                 return_item = gitems[[gitems[i]['item_type'] == 'ReturnItem' and \
@@ -179,7 +183,8 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
 
             # assemble grouped item
             execution_item = {}
-            for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type', 'path']:
+            for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type', 'path',
+                      'is_library', 'library_state_name', 'library_name', 'library_path']:
                 execution_item[l] = call_item[l]
             for l in ['outcome_name', 'outcome_id']:
                 execution_item[l] = return_item[l]
@@ -200,11 +205,11 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                             except Exception as e:
                                 if throw_on_pickle_error:
                                     raise
-                                elif include_erronous_data_ports:
+                                elif include_erroneous_data_ports:
                                     r['!' + k] = (str(e), v)
                                 else:
                                     pass # ignore
-                        elif include_erronous_data_ports:
+                        elif include_erroneous_data_ports:
                             r[k] = v
 
                 return r
@@ -219,13 +224,23 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
     return start_item, collapsed_next, collapsed_concurrent, collapsed_hierarchy, collapsed_items
 
 
-def log_to_DataFrame(execution_history_items):
+def log_to_DataFrame(execution_history_items, data_in_columns=[], data_out_columns=[], scoped_in_columns=[],
+                     scoped_out_columns=[], semantic_data_columns=[], throw_on_pickle_error=True):
     """
-    Returns all collapsed items in a table-like structure (pandas.DataFrame). The data flow is
-    omitted from this table as the different states have different ports defined. The available
-    data per execution item (row in the table) can be printed using pandas.DataFrame.columns.
+    Returns all collapsed items in a table-like structure (pandas.DataFrame) with one row per executed 
+    state and a set of properties resp. columns (e.g. state_name, outcome, run_id) for this state.
+    The data flow (data_in/out, scoped_data_in/out, semantic_data) is omitted from this table
+    representation by default, as the different states have different data in-/out-port, scoped_data-
+    ports and semantic_data defined. However, you can ask specific data-/scoped_data-ports and semantic
+    data to be exported as table column, given they are primitive-valued, by including the port / key
+    names in the *_selected-parameters. These table-columns will obviously only be well-defined for
+    states having this kind of port-name-/semantic-key and otherwise will contain a None-like value,
+    indicating missing data.
+
+    The available data per execution item (row in the table) can be printed using pandas.DataFrame.columns.
     """
-    start, next_, concurrenty, hierarchy, gitems = log_to_collapsed_structure(execution_history_items)
+    start, next_, concurrency, hierarchy, gitems = log_to_collapsed_structure(
+        execution_history_items, throw_on_pickle_error=throw_on_pickle_error)
     gitems.pop(start['run_id'])
     if len(gitems) == 0:
         return pd.DataFrame()
@@ -237,12 +252,29 @@ def log_to_DataFrame(execution_history_items):
     df_keys.remove('data_outs')
     df_keys.remove('scoped_data_ins')
     df_keys.remove('scoped_data_outs')
+    df_keys.remove('semantic_data')
     df_keys.sort()
 
     df_items = []
-    for rid, item in gitems.items():
-        df_items.append([item[k] for k in df_keys])
 
+    for rid, item in gitems.items():
+        row_data = [item[k] for k in df_keys]
+
+        for key, selected_columns in [('data_ins', data_in_columns),
+                                      ('data_outs', data_out_columns),
+                                      ('scoped_data_ins', scoped_in_columns),
+                                      ('scoped_data_outs', scoped_out_columns),
+                                      ('semantic_data', semantic_data_columns)]:
+            for column_key in selected_columns:
+                row_data.append(item[key].get(column_key, None))
+        df_items.append(row_data)
+
+    for key, selected_columns in [('data_ins', data_in_columns),
+                                  ('data_outs', data_out_columns),
+                                  ('scoped_data_ins', scoped_in_columns),
+                                  ('scoped_data_outs', scoped_out_columns),
+                                  ('semantic_data', semantic_data_columns)]:
+        df_keys.extend([key + '__' + s for s in selected_columns])
     df = pd.DataFrame(df_items, columns=df_keys)
     # convert epoch to datetime
     df.timestamp_call = pd.to_datetime(df.timestamp_call, unit='s')
@@ -278,7 +310,7 @@ def log_to_ganttplot(execution_history_items):
                    'BarrierConcurrencyState': 'y',
                    'PreemptiveConcurrencyState': 'y'}
 
-    fig, ax = plt.subplots(1,1)
-    ax.barh(bottom=[name2idx[k] for k in d.path_by_name], width=returndate-calldate, left=calldate, align='center', color=[state2color[s] for s in d.state_type], lw=0.0)
+    fig, ax = plt.subplots(1, 1)
+    ax.barh(bottom=[name2idx[k] for k in d.path_by_name], width=returndate-calldate,
+            left=calldate, align='center', color=[state2color[s] for s in d.state_type], lw=0.0)
     plt.yticks(range(len(ordered_unique_states)), ordered_unique_states)
-
