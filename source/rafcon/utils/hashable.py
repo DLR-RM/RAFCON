@@ -14,19 +14,25 @@ import hashlib
 
 class Hashable(object):
     @staticmethod
-    def update_hash_from_dict(obj_hash, value):
-        """Updates an existing hash object with another Hashable or a dictionary
+    def update_hash_from_dict(obj_hash, object):
+        """Updates an existing hash object with another Hashable, list, set, tuple, dict or stringifyable object
 
         :param obj_hash: The hash object (see Python hashlib documentation)
-        :param value: The value that should be added to the hash (can be another Hashable or a dictionary)
+        :param object: The value that should be added to the hash (can be another Hashable or a dictionary)
         """
-        if isinstance(value, Hashable):
-            value.update_hash(obj_hash)
-        elif isinstance(value, dict):
-            for v in value.itervalues():
-                Hashable.update_hash_from_dict(obj_hash, v)
+        if isinstance(object, Hashable):
+            object.update_hash(obj_hash)
+        elif isinstance(object, (list, set, tuple)):
+            if isinstance(object, set):  # A set is not ordered
+                object = sorted(object)
+            for element in object:
+                Hashable.update_hash_from_dict(obj_hash, element)
+        elif isinstance(object, dict):
+            for key in sorted(object.keys()):  # A dict is not ordered
+                Hashable.update_hash_from_dict(obj_hash, key)
+                Hashable.update_hash_from_dict(obj_hash, object[key])
         else:
-            obj_hash.update(str(value))
+            obj_hash.update(str(object))
 
     def update_hash(self, obj_hash):
         """Should be implemented by derived classes to update the hash with their data fields
