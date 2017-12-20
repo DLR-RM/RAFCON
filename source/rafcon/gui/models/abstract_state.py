@@ -137,6 +137,10 @@ class AbstractStateModel(MetaModel, Hashable):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __cmp__(self, other):
+        if isinstance(other, AbstractStateModel):
+            return self.core_element.__cmp__(other.core_element)
+
     def __contains__(self, item):
         """Checks whether `item` is an element of the state model
 
