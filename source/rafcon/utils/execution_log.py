@@ -101,11 +101,21 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             if gitems[0]['item_type'] == 'StateMachineStartItem':
                 item = gitems[0]
                 execution_item = {}
-                for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type',
+                ## add base properties will throw if not existing
+                for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
                           'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
-                          'used_rafcon_version', 'creation_time', 'last_update',
-                          'is_library', 'library_state_name', 'library_name', 'library_path']:
+                          'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
                     execution_item[l] = item[l]
+
+                ## add extended properties (added in later rafcon versions),
+                ## will add default value if not existing instead
+                for l, default in [('semantic_data', {}),
+                                     ('is_library', None),
+                                     ('library_state_name', None),
+                                     ('library_name', None),
+                                     ('library_path', None)]:
+                    execution_item[l] = item.get(l, default)
+
                 start_item = execution_item
         return start_item, collapsed_next, collapsed_concurrent, collapsed_hierarchy, collapsed_items
 
@@ -114,13 +124,20 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
         if gitems[0]['item_type'] == 'StateMachineStartItem':
             item = gitems[0]
             execution_item = {}
-            for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type',
+            ## add base properties will throw if not existing
+            for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
                       'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
                       'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
-                try:
-                    execution_item[l] = item[l]
-                except KeyError:
-                    logger.debug("{} not found in meta data!".format(l))
+                execution_item[l] = item[l]
+
+            ## add extended properties (added in later rafcon versions),
+            ## will add default value if not existing instead
+            for l, default in [('semantic_data', {}),
+                                 ('is_library', None),
+                                 ('library_state_name', None),
+                                 ('library_name', None),
+                                 ('library_path', None)]:
+                execution_item[l] = item.get(l, default)
 
             start_item = execution_item
 
@@ -183,9 +200,19 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
 
             # assemble grouped item
             execution_item = {}
-            for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type', 'path',
-                      'is_library', 'library_state_name', 'library_name', 'library_path']:
+            ## add base properties will throw if not existing
+            for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type', 'path']:
                 execution_item[l] = call_item[l]
+
+            ## add extended properties (added in later rafcon versions),
+            ## will add default value if not existing instead
+            for l, default in [('semantic_data', {}),
+                                 ('is_library', None),
+                                 ('library_state_name', None),
+                                 ('library_name', None),
+                                 ('library_path', None)]:
+                execution_item[l] = call_item.get(l, default)
+
             for l in ['outcome_name', 'outcome_id']:
                 execution_item[l] = return_item[l]
             for l in ['timestamp']:
