@@ -47,8 +47,8 @@ class ValueCache(object):
         :param value: The value to be cached
         :param dict parameters: The parameters on which the value depends
         """
-        if parameters is not None and not isinstance(parameters, dict):
-            raise TypeError("parameters must be None or a dict")
+        if not isinstance(parameters, dict):
+            raise TypeError("parameters must be a dict")
         hash = self._parameter_hash(parameters)
         if name not in self._cache:
             self._cache[name] = {}
@@ -64,8 +64,8 @@ class ValueCache(object):
         :param dict parameters: Current parameters or None if parameters do not matter
         :return: The cached value of the variable or None if the parameters differ
         """
-        if parameters is not None and not isinstance(parameters, dict):
-            raise TypeError("parameters must be None or a dict")
+        if not isinstance(parameters, dict):
+            raise TypeError("parameters must a dict")
         if name not in self._cache:
             return None
         hash = self._parameter_hash(parameters)
