@@ -384,7 +384,7 @@ class StateView(Element):
         height = self.height
         border_width = self.border_width
         view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
-        if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY and self.parent:
+        if min(view_width, view_height) < constants.MINIMUM_STATE_SIZE_FOR_DISPLAY and self.parent:
             return
 
         c = context.cairo
@@ -918,7 +918,7 @@ class NameView(Element):
         width = self.width
         height = self.height
         view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
-        if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY:
+        if min(view_width, view_height) < constants.MINIMUM_NAME_SIZE_FOR_DISPLAY:
             return
         font_transparency = self.transparency
 
