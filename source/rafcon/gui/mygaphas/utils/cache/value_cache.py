@@ -9,6 +9,8 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from decimal import Context, Decimal
+
 
 class ValueCache(object):
     """Cache holding values calculated from certain parameters
@@ -20,8 +22,9 @@ class ValueCache(object):
     __value_cache = {}
     __parameter_cache = {}
 
-    def __init__(self):
+    def __init__(self, precision=2):
         self.empty()
+        self._context = Context(prec=precision)
 
     def empty(self):
         """Empty the cache
@@ -41,6 +44,7 @@ class ValueCache(object):
         :param value: The value to be cached
         :param dict parameters: The parameters on which the value depends
         """
+        self._normalize_number_values(parameters)
         if parameters is not None and not isinstance(parameters, dict):
             raise TypeError("parameters must be None or a dict")
         self.__value_cache[name] = value
@@ -56,6 +60,7 @@ class ValueCache(object):
         :param dict parameters: Current parameters or None if parameters do not matter
         :return: The cached value of the variable or None if the parameters differ
         """
+        self._normalize_number_values(parameters)
         if parameters is not None and not isinstance(parameters, dict):
             raise TypeError("parameters must be None or a dict")
         if name not in self.__value_cache:
@@ -69,3 +74,9 @@ class ValueCache(object):
         if len(parameters) != len(self.__parameter_cache[name]):
             return None
         return self.__value_cache[name]
+
+    def _normalize_number_values(self, parameters):
+        """Assures equal precision for all number values"""
+        for key, value in parameters.iteritems():
+            if isinstance(value, (int, float, long)):
+                parameters[key] = Decimal(value).normalize(self._context)
