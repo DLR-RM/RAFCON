@@ -965,7 +965,7 @@ class NameView(Element):
 
             font_name = constants.INTERFACE_FONT
 
-            font_size_parameters = {"text": self.name, "width": width, "height": height}
+            font_size_parameters = {"text": self.name, "width": width, "height": height, "zoom": current_zoom}
             font_size = self._value_cache.get_value("font_size", font_size_parameters)
 
             if font_size:
