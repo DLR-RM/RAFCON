@@ -27,12 +27,15 @@ class ValueCache(object):
         self.empty()
         self._context = Context(prec=precision)
 
-    def empty(self):
+    def empty(self, name=None):
         """Empty the cache
 
-        All values are removed.
+        :param name: The name of the cache that is to be deleted or None if whole cache is to be deleted
         """
-        self._cache = {}
+        if name is None:
+            self._cache = {}
+        else:
+            self._cache[name] = {}
 
     def store_value(self, name, value, parameters=None):
         """Stores the value of a certain variable
