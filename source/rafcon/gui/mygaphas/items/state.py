@@ -34,7 +34,6 @@ from rafcon.gui.mygaphas.utils.enums import SnappedSide
 from rafcon.gui.mygaphas.utils.gap_draw_helper import get_col_rgba
 from rafcon.gui.mygaphas.utils import gap_draw_helper
 from rafcon.gui.mygaphas.utils.cache.image_cache import ImageCache
-from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
 
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
 from rafcon.gui.helpers.meta_data import contains_geometric_info
@@ -855,7 +854,6 @@ class NameView(Element):
         self._view = None
 
         self._image_cache = ImageCache(multiplicator=1.5)
-        self._value_cache = ValueCache()
 
     def update_minimum_size(self):
         min_side_length = min(self.parent.width, self.parent.height) / constants.MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO
@@ -966,7 +964,7 @@ class NameView(Element):
             font_name = constants.INTERFACE_FONT
 
             font_size_parameters = {"text": self.name, "width": width, "height": height, "zoom": current_zoom}
-            font_size = self._value_cache.get_value("font_size", font_size_parameters)
+            font_size = self.view.value_cache.get_value("font_size", font_size_parameters)
 
             if font_size:
                 set_font_description(font_size)
@@ -983,7 +981,7 @@ class NameView(Element):
                     font_size *= 0.9
                     set_font_description(font_size)
 
-                self._value_cache.store_value("font_size", font_size, font_size_parameters)
+                self.view.value_cache.store_value("font_size", font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
             c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
