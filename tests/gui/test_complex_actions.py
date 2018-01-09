@@ -2,11 +2,6 @@
 every respective feature."""
 import threading
 
-# gui elements
-import rafcon.gui.singleton
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
-
 # core elements
 import rafcon.core.singleton
 from rafcon.core.states.hierarchy_state import HierarchyState
@@ -39,8 +34,6 @@ def create_models(*args, **kargs):
 
     # add new state machine
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-    # select state machine
-    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
 
 # def test_state_type_change(caplog):
@@ -65,20 +58,14 @@ def trigger_repetitive_group_ungroup(*args):
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     import rafcon.gui.singleton as gui_singletons
     import time
-    sm_manager_model = args[0]
-    main_window_controller = args[1]
-    logger = args[2]
 
-    states_machines_editor_controller = main_window_controller.get_controller('state_machines_editor_ctrl')
-    graphical_editor_controller = states_machines_editor_controller.get_child_controllers()[0]
-    call_gui_callback(graphical_editor_controller.view.editor.set_size_request, 500, 500)
+    call_gui_callback(create_models)
+    call_gui_callback(testing_utils.wait_for_gui)
 
-    sm_id = gui_singletons.state_machine_manager_model.state_machines.values()[0].state_machine.state_machine_id
-    gui_singletons.state_machine_manager_model.selected_state_machine_id = sm_id
     sm_m = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
     print "select: ", sm_m.root_state.states.values()
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values())
-    # time.sleep(1)
+
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
     sm_m.root_state.states.values()[0].state.name = "Stage 1"
 
@@ -147,45 +134,20 @@ def trigger_repetitive_group_ungroup(*args):
 
     # exception core test
     # call_gui_callback(sm_m.root_state.states.values()[0].state.group_states, ['State1', 'State2', UNIQUE_DECIDER_STATE_ID])
-    print "wait3 failure"
-    # exit()
-    # time.sleep(5)
-    print "quitting"
-    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
+    # print "wait3 failure"
 
 
 def test_repetitive_ungroup_state_and_group_states(caplog):
     """Check if repetitive group and ungroup works"""
 
-    testing_utils.initialize_environment(libraries={"unit_test_state_machines":
-                                                    testing_utils.get_test_sm_path("unit_test_state_machines")})
+    libraries = {"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
 
-    create_models()
-
-    main_window_view = MainWindowView()
-
-    # load the meta data for the state machine
-    rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
-
-    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
-
-    testing_utils.wait_for_gui()
-    thread = threading.Thread(target=trigger_repetitive_group_ungroup,
-                              args=[rafcon.gui.singleton.state_machine_manager_model, main_window_controller, logger])
-    thread.start()
-
-    import gtk
-    gtk.main()
-    logger.debug("Gtk main loop exited!")
-    sm = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
-    if sm:
-        sm.root_state.join()
-        logger.debug("Joined currently executing state machine!")
-        thread.join()
-        logger.debug("Joined test triggering thread!")
-
-    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
+    testing_utils.run_gui(libraries=libraries)
+    try:
+        trigger_repetitive_group_ungroup()
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
     pass
 
 
