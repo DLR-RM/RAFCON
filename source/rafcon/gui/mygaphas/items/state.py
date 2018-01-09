@@ -987,7 +987,6 @@ class NameView(Element):
 
             c.move_to(*self.handles()[NW].pos)
             c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
-            c.update_layout(layout)
             c.show_layout(layout)
 
             # Copy image surface to current cairo context
