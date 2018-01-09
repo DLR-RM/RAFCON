@@ -99,7 +99,11 @@ class BasicTreeViewExample:
         self.treestore = gtk.TreeStore(str, str)
 
         # we'll add some data now - 4 rows with 3 child rows each
-        elements = [(None, self.start['run_id'])]
+        if not self.start:
+            print 'WARNING: no start item found, just listing all items'
+            elements = [(None, run_id) for run_id in self.items.keys()]
+        else:
+            elements = [(None, self.start['run_id'])]
         while True:
             new_elements = []
             for e in elements:
