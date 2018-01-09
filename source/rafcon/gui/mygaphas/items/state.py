@@ -934,12 +934,10 @@ class NameView(Element):
         from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
-            # print "from cache"
             self._image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
         else:
-            # print "draw"
             c = self._image_cache.get_context_for_image(current_zoom)
 
             if context.selected:
@@ -969,19 +967,45 @@ class NameView(Element):
             if font_size:
                 set_font_description(font_size)
             else:
-                font_size = height * 0.8
-                set_font_description(font_size)
-                pango_size = (width * SCALE, height * SCALE)
+                available_size = (width * SCALE, height * SCALE)
+                word_count = len(self.name.split(" "))
+                # Set max font size to available height
+                max_font_size = height * 0.9
+                # Calculate minimum size that is still to be drawn
+                min_name_height, _ = self.view.get_matrix_v2i(self).transform_distance(
+                    constants.MINIMUM_NAME_SIZE_FOR_DISPLAY, 0)
+                # Calculate line height if all words are wrapped
+                line_height = max_font_size / word_count
+                # Use minimum if previous values and add safety margin
+                min_font_size = min(line_height, min_name_height) * 0.5
 
-                def exceeds_layout_size():
+                # Iteratively calculate font size by always choosing the average of the maximum and minimum size
+                working_font_size = None
+                current_font_size = (max_font_size + min_font_size) / 2.
+                set_font_description(current_font_size)
+
+                while True:
                     ink_extents, logical_extents = layout.get_extents()
-                    return ink_extents[2] > pango_size[0] or ink_extents[3] > pango_size[1]
-
-                while exceeds_layout_size():
-                    font_size *= 0.9
-                    set_font_description(font_size)
-
-                self.view.value_cache.store_value("font_size", font_size, font_size_parameters)
+                    width_factor = ink_extents[2] / available_size[0]
+                    height_factor = ink_extents[3] / available_size[1]
+                    max_factor = max(width_factor, height_factor)
+                    if max_factor > 1:  # font size too large
+                        max_font_size = current_font_size
+                    elif max_factor > 0.9:  # font size fits!
+                        break
+                    else:  # font size too small
+                        # Nevertheless store the font size in case we do not find anything better
+                        if not working_font_size or current_font_size > working_font_size:
+                            working_font_size = current_font_size
+                        min_font_size = current_font_size
+                    if 0.99 < min_font_size / max_font_size < 1.01:  # Stop criterion: changes too small
+                        if working_font_size:
+                            current_font_size = working_font_size
+                            set_font_description(current_font_size)
+                        break
+                    current_font_size = (max_font_size + min_font_size) / 2.
+                    set_font_description(current_font_size)
+                self.view.value_cache.store_value("font_size", current_font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
             c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
