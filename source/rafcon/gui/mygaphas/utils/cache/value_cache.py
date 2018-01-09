@@ -10,6 +10,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from decimal import Context, Decimal
+from hashlib import sha256
+from rafcon.utils.hashable import Hashable
 
 
 class ValueCache(object):
@@ -19,8 +21,7 @@ class ValueCache(object):
     change, the cached value can be used.
     """
 
-    __value_cache = {}
-    __parameter_cache = {}
+    _cache = {}
 
     def __init__(self, precision=2):
         self.empty()
@@ -31,8 +32,7 @@ class ValueCache(object):
 
         All values are removed.
         """
-        self.__value_cache = {}
-        self.__parameter_cache = {}
+        self._cache = {}
 
     def store_value(self, name, value, parameters=None):
         """Stores the value of a certain variable
@@ -44,11 +44,12 @@ class ValueCache(object):
         :param value: The value to be cached
         :param dict parameters: The parameters on which the value depends
         """
-        self._normalize_number_values(parameters)
         if parameters is not None and not isinstance(parameters, dict):
             raise TypeError("parameters must be None or a dict")
-        self.__value_cache[name] = value
-        self.__parameter_cache[name] = parameters
+        hash = self._parameter_hash(parameters)
+        if name not in self._cache:
+            self._cache[name] = {}
+        self._cache[name][hash.hexdigest()] = value
 
     def get_value(self, name, parameters=None):
         """Return the value of a cached variable if applicable
@@ -60,23 +61,22 @@ class ValueCache(object):
         :param dict parameters: Current parameters or None if parameters do not matter
         :return: The cached value of the variable or None if the parameters differ
         """
-        self._normalize_number_values(parameters)
         if parameters is not None and not isinstance(parameters, dict):
             raise TypeError("parameters must be None or a dict")
-        if name not in self.__value_cache:
+        if name not in self._cache:
             return None
-        if parameters is None:
-            return self.__value_cache[name]
-        for parameter, parameter_value in parameters.iteritems():
-            if parameter not in self.__parameter_cache[name] or \
-                    self.__parameter_cache[name][parameter] != parameter_value:
-                return None
-        if len(parameters) != len(self.__parameter_cache[name]):
-            return None
-        return self.__value_cache[name]
+        hash = self._parameter_hash(parameters)
+        hashdigest = hash.hexdigest()
+        return self._cache[name].get(hashdigest, None)
+
+    def _parameter_hash(self, parameters):
+        self._normalize_number_values(parameters)
+        hash = sha256()
+        Hashable.update_hash_from_dict(hash, parameters)
+        return hash
 
     def _normalize_number_values(self, parameters):
         """Assures equal precision for all number values"""
         for key, value in parameters.iteritems():
             if isinstance(value, (int, float, long)):
-                parameters[key] = Decimal(value).normalize(self._context)
+                parameters[key] = str(Decimal(value).normalize(self._context))
