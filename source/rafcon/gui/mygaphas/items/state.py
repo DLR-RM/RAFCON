@@ -974,9 +974,15 @@ class NameView(Element):
                 font_size = height * 0.8
                 set_font_description(font_size)
                 pango_size = (width * SCALE, height * SCALE)
-                while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
+
+                def exceeds_layout_size():
+                    ink_extents, logical_extents = layout.get_extents()
+                    return ink_extents[2] > pango_size[0] or ink_extents[3] > pango_size[1]
+
+                while exceeds_layout_size():
                     font_size *= 0.9
                     set_font_description(font_size)
+
                 self._value_cache.store_value("font_size", font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
