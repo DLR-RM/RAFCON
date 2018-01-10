@@ -61,6 +61,7 @@ class AbstractTreeViewController(ExtendedController):
 
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
+        super(AbstractTreeViewController, self).register_view(view)
         self._tree_selection.connect('changed', self.selection_changed)
         self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)

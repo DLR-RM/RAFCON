@@ -105,6 +105,7 @@ class ModificationHistoryTreeController(ExtendedController):
             self._selected_sm_model = None
 
     def register_view(self, view):
+        super(ModificationHistoryTreeController, self).register_view(view)
         view['history_tree'].connect('cursor-changed', self.on_cursor_changed)
         view['undo_button'].connect('clicked', self.on_undo_button_clicked)
         view['redo_button'].connect('clicked', self.on_redo_button_clicked)

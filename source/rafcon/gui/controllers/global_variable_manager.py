@@ -67,7 +67,7 @@ class GlobalVariableManagerController(ListViewController):
 
     def register_view(self, view):
         """Called when the View was registered"""
-        ExtendedController.register_view(self, view)
+        ExtendedController.register_view(self, view)  # no super to avoid sm based selection initialization
         view['name_text'].set_property('editable', True)
         view['value_text'].set_property('editable', True)
         view['type_text'].set_property('editable', True)

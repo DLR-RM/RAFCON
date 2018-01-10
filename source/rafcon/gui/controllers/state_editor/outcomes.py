@@ -336,6 +336,7 @@ class StateOutcomesEditorController(ExtendedController):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
+        super(StateOutcomesEditorController, self).register_view(view)
         if isinstance(view, StateOutcomesEditorView):
             view['add_button'].connect("clicked", self.oc_list_ctrl.on_add)
             view['remove_button'].connect("clicked", self.oc_list_ctrl.on_remove)

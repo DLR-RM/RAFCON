@@ -64,6 +64,7 @@ class LibraryTreeController(ExtendedController):
         self.update()
 
     def register_view(self, view):
+        super(LibraryTreeController, self).register_view(view)
         self.view.connect('button_press_event', self.mouse_click)
 
         self.view.connect("drag-data-get", self.on_drag_data_get)

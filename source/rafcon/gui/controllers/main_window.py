@@ -209,6 +209,7 @@ class MainWindowController(ExtendedController):
         global_runtime_config.store_widget_properties(widget, name)
 
     def register_view(self, view):
+        super(MainWindowController, self).register_view(view)
         self.register_actions(self.shortcut_manager)
 
         self.view.get_top_widget().connect("key-press-event", self._on_key_press)

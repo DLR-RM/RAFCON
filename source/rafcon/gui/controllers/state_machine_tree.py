@@ -61,7 +61,7 @@ class StateMachineTreeController(TreeViewController):
         tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT, str)
         super(StateMachineTreeController, self).__init__(model, view, view, tree_store)
 
-        self.state_right_click_ctrl = StateMachineTreeRightClickMenuController(model, view)
+        self.add_controller("state_right_click_ctrl", StateMachineTreeRightClickMenuController(model, view))
 
         self.view_is_registered = False
 
@@ -78,10 +78,10 @@ class StateMachineTreeController(TreeViewController):
 
     def register_view(self, view):
         """Called when the view was registered"""
+        super(StateMachineTreeController, self).register_view(view)
         self.view.connect('button_press_event', self.mouse_click)
         self.view_is_registered = True
         self.update(with_expand=True)
-        super(StateMachineTreeController, self).register_view(view)
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions

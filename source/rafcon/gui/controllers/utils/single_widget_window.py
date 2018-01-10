@@ -38,6 +38,7 @@ class SingleWidgetWindowController(ExtendedController):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
+        super(SingleWidgetWindowController, self).register_view(view)
         self.shortcut_manager = ShortcutManager(self.view['main_window'])
         self.register_actions(self.shortcut_manager)
 

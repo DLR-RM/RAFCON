@@ -803,6 +803,7 @@ class StateDataFlowsEditorController(ExtendedController):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
+        super(StateDataFlowsEditorController, self).register_view(view)
         view['add_d_button'].connect('clicked', self.df_list_ctrl.on_add)
         view['remove_d_button'].connect('clicked', self.df_list_ctrl.on_remove)
         view['connected_to_d_checkbutton'].connect('toggled', self.toggled_button, 'data_flows_external')

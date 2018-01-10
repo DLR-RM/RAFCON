@@ -146,6 +146,7 @@ class StatesEditorController(ExtendedController):
         self.closed_tabs = {}
 
     def register_view(self, view):
+        super(StatesEditorController, self).register_view(view)
         self.view.notebook.connect('switch-page', self.on_switch_page)
         if self.current_state_machine_m:
             self.add_state_editor(self.current_state_machine_m.root_state)

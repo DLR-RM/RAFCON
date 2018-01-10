@@ -29,11 +29,20 @@ logger = log.get_logger(__name__)
 class ExtendedController(Controller):
     def __init__(self, model, view, spurious=False):
         self.__registered_models = set()
+        self._view_initialized = False
         super(ExtendedController, self).__init__(model, view, spurious=spurious)
         self.__action_registered_controllers = []
         self.__child_controllers = dict()
         self.__shortcut_manager = None
         self.__parent = None
+
+    def register_view(self, view):
+        """Called when the View was registered
+
+        Can be used e.g. to connect signals. Here, this implements a convenient feature that observes if thread problems
+        are possible by destroying a controller before being fully initialized.
+        """
+        self._view_initialized = True
 
     def add_controller(self, key, controller):
         """Add child controller
@@ -169,7 +178,13 @@ class ExtendedController(Controller):
         self.relieve_all_models()
         if self.parent:
             self.__parent = None
-        self.view.get_top_widget().destroy()
+        if self._view_initialized:
+            self.view.get_top_widget().destroy()
+            self.view = None
+        else:
+            logger.warning("The controller {0} seems to be destroyed before the view was fully initialized. {1} "
+                           "Check if you maybe do not call {2} or there exist most likely threading problems."
+                           "".format(self.__class__.__name__, self.model, ExtendedController.register_view))
 
     def observe_model(self, model):
         """Make this model observable within the controller

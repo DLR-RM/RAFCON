@@ -40,6 +40,7 @@ class LoggingConsoleController(ExtendedController):
         log_helpers.LoggingViewHandler.add_logging_view('main', self)
 
     def register_view(self, view):
+        super(LoggingConsoleController, self).register_view(view)
         view.text_view.connect('populate_popup', self.add_clear_menu_item)
         self.view.set_enables(self._enables)
         self.update_filtered_buffer()

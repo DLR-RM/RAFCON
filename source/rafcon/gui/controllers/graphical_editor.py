@@ -137,6 +137,7 @@ class GraphicalEditorController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(GraphicalEditorController, self).register_view(view)
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
         view.editor.connect('button-release-event', self._on_mouse_release)

@@ -88,7 +88,7 @@ class GraphicalEditorController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
-        assert self.view == view
+        super(GraphicalEditorController, self).register_view(view)
 
         self.view.connect('meta_data_changed', self._meta_data_changed)
         self.focus_changed_handler_id = self.view.editor.connect('focus-changed', self._move_focused_item_into_viewport)
