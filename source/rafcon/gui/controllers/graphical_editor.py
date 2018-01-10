@@ -100,8 +100,8 @@ class GraphicalEditorController(ExtendedController):
         """Constructor"""
         assert isinstance(model, StateMachineModel)
         assert isinstance(view, GraphicalEditorView)
-        ExtendedController.__init__(self, model, view)
-        self.state_right_click_ctrl = StateRightClickMenuControllerOpenGLEditor(model, view)
+        super(GraphicalEditorController, self).__init__(model, view)
+        self.add_controller("state_right_click_ctrl", StateRightClickMenuControllerOpenGLEditor(model, view))
 
         self.root_state_m = model.root_state
 
