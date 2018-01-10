@@ -78,7 +78,7 @@ class LinkageListController(ListViewController):
             else:
                 # if the state it self is removed lock the widget to never run updates and relieve all models
                 removed_state_id = info.args[1] if len(info.args) > 1 else info.kwargs['state_id']
-                if  removed_state_id == self.model.state.state_id or \
+                if removed_state_id == self.model.state.state_id or \
                         not self.model.state.is_root_state and removed_state_id == self.model.parent.state.state_id:
                     self.no_update_self_or_parent_state_destruction = True
                     self.relieve_all_models()
@@ -135,6 +135,10 @@ class LinkageListController(ListViewController):
             if model not in self._model_observed:
                 self.relieve_model(model)
             self.register_models_to_observe()
+
+        # TODO think about to remove this -> this a work around for the recreate state-editor assert __observer_threads
+        if msg.action in ['change_state_type', 'change_root_state_type'] and not msg.after:
+            self.relieve_all_models()
 
     @ListViewController.observe("state_machine", before=True)
     def before_notification_state_machine_observation_control(self, model, prop_name, info):
