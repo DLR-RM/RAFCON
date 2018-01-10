@@ -71,8 +71,9 @@ class ExtendedController(Controller):
             key = controller
 
         if key in self.__child_controllers:
-            self.__action_registered_controllers.remove(self.__child_controllers[key])
-            self.__child_controllers[key].unregister_actions(self.__shortcut_manager)
+            if self.__shortcut_manager is not None:
+                self.__action_registered_controllers.remove(self.__child_controllers[key])
+                self.__child_controllers[key].unregister_actions(self.__shortcut_manager)
             self.__child_controllers[key].destroy()
             del self.__child_controllers[key]
             return True
