@@ -329,12 +329,7 @@ class StateOutcomesEditorController(ExtendedController):
         """
         ExtendedController.__init__(self, model, view)
         self.oc_list_ctrl = StateOutcomesListController(model, view.treeView)
-        # self.add_controller('oc_list_ctrl', self.oc_list_ctrl)
-
-    def destroy(self):
-        # TODO maybe refactor widget to use ExtendedController destruct method
-        self.oc_list_ctrl.relieve_all_models()
-        super(StateOutcomesEditorController, self).destroy()
+        self.add_controller('oc_list_ctrl', self.oc_list_ctrl)
 
     def register_view(self, view):
         """Called when the View was registered
