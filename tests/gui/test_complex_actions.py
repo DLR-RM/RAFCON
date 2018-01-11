@@ -2,13 +2,6 @@
 every respective feature."""
 import threading
 
-# core elements
-import rafcon.core.singleton
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, UNIQUE_DECIDER_STATE_ID
-from rafcon.core.state_machine import StateMachine
-
 # general tool elements
 from rafcon.utils import log
 
@@ -21,6 +14,10 @@ logger = log.get_logger(__name__)
 
 
 def create_models(*args, **kargs):
+    import rafcon.core.singleton
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.state_machine import StateMachine
 
     state1 = HierarchyState('State1', state_id="State1")
     state2 = ExecutionState('State2', state_id="State2")
@@ -57,7 +54,7 @@ def trigger_repetitive_group_ungroup(*args):
     import rafcon.gui.helpers.state as gui_helper_state
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     import rafcon.gui.singleton as gui_singletons
-    import time
+    from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, UNIQUE_DECIDER_STATE_ID
 
     call_gui_callback(create_models)
     call_gui_callback(testing_utils.wait_for_gui)

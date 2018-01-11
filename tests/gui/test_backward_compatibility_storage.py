@@ -3,15 +3,9 @@ import os
 import hashlib
 from distutils.version import StrictVersion
 
-# core elements
-import rafcon.core.config
-import rafcon.core.singleton as singletons
-from rafcon.core.storage import storage
-from rafcon.gui.models.state_machine import StateMachineModel
-
 # general tool elements
 import testing_utils
-from testing_utils import call_gui_callback, run_gui, close_gui, initialize_environment
+from testing_utils import call_gui_callback, run_gui, initialize_environment
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -27,7 +21,10 @@ def run_backward_compatibility_state_machines(state_machines_path):
 
 
 def run_state_machine(state_machine_path):
+    import rafcon.core.config
+    import rafcon.core.singleton as singletons
     import rafcon.gui.helpers.state_machine as gui_helper_statemachine
+
     gvm = rafcon.core.singleton.global_variable_manager
     execution_engine = singletons.state_machine_execution_engine
     state_machine_manager = singletons.state_machine_manager
@@ -36,11 +33,11 @@ def run_state_machine(state_machine_path):
         raise RuntimeError("The execution engine is not stopped")
 
     print "Loading state machine from path: {}".format(state_machine_path)
+
     call_gui_callback(gui_helper_statemachine.open_state_machine, state_machine_path)
-
     testing_utils.remove_all_gvm_variables()
+    call_gui_callback(execution_engine.start)
 
-    execution_engine.start()
     if not execution_engine.join(3):
         raise RuntimeError("State machine did not finish within the given time")
 
@@ -50,7 +47,7 @@ def run_state_machine(state_machine_path):
     assert gvm.get_variable("e1") == 1
     assert gvm.get_variable("l1") == 1
 
-    state_machine_manager.remove_state_machine(state_machine_manager.active_state_machine_id)
+    call_gui_callback(state_machine_manager.remove_state_machine, state_machine_manager.active_state_machine_id)
 
 
 def test_backward_compatibility_storage(caplog):
@@ -66,12 +63,17 @@ def test_backward_compatibility_storage(caplog):
     finally:
         # two warning per minor version lower than the current RAFCON version
         state_machines = len([filename for filename in os.listdir(path) if os.path.isdir(os.path.join(path, filename))])
-        close_gui()
+        testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0)
 
 
 def test_unchanged_storage_format(caplog):
     """This test ensures that the state machine storage format does not change in patch releases"""
+
+    from rafcon.core.storage import storage
+    from rafcon.gui.models.state_machine import StateMachineModel
+    import rafcon
+
     path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_compatibility"))
 
     initialize_environment(gui_config={'HISTORY_ENABLED': False,
@@ -111,6 +113,7 @@ def calculate_state_machine_hash(path):
     :return: The hash of the files
     :rtype: hashlib.Hashable
     """
+    from rafcon.core.storage import storage
 
     paths_to_hash = []
     for root, dirs, filenames in os.walk(path):
