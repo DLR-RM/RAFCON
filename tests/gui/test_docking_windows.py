@@ -2,9 +2,6 @@ import threading
 import pytest
 import time
 
-from rafcon.gui.runtime_config import global_runtime_config
-from rafcon.gui.utils import constants
-
 import testing_utils
 from testing_utils import call_gui_callback, run_gui, close_gui, wait_for_gui
 from rafcon.utils import log
@@ -15,6 +12,8 @@ event_size = (0, 0)
 
 
 def get_stored_window_size(window_name):
+    from rafcon.gui.runtime_config import global_runtime_config
+    from rafcon.gui.utils import constants
     size = global_runtime_config.get_config_value(window_name.upper() + '_SIZE')
     if not size:
         size = constants.WINDOW_SIZE[window_name.upper()]
@@ -47,6 +46,7 @@ def assert_size_equality(size1, size2):
 
 
 def undock_sidebars():
+    from rafcon.gui.runtime_config import global_runtime_config
     from rafcon.gui.singleton import main_window_controller
     debug_sleep_time = 0
 
@@ -126,6 +126,8 @@ def undock_sidebars():
 
 def check_pane_positions():
     from rafcon.gui.singleton import main_window_controller
+    from rafcon.gui.runtime_config import global_runtime_config
+    from rafcon.gui.utils import constants
     debug_sleep_time = 0
 
     stored_pane_positions = {}
@@ -174,6 +176,7 @@ def check_pane_positions():
 
 def test_window_positions(caplog):
     run_gui(core_config=None, gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False}, runtime_config={})
+    from rafcon.gui.runtime_config import global_runtime_config
     original_runtime_config = global_runtime_config.as_dict()
 
     try:
@@ -187,8 +190,8 @@ def test_window_positions(caplog):
 
 
 def test_pane_positions(caplog):
-
     run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+    from rafcon.gui.runtime_config import global_runtime_config
     original_runtime_config = global_runtime_config.as_dict()
 
     try:
