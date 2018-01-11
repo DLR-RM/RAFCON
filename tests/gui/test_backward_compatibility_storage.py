@@ -5,7 +5,7 @@ from distutils.version import StrictVersion
 
 # general tool elements
 import testing_utils
-from testing_utils import call_gui_callback, run_gui, close_gui, initialize_environment
+from testing_utils import call_gui_callback, run_gui, initialize_environment
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -63,7 +63,7 @@ def test_backward_compatibility_storage(caplog):
     finally:
         # two warning per minor version lower than the current RAFCON version
         state_machines = len([filename for filename in os.listdir(path) if os.path.isdir(os.path.join(path, filename))])
-        close_gui()
+        testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0)
 
 
