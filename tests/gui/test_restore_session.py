@@ -271,7 +271,7 @@ def test_restore_session(caplog):
     from rafcon.gui.controllers.main_window import MainWindowController, MainWindowView
 
     change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False,
-                            'SESSION_RESTORE_ENABLED': True, 'GAPHAS_EDITOR': False}
+                            'SESSION_RESTORE_ENABLED': True, 'GAPHAS_EDITOR': True}
 
     # first run
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
@@ -339,23 +339,25 @@ def test_restore_session(caplog):
                     print "does not exist sm_file_path ", sm_file_path
             else:
                 print "state machine was NOT stored"
-        # assert final_tuple_list[index][CORE_HASH_INDEX] == sm_tuple[CORE_HASH_INDEX]
+        assert final_tuple_list[index][CORE_HASH_INDEX] == sm_tuple[CORE_HASH_INDEX]
         assert final_tuple_list[index][PATH_INDEX] == sm_tuple[PATH_INDEX]
         if not final_tuple_list[index][GUI_HASH_INDEX] == sm_tuple[GUI_HASH_INDEX]:
             print "GUI hashes page {4} are not equal: {0} != {1}, path: {2} {3}" \
                   "".format(final_tuple_list[index][GUI_HASH_INDEX], sm_tuple[GUI_HASH_INDEX],
                             sm_tuple[PATH_INDEX], sm_tuple[MARKED_DIRTY_INDEX], sm_tuple[PAGE_NUMBER_INDEX])
-        # assert final_tuple_list[index][GUI_HASH_INDEX] == sm_tuple[GUI_HASH_INDEX]
+        assert final_tuple_list[index][GUI_HASH_INDEX] == sm_tuple[GUI_HASH_INDEX]
         assert final_tuple_list[index][PAGE_NUMBER_INDEX] == sm_tuple[PAGE_NUMBER_INDEX]
         # page dirty 0, 4, 6 and not dirty 1, 2, 3, 5
         if not final_tuple_list[index][MARKED_DIRTY_INDEX] == sm_tuple[MARKED_DIRTY_INDEX]:
             print "MARKED DIRTY page {4} is not equal: {0} != {1}, path: {2} {3}" \
                   "".format(final_tuple_list[index][MARKED_DIRTY_INDEX], sm_tuple[MARKED_DIRTY_INDEX],
                             sm_tuple[PATH_INDEX], sm_tuple[MARKED_DIRTY_INDEX], sm_tuple[PAGE_NUMBER_INDEX])
+        assert final_tuple_list[index][MARKED_DIRTY_INDEX] == sm_tuple[MARKED_DIRTY_INDEX]
         if not final_tuple_list[index][MARKED_DIRTY_INDEX] == order_of_pages_to_be_dirty[index]:
             print "Aspect different dirty flag page {4} is not equal: {0} != {1}, path: {2} {3}" \
                   "".format(final_tuple_list[index][MARKED_DIRTY_INDEX], order_of_pages_to_be_dirty[index],
                             sm_tuple[PATH_INDEX], sm_tuple[MARKED_DIRTY_INDEX], sm_tuple[PAGE_NUMBER_INDEX])
+        # TODO check to put here an assert, too, -> maybe the implementation of this check is bad (because tabs look OK)
     testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
 
