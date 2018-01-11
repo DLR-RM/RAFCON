@@ -2,17 +2,8 @@ import threading
 import shutil
 from os.path import join
 
-# core elements
-import rafcon.core.config
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.library_state import LibraryState
-from rafcon.core.state_machine import StateMachine
-import rafcon.core.singleton
-
 # general tool elements
 from rafcon.utils import log
-
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
@@ -23,6 +14,9 @@ logger = log.get_logger(__name__)
 
 
 def create_state_machine(*args, **kargs):
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.state_machine import StateMachine
 
     state1 = ExecutionState('State1', state_id='STATE1')
     state2 = ExecutionState('State2')
@@ -102,6 +96,8 @@ def trigger_gui_signals(*args):
     from rafcon.gui.controllers.main_window import MenuBarController
     from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+    import rafcon.core.config
+    from rafcon.core.states.library_state import LibraryState
 
     print "WT: ", threading.currentThread()
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
@@ -248,7 +244,7 @@ def trigger_gui_signals(*args):
     call_gui_callback(testing_utils.wait_for_gui)
     assert recently_opened_state_machines_paths == global_runtime_config.get_config_value('recently_opened_state_machines')
     assert number_of_open_sm == len(sm_manager_model.state_machines) + 1
-    auto_backup.recover_state_machine_from_backup(backup_path)
+    call_gui_callback(auto_backup.recover_state_machine_from_backup, backup_path)
     assert recently_opened_state_machines_paths == global_runtime_config.get_config_value('recently_opened_state_machines')
     assert number_of_open_sm == len(sm_manager_model.state_machines)
     check_order_and_consistency_of_menu(menubar_ctrl)
