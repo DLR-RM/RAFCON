@@ -178,9 +178,7 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
     :return:
     """
     initialize_environment_core(core_config, libraries)
-
     initialize_environment_gui(gui_config, runtime_config)
-
     initialize_signal_handler()
 
 
@@ -206,8 +204,6 @@ def initialize_environment_core(core_config=None, libraries=None):
                 global_config.set_config_value(key, value)
 
     rewind_and_set_libraries(libraries=libraries)
-
-    state_machine_manager.delete_all_state_machines()
 
 
 def initialize_environment_gui(gui_config=None, runtime_config=None):
@@ -266,6 +262,10 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
         reload_config(config, gui_config)
         GUI_INITIALIZED = GUI_SIGNAL_INITIALIZED = False
         test_multithreading_lock.release()
+    global gui_thread
+    global used_gui_threads
+    used_gui_threads.append(gui_thread)
+    unpatch_gtkmvc_model_mt()
 
 
 def shutdown_environment_only_core(config=True, caplog=None, expected_warnings=0, expected_errors=0):
@@ -298,6 +298,7 @@ def run_gui_thread(gui_config=None, runtime_config=None):
 
 
 def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=None, timeout=5):
+    patch_gtkmvc_model_mt()
     global gui_ready, gui_thread
     # IMPORTANT enforce gtk.gtkgl import in the python main thread to avoid segfaults
     import gtk.gtkgl
@@ -322,11 +323,119 @@ def wait_for_gui_quit(timeout=5):
 
 
 def close_gui():
-    from rafcon.core.singleton import state_machine_execution_engine
-    from rafcon.gui.singleton import main_window_controller
+    from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
+    from rafcon.gui.singleton import main_window_controller, state_machine_manager_model
     call_gui_callback(state_machine_execution_engine.stop)
+    call_gui_callback(state_machine_manager.delete_all_state_machines)
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
-
     if not wait_for_gui_quit():
         assert False, "Could not close the GUI"
+
+
+original_ModelMT = None
+original_state_start = None
+original_execution_engine = None
+state_threads = []
+used_gui_threads = []
+
+
+def patch_gtkmvc_model_mt():
+    print "patch"
+    global state_threads, original_ModelMT, original_state_start, original_execution_engine, used_gui_threads
+
+    import rafcon.core.states.state
+    import rafcon.core.execution.execution_engine
+    import gtkmvc
+    from gtkmvc.model_mt import Model, _threading, gobject, ModelMT
+    from rafcon.core.states.state import run_id_generator, threading
+    from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger, Queue, ExecutionEngine
+
+    original_ModelMT = gtkmvc.model_mt.ModelMT
+    original_state_start = rafcon.core.states.state.State.start
+    original_execution_engine = rafcon.core.execution.execution_engine.ExecutionEngine
+    state_threads = []
+
+    def state_start(self, execution_history, backward_execution=False, generate_run_id=True):
+        self.execution_history = execution_history
+        if generate_run_id:
+            self._run_id = run_id_generator()
+        self.backward_execution = copy.copy(backward_execution)
+        self.thread = threading.Thread(target=self.run)
+        # !!!!!!!!!!!!! pachted line !!!!!!!!!!!!!
+        state_threads.append(self.thread)
+        self.thread.start()
+
+    class PatchedExecutionEngine(ExecutionEngine):
+
+        def _run_active_state_machine(self):
+            """Store running state machine and observe its status
+            """
+            # Create new concurrency queue for root state to be able to synchronize with the execution
+            self._ExecutionEngine__running_state_machine = self.state_machine_manager.get_active_state_machine()
+            self._ExecutionEngine__running_state_machine.root_state.concurrency_queue = Queue.Queue(maxsize=0)
+
+            if self._ExecutionEngine__running_state_machine:
+                self._ExecutionEngine__running_state_machine.start()
+
+                self._ExecutionEngine__wait_for_finishing_thread = threading.Thread(target=self._wait_for_finishing)
+                # !!!!!!!!!!!!! pachted line !!!!!!!!!!!!!
+                state_threads.append(self._ExecutionEngine__wait_for_finishing_thread)
+                self._ExecutionEngine__wait_for_finishing_thread.start()
+            else:
+                logger.warn("Currently no active state machine! Please create a new state machine.")
+                self.set_execution_mode(StateMachineExecutionStatus.STOPPED)
+
+    class PatchedModelMT(ModelMT):
+
+        def __notify_observer__(self, observer, method, *args, **kwargs):
+            """This makes a call either through the gtk.idle list or a
+            direct method call depending whether the caller's thread is
+            different from the observer's thread"""
+
+            assert self._ModelMT__observer_threads.has_key(observer)
+            if _threading.currentThread().ident == self._ModelMT__observer_threads[observer].ident:
+                # standard call
+                # print "{0} -> {1}: single threading '{2}' in call_thread {3} object_generation_thread {3} \n{4}" \
+                #       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
+                #                 self._ModelMT__observer_threads[observer], (args, kwargs))
+                return Model.__notify_observer__(self, observer, method,
+                                                 *args, **kwargs)
+
+            # multi-threading call
+            if _threading.currentThread() in state_threads:
+                # print "Notification from state thread", _threading.currentThread()  #, method, args, kwargs
+                gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
+                return
+            else:
+                # print "mutli", _threading.currentThread(), used_gui_threads
+                if _threading.currentThread() in used_gui_threads:
+                    return
+                print "{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \
+                      "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
+                                _threading.currentThread(), self._ModelMT__observer_threads[observer], (args, kwargs))
+
+                # print "state threads", state_threads
+                # print "used_gui_threads", used_gui_threads
+
+                raise RuntimeError("This test should not have multi-threading constellations.")
+
+    gtkmvc.model_mt.ModelMT = PatchedModelMT
+    gtkmvc.ModelMT = PatchedModelMT
+    rafcon.core.states.state.State.start = state_start
+    rafcon.core.execution.execution_engine.ExecutionEngine = PatchedExecutionEngine
+
+
+def unpatch_gtkmvc_model_mt():
+    print "unpatch"
+    global state_threads, original_ModelMT, original_state_start, original_execution_engine
+
+    import rafcon.core.states.state
+    import rafcon.core.execution.execution_engine
+    import gtkmvc
+
+    gtkmvc.model_mt.ModelMT = original_ModelMT
+    gtkmvc.ModelMT = original_ModelMT
+    rafcon.core.states.state.State.start = original_state_start
+    rafcon.core.execution.execution_engine.ExecutionEngine = original_execution_engine
+    state_threads = []

@@ -38,12 +38,10 @@ def execute_library_state_forwards_backwards():
     import rafcon.gui.singleton as gui_singleton
 
     menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
-
     call_gui_callback(
         menubar_ctrl.on_open_activate, None, None,
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_step_library_execution_test"))
     )
-
     # reset the synchronization counter; although the tests run in different processes they share their memory
     # as the import statements are at the top of the file and not inside the parallel called functions
     state_machine_execution_engine.synchronization_lock.acquire()
@@ -83,13 +81,23 @@ def test_backward_stepping_library_state(caplog):
                                                                'backward_step_library_execution_test', 'test_library')
                                      }
                           )
-    initialize_global_variables()
-    try:
-        execute_library_state_forwards_backwards()
-    finally:
-        print "I'm done"
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
+    call_gui_callback(initialize_global_variables)
+    # try:
+    execute_library_state_forwards_backwards()
+# except Exception,e:
+#     raise
+# finally:
+    testing_utils.close_gui()
+    testing_utils.shutdown_environment(caplog=caplog)
+
+
+def verify_execute_preemptive_state_forwards_backwards():
+    import rafcon.gui.singleton as gui_singleton
+    gvm = gui_singleton.global_variable_manager_model
+    beers = gvm.global_variable_manager.get_variable('beers')
+    whiskey = gvm.global_variable_manager.get_variable('whiskey')
+    assert beers == 0
+    assert whiskey == 0
 
 
 def execute_preemptive_state_forwards_backwards():
@@ -139,22 +147,20 @@ def execute_preemptive_state_forwards_backwards():
 
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
-    beers = gvm.global_variable_manager.get_variable('beers')
-    whiskey = gvm.global_variable_manager.get_variable('whiskey')
-    assert beers == 0
-    assert whiskey == 0
 
+    call_gui_callback(verify_execute_preemptive_state_forwards_backwards)
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
 
 
 def test_backward_stepping_preemptive_state(caplog):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    initialize_global_variables()
+    call_gui_callback(initialize_global_variables)
     try:
         execute_preemptive_state_forwards_backwards()
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
+        # testing_utils.wait_for_gui()
 
 
 def execute_barrier_state_forwards_backwards():
@@ -213,10 +219,13 @@ def execute_barrier_state_forwards_backwards():
 
 def test_backward_stepping_barrier_state(caplog):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    initialize_global_variables()
+    call_gui_callback(initialize_global_variables)
     try:
         execute_barrier_state_forwards_backwards()
+    except Exception,e:
+        raise
     finally:
+        # testing_utils.wait_for_gui()
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
