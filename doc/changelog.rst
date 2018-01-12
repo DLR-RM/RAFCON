@@ -7,6 +7,14 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 
+- Improvements:
+
+    - drawing of connections, ports and labels, especially when deeply nested
+
+- Bug Fixes:
+
+    - :issue:`449`: ports (of transitions or data flows) cannot be moved
+
 
 Patch releases 0.12.\*
 ----------------------
