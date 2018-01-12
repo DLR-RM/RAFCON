@@ -20,6 +20,16 @@ def run_backward_compatibility_state_machines(state_machines_path):
         run_state_machine(state_machine_path)
 
 
+def assert_correctness_of_execution():
+    import rafcon
+    gvm = rafcon.core.singleton.global_variable_manager
+    assert gvm.get_variable("b1") == 1
+    assert gvm.get_variable("b2") == 1
+    assert gvm.get_variable("h1") == 1
+    assert gvm.get_variable("e1") == 1
+    assert gvm.get_variable("l1") == 1
+
+
 def run_state_machine(state_machine_path):
     import rafcon.core.config
     import rafcon.core.singleton as singletons
@@ -35,18 +45,13 @@ def run_state_machine(state_machine_path):
     print "Loading state machine from path: {}".format(state_machine_path)
 
     call_gui_callback(gui_helper_statemachine.open_state_machine, state_machine_path)
-    testing_utils.remove_all_gvm_variables()
+    call_gui_callback(testing_utils.remove_all_gvm_variables)
     call_gui_callback(execution_engine.start)
 
     if not execution_engine.join(3):
         raise RuntimeError("State machine did not finish within the given time")
 
-    assert gvm.get_variable("b1") == 1
-    assert gvm.get_variable("b2") == 1
-    assert gvm.get_variable("h1") == 1
-    assert gvm.get_variable("e1") == 1
-    assert gvm.get_variable("l1") == 1
-
+    call_gui_callback(assert_correctness_of_execution)
     call_gui_callback(state_machine_manager.remove_state_machine, state_machine_manager.active_state_machine_id)
 
 
@@ -130,5 +135,5 @@ def calculate_state_machine_hash(path):
 
 if __name__ == '__main__':
     # test_backward_compatibility_storage(None)
-    # test_unchanged_storage_format(None)
-    pytest.main(['-s', __file__])
+    test_unchanged_storage_format(None)
+    # pytest.main(['-s', __file__])
