@@ -7,6 +7,14 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 
+- Improvements:
+
+    - Hash calculations of state machines
+
+- Bug Fixes:
+
+    - :issue:`447`: Hashes of state machine in storage different then the reopened state machine after saving it
+
 
 Patch releases 0.12.\*
 ----------------------
