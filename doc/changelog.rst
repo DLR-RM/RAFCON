@@ -14,14 +14,11 @@ Next release
 - Bug Fixes:
 
     - :issue:`447`: Hashes of state machine in storage different then the reopened state machine after saving it
+    - :issue:`455`: gaphas drawing while proportional resize (smaller) seems to screw its childs meta data
 
 
 Patch releases 0.12.\*
 ----------------------
-
-- Bug Fixes:
-
-    - :issue:`455`: gaphas drawing while proportional resize (smaller) seems to screw its childs meta data
 
 
 0.12.1
