@@ -11,22 +11,30 @@ import pytest
 logger = log.get_logger(__name__)
 
 
-def trigger_ungroup_bug_signals(*args):
+def set_selected_state_machine_id(id):
+    import rafcon
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    sm_manager_model.selected_state_machine_id = id
+
+
+def trigger_ungroup_bug_signals():
     import rafcon.core.singleton
+    import rafcon.gui.singleton as gui_singleton
     from gui.widget.test_menu_bar import focus_graphical_editor_in_page, create_state_machine
 
     state_machine = create_state_machine()
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, state_machine)
 
-    sm_manager_model = args[0]
-    main_window_controller = args[1]
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    main_window_controller = gui_singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
     current_sm_length = len(sm_manager_model.state_machines)
     first_sm_id = sm_manager_model.state_machines.keys()[0]
-    # call_gui_callback(menubar_ctrl.on_new_activate, None)
+    call_gui_callback(menubar_ctrl.on_new_activate, None)
     main_window_controller.view['main_window'].grab_focus()
-    sm_manager_model.selected_state_machine_id = first_sm_id
+    call_gui_callback(set_selected_state_machine_id, first_sm_id)
+
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
     page_id = state_machines_ctrl.get_page_num(first_sm_id)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
@@ -52,16 +60,14 @@ def test_ungroup_bug(caplog):
                    "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
                    "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
     )
-    import rafcon
-    import rafcon.gui.singleton as gui_singleton
+
     try:
-        trigger_ungroup_bug_signals(rafcon.gui.singleton.state_machine_manager_model,
-                                    gui_singleton.main_window_controller)
+        trigger_ungroup_bug_signals()
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':
-    # test_ungroup_bug(None)
-    pytest.main(['-s', __file__])
+    test_ungroup_bug(None)
+    # pytest.main(['-s', __file__])
