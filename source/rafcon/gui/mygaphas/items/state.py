@@ -773,7 +773,6 @@ class StateView(Element):
         def set_item_properties(item, size, rel_pos):
             prefix = 'name.' if isinstance(item, NameView) else ''
             item_m = item.model if isinstance(item, StateView) else item.parent.model
-            size = (max(size[0], item.min_width),  max(size[1], item.min_height))
             item.width = size[0]
             item.height = size[1]
             item_m.set_meta_data_editor(prefix + 'size', size)
@@ -810,6 +809,8 @@ class StateView(Element):
                     old_child_size = (child_state_v.width, child_state_v.height)
 
                 new_child_size = (old_child_size[0] * width_factor, old_child_size[1] * height_factor)
+                new_child_size = (max(new_child_size[0], child_state_v.min_width),
+                                  max(new_child_size[1], child_state_v.min_height))
                 resize_state_v(child_state_v, old_child_size, new_child_size, use_meta_data)
 
             # Set new port view properties
