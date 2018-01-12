@@ -100,7 +100,7 @@ def undock_sidebars():
         time.sleep(debug_sleep_time)
         ready.clear()
         show_handler_id = window.connect('show', notify_on_event)
-        main_window_controller.view["undock_{}_button".format(window_key.lower())].emit("clicked")
+        call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key.lower())].emit, "clicked")
         wait_for_event_notification()
         assert window.get_property('visible') is True
         assert_size_equality(window.get_size(), target_size)
@@ -183,9 +183,9 @@ def test_window_positions(caplog):
         undock_sidebars()
     finally:
         for key, value in original_runtime_config.iteritems():
-            global_runtime_config.set_config_value(key, value)
+            call_gui_callback(global_runtime_config.set_config_value, key, value)
 
-        close_gui()
+        testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
 
@@ -198,10 +198,12 @@ def test_pane_positions(caplog):
         check_pane_positions()
     finally:
         for key, value in original_runtime_config.iteritems():
-            global_runtime_config.set_config_value(key, value)
+            call_gui_callback(global_runtime_config.set_config_value, key, value)
 
-        close_gui()
+        testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
 if __name__ == '__main__':
-    pytest.main([__file__, '-xs'])
+    test_window_positions(None)
+    test_pane_positions(None)
+    # pytest.main([__file__, '-xs'])
