@@ -1,6 +1,3 @@
-# state machine elements
-from docutils.statemachine import StateMachine
-from rafcon.core.singleton import state_machine_manager
 
 # test environment elements
 import testing_utils
@@ -22,6 +19,8 @@ def initialize_data(state):
 
 
 def change_semantic_data_values():
+    # core elements
+    from rafcon.core.singleton import state_machine_manager
     # gui elements
     import rafcon.gui.singleton as gui_singleton
     from rafcon.gui.controllers.state_editor.semantic_data_editor import SemanticDataEditorController
