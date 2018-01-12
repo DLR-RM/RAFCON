@@ -10,6 +10,7 @@ Next release
 - Improvements:
 
     - Hash calculations of state machines
+    - Placement of NameView
 
 - Bug Fixes:
 
