@@ -1,26 +1,4 @@
-import logging
-import gtk
-import threading
 import time
-
-# gui elements
-from rafcon.gui.config import global_gui_config
-import rafcon.gui.singleton
-from rafcon.gui.models import GlobalVariableManagerModel
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
-
-# core elements
-import rafcon.core.singleton
-from rafcon.core.states.state import State
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.container_state import ContainerState
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
-from rafcon.core.state_machine import StateMachine
-from rafcon.core.config import global_config
 
 # general tool elements
 from rafcon.utils import log
@@ -35,7 +13,12 @@ check_elements_ignores = []
 
 logger = log.get_logger(__name__)
 
-def create_models(*args, **kargs):
+
+def create_models(state_dict):
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.state_machine import StateMachine
 
     state1 = ExecutionState('State1', state_id="State1")
     output_state1 = state1.add_output_data_port("output", "int")
@@ -100,21 +83,22 @@ def create_models(*args, **kargs):
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
     ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
 
-    state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
+    tmp_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
                   'Nested2': state5}
+    state_dict.update(tmp_dict)
     sm = StateMachine(ctr_state)
 
     # add new state machine
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     # select state machine
     rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
-    # get state machine model
-    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
-
-    return sm_m, state_dict
 
 
 def store_state_elements(state, state_m):
+    from rafcon.core.states.state import State
+    from rafcon.core.states.container_state import ContainerState
+    from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
+
     """Stores all ids of elements in or outside of the actual state"""
     print "STORE state elements of %s, %s" % (state.name, state_m.state.name)
     global store_elements_ignores
@@ -318,6 +302,13 @@ def store_state_elements(state, state_m):
 
 
 def check_state_elements(check_list, state, state_m, stored_state_elements, stored_state_m_elements):
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.container_state import ContainerState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+    from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+    from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
+
     print "CHECK state elements of %s, %s " % (state.name, state_m.state.name)
     print "AGAINST stored elements of %s, %s " % (stored_state_elements['name'],
                                                   stored_state_m_elements['name'])
@@ -545,6 +536,7 @@ def list_store_id_dict(store):
         id += 1
     return list_store_id
 
+
 check_list_ES = ['ports', 'outcomes', 'transitions_external', 'data_flows_external']
 check_list_HS = ['ports', 'outcomes', 'states', 'scoped_variables', 'transitions_internal', 'transitions_external',
                  'data_flows_internal', 'data_flows_external']
@@ -576,23 +568,28 @@ def get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controlle
 
 
 @log.log_exceptions(None, gtk_quit=True)
-def trigger_state_type_change_tests(*args):
+def trigger_state_type_change_tests(with_gui):
     """Only works with gui at the moment.
 
     :param args:
     """
-    main_window_controller = args[0]
-    sm_m = args[1]
-    state_dict = args[2]
-    with_gui = args[3]
-    logger = args[4]
+    import rafcon.gui.singleton
+
+    main_window_controller = rafcon.gui.singleton.main_window_controller
     sleep_time_max = 5.0
+    # will get updated in "create_models
+    state_dict = {}
+    call_gui_callback(create_models, state_dict)
+    sm = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    # sm_m, state_dict = create_models()
 
     # General Type Change inside of a state machine (NO ROOT STATE) ############
     state_of_type_change = 'State3'
     check_elements_ignores.append("internal_transitions")
     # first storage
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    # no call_gui_callback as only core operations
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
     print "\n\n %s \n\n" % state_m.state.name
 
@@ -657,35 +654,17 @@ def trigger_state_type_change_tests(*args):
     # simple type change of root_state -> still could be extended
     check_elements_ignores.remove("internal_transitions")
 
-    if with_gui:
-        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
-
 
 def test_state_type_change_test(caplog):
+    testing_utils.run_gui()
     with_gui = True
-    testing_utils.initialize_environment()
-
-    sm_m, state_dict = create_models()
-    main_window_controller = None
-    if with_gui:
-        main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
-
-    if with_gui:
-        # Wait for GUI to initialize
-        while gtk.events_pending():
-            gtk.main_iteration(False)
-    thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[main_window_controller, sm_m, state_dict, with_gui, logger])
-    thread.start()
-    if with_gui:
-        gtk.main()
-        logger.debug("Gtk main loop exited!")
-
-    thread.join()
-
-    testing_utils.shutdown_environment(caplog=caplog)
+    try:
+        trigger_state_type_change_tests(with_gui)
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':
-    pytest.main(['-s', __file__])
+    test_state_type_change_test(None)
+    # pytest.main(['-s', __file__])

@@ -177,7 +177,8 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
     :param libraries: Dictionary with library mounting labels and hard drive paths.
     :return:
     """
-    initialize_environment_core(core_config, libraries)
+    # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
+    call_gui_callback(initialize_environment_core, core_config, libraries)
     initialize_environment_gui(gui_config, runtime_config)
     initialize_signal_handler()
 
@@ -204,6 +205,8 @@ def initialize_environment_core(core_config=None, libraries=None):
                 global_config.set_config_value(key, value)
 
     rewind_and_set_libraries(libraries=libraries)
+
+    state_machine_manager.delete_all_state_machines()
 
 
 def initialize_environment_gui(gui_config=None, runtime_config=None):
@@ -236,7 +239,8 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
     GUI_INITIALIZED = True
 
 
-def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0):
+def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0,
+                         core_only=False):
     """ Reset Config object classes of singletons and release multi threading lock and optional do the log-msg test
 
      The function reloads the default config files optional and release the multi threading lock. This function is
@@ -265,11 +269,12 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
     global gui_thread
     global used_gui_threads
     used_gui_threads.append(gui_thread)
-    unpatch_gtkmvc_model_mt()
+    if not core_only:
+        unpatch_gtkmvc_model_mt()
 
 
 def shutdown_environment_only_core(config=True, caplog=None, expected_warnings=0, expected_errors=0):
-    shutdown_environment(config, False, caplog, expected_warnings, expected_errors)
+    shutdown_environment(config, False, caplog, expected_warnings, expected_errors, core_only=True)
 
 
 def wait_for_gui():
@@ -302,10 +307,11 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     global gui_ready, gui_thread
     # IMPORTANT enforce gtk.gtkgl import in the python main thread to avoid segfaults
     import gtk.gtkgl
-    initialize_environment_core(core_config, libraries)
     gui_ready = Event()
     gui_thread = Thread(target=run_gui_thread, args=[gui_config, runtime_config])
     gui_thread.start()
+    # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
+    call_gui_callback(initialize_environment_core, core_config, libraries)
     if not gui_ready.wait(timeout):
         import gtk
         gtk.idle_add(gtk.main_quit)
