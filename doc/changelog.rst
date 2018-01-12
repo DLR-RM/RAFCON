@@ -7,6 +7,13 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 
+- Improvements:
+
+    - Optimize NameView font size calculations, noticeable during zooming
+
+- Bug Fixes:
+
+    - :issue:`450`
 
 Patch releases 0.12.\*
 ----------------------
