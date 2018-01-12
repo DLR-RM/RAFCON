@@ -773,6 +773,7 @@ class StateView(Element):
         def set_item_properties(item, size, rel_pos):
             prefix = 'name.' if isinstance(item, NameView) else ''
             item_m = item.model if isinstance(item, StateView) else item.parent.model
+            size = (max(size[0], item.min_width),  max(size[1], item.min_height))
             item.width = size[0]
             item.height = size[1]
             item_m.set_meta_data_editor(prefix + 'size', size)
