@@ -11,6 +11,11 @@ Next release
 Patch releases 0.12.\*
 ----------------------
 
+- Bug Fixes:
+
+    - :issue:`455`: gaphas drawing while proportional resize (smaller) seems to screw its childs meta data
+
+
 0.12.1
 """"""
 
