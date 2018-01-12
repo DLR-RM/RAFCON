@@ -831,6 +831,8 @@ class StateView(Element):
                 state_copy_v = self.canvas.get_view_for_model(state_v.model.state_copy)
                 resize_child_state_v(state_copy_v)
 
+        # Constraints must be resolved first to maintain the minimum state size
+        self.canvas.resolve_item_constraints(self)
         new_size = (self.width, self.height)
         resize_state_v(self, old_size, new_size, paste)
 
