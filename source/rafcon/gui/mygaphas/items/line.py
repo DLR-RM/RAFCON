@@ -355,6 +355,10 @@ class PerpLine(Line):
     def is_out_port(port):
         return isinstance(port, (OutcomeView, OutputPortView))
 
+    def point(self, pos):
+        distance = super(PerpLine, self).point(pos)
+        return distance - self.line_width / 1.5
+
     def _keep_handle_in_parent_state(self, handle):
         canvas = self.canvas
         parent = canvas.get_parent(self)
