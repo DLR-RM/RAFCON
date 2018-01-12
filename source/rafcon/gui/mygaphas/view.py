@@ -155,7 +155,7 @@ class ExtendedGtkView(GtkView, Observer):
                     pass
         super(ExtendedGtkView, self).queue_draw_item(*gaphas_items)
 
-    def get_items_at_point(self, pos, selected=True, distance=0.5):
+    def get_items_at_point(self, pos, selected=True, distance=0):
         """
         Return the items located at ``pos`` (x, y).
 
@@ -171,7 +171,7 @@ class ExtendedGtkView(GtkView, Observer):
 
             v2i = self.get_matrix_v2i(item)
             ix, iy = v2i.transform_point(*pos)
-            if item.point((ix, iy)) < distance:
+            if item.point((ix, iy)) <= distance:
                 filtered_items.append(item)
         return filtered_items
 
