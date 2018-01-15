@@ -1,22 +1,7 @@
 import os
-import gtk
 import logging
 import shutil
 import pytest
-
-# mvc
-import rafcon.gui.singleton
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
-from rafcon.gui.models.state_machine import StateMachineModel
-
-# core elements
-import rafcon.core.singleton
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.container_state import ContainerState
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.state_machine import StateMachine
-from rafcon.core.storage import storage
 
 # general tool elements
 from rafcon.utils import log
@@ -28,7 +13,12 @@ from testing_utils import call_gui_callback
 logger = log.get_logger(__name__)
 
 
-def create_models(*args, **kargs):
+def create_models():
+    import rafcon.core.singleton
+    import rafcon.gui.singleton
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.state_machine import StateMachine
 
     logger.setLevel(logging.DEBUG)
     for handler in logging.getLogger('gtkmvc').handlers:
@@ -57,7 +47,6 @@ def create_models(*args, **kargs):
     state3.add_data_flow(state4.state_id, output_state4, state5.state_id, input_state5)
     state3.add_outcome('Branch1')
     state3.add_outcome('Branch2')
-
     ctr_state = HierarchyState(name="Container", state_id='CONT2')
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
@@ -73,7 +62,6 @@ def create_models(*args, **kargs):
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, state1.state_id, input_state1)
     ctr_state.add_data_flow(state3.state_id, output_state3, ctr_state.state_id, output_ctr_state)
     ctr_state.name = "Container"
-
     ctr_state.add_input_data_port("input", "str", "default_value1")
     ctr_state.add_input_data_port("pos_x", "str", "default_value2")
     ctr_state.add_input_data_port("pos_y", "str", "default_value3")
@@ -87,7 +75,6 @@ def create_models(*args, **kargs):
 
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
     ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
-
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
@@ -95,42 +82,52 @@ def create_models(*args, **kargs):
     for sm_in in rafcon.core.singleton.state_machine_manager.state_machines.values():
         rafcon.core.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
+    # wait until model is created, otherwise gui will crash
+    testing_utils.wait_for_gui()
     rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
-
-    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
-
-    # return ctr_state, sm_m, state_dict
-    return ctr_state, sm_m, state_dict
 
 
 def on_save_activate(state_machine_m, logger):
-        if state_machine_m is None:
-            return
-        save_path = state_machine_m.state_machine.base_path
-        if save_path is None:
-            return
+    from rafcon.core.storage import storage
 
-        logger.debug("Saving state machine to {0}".format(save_path))
-        storage.save_state_machine_to_path(state_machine_m.state_machine,
-                                          state_machine_m.state_machine.base_path, delete_old_state_machine=False)
+    if state_machine_m is None:
+        return
+    save_path = state_machine_m.state_machine.base_path
+    if save_path is None:
+        return
 
-        state_machine_m.root_state.store_meta_data()
-        logger.debug("Successfully saved graphics meta data.")
+    logger.debug("Saving state machine to {0}".format(save_path))
+    storage.save_state_machine_to_path(state_machine_m.state_machine,
+                                      state_machine_m.state_machine.base_path, delete_old_state_machine=False)
+
+    state_machine_m.root_state.store_meta_data()
+    logger.debug("Successfully saved graphics meta data.")
 
 
-def save_state_machine(sm_model, path, logger, with_gui, menubar_ctrl):
-    # sleep_time_short = 0.5
+def save_state_machine(with_gui=True):
+    import rafcon
+    from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
+    import rafcon.gui.singleton as gui_singleton
+    from rafcon.core.storage import storage
+
+    path = testing_utils.get_unique_temp_path()
     if with_gui:
-        sm_model.state_machine.base_path = path
-        # time.sleep(sleep_time_short)
-        call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, sm_model.state_machine.base_path)
-        # time.sleep(sleep_time_short)
-        call_gui_callback(menubar_ctrl.on_quit_activate, None)
+        call_gui_callback(create_models)
     else:
-        sm_model.state_machine.base_path = path
-        on_save_activate(sm_model, logger)
+        create_models()
+
+    state_machine = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
+    if with_gui:
+        sm_model = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
+        menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
+        # sm_model.state_machine.base_path = path
+        call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, path)
+        # call_gui_callback(menubar_ctrl.on_quit_activate, None)
+        call_gui_callback(check_that_all_files_are_there, state_machine, with_print=False)
+    else:
+        storage.save_state_machine_to_path(state_machine, path, delete_old_state_machine=False)
+        check_that_all_files_are_there(state_machine, with_print=False)
 
 
 def check_file(file_path, kind, missing_elements=None, existing_elements=None):
@@ -160,6 +157,7 @@ def check_folder(folder_path, kind, missing_elements=None, existing_elements=Non
 
 
 def check_state_machine_storage(state_machine, path, missing_elements, existing_elements=None, check_meta_data=False):
+    from rafcon.core.storage import storage
     # check state machine folder exists
     check_folder(path, "state machine path", missing_elements, existing_elements)
 
@@ -178,7 +176,11 @@ def check_state_machine_storage(state_machine, path, missing_elements, existing_
 
 
 def check_state_storage(state, parent_path, missing_elements, existing_elements=None, check_meta_data=False):
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.container_state import ContainerState
+    from rafcon.core.storage import storage
     from rafcon.core.storage.storage import get_storage_id_for_state
+
     # check state folder exists
     folder_path = os.path.join(parent_path, get_storage_id_for_state(state))
     check_folder(folder_path, "state_path", missing_elements, existing_elements)
@@ -203,13 +205,13 @@ def check_state_storage(state, parent_path, missing_elements, existing_elements=
             check_state_storage(child_state, folder_path, missing_elements, existing_elements, check_meta_data)
 
 
-def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, with_print=False,
+def check_that_all_files_are_there(state_machine, base_path=None, check_meta_data=False, with_print=False,
                                    old_exists=None, old_base_path=None):
-    root_state = sm_m.state_machine.root_state
-    base_path = sm_m.state_machine.file_system_path
+    root_state = state_machine.root_state
+    base_path = state_machine.file_system_path
     missing_elements = []
     existing_elements = []
-    check_state_machine_storage(sm_m.state_machine, base_path, missing_elements, existing_elements, check_meta_data)
+    check_state_machine_storage(state_machine, base_path, missing_elements, existing_elements, check_meta_data)
 
     if old_exists is not None and old_base_path:
         old_without_base = [old_path.replace(old_base_path, "") for old_path in old_exists]
@@ -218,7 +220,7 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, 
     if with_print and missing_elements:
         logger.debug(30*"#")
         logger.debug("State machine %s with root_state.state_id %s MISSING the following FILES" % \
-              (sm_m.state_machine.state_machine_id, root_state.state_id))
+              (state_machine.state_machine_id, root_state.state_id))
         logger.debug(30*"#")
         for path in missing_elements:
             if old_without_base is not None and path.replace(base_path, "") in old_without_base:
@@ -228,13 +230,14 @@ def check_that_all_files_are_there(sm_m, base_path=None, check_meta_data=False, 
     else:
         logger.debug(30*"#")
         logger.debug("All Files and Folders where Found of state machine %s with root_state.state_id %s" % \
-              (sm_m.state_machine.state_machine_id, root_state.state_id))
+              (state_machine.state_machine_id, root_state.state_id))
         logger.debug(30*"#")
 
-    return missing_elements, existing_elements
+    assert len(missing_elements) == 0
 
 
 def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
+    from rafcon.core.states.container_state import ContainerState
 
     def check_state(state, state_id=None, state_machine=False):
         # handle handed state machine
@@ -266,62 +269,27 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
 
 
 def test_storage_without_gui(caplog):
-    with_gui = False
-    testing_utils.initialize_environment()
-    [state, sm_m, state_dict] = create_models()
+    testing_utils.initialize_environment(gui_already_started=False)
     try:
-        save_state_machine(sm_model=sm_m, path=testing_utils.get_unique_temp_path(), logger=logger, with_gui=with_gui,
-                           menubar_ctrl=None)
-
-        missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
-
-        assert len(missing_elements) == 0
+        save_state_machine(with_gui=False)
+    except Exception,e:
+        raise
     finally:
-        testing_utils.shutdown_environment(caplog=caplog)
+        # delete all state machines
+        from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
+        from rafcon.gui.singleton import main_window_controller, state_machine_manager_model
+        state_machine_manager.delete_all_state_machines()
+
+        # shutdown environment
+        testing_utils.shutdown_environment_only_core(caplog=caplog)
 
 
 def test_storage_with_gui(caplog):
-    # with_gui = True
-    # testing_utils.run_gui()
-    # [state, sm_m, state_dict] = create_models()
-    # menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
-    # try:
-    #     save_state_machine(sm_model=sm_m, path=testing_utils.get_unique_temp_path(), logger=logger, with_gui=with_gui,
-    #                        menubar_ctrl=menubar_ctrl)
-    # finally:
-    #     menubar_ctrl.on_quit_activate(None, None, True)
-    #
-    # missing_elements, _ = check_that_all_files_are_there(sm_m, check_meta_data=True, with_print=False)
-    # assert len(missing_elements) == 0
-    # testing_utils.shutdown_environment()
-    # testing_utils.assert_logger_warnings_and_errors(caplog)
-
-    with_gui = True
-    testing_utils.initialize_environment()
-    logger.debug("create model")
-    [state, sm_m, state_dict] = create_models()
-
-    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
-
-    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    testing_utils.wait_for_gui()
-
-    logger.debug("start thread")
-    import threading
-    thread = threading.Thread(target=save_state_machine,
-                              args=[sm_m, testing_utils.get_unique_temp_path(), logger, with_gui, menubar_ctrl])
-    thread.start()
-
-    if with_gui:
-        gtk.main()
-        logger.debug("Gtk main loop exited!")
-
-    thread.join()
-
-    missing_elements, _ = check_that_all_files_are_there(sm_m, check_meta_data=True, with_print=False)
+    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
     try:
-        assert len(missing_elements) == 0
+        save_state_machine(with_gui=True)
     finally:
+        testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
 
@@ -338,7 +306,10 @@ def check_state_recursively_if_state_scripts_are_valid(state):
 
 
 def test_on_clean_storing_with_name_in_path(caplog):
-    testing_utils.initialize_environment(gui_config={"AUTO_BACKUP_ENABLED": True})
+    from rafcon.gui.models.state_machine import StateMachineModel
+    from rafcon.core.storage import storage
+
+    testing_utils.initialize_environment(gui_config={"AUTO_BACKUP_ENABLED": True}, gui_already_started=False)
 
     path_old_format = testing_utils.get_test_sm_path(
         os.path.join("unit_test_state_machines", "id_to_name_plus_id_storage_format_test_do_not_update"))
@@ -351,14 +322,10 @@ def test_on_clean_storing_with_name_in_path(caplog):
     sm_m = StateMachineModel(sm)
     try:
         on_save_activate(sm_m, logger)
-
-        missing_elements, _ = check_that_all_files_are_there(sm_m, with_print=False)
-
-        assert len(missing_elements) == 0
-
+        check_that_all_files_are_there(sm, with_print=False)
         check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m)
     finally:
-        testing_utils.shutdown_environment(caplog=caplog)
+        testing_utils.shutdown_environment(caplog=caplog, do_not_unpatch_model_mt=True)
 
 
 if __name__ == '__main__':

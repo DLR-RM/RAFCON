@@ -162,7 +162,8 @@ def initialize_signal_handler():
     GUI_SIGNAL_INITIALIZED = True
 
 
-def initialize_environment(core_config=None, gui_config=None, runtime_config=None, libraries=None, only_core=False):
+def initialize_environment(core_config=None, gui_config=None, runtime_config=None, libraries=None,
+                           only_core=False, gui_already_started=True):
     """ Initialize global configs, libraries and acquire multi threading lock
 
      The function accepts tuples as arguments to load a config with (config-file, path) as tuple or a
@@ -177,8 +178,11 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
     :param libraries: Dictionary with library mounting labels and hard drive paths.
     :return:
     """
-    # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
-    call_gui_callback(initialize_environment_core, core_config, libraries)
+    if gui_already_started:
+        # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
+        call_gui_callback(initialize_environment_core, core_config, libraries)
+    else:
+        initialize_environment_core(core_config, libraries)
     initialize_environment_gui(gui_config, runtime_config)
     initialize_signal_handler()
 
@@ -206,7 +210,10 @@ def initialize_environment_core(core_config=None, libraries=None):
 
     rewind_and_set_libraries(libraries=libraries)
 
-    state_machine_manager.delete_all_state_machines()
+    # delete_all_state_machines must not be called here
+    # as old state machines might still be patched with PatchedModelMT
+    # if initialize_environment_core is called in an un-pachted manner, than this will result in a MultiThreading Error
+    # state_machine_manager.delete_all_state_machines()
 
 
 def initialize_environment_gui(gui_config=None, runtime_config=None):
@@ -240,7 +247,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
 
 
 def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0,
-                         core_only=False):
+                         do_not_unpatch_model_mt=False):
     """ Reset Config object classes of singletons and release multi threading lock and optional do the log-msg test
 
      The function reloads the default config files optional and release the multi threading lock. This function is
@@ -265,16 +272,21 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
         rewind_and_set_libraries()
         reload_config(config, gui_config)
         GUI_INITIALIZED = GUI_SIGNAL_INITIALIZED = False
+
         test_multithreading_lock.release()
     global gui_thread
     global used_gui_threads
     used_gui_threads.append(gui_thread)
-    if not core_only:
+    if not do_not_unpatch_model_mt:
         unpatch_gtkmvc_model_mt()
 
 
 def shutdown_environment_only_core(config=True, caplog=None, expected_warnings=0, expected_errors=0):
-    shutdown_environment(config, False, caplog, expected_warnings, expected_errors, core_only=True)
+    from rafcon.core.singleton import state_machine_manager
+    # in the gui case, the state machines have to be deleted while the gui is still running with add_gui_callback
+    # if add_gui_callback is not used, then a multi threading RuntimeError will be raised by the PatchedModelMT
+    state_machine_manager.delete_all_state_machines()
+    shutdown_environment(config, False, caplog, expected_warnings, expected_errors, do_not_unpatch_model_mt=True)
 
 
 def wait_for_gui():

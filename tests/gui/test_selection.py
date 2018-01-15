@@ -294,8 +294,8 @@ def test_focus():
 
 if __name__ == '__main__':
     test_add_set_remove_clear()
-    # test_adding_same_model_twice()
-    # test_all_models()
-    # test_focus()
-    # test_invalid_model()
+    test_adding_same_model_twice()
+    test_all_models()
+    test_focus()
+    test_invalid_model()
     # pytest.main(['-s', __file__])
