@@ -11,14 +11,7 @@ import pytest
 logger = log.get_logger(__name__)
 
 
-def set_selected_state_machine_id(id):
-    import rafcon
-    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
-    sm_manager_model.selected_state_machine_id = id
-
-
 def create_state_machine():
-    import rafcon
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.states.execution_state import ExecutionState
     from rafcon.core.state_machine import StateMachine
@@ -49,7 +42,7 @@ def create_state_machine():
     ctr_state.name = "Container"
 
     state_machine = StateMachine(ctr_state)
-    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    return state_machine
 
 
 def focus_graphical_editor_in_page(page):
@@ -67,20 +60,15 @@ def trigger_ungroup_signals():
     import rafcon.gui.helpers.state as gui_helper_state
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
-    call_gui_callback(create_state_machine)
-    # state_machine = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
-
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_controller = gui_singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
-    while len (sm_manager_model.state_machines) <= 0:
-        # give model time to be created
-        testing_utils.wait_for_gui()
+    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, create_state_machine())
 
     first_sm_id = sm_manager_model.state_machines.keys()[0]
     call_gui_callback(main_window_controller.view['main_window'].grab_focus)
-    call_gui_callback(set_selected_state_machine_id, first_sm_id)
+    call_gui_callback(sm_manager_model.__setattr__, "selected_state_machine_id", first_sm_id)
 
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
     page_id = state_machines_ctrl.get_page_num(first_sm_id)
@@ -111,7 +99,6 @@ def test_ungroup(caplog):
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
-
 
 if __name__ == '__main__':
     # test_ungroup(None)

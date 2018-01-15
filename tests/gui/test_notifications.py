@@ -1335,6 +1335,7 @@ def test_state_add_remove_notification(caplog):
     rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
+
 # TODO do the notification checks for the LibraryState
 def test_state_property_modify_notification(caplog):
     """ Observable Attributes of State are:
