@@ -1,7 +1,5 @@
 import pytest
 
-from rafcon.gui.models.meta import MetaModel
-
 
 def assert_single_editor_meta_data(model, gaphas):
     editor_keys = model.meta["gui"].keys()
@@ -12,6 +10,7 @@ def assert_single_editor_meta_data(model, gaphas):
 
 
 def test_meta_initialization():
+    from rafcon.gui.models.meta import MetaModel
     meta_m = MetaModel(meta={"1": 2, "2": 1})
     assert meta_m.meta == {"1": 2, "2": 1}
 
@@ -21,6 +20,7 @@ def test_meta_initialization():
 
 
 def test_meta_setter_return_value():
+    from rafcon.gui.models.meta import MetaModel
     meta_m = MetaModel()
     meta_data = meta_m.set_meta_data_editor("key", "value")
     assert meta_data["key"] == "value"
@@ -32,6 +32,7 @@ def test_meta_setter_return_value():
 
 @pytest.mark.parametrize("use_gaphas", [False, True])
 def test_editor_setter_getter(use_gaphas):
+    from rafcon.gui.models.meta import MetaModel
     meta_m = MetaModel()
 
     meta_data = meta_m.get_meta_data_editor(for_gaphas=use_gaphas)
@@ -54,6 +55,7 @@ def test_editor_setter_getter(use_gaphas):
 
 @pytest.mark.parametrize("use_gaphas", [False, True])
 def test_editor_setter_getter_conversion(use_gaphas):
+    from rafcon.gui.models.meta import MetaModel
     meta_m = MetaModel()
     meta_m.meta["gui"]["editor_opengl" if use_gaphas else "editor_gaphas"]["test"] = (1, 2)
     meta_data = meta_m.get_meta_data_editor(for_gaphas=use_gaphas)
@@ -64,9 +66,9 @@ def test_editor_setter_getter_conversion(use_gaphas):
 
 
 def test_meta_list_modification():
+    from rafcon.gui.models.meta import MetaModel
     meta_m = MetaModel()
     meta_data = meta_m.set_meta_data_editor("list", [1, 2, 3])
     assert meta_data["list"] == [1, 2, 3]
     meta_data = meta_m.set_meta_data_editor("list.0", 4)
     assert meta_data["list"] == [4, 2, 3]
-
