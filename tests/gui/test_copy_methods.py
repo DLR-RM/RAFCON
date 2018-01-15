@@ -374,7 +374,7 @@ def test_simple(caplog):
     :return:
     """
     # create testbed
-    testing_utils.initialize_environment()
+    testing_utils.initialize_environment(gui_already_started=False)
 
     [state, sm_model, state_dict] = create_models()
     run_copy_test(sm_model)
@@ -399,7 +399,7 @@ def test_complex(with_gui, caplog):
     :return:
     """
     # create testbed
-    testing_utils.initialize_environment()
+    testing_utils.initialize_environment(gui_already_started=False)
     from rafcon.core.config import global_config
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
     library_paths["unit_test_state_machines"] = os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")
