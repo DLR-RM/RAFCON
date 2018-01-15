@@ -1,20 +1,5 @@
 from gtkmvc.observer import Observer
 
-# mvc
-from rafcon.gui.config import global_gui_config
-import rafcon.gui.singleton
-
-# core elements
-import rafcon.core.singleton
-from rafcon.core.script import Script
-from rafcon.core.states.state import StateType
-from rafcon.core.states.state import State
-from rafcon.core.states.container_state import ContainerState
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.state_machine import StateMachine
-from rafcon.core.storage import storage
-
 import pytest
 import testing_utils
 
@@ -181,6 +166,10 @@ class StateNotificationLogObserver(NotificationLogObserver):
 
 
 def create_models(*args, **kargs):
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.state_machine import StateMachine
 
     state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
@@ -254,6 +243,8 @@ def create_models(*args, **kargs):
 
 def store_state_elements(state, state_m):
     """Stores all ids of elements in or outside of the actual state"""
+    from rafcon.core.states.state import State
+    from rafcon.core.states.container_state import ContainerState
 
     state_elements = {}
     state_m_elements = {}
@@ -435,7 +426,8 @@ def store_state_elements(state, state_m):
 
 
 def check_state_elements(check_list, state, state_m, stored_state_elements, stored_state_m_elements):
-
+    from rafcon.core.states.container_state import ContainerState
+    
     # check ports
     if 'ports' in check_list:
         # collect input_data_ports
@@ -604,7 +596,9 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
 
 
 def check_state_for_all_models(state, state_m):
-
+    from rafcon.core.states.state import State
+    from rafcon.core.states.container_state import ContainerState
+    
     # check ports
     # - collect input_data_ports
     core_id_store = []
@@ -755,6 +749,14 @@ def test_add_remove_models(caplog):
     # - change data_flow
 
     # remove data_flow
+
+    from rafcon.gui.config import global_gui_config
+    from rafcon.core.script import Script
+    from rafcon.core.states.state import State
+    from rafcon.core.states.container_state import ContainerState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.storage import storage
 
     # create testbed
     global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
@@ -1053,6 +1055,10 @@ def test_state_property_models_consistency(caplog):
 
     # change child_execution
 
+    from rafcon.gui.config import global_gui_config
+    from rafcon.core.script import Script
+    from rafcon.core.states.execution_state import ExecutionState
+
     # create testbed
     global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -1184,6 +1190,8 @@ def test_outcome_property__models_consistency(caplog):
 
     # change name
 
+    from rafcon.gui.config import global_gui_config
+
     # create testbed
     global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -1241,6 +1249,9 @@ def test_transition_property_models_consistency(caplog):
     # modify_transition_to_outcome
 
     # modify_transition_to_state
+
+    from rafcon.gui.config import global_gui_config
+    from rafcon.core.states.execution_state import ExecutionState
 
     # create testbed
     global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
@@ -1324,6 +1335,8 @@ def test_input_port_modify_notification(caplog):
 
     # change datatype
 
+    from rafcon.gui.config import global_gui_config
+
     # create testbed
     global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -1364,6 +1377,8 @@ def test_output_port_modify_notification(caplog):
 
     # change datatype
 
+    from rafcon.gui.config import global_gui_config
+
     # create testbed
     global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -1402,6 +1417,8 @@ def test_scoped_variable_modify_notification(caplog):
     # change default_value
 
     # change datatype
+
+    from rafcon.gui.config import global_gui_config
 
     # create testbed
     global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
@@ -1457,6 +1474,9 @@ def test_data_flow_property_modifications_history(caplog):
     # modify_transition_to_key
 
     # modify_transition_to_state
+
+    from rafcon.gui.config import global_gui_config
+    from rafcon.core.states.execution_state import ExecutionState
 
     # create testbed
     global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
