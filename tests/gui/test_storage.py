@@ -325,7 +325,7 @@ def test_on_clean_storing_with_name_in_path(caplog):
         check_that_all_files_are_there(sm, with_print=False)
         check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m)
     finally:
-        testing_utils.shutdown_environment(caplog=caplog, do_not_unpatch_model_mt=True)
+        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 if __name__ == '__main__':

@@ -210,12 +210,12 @@ def initialize_environment_core(core_config=None, libraries=None, delete=True):
 
     rewind_and_set_libraries(libraries=libraries)
 
-    if delete:
-        state_machine_manager.delete_all_state_machines()
-        # delete_all_state_machines must not be called here
+    # delete_all_state_machines must not be called here per default
     # as old state machines might still be patched with PatchedModelMT
     # if initialize_environment_core is called in an un-pachted manner, than this will result in a MultiThreading Error
     # state_machine_manager.delete_all_state_machines()
+    if delete:
+        state_machine_manager.delete_all_state_machines()
 
 
 def initialize_environment_gui(gui_config=None, runtime_config=None):
@@ -344,12 +344,13 @@ def wait_for_gui_quit(timeout=5):
 
 
 def close_gui(already_quit=False):
-    from rafcon.core.singleton import state_machine_execution_engine
+    from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
     from rafcon.gui.singleton import main_window_controller
     if not already_quit:
         call_gui_callback(state_machine_execution_engine.stop)
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        # delete_all_state_machines should be done  by the quit gui method -> TODO maybe add the force quit flag as option to the arguments
+        # delete_all_state_machines should be done by the quit gui method -> TODO maybe add the force quit flag as option to the arguments
+        call_gui_callback(state_machine_manager.delete_all_state_machines)
         call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
     if not wait_for_gui_quit():
         assert False, "Could not close the GUI"
