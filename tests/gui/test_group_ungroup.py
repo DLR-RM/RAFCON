@@ -50,24 +50,32 @@ def create_state_machine():
 
     state_machine = StateMachine(ctr_state)
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    # give model time to be created
+    testing_utils.wait_for_gui()
 
 
-def trigger_ungroup_bug_signals():
+def focus_graphical_editor_in_page(page):
+    from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
+    from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
+    graphical_controller = page.children()[0]
+    if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
+        graphical_controller = graphical_controller.children()[0]
+    graphical_controller.grab_focus()
+
+
+def trigger_ungroup_signals():
     import rafcon.core.singleton
     import rafcon.gui.singleton as gui_singleton
-    from gui.widget.test_menu_bar import focus_graphical_editor_in_page
     import rafcon.gui.helpers.state as gui_helper_state
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 
     call_gui_callback(create_state_machine)
-    state_machine = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, state_machine)
+    # state_machine = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
 
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_controller = gui_singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
-    current_sm_length = len(sm_manager_model.state_machines)
     first_sm_id = sm_manager_model.state_machines.keys()[0]
     call_gui_callback(menubar_ctrl.on_new_activate, None)
     call_gui_callback(main_window_controller.view['main_window'].grab_focus)
@@ -89,7 +97,7 @@ def trigger_ungroup_bug_signals():
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
 
 
-def test_ungroup_bug(caplog):
+def test_ungroup(caplog):
     testing_utils.run_gui(
         gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False},
         libraries={"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
@@ -98,12 +106,12 @@ def test_ungroup_bug(caplog):
     )
 
     try:
-        trigger_ungroup_bug_signals()
+        trigger_ungroup_signals()
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':
-    test_ungroup_bug(None)
-    # pytest.main(['-s', __file__])
+    # test_ungroup(None)
+    pytest.main(['-s', __file__])
