@@ -1,14 +1,6 @@
 import os
 import gc
 import time
-import gtkmvc
-
-import rafcon
-import rafcon.gui
-import rafcon.gui.controllers
-import rafcon.gui.controllers.utils.extended_controller
-import rafcon.gui.models
-import rafcon.gui.models.state_element
 
 import rafcon.core.singleton
 from rafcon.core.states.execution_state import ExecutionState
@@ -37,40 +29,26 @@ GTKMVC_FILES = ['gtkmvc_view', 'gtkmvc_controller']
 FILES = CORE_FILES + MODEL_FILES + CTRL_FILES
 
 # store method of core element classes
-old_state_init = rafcon.core.states.state.State.__init__
+old_state_init = None
 old_state_del = None
-if hasattr(rafcon.core.states.state.State, '__del__'):
-    old_state_del = rafcon.core.states.state.State.__del__
-old_state_element_init = rafcon.core.state_elements.state_element.StateElement.__init__
+old_state_element_init = None
 old_state_element_del = None
-if hasattr(rafcon.core.state_elements.state_element.StateElement, '__del__'):
-    old_state_element_del = rafcon.core.state_elements.state_element.StateElement.__del__
 
 # store method of model element classes
-old_abstract_state_model_init = rafcon.gui.models.abstract_state.AbstractStateModel.__init__
+old_abstract_state_model_init = None
 old_abstract_state_model_del = None
-if hasattr(rafcon.gui.models.abstract_state.AbstractStateModel, '__del__'):
-    old_abstract_state_model_del = rafcon.gui.models.abstract_state.AbstractStateModel.__del__
-old_state_element_model_init = rafcon.gui.models.state_element.StateElementModel.__init__
+old_state_element_model_init = None
 old_state_element_model_del = None
-if hasattr(rafcon.gui.models.state_element.StateElementModel, '__del__'):
-    old_state_element_model_del = rafcon.gui.models.state_element.StateElementModel.__del__
 
 # store method of extended ctrl class
-old_extended_controller_init = rafcon.gui.controllers.utils.extended_controller.ExtendedController.__init__
+old_extended_controller_init = None
 old_extended_controller_del = None
-if hasattr(rafcon.gui.controllers.utils.extended_controller.ExtendedController, '__del__'):
-    old_extended_controller_del = rafcon.gui.controllers.utils.extended_controller.ExtendedController.__del__
 
 # store method of gtkmvc element classes
-old_gtkmvc_view_init = gtkmvc.View.__init__
+old_gtkmvc_view_init = None
 old_gtkmvc_view_del = None
-if hasattr(gtkmvc.View, '__del__'):
-    old_gtkmvc_view_del = gtkmvc.View.__del__
-old_gtkmvc_controller_init = gtkmvc.Controller.__init__
+old_gtkmvc_controller_init = None
 old_gtkmvc_controller_del = None
-if hasattr(gtkmvc.Controller, '__del__'):
-    old_gtkmvc_controller_del = gtkmvc.Controller.__del__
 
 
 def create_container_state(*args, **kargs):
@@ -224,11 +202,12 @@ def check_destruction_logs(elements, print_method=None):
 
 def run_model_construction():
 
-    from gui._test_history import create_models
+    import rafcon.gui.models.state
+    from gui.test_history import create_models
     logger, sm_m, state_dict = create_models()
     # root_state = sm_m.root_state
 
-    c_state, state_dict= create_container_state()
+    c_state, state_dict = create_container_state()
     s_m = rafcon.gui.models.state.StateModel(c_state.states['STATE1'])
     rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
     s_m.prepare_destruction()
@@ -244,6 +223,11 @@ def run_controller_construction(caplog, with_gui):
     # for a start load one of the type change tests to generate a lot of controllers which also close the GUI
     from gui.widget.test_states_editor import create_models, MainWindowView, \
         MainWindowController, trigger_state_type_change_tests, gtk, threading
+    import rafcon.gui
+    import rafcon.gui.controllers
+    import rafcon.gui.controllers.utils.extended_controller
+    import rafcon.gui.models
+    import rafcon.gui.models.state_element
 
     sm_m, state_dict = create_models()
 
@@ -287,6 +271,15 @@ def unpatch_del_method_of_class(class_, old_del_method):
 
 def patch_core_classes_with_log():
 
+    global old_state_init, old_state_element_init, old_state_del, old_state_element_del
+    old_state_init = rafcon.core.states.state.State.__init__
+    old_state_del = None
+    if hasattr(rafcon.core.states.state.State, '__del__'):
+        old_state_del = rafcon.core.states.state.State.__del__
+    old_state_element_init = rafcon.core.state_elements.state_element.StateElement.__init__
+    old_state_element_del = None
+    if hasattr(rafcon.core.state_elements.state_element.StateElement, '__del__'):
+        old_state_element_del = rafcon.core.state_elements.state_element.StateElement.__del__
     check_log_files(CORE_FILES)
 
     def state_init(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
@@ -334,6 +327,8 @@ def patch_core_classes_with_log():
 
 
 def un_patch_core_classes_from_log():
+    global old_state_init, old_state_element_init, old_state_del, old_state_element_del
+
     rafcon.core.states.state.State.__init__ = old_state_init
     unpatch_del_method_of_class(rafcon.core.states.state.State, old_state_del)
     rafcon.core.state_elements.state_element.StateElement.__init__ = old_state_element_init
@@ -342,7 +337,17 @@ def un_patch_core_classes_from_log():
 
 
 def patch_model_classes_with_log():
+    import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.state_element
+    global old_abstract_state_model_init, old_abstract_state_model_del, old_state_element_model_init, \
+        old_state_element_model_del
 
+    old_abstract_state_model_init = rafcon.gui.models.abstract_state.AbstractStateModel.__init__
+    if hasattr(rafcon.gui.models.abstract_state.AbstractStateModel, '__del__'):
+        old_abstract_state_model_del = rafcon.gui.models.abstract_state.AbstractStateModel.__del__
+    old_state_element_model_init = rafcon.gui.models.state_element.StateElementModel.__init__
+    if hasattr(rafcon.gui.models.state_element.StateElementModel, '__del__'):
+        old_state_element_model_del = rafcon.gui.models.state_element.StateElementModel.__del__
     check_log_files(MODEL_FILES)
 
     def abstract_state_model_init(self, state, parent=None, meta=None):
@@ -394,6 +399,11 @@ def patch_model_classes_with_log():
 
 
 def un_patch_model_classes_from_log():
+    import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.state_element
+    global old_abstract_state_model_init, old_abstract_state_model_del, old_state_element_model_init, \
+        old_state_element_model_del
+
     rafcon.gui.models.abstract_state.AbstractStateModel.__init__ = old_abstract_state_model_init
     unpatch_del_method_of_class(rafcon.gui.models.abstract_state.AbstractStateModel, old_abstract_state_model_del)
     rafcon.gui.models.state_element.StateElementModel.__init__ = old_state_element_model_init
@@ -402,9 +412,13 @@ def un_patch_model_classes_from_log():
 
 
 def patch_ctrl_classes_with_log():
+    import rafcon.gui.controllers.utils.extended_controller
+    global old_extended_controller_init, old_extended_controller_del
 
     # TODO maybe remove this again because the gtkmvc classes are covering this case
-
+    old_extended_controller_init = rafcon.gui.controllers.utils.extended_controller.ExtendedController.__init__
+    if hasattr(rafcon.gui.controllers.utils.extended_controller.ExtendedController, '__del__'):
+        old_extended_controller_del = rafcon.gui.controllers.utils.extended_controller.ExtendedController.__del__
     check_log_files(CTRL_FILES)
 
     def extended_controller_init(self, model, view, spurious=None):
@@ -435,6 +449,9 @@ def patch_ctrl_classes_with_log():
 
 
 def un_patch_ctrl_classes_from_log():
+    import rafcon.gui.controllers.utils.extended_controller
+    global old_extended_controller_init, old_extended_controller_del
+
     rafcon.gui.controllers.utils.extended_controller.ExtendedController.__init__ = old_extended_controller_init
     unpatch_del_method_of_class(class_=rafcon.gui.controllers.utils.extended_controller.ExtendedController,
                                 old_del_method=old_extended_controller_del)
@@ -442,7 +459,20 @@ def un_patch_ctrl_classes_from_log():
 
 
 def patch_gtkmvc_classes_with_log():
+    import gtkmvc
+    import gtkmvc.controller
+    import gtkmvc.view
 
+    global old_gtkmvc_view_init, old_gtkmvc_view_del, old_gtkmvc_controller_init, old_gtkmvc_controller_del
+
+    old_gtkmvc_view_init = gtkmvc.View.__init__
+    old_gtkmvc_view_del = None
+    if hasattr(gtkmvc.View, '__del__'):
+        old_gtkmvc_view_del = gtkmvc.View.__del__
+    old_gtkmvc_controller_init = gtkmvc.Controller.__init__
+    old_gtkmvc_controller_del = None
+    if hasattr(gtkmvc.Controller, '__del__'):
+        old_gtkmvc_controller_del = gtkmvc.Controller.__del__
     check_log_files(GTKMVC_FILES)
 
     def gtkmvc_view_init(self, glade=None, top=None, parent=None, builder=None):
@@ -489,9 +519,16 @@ def patch_gtkmvc_classes_with_log():
     gtkmvc.View.__del__ = gtkmvc_view_del
     gtkmvc.Controller.__init__ = gtkmvc_controller_init
     gtkmvc.Controller.__del__ = gtkmvc_controller_del
+    assert gtkmvc.view.View.__init__ is gtkmvc_view_init
+    assert gtkmvc.view.View.__del__ is gtkmvc_view_del
+    assert gtkmvc.controller.Controller.__init__ is gtkmvc_controller_init
+    assert gtkmvc.controller.Controller.__del__ is gtkmvc_controller_del
 
 
 def un_patch_gtkmvc_classes_from_log():
+    import gtkmvc
+    global old_gtkmvc_view_init, old_gtkmvc_view_del, old_gtkmvc_controller_init, old_gtkmvc_controller_del
+
     gtkmvc.View.__init__ = old_gtkmvc_view_init
     unpatch_del_method_of_class(gtkmvc.View, old_gtkmvc_view_del)
     gtkmvc.Controller.__init__ = old_gtkmvc_controller_init
@@ -527,9 +564,7 @@ def test_core_destruct(caplog):
 
 def test_model_and_core_destruct(caplog):
 
-    testing_utils.patch_gtkmvc_model_mt()
-
-    testing_utils.initialize_environment()
+    testing_utils.initialize_environment(gui_already_started=False)
 
     patch_core_classes_with_log()
     patch_model_classes_with_log()
