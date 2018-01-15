@@ -344,12 +344,12 @@ def wait_for_gui_quit(timeout=5):
 
 
 def close_gui(already_quit=False):
-    from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
+    from rafcon.core.singleton import state_machine_execution_engine
     from rafcon.gui.singleton import main_window_controller
     if not already_quit:
         call_gui_callback(state_machine_execution_engine.stop)
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        # delete_all_state_machines should be done by the quit gui method -> TODO maybe add the force quit flag as option to the arguments
+        # delete_all_state_machines should be done  by the quit gui method -> TODO maybe add the force quit flag as option to the arguments
         call_gui_callback(state_machine_manager.delete_all_state_machines)
         call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
     if not wait_for_gui_quit():
