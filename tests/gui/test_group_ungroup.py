@@ -67,11 +67,10 @@ def trigger_ungroup_bug_signals():
     main_window_controller = gui_singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
-    current_sm_length = len(sm_manager_model.state_machines)
-    first_sm_id = sm_manager_model.state_machines.keys()[0]
+    first_sm_id = state_machine.state_machine_id
     call_gui_callback(menubar_ctrl.on_new_activate, None)
     call_gui_callback(main_window_controller.view['main_window'].grab_focus)
-    call_gui_callback(set_selected_state_machine_id, first_sm_id)
+    call_gui_callback(sm_manager_model.__setattr__, "selected_state_machine_id", first_sm_id)
 
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
     page_id = state_machines_ctrl.get_page_num(first_sm_id)

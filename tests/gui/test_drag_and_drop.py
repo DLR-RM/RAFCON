@@ -24,6 +24,7 @@ class StructHelper:
 
 def create_models(*args, **kargs):
     import rafcon.core.singleton
+    import rafcon.gui.singleton
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.state_machine import StateMachine
 

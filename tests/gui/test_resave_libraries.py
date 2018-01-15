@@ -14,7 +14,7 @@ def test_resave(caplog):
     print "config path: " + config_path
     resave.convert_libraries_in_path(config_path, folder_to_convert, target_folder)
 
-    testing_utils.shutdown_environment(caplog=caplog, do_not_unpatch_model_mt=True)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 if __name__ == '__main__':
     #test_resave(None)

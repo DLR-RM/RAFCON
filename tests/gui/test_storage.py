@@ -1,8 +1,6 @@
 import os
 import logging
 import shutil
-import pytest
-
 # general tool elements
 from rafcon.utils import log
 
@@ -306,7 +304,6 @@ def check_state_recursively_if_state_scripts_are_valid(state):
 
 
 def test_on_clean_storing_with_name_in_path(caplog):
-    from rafcon.gui.models.state_machine import StateMachineModel
     from rafcon.core.storage import storage
 
     testing_utils.initialize_environment(gui_config={"AUTO_BACKUP_ENABLED": True}, gui_already_started=False)
@@ -315,6 +312,10 @@ def test_on_clean_storing_with_name_in_path(caplog):
         os.path.join("unit_test_state_machines", "id_to_name_plus_id_storage_format_test_do_not_update"))
     path_new_format = os.path.join(testing_utils.get_unique_temp_path(),
                                    "id_to_name_plus_id_storage_format_test_do_not_update")
+
+    # gui imports better after initialization
+    from rafcon.gui.models.state_machine import StateMachineModel
+
     shutil.copytree(path_old_format, path_new_format)
     sm = storage.load_state_machine_from_path(path_new_format)
     check_state_recursively_if_state_scripts_are_valid(sm.root_state)
@@ -325,11 +326,12 @@ def test_on_clean_storing_with_name_in_path(caplog):
         check_that_all_files_are_there(sm, with_print=False)
         check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m)
     finally:
-        testing_utils.shutdown_environment(caplog=caplog, do_not_unpatch_model_mt=True)
+        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 if __name__ == '__main__':
-    test_storage_without_gui(None)
-    test_storage_with_gui(None)
-    test_on_clean_storing_with_name_in_path(None)
-    # pytest.main([__file__])
+    # test_storage_without_gui(None)
+    # test_storage_with_gui(None)
+    # test_on_clean_storing_with_name_in_path(None)
+    import pytest
+    pytest.main(['-s', __file__])
