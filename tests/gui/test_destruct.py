@@ -224,7 +224,7 @@ def check_destruction_logs(elements, print_method=None):
 
 def run_model_construction():
 
-    from gui.test_history import create_models
+    from gui._test_history import create_models
     logger, sm_m, state_dict = create_models()
     # root_state = sm_m.root_state
 
@@ -501,7 +501,7 @@ def un_patch_gtkmvc_classes_from_log():
 
 def test_core_destruct(caplog):
 
-    testing_utils.initialize_environment()
+    testing_utils.initialize_environment_core()
 
     patch_core_classes_with_log()
 
@@ -522,10 +522,12 @@ def test_core_destruct(caplog):
 
     un_patch_core_classes_from_log()
 
-    testing_utils.shutdown_environment(caplog=caplog)
+    testing_utils.shutdown_environment_only_core(caplog=caplog)
 
 
 def test_model_and_core_destruct(caplog):
+
+    testing_utils.patch_gtkmvc_model_mt()
 
     testing_utils.initialize_environment()
 
@@ -562,7 +564,7 @@ def test_model_and_core_destruct(caplog):
     #         #             if numxx > 1:
     #         #                 print "#########" + str(numxx) + ": " + str(ooo) + "\n" + '\n'.join([str(num) + ": " + str(elem) for num, elem in enumerate(gc.get_referrers(oo)) if num > 3]), "\n \n"
 
-    testing_utils.shutdown_environment(caplog=caplog)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def _test_model_and_core_destruct_with_gui(caplog):
