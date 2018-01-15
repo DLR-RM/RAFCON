@@ -73,7 +73,6 @@ MARKED_DIRTY_INDEX = 4
 
 
 def prepare_tab_data_of_open_state_machines(main_window_controller, sm_manager_model, open_state_machines):
-    testing_utils.wait_for_gui()
     state_machines_editor_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
     number_of_pages = state_machines_editor_ctrl.view['notebook'].get_n_pages()
     for page_number in range(number_of_pages):
@@ -222,14 +221,13 @@ def trigger_gui_signals_first_run(*args):
     ####################
     # collect open state machine data
     ####################
-    testing_utils.wait_for_gui()
-    call_gui_callback(prepare_tab_data_of_open_state_machines,
-                      main_window_controller, sm_manager_model, open_state_machines)
+    call_gui_callback(prepare_tab_data_of_open_state_machines, main_window_controller, sm_manager_model, open_state_machines)
 
     ####################
     # shout down gui
     ####################
     call_gui_callback(menubar_ctrl.on_stop_activate, None)
+    call_gui_callback(menubar_ctrl.on_quit_activate, None, None, False)
 
 
 @log.log_exceptions(None, gtk_quit=True)
@@ -253,7 +251,6 @@ def trigger_gui_signals_second_run(*args):
                 print line
         print "#"*20, "\n"*5
 
-    testing_utils.wait_for_gui()
     call_gui_callback(prepare_tab_data_of_open_state_machines,
                       main_window_controller, sm_manager_model, open_state_machines)
     call_gui_callback(backup_session.reset_session)
@@ -261,6 +258,8 @@ def trigger_gui_signals_second_run(*args):
 
 
 def test_restore_session(caplog):
+    from rafcon.core.storage import storage
+
     change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False,
                             'SESSION_RESTORE_ENABLED': True, 'GAPHAS_EDITOR': True}
 
@@ -273,7 +272,7 @@ def test_restore_session(caplog):
         open_state_machines = {'list_of_hash_path_tab_page_number_tuple': [], 'selected_sm_page_number': None}
         trigger_gui_signals_first_run(open_state_machines)
     finally:
-        testing_utils.close_gui()
+        testing_utils.close_gui(already_quit=True)
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
     # second run

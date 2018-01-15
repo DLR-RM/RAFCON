@@ -187,7 +187,7 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
     initialize_signal_handler()
 
 
-def initialize_environment_core(core_config=None, libraries=None):
+def initialize_environment_core(core_config=None, libraries=None, delete=True):
     from rafcon.core.config import global_config
     from rafcon.core.singleton import state_machine_manager
 
@@ -210,7 +210,9 @@ def initialize_environment_core(core_config=None, libraries=None):
 
     rewind_and_set_libraries(libraries=libraries)
 
-    # delete_all_state_machines must not be called here
+    if delete:
+        state_machine_manager.delete_all_state_machines()
+        # delete_all_state_machines must not be called here
     # as old state machines might still be patched with PatchedModelMT
     # if initialize_environment_core is called in an un-pachted manner, than this will result in a MultiThreading Error
     # state_machine_manager.delete_all_state_machines()
@@ -247,7 +249,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
 
 
 def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0,
-                         do_not_unpatch_model_mt=False):
+                         unpatch_threading=True):
     """ Reset Config object classes of singletons and release multi threading lock and optional do the log-msg test
 
      The function reloads the default config files optional and release the multi threading lock. This function is
@@ -277,7 +279,7 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
     global gui_thread
     global used_gui_threads
     used_gui_threads.append(gui_thread)
-    if not do_not_unpatch_model_mt:
+    if unpatch_threading:
         unpatch_gtkmvc_model_mt()
 
 
@@ -286,7 +288,7 @@ def shutdown_environment_only_core(config=True, caplog=None, expected_warnings=0
     # in the gui case, the state machines have to be deleted while the gui is still running with add_gui_callback
     # if add_gui_callback is not used, then a multi threading RuntimeError will be raised by the PatchedModelMT
     state_machine_manager.delete_all_state_machines()
-    shutdown_environment(config, False, caplog, expected_warnings, expected_errors, do_not_unpatch_model_mt=True)
+    shutdown_environment(config, False, caplog, expected_warnings, expected_errors, unpatch_threading=False)
 
 
 def wait_for_gui():
@@ -314,8 +316,9 @@ def run_gui_thread(gui_config=None, runtime_config=None):
     gtk.main()
 
 
-def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=None, timeout=5):
-    patch_gtkmvc_model_mt()
+def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=None, timeout=5, patch_threading=True):
+    if patch_threading:
+        patch_gtkmvc_model_mt()
     global gui_ready, gui_thread
     # IMPORTANT enforce gtk.gtkgl import in the python main thread to avoid segfaults
     import gtk.gtkgl
@@ -340,13 +343,14 @@ def wait_for_gui_quit(timeout=5):
     return not gui_thread.is_alive()
 
 
-def close_gui():
-    from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
-    from rafcon.gui.singleton import main_window_controller, state_machine_manager_model
-    call_gui_callback(state_machine_execution_engine.stop)
-    call_gui_callback(state_machine_manager.delete_all_state_machines)
-    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
+def close_gui(already_quit=False):
+    from rafcon.core.singleton import state_machine_execution_engine
+    from rafcon.gui.singleton import main_window_controller
+    if not already_quit:
+        call_gui_callback(state_machine_execution_engine.stop)
+        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+        # delete_all_state_machines should be done  by the quit gui method -> TODO maybe add the force quit flag as option to the arguments
+        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
     if not wait_for_gui_quit():
         assert False, "Could not close the GUI"
 
@@ -356,11 +360,13 @@ original_state_start = None
 original_execution_engine = None
 state_threads = []
 used_gui_threads = []
+auto_backup_threads = []
 
 
 def patch_gtkmvc_model_mt():
     print "patch"
-    global state_threads, original_ModelMT, original_state_start, original_execution_engine, used_gui_threads
+    global state_threads, original_ModelMT, original_state_start, original_execution_engine, used_gui_threads, \
+        auto_backup_threads
 
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
@@ -421,7 +427,7 @@ def patch_gtkmvc_model_mt():
                                                  *args, **kwargs)
 
             # multi-threading call
-            if _threading.currentThread() in state_threads:
+            if _threading.currentThread() in state_threads or _threading.currentThread() in auto_backup_threads:
                 # print "Notification from state thread", _threading.currentThread()  #, method, args, kwargs
                 gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
                 return
