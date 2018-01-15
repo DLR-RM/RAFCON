@@ -350,7 +350,6 @@ def close_gui(already_quit=False):
         call_gui_callback(state_machine_execution_engine.stop)
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
         # delete_all_state_machines should be done  by the quit gui method -> TODO maybe add the force quit flag as option to the arguments
-        call_gui_callback(state_machine_manager.delete_all_state_machines)
         call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
     if not wait_for_gui_quit():
         assert False, "Could not close the GUI"
