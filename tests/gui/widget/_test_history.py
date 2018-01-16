@@ -26,11 +26,11 @@ from rafcon.utils import log
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
-from test_state_type_change import store_state_elements, check_state_elements, \
+from gui.widget.test_0state_type_change import store_state_elements, check_state_elements, \
      check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
      check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
      get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
-from gui.widget._test_states_editor import check_state_editor_models
+from gui.widget.test_1states_editor import check_state_editor_models
 import pytest
 
 NO_SAVE = False
@@ -1154,7 +1154,7 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     # else:
     #     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED', False, 'HISTORY_ENABLED', True})
     #
-    # [logger, sm_m, state_dict] = create_models()
+    # [logger, sm_m, state_dict] = create_state_machine()
     # if testing_utils.sm_manager_model is None:
     #     testing_utils.sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     #
@@ -1197,7 +1197,7 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     # else:
     #     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
     #
-    # [logger, sm_m, state_dict] = create_models()
+    # [logger, sm_m, state_dict] = create_state_machine()
     #
     # try:
     #     if with_gui:

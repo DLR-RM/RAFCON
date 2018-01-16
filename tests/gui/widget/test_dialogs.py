@@ -2,7 +2,6 @@ import gtk
 import threading
 import testing_utils
 
-from rafcon.gui.utils import dialog
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -17,6 +16,7 @@ def xor(_list):
 
 def trigger_dialog_tests():
     test_text = "test_text"
+    from rafcon.gui.utils import dialog
 
     def on_ok_clicked(widget, response_id):
         # Default response by the "ok" button is -5

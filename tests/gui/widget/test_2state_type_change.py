@@ -562,9 +562,10 @@ def get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controlle
     return state_editor_ctrl, list_store_id_from_state_type_dict
 
 
-def change_state_type(state_m, new_state_type, state_of_type_change, checklist,
-                      sm_m, state_dict, stored_state_elements, stored_state_m_elements, return_list):
+def change_state_type(input_and_return_list, new_state_type, state_of_type_change, checklist,
+                      sm_m, state_dict, stored_state_elements, stored_state_m_elements):
     from rafcon.gui.singleton import main_window_controller
+    state_m = input_and_return_list.pop()
     sleep_time_max = 5.0
     # - get state-editor controller and find right row in combo box
     [state_editor_ctrl, list_store_id_from_state_type_dict] = \
@@ -576,7 +577,7 @@ def change_state_type(state_m, new_state_type, state_of_type_change, checklist,
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(checklist, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
-    return_list.append(new_state_m)
+    input_and_return_list.append(new_state_m)
 
 
 @log.log_exceptions(None, gtk_quit=True)
@@ -602,42 +603,31 @@ def trigger_state_type_change_tests(with_gui):
     # first storage
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
 
-    return_list = list()
-    call_gui_callback(store_state_elements, state_dict[state_of_type_change], state_m, return_list)
+    input_and_return_list = list()
+    call_gui_callback(store_state_elements, state_dict[state_of_type_change], state_m, input_and_return_list)
     call_gui_callback(testing_utils.wait_for_gui)
-    stored_state_elements = return_list[0]
-    stored_state_m_elements = return_list[1]
+    stored_state_elements = input_and_return_list[0]
+    stored_state_m_elements = input_and_return_list[1]
 
     print "\n\n %s \n\n" % state_m.state.name
 
-    if with_gui:
-        call_gui_callback(sm_m.selection.set, [state_m])
-    else:
-        sm_m.selection.set([state_m])
-
-    testing_utils.wait_for_gui()
     # HS -> BCS
-    return_list = list()
-    call_gui_callback(change_state_type, state_m, 'BARRIER_CONCURRENCY', 'State3', check_list_BCS,
-                      sm_m, state_dict, stored_state_elements, stored_state_m_elements, return_list)
-    new_state_m = return_list[0]
+    input_and_return_list = [state_m]
+    call_gui_callback(sm_m.selection.set, input_and_return_list)
+    call_gui_callback(change_state_type, input_and_return_list, 'BARRIER_CONCURRENCY', 'State3', check_list_BCS,
+                      sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # BCS -> HS
-    return_list = list()
-    call_gui_callback(change_state_type, new_state_m, 'HIERARCHY', 'State3', check_list_HS,
-                      sm_m, state_dict, stored_state_elements, stored_state_m_elements, return_list)
-    new_state_m = return_list[0]
+    call_gui_callback(change_state_type, input_and_return_list, 'HIERARCHY', 'State3', check_list_HS,
+                      sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # HS -> PCS
-    return_list = list()
-    call_gui_callback(change_state_type, new_state_m, 'PREEMPTION_CONCURRENCY', 'State3', check_list_PCS,
-                      sm_m, state_dict, stored_state_elements, stored_state_m_elements, return_list)
-    new_state_m = return_list[0]
+    call_gui_callback(change_state_type, input_and_return_list, 'PREEMPTION_CONCURRENCY', 'State3', check_list_PCS,
+                      sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # PCS -> ES
-    return_list = list()
-    call_gui_callback(change_state_type, new_state_m, 'EXECUTION', 'State3', check_list_ES,
-                      sm_m, state_dict, stored_state_elements, stored_state_m_elements, return_list)
+    call_gui_callback(change_state_type, input_and_return_list, 'EXECUTION', 'State3', check_list_ES,
+                      sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # TODO all test that are not root_state-test have to be performed with Preemptive and Barrier Concurrency States as parents too
 
@@ -645,40 +635,35 @@ def trigger_state_type_change_tests(with_gui):
     state_of_type_change = 'Container'
     # get first storage
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    return_list = []
-    call_gui_callback(store_state_elements, state_dict[state_of_type_change], state_m, return_list)
+    input_and_return_list = []
+    call_gui_callback(store_state_elements, state_dict[state_of_type_change], state_m, input_and_return_list)
     call_gui_callback(testing_utils.wait_for_gui)
-    stored_state_elements = return_list[0]
-    stored_state_m_elements = return_list[1]
+    stored_state_elements = input_and_return_list[0]
+    stored_state_m_elements = input_and_return_list[1]
     print "\n\n %s \n\n" % state_m.state.name
-    call_gui_callback(sm_m.selection.set, [state_m])
+
 
     # HS -> BCS
     print "Test: change root state type: HS -> BCS"
-    return_list = list()
-    call_gui_callback(change_state_type, state_m, 'BARRIER_CONCURRENCY', 'Container', check_list_root_BCS,
-                      sm_m, state_dict, stored_state_elements, stored_state_m_elements, return_list)
-    new_state_m = return_list[0]
+    input_and_return_list = [state_m]
+    call_gui_callback(sm_m.selection.set, input_and_return_list)
+    call_gui_callback(change_state_type, input_and_return_list, 'BARRIER_CONCURRENCY', 'Container', check_list_root_BCS,
+                      sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # BCS -> HS
     print "Test: change root state type: BCS -> HS"
-    return_list = list()
-    call_gui_callback(change_state_type, new_state_m, 'HIERARCHY', 'Container', check_list_root_HS,
-                      sm_m, state_dict, stored_state_elements, stored_state_m_elements, return_list)
-    new_state_m = return_list[0]
+    call_gui_callback(change_state_type, input_and_return_list, 'HIERARCHY', 'Container', check_list_root_HS,
+                      sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # HS -> PCS
     print "Test: change root state type: HS -> PCS"
-    return_list = list()
-    call_gui_callback(change_state_type, new_state_m, 'PREEMPTION_CONCURRENCY', 'Container', check_list_root_PCS,
-                      sm_m, state_dict, stored_state_elements, stored_state_m_elements, return_list)
-    new_state_m = return_list[0]
+    call_gui_callback(change_state_type, input_and_return_list, 'PREEMPTION_CONCURRENCY', 'Container', check_list_root_PCS,
+                      sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # PCS -> ES
     print "Test: change root state type: PCS -> ES"
-    return_list = list()
-    call_gui_callback(change_state_type, new_state_m, 'EXECUTION', 'Container', check_list_root_ES,
-                      sm_m, state_dict, stored_state_elements, stored_state_m_elements, return_list)
+    call_gui_callback(change_state_type, input_and_return_list, 'EXECUTION', 'Container', check_list_root_ES,
+                      sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # simple type change of root_state -> still could be extended
     check_elements_ignores.remove("internal_transitions")

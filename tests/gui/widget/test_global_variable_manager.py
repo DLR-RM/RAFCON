@@ -2,11 +2,6 @@ import gtk
 import threading
 import pytest
 
-# gui elements
-import rafcon.gui.singleton
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
-
 # core elements
 import rafcon.core.config
 import rafcon.core.singleton
@@ -57,6 +52,9 @@ def trigger_gvm_signals(main_window_controller):
 
 
 def test_gui(caplog):
+    import rafcon.gui.singleton
+    from rafcon.gui.controllers.main_window import MainWindowController
+    from rafcon.gui.views.main_window import MainWindowView
     testing_utils.initialize_environment(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
                                          gui_already_started=False)
 

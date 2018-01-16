@@ -1,23 +1,3 @@
-import gtk
-import threading
-from os.path import join
-
-# gui elements
-import rafcon.gui.singleton
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
-from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
-from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
-import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-
-# core elements
-import rafcon.core.config
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.library_state import LibraryState
-from rafcon.core.state_machine import StateMachine
-import rafcon.core.singleton
-
 # general tool elements
 from rafcon.utils import log
 
@@ -30,7 +10,10 @@ import pytest
 logger = log.get_logger(__name__)
 
 
-def create_state_machine(*args, **kargs):
+def create_state_machine():
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.state_machine import StateMachine
 
     state1 = ExecutionState('State1', state_id='STATE1')
     state2 = ExecutionState('State2')
@@ -61,6 +44,8 @@ def create_state_machine(*args, **kargs):
 
 
 def focus_graphical_editor_in_page(page):
+    from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
+    from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
     graphical_controller = page.children()[0]
     if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
         graphical_controller = graphical_controller.children()[0]
@@ -123,7 +108,13 @@ def trigger_gui_signals(*args):
     - Stop State Machine
     - Quit GUI
     """
+    from os.path import join
+    import rafcon.core.config
+    from rafcon.core.states.library_state import LibraryState
+    import rafcon.core.singleton
+    import rafcon.gui.singleton
     import rafcon.gui.helpers.state as gui_helper_state
+    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     sm_manager_model = args[0]
     main_window_controller = args[1]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
@@ -135,6 +126,7 @@ def trigger_gui_signals(*args):
     assert len(sm_manager_model.state_machines) == current_sm_length + 1
     call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TUTORIAL_PATH,
                                                                       "basic_turtle_demo_sm"))
+    call_gui_callback(testing_utils.wait_for_gui)
     assert len(sm_manager_model.state_machines) == current_sm_length + 2
 
     sm_m = sm_manager_model.state_machines[first_sm_id + 2]
@@ -299,7 +291,9 @@ def trigger_gui_signals(*args):
     assert state_m_parent.state.states[new_state_id].input_data_ports.items()[0][1].default_value == 2.0
 
     call_gui_callback(menubar_ctrl.on_refresh_libraries_activate)
+    call_gui_callback(testing_utils.wait_for_gui)
     call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
+    call_gui_callback(testing_utils.wait_for_gui)
     assert len(sm_manager_model.state_machines) == 1
 
     call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
@@ -308,12 +302,20 @@ def trigger_gui_signals(*args):
 
 
 def test_gui(caplog):
+    import gtk
+    import threading
+    from os.path import join
+    import rafcon.core.singleton
+    import rafcon.gui.singleton
+    from rafcon.gui.controllers.main_window import MainWindowController
+    from rafcon.gui.views.main_window import MainWindowView
+
     change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False}
 
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
                  "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
-    testing_utils.initialize_environment(gui_config=change_in_gui_config, libraries=libraries)
+    testing_utils.initialize_environment(gui_config=change_in_gui_config, libraries=libraries, gui_already_started=False)
 
     state_machine = create_state_machine()
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
@@ -330,7 +332,7 @@ def test_gui(caplog):
     logger.debug("after gtk main")
     thread.join()
 
-    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0, unpatch_threading=False)
 
 
 if __name__ == '__main__':
