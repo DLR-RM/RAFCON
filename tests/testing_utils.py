@@ -362,8 +362,6 @@ def close_gui(already_quit=False, force_quit=True):
         call_gui_callback(menubar_ctrl.on_quit_activate, None, None, force_quit)
     if not wait_for_gui_quit():
         assert False, "Could not close the GUI"
-    global gui_ready
-    gui_ready = None
 
 
 original_ModelMT = None
