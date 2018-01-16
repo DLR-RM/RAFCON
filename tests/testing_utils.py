@@ -163,7 +163,7 @@ def initialize_signal_handler():
 
 
 def initialize_environment(core_config=None, gui_config=None, runtime_config=None, libraries=None,
-                           only_core=False, gui_already_started=True):
+                           gui_already_started=True):
     """ Initialize global configs, libraries and acquire multi threading lock
 
      The function accepts tuples as arguments to load a config with (config-file, path) as tuple or a
@@ -180,16 +180,21 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
     """
     if gui_already_started:
         # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
-        call_gui_callback(initialize_environment_core, core_config, libraries)
+        call_gui_callback(initialize_environment_core, core_config, libraries, True)
     else:
         initialize_environment_core(core_config, libraries)
     initialize_environment_gui(gui_config, runtime_config)
     initialize_signal_handler()
 
 
-def initialize_environment_core(core_config=None, libraries=None, delete=True):
+def initialize_environment_core(core_config=None, libraries=None, delete=False):
     from rafcon.core.config import global_config
-    from rafcon.core.singleton import state_machine_manager
+    import rafcon.core.singleton
+
+    if rafcon.core.singleton.state_machine_manager.state_machines:
+        raise EnvironmentError("The environment has to have an empty StateMachineManager but here the following "
+                               "state machines are still existing: \n{0}"
+                               "".format(rafcon.core.singleton.state_machine_manager.state_machines))
 
     test_multithreading_lock.acquire()
 
@@ -212,10 +217,8 @@ def initialize_environment_core(core_config=None, libraries=None, delete=True):
 
     # delete_all_state_machines must not be called here per default
     # as old state machines might still be patched with PatchedModelMT
-    # if initialize_environment_core is called in an un-pachted manner, than this will result in a MultiThreading Error
+    # if initialize_environment_core is called in an un-patched manner, than this will result in a MultiThreading Error
     # state_machine_manager.delete_all_state_machines()
-    if delete:
-        state_machine_manager.delete_all_state_machines()
 
 
 def initialize_environment_gui(gui_config=None, runtime_config=None):
@@ -265,19 +268,25 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
     :param bool gui_config: Flag to reload gui config from default path.
     :return:
     """
+    import rafcon.core.singleton
     global GUI_INITIALIZED, GUI_SIGNAL_INITIALIZED
+    global gui_thread, gui_ready, used_gui_threads
 
     try:
         if caplog is not None:
             assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors)
     finally:
+        if gui_ready is None:  # gui was not initialized fully only the environment
+            rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+        # check that state machine manager is empty
+        assert not rafcon.core.singleton.state_machine_manager.state_machines
         rewind_and_set_libraries()
         reload_config(config, gui_config)
         GUI_INITIALIZED = GUI_SIGNAL_INITIALIZED = False
+        gui_thread = gui_ready = None
 
         test_multithreading_lock.release()
-    global gui_thread
-    global used_gui_threads
+
     used_gui_threads.append(gui_thread)
     if unpatch_threading:
         unpatch_gtkmvc_model_mt()
@@ -343,16 +352,18 @@ def wait_for_gui_quit(timeout=5):
     return not gui_thread.is_alive()
 
 
-def close_gui(already_quit=False):
+def close_gui(already_quit=False, force_quit=True):
     from rafcon.core.singleton import state_machine_execution_engine
     from rafcon.gui.singleton import main_window_controller
     if not already_quit:
         call_gui_callback(state_machine_execution_engine.stop)
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
         # delete_all_state_machines should be done  by the quit gui method -> TODO maybe add the force quit flag as option to the arguments
-        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
+        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, force_quit)
     if not wait_for_gui_quit():
         assert False, "Could not close the GUI"
+    global gui_ready
+    gui_ready = None
 
 
 original_ModelMT = None
