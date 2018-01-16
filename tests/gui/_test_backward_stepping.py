@@ -199,9 +199,13 @@ def execute_barrier_state_forwards_backwards():
         call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
+    print "cp1"
+
     for i in range(4):
         call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(3, logger)
+
+    print "cp2"
 
     call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
@@ -233,6 +237,6 @@ def test_backward_stepping_barrier_state(caplog):
 
 if __name__ == '__main__':
     # test_backward_stepping_library_state(None)
-    # test_backward_stepping_barrier_state(None)
+    test_backward_stepping_barrier_state(None)
     # test_backward_stepping_preemptive_state(None)
-    pytest.main(['-s', __file__])
+    # pytest.main(['-s', __file__])

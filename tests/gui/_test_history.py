@@ -30,7 +30,7 @@ from test_state_type_change import store_state_elements, check_state_elements, \
      check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
      check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
      get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
-from gui.widget.test_states_editor import check_state_editor_models
+from gui.widget._test_states_editor import check_state_editor_models
 import pytest
 
 NO_SAVE = False

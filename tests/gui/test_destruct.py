@@ -203,7 +203,7 @@ def check_destruction_logs(elements, print_method=None):
 def run_model_construction():
 
     import rafcon.gui.models.state
-    from gui.test_history import create_models
+    from gui._test_history import create_models
     logger, sm_m, state_dict = create_models()
     # root_state = sm_m.root_state
 
