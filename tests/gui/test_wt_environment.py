@@ -22,8 +22,9 @@ def run_create():
     main_window_controller = rafcon.gui.singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     call_gui_callback(menubar_ctrl.on_new_activate, None)
-
-    print "\n"*10, "WT generated object", "\n"*5
+    # negative test
+    # menubar_ctrl.on_new_activate(None)
+    print "\n"*3, "WT generated object", "\n"*3
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine,
                       StateMachine(HierarchyState("new root state")))
 
@@ -34,6 +35,8 @@ def test_thread_observer_creation_list(caplog):
 
     try:
         run_create()
+    except:
+        raise
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)

@@ -364,9 +364,9 @@ def close_gui(already_quit=False, force_quit=True):
         assert False, "Could not close the GUI"
 
 
-original_ModelMT = None
+original_ModelMT_notify_observer = None
 original_state_start = None
-original_execution_engine = None
+original_run_state_machine = None
 state_threads = []
 used_gui_threads = []
 auto_backup_threads = []
@@ -374,7 +374,7 @@ auto_backup_threads = []
 
 def patch_gtkmvc_model_mt():
     print "patch"
-    global state_threads, original_ModelMT, original_state_start, original_execution_engine, used_gui_threads, \
+    global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine, used_gui_threads, \
         auto_backup_threads
 
     import rafcon.core.states.state
@@ -384,9 +384,10 @@ def patch_gtkmvc_model_mt():
     from rafcon.core.states.state import run_id_generator, threading
     from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger, Queue, ExecutionEngine
 
-    original_ModelMT = gtkmvc.model_mt.ModelMT
+    original_ModelMT_notify_observer = gtkmvc.model_mt.ModelMT.__notify_observer__
     original_state_start = rafcon.core.states.state.State.start
-    original_execution_engine = rafcon.core.execution.execution_engine.ExecutionEngine
+    original_run_state_machine = rafcon.core.execution.execution_engine.ExecutionEngine._run_active_state_machine
+    print original_ModelMT_notify_observer, original_run_state_machine, original_state_start
     state_threads = []
 
     def state_start(self, execution_history, backward_execution=False, generate_run_id=True):
@@ -399,50 +400,49 @@ def patch_gtkmvc_model_mt():
         state_threads.append(self.thread)
         self.thread.start()
 
-    class PatchedExecutionEngine(ExecutionEngine):
+    def _patched_run_active_state_machine(self):
+        """Store running state machine and observe its status
+        """
+        # Create new concurrency queue for root state to be able to synchronize with the execution
+        self._ExecutionEngine__running_state_machine = self.state_machine_manager.get_active_state_machine()
+        self._ExecutionEngine__running_state_machine.root_state.concurrency_queue = Queue.Queue(maxsize=0)
 
-        def _run_active_state_machine(self):
-            """Store running state machine and observe its status
-            """
-            # Create new concurrency queue for root state to be able to synchronize with the execution
-            self._ExecutionEngine__running_state_machine = self.state_machine_manager.get_active_state_machine()
-            self._ExecutionEngine__running_state_machine.root_state.concurrency_queue = Queue.Queue(maxsize=0)
+        if self._ExecutionEngine__running_state_machine:
+            self._ExecutionEngine__running_state_machine.start()
 
-            if self._ExecutionEngine__running_state_machine:
-                self._ExecutionEngine__running_state_machine.start()
+            self._ExecutionEngine__wait_for_finishing_thread = threading.Thread(target=self._wait_for_finishing)
+            # !!!!!!!!!!!!! pachted line !!!!!!!!!!!!!
+            state_threads.append(self._ExecutionEngine__wait_for_finishing_thread)
+            self._ExecutionEngine__wait_for_finishing_thread.start()
+        else:
+            logger.warn("Currently no active state machine! Please create a new state machine.")
+            self.set_execution_mode(StateMachineExecutionStatus.STOPPED)
 
-                self._ExecutionEngine__wait_for_finishing_thread = threading.Thread(target=self._wait_for_finishing)
-                # !!!!!!!!!!!!! pachted line !!!!!!!!!!!!!
-                state_threads.append(self._ExecutionEngine__wait_for_finishing_thread)
-                self._ExecutionEngine__wait_for_finishing_thread.start()
-            else:
-                logger.warn("Currently no active state machine! Please create a new state machine.")
-                self.set_execution_mode(StateMachineExecutionStatus.STOPPED)
+    def __patched__notify_observer__(self, observer, method, *args, **kwargs):
+        """This makes a call either through the gtk.idle list or a
+        direct method call depending whether the caller's thread is
+        different from the observer's thread"""
 
-    class PatchedModelMT(ModelMT):
-
-        def __notify_observer__(self, observer, method, *args, **kwargs):
-            """This makes a call either through the gtk.idle list or a
-            direct method call depending whether the caller's thread is
-            different from the observer's thread"""
-
-            assert self._ModelMT__observer_threads.has_key(observer)
-            if _threading.currentThread().ident == self._ModelMT__observer_threads[observer].ident:
-                # standard call
-                # print "{0} -> {1}: single threading '{2}' in call_thread {3} object_generation_thread {3} \n{4}" \
-                #       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
-                #                 self._ModelMT__observer_threads[observer], (args, kwargs))
-                return Model.__notify_observer__(self, observer, method,
-                                                 *args, **kwargs)
-
+        assert self._ModelMT__observer_threads.has_key(observer)
+        if _threading.currentThread().ident == self._ModelMT__observer_threads[observer].ident:
+            # standard call => single threaded
+            # print "{0} -> {1}: single threading '{2}' in call_thread {3} object_generation_thread {3} \n{4}" \
+            #       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
+            #                 self._ModelMT__observer_threads[observer], (args, kwargs))
+            return Model.__notify_observer__(self, observer, method,
+                                             *args, **kwargs)
+        else:
             # multi-threading call
             if _threading.currentThread() in state_threads or _threading.currentThread() in auto_backup_threads:
-                # print "Notification from state thread", _threading.currentThread()  #, method, args, kwargs
+                # print "Notification from state thread", _threading.currentThread()
                 gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
                 return
             else:
-                # print "mutli", _threading.currentThread(), used_gui_threads
+                # print "multi", _threading.currentThread(), used_gui_threads
+                # we ignore old models created in old gui threads, which are not the current thread
+                # TODO: if destruct is working for all models which can skip this case
                 if _threading.currentThread() in used_gui_threads:
+                    print "%%%%%%%%%%%%%%%%%%%% old model ignore: should not happen %%%%%%%%%%%%%%%%%%%%%%"
                     return
                 print "{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \
                       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
@@ -450,25 +450,22 @@ def patch_gtkmvc_model_mt():
 
                 # print "state threads", state_threads
                 # print "used_gui_threads", used_gui_threads
-
                 raise RuntimeError("This test should not have multi-threading constellations.")
 
-    gtkmvc.model_mt.ModelMT = PatchedModelMT
-    gtkmvc.ModelMT = PatchedModelMT
+    gtkmvc.model_mt.ModelMT.__notify_observer__ = __patched__notify_observer__
     rafcon.core.states.state.State.start = state_start
-    rafcon.core.execution.execution_engine.ExecutionEngine = PatchedExecutionEngine
+    rafcon.core.execution.execution_engine.ExecutionEngine._run_active_state_machine = _patched_run_active_state_machine
 
 
 def unpatch_gtkmvc_model_mt():
     print "unpatch"
-    global state_threads, original_ModelMT, original_state_start, original_execution_engine
+    global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine
 
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
     import gtkmvc
 
-    gtkmvc.model_mt.ModelMT = original_ModelMT
-    gtkmvc.ModelMT = original_ModelMT
+    gtkmvc.model_mt.ModelMT.__notify_observer__ = original_ModelMT_notify_observer
     rafcon.core.states.state.State.start = original_state_start
-    rafcon.core.execution.execution_engine.ExecutionEngine = original_execution_engine
+    rafcon.core.execution.execution_engine.ExecutionEngine._run_state_machine = original_run_state_machine
     state_threads = []
