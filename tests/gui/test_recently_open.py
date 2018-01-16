@@ -273,24 +273,23 @@ def unpatch_backup_threading():
 
 
 def test_recent_opened_state_machine_list(caplog):
-    patch_backup_threading()
     change_in_gui_config = {'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': False}
 
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
                  "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
     testing_utils.run_gui(gui_config=change_in_gui_config, libraries=libraries)  # , patch_threading=False)
-
+    call_gui_callback(patch_backup_threading)
     try:
         trigger_gui_signals()
     except:
         raise
     finally:
+        call_gui_callback(unpatch_backup_threading)
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)  # , unpatch_threading=False)
-        unpatch_backup_threading()
 
 
 if __name__ == '__main__':
-    # test_recent_opened_state_machine_list(None)
-    pytest.main(['-s', __file__])
+    test_recent_opened_state_machine_list(None)
+    # pytest.main(['-s', __file__])

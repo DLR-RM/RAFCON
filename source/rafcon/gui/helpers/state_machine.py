@@ -62,7 +62,8 @@ def new_state_machine():
     root_state = HierarchyState("new root state")
     state_machine = StateMachine(root_state)
     state_machine_manager.add_state_machine(state_machine)
-    state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
+    rafcon.gui.utils.wait_for_gui()
+    state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
     # this is needed in order that the model is already there, when it is access via get_selected_state_machine_model()
     rafcon.gui.utils.wait_for_gui()

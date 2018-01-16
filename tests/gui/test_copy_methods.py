@@ -5,20 +5,6 @@ import copy
 import time
 import threading
 
-# mvc
-from rafcon.gui.models.state_machine import StateMachineModel
-
-# core elements
-import rafcon.core.singleton
-from rafcon.core.storage import storage
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.container_state import ContainerState
-from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
-from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
-from rafcon.core.states.library_state import LibraryState
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.state_machine import StateMachine
-
 import testing_utils
 import pytest
 
@@ -26,6 +12,10 @@ with_print = False
 
 
 def create_models(*args, **kargs):
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.state_machine import StateMachine
 
     state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
@@ -85,6 +75,8 @@ def create_models(*args, **kargs):
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
+    testing_utils.wait_for_gui()
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm.state_machine_id
 
     sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
@@ -92,6 +84,7 @@ def create_models(*args, **kargs):
 
 
 def create_models_lib():
+    from rafcon.core.states.library_state import LibraryState
 
     [state, sm_model, state_dict] = create_models()
 
@@ -123,6 +116,10 @@ def create_models_lib():
 
 
 def create_models_concurrency():
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+    from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+    from rafcon.core.states.hierarchy_state import HierarchyState
 
     [state, sm_model, state_dict] = create_models()
 
@@ -148,72 +145,78 @@ def create_models_concurrency():
 
 
 def collect_state_memory_addresses(state, address_book=None):
-        # print type(state)
-        if address_book is None:
-            address_book = []
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.container_state import ContainerState
+    from rafcon.core.states.library_state import LibraryState
 
-        def append_addresses_of_dict_elements(dict_of_elements, address_book):
-            for elem in dict_of_elements.itervalues():
-                # print "{0}: {1}".format(elem.__class__.__name__, id(elem))
-                address_book.append(id(elem))
+    # print type(state)
+    if address_book is None:
+        address_book = []
 
-        if isinstance(state, LibraryState):
-            # print "state_copy: {}".format(id(state.state_copy))
-            collect_state_memory_addresses(state.state_copy, address_book)
-            address_book.append(id(state.state_copy))
-        else:
-            # collect all memory addresses for, io-ports, outcomes and description
-            append_addresses_of_dict_elements(state.input_data_ports, address_book)
-            append_addresses_of_dict_elements(state.output_data_ports, address_book)
-            append_addresses_of_dict_elements(state.outcomes, address_book)
-            # print "description: {}".format(id(state.description))
-            # address_book.append(id(state.description))
+    def append_addresses_of_dict_elements(dict_of_elements, address_book):
+        for elem in dict_of_elements.itervalues():
+            # print "{0}: {1}".format(elem.__class__.__name__, id(elem))
+            address_book.append(id(elem))
 
-        if isinstance(state, ContainerState):
-            append_addresses_of_dict_elements(state.data_flows, address_book)
-            append_addresses_of_dict_elements(state.transitions, address_book)
-            append_addresses_of_dict_elements(state.scoped_variables, address_book)
-            for elem in state.states.itervalues():
-                # print "{0}: {1}".format(elem.__class__.__name__, id(elem))
-                collect_state_memory_addresses(elem, address_book)
-                address_book.append(id(elem))
+    if isinstance(state, LibraryState):
+        # print "state_copy: {}".format(id(state.state_copy))
+        collect_state_memory_addresses(state.state_copy, address_book)
+        address_book.append(id(state.state_copy))
+    else:
+        # collect all memory addresses for, io-ports, outcomes and description
+        append_addresses_of_dict_elements(state.input_data_ports, address_book)
+        append_addresses_of_dict_elements(state.output_data_ports, address_book)
+        append_addresses_of_dict_elements(state.outcomes, address_book)
+        # print "description: {}".format(id(state.description))
+        # address_book.append(id(state.description))
 
-        if isinstance(state, ExecutionState):
-            # print "script: {}".format(id(state.script))
-            address_book.append(id(state.script))
-            # print "script_text: {}".format(id(state.script_text))
-            # address_book.append(id(state.script_text))
+    if isinstance(state, ContainerState):
+        append_addresses_of_dict_elements(state.data_flows, address_book)
+        append_addresses_of_dict_elements(state.transitions, address_book)
+        append_addresses_of_dict_elements(state.scoped_variables, address_book)
+        for elem in state.states.itervalues():
+            # print "{0}: {1}".format(elem.__class__.__name__, id(elem))
+            collect_state_memory_addresses(elem, address_book)
+            address_book.append(id(elem))
 
-        return address_book
+    if isinstance(state, ExecutionState):
+        # print "script: {}".format(id(state.script))
+        address_book.append(id(state.script))
+        # print "script_text: {}".format(id(state.script_text))
+        # address_book.append(id(state.script_text))
+
+    return address_book
 
 
 def collect_state_model_memory_addresses(state_m, address_book=None):
-        # print type(state_m)
-        if address_book is None:
-            address_book = []
+    from rafcon.core.states.container_state import ContainerState
 
-        def append_addresses_of_list_elements(list_of_elements, address_book):
-            for elem in list_of_elements:
-                # print "{3} {0}: {1} {2}".format(elem.__class__.__name__, id(elem), id(elem.meta), state_m.state.get_path())
-                address_book.append(id(elem))
-                address_book.append(id(elem.meta))
+    # print type(state_m)
+    if address_book is None:
+        address_book = []
 
-        # collect all memory addresses for, io-ports, outcomes and description
-        append_addresses_of_list_elements(state_m.input_data_ports, address_book)
-        append_addresses_of_list_elements(state_m.output_data_ports, address_book)
-        append_addresses_of_list_elements(state_m.outcomes, address_book)
+    def append_addresses_of_list_elements(list_of_elements, address_book):
+        for elem in list_of_elements:
+            # print "{3} {0}: {1} {2}".format(elem.__class__.__name__, id(elem), id(elem.meta), state_m.state.get_path())
+            address_book.append(id(elem))
+            address_book.append(id(elem.meta))
 
-        if isinstance(state_m.state, ContainerState):
-            append_addresses_of_list_elements(state_m.data_flows, address_book)
-            append_addresses_of_list_elements(state_m.transitions, address_book)
-            append_addresses_of_list_elements(state_m.scoped_variables, address_book)
-            for elem in state_m.states.itervalues():
-                # print "{3} {0}: {1} {2}".format(elem.__class__.__name__, id(elem), id(elem.meta), state_m.state.get_path())
-                address_book.append(id(elem))
-                address_book.append(id(elem.meta))
-                collect_state_model_memory_addresses(elem, address_book)
+    # collect all memory addresses for, io-ports, outcomes and description
+    append_addresses_of_list_elements(state_m.input_data_ports, address_book)
+    append_addresses_of_list_elements(state_m.output_data_ports, address_book)
+    append_addresses_of_list_elements(state_m.outcomes, address_book)
 
-        return address_book
+    if isinstance(state_m.state, ContainerState):
+        append_addresses_of_list_elements(state_m.data_flows, address_book)
+        append_addresses_of_list_elements(state_m.transitions, address_book)
+        append_addresses_of_list_elements(state_m.scoped_variables, address_book)
+        for elem in state_m.states.itervalues():
+            # print "{3} {0}: {1} {2}".format(elem.__class__.__name__, id(elem), id(elem.meta), state_m.state.get_path())
+            address_book.append(id(elem))
+            address_book.append(id(elem.meta))
+            collect_state_model_memory_addresses(elem, address_book)
+
+    return address_book
 
 
 def compare_references_to_sm_model_and_core(sm_m, new_sm_m):
@@ -314,6 +317,9 @@ def run_copy_test(*args):
 
 def run_copy_performance_test_and_check_storage_copy(*args):
     """Run general test that """
+    from rafcon.gui.models.state_machine import StateMachineModel
+    from rafcon.core.storage import storage
+
     sm_m = args[0]
     sm = sm_m.state_machine
 
@@ -373,6 +379,7 @@ def test_simple(caplog):
     :param caplog:
     :return:
     """
+    import rafcon
     # create testbed
     testing_utils.initialize_environment(gui_already_started=False)
 
@@ -387,8 +394,8 @@ def test_simple(caplog):
     run_copy_performance_test_and_check_storage_copy(sm_model)
     sm_model.destroy()
     # rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
-
-    testing_utils.shutdown_environment(caplog=caplog)
+    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 @pytest.mark.parametrize("with_gui", [False])
@@ -398,6 +405,8 @@ def test_complex(with_gui, caplog):
     :param caplog:
     :return:
     """
+    import rafcon.core.singleton
+
     # create testbed
     testing_utils.initialize_environment(gui_already_started=False)
     from rafcon.core.config import global_config
@@ -436,7 +445,7 @@ def test_complex(with_gui, caplog):
     while gtk.events_pending():
         gtk.main_iteration(False)
 
-    testing_utils.shutdown_environment(caplog=caplog)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
     # import conftest
     # import shutil

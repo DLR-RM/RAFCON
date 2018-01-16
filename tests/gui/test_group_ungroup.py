@@ -65,6 +65,10 @@ def trigger_ungroup_signals():
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, create_state_machine())
+    sm = rafcon.core.singleton.state_machine_manager.state_machines[rafcon.core.singleton.state_machine_manager.state_machines.keys()[0]]
+    call_gui_callback(
+        rafcon.core.singleton.state_machine_manager.__setattr__, "active_state_machine_id", sm.state_machine_id
+    )
     # TODO avoid this in all tests running, too!!! -> in single runs it does work without!!!
     while len(sm_manager_model.state_machines) <= 0:
         # give model time to be created
@@ -105,5 +109,5 @@ def test_ungroup(caplog):
         testing_utils.shutdown_environment(caplog=caplog)
 
 if __name__ == '__main__':
-    # test_ungroup(None)
-    pytest.main(['-s', __file__])
+    test_ungroup(None)
+    # pytest.main(['-s', __file__])

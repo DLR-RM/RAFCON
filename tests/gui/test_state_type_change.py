@@ -591,7 +591,7 @@ def trigger_state_type_change_tests(with_gui):
 
     state_dict, sm = create_state_machine()
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
-    call_gui_callback(testing_utils.wait_for_gui)
+    # call_gui_callback(testing_utils.wait_for_gui)
 
     first_sm_id = sm.state_machine_id
     sm_m = sm_manager_model.state_machines[first_sm_id]

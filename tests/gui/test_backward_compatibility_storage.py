@@ -65,14 +65,18 @@ def test_backward_compatibility_storage(caplog):
 
     try:
         run_backward_compatibility_state_machines(path)
+    except Exception:
+        raise
     finally:
         # two warning per minor version lower than the current RAFCON version
         state_machines = len([filename for filename in os.listdir(path) if os.path.isdir(os.path.join(path, filename))])
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0)
 
+    _test_unchanged_storage_format(caplog)
 
-def test_unchanged_storage_format(caplog):
+
+def _test_unchanged_storage_format(caplog):
     """This test ensures that the state machine storage format does not change in patch releases"""
 
     from rafcon.core.storage import storage
@@ -105,6 +109,8 @@ def test_unchanged_storage_format(caplog):
         old_state_machine_hash = calculate_state_machine_hash(old_state_machine_path)
         new_state_machine_hash = calculate_state_machine_hash(new_state_machine_path)
         assert old_state_machine_hash.digest() == new_state_machine_hash.digest()
+    except Exception:
+        raise
     finally:
         testing_utils.shutdown_environment(caplog=caplog)
 
@@ -136,5 +142,5 @@ def calculate_state_machine_hash(path):
 
 if __name__ == '__main__':
     test_backward_compatibility_storage(None)
-    test_unchanged_storage_format(None)
+    _test_unchanged_storage_format(None)
     # pytest.main(['-s', __file__])

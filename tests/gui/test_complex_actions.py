@@ -31,7 +31,7 @@ def create_models(*args, **kargs):
 
     # add new state machine
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm.state_machine_id
 
 # def test_state_type_change(caplog):
 #     pass
@@ -146,6 +146,8 @@ def test_repetitive_ungroup_state_and_group_states(caplog):
     testing_utils.run_gui(libraries=libraries)
     try:
         trigger_repetitive_group_ungroup()
+    except Exception:
+        raise
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)

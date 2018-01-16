@@ -85,10 +85,9 @@ def test_backward_stepping_library_state(caplog):
     call_gui_callback(initialize_global_variables)
     try:
         execute_library_state_forwards_backwards()
-    except Exception,e:
+    except Exception:
         raise
     finally:
-        testing_utils.wait_for_gui()
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
@@ -236,7 +235,7 @@ def test_backward_stepping_barrier_state(caplog):
 
 
 if __name__ == '__main__':
-    # test_backward_stepping_library_state(None)
-    test_backward_stepping_barrier_state(None)
+    test_backward_stepping_library_state(None)
+    # test_backward_stepping_barrier_state(None)
     # test_backward_stepping_preemptive_state(None)
     # pytest.main(['-s', __file__])

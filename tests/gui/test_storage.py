@@ -18,6 +18,8 @@ def create_models():
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.state_machine import StateMachine
 
+    print "create models"
+
     logger.setLevel(logging.DEBUG)
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
@@ -76,14 +78,17 @@ def create_models():
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
+    # give gui time to create the state machine
+    testing_utils.wait_for_gui()
 
     for sm_in in rafcon.core.singleton.state_machine_manager.state_machines.values():
         rafcon.core.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
-    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
+    # give the gui time to remove the state machine
+    testing_utils.wait_for_gui()
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     # wait until model is created, otherwise gui will crash
     testing_utils.wait_for_gui()
-    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm.state_machine_id
 
 
 def on_save_activate(state_machine_m, logger):
@@ -266,11 +271,12 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
     check_state(sm_m.state_machine, state_machine=True)
 
 
-def test_storage_without_gui(caplog):
+def _test_storage_without_gui(caplog):
+    print "test storage without gui"
     testing_utils.initialize_environment(gui_already_started=False)
     try:
         save_state_machine(with_gui=False)
-    except Exception,e:
+    except Exception:
         raise
     finally:
         # delete all state machines
@@ -278,17 +284,27 @@ def test_storage_without_gui(caplog):
         from rafcon.gui.singleton import main_window_controller, state_machine_manager_model
         state_machine_manager.delete_all_state_machines()
 
-        # shutdown environment
-        testing_utils.shutdown_environment_only_core(caplog=caplog)
+        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_storage_with_gui(caplog):
+    print "test storage with gui"
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
     try:
         save_state_machine(with_gui=True)
+    except Exception:
+        raise
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
+
+    from rafcon.core.singleton import state_machine_manager
+    print "%" * 10, state_machine_manager.state_machines
+
+    # this test must not be called by py.test directly
+    # as it is a test without gui it must not create the core and gui singletons
+    # otherwise the multi-threading test will fail
+    _test_storage_without_gui(caplog)
 
 
 # TODO add examples of bad naming that cause before problems \n or [ ] and so on
@@ -304,9 +320,9 @@ def check_state_recursively_if_state_scripts_are_valid(state):
 
 
 def test_on_clean_storing_with_name_in_path(caplog):
-    from rafcon.core.storage import storage
-
-    testing_utils.initialize_environment(gui_config={"AUTO_BACKUP_ENABLED": True}, gui_already_started=False)
+    print "test_on_clean_storing_with_name_in_path"
+    testing_utils.initialize_environment(
+        gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False}, gui_already_started=False)
 
     path_old_format = testing_utils.get_test_sm_path(
         os.path.join("unit_test_state_machines", "id_to_name_plus_id_storage_format_test_do_not_update"))
@@ -317,6 +333,7 @@ def test_on_clean_storing_with_name_in_path(caplog):
     from rafcon.gui.models.state_machine import StateMachineModel
 
     shutil.copytree(path_old_format, path_new_format)
+    from rafcon.core.storage import storage
     sm = storage.load_state_machine_from_path(path_new_format)
     check_state_recursively_if_state_scripts_are_valid(sm.root_state)
     sm.base_path = path_new_format
@@ -330,8 +347,9 @@ def test_on_clean_storing_with_name_in_path(caplog):
 
 
 if __name__ == '__main__':
+    test_storage_with_gui(None)
     # test_storage_without_gui(None)
-    # test_storage_with_gui(None)
-    # test_on_clean_storing_with_name_in_path(None)
-    import pytest
-    pytest.main(['-s', __file__])
+    # # test_storage_with_gui(None)
+    test_on_clean_storing_with_name_in_path(None)
+    # import pytest
+    # pytest.main(['-s', __file__])
