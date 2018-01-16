@@ -1,16 +1,13 @@
-
-import __builtin__
 import os
 import gtk
 
 from testing_utils import RAFCON_TEMP_PATH_TEST_BASE
-import rafcon.core.interface as core_interface
-import rafcon.gui.interface as gui_interface
 
 
 def test_core_open_folder(monkeypatch):
     """Tests `open_folder_cmd_line` function from `rafcon.core.interface`"""
-
+    import __builtin__
+    import rafcon.core.interface as core_interface
     # replaces raw_input by an expression that returns "/tmp"
     monkeypatch.setattr(__builtin__, 'raw_input', lambda _: "/tmp")
 
@@ -31,7 +28,8 @@ def test_core_open_folder(monkeypatch):
 
 def test_core_create_folder(monkeypatch):
     """Tests `create_folder_cmd_line` function from `rafcon.core.interface`"""
-
+    import __builtin__
+    import rafcon.core.interface as core_interface
     # replaces raw_input by an expression that returns RAFCON_TEMP_PATH_TEST_BASE
     monkeypatch.setattr(__builtin__, 'raw_input', lambda _: RAFCON_TEMP_PATH_TEST_BASE)
 
@@ -65,7 +63,7 @@ class PatchedFileChooserDialog(gtk.FileChooserDialog):
 
 def test_gui_open_folder(monkeypatch):
     """Tests `open_folder` function from `rafcon.core.interface`"""
-
+    import rafcon.gui.interface as gui_interface
     # prepare FileChooserDialog for monkey-patching
     monkeypatch.setattr(gtk, "FileChooserDialog", PatchedFileChooserDialog)
     # replaces run by an expression that returns gtk.RESPONSE_OK
@@ -91,7 +89,7 @@ def test_gui_open_folder(monkeypatch):
 
 def test_gui_create_folder(monkeypatch):
     """Tests `create_folder` function from `rafcon.core.interface`"""
-
+    import rafcon.gui.interface as gui_interface
     # prepare FileChooserDialog for monkey-patching
     monkeypatch.setattr(gtk, "FileChooserDialog", PatchedFileChooserDialog)
     # replaces run by an expression that returns gtk.RESPONSE_OK
