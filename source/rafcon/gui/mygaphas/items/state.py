@@ -43,6 +43,9 @@ from rafcon.gui.utils import constants
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
+# Fixed width of the Pango layout. The higher this value, the better is the accuracy, but the more memory is consumed
+BASE_WIDTH = 100.
+
 
 class StateView(Element):
     """ A State has 4 handles (for a start):
@@ -952,7 +955,7 @@ class NameView(Element):
 
             layout = c.create_layout()
             layout.set_wrap(WRAP_WORD)
-            layout.set_width(int(width) * SCALE)
+            layout.set_width(int(round(BASE_WIDTH * SCALE)))
             layout.set_text(self.name)
 
             def set_font_description(font_size):
@@ -961,23 +964,24 @@ class NameView(Element):
 
             font_name = constants.INTERFACE_FONT
 
-            font_size_parameters = {"text": self.name, "width": width, "height": height, "zoom": current_zoom}
+            zoom_scale = BASE_WIDTH / width
+            scaled_height = height * zoom_scale
+            font_size_parameters = {"text": self.name, "height": scaled_height}
             font_size = self.view.value_cache.get_value("font_size", font_size_parameters)
 
             if font_size:
                 set_font_description(font_size)
             else:
-                available_size = (width * SCALE, height * SCALE)
+                available_size = (BASE_WIDTH * SCALE, scaled_height * SCALE)
                 word_count = len(self.name.split(" "))
                 # Set max font size to available height
-                max_font_size = height * 0.9
+                max_font_size = scaled_height * 0.9
                 # Calculate minimum size that is still to be drawn
-                min_name_height, _ = self.view.get_matrix_v2i(self).transform_distance(
-                    constants.MINIMUM_NAME_SIZE_FOR_DISPLAY, 0)
+                min_name_height = max_font_size / 10.
                 # Calculate line height if all words are wrapped
                 line_height = max_font_size / word_count
                 # Use minimum if previous values and add safety margin
-                min_font_size = min(line_height, min_name_height) * 0.5
+                min_font_size = min(line_height * 0.5, min_name_height)
 
                 # Iteratively calculate font size by always choosing the average of the maximum and minimum size
                 working_font_size = None
@@ -985,10 +989,11 @@ class NameView(Element):
                 set_font_description(current_font_size)
 
                 while True:
-                    ink_extents, logical_extents = layout.get_extents()
-                    width_factor = ink_extents[2] / available_size[0]
-                    height_factor = ink_extents[3] / available_size[1]
+                    logical_extents = layout.get_size()
+                    width_factor = logical_extents[0] / available_size[0]
+                    height_factor = logical_extents[1] / available_size[1]
                     max_factor = max(width_factor, height_factor)
+
                     if max_factor > 1:  # font size too large
                         max_font_size = current_font_size
                     elif max_factor > 0.9:  # font size fits!
@@ -1009,7 +1014,12 @@ class NameView(Element):
 
             c.move_to(*self.handles()[NW].pos)
             c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
+            c.save()
+            # The pango layout has a fixed width and needs to be fitted to the context size
+            c.scale(1. / zoom_scale, 1. / zoom_scale)
+            c.update_layout(layout)
             c.show_layout(layout)
+            c.restore()
 
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
