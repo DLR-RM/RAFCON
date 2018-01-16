@@ -1,16 +1,10 @@
 import pytest
 
-from rafcon.core.states.state import State
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.gui.models.state import StateModel
-from rafcon.gui.models.container_state import ContainerStateModel
-
-from rafcon.core.state_elements.transition import Transition
-from rafcon.gui.models.transition import TransitionModel
-
 
 @pytest.mark.parametrize("use_gaphas", [False, True])
 def test_state_rel_pos(use_gaphas):
+    from rafcon.core.states.state import State
+    from rafcon.gui.models.state import StateModel
     state = State()
     state_m = StateModel(state, parent=None)
     state_m.meta["gui"]["editor_opengl" if use_gaphas else "editor_gaphas"]["rel_pos"] = (1, 2)
@@ -19,6 +13,8 @@ def test_state_rel_pos(use_gaphas):
 
 
 def test_name():
+    from rafcon.core.states.state import State
+    from rafcon.gui.models.state import StateModel
     state = State()
     state_m = StateModel(state, parent=None)
     state_m.meta["gui"]["editor_opengl"]["size"] = (96, 150)
@@ -28,6 +24,8 @@ def test_name():
 
 
 def test_income():
+    from rafcon.core.states.state import State
+    from rafcon.gui.models.state import StateModel
     state = State()
     state_m = StateModel(state, parent=None)
     state_m.meta["gui"]["editor_opengl"]["size"] = (50, 50)
@@ -36,6 +34,8 @@ def test_income():
 
 
 def test_state_property_deletion():
+    from rafcon.core.states.state import State
+    from rafcon.gui.models.state import StateModel
     state = State()
     state_m = StateModel(state, parent=None)
     state_m.meta["gui"]["editor_gaphas"]["income"]["rel_pos"] = (0, 50)
@@ -51,6 +51,8 @@ def test_state_property_deletion():
 
 
 def test_3_outcomes():
+    from rafcon.core.states.state import State
+    from rafcon.gui.models.state import StateModel
     state = State()
     state_m = StateModel(state, parent=None)
     state_m.meta["gui"]["editor_opengl"]["size"] = (60, 60)
@@ -68,6 +70,8 @@ def test_3_outcomes():
 
 
 def test_4_outcomes():
+    from rafcon.core.states.state import State
+    from rafcon.gui.models.state import StateModel
     state = State()
     state.add_outcome("success2")
     state_m = StateModel(state, parent=None)
@@ -88,6 +92,8 @@ def test_4_outcomes():
 
 
 def test_input_opengl2gaphas():
+    from rafcon.core.states.state import State
+    from rafcon.gui.models.state import StateModel
     state = State()
     state.add_input_data_port("in", int, 0)
     state_m = StateModel(state, parent=None)
@@ -100,6 +106,8 @@ def test_input_opengl2gaphas():
 
 
 def test_input_gaphas2opengl():
+    from rafcon.core.states.state import State
+    from rafcon.gui.models.state import StateModel
     state = State()
     state.add_input_data_port("in", int, 0)
     state_m = StateModel(state, parent=None)
@@ -112,6 +120,8 @@ def test_input_gaphas2opengl():
 
 
 def test_output_opengl2gaphas():
+    from rafcon.core.states.state import State
+    from rafcon.gui.models.state import StateModel
     state = State()
     state.add_output_data_port("out", int, 0)
     state_m = StateModel(state, parent=None)
@@ -124,6 +134,8 @@ def test_output_opengl2gaphas():
 
 
 def test_output_gaphas2opengl():
+    from rafcon.core.states.state import State
+    from rafcon.gui.models.state import StateModel
     state = State()
     state.add_output_data_port("out", int, 0)
     state_m = StateModel(state, parent=None)
@@ -136,6 +148,8 @@ def test_output_gaphas2opengl():
 
 
 def test_scoped_variable_opengl2gaphas():
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.gui.models.container_state import ContainerStateModel
     state = HierarchyState()
     state.add_scoped_variable("sv", int, 0)
     state_m = ContainerStateModel(state, parent=None)
@@ -148,6 +162,8 @@ def test_scoped_variable_opengl2gaphas():
 
 
 def test_scoped_variable_gaphas2opengl():
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.gui.models.container_state import ContainerStateModel
     state = HierarchyState()
     state.add_scoped_variable("sv", int, 0)
     state_m = ContainerStateModel(state, parent=None)
@@ -161,6 +177,8 @@ def test_scoped_variable_gaphas2opengl():
 
 @pytest.mark.parametrize("use_gaphas", [False, True])
 def test_transition_waypoints(use_gaphas):
+    from rafcon.core.state_elements.transition import Transition
+    from rafcon.gui.models.transition import TransitionModel
     transition = Transition(None, 0, None, 0, None)
     transition_m = TransitionModel(transition, parent=None)
     transition_m.meta["gui"]["editor_opengl" if use_gaphas else "editor_gaphas"]["waypoints"] = [(1, 2), (-1, 3)]
