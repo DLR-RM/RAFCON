@@ -469,4 +469,5 @@ def unpatch_gtkmvc_model_mt():
     gtkmvc.model_mt.ModelMT.__notify_observer__ = original_ModelMT_notify_observer
     rafcon.core.states.state.State.start = original_state_start
     rafcon.core.execution.execution_engine.ExecutionEngine._run_state_machine = original_run_state_machine
+    original_ModelMT_notify_observer = original_state_start = original_run_state_machine = None
     state_threads = []
