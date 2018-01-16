@@ -19,9 +19,6 @@ DataFlow's DataFlowModel is in.
 
 from gtkmvc.observer import Observer
 
-# mvc
-import rafcon.gui.singleton
-
 # core elements
 import rafcon.core.singleton
 from rafcon.core.states.execution_state import ExecutionState
@@ -305,6 +302,7 @@ class TransitionNotificationLogObserver(NotificationLogObserver):
 
 
 def create_models(*args, **kargs):
+    import rafcon.gui.models.state_machine
 
     state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
@@ -363,9 +361,7 @@ def create_models(*args, **kargs):
 
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
-    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-
-    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.models.state_machine.StateMachineModel(sm)
 
     return ctr_state, sm_m, state_dict
 
@@ -426,6 +422,7 @@ def full_observer_dict_reset(observer_dict):
 
 
 def test_outcome_add_remove_notification(caplog):
+    import rafcon.gui.singleton
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
     states_observer_dict = setup_observer_dict_for_state_model(sm_model.root_state, with_print=with_print)

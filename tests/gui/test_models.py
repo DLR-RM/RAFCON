@@ -229,13 +229,11 @@ def create_models(*args, **kargs):
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
 
+    import rafcon.gui.models.state_machine
     # for sm_in in rafcon.core.singleton.state_machine_manager.state_machines.values():
     #     rafcon.core.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
-    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
+    sm_m = rafcon.gui.models.state_machine.StateMachineModel(sm)
 
-    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
-
-    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
     # sm_m.history.fake = True
 
     return ctr_state, sm_m, state_dict
