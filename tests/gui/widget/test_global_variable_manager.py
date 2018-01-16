@@ -57,7 +57,8 @@ def trigger_gvm_signals(main_window_controller):
 
 
 def test_gui(caplog):
-    testing_utils.initialize_environment(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+    testing_utils.initialize_environment(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
+                                         gui_already_started=False)
 
     testing_utils.remove_all_gvm_variables()
 
@@ -74,7 +75,7 @@ def test_gui(caplog):
     thread.join()
 
     # expected_errors=1 because global_variable_is_editable throws an error
-    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
+    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1, unpatch_threading=False)
 
 
 if __name__ == '__main__':
