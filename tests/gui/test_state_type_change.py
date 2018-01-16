@@ -14,8 +14,7 @@ check_elements_ignores = []
 logger = log.get_logger(__name__)
 
 
-def create_models(state_dict):
-    import rafcon.core.singleton
+def create_state_machine():
     from rafcon.core.states.execution_state import ExecutionState
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.state_machine import StateMachine
@@ -85,15 +84,9 @@ def create_models(state_dict):
 
     tmp_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
                   'Nested2': state5}
-    state_dict.update(tmp_dict)
     sm = StateMachine(ctr_state)
 
-    # add new state machine
-    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-    while len(rafcon.gui.singleton.state_machine_manager.state_machines) <= 0:
-        testing_utils.wait_for_gui()
-    # select state machine
-    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    return tmp_dict, sm
 
 
 def store_state_elements(state, state_m, return_list):
@@ -592,13 +585,17 @@ def trigger_state_type_change_tests(with_gui):
 
     :param args:
     """
+    import rafcon.core.singleton
     import rafcon.gui.singleton
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
-    state_dict = {}
-    call_gui_callback(create_models, state_dict)
-    sm = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
-    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    state_dict, sm = create_state_machine()
+    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
+    call_gui_callback(testing_utils.wait_for_gui)
 
+    first_sm_id = sm.state_machine_id
+    sm_m = sm_manager_model.state_machines[first_sm_id]
+    call_gui_callback(sm_manager_model.__setattr__, 'selected_state_machine_id', first_sm_id)
     # General Type Change inside of a state machine (NO ROOT STATE) ############
     state_of_type_change = 'State3'
     check_elements_ignores.append("internal_transitions")
@@ -607,9 +604,7 @@ def trigger_state_type_change_tests(with_gui):
 
     return_list = list()
     call_gui_callback(store_state_elements, state_dict[state_of_type_change], state_m, return_list)
-    while len(rafcon.gui.singleton.state_machine_manager_model.state_machines) <= 0:
-        # give model time to be created
-        testing_utils.wait_for_gui()
+    call_gui_callback(testing_utils.wait_for_gui)
     stored_state_elements = return_list[0]
     stored_state_m_elements = return_list[1]
 
@@ -652,13 +647,12 @@ def trigger_state_type_change_tests(with_gui):
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     return_list = []
     call_gui_callback(store_state_elements, state_dict[state_of_type_change], state_m, return_list)
-    testing_utils.wait_for_gui()
+    call_gui_callback(testing_utils.wait_for_gui)
     stored_state_elements = return_list[0]
     stored_state_m_elements = return_list[1]
     print "\n\n %s \n\n" % state_m.state.name
     call_gui_callback(sm_m.selection.set, [state_m])
 
-    testing_utils.wait_for_gui()
     # HS -> BCS
     print "Test: change root state type: HS -> BCS"
     return_list = list()
