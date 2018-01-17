@@ -13,13 +13,16 @@
 
 from math import pi
 
-from pango import SCALE, FontDescription
+from pango import SCALE, FontDescription, WRAP_WORD
 from cairo import ANTIALIAS_SUBPIXEL
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.mygaphas.utils.enums import SnappedSide
 from rafcon.gui.utils import constants
 from rafcon.utils.geometry import deg2rad
+
+# Fixed font size when drawing on Pango layout
+FONT_SIZE = 5.
 
 
 def limit_value_string_length(value):
@@ -257,6 +260,8 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
     :param additional_value: The additional value to be shown
     :param only_extent_calculations: Calculate only the extends and do not actually draw
     """
+    port_side_length = float(port_side_length)
+
     c = context
     c.set_antialias(ANTIALIAS_SUBPIXEL)
 
@@ -266,17 +271,21 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
     layout.set_text(text)
 
     font_name = constants.INTERFACE_FONT
-    font_size = port_side_length
-    font = FontDescription(font_name + " " + str(font_size))
+    font = FontDescription(font_name + " " + str(FONT_SIZE))
     layout.set_font_description(font)
-    text_size = (layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE))
+
+    ink_extents, logical_extents = layout.get_extents()
+    ink_extents = [extent / float(SCALE) for extent in ink_extents]
+    text_size = ink_extents[2], ink_extents[3]
+    desired_height = port_side_length * 4
+    scale_factor = text_size[0] / desired_height
 
     # margin is the distance between the text and the border line
-    margin = port_side_length / 4.
+    margin = port_side_length / 2.5
     # The text_size dimensions are rotated by 90 deg compared to the label, as the label is drawn upright
-    width = text_size[1] + 2 * margin
+    width = text_size[1] / scale_factor + 2 * margin
     arrow_height = port_side_length
-    height = arrow_height + text_size[0] + 2 * margin
+    height = arrow_height + desired_height + 2 * margin
     port_distance = port_side_length
 
     if label_position is SnappedSide.RIGHT:
@@ -314,12 +323,15 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
         c.save()
         c.move_to(*port_position)
         c.rotate(label_angle)
-        c.rel_move_to(-text_size[1] / 2., text_size[0] + port_distance + arrow_height + margin)
+        c.rel_move_to(0, port_distance + arrow_height + margin)
+        c.scale(1. / scale_factor, 1. / scale_factor)
+        c.rel_move_to(-text_size[1] / 2 - ink_extents[1], text_size[0] - ink_extents[0])
         c.restore()
 
         # Show text in correct orientation
         c.save()
         c.rotate(text_angle)
+        c.scale(1. / scale_factor, 1. / scale_factor)
         # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
         if label_position is SnappedSide.RIGHT:
             c.rel_move_to(-text_size[0], -text_size[1])
@@ -333,7 +345,10 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
         value_layout = c.create_layout()
         value_layout.set_text(value_text)
         value_layout.set_font_description(font)
-        value_text_size = (value_layout.get_size()[0] / float(SCALE), text_size[1] / float(SCALE))
+
+        ink_extents, logical_extents = value_layout.get_extents()
+        ink_extents = [extent / float(SCALE) for extent in ink_extents]
+        value_text_size = ink_extents[2], text_size[1]
 
         # Move to the upper left corner of the additional value box
         c.save()
@@ -342,7 +357,7 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
         c.rel_move_to(-width / 2., height + port_distance)
         # Draw rectangular path
         c.rel_line_to(width, 0)
-        c.rel_line_to(0, value_text_size[0] + 2 * margin)
+        c.rel_line_to(0, value_text_size[0] / scale_factor + 2 * margin)
         c.rel_line_to(-width, 0)
         c.close_path()
         c.restore()
@@ -362,15 +377,18 @@ def draw_port_label(context, text, label_color, text_color, transparency, fill, 
             c.save()
             c.move_to(*port_position)
             c.rotate(label_angle)
-            c.rel_move_to(-text_size[1] / 2., value_text_size[0] + margin + height + port_distance)
+            c.rel_move_to(0, 2 * margin + height + port_distance)
+            c.scale(1. / scale_factor, 1. / scale_factor)
+            c.rel_move_to(-text_size[1] / 2., value_text_size[0])
             c.restore()
 
             # Show text in correct orientation
             c.save()
             c.rotate(text_angle)
+            c.scale(1. / scale_factor, 1. / scale_factor)
             # Correction for labels positioned right: as the text is mirrored, the anchor point must be moved
             if label_position is SnappedSide.RIGHT:
-                c.rel_move_to(-value_text_size[0], -text_size[1])
+                c.rel_move_to(-value_text_size[0] - 2 * margin * scale_factor, -text_size[1])
             c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['SCOPED_VARIABLE_TEXT']))
             c.update_layout(value_layout)
             c.show_layout(value_layout)
