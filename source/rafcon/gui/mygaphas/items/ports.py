@@ -738,31 +738,40 @@ class ScopedVariablePortView(PortView):
 
         layout = c.create_layout()
         font_name = constants.INTERFACE_FONT
-        font_size = side_length * .6
+        font_size = gap_draw_helper.FONT_SIZE
         font = FontDescription(font_name + " " + str(font_size))
         layout.set_font_description(font)
         layout.set_text(self.name)
 
+        ink_extents, logical_extents = layout.get_extents()
+        extents = [extent / float(SCALE) for extent in logical_extents]
+        real_name_size = extents[2], extents[3]
+        desired_height = side_length * 0.75
+        scale_factor = real_name_size[1] / desired_height
+
         # Determine the size of the text, increase the width to have more margin left and right of the text
-        real_name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
-        name_size = real_name_size[0] + side_length / 2., side_length
+        margin = side_length / 4.
+        name_size = real_name_size[0] / scale_factor + side_length / 2. * 0, desired_height
+        name_size_with_margin = name_size[0] + margin * 2, name_size[1] + margin * 2
 
         # Only the size is required, stop here
         if only_calculate_size:
-            return name_size
+            return name_size_with_margin
 
         # Current position is the center of the port rectangle
         c.save()
         if self.side is SnappedSide.RIGHT or self.side is SnappedSide.LEFT:
             c.rotate(deg2rad(-90))
-        c.rel_move_to(-real_name_size[0] / 2., -real_name_size[1] / 2.)
+        c.rel_move_to(-name_size[0] / 2, -name_size[1] / 2)
+        c.scale(1. / scale_factor, 1. / scale_factor)
+        c.rel_move_to(-extents[0], -extents[1])
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(self.text_color, transparency))
         c.update_layout(layout)
         c.show_layout(layout)
         c.restore()
 
-        return name_size
+        return name_size_with_margin
 
     def _draw_rectangle_path(self, context, width, height, only_get_extents=False):
         """Draws the rectangle path for the port
