@@ -64,7 +64,7 @@ class PatchedFileChooserDialog(gtk.FileChooserDialog):
     pass
 
 
-def test_gui_tests(caplog):
+def _test_gui_tests(monkeypatch, caplog):
     # let the gui thread create the gui singletons by opening and closing an empty gui
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
 
@@ -76,9 +76,9 @@ def test_gui_tests(caplog):
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
-    # creating a new monkeypatch object will only work in a py.test case, not by calling test_gui_tests directly
-    from _pytest.monkeypatch import MonkeyPatch
-    monkeypatch = MonkeyPatch()
+    # # creating a new monkeypatch object will only work in a py.test case, not by calling test_gui_tests directly
+    # from _pytest.monkeypatch import MonkeyPatch
+    # monkeypatch = MonkeyPatch()
 
     # This test must not be called by py.test directly!
     # As it is a test without gui it must not create the core and gui singletons,
