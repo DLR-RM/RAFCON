@@ -114,7 +114,7 @@ def trigger_gui_signals_first_run(*args):
     import rafcon.gui.singleton
     from rafcon.gui.controllers.main_window import MenuBarController
     from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
-    from gui.widget.test_m2state_type_change import get_state_editor_ctrl_and_store_id_dict
+    from gui.widget.test_state_type_change import get_state_editor_ctrl_and_store_id_dict
 
     testing_utils.wait_for_gui()
     main_window_controller = rafcon.gui.singleton.main_window_controller
