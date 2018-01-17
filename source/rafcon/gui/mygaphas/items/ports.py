@@ -229,8 +229,18 @@ class PortView(object):
         side_length = self.port_side_size
         position = self.pos
 
-        view_length, _ = view.get_matrix_i2v(self.parent).transform_distance(side_length, 0)
+        # Do not draw ports below a certain threshold size
+        matrix_i2v = view.get_matrix_i2v(self.parent)
+        view_length, _ = matrix_i2v.transform_distance(side_length, 0)
         if view_length < constants.MINIMUM_SIZE_FOR_DISPLAY:
+            return
+        # Do not draw port outside of teh view
+        center = (position.x.value, position.y.value)
+        view_center = matrix_i2v.transform_point(*center)
+        if view_center[0] + view_length / 2. < 0 or \
+                view_center[0] - view_length / 2. > view.allocation[2] or \
+                view_center[1] + view_length / 2. < 0 or \
+                view_center[1] - view_length / 2. > view.allocation[3]:
             return
 
         parent_state_m = self._parent.model
@@ -248,6 +258,7 @@ class PortView(object):
         }
 
         upper_left_corner = (position.x.value - side_length / 2., position.y.value - side_length / 2.)
+
         current_zoom = view.get_zoom_factor()
         from_cache, image, zoom = self._port_image_cache.get_cached_image(side_length, side_length,
                                                                           current_zoom, parameters)
