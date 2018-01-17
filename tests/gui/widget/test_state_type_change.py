@@ -89,7 +89,7 @@ def create_state_machine():
     return tmp_dict, sm
 
 
-def store_state_elements(state, state_m, return_list):
+def store_state_elements(state, state_m, return_list=None):
     from rafcon.core.states.state import State
     from rafcon.core.states.container_state import ContainerState
     from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
@@ -293,9 +293,11 @@ def store_state_elements(state, state_m, return_list):
     else:
         print "STATE is a root_state"
 
-    return_list.append(state_elements)
-    return_list.append(state_m_elements)
-
+    if return_list is not None:
+        return_list.append(state_elements)
+        return_list.append(state_m_elements)
+    else:
+        return state_elements, state_m_elements
 
 def check_state_elements(check_list, state, state_m, stored_state_elements, stored_state_m_elements):
     from rafcon.core.states.execution_state import ExecutionState

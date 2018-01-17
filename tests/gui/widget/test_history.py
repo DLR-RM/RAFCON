@@ -3,13 +3,6 @@ import gtk
 import threading
 import time
 
-
-# gui elements
-from rafcon.gui.config import global_gui_config
-import rafcon.gui.singleton
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
-
 # core elements
 import rafcon.core.singleton
 from rafcon.core.state_machine import StateMachine
@@ -75,7 +68,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
 
     from test_storage import check_that_all_files_are_there
 
-    check_that_all_files_are_there(sm_model, path, False, True)
+    check_that_all_files_are_there(sm_model.state_machine, path, False, True)
 
 
 def save_and_quit(sm_model, path, menubar_ctrl, with_gui):
@@ -84,9 +77,8 @@ def save_and_quit(sm_model, path, menubar_ctrl, with_gui):
         call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
 
-def create_models(*args, **kargs):
+def create_state_machine():
 
-    global_gui_config.set_config_value('HISTORY_ENABLED', True)
     logger = log.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
     for handler in logging.getLogger('gtkmvc').handlers:
@@ -149,17 +141,34 @@ def create_models(*args, **kargs):
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
                   'Nested2': state5}
     sm = StateMachine(ctr_state)
-    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
-    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    return logger, sm, state_dict
+
+
+def prepare_state_machine_model(state_machine):
+    import rafcon.gui.singleton
+    rafcon.gui.singleton.state_machine_manager_model.state_machine_manager.add_state_machine(state_machine)
+    testing_utils.wait_for_gui()
+    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = state_machine.state_machine_id
+
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
     sm_m.history.fake = False
     print "with_prints is: ", sm_m.history.with_prints
     sm_m.history.with_prints = False
     # return ctr_state, sm_m, state_dict
-    return logger, sm_m, state_dict
 
 
+def create_sm_model():
+    [logger, sm, state_dict] = create_state_machine()
+
+    # create state machine model
+    import rafcon.gui.singleton
+    prepare_state_machine_model(sm)
+    sm_model = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    return logger, sm_model, state_dict
+
+
+# TODO introduce test_add_remove_history with_gui=True to have a more reliable unit-test
 def test_add_remove_history(caplog):
     ##################
     # Root_state elements
@@ -200,8 +209,9 @@ def test_add_remove_history(caplog):
     # remove data_flow
 
     # create testbed
-    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    [logger, sm_model, state_dict] = create_models()
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
+                                                     'HISTORY_ENABLED': True}, gui_already_started=False)
+    [logger, sm_model, state_dict] = create_sm_model()
 
     state_machine_path = TEST_PATH + '_test_add_remove'
     save_state_machine(sm_model, state_machine_path + '_before', logger, with_gui=False, menubar_ctrl=None)
@@ -507,8 +517,7 @@ def test_add_remove_history(caplog):
     # assert check_if_all_states_there(state_dict['Container'], state_check_dict1)
     # assert check_if_all_states_there(state_dict['Container'], state_check_dict2)
 
-    testing_utils.reload_config()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_state_property_modifications_history(caplog):
@@ -549,8 +558,9 @@ def test_state_property_modifications_history(caplog):
     # change child_execution
 
     # create testbed
-    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    [logger, sm_model, state_dict] = create_models()
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
+                                                     'HISTORY_ENABLED': True}, gui_already_started=False)
+    [logger, sm_model, state_dict] = create_sm_model()
 
     state1 = ExecutionState('State1')
     input_state1 = state1.add_input_data_port("input", "str", "zero")
@@ -680,8 +690,7 @@ def test_state_property_modifications_history(caplog):
 
     save_state_machine(sm_model, TEST_PATH + "_state_properties", logger, with_gui=False)
 
-    testing_utils.reload_config()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_outcome_property_modifications_history(caplog):
@@ -691,8 +700,9 @@ def test_outcome_property_modifications_history(caplog):
     # change name
 
     # create testbed
-    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    [logger, sm_model, state_dict] = create_models()
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
+                                                     'HISTORY_ENABLED': True}, gui_already_started=False)
+    [logger, sm_model, state_dict] = create_sm_model()
 
     def do_check_for_state(state_dict, state_name='Nested'):
         ####################################################
@@ -728,8 +738,7 @@ def test_outcome_property_modifications_history(caplog):
     do_check_for_state(state_dict, state_name='Container')
     save_state_machine(sm_model, TEST_PATH + "_outcome_properties", logger, with_gui=False)
 
-    testing_utils.reload_config()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
@@ -766,8 +775,9 @@ def test_transition_property_modifications_history(caplog):
     # modify_transition_to_state
 
     # create testbed
-    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    [logger, sm_model, state_dict] = create_models()
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
+                                                     'HISTORY_ENABLED': True}, gui_already_started=False)
+    [logger, sm_model, state_dict] = create_sm_model()
 
     state1 = ExecutionState('State1')
     outcome_again_state1 = state1.add_outcome("again")
@@ -850,8 +860,7 @@ def test_transition_property_modifications_history(caplog):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_transition_properties", logger, with_gui=False)
 
-    testing_utils.reload_config()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_input_port_modify_notification(caplog):
@@ -867,8 +876,10 @@ def test_input_port_modify_notification(caplog):
     # change datatype
 
     # create testbed
-    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    [logger, sm_model, state_dict] = create_models()
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
+                                                     'HISTORY_ENABLED': True}, gui_already_started=False)
+    [logger, sm_model, state_dict] = create_sm_model()
+
     new_input_data_port_id = state_dict['Nested2'].add_input_data_port(name='new_input', data_type='str')
     sm_model.history.undo()
     sm_model.history.redo()
@@ -899,8 +910,7 @@ def test_input_port_modify_notification(caplog):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_input_port_properties", logger, with_gui=False)
 
-    testing_utils.reload_config()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_output_port_modify_notification(caplog):
@@ -917,8 +927,10 @@ def test_output_port_modify_notification(caplog):
     # change datatype
 
     # create testbed
-    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    [logger, sm_model, state_dict] = create_models()
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
+                                                     'HISTORY_ENABLED': True}, gui_already_started=False)
+    [logger, sm_model, state_dict] = create_sm_model()
+
     new_output_data_port_id = state_dict['Nested2'].add_output_data_port(name='new_output', data_type='str')
 
     ################################
@@ -947,8 +959,7 @@ def test_output_port_modify_notification(caplog):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_output_port_properties", logger, with_gui=False)
 
-    testing_utils.reload_config()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_scoped_variable_modify_notification(caplog):
@@ -964,8 +975,10 @@ def test_scoped_variable_modify_notification(caplog):
     # change datatype
 
     # create testbed
-    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    [logger, sm_model, state_dict] = create_models()
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
+                                                     'HISTORY_ENABLED': True}, gui_already_started=False)
+    [logger, sm_model, state_dict] = create_sm_model()
+
     new_scoped_variable_id = state_dict['Nested'].add_scoped_variable(name='new_output', data_type='str')
 
     ################################
@@ -1001,8 +1014,7 @@ def test_scoped_variable_modify_notification(caplog):
     sm_model.history.redo()
     save_state_machine(sm_model, TEST_PATH + "_scoped_variable_properties", logger, with_gui=False)
 
-    testing_utils.reload_config()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_data_flow_property_modifications_history(caplog):
@@ -1026,8 +1038,9 @@ def test_data_flow_property_modifications_history(caplog):
     # modify_transition_to_state
 
     # create testbed
-    global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
-    [logger, sm_model, state_dict] = create_models()
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
+                                                     'HISTORY_ENABLED': True}, gui_already_started=False)
+    [logger, sm_model, state_dict] = create_sm_model()
 
     state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
@@ -1126,28 +1139,32 @@ def test_data_flow_property_modifications_history(caplog):
 
     save_state_machine(sm_model, TEST_PATH + "_data_flow_properties", logger, with_gui=False)
 
-    testing_utils.reload_config()
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_type_modifications_without_gui(caplog):
-    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False})
-
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
+                                                     'HISTORY_ENABLED': True},
+                                         gui_already_started=False)
+    import rafcon.gui.singleton
     with_gui = False
 
-    [logger, sm_m, state_dict] = create_models()
+    [logger, sm_m, state_dict] = create_sm_model()
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     # load the meta data for the state machine
     sm_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
     print "start thread"
     trigger_state_type_change_tests(sm_manager_model, None, sm_m, state_dict, with_gui, logger)
-
-    testing_utils.shutdown_environment(caplog=caplog)
+    print "FINISH", test_type_modifications_without_gui
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_machine_modifications_with_gui(with_gui, caplog):
+    import rafcon.gui.singleton
+    from rafcon.gui.controllers.main_window import MainWindowController
+    from rafcon.gui.views.main_window import MainWindowView
 
     # if with_gui:
     #     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED', False, 'HISTORY_ENABLED', True})
@@ -1162,12 +1179,13 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     #                                 rafcon.gui.singleton.main_window_controller,
     #                                 sm_m, state_dict, with_gui, logger)
     #
-    # testing_utils.reload_config()
-    # testing_utils.assert_logger_warnings_and_errors(caplog)
+    # testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
-    testing_utils.initialize_environment()
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
+                                                     'HISTORY_ENABLED': True},
+                                         gui_already_started=False)
     print "create model"
-    [logger, sm_m, state_dict] = create_models()
+    [logger, sm_m, state_dict] = create_sm_model()
 
     print "initialize MainWindow"
     main_window_view = MainWindowView()
@@ -1185,12 +1203,15 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
         logger.debug("Gtk main loop exited!")
 
     thread.join()
-    testing_utils.shutdown_environment(caplog=caplog)
+    print "FINISH", test_state_machine_modifications_with_gui
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
-# TODO introduce test_add_remove_history with_gui=True to have a more reliable unit-test
 
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_type_change_bugs_with_gui(with_gui, caplog):
+    import rafcon.gui.singleton
+    from rafcon.gui.controllers.main_window import MainWindowController
+    from rafcon.gui.views.main_window import MainWindowView
 
     # if with_gui:
     #     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
@@ -1212,11 +1233,12 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
     #     menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
     #     call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
     #
-    # testing_utils.shutdown_environment()
-    # testing_utils.assert_logger_warnings_and_errors(caplog)
+    # testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
-    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False})
-    [logger, sm_m, state_dict] = create_models()
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
+                                                     'HISTORY_ENABLED': True},
+                                         gui_already_started=False)
+    [logger, sm_m, state_dict] = create_sm_model()
 
     # load the meta data for the state machine
     if with_gui:
@@ -1240,12 +1262,18 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
         trigger_state_type_change_typical_bug_tests(rafcon.gui.singleton.state_machine_manager_model,
                                                     None, sm_m, state_dict, with_gui, logger)
 
-    testing_utils.shutdown_environment(caplog=caplog)
+    print "FINISH", test_state_type_change_bugs_with_gui
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_multiple_undo_redo_bug_with_gui(caplog):
+    import rafcon.gui.singleton
+    from rafcon.gui.controllers.main_window import MainWindowController
+    from rafcon.gui.views.main_window import MainWindowView
 
-    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': True,
+                                                     'HISTORY_ENABLED': True},
+                                         gui_already_started=False)
 
     main_window_view = MainWindowView()
     MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
@@ -1256,7 +1284,7 @@ def test_multiple_undo_redo_bug_with_gui(caplog):
     gtk.main()
     thread.join()
 
-    testing_utils.shutdown_environment(caplog=caplog)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 @log.log_exceptions(None, gtk_quit=False)
@@ -1320,7 +1348,7 @@ def trigger_state_type_change_tests(*args):
         save_state_machine(sm_model, state_machine_path, logger, bool(with_gui), menubar_ctrl)
         pass
     if with_gui:
-        check_state_editor_models(sm_m, state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, state_m, main_window_controller, logger)
 
     # HS -> BCS
     save_state_machine(sm_model, state_machine_path + '_before1', logger, with_gui, menubar_ctrl)
@@ -1358,7 +1386,7 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     logger.info("HS -> BCS (redo)")
     if with_gui:
@@ -1375,7 +1403,7 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_BCS, new_state, new_state_m, stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     # BCS -> HS
     save_state_machine(sm_model, state_machine_path + '_before2', logger, with_gui, menubar_ctrl)
@@ -1403,8 +1431,8 @@ def trigger_state_type_change_tests(*args):
 
     print "\n\n ###### State: %s" % state_dict[state_of_type_change]
     from test_storage import check_that_all_files_are_there
-    check_that_all_files_are_there(sm_model, state_machine_path + '_before2', False, True)
-    check_that_all_files_are_there(sm_model, state_machine_path + '_after2', False, True)
+    check_that_all_files_are_there(sm_model.state_machine, state_machine_path + '_before2', False, True)
+    check_that_all_files_are_there(sm_model.state_machine, state_machine_path + '_after2', False, True)
 
     save_state_machine(sm_model, state_machine_path + '_after2', logger, with_gui, menubar_ctrl)
 
@@ -1420,7 +1448,7 @@ def trigger_state_type_change_tests(*args):
 
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     save_state_machine(sm_model, state_machine_path + '_undo2', logger, with_gui, menubar_ctrl)
 
@@ -1439,7 +1467,7 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_HS, new_state, new_state_m, stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     # HS -> PCS
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
@@ -1478,7 +1506,7 @@ def trigger_state_type_change_tests(*args):
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(state_dict[parent_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     save_state_machine(sm_model, state_machine_path + '_undo3', logger, with_gui, menubar_ctrl)
 
@@ -1501,7 +1529,7 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_model.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_PCS, new_state, new_state_m, stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     # PCS -> ES
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
@@ -1541,7 +1569,7 @@ def trigger_state_type_change_tests(*args):
 
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     save_state_machine(sm_model, state_machine_path + '_undo4', logger, with_gui, menubar_ctrl)
 
@@ -1564,14 +1592,14 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_model.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_ES, new_state, new_state_m, stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     ####### General Type Change as ROOT STATE ############
     state_of_type_change = 'Container'
     state_m = sm_model.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
     if with_gui:
-        check_state_editor_models(sm_m, state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, state_m, main_window_controller, logger)
 
     # HS -> BCS
     logger.info("HS -> BCS root")
@@ -1613,7 +1641,7 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     logger.info("HS -> BCS root (redo)")
     if with_gui:
@@ -1627,7 +1655,7 @@ def trigger_state_type_change_tests(*args):
     check_state_elements(check_list_root_BCS, new_state, new_state_m,
                          stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     # BCS -> HS
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
@@ -1664,7 +1692,7 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_BCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     logger.info("BCS -> HS root 2 (redo)")
     if with_gui:
@@ -1678,7 +1706,7 @@ def trigger_state_type_change_tests(*args):
     check_state_elements(check_list_root_HS, new_state, new_state_m,
                          stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     # HS -> PCS
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
@@ -1714,7 +1742,7 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     logger.info("HS -> PCS (redo)")
     if with_gui:
@@ -1728,7 +1756,7 @@ def trigger_state_type_change_tests(*args):
     check_state_elements(check_list_root_HS, new_state, new_state_m,
                          stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     # PCS -> ES
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
@@ -1770,7 +1798,7 @@ def trigger_state_type_change_tests(*args):
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_root_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     logger.info("PCS -> ES (redo)")
     if with_gui:
@@ -1784,7 +1812,7 @@ def trigger_state_type_change_tests(*args):
     check_state_elements(check_list_root_ES, new_state, new_state_m,
                          stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        call_gui_callback(check_state_editor_models, sm_m, new_state_m, main_window_controller, logger)
 
     save_and_quit(sm_model, TEST_PATH + '_state_type_change', menubar_ctrl, with_gui)
 
