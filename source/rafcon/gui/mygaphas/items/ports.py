@@ -323,7 +323,7 @@ class PortView(object):
                                                       False, label_position, side_length, self._draw_connection_to_port,
                                                       show_additional_value, value, only_extent_calculations=True)
             from rafcon.gui.mygaphas.utils.gap_helper import extend_extents
-            extents = extend_extents(extents, factor=1.02)
+            extents = extend_extents(extents, factor=1.1)
             label_pos = extents[0], extents[1]
             relative_pos = label_pos[0] - position[0], label_pos[1] - position[1]
             label_size = extents[2] - extents[0], extents[3] - extents[1]
@@ -751,7 +751,7 @@ class ScopedVariablePortView(PortView):
 
         # Determine the size of the text, increase the width to have more margin left and right of the text
         margin = side_length / 4.
-        name_size = real_name_size[0] / scale_factor + side_length / 2. * 0, desired_height
+        name_size = real_name_size[0] / scale_factor, desired_height
         name_size_with_margin = name_size[0] + margin * 2, name_size[1] + margin * 2
 
         # Only the size is required, stop here
