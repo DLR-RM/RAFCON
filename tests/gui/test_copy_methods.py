@@ -1,9 +1,7 @@
-import gtk
 import os
 from os.path import join
 import copy
 import time
-import threading
 
 import testing_utils
 import pytest
@@ -75,15 +73,19 @@ def create_models(*args, **kargs):
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
+
     testing_utils.wait_for_gui()
+
     rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm.state_machine_id
+
+    testing_utils.wait_for_gui()
 
     sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     return ctr_state, sm_m, state_dict
 
 
-def create_models_lib():
+def create_models_lib(output_list):
     from rafcon.core.states.library_state import LibraryState
 
     [state, sm_model, state_dict] = create_models()
@@ -101,7 +103,10 @@ def create_models_lib():
     for state_id in sm_model.root_state.states[new_state_id].states:
         state_m = sm_model.root_state.states[new_state_id].states[state_id]
         print state_m.state.state_id, state_m.state.get_path(), state_m.meta
-    return sm_model.root_state, sm_model, state_dict
+
+    output_list.append(sm_model.root_state)
+    output_list.append(sm_model)
+    output_list.append(state_dict)
 
     # sm_loaded = storage.load_state_machine_from_path(
     #     os.path.join(testing_utils.TEST_PATH, "assets", "unit_test_state_machines", "last_data_wins_test"))
@@ -122,7 +127,6 @@ def create_models_concurrency():
     from rafcon.core.states.hierarchy_state import HierarchyState
 
     [state, sm_model, state_dict] = create_models()
-
 
     pstate = PreemptiveConcurrencyState(name='Preemptive', state_id='PREEMPT')
     state_dict['Nested'].add_state(pstate)
@@ -285,14 +289,13 @@ def equal_check_state_model(origin_state_m, target_state_m):
     #         equal_check_state_model(elem, target_state_m.states[elem_id])
 
 
-def run_copy_test(*args):
+def run_copy_test(sm_m, with_gui=False):
     """Run general test that """
-    sm_m = args[0]
+    import rafcon.gui.singleton
     sm = sm_m.state_machine
     new_sm_m = copy.copy(sm_m)
-    new_sm = new_sm_m.state_machine
     equal_check_state(sm_m.root_state.state, new_sm_m.root_state.state)
-    if len(args) > 1:
+    if with_gui:
         testing_utils.call_gui_callback(equal_check_state_model, sm_m.root_state, new_sm_m.root_state)
     else:
         equal_check_state_model(sm_m.root_state, new_sm_m.root_state)
@@ -307,12 +310,11 @@ def run_copy_test(*args):
         tmp_sm_system_path = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, 'copy_test' + sm.file_system_path)
 
     new_sm_m.destroy()
-    if len(args) > 1:
-        main_window_controller = args[1]
+    if with_gui:
+        main_window_controller = rafcon.gui.singleton.main_window_controller
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        sm_m.state_machine.file_system_path = tmp_sm_system_path
+        testing_utils.call_gui_callback(sm_m.state_machine.__setattr__, "file_system_path", tmp_sm_system_path)
         testing_utils.call_gui_callback(menubar_ctrl.on_save_activate, None)
-        testing_utils.call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
 def run_copy_performance_test_and_check_storage_copy(*args):
@@ -379,73 +381,76 @@ def test_simple(caplog):
     :param caplog:
     :return:
     """
-    import rafcon
     # create testbed
-    testing_utils.initialize_environment(gui_already_started=False)
+    testing_utils.initialize_environment(gui_already_started=False,
+                                         gui_config={'HISTORY_ENABLED': False,
+                                                     'AUTO_BACKUP_ENABLED': False},
+                                         )
 
     [state, sm_model, state_dict] = create_models()
     run_copy_test(sm_model)
     run_copy_performance_test_and_check_storage_copy(sm_model)
     sm_model.destroy()
-    # rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+    import rafcon
+    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
 
     [state, sm_model, state_dict] = create_models_concurrency()
     run_copy_test(sm_model)
     run_copy_performance_test_and_check_storage_copy(sm_model)
     sm_model.destroy()
-    # rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
     rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
-@pytest.mark.parametrize("with_gui", [False])
-def test_complex(with_gui, caplog):
+def test_complex(caplog, with_gui=True):
     """Do all copy strategies possible in RAFCON and check if all Objects have different memory location to secure
     reference free assignments from origin to new state.
     :param caplog:
     :return:
     """
-    import rafcon.core.singleton
-
-    # create testbed
-    testing_utils.initialize_environment(gui_already_started=False)
-    from rafcon.core.config import global_config
-    library_paths = global_config.get_config_value("LIBRARY_PATHS")
-    library_paths["unit_test_state_machines"] = os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")
-    rafcon.core.singleton.library_manager.refresh_libraries()
 
     if with_gui:
-        from rafcon.gui.controllers.main_window import MainWindowController
-        from rafcon.gui.views.main_window import MainWindowView
-        main_window_view = MainWindowView()
-        main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
+        try:
+            testing_utils.run_gui(
+                gui_config={'HISTORY_ENABLED': False,
+                            'AUTO_BACKUP_ENABLED': False},
+                libraries={"unit_test_state_machines":
+                               os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")}
+            )
+            output_list = list()
+            testing_utils.call_gui_callback(create_models_lib, output_list)
+            state = output_list[0]
+            sm_model = output_list[1]
+            state_dict = output_list[2]
+            run_copy_test(sm_model, with_gui=True)
+            testing_utils.call_gui_callback(run_copy_performance_test_and_check_storage_copy, sm_model)
+        except:
+            raise
+        finally:
+            testing_utils.close_gui()
+            testing_utils.shutdown_environment(caplog=caplog)
 
-        # Wait for GUI to initialize
-        while gtk.events_pending():
-            gtk.main_iteration(False)
-        [state, sm_model, state_dict] = create_models_lib()
-        # Wait for GUI to initialize
-        while gtk.events_pending():
-            gtk.main_iteration(False)
-
-        thread = threading.Thread(target=run_copy_test, args=[sm_model, main_window_controller])
-        thread.start()
-
-        gtk.main()
-        thread.join()
-        print "joined thread"
     else:
-        [state, sm_model, state_dict] = create_models_lib()
+        print "test_complex without gui"
+        testing_utils.initialize_environment(
+            gui_config={'HISTORY_ENABLED': False,
+                        'AUTO_BACKUP_ENABLED': False},
+            libraries={"unit_test_state_machines":
+                           os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")},
+            gui_already_started=False)
+
+        output_list = list()
+        create_models_lib(output_list)
+        state = output_list[0]
+        sm_model = output_list[1]
+        state_dict = output_list[2]
         run_copy_test(sm_model)
-        print "start thread"
-    run_copy_performance_test_and_check_storage_copy(sm_model)
-    sm_model.destroy()
-
-    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
-    while gtk.events_pending():
-        gtk.main_iteration(False)
-
-    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
+        # run_copy_performance_test_and_check_storage_copy(sm_model)
+        sm_model.destroy()
+        import rafcon.core.singleton
+        rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
+        print "after test_complex without gui"
 
     # import conftest
     # import shutil
@@ -460,6 +465,7 @@ if __name__ == '__main__':
     # import re
     # import copy
     # cProfile.run('test_state_add_remove_notification(None)')
-    test_complex(False, None)
+    # test_simple(None)
+    test_complex(None, False)
     test_simple(None)
     # pytest.main(['-s', __file__])
