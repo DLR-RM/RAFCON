@@ -375,12 +375,13 @@ def run_copy_performance_test_and_check_storage_copy(*args):
     print "model_copy_duration: {}".format(model_copy_duration)
 
 
-def test_simple(caplog):
+def _test_simple(caplog):
     """Do all copy strategies possible in RAFCON and check if all Objects have different memory location to secure
     reference free assignments from origin to new state.
     :param caplog:
     :return:
     """
+    print "start test simple"
     # create testbed
     testing_utils.initialize_environment(gui_already_started=False,
                                          gui_config={'HISTORY_ENABLED': False,
@@ -400,6 +401,7 @@ def test_simple(caplog):
     sm_model.destroy()
     rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
+    print "test simple finished"
 
 
 def test_complex(caplog, with_gui=True):
@@ -410,6 +412,7 @@ def test_complex(caplog, with_gui=True):
     """
 
     if with_gui:
+        print "test_complex with gui"
         try:
             testing_utils.run_gui(
                 gui_config={'HISTORY_ENABLED': False,
@@ -429,7 +432,7 @@ def test_complex(caplog, with_gui=True):
         finally:
             testing_utils.close_gui()
             testing_utils.shutdown_environment(caplog=caplog)
-
+        print "finish test_complex with gui"
     else:
         print "test_complex without gui"
         testing_utils.initialize_environment(
@@ -459,13 +462,17 @@ def test_complex(caplog, with_gui=True):
     #     if os.path.isdir(path) and not path == testing_utils.RAFCON_TEMP_PATH_TEST_BASE:
     #         shutil.rmtree(path)
 
+    # This test must not be called by py.test directly!
+    # As it is a test without gui it must not create the core and gui singletons,
+    # otherwise the multi-threading test will fail
+    _test_simple(caplog)
+
 
 if __name__ == '__main__':
     # import cProfile
     # import re
     # import copy
     # cProfile.run('test_state_add_remove_notification(None)')
-    # test_simple(None)
-    test_complex(None, False)
-    test_simple(None)
+    test_complex(None, True)
+    # _test_simple(None)
     # pytest.main(['-s', __file__])
