@@ -301,7 +301,7 @@ def run_model_construction():
 
 def run_controller_construction(caplog, with_gui):
     # for a start load one of the type change tests to generate a lot of controllers which also close the GUI
-    from gui.widget.test_0states_editor import trigger_state_type_change_tests
+    from gui.widget.test_states_editor import trigger_state_type_change_tests
     import gtk
     import threading
     from rafcon.gui.controllers.main_window import MainWindowController, MainWindowView
