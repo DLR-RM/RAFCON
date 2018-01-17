@@ -9,7 +9,7 @@ import pytest
 with_print = False
 
 
-def create_models(*args, **kargs):
+def create_models():
     import rafcon.core.singleton
     from rafcon.core.states.execution_state import ExecutionState
     from rafcon.core.states.hierarchy_state import HierarchyState
@@ -54,7 +54,6 @@ def create_models(*args, **kargs):
     ctr_state.add_data_flow(state2.state_id, output_res_state2, state3.state_id, input_state3)
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, state1.state_id, input_state1)
     ctr_state.add_data_flow(state3.state_id, output_state3, ctr_state.state_id, output_ctr_state)
-    ctr_state.name = "Container"
 
     ctr_state.add_input_data_port("input", "str", "default_value1")
     ctr_state.add_input_data_port("pos_x", "str", "default_value2")
@@ -80,9 +79,9 @@ def create_models(*args, **kargs):
 
     testing_utils.wait_for_gui()
 
-    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    state_machine_model = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
-    return ctr_state, sm_m, state_dict
+    return ctr_state, state_machine_model, state_dict
 
 
 def create_models_lib(output_list):
@@ -98,26 +97,19 @@ def create_models_lib(output_list):
     state_dict['Container'].add_state(dialog3)
     last_wins = LibraryState(name="last wins", library_path="unit_test_state_machines", library_name="last_data_wins_test")
     new_state_id = state_dict['Container'].add_state(last_wins.state_copy)
-    print "YYY ", sm_model.root_state.state.name
-    time.sleep(0.3)
+
     for state_id in sm_model.root_state.states[new_state_id].states:
         state_m = sm_model.root_state.states[new_state_id].states[state_id]
         print state_m.state.state_id, state_m.state.get_path(), state_m.meta
 
-    output_list.append(sm_model.root_state)
-    output_list.append(sm_model)
-    output_list.append(state_dict)
-
     # sm_loaded = storage.load_state_machine_from_path(
     #     os.path.join(testing_utils.TEST_PATH, "assets", "unit_test_state_machines", "last_data_wins_test"))
     # # root_state = sm_loaded.root_state
-    # #
     # # state_machine = StateMachine(root_state)
-    #
     # rafcon.core.singleton.state_machine_manager.add_state_machine(sm_loaded)
     # sm_model = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm_loaded.state_machine_id]
-    #
     # return sm_loaded.root_state, sm_model, {}
+    output_list.append(sm_model)
 
 
 def create_models_concurrency():
@@ -295,10 +287,7 @@ def run_copy_test(sm_m, with_gui=False):
     sm = sm_m.state_machine
     new_sm_m = copy.copy(sm_m)
     equal_check_state(sm_m.root_state.state, new_sm_m.root_state.state)
-    if with_gui:
-        testing_utils.call_gui_callback(equal_check_state_model, sm_m.root_state, new_sm_m.root_state)
-    else:
-        equal_check_state_model(sm_m.root_state, new_sm_m.root_state)
+    equal_check_state_model(sm_m.root_state, new_sm_m.root_state)
     compare_references_to_sm_model_and_core(sm_m, new_sm_m)
 
     # storage copy tests
@@ -309,6 +298,8 @@ def run_copy_test(sm_m, with_gui=False):
     else:
         tmp_sm_system_path = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, 'copy_test' + sm.file_system_path)
 
+    new_sm_m.state_machine.root_state.name = "Copied Cont state"
+    testing_utils.wait_for_gui()
     new_sm_m.destroy()
     if with_gui:
         main_window_controller = rafcon.gui.singleton.main_window_controller
@@ -391,6 +382,7 @@ def _test_simple(caplog):
     [state, sm_model, state_dict] = create_models()
     run_copy_test(sm_model)
     run_copy_performance_test_and_check_storage_copy(sm_model)
+    # currently destroy doesn't do anything if auto_backup is disabled
     sm_model.destroy()
     import rafcon
     rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
@@ -398,18 +390,23 @@ def _test_simple(caplog):
     [state, sm_model, state_dict] = create_models_concurrency()
     run_copy_test(sm_model)
     run_copy_performance_test_and_check_storage_copy(sm_model)
+    # currently destroy doesn't do anything if auto_backup is disabled
     sm_model.destroy()
     rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+    # wait until state machine model is destroyed
+    testing_utils.wait_for_gui()
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
     print "test simple finished"
 
 
-def test_complex(caplog, with_gui=True):
+def test_complex(caplog):
     """Do all copy strategies possible in RAFCON and check if all Objects have different memory location to secure
     reference free assignments from origin to new state.
     :param caplog:
     :return:
     """
+
+    with_gui = True
 
     if with_gui:
         print "test_complex with gui"
@@ -422,10 +419,8 @@ def test_complex(caplog, with_gui=True):
             )
             output_list = list()
             testing_utils.call_gui_callback(create_models_lib, output_list)
-            state = output_list[0]
-            sm_model = output_list[1]
-            state_dict = output_list[2]
-            run_copy_test(sm_model, with_gui=True)
+            sm_model = output_list[0]
+            testing_utils.call_gui_callback(run_copy_test, sm_model, with_gui=True)
             testing_utils.call_gui_callback(run_copy_performance_test_and_check_storage_copy, sm_model)
         except:
             raise
@@ -433,6 +428,13 @@ def test_complex(caplog, with_gui=True):
             testing_utils.close_gui()
             testing_utils.shutdown_environment(caplog=caplog)
         print "finish test_complex with gui"
+
+        # import threading
+        # print "&" * 50
+        # print "end of copy method"
+        # print threading.currentThread().ident
+        # print threading.currentThread()
+        # print "&" * 50
     else:
         print "test_complex without gui"
         testing_utils.initialize_environment(
@@ -444,11 +446,9 @@ def test_complex(caplog, with_gui=True):
 
         output_list = list()
         create_models_lib(output_list)
-        state = output_list[0]
-        sm_model = output_list[1]
-        state_dict = output_list[2]
+        sm_model = output_list[0]
         run_copy_test(sm_model)
-        # run_copy_performance_test_and_check_storage_copy(sm_model)
+        run_copy_performance_test_and_check_storage_copy(sm_model)
         sm_model.destroy()
         import rafcon.core.singleton
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
@@ -473,6 +473,6 @@ if __name__ == '__main__':
     # import re
     # import copy
     # cProfile.run('test_state_add_remove_notification(None)')
-    test_complex(None, True)
+    test_complex(None)
     # _test_simple(None)
     # pytest.main(['-s', __file__])
