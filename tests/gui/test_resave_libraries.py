@@ -1,7 +1,6 @@
 import os
 import pytest
 
-import rafcon.gui.resave_state_machines as resave
 import testing_utils
 
 
@@ -12,6 +11,7 @@ def test_resave(caplog):
     config_path = os.path.join(testing_utils.TESTS_PATH, "assets", "configs", "valid_config")
     print "folder to convert: " + folder_to_convert
     print "config path: " + config_path
+    import rafcon.gui.resave_state_machines as resave
     resave.convert_libraries_in_path(config_path, folder_to_convert, target_folder)
 
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
