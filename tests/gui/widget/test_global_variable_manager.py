@@ -12,7 +12,7 @@ def trigger_gvm_signals():
     # core elements
     import rafcon.core.singleton
     import rafcon.gui.singleton
-    testing_utils.remove_all_gvm_variables()
+    call_gui_callback(testing_utils.remove_all_gvm_variables)
     gvm = rafcon.core.singleton.global_variable_manager
     gvm_controller = rafcon.gui.singleton.main_window_controller.get_controller('global_variable_manager_ctrl')
 
