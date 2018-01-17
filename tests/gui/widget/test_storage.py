@@ -273,8 +273,8 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
 
 def test_storage_without_gui(caplog):
     print "test storage without gui"
-    testing_utils.initialize_environment(
-        gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False}, gui_already_started=False)
+    testing_utils.initialize_environment(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
+                                         gui_already_started=False)
     try:
         save_state_machine(with_gui=False)
     except Exception:

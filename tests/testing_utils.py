@@ -274,13 +274,13 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
     import rafcon.core.singleton
     global GUI_INITIALIZED, GUI_SIGNAL_INITIALIZED
     global gui_thread, gui_ready, used_gui_threads
-
     try:
         if caplog is not None:
             assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors)
     finally:
         if gui_ready is None:  # gui was not initialized fully only the environment
             rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+            wait_for_gui()  # is needed to empty the idle add queue and not party destroy elements in next test
         # check that state machine manager is empty
         assert not rafcon.core.singleton.state_machine_manager.state_machines
         rewind_and_set_libraries()
