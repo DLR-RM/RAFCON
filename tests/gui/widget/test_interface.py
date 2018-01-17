@@ -83,11 +83,11 @@ def _test_gui_tests(monkeypatch, caplog):
     # This test must not be called by py.test directly!
     # As it is a test without gui it must not create the core and gui singletons,
     # otherwise the multi-threading test will fail
-    _test_gui_open_folder(monkeypatch)
-    _test_gui_create_folder(monkeypatch)
+    # _test_gui_open_folder(monkeypatch)
+    # _test_gui_create_folder(monkeypatch)
 
 
-def _test_gui_open_folder(monkeypatch):
+def test_gui_open_folder(monkeypatch):
     """Tests `open_folder` function from `rafcon.core.interface`"""
     print "execute test_gui_open_folder"
     import rafcon.gui.interface as gui_interface
@@ -114,7 +114,7 @@ def _test_gui_open_folder(monkeypatch):
     assert gui_interface.open_folder("query", "/non/existing/path") is None
 
 
-def _test_gui_create_folder(monkeypatch):
+def test_gui_create_folder(monkeypatch):
     """Tests `create_folder` function from `rafcon.core.interface`"""
     print "execute test_gui_create_folder"
     import rafcon.gui.interface as gui_interface
