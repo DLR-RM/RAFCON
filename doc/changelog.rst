@@ -7,6 +7,11 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 
+- Improvements:
+
+    - ports outside of the visible view are no longer drawn, which increases the performance, especially while
+      zooming in large state machines
+
 
 Patch releases 0.12.\*
 ----------------------
