@@ -24,7 +24,6 @@ def trigger_copy_delete_bug_signals():
     -> 5. action is to delete child execution state whereby it is proved that not the view of child child execution
     state is removed.
     """
-    import rafcon.core.singleton
     from rafcon.core.states.hierarchy_state import HierarchyState
     from gui.widget.test_menu_bar import select_and_paste_state
     import rafcon.gui.singleton
@@ -80,57 +79,26 @@ def trigger_copy_delete_bug_signals():
     if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR'):
         assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
 
-    call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
+    print "TEST FINISHED"
 
 
 def test_copy_delete_bug(caplog):
-    import threading
     from os.path import join
-    import gtk
-
-    # core elements
-    import rafcon.core.config
-    from rafcon.core.states.hierarchy_state import HierarchyState
-    import rafcon.core.singleton
-    from gui.widget.test_menu_bar import select_and_paste_state
-    import rafcon.gui.singleton
-    from rafcon.gui.controllers.main_window import MainWindowController
-    from rafcon.gui.views.main_window import MainWindowView
-    # testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False, 'GAPHAS_EDITOR': True},
-    #                       libraries={"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-    #                                  "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
-    #                                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
-    #                       )
-    #
-    # try:
-    #     trigger_copy_delete_bug_signals(rafcon.gui.singleton.state_machine_manager_model,
-    #                                     rafcon.gui.singleton.main_window_controller)
-    # finally:
-    #     menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
-    #     call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
-    #
-    # testing_utils.shutdown_environment()
-    # testing_utils.assert_logger_warnings_and_errors(caplog)
 
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
                  "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
     change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False, 'GAPHAS_EDITOR': True}
-    testing_utils.initialize_environment(gui_config=change_in_gui_config, libraries=libraries, gui_already_started=False)
+    testing_utils.run_gui(gui_config=change_in_gui_config, libraries=libraries,)
 
-    MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
-
-    # Wait for GUI to initialize
-    testing_utils.wait_for_gui()
-
-    thread = threading.Thread(target=trigger_copy_delete_bug_signals)
-    thread.start()
-    gtk.main()
-    logger.debug("after gtk main")
-    thread.join()
-    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
+    try:
+        trigger_copy_delete_bug_signals()
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':
     test_copy_delete_bug(None)
+    # import pytest
     # pytest.main(['-s', __file__])
