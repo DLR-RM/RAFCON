@@ -154,7 +154,7 @@ def trigger_state_type_change_tests(with_gui=True):
     sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     def change_state_type(input_and_return_list, new_state_type, state_of_type_change):
-        from gui.widget.test_2state_type_change import get_state_editor_ctrl_and_store_id_dict
+        from gui.widget.test_m2state_type_change import get_state_editor_ctrl_and_store_id_dict
         sleep_time_max = 5.
         state_m = input_and_return_list.pop()
         # - get state-editor controller and find right row in combo box

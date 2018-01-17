@@ -61,7 +61,7 @@ class PatchedFileChooserDialog(gtk.FileChooserDialog):
     pass
 
 
-def test_gui_open_folder(monkeypatch):
+def _test_gui_open_folder(monkeypatch):
     """Tests `open_folder` function from `rafcon.core.interface`"""
     import rafcon.gui.interface as gui_interface
     # prepare FileChooserDialog for monkey-patching
@@ -87,7 +87,7 @@ def test_gui_open_folder(monkeypatch):
     assert gui_interface.open_folder("query", "/non/existing/path") is None
 
 
-def test_gui_create_folder(monkeypatch):
+def _test_gui_create_folder(monkeypatch):
     """Tests `create_folder` function from `rafcon.core.interface`"""
     import rafcon.gui.interface as gui_interface
     # prepare FileChooserDialog for monkey-patching
@@ -115,3 +115,9 @@ def test_gui_create_folder(monkeypatch):
     assert gui_interface.create_folder("query", "new_folder", "/root/not/writable") is None
     # Return None if no user input and insufficient path information given
     assert gui_interface.create_folder("query", "new_folder") is None
+
+if __name__ == '__main__':
+    # test_gui_open_folder(None)
+    # _test_gui_create_folder(None)
+    import pytest
+    pytest.main(['-s', __file__])
