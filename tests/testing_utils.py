@@ -287,7 +287,6 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
 
         test_multithreading_lock.release()
 
-    used_gui_threads.append(gui_thread)
     if unpatch_threading:
         unpatch_gtkmvc_model_mt()
 
@@ -334,6 +333,7 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     gui_ready = Event()
     gui_thread = Thread(target=run_gui_thread, args=[gui_config, runtime_config])
     gui_thread.start()
+    used_gui_threads.append(gui_thread)
     # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
     call_gui_callback(initialize_environment_core, core_config, libraries)
     if not gui_ready.wait(timeout):
@@ -374,8 +374,8 @@ auto_backup_threads = []
 
 def patch_gtkmvc_model_mt():
     print "patch"
-    global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine, used_gui_threads, \
-        auto_backup_threads
+    global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine,\
+        used_gui_threads, auto_backup_threads
 
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
@@ -437,13 +437,14 @@ def patch_gtkmvc_model_mt():
                 # print "Notification from state thread", _threading.currentThread()
                 gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
                 return
+            elif _threading.currentThread() in used_gui_threads and \
+                            self._ModelMT__observer_threads[observer] in used_gui_threads:
+                # As long as the gtk module keeps constant the gtk main thread will always have the same thread id!
+                # But, if the module is patched as in "test_interface.py" the gtk thread will get another thread id!
+                # Thus, if both threads are in used_gui_threads then we simply allow this case!
+                gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
+                return
             else:
-                # print "multi", _threading.currentThread(), used_gui_threads
-                # we ignore old models created in old gui threads, which are not the current thread
-                # TODO: if destruct is working for all models which can skip this case
-                if _threading.currentThread() in used_gui_threads:
-                    print "%%%%%%%%%%%%%%%%%%%% old model ignore: should not happen %%%%%%%%%%%%%%%%%%%%%%"
-                    return
                 print "{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \
                       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
                                 _threading.currentThread(), self._ModelMT__observer_threads[observer], (args, kwargs))
