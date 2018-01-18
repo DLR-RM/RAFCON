@@ -155,17 +155,27 @@ def prepare_state_machine_model(state_machine):
     # return ctr_state, sm_m, state_dict
 
 
-def create_sm_model(add_state_machine=False):
+def create_sm_model(with_gui=False, add_state_machine=False):
     [logger, sm, state_dict] = create_state_machine()
 
     # create state machine model
     import rafcon.gui.singleton
-    if add_state_machine:
-        prepare_state_machine_model(sm)
+    if with_gui:
+        [logger, sm, state_dict] = create_state_machine()
+        call_gui_callback(prepare_state_machine_model, sm)
         sm_model = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     else:
-        from rafcon.gui.models.state_machine import StateMachineModel
-        sm_model = StateMachineModel(sm)
+        if add_state_machine:
+            print "sm model 1"
+            prepare_state_machine_model(sm)
+            print "sm model 2"
+            sm_model = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+            print "sm model 3"
+        else:
+            from rafcon.gui.models.state_machine import StateMachineModel
+            sm_model = StateMachineModel(sm)
+            print "sm model 4"
+    print "sm model 5"
     return logger, sm_model, state_dict
 
 
@@ -1143,108 +1153,59 @@ def test_data_flow_property_modifications_history(caplog):
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
-def _test_type_modifications_without_gui(caplog):
-    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
-                                                     'HISTORY_ENABLED': True},
-                                         gui_already_started=False)
-    with_gui = False
-
-    print "start thread"
-    trigger_state_type_change_tests(with_gui)
-    print "FINISH", test_type_modifications_without_gui
-    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
-
-
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_machine_modifications_with_gui(with_gui, caplog):
     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
 
-    try:
-        trigger_state_type_change_tests(with_gui=True)
-    except:
-        raise
-    # finally:
-    testing_utils.close_gui()
-    testing_utils.shutdown_environment(caplog=caplog)
+    if with_gui:
+        try:
+            trigger_state_type_change_tests(with_gui)
+        # except:
+        #     raise
+        finally:
+            testing_utils.close_gui()
+            testing_utils.shutdown_environment(caplog=caplog)
+    else:
+        testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True},
+                                             gui_already_started=False)
+        print "start thread"
+        trigger_state_type_change_tests(with_gui)
+        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
+
+    print "FINISH test_state_machine_modifications_with_gui", with_gui
 
 
 @pytest.mark.parametrize("with_gui", [True])
-def _test_state_type_change_bugs_with_gui(with_gui, caplog):
-    import rafcon.gui.singleton
-    from rafcon.gui.controllers.main_window import MainWindowController
-    from rafcon.gui.views.main_window import MainWindowView
+def test_state_type_change_bugs_with_gui(with_gui, caplog):
 
-    # if with_gui:
-    #     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
-    # else:
-    #     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
-    #
-    # [logger, sm_m, state_dict] = create_state_machine()
-    #
-    # try:
-    #     if with_gui:
-    #         trigger_state_type_change_typical_bug_tests(rafcon.gui.singleton.state_machine_manager_model,
-    #                                                     rafcon.gui.singleton.main_window_controller,
-    #                                                     sm_m, state_dict, with_gui, logger)
-    #     else:
-    #         rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
-    #         trigger_state_type_change_typical_bug_tests(rafcon.gui.singleton.state_machine_manager_model,
-    #                                                     None, sm_m, state_dict, with_gui, logger)
-    # finally:
-    #     menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
-    #     call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
-    #
-    # testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
-
-    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
-                                                     'HISTORY_ENABLED': True},
-                                         gui_already_started=False)
-    [logger, sm_m, state_dict] = create_sm_model(True)
-
-    # load the meta data for the state machine
     if with_gui:
-        print "initialize MainWindow"
-        main_window_view = MainWindowView()
-        main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
-        if with_gui:
-            testing_utils.wait_for_gui()
-        thread = threading.Thread(target=trigger_state_type_change_typical_bug_tests,
-                                  args=[main_window_controller, sm_m, state_dict, with_gui, logger])
-        thread.start()
-
-        if with_gui:
-            gtk.main()
-            logger.debug("Gtk main loop exited!")
-
-        thread.join()
+        testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
+        try:
+            trigger_state_type_change_typical_bug_tests(with_gui=True)
+        # except:
+        #     raise
+        finally:
+            testing_utils.close_gui()
+            testing_utils.shutdown_environment(caplog=caplog)
     else:
-        rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
-        trigger_state_type_change_typical_bug_tests(rafcon.gui.singleton.state_machine_manager_model,
-                                                    None, sm_m, state_dict, with_gui, logger)
+        testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True},
+                                             gui_already_started=False)
+        trigger_state_type_change_typical_bug_tests(with_gui)
+        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
     print "FINISH", test_state_type_change_bugs_with_gui
-    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
-def _test_multiple_undo_redo_bug_with_gui(caplog):
-    import rafcon.gui.singleton
-    from rafcon.gui.controllers.main_window import MainWindowController
-    from rafcon.gui.views.main_window import MainWindowView
+def test_multiple_undo_redo_bug_with_gui(caplog):
 
-    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': True,
-                                                     'HISTORY_ENABLED': True},
-                                         gui_already_started=False)
-
-    main_window_view = MainWindowView()
-    MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
-    testing_utils.wait_for_gui()
-
-    thread = threading.Thread(target=trigger_multiple_undo_redo_bug_tests, args=[True])
-    thread.start()
-    gtk.main()
-    thread.join()
-
-    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
+    testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
+    try:
+        trigger_multiple_undo_redo_bug_tests(with_gui=True)
+    # except:
+    #     raise
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 @log.log_exceptions(None, gtk_quit=False)
@@ -1253,14 +1214,9 @@ def trigger_state_type_change_tests(with_gui):
     import rafcon.gui.helpers.state as gui_helper_state
     main_window_controller = rafcon.gui.singleton.main_window_controller
 
-    if with_gui:
-        [logger, sm, state_dict] = create_state_machine()
-        call_gui_callback(prepare_state_machine_model, sm)
-        sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
-    else:
-        [logger, sm_m, state_dict] = create_sm_model()
-    sm_m.root_state.load_meta_data()
-
+    print "start 00"
+    [logger, sm_m, state_dict] = create_sm_model(with_gui, add_state_machine=True)
+    print "start 0"
     sleep_time_max = 5  # 0.5
 
     check_elements_ignores.append("internal_transitions")
@@ -1269,23 +1225,28 @@ def trigger_state_type_change_tests(with_gui):
     state_of_type_change = 'State3'
     parent_of_type_change = 'Container'
 
+    print "start 1"
     # do state_type_change with gui
-    call_gui_callback(sm_m.history.modifications.reset)
+    if with_gui:
+        call_gui_callback(sm_m.history.modifications.reset)
+    else:
+        sm_m.history.modifications.reset()
+    print "start 2"
 
     state_parent_m = sm_m.get_state_model_by_path(state_dict[parent_of_type_change].get_path())
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
     print "\n\n %s \n\n" % state_m.state.name
-    call_gui_callback(sm_m.selection.set, [state_m])
-
-    # adjust the transition test
-    # TODO finish it
+    if with_gui:
+        call_gui_callback(sm_m.selection.set, [state_m])
+    else:
+        sm_m.selection.set([state_m])
 
     list_store_id_from_state_type_dict = {}
     state_editor_ctrl = None
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
-    state_machine_path = TEST_PATH + "_state_type_change_" + "with_gui" if with_gui else "without_gui"
+    state_machine_path = TEST_PATH + "_state_type_change_{0}".format("with_gui" if with_gui else "without_gui")
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller') if with_gui else None
     save_state_machine(sm_m, state_machine_path, logger, with_gui, menubar_ctrl)
 
@@ -1354,9 +1315,9 @@ def trigger_state_type_change_tests(with_gui):
 
     # BCS -> HS
     save_state_machine(sm_m, state_machine_path + '_before2', logger, with_gui, menubar_ctrl)
-    call_gui_callback(sm_m.state_machine.__setattr__, "file_system_path", state_machine_path)
     logger.info("BCS -> HS 2")
     if with_gui:
+        call_gui_callback(sm_m.state_machine.__setattr__, "file_system_path", state_machine_path)
         # do state_type_change with gui
         # - get state-editor controller and find right row in combo box
         [state_editor_ctrl, list_store_id_from_state_type_dict] = \
@@ -1366,6 +1327,7 @@ def trigger_state_type_change_tests(with_gui):
         state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
         call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     else:
+        sm_m.state_machine.file_system_path = state_machine_path
         gui_helper_state.change_state_type(new_state_m, HierarchyState)
         # state_dict[parent_of_type_change].change_state_type(new_state_m.state, HierarchyState)
 
@@ -1766,13 +1728,12 @@ def trigger_state_type_change_tests(with_gui):
 
 
 @log.log_exceptions(None, gtk_quit=True)
-def trigger_state_type_change_typical_bug_tests(*args):
-    with_gui = bool(args[4])
-    sm_manager_model = args[0]
-    main_window_controller = args[1]
-    sm_m = args[2]
-    state_dict = args[3]
-    logger = args[5]
+def trigger_state_type_change_typical_bug_tests(with_gui):
+    import rafcon.gui.singleton
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    main_window_controller = rafcon.gui.singleton.main_window_controller
+
+    [logger, sm_m, state_dict] = create_sm_model(with_gui, True)
 
     check_elements_ignores.append("internal_transitions")
 
@@ -1781,22 +1742,14 @@ def trigger_state_type_change_typical_bug_tests(*args):
     parent_of_type_change = 'Container'
 
     # do state_type_change with gui
-    # - find state machine id
-    my_sm_id = None
-    for sm_id, state_machine in sm_manager_model.state_machine_manager.state_machines.iteritems():
-        if state_machine is sm_m.state_machine:
-            my_sm_id = sm_id
-    assert my_sm_id is not None
-
-    sm_model = sm_m  # sm_manager_model.state_machines[my_sm_id]
-    sm_model.history.modifications.reset()
+    call_gui_callback(sm_m.history.modifications.reset)
 
     state_parent_m = sm_m.get_state_model_by_path(state_dict[parent_of_type_change].get_path())
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
     print "\n\n %s \n\n" % state_m.state.name
     # call_gui_callback(sm_m.selection.set, [state_m])
-    sm_m.selection.set([state_m])
+    call_gui_callback(sm_m.selection.set, [state_m])
 
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
@@ -1812,7 +1765,8 @@ def trigger_state_type_change_typical_bug_tests(*args):
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
         # call_gui_callback(menubar_ctrl.on_new_activate, None)
         call_gui_callback(sm_manager_model.state_machine_manager.add_state_machine, state_machine)
-        sm_manager_model.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+        call_gui_callback(sm_manager_model.state_machine_manager.__setattr__,
+                          "active_state_machine_id", state_machine.state_machine_id)
     else:
         menubar_ctrl = None
         logger.debug("Creating new state-machine...")
@@ -1867,12 +1821,6 @@ def trigger_state_type_change_typical_bug_tests(*args):
         sm_m.history.redo()
     logger.info("REDO finished")
 
-    if with_gui:
-        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        call_gui_callback(menubar_ctrl.on_stop_activate, None)
-        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
-        # call_gui_callback(menubar_ctrl.prepare_destruction)
-
     check_elements_ignores.remove("internal_transitions")
     print check_elements_ignores
 
@@ -1881,10 +1829,13 @@ def trigger_state_type_change_typical_bug_tests(*args):
 def trigger_multiple_undo_redo_bug_tests(with_gui=False):
     import rafcon.gui.singleton
     main_window_controller = rafcon.gui.singleton.main_window_controller
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, StateMachine(HierarchyState()))
+    sm = StateMachine(HierarchyState())
+    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
+    call_gui_callback(rafcon.core.singleton.state_machine_manager.__setattr__,
+                      "active_state_machine_id", sm.state_machine_id)
     sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines.values()[-1]
 
-    sm_m.selection.add(sm_m.root_state)
+    call_gui_callback(sm_m.selection.set, [sm_m.root_state])
 
     try:
         import time
@@ -1915,11 +1866,7 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
         press_key([keyboard.control_l_key, keyboard.shift_l_key, 'z'], duration=0.8)
     except ImportError as e:
         print "ERROR: ", e
-
-    if with_gui:
-        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        call_gui_callback(menubar_ctrl.on_stop_activate, None)
-        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
+        # TODO finish this test and make a better raise or error here
 
 
 if __name__ == '__main__':
@@ -1938,4 +1885,5 @@ if __name__ == '__main__':
     # test_state_machine_modifications_with_gui(True, None)
     # test_state_type_change_bugs_with_gui(False, None)
     # test_state_type_change_bugs_with_gui(True, None)
+    # test_multiple_undo_redo_bug_with_gui(None)
     pytest.main(['-s', __file__])

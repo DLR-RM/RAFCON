@@ -64,17 +64,11 @@ def trigger_ungroup_signals():
     main_window_controller = gui_singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, create_state_machine())
-    sm = rafcon.core.singleton.state_machine_manager.state_machines[rafcon.core.singleton.state_machine_manager.state_machines.keys()[0]]
-    call_gui_callback(
-        rafcon.core.singleton.state_machine_manager.__setattr__, "active_state_machine_id", sm.state_machine_id
-    )
-    # TODO avoid this in all tests running, too!!! -> in single runs it does work without!!!
-    while len(sm_manager_model.state_machines) <= 0:
-        # give model time to be created
-        testing_utils.wait_for_gui()
+    state_machine = create_state_machine()
+    first_sm_id = state_machine.state_machine_id
+    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, state_machine)
+    call_gui_callback(rafcon.core.singleton.state_machine_manager.__setattr__, "active_state_machine_id", first_sm_id)
 
-    first_sm_id = sm_manager_model.state_machines.keys()[0]
     call_gui_callback(main_window_controller.view['main_window'].grab_focus)
     call_gui_callback(sm_manager_model.__setattr__, "selected_state_machine_id", first_sm_id)
 
