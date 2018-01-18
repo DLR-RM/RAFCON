@@ -5,7 +5,7 @@ import run_tests_in_processes_template
 
 
 def test_run_unit_tests():
-    run_tests_in_processes_template.run_unit_tests_in_processes("network")
+    run_tests_in_processes_template.run_unit_tests_in_processes("gui")
 
 
 if __name__ == '__main__':
