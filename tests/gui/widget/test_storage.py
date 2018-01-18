@@ -271,7 +271,7 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
     check_state(sm_m.state_machine, state_machine=True)
 
 
-def test_storage_without_gui(caplog):
+def _test_storage_without_gui(caplog):
     print "test storage without gui"
     testing_utils.initialize_environment(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
                                          gui_already_started=False)
@@ -306,7 +306,7 @@ def test_storage_with_gui(caplog):
     # this test must not be called by py.test directly
     # as it is a test without gui it must not create the core and gui singletons
     # otherwise the multi-threading test will fail
-    # _test_storage_without_gui(caplog)
+    _test_storage_without_gui(caplog)
 
 
 # TODO add examples of bad naming that cause before problems \n or [ ] and so on
