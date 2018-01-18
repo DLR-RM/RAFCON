@@ -136,6 +136,7 @@ def undock_sidebars():
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
     print "=> test console_window"
     test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
+    wait_for_gui()
 
 
 def check_pane_positions():
@@ -186,6 +187,7 @@ def check_pane_positions():
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
     print "=> test console_window"
     test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
+    testing_utils.wait_for_gui()
 
     print "check if pane positions are still like in runtime_config.yaml"
     for config_id, pane_id in constants.PANE_ID.iteritems():
