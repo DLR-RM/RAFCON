@@ -23,7 +23,6 @@ import rafcon.core.singleton as core_singletons
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.utils.dialog import RAFCONCheckBoxTableDialog
-import rafcon.gui.singleton as gui_singletons
 
 from rafcon.gui.utils.constants import RAFCON_INSTANCE_LOCK_FILE_PATH
 from rafcon.utils.vividict import Vividict
@@ -129,6 +128,7 @@ def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=No
     # move dirty lock file
     move_dirty_lock_file(full_path_dirty_lock, sm_path)
 
+    import rafcon.gui.singleton as gui_singletons
     gui_singletons.state_machine_manager.add_state_machine(state_machine)
 
     # TODO check this gui wait again
@@ -249,6 +249,7 @@ def check_for_crashed_rafcon_instances():
                 logger.info("Those lock is removed anytime because for instances without state machine lock "
                             "there is no recovery procedure, for now.")
 
+        import rafcon.gui.singleton as gui_singletons
         dialog = RAFCONCheckBoxTableDialog(message_string,
                                            button_texts=("Apply", "Remind me Later.", "Ignore -> Remove all Notifications/Locks."),
                                            callback=on_message_dialog_response_signal, callback_args=[restorable_sm],
