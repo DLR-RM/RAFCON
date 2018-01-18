@@ -4,7 +4,7 @@ import signal
 import tempfile
 from os import mkdir, environ
 from os.path import join, dirname, realpath, exists, abspath
-from threading import Lock, Condition, Event, Thread
+from threading import Lock, Condition, Event, Thread, currentThread
 
 import rafcon
 from rafcon.utils import log, constants
@@ -321,6 +321,9 @@ def run_gui_thread(gui_config=None, runtime_config=None):
 
     MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
+    print "run_gui thread: ", currentThread(), currentThread().ident, "gui.singleton thread ident:", \
+        rafcon.gui.singleton.thread_identifier
+
     # Wait for GUI to initialize
     wait_for_gui()
     gtk.idle_add(gui_ready.set)
@@ -333,10 +336,13 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     global gui_ready, gui_thread
     # IMPORTANT enforce gtk.gtkgl import in the python main thread to avoid segfaults
     import gtk.gtkgl
+
+    print "WT thread: ", currentThread(), currentThread().ident
     gui_ready = Event()
     gui_thread = Thread(target=run_gui_thread, args=[gui_config, runtime_config])
     gui_thread.start()
-    used_gui_threads.append(gui_thread)
+
+    used_gui_threads.append(gui_thread)  # TODO why now here before it was in shutdown
     # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
     call_gui_callback(initialize_environment_core, core_config, libraries)
     if not gui_ready.wait(timeout):
