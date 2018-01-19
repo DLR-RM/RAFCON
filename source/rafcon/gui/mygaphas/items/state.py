@@ -34,7 +34,6 @@ from rafcon.gui.mygaphas.utils.enums import SnappedSide
 from rafcon.gui.mygaphas.utils.gap_draw_helper import get_col_rgba
 from rafcon.gui.mygaphas.utils import gap_draw_helper
 from rafcon.gui.mygaphas.utils.cache.image_cache import ImageCache
-from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
 
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
 from rafcon.gui.helpers.meta_data import contains_geometric_info
@@ -43,6 +42,9 @@ from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+
+# Fixed width of the Pango layout. The higher this value, the better is the accuracy, but the more memory is consumed
+BASE_WIDTH = 100.
 
 
 class StateView(Element):
@@ -386,7 +388,7 @@ class StateView(Element):
         height = self.height
         border_width = self.border_width
         view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
-        if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY and self.parent:
+        if min(view_width, view_height) < constants.MINIMUM_STATE_SIZE_FOR_DISPLAY and self.parent:
             return
 
         c = context.cairo
@@ -856,7 +858,6 @@ class NameView(Element):
         self._view = None
 
         self._image_cache = ImageCache(multiplicator=1.5)
-        self._value_cache = ValueCache()
 
     def update_minimum_size(self):
         min_side_length = min(self.parent.width, self.parent.height) / constants.MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO
@@ -922,7 +923,7 @@ class NameView(Element):
         width = self.width
         height = self.height
         view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
-        if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY:
+        if min(view_width, view_height) < constants.MINIMUM_NAME_SIZE_FOR_DISPLAY:
             return
         font_transparency = self.transparency
 
@@ -938,12 +939,10 @@ class NameView(Element):
         from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
-            # print "from cache"
             self._image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
         else:
-            # print "draw"
             c = self._image_cache.get_context_for_image(current_zoom)
 
             if context.selected:
@@ -958,7 +957,7 @@ class NameView(Element):
 
             layout = c.create_layout()
             layout.set_wrap(WRAP_WORD)
-            layout.set_width(int(width) * SCALE)
+            layout.set_width(int(round(BASE_WIDTH * SCALE)))
             layout.set_text(self.name)
 
             def set_font_description(font_size):
@@ -967,24 +966,62 @@ class NameView(Element):
 
             font_name = constants.INTERFACE_FONT
 
-            font_size_parameters = {"text": self.name, "width": width, "height": height}
-            font_size = self._value_cache.get_value("font_size", font_size_parameters)
+            zoom_scale = BASE_WIDTH / width
+            scaled_height = height * zoom_scale
+            font_size_parameters = {"text": self.name, "height": scaled_height}
+            font_size = self.view.value_cache.get_value("font_size", font_size_parameters)
 
             if font_size:
                 set_font_description(font_size)
             else:
-                font_size = height * 0.8
-                set_font_description(font_size)
-                pango_size = (width * SCALE, height * SCALE)
-                while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
-                    font_size *= 0.9
-                    set_font_description(font_size)
-                self._value_cache.store_value("font_size", font_size, font_size_parameters)
+                available_size = (BASE_WIDTH * SCALE, scaled_height * SCALE)
+                word_count = len(self.name.split(" "))
+                # Set max font size to available height
+                max_font_size = scaled_height * 0.9
+                # Calculate minimum size that is still to be drawn
+                min_name_height = max_font_size / 10.
+                # Calculate line height if all words are wrapped
+                line_height = max_font_size / word_count
+                # Use minimum if previous values and add safety margin
+                min_font_size = min(line_height * 0.5, min_name_height)
+
+                # Iteratively calculate font size by always choosing the average of the maximum and minimum size
+                working_font_size = None
+                current_font_size = (max_font_size + min_font_size) / 2.
+                set_font_description(current_font_size)
+
+                while True:
+                    logical_extents = layout.get_size()
+                    width_factor = logical_extents[0] / available_size[0]
+                    height_factor = logical_extents[1] / available_size[1]
+                    max_factor = max(width_factor, height_factor)
+
+                    if max_factor > 1:  # font size too large
+                        max_font_size = current_font_size
+                    elif max_factor > 0.9:  # font size fits!
+                        break
+                    else:  # font size too small
+                        # Nevertheless store the font size in case we do not find anything better
+                        if not working_font_size or current_font_size > working_font_size:
+                            working_font_size = current_font_size
+                        min_font_size = current_font_size
+                    if 0.99 < min_font_size / max_font_size < 1.01:  # Stop criterion: changes too small
+                        if working_font_size:
+                            current_font_size = working_font_size
+                            set_font_description(current_font_size)
+                        break
+                    current_font_size = (max_font_size + min_font_size) / 2.
+                    set_font_description(current_font_size)
+                self.view.value_cache.store_value("font_size", current_font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
             c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
+            c.save()
+            # The pango layout has a fixed width and needs to be fitted to the context size
+            c.scale(1. / zoom_scale, 1. / zoom_scale)
             c.update_layout(layout)
             c.show_layout(layout)
+            c.restore()
 
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
