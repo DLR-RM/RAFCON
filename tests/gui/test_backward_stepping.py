@@ -30,7 +30,7 @@ def wait_for_execution_engine_sync_counter(target_value, logger, timeout=5):
             break
         state_machine_execution_engine.synchronization_lock.release()
         if (datetime.datetime.now() - current_time).seconds > timeout:
-            raise RuntimeError("Something went wrong")
+            raise RuntimeError("Something went wrong while waiting for states to finish!")
         time.sleep(0.1)
 
 
@@ -211,6 +211,9 @@ def execute_barrier_state_forwards_backwards():
     sm = state_machine_manager.get_active_state_machine()
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
+
+    testing_utils.wait_for_gui()
+
     for key, sd in sm.root_state.scoped_data.iteritems():
         if sd.name == "beer_number":
             assert sd.value == 100
@@ -235,7 +238,7 @@ def test_backward_stepping_barrier_state(caplog):
 
 
 if __name__ == '__main__':
-    test_backward_stepping_library_state(None)
-    # test_backward_stepping_barrier_state(None)
+    # test_backward_stepping_library_state(None)
+    test_backward_stepping_barrier_state(None)
     # test_backward_stepping_preemptive_state(None)
     # pytest.main(['-s', __file__])

@@ -1,8 +1,8 @@
 {
-    "__jsonqualname__": "rafcon.statemachine.states.hierarchy_state.HierarchyState", 
+    "__jsonqualname__": "rafcon.core.states.hierarchy_state.HierarchyState", 
     "data_flows": {
         "1": {
-            "__jsonqualname__": "rafcon.statemachine.data_flow.DataFlow", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
             "data_flow_id": 1, 
             "from_key": 3, 
             "from_state": "OUWQUJ", 
@@ -10,7 +10,7 @@
             "to_state": "SMCOIB"
         }, 
         "15": {
-            "__jsonqualname__": "rafcon.statemachine.data_flow.DataFlow", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
             "data_flow_id": 15, 
             "from_key": 2, 
             "from_state": "SMCOIB", 
@@ -18,7 +18,7 @@
             "to_state": "YSBJGK"
         }, 
         "16": {
-            "__jsonqualname__": "rafcon.statemachine.data_flow.DataFlow", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
             "data_flow_id": 16, 
             "from_key": 2, 
             "from_state": "SMCOIB", 
@@ -29,10 +29,10 @@
     "description": null, 
     "input_data_ports": {
         "2": {
-            "__jsonqualname__": "rafcon.statemachine.data_port.InputDataPort", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
             "data_port_id": 2, 
             "data_type": {
-                "__type__": "int"
+                "__type__": "__builtin__.int"
             }, 
             "default_value": null, 
             "name": "in"
@@ -41,27 +41,27 @@
     "name": "99 bottles of beer", 
     "outcomes": {
         "-2": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "preempted", 
             "outcome_id": -2
         }, 
         "-1": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "aborted", 
             "outcome_id": -1
         }, 
         "0": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "success", 
             "outcome_id": 0
         }
     }, 
     "output_data_ports": {
         "8": {
-            "__jsonqualname__": "rafcon.statemachine.data_port.OutputDataPort", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.OutputDataPort", 
             "data_port_id": 8, 
             "data_type": {
-                "__type__": "int"
+                "__type__": "__builtin__.int"
             }, 
             "default_value": null, 
             "name": "out"
@@ -71,7 +71,7 @@
     "state_id": "SMCOIB", 
     "transitions": {
         "1": {
-            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
             "from_outcome": 0, 
             "from_state": "YSBJGK", 
             "to_outcome": null, 
@@ -79,7 +79,7 @@
             "transition_id": 1
         }, 
         "3": {
-            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
             "from_outcome": 0, 
             "from_state": "OUWQUJ", 
             "to_outcome": 0, 
@@ -87,7 +87,7 @@
             "transition_id": 3
         }, 
         "4": {
-            "__jsonqualname__": "rafcon.statemachine.transition.Transition", 
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
             "from_outcome": null, 
             "from_state": null, 
             "to_outcome": null, 
