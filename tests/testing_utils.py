@@ -348,6 +348,7 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     gui_thread.start()
 
     used_gui_threads.append(gui_thread)  # TODO why now here before it was in shutdown
+    print "used_gui_threads", used_gui_threads
     # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
     call_gui_callback(initialize_environment_core, core_config, libraries)
     if not gui_ready.wait(timeout):
@@ -438,26 +439,28 @@ def patch_gtkmvc_model_mt():
         different from the observer's thread"""
 
         assert self._ModelMT__observer_threads.has_key(observer)
-        if _threading.currentThread().ident == self._ModelMT__observer_threads[observer].ident:
+        if _threading.currentThread() == self._ModelMT__observer_threads[observer]:
             # standard call => single threaded
             # print "{0} -> {1}: single threading '{2}' in call_thread {3} object_generation_thread {3} \n{4}" \
             #       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
             #                 self._ModelMT__observer_threads[observer], (args, kwargs))
-            return Model.__notify_observer__(self, observer, method,
-                                             *args, **kwargs)
+            return Model.__notify_observer__(self, observer, method, *args, **kwargs)
         else:
             # multi-threading call
             if _threading.currentThread() in state_threads or _threading.currentThread() in auto_backup_threads:
                 # print "Notification from state thread", _threading.currentThread()
                 gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
                 return
-            elif _threading.currentThread() in used_gui_threads and \
-                            self._ModelMT__observer_threads[observer] in used_gui_threads:
+            elif _threading.currentThread() in used_gui_threads \
+                    and self._ModelMT__observer_threads[observer] in used_gui_threads:
                 # As long as the gtk module keeps constant the gtk main thread will always have the same thread id!
                 # But, if the module is patched as in "test_interface.py" the gtk thread will get another thread id!
                 # Thus, if both threads are in used_gui_threads then we simply allow this case!
-                gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
-                return
+                print "Both threads are former gui threads! Current thread {}, Observer thread {}".format(
+                    _threading.currentThread(), self._ModelMT__observer_threads[observer])
+                return Model.__notify_observer__(self, observer, method, *args, **kwargs)
+                # gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
+                # return
             else:
                 print "{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \
                       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
