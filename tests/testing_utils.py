@@ -481,3 +481,21 @@ def unpatch_gtkmvc_model_mt():
     rafcon.core.execution.execution_engine.ExecutionEngine._run_state_machine = original_run_state_machine
     original_ModelMT_notify_observer = original_state_start = original_run_state_machine = None
     state_threads = []
+
+
+def dummy_gui(caplog):
+    """ This function just starts up an empty gui and closes it again. This is needed to initially create
+        the gui singletons in the gui thread.
+
+    :param caplog: the caplog object provided by pytests's caplog fixture
+    :return: None
+    """
+    run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+    try:
+        # do nothing, just open gui and close it afterwards
+        assert True
+    except:
+        raise
+    finally:
+        close_gui()
+        shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)

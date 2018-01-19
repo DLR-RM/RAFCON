@@ -1,4 +1,21 @@
 
+# Unfortunately this approach does not work to make sure to initialize the gui singletons from a gui thread
+# Problem: after executing conftest.py all modules are re-imported
+# and thus all variables (incl. singletons) are reinitialized
+# def pytest_configure(config):
+#     if any(x in str(config.invocation_dir) for x in ["gui", "share_elements", "widget", "network"]):
+#         import testing_utils
+#         testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+#         try:
+#             # do nothing, just open gui and close it afterwards
+#             pass
+#         except:
+#             raise
+#         finally:
+#             testing_utils.close_gui()
+#             testing_utils.shutdown_environment()
+
+
 def pytest_unconfigure(config):
     clean_temp_test_directory()
 
