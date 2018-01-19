@@ -26,16 +26,17 @@ def log_to_raw_structure(execution_history_items):
     grouped_by_run_id = {}
     start_item = None
 
-    # if a shelve was not closed properly not all data can be caught, thus try + catch
-    try:
-        for k,v in execution_history_items.items():
-            if v['item_type'] == 'StateMachineStartItem':
-                start_item = v
-            else:
-                # connect the item to its predecessor
-                prev_item_id = v['prev_history_item_id']
-                previous[k] = prev_item_id
+    for k,v in execution_history_items.items():
+        if v['item_type'] == 'StateMachineStartItem':
+            start_item = v
+        else:
+            # connect the item to its predecessor
+            prev_item_id = v['prev_history_item_id']
 
+            if prev_item_id in execution_history_items:
+                ## should always be the case except if shelve is broken/missing data
+
+                previous[k] = prev_item_id
                 if execution_history_items[prev_item_id]['item_type'] == 'ConcurrencyItem' and \
                    execution_history_items[k]['item_type'] != 'ReturnItem':
                     # this is not a return  item, thus this 'previous' relationship of this
@@ -48,15 +49,14 @@ def log_to_raw_structure(execution_history_items):
                 else:
                     # this is a logical 'next' relationship
                     next_[prev_item_id] = k
-
-            rid = v['run_id']
-            if rid in grouped_by_run_id:
-                grouped_by_run_id[rid].append(v)
             else:
-                grouped_by_run_id[rid] = [v]
-    except Exception:
-        logger.error("Shelve was not properly closed!")
-        pass
+                logger.warn('HistoryItem is referring to a non-existing previous history item, HistoryItem was %s' % str(v))
+
+        rid = v['run_id']
+        if rid in grouped_by_run_id:
+            grouped_by_run_id[rid].append(v)
+        else:
+            grouped_by_run_id[rid] = [v]
 
     return start_item, previous, next_, concurrent, grouped_by_run_id
 
@@ -101,11 +101,21 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             if gitems[0]['item_type'] == 'StateMachineStartItem':
                 item = gitems[0]
                 execution_item = {}
-                for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type',
+                ## add base properties will throw if not existing
+                for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
                           'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
-                          'used_rafcon_version', 'creation_time', 'last_update',
-                          'is_library', 'library_state_name', 'library_name', 'library_path']:
+                          'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
                     execution_item[l] = item[l]
+
+                ## add extended properties (added in later rafcon versions),
+                ## will add default value if not existing instead
+                for l, default in [('semantic_data', {}),
+                                     ('is_library', None),
+                                     ('library_state_name', None),
+                                     ('library_name', None),
+                                     ('library_path', None)]:
+                    execution_item[l] = item.get(l, default)
+
                 start_item = execution_item
         return start_item, collapsed_next, collapsed_concurrent, collapsed_hierarchy, collapsed_items
 
@@ -114,13 +124,20 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
         if gitems[0]['item_type'] == 'StateMachineStartItem':
             item = gitems[0]
             execution_item = {}
-            for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type',
+            ## add base properties will throw if not existing
+            for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
                       'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
                       'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
-                try:
-                    execution_item[l] = item[l]
-                except KeyError:
-                    logger.debug("{} not found in meta data!".format(l))
+                execution_item[l] = item[l]
+
+            ## add extended properties (added in later rafcon versions),
+            ## will add default value if not existing instead
+            for l, default in [('semantic_data', {}),
+                                 ('is_library', None),
+                                 ('library_state_name', None),
+                                 ('library_name', None),
+                                 ('library_path', None)]:
+                execution_item[l] = item.get(l, default)
 
             start_item = execution_item
 
@@ -143,9 +160,23 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                     for i in range(len(gitems))].index(True)]
             except ValueError:
                 # fall back to container call, should only happen for root state
-                call_item = gitems[[gitems[i]['item_type'] == 'CallItem' and \
-                                    gitems[i]['call_type'] == 'CONTAINER' \
-                                    for i in range(len(gitems))].index(True)]
+                try:
+                    call_item = gitems[[gitems[i]['item_type'] == 'CallItem' and \
+                                        gitems[i]['call_type'] == 'CONTAINER' \
+                                        for i in range(len(gitems))].index(True)]
+                except ValueError:
+                    logger.warn('Could not find a CallItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
+                    ## create dummy returnitem with the properties referenced later in this code
+                    call_item = dict(description=None,
+                                     history_item_id=None,
+                                     path_by_name=None,
+                                     state_name=None,
+                                     run_id=None,
+                                     state_type=None,
+                                     path=None,
+                                     timestamp=None,
+                                     input_output_data={},
+                                     scoped_data={})
 
             try:
                 return_item = gitems[[gitems[i]['item_type'] == 'ReturnItem' and \
@@ -153,9 +184,19 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                       for i in range(len(gitems))].index(True)]
             except ValueError:
                 # fall back to container call, should only happen for root state
-                return_item = gitems[[gitems[i]['item_type'] == 'ReturnItem' and \
-                                      gitems[i]['call_type'] == 'CONTAINER' \
-                                      for i in range(len(gitems))].index(True)]
+                try:
+                    return_item = gitems[[gitems[i]['item_type'] == 'ReturnItem' and \
+                                          gitems[i]['call_type'] == 'CONTAINER' \
+                                          for i in range(len(gitems))].index(True)]
+                except ValueError:
+                    logger.warn('Could not find a ReturnItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
+                    ## create dummy returnitem with the properties referenced later in this code
+                    return_item = dict(history_item_id=None,
+                                       outcome_name=None,
+                                       outcome_id=None,
+                                       timestamp=None,
+                                       input_output_data={},
+                                       scoped_data={})
 
             # next item (on same hierarchy level) is always after return item
             if return_item['history_item_id'] in next_:
@@ -168,24 +209,35 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                 else:
                     collapsed_next[rid] = execution_history_items[next_[return_item['history_item_id']]]['run_id']
 
-            # treat hierarchy level 
-            if execution_history_items[previous[call_item['history_item_id']]]['state_type'] == 'HierarchyState' and execution_history_items[previous[call_item['history_item_id']]]['item_type'] == 'CallItem':
-                prev_rid = execution_history_items[previous[call_item['history_item_id']]]['run_id']
-                collapsed_hierarchy[prev_rid] = rid
+            # treat hierarchy level
+            if call_item['history_item_id'] in previous:
+                if execution_history_items[previous[call_item['history_item_id']]]['state_type'] == 'HierarchyState' and execution_history_items[previous[call_item['history_item_id']]]['item_type'] == 'CallItem':
+                    prev_rid = execution_history_items[previous[call_item['history_item_id']]]['run_id']
+                    collapsed_hierarchy[prev_rid] = rid
 
-            # treat concurrency level
-            if execution_history_items[previous[call_item['history_item_id']]]['item_type'] == 'ConcurrencyItem':
-                prev_rid = execution_history_items[previous[call_item['history_item_id']]]['run_id']
-                if prev_rid in collapsed_concurrent:
-                    collapsed_concurrent[prev_rid].append(rid)
-                else:
-                    collapsed_concurrent[prev_rid] = [rid]
+                # treat concurrency level
+                if execution_history_items[previous[call_item['history_item_id']]]['item_type'] == 'ConcurrencyItem':
+                    prev_rid = execution_history_items[previous[call_item['history_item_id']]]['run_id']
+                    if prev_rid in collapsed_concurrent:
+                        collapsed_concurrent[prev_rid].append(rid)
+                    else:
+                        collapsed_concurrent[prev_rid] = [rid]
 
             # assemble grouped item
             execution_item = {}
-            for l in ['description', 'semantic_data', 'path_by_name', 'state_name', 'run_id', 'state_type', 'path',
-                      'is_library', 'library_state_name', 'library_name', 'library_path']:
+            ## add base properties will throw if not existing
+            for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type', 'path']:
                 execution_item[l] = call_item[l]
+
+            ## add extended properties (added in later rafcon versions),
+            ## will add default value if not existing instead
+            for l, default in [('semantic_data', {}),
+                                 ('is_library', None),
+                                 ('library_state_name', None),
+                                 ('library_name', None),
+                                 ('library_path', None)]:
+                execution_item[l] = call_item.get(l, default)
+
             for l in ['outcome_name', 'outcome_id']:
                 execution_item[l] = return_item[l]
             for l in ['timestamp']:

@@ -40,6 +40,7 @@ class ToolBarController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(ToolBarController, self).register_view(view)
         self.view['button_new'].connect('clicked', self.on_button_new_clicked)
         self.view['button_open'].connect('clicked', self.on_button_open_clicked)
         self.view['button_save'].connect('clicked', self.on_button_save_clicked)

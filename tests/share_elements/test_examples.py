@@ -6,11 +6,6 @@ import threading
 import subprocess
 import select
 
-# core elements
-import rafcon.core.singleton
-from rafcon.core.storage import storage
-
-# gui elements
 import rafcon
 
 # general tool elements
@@ -59,7 +54,7 @@ def test_api_example(caplog):
         timed_thread.join()
     finally:
         sys.path.remove(path_of_api_examples)
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_ros_library_examples(caplog):
@@ -78,6 +73,8 @@ def test_functionality_example(caplog):
     - if test can be run and stopped
     - and everything can be closed again
     """
+    import rafcon.core.singleton
+    from rafcon.core.storage import storage
 
     # The test maybe should also test if functionality are correct depicted.
     # TODO check if this is done in the common tests already
@@ -99,7 +96,7 @@ def test_functionality_example(caplog):
             rafcon.core.singleton.state_machine_execution_engine.stop()
             rafcon.core.singleton.state_machine_execution_engine.join()
     finally:
-        testing_utils.shutdown_environment(gui_config=False, caplog=caplog, expected_warnings=2, expected_errors=3)
+        testing_utils.shutdown_environment(gui_config=False, caplog=caplog, expected_warnings=2, expected_errors=3, unpatch_threading=False)
 
 
 def test_plugins_example(caplog):
@@ -143,7 +140,8 @@ def test_plugins_example(caplog):
                     rafcon_gui_process.communicate()
                     assert False, "RAFCON did not start in time"
     finally:
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0,
+                                           unpatch_threading=False)
 
 
 def test_tutorial_state_machine_examples(caplog):
@@ -152,4 +150,10 @@ def test_tutorial_state_machine_examples(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    test_api_example(None)
+    test_functionality_example(None)
+    test_plugins_example(None)
+    test_ros_library_examples(None)
+    test_turtle_library_examples(None)
+    test_tutorial_state_machine_examples(None)
+    # pytest.main([__file__])

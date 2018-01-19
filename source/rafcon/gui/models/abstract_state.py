@@ -137,6 +137,10 @@ class AbstractStateModel(MetaModel, Hashable):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __cmp__(self, other):
+        if isinstance(other, AbstractStateModel):
+            return self.core_element.__cmp__(other.core_element)
+
     def __contains__(self, item):
         """Checks whether `item` is an element of the state model
 
@@ -202,7 +206,7 @@ class AbstractStateModel(MetaModel, Hashable):
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.core_element)
-        for state_element in self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]:
+        for state_element in sorted(self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
             self.update_hash_from_dict(obj_hash, state_element)
         if not self.state.get_library_root_state():
             self.update_hash_from_dict(obj_hash, self.meta)

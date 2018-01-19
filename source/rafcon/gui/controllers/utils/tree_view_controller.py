@@ -61,6 +61,7 @@ class AbstractTreeViewController(ExtendedController):
 
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
+        super(AbstractTreeViewController, self).register_view(view)
         self._tree_selection.connect('changed', self.selection_changed)
         self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
@@ -753,7 +754,7 @@ class TreeViewController(AbstractTreeViewController):
             else:
                 self.tree_view.get_selection().select_path(path)
         else:
-            self.logger.warning("Path not valid: {0} (by_cursor {1})".format(str(core_element_id), str(by_cursor)))
+            self._logger.warning("Path not valid: {0} (by_cursor {1})".format(str(core_element_id), str(by_cursor)))
 
     def tree_view_keypress_callback(self, widget, event):
         """Tab back and forward tab-key motion in list widget and the scrollbar motion to follow key cursor motions

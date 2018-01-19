@@ -84,6 +84,12 @@ class StateView(Element):
         self.__symbol_size_cache = {}
         self._image_cache = ImageCache()
 
+        self._border_width = Variable(min(self.width, self.height) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
+        border_width_constraint = BorderWidthConstraint(self._handles[NW].pos, self._handles[SE].pos,
+                                                        self._border_width, constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
+        self._constraints.append(border_width_constraint)
+
+        # Initialize NameView
         name_meta = state_m.get_meta_data_editor()['name']
         if not contains_geometric_info(name_meta['size']):
             name_width = self.width * 0.8
@@ -94,14 +100,9 @@ class StateView(Element):
         self._name_view = NameView(state_m.state.name, name_size)
 
         if not contains_geometric_info(name_meta['rel_pos']):
-            name_meta['rel_pos'] = (0, 0)
+            name_meta['rel_pos'] = (self.border_width, self.border_width)
         name_pos = name_meta['rel_pos']
         self.name_view.matrix.translate(*name_pos)
-
-        self._border_width = Variable(min(self.width, self.height) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
-        border_width_constraint = BorderWidthConstraint(self._handles[NW].pos, self._handles[SE].pos,
-                                                        self._border_width, constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
-        self._constraints.append(border_width_constraint)
 
     @property
     def selected(self):
@@ -908,6 +909,7 @@ class NameView(Element):
         # logger.info("name rel_pos {}".format(name_meta['rel_pos']))
         # logger.info("name size {}".format(name_meta['size']))
         self.position = name_meta['rel_pos']
+        # print "name pos from meta", name_meta['rel_pos']
         self.width = name_meta['size'][0]
         self.height = name_meta['size'][1]
 

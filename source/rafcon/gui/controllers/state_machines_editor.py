@@ -140,6 +140,7 @@ class StateMachinesEditorController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(StateMachinesEditorController, self).register_view(view)
         self.view['notebook'].connect("add_clicked", add_state_machine)
         self.view['notebook'].connect('switch-page', self.on_switch_page)
 
@@ -524,6 +525,8 @@ class StateMachinesEditorController(ExtendedController):
             self.model.state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
         except AttributeError as e:
             logger.warning("Not all state machines were re-open because {0}".format(e))
+        import rafcon.gui.utils
+        rafcon.gui.utils.wait_for_gui()  # TODO check again this is needed  to secure that all sm-models are generated
 
         # recover tab arrangement
         self.rearrange_state_machines(page_num_by_sm_id)

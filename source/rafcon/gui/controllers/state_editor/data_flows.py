@@ -796,19 +796,14 @@ class StateDataFlowsEditorController(ExtendedController):
         """
         ExtendedController.__init__(self, model, view)
         self.df_list_ctrl = StateDataFlowsListController(model, view.data_flows_listView)
-        # self.add_controller('df_list_ctrl', self.df_list_ctrl)
-
-    def destroy(self):
-        # TODO fix destroy order or refactor widget to possibly use ExtendedController destruct method
-        # self.df_list_ctrl.relieve_all_models()
-        super(StateDataFlowsEditorController, self).destroy()
+        self.add_controller('df_list_ctrl', self.df_list_ctrl)
 
     def register_view(self, view):
         """Called when the View was registered
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
-
+        super(StateDataFlowsEditorController, self).register_view(view)
         view['add_d_button'].connect('clicked', self.df_list_ctrl.on_add)
         view['remove_d_button'].connect('clicked', self.df_list_ctrl.on_remove)
         view['connected_to_d_checkbutton'].connect('toggled', self.toggled_button, 'data_flows_external')

@@ -1,7 +1,6 @@
-from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
-
 
 def test_value_retrieval():
+    from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
     cache = ValueCache()
 
     cache.store_value("a", 1, {})

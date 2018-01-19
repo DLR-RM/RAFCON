@@ -2,7 +2,6 @@ import gtk
 import threading
 import testing_utils
 
-from rafcon.gui.utils import dialog
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -17,6 +16,7 @@ def xor(_list):
 
 def trigger_dialog_tests():
     test_text = "test_text"
+    from rafcon.gui.utils import dialog
 
     def on_ok_clicked(widget, response_id):
         # Default response by the "ok" button is -5
@@ -89,13 +89,13 @@ def trigger_dialog_tests():
 
 def test_dialog_test(caplog):
 
-    testing_utils.initialize_environment()
+    testing_utils.initialize_environment(gui_already_started=False)
 
     logger.debug("Dialog test started.")
 
     thread = threading.Thread(target=trigger_dialog_tests)
     thread.start()
-    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0, unpatch_threading=False)
 
 
 #TODO dialog tests in rafcon by mouse click and callback or only by callback and respective dialog objects response call

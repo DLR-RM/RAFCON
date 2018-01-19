@@ -36,9 +36,10 @@ class EditorController(ExtendedController):
         """Constructor"""
         assert isinstance(observed_method, str)
         self._observed_method = observed_method
-        ExtendedController.__init__(self, model, view)
+        super(EditorController, self).__init__(model, view)
 
     def register_view(self, view):
+        super(EditorController, self).register_view(view)
         view.get_buffer().connect('changed', self.code_changed)
 
         if hasattr(view.get_buffer(), 'begin_not_undoable_action'):

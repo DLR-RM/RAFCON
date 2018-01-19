@@ -146,6 +146,7 @@ class StatesEditorController(ExtendedController):
         self.closed_tabs = {}
 
     def register_view(self, view):
+        super(StatesEditorController, self).register_view(view)
         self.view.notebook.connect('switch-page', self.on_switch_page)
         if self.current_state_machine_m:
             self.add_state_editor(self.current_state_machine_m.root_state)
@@ -158,6 +159,10 @@ class StatesEditorController(ExtendedController):
         """
         shortcut_manager.add_callback_for_action('rename', self.rename_selected_state)
         super(StatesEditorController, self).register_actions(shortcut_manager)
+
+    # def prepare_destruction(self):
+    #     # -> do not generate new state editor
+    #     self.relieve_model(self.model)
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
