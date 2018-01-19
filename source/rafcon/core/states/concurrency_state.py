@@ -117,10 +117,9 @@ class ConcurrencyState(ContainerState):
         :return:
         """
         state.join()
-        if self.preempted:
-            # if the state was preempted leave the state in forward mode in the default preemption manner
-            state.backward_execution = False
-            self.backward_execution = False
+        if state.backward_execution:
+            self.backward_execution = True
+
         state.state_execution_status = StateExecutionStatus.INACTIVE
         # care for the history items
         if not self.backward_execution:
