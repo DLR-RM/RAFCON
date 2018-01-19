@@ -657,7 +657,7 @@ class MainWindowController(ExtendedController):
         global_runtime_config.save_configuration()
         
         # close all tabs
-        self.get_controller('states_editor_ctrl').prepare_destruction()  # avoid new state editor
+        # self.get_controller('states_editor_ctrl').prepare_destruction()  # avoid new state editor
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
         # Recursively destroys the main window
         self.get_controller('menu_bar_controller').logging_console_view.quit_flag = True

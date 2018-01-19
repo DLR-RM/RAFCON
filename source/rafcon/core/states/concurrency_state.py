@@ -94,7 +94,6 @@ class ConcurrencyState(ContainerState):
                 state.concurrency_queue = concurrency_queue
                 state.concurrency_queue_id = index
 
-
                 state.generate_run_id()
                 if not self.backward_execution:
                     # care for the history items; this item is only for execution visualization
@@ -118,6 +117,10 @@ class ConcurrencyState(ContainerState):
         :return:
         """
         state.join()
+        if self.preempted:
+            # if the state was preempted leave the state in forward mode in the default preemption manner
+            state.backward_execution = False
+            self.backward_execution = False
         state.state_execution_status = StateExecutionStatus.INACTIVE
         # care for the history items
         if not self.backward_execution:

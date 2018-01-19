@@ -45,6 +45,11 @@ def assert_size_equality(size1, size2):
     assert abs(size1[1] - size2[1]) <= 10
 
 
+def connect_window(window, event, method, output_list):
+    handler_id = window.connect(event, method)
+    output_list.append(handler_id)
+
+
 def undock_sidebars():
     from rafcon.gui.runtime_config import global_runtime_config
     from rafcon.gui.singleton import main_window_controller
@@ -52,8 +57,13 @@ def undock_sidebars():
 
     def test_bar(window, window_key):
         attribute_name_of_undocked_window_view = window_name = window_key.lower() + "_window"
-        configure_handler_id = window.connect('configure-event', notify_on_resize_event)
-        hide_handler_id = window.connect('hide', notify_on_event)
+
+        output_list = list()
+        call_gui_callback(connect_window, window, 'configure-event', notify_on_resize_event, output_list)
+        configure_handler_id = output_list[0]
+        output_list = list()
+        call_gui_callback(connect_window, window, 'hide', notify_on_event, output_list)
+        hide_handler_id = output_list[0]
 
         logger.info("undocking...")
         time.sleep(debug_sleep_time)
@@ -76,7 +86,7 @@ def undock_sidebars():
         if new_size == target_size:
             target_size = (700, 700)
         logger.debug("target size: {}".format(target_size))
-        window.resize(*target_size)
+        call_gui_callback(window.resize,*target_size)
         wait_for_event_notification()
         try:
             assert_size_equality(event_size, target_size)
@@ -99,7 +109,11 @@ def undock_sidebars():
         logger.info("undocking...")
         time.sleep(debug_sleep_time)
         ready.clear()
-        show_handler_id = window.connect('show', notify_on_event)
+
+        output_list = list()
+        call_gui_callback(connect_window, window, 'show', notify_on_event, output_list)
+        show_handler_id = output_list[0]
+
         call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key.lower())].emit, "clicked")
         wait_for_event_notification()
         assert window.get_property('visible') is True
@@ -122,6 +136,7 @@ def undock_sidebars():
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
     print "=> test console_window"
     test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
+    wait_for_gui()
 
 
 def check_pane_positions():
@@ -140,8 +155,13 @@ def check_pane_positions():
             return
 
     def test_bar(window, window_key):
-        configure_handler_id = window.connect('configure-event', notify_on_event)
-        hide_handler_id = window.connect('hide', notify_on_event)
+
+        output_list = list()
+        call_gui_callback(connect_window, window, 'configure-event', notify_on_event, output_list)
+        configure_handler_id = output_list[0]
+        output_list = list()
+        call_gui_callback(connect_window, window, 'hide', notify_on_event, output_list)
+        hide_handler_id = output_list[0]
 
         print "undocking..."
         time.sleep(debug_sleep_time)
@@ -167,6 +187,7 @@ def check_pane_positions():
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
     print "=> test console_window"
     test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
+    testing_utils.wait_for_gui()
 
     print "check if pane positions are still like in runtime_config.yaml"
     for config_id, pane_id in constants.PANE_ID.iteritems():
@@ -175,7 +196,9 @@ def check_pane_positions():
 
 
 def test_window_positions(caplog):
-    run_gui(core_config=None, gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False}, runtime_config={})
+    testing_utils.run_gui(core_config=None,
+                          runtime_config={},
+                          gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
     from rafcon.gui.runtime_config import global_runtime_config
     original_runtime_config = global_runtime_config.as_dict()
 
@@ -190,7 +213,8 @@ def test_window_positions(caplog):
 
 
 def test_pane_positions(caplog):
-    run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
+                          runtime_config={},)
     from rafcon.gui.runtime_config import global_runtime_config
     original_runtime_config = global_runtime_config.as_dict()
 

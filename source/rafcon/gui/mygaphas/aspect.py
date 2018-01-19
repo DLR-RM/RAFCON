@@ -188,7 +188,10 @@ class SegmentHandleSelection(ItemHandleSelection):
         after = handles[handle_index + 1]
         d, p = distance_line_point(before.pos, after.pos, handle.pos)
 
-        if d < 1. / item.hierarchy_level:
+        # Checks how far the waypoint is from an imaginary line connecting the previous and next way/end point
+        # If it is close, the two segments are merged to one
+        merge_distance = item.line_width * 4
+        if d < merge_distance:
             assert len(self.view.canvas.solver._marked_cons) == 0
             Segment(item, self.view).merge_segment(segment)
 

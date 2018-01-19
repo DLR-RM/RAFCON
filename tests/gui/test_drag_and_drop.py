@@ -24,6 +24,7 @@ class StructHelper:
 
 def create_models(*args, **kargs):
     import rafcon.core.singleton
+    import rafcon.gui.singleton
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.state_machine import StateMachine
 
@@ -37,6 +38,7 @@ def create_models(*args, **kargs):
 
     # add new state machine
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
+    testing_utils.wait_for_gui()
     # select state machine
     rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
@@ -109,7 +111,7 @@ def trigger_drag_and_drop_tests(*args):
 
 def test_drag_and_drop_test(caplog):
     testing_utils.run_gui(
-        gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True},
+        gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False},
         libraries={"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
     )
     import rafcon.core.singleton

@@ -173,6 +173,11 @@ class HierarchyState(ContainerState):
 
         self.child_state.join()
 
+        # this line is important to indicate the parent the current execution status
+        # it may also change during the execution of an hierarchy state
+        # e.g. a hierarchy state may be started in forward execution mode but can leave in backward execution mode
+        self.backward_execution = self.child_state.backward_execution
+
         if self.preempted:
             if self.backward_execution:
                 # this is the case if the user backward step through its state machine and stops it
