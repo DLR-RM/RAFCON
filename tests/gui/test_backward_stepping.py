@@ -208,11 +208,17 @@ def execute_barrier_state_forwards_backwards():
 
     call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
+    print "cp3"
+
     sm = state_machine_manager.get_active_state_machine()
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
 
+    print "cp4"
+
     testing_utils.wait_for_gui()
+
+    print "cp5"
 
     for key, sd in sm.root_state.scoped_data.iteritems():
         if sd.name == "beer_number":
