@@ -11,6 +11,11 @@ Next release
 
     - ports outside of the visible view are no longer drawn, which increases the performance, especially while
       zooming in large state machines
+    - Hash calculations of state machines
+
+- Bug Fixes:
+
+    - :issue:`447`: Hashes of state machine in storage different then the reopened state machine after saving it
 
 
 Patch releases 0.12.\*

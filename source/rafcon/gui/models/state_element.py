@@ -57,6 +57,8 @@ class StateElementModel(MetaModel, Hashable):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __cmp__(self, other):
         if isinstance(other, StateElementModel):
             return self.core_element.__cmp__(other.core_element)
 

@@ -754,7 +754,7 @@ class TreeViewController(AbstractTreeViewController):
             else:
                 self.tree_view.get_selection().select_path(path)
         else:
-            self.logger.warning("Path not valid: {0} (by_cursor {1})".format(str(core_element_id), str(by_cursor)))
+            self._logger.warning("Path not valid: {0} (by_cursor {1})".format(str(core_element_id), str(by_cursor)))
 
     def tree_view_keypress_callback(self, widget, event):
         """Tab back and forward tab-key motion in list widget and the scrollbar motion to follow key cursor motions

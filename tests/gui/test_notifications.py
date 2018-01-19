@@ -19,18 +19,6 @@ DataFlow's DataFlowModel is in.
 
 from gtkmvc.observer import Observer
 
-# mvc
-import rafcon.gui.singleton
-
-# core elements
-import rafcon.core.singleton
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.container_state import ContainerState
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.state_machine import StateMachine
-
-from rafcon.core.states.state import StateExecutionStatus
-
 import testing_utils
 import pytest
 
@@ -305,6 +293,10 @@ class TransitionNotificationLogObserver(NotificationLogObserver):
 
 
 def create_models(*args, **kargs):
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.state_machine import StateMachine
+    import rafcon.gui.models.state_machine
 
     state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
@@ -363,9 +355,7 @@ def create_models(*args, **kargs):
 
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
-    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-
-    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.models.state_machine.StateMachineModel(sm)
 
     return ctr_state, sm_m, state_dict
 
@@ -380,6 +370,7 @@ def get_state_model_by_path(state_model, path):
 
 
 def setup_observer_dict_for_state_model(state_model, with_print=False):
+    from rafcon.core.states.container_state import ContainerState
 
     def generate_observer_dict(state_m):
         observer_dict = {state_m.state.get_path(): StateNotificationLogObserver(state_m, with_print)}
@@ -426,6 +417,7 @@ def full_observer_dict_reset(observer_dict):
 
 
 def test_outcome_add_remove_notification(caplog):
+    import rafcon.gui.singleton
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
     states_observer_dict = setup_observer_dict_for_state_model(sm_model.root_state, with_print=with_print)
@@ -475,6 +467,8 @@ def test_outcome_modify_notification(caplog):
         - name      (setter-method -> 1 before and 1 after notification)
         Observable Methods of Outcome DO NOT EXIST.
     """
+    # core elements
+    import rafcon.core.singleton
 
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
@@ -551,6 +545,8 @@ def test_outcome_modify_notification(caplog):
 
 
 def test_input_port_add_remove_notification(caplog):
+    # core elements
+    import rafcon.core.singleton
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -605,6 +601,8 @@ def test_input_port_modify_notification(caplog):
         Observable Methods of InputDataPort are:
         - change_data_type  (method + data_type-setter -> 2 before and 2 after notification)
     """
+    # core elements
+    import rafcon.core.singleton
 
     def check_input_notifications(input_observer, states_obs_dict, _state_dict, forecast=1):
 
@@ -666,6 +664,7 @@ def test_input_port_modify_notification(caplog):
 
 
 def test_output_port_add_remove_notification(caplog):
+    import rafcon.core.singleton
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -721,6 +720,8 @@ def test_output_port_modify_notification(caplog):
         Observable Methods of OutputDataPort are:
         - change_data_type  (method + data_type-setter -> 2 before and 2 after notification)
     """
+    # core elements
+    import rafcon.core.singleton
 
     def check_output_notifications(output_observer, states_obs_dict, _state_dict, forecast=1):
 
@@ -783,6 +784,7 @@ def test_output_port_modify_notification(caplog):
 
 
 def test_scoped_variable_add_remove_notification(caplog):
+    import rafcon.core.singleton
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -838,6 +840,8 @@ def test_scoped_variable_modify_notification(caplog):
         Observable Methods of ScopedVariable are:
         - change_data_type  (method + data_type-setter -> 2 before and 2 after notification)
     """
+    # core elements
+    import rafcon.core.singleton
 
     def check_output_notifications(output_observer, states_obs_dict, _state_dict, forecast=1):
 
@@ -935,6 +939,8 @@ def test_scoped_variable_modify_notification(caplog):
 
 
 def test_data_flow_add_remove_notification(caplog):
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -1000,6 +1006,8 @@ def test_data_flow_modify_notification(caplog):
         - modify_origin     (method -> 1 before and 1 after notification)
         - modify_target     (method -> 1 before and 1 after notification)
     """
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
 
     def check_data_flow_notifications(data_flow_m_observer, states_obs_dict, _state_dict, forecast=1):
 
@@ -1109,6 +1117,9 @@ def test_data_flow_modify_notification(caplog):
 
 
 def test_transition_add_remove_notification(caplog):
+    # core elements
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -1175,6 +1186,9 @@ def test_transition_modify_notification(caplog):
         - modify_origin     (method -> 1 before and 1 after notification)
         - modify_target     (method -> 1 before and 1 after notification)
     """
+    # core elements
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
 
     def check_transition_notifications(transition_m_observer, states_obs_dict, _state_dict, forecast=1):
 
@@ -1284,6 +1298,9 @@ def test_transition_modify_notification(caplog):
 
 
 def test_state_add_remove_notification(caplog):
+    # core elements
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -1335,6 +1352,7 @@ def test_state_add_remove_notification(caplog):
     rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
+
 # TODO do the notification checks for the LibraryState
 def test_state_property_modify_notification(caplog):
     """ Observable Attributes of State are:
@@ -1383,6 +1401,10 @@ def test_state_property_modify_notification(caplog):
         - add_data_flow, remove_data_flow
         - add_scoped_variable, remove_scoped_variable
     """
+    # core elements
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.state import StateExecutionStatus
 
     def check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=1, child_effects={}):
 

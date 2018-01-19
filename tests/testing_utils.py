@@ -4,7 +4,7 @@ import signal
 import tempfile
 from os import mkdir, environ
 from os.path import join, dirname, realpath, exists, abspath
-from threading import Lock, Condition, Event, Thread
+from threading import Lock, Condition, Event, Thread, currentThread
 
 import rafcon
 from rafcon.utils import log, constants
@@ -14,6 +14,7 @@ test_multithreading_lock = Lock()
 gui_thread = None
 gui_ready = None
 exception_info = None
+result = None
 
 RAFCON_TEMP_PATH_TEST_BASE = join(constants.RAFCON_TEMP_PATH_BASE, 'unit_tests')
 if not exists(RAFCON_TEMP_PATH_TEST_BASE):
@@ -99,7 +100,7 @@ def call_gui_callback(callback, *args, **kwargs):
     :param callback: The callback method, e.g. on_open_activate
     :param args: The parameters to be passed to the callback method
     """
-    global exception_info
+    global exception_info, result
     import glib
     condition = Condition()
     exception_info = None
@@ -108,9 +109,10 @@ def call_gui_callback(callback, *args, **kwargs):
     def fun():
         """Call callback and notify condition variable
         """
-        global exception_info
+        global exception_info, result
+        result = None
         try:
-            callback(*args)
+            result = callback(*args)
         except:
             # Exception within this asynchronously called function won't reach pytest. This is why we have to store
             # the information about the exception to re-raise it at the end of the synchronous call.
@@ -133,6 +135,7 @@ def call_gui_callback(callback, *args, **kwargs):
     condition.release()
     if exception_info:
         raise exception_info[0], exception_info[1], exception_info[2]
+    return result
 
 
 def rewind_and_set_libraries(libraries=None):
@@ -162,7 +165,8 @@ def initialize_signal_handler():
     GUI_SIGNAL_INITIALIZED = True
 
 
-def initialize_environment(core_config=None, gui_config=None, runtime_config=None, libraries=None, only_core=False):
+def initialize_environment(core_config=None, gui_config=None, runtime_config=None, libraries=None,
+                           gui_already_started=True):
     """ Initialize global configs, libraries and acquire multi threading lock
 
      The function accepts tuples as arguments to load a config with (config-file, path) as tuple or a
@@ -177,16 +181,23 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
     :param libraries: Dictionary with library mounting labels and hard drive paths.
     :return:
     """
-    initialize_environment_core(core_config, libraries)
-
+    if gui_already_started:
+        # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
+        call_gui_callback(initialize_environment_core, core_config, libraries, True)
+    else:
+        initialize_environment_core(core_config, libraries)
     initialize_environment_gui(gui_config, runtime_config)
-
     initialize_signal_handler()
 
 
-def initialize_environment_core(core_config=None, libraries=None):
+def initialize_environment_core(core_config=None, libraries=None, delete=False):
     from rafcon.core.config import global_config
-    from rafcon.core.singleton import state_machine_manager
+    import rafcon.core.singleton
+
+    if rafcon.core.singleton.state_machine_manager.state_machines:
+        raise EnvironmentError("The environment has to have an empty StateMachineManager but here the following "
+                               "state machines are still existing: \n{0}"
+                               "".format(rafcon.core.singleton.state_machine_manager.state_machines))
 
     test_multithreading_lock.acquire()
 
@@ -207,7 +218,10 @@ def initialize_environment_core(core_config=None, libraries=None):
 
     rewind_and_set_libraries(libraries=libraries)
 
-    state_machine_manager.delete_all_state_machines()
+    # delete_all_state_machines must not be called here per default
+    # as old state machines might still be patched with PatchedModelMT
+    # if initialize_environment_core is called in an un-patched manner, than this will result in a MultiThreading Error
+    # state_machine_manager.delete_all_state_machines()
 
 
 def initialize_environment_gui(gui_config=None, runtime_config=None):
@@ -240,7 +254,8 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
     GUI_INITIALIZED = True
 
 
-def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0):
+def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0,
+                         unpatch_threading=True):
     """ Reset Config object classes of singletons and release multi threading lock and optional do the log-msg test
 
      The function reloads the default config files optional and release the multi threading lock. This function is
@@ -256,20 +271,40 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
     :param bool gui_config: Flag to reload gui config from default path.
     :return:
     """
+    import rafcon.core.singleton
     global GUI_INITIALIZED, GUI_SIGNAL_INITIALIZED
-
+    global gui_thread, gui_ready, used_gui_threads
     try:
         if caplog is not None:
             assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors)
     finally:
-        rewind_and_set_libraries()
-        reload_config(config, gui_config)
-        GUI_INITIALIZED = GUI_SIGNAL_INITIALIZED = False
-        test_multithreading_lock.release()
+        try:
+            if gui_ready is None:  # gui was not initialized fully only the environment
+                rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+                wait_for_gui()  # is needed to empty the idle add queue and not party destroy elements in next test
+            # check that state machine manager is empty
+            assert not rafcon.core.singleton.state_machine_manager.state_machines
+            if gui_ready:
+                assert not rafcon.gui.singleton.state_machine_manager_model.state_machines
+            rewind_and_set_libraries()
+            reload_config(config, gui_config)
+            GUI_INITIALIZED = GUI_SIGNAL_INITIALIZED = False
+            gui_thread = gui_ready = None
+        except:
+            raise
+        finally:
+            test_multithreading_lock.release()
+
+    if unpatch_threading:
+        unpatch_gtkmvc_model_mt()
 
 
 def shutdown_environment_only_core(config=True, caplog=None, expected_warnings=0, expected_errors=0):
-    shutdown_environment(config, False, caplog, expected_warnings, expected_errors)
+    from rafcon.core.singleton import state_machine_manager
+    # in the gui case, the state machines have to be deleted while the gui is still running with add_gui_callback
+    # if add_gui_callback is not used, then a multi threading RuntimeError will be raised by the PatchedModelMT
+    state_machine_manager.delete_all_state_machines()
+    shutdown_environment(config, False, caplog, expected_warnings, expected_errors, unpatch_threading=False)
 
 
 def wait_for_gui():
@@ -291,20 +326,31 @@ def run_gui_thread(gui_config=None, runtime_config=None):
 
     MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
 
+    print "run_gui thread: ", currentThread(), currentThread().ident, "gui.singleton thread ident:", \
+        rafcon.gui.singleton.thread_identifier
+
     # Wait for GUI to initialize
     wait_for_gui()
     gtk.idle_add(gui_ready.set)
     gtk.main()
 
 
-def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=None, timeout=5):
+def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=None, timeout=5, patch_threading=True):
+    if patch_threading:
+        patch_gtkmvc_model_mt()
     global gui_ready, gui_thread
     # IMPORTANT enforce gtk.gtkgl import in the python main thread to avoid segfaults
     import gtk.gtkgl
-    initialize_environment_core(core_config, libraries)
+
+    print "WT thread: ", currentThread(), currentThread().ident
     gui_ready = Event()
     gui_thread = Thread(target=run_gui_thread, args=[gui_config, runtime_config])
     gui_thread.start()
+
+    used_gui_threads.append(gui_thread)  # TODO why now here before it was in shutdown
+    print "used_gui_threads", used_gui_threads
+    # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
+    call_gui_callback(initialize_environment_core, core_config, libraries)
     if not gui_ready.wait(timeout):
         import gtk
         gtk.idle_add(gtk.main_quit)
@@ -321,12 +367,143 @@ def wait_for_gui_quit(timeout=5):
     return not gui_thread.is_alive()
 
 
-def close_gui():
+def close_gui(already_quit=False, force_quit=True):
     from rafcon.core.singleton import state_machine_execution_engine
     from rafcon.gui.singleton import main_window_controller
-    call_gui_callback(state_machine_execution_engine.stop)
-    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
-
+    if not already_quit:
+        call_gui_callback(state_machine_execution_engine.stop)
+        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+        # delete_all_state_machines should be done  by the quit gui method -> TODO maybe add the force quit flag as option to the arguments
+        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, force_quit)
     if not wait_for_gui_quit():
         assert False, "Could not close the GUI"
+
+
+original_ModelMT_notify_observer = None
+original_state_start = None
+original_run_state_machine = None
+state_threads = []
+used_gui_threads = []
+auto_backup_threads = []
+
+
+def patch_gtkmvc_model_mt():
+    print "patch"
+    global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine,\
+        used_gui_threads, auto_backup_threads
+
+    import rafcon.core.states.state
+    import rafcon.core.execution.execution_engine
+    import gtkmvc
+    from gtkmvc.model_mt import Model, _threading, gobject, ModelMT
+    from rafcon.core.states.state import run_id_generator, threading
+    from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger, Queue, ExecutionEngine
+
+    original_ModelMT_notify_observer = gtkmvc.model_mt.ModelMT.__notify_observer__
+    original_state_start = rafcon.core.states.state.State.start
+    original_run_state_machine = rafcon.core.execution.execution_engine.ExecutionEngine._run_active_state_machine
+    print original_ModelMT_notify_observer, original_run_state_machine, original_state_start
+    state_threads = []
+
+    def state_start(self, execution_history, backward_execution=False, generate_run_id=True):
+        self.execution_history = execution_history
+        if generate_run_id:
+            self._run_id = run_id_generator()
+        self.backward_execution = copy.copy(backward_execution)
+        self.thread = threading.Thread(target=self.run)
+        # !!!!!!!!!!!!! pachted line !!!!!!!!!!!!!
+        state_threads.append(self.thread)
+        self.thread.start()
+
+    def _patched_run_active_state_machine(self):
+        """Store running state machine and observe its status
+        """
+        # Create new concurrency queue for root state to be able to synchronize with the execution
+        self._ExecutionEngine__running_state_machine = self.state_machine_manager.get_active_state_machine()
+        self._ExecutionEngine__running_state_machine.root_state.concurrency_queue = Queue.Queue(maxsize=0)
+
+        if self._ExecutionEngine__running_state_machine:
+            self._ExecutionEngine__running_state_machine.start()
+
+            self._ExecutionEngine__wait_for_finishing_thread = threading.Thread(target=self._wait_for_finishing)
+            # !!!!!!!!!!!!! pachted line !!!!!!!!!!!!!
+            state_threads.append(self._ExecutionEngine__wait_for_finishing_thread)
+            self._ExecutionEngine__wait_for_finishing_thread.start()
+        else:
+            logger.warn("Currently no active state machine! Please create a new state machine.")
+            self.set_execution_mode(StateMachineExecutionStatus.STOPPED)
+
+    def __patched__notify_observer__(self, observer, method, *args, **kwargs):
+        """This makes a call either through the gtk.idle list or a
+        direct method call depending whether the caller's thread is
+        different from the observer's thread"""
+
+        assert self._ModelMT__observer_threads.has_key(observer)
+        if _threading.currentThread() == self._ModelMT__observer_threads[observer]:
+            # standard call => single threaded
+            # print "{0} -> {1}: single threading '{2}' in call_thread {3} object_generation_thread {3} \n{4}" \
+            #       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
+            #                 self._ModelMT__observer_threads[observer], (args, kwargs))
+            return Model.__notify_observer__(self, observer, method, *args, **kwargs)
+        else:
+            # multi-threading call
+            if _threading.currentThread() in state_threads or _threading.currentThread() in auto_backup_threads:
+                # print "Notification from state thread", _threading.currentThread()
+                gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
+                return
+            elif _threading.currentThread() in used_gui_threads \
+                    and self._ModelMT__observer_threads[observer] in used_gui_threads:
+                # As long as the gtk module keeps constant the gtk main thread will always have the same thread id!
+                # But, if the module is patched as in "test_interface.py" the gtk thread will get another thread id!
+                # Thus, if both threads are in used_gui_threads then we simply allow this case!
+                print "Both threads are former gui threads! Current thread {}, Observer thread {}".format(
+                    _threading.currentThread(), self._ModelMT__observer_threads[observer])
+                return Model.__notify_observer__(self, observer, method, *args, **kwargs)
+                # gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
+                # return
+            else:
+                print "{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \
+                      "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
+                                _threading.currentThread(), self._ModelMT__observer_threads[observer], (args, kwargs))
+
+                # print "state threads", state_threads
+                # print "used_gui_threads", used_gui_threads
+                raise RuntimeError("This test should not have multi-threading constellations.")
+
+    gtkmvc.model_mt.ModelMT.__notify_observer__ = __patched__notify_observer__
+    rafcon.core.states.state.State.start = state_start
+    rafcon.core.execution.execution_engine.ExecutionEngine._run_active_state_machine = _patched_run_active_state_machine
+
+
+def unpatch_gtkmvc_model_mt():
+    print "unpatch"
+    global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine
+
+    import rafcon.core.states.state
+    import rafcon.core.execution.execution_engine
+    import gtkmvc
+    if any([e is None for e in original_ModelMT_notify_observer, original_state_start, original_run_state_machine]):
+        raise EnvironmentError("All methods to un-patch have to be set not None.")
+    gtkmvc.model_mt.ModelMT.__notify_observer__ = original_ModelMT_notify_observer
+    rafcon.core.states.state.State.start = original_state_start
+    rafcon.core.execution.execution_engine.ExecutionEngine._run_state_machine = original_run_state_machine
+    original_ModelMT_notify_observer = original_state_start = original_run_state_machine = None
+    state_threads = []
+
+
+def dummy_gui(caplog):
+    """ This function just starts up an empty gui and closes it again. This is needed to initially create
+        the gui singletons in the gui thread.
+
+    :param caplog: the caplog object provided by pytests's caplog fixture
+    :return: None
+    """
+    run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+    try:
+        # do nothing, just open gui and close it afterwards
+        assert True
+    except:
+        raise
+    finally:
+        close_gui()
+        shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)

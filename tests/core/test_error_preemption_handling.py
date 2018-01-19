@@ -33,8 +33,7 @@ class TestErrorPreemptionHandling():
 
     @classmethod
     def teardown_class(cls):
-        testing_utils.test_multithreading_lock.release()
-        pass
+        testing_utils.shutdown_environment_only_core()
 
     def setup(self):
         # This methods runs before each test method and resets the global variables

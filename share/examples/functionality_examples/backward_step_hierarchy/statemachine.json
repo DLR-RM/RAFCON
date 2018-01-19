@@ -1,6 +1,7 @@
 {
     "creation_time": "2015-07-17 06:13:33", 
-    "last_update": "2016-03-23 08:23:46", 
-    "root_state_id": "GLSUJY", 
-    "version": "None"
+    "last_update": "2018-01-19 10:16:45", 
+    "root_state_storage_id": "backward_hierarchy_test_GLSUJY", 
+    "state_machine_version": "None", 
+    "used_rafcon_version": "0.12.1a1"
 }

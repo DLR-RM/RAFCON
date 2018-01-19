@@ -407,7 +407,8 @@ class ExecutionEngine(Observable):
             state_machine = storage.load_state_machine_from_path(path)
             rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
-        rafcon.core.singleton.state_machine_execution_engine.start(start_state_path=start_state_path)
+        rafcon.core.singleton.state_machine_execution_engine.start(
+            state_machine.state_machine_id, start_state_path=start_state_path)
 
         if wait_for_execution_finished:
             self.join()

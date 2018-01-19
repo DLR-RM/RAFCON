@@ -1,18 +1,4 @@
-import gtk
-import threading
 import time
-
-# gui elements
-import rafcon.gui.singleton
-from rafcon.gui.models import ContainerStateModel
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
-
-# core elements
-import rafcon.core.singleton
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.state_machine import StateMachine
 
 # general tool elements
 from rafcon.utils import log
@@ -20,13 +6,15 @@ from rafcon.utils import log
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
-from gui.test_state_type_change import get_state_editor_ctrl_and_store_id_dict
 import pytest
 
 logger = log.get_logger(__name__)
 
 
-def create_models(*args, **kargs):
+def create_state_machine():
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.state_machine import StateMachine
 
     state1 = ExecutionState('State1', state_id="State1")
     output_state1 = state1.add_output_data_port("output", "int")
@@ -85,18 +73,7 @@ def create_models(*args, **kargs):
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
                   'Nested2': state5}
     sm = StateMachine(ctr_state)
-
-    # remove existing state machines
-    for sm_id in rafcon.core.singleton.state_machine_manager.state_machines.keys():
-        rafcon.core.singleton.state_machine_manager.remove_state_machine(sm_id)
-    # add new state machine
-    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-    # select state machine
-    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
-    # get state machine model
-    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
-
-    return sm_m, state_dict
+    return state_dict, sm
 
 
 def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
@@ -107,14 +84,18 @@ def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
         state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
         if state_editor_ctrl is not None:
             break
-        time.sleep(0.1)
-        time_waited += 0.1
+        last_time = time.time()
+        testing_utils.wait_for_gui()
+        time.sleep(0.02)
+        time_waited += time.time() - last_time
         assert time_waited < max_time
 
     return state_editor_ctrl, time_waited
 
 
 def check_state_editor_models(sm_m, parent_state_m, main_window_controller, logger):
+    from rafcon.gui.models import ContainerStateModel
+
     sleep_time_max = 5.0
     states_editor_controller = main_window_controller.get_controller('states_editor_ctrl')
     if isinstance(parent_state_m, ContainerStateModel):
@@ -128,7 +109,7 @@ def check_state_editor_models(sm_m, parent_state_m, main_window_controller, logg
             # if not state_m.state.name == "Decider":
             state_identifier = states_editor_controller.get_state_identifier(state_m)
             # time.sleep(1)
-            call_gui_callback(sm_m.selection.set, [state_m])
+            sm_m.selection.set([state_m])
             [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller,
                                                                       state_identifier,
                                                                       sleep_time_max)
@@ -139,12 +120,13 @@ def check_state_editor_models(sm_m, parent_state_m, main_window_controller, logg
             #               state_m, state_m.state.get_path()))
 
             # # check if models of widget and in state_machine-model are the same
+            testing_utils.wait_for_gui()
             assert state_editor_ctrl.model is state_m
 
     state_identifier = states_editor_controller.get_state_identifier(parent_state_m)
     parent_state_m.get_state_machine_m()
     print "try to select", parent_state_m
-    call_gui_callback(sm_m.selection.set, [parent_state_m])
+    sm_m.selection.set([parent_state_m])
     [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, state_identifier, sleep_time_max)
     # logger.debug("wait for state's state editor %s" % time_waited)
     # logger.debug("models are: \n ctrl  %s path: %s\n model %s path: %s" %
@@ -154,104 +136,89 @@ def check_state_editor_models(sm_m, parent_state_m, main_window_controller, logg
 
 
 @log.log_exceptions(None, gtk_quit=True)
-def trigger_state_type_change_tests(*args):
-    main_window_controller = args[1]
-    sm_m = args[2]
-    state_dict = args[3]
-    with_gui = args[4]
-    logger = args[5]
-    sleep_time_max = 5.0
+def trigger_state_type_change_tests(with_gui=True):
+    import rafcon.core.singleton
+    import rafcon.gui.singleton
+    main_window_controller = rafcon.gui.singleton.main_window_controller
 
-    ####### General Type Change inside of a state machine (NO ROOT STATE) ############
-    state_of_type_change = 'State3'
-    state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    state_dict, sm = create_state_machine()
+    first_sm_id = sm.state_machine_id
 
-    def change_state_type(state_m, new_state_type):
+    # add new state machine
+    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
+    call_gui_callback(testing_utils.wait_for_gui)
+    # call_gui_callback(rafcon.core.singleton.state_machine_manager.__setattr__, "active_state_machine_id", first_sm_id)
+    # select state machine
+    call_gui_callback(rafcon.gui.singleton.state_machine_manager_model.__setattr__, "selected_state_machine_id", first_sm_id)
+    # get state machine model
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+
+    def change_state_type(input_and_return_list, new_state_type, state_of_type_change):
+        from gui.widget.test_state_type_change import get_state_editor_ctrl_and_store_id_dict
+        sleep_time_max = 5.
+        state_m = input_and_return_list.pop()
         # - get state-editor controller and find right row in combo box
         [state_editor_ctrl, list_store_id_from_state_type_dict] = \
             get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controller, sleep_time_max, logger)
         # - do state type change
         state_type_row_id = list_store_id_from_state_type_dict[new_state_type]
-        call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active,
-                          state_type_row_id)
+        state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active(state_type_row_id)
         # - check child state editor widgets
         new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
         check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
-        return new_state_m
+        input_and_return_list.append(new_state_m)
+
+    ####### General Type Change inside of a state machine (NO ROOT STATE) ############
+    state_of_type_change = 'State3'
+    state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
 
     # HS -> BCS
-    new_state_m = change_state_type(state_m, 'BARRIER_CONCURRENCY')
+    input_and_return_list = [state_m]
+    call_gui_callback(sm_m.selection.set, input_and_return_list)
+    call_gui_callback(change_state_type, input_and_return_list, 'BARRIER_CONCURRENCY', state_of_type_change)
 
     # BCS -> HS
-    new_state_m = change_state_type(new_state_m, 'HIERARCHY')
+    call_gui_callback(change_state_type, input_and_return_list, 'HIERARCHY', state_of_type_change)
 
     # HS -> PCS
-    new_state_m = change_state_type(new_state_m, 'PREEMPTION_CONCURRENCY')
+    call_gui_callback(change_state_type, input_and_return_list, 'PREEMPTION_CONCURRENCY', state_of_type_change)
 
     # PCS -> ES
-    change_state_type(new_state_m, 'EXECUTION')
+    call_gui_callback(change_state_type, input_and_return_list, 'EXECUTION', state_of_type_change)
 
     # TODO all test that are not root_state-test have to be performed with Preemptive and Barrier Concurrency States as parents too
 
     ####### General Type Change as ROOT STATE ############
     state_of_type_change = 'Container'
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    input_and_return_list = [sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())]
 
     # HS -> BCS
-    new_state_m = change_state_type(new_state_m, 'BARRIER_CONCURRENCY')
+    call_gui_callback(sm_m.selection.set, input_and_return_list)
+    call_gui_callback(change_state_type, input_and_return_list, 'BARRIER_CONCURRENCY', state_of_type_change)
 
     # BCS -> HS
-    new_state_m = change_state_type(new_state_m, 'HIERARCHY')
+    call_gui_callback(change_state_type, input_and_return_list, 'HIERARCHY', state_of_type_change)
 
     # HS -> PCS
-    new_state_m = change_state_type(new_state_m, 'PREEMPTION_CONCURRENCY')
+    call_gui_callback(change_state_type, input_and_return_list, 'PREEMPTION_CONCURRENCY', state_of_type_change)
 
     # PCS -> ES
-    change_state_type(new_state_m, 'EXECUTION')
+    call_gui_callback(change_state_type, input_and_return_list, 'EXECUTION', state_of_type_change)
 
     # simple type change of root_state -> still could be extended
 
-    if with_gui:
-        menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
 
+def test_state_type_change_test(caplog):
 
-@pytest.mark.parametrize("with_gui", [True])
-def test_state_type_change_test(with_gui, caplog):
-    testing_utils.initialize_environment()
-
-    sm_m, state_dict = create_models()
-
-    main_window_controller = None
-    if with_gui:
-        main_window_view = MainWindowView()
-
-        # load the meta data for the state machine
-        rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
-
-        main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
-        # Wait for GUI to initialize
-        while gtk.events_pending():
-            gtk.main_iteration(False)
-    else:
-        # load the meta data for the state machine
-        rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
-
-    thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[rafcon.gui.singleton.state_machine_manager_model, main_window_controller,
-                                    sm_m, state_dict, with_gui, logger])
-    thread.start()
-
-    if with_gui:
-        gtk.main()
-        logger.debug("Gtk main loop exited!")
-        thread.join()
-        logger.debug("Joined test triggering thread!")
-    else:
-        thread.join()
-
-    testing_utils.shutdown_environment(caplog=caplog)
+    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+    try:
+        trigger_state_type_change_tests(with_gui=True)
+    # except:
+    #     raise
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    pytest.main(['-s', __file__])

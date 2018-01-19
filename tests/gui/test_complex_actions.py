@@ -2,13 +2,6 @@
 every respective feature."""
 import threading
 
-# core elements
-import rafcon.core.singleton
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, UNIQUE_DECIDER_STATE_ID
-from rafcon.core.state_machine import StateMachine
-
 # general tool elements
 from rafcon.utils import log
 
@@ -21,6 +14,10 @@ logger = log.get_logger(__name__)
 
 
 def create_models(*args, **kargs):
+    import rafcon.core.singleton
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.state_machine import StateMachine
 
     state1 = HierarchyState('State1', state_id="State1")
     state2 = ExecutionState('State2', state_id="State2")
@@ -34,7 +31,7 @@ def create_models(*args, **kargs):
 
     # add new state machine
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm.state_machine_id
 
 # def test_state_type_change(caplog):
 #     pass
@@ -52,12 +49,16 @@ def create_models(*args, **kargs):
 #     pass
 
 
+def set_state_name(state, new_value):
+    state.name = new_value
+
+
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_repetitive_group_ungroup(*args):
     import rafcon.gui.helpers.state as gui_helper_state
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     import rafcon.gui.singleton as gui_singletons
-    import time
+    from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, UNIQUE_DECIDER_STATE_ID
 
     call_gui_callback(create_models)
     call_gui_callback(testing_utils.wait_for_gui)
@@ -67,20 +68,22 @@ def trigger_repetitive_group_ungroup(*args):
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values())
 
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
-    sm_m.root_state.states.values()[0].state.name = "Stage 1"
+    # call_gui_callback(sm_m.root_state.states.values()[0].state.name, "Stage 1")
+    call_gui_callback(set_state_name, sm_m.root_state.states.values()[0].state, "Stage 1")
 
     print "select: ", sm_m.root_state.states.values()
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values())
     # time.sleep(1)
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
-    sm_m.root_state.states.values()[0].states.values()[0].state.name = "Stage 2"
+    call_gui_callback(set_state_name, sm_m.root_state.states.values()[0].states.values()[0].state, "Stage 2")
 
     print "select: ", sm_m.root_state.states.values()
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values()[0].states.values())
     # time.sleep(1)
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
-    sm_m.root_state.states.values()[0].states.values()[0].states.values()[0].state.name = "Stage 3"
-
+    call_gui_callback(
+        set_state_name, sm_m.root_state.states.values()[0].states.values()[0].states.values()[0].state, "Stage 3"
+    )
     # time.sleep(5)
 
     # raw_input("press enter")
@@ -99,7 +102,7 @@ def trigger_repetitive_group_ungroup(*args):
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values())
     # time.sleep(1)
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
-    sm_m.root_state.states.values()[0].state.name = "Stage 1"
+    call_gui_callback(set_state_name, sm_m.root_state.states.values()[0].state, "Stage 1")
 
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0])
     call_gui_callback(gui_helper_state.change_state_type, sm_m.root_state.states.values()[0], BarrierConcurrencyState)
@@ -139,12 +142,12 @@ def trigger_repetitive_group_ungroup(*args):
 
 def test_repetitive_ungroup_state_and_group_states(caplog):
     """Check if repetitive group and ungroup works"""
-
     libraries = {"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
-
     testing_utils.run_gui(libraries=libraries)
     try:
         trigger_repetitive_group_ungroup()
+    except Exception:
+        raise
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
@@ -158,5 +161,5 @@ def test_repetitive_ungroup_state_and_group_states(caplog):
 #     pass
 
 if __name__ == '__main__':
-    # test_repetitive_ungroup_state_and_group_states(None)
-    pytest.main([__file__, '-xs'])
+    test_repetitive_ungroup_state_and_group_states(None)
+    # pytest.main([__file__, '-xs'])
