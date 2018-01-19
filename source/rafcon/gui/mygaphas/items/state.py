@@ -908,7 +908,7 @@ class NameView(Element):
         # logger.info("name rel_pos {}".format(name_meta['rel_pos']))
         # logger.info("name size {}".format(name_meta['size']))
         self.position = name_meta['rel_pos']
-        print "name pos from meta", name_meta['rel_pos']
+        # print "name pos from meta", name_meta['rel_pos']
         self.width = name_meta['size'][0]
         self.height = name_meta['size'][1]
 
