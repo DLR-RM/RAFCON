@@ -12,6 +12,7 @@ Next release
     - ports outside of the visible view are no longer drawn, which increases the performance, especially while
       zooming in large state machines
     - Hash calculations of state machines
+    - Placement of NameView
 
 - Bug Fixes:
 
