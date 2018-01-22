@@ -113,6 +113,11 @@ class ExecutionEngine(Observable):
             logger.debug("Start execution engine ...")
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
+
+            if not self.state_machine_manager.active_state_machine_id:
+                logger.error("There exists no active state machine!")
+                return
+
             self.set_execution_mode(StateMachineExecutionStatus.STARTED)
 
             self.start_state_paths = []
