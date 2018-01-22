@@ -286,13 +286,13 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
             assert not rafcon.core.singleton.state_machine_manager.state_machines
             if gui_ready:
                 assert not rafcon.gui.singleton.state_machine_manager_model.state_machines
+        except:
+            raise
+        finally:
             rewind_and_set_libraries()
             reload_config(config, gui_config)
             GUI_INITIALIZED = GUI_SIGNAL_INITIALIZED = False
             gui_thread = gui_ready = None
-        except:
-            raise
-        finally:
             test_multithreading_lock.release()
 
     if unpatch_threading:
