@@ -274,6 +274,7 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
     import rafcon.core.singleton
     global GUI_INITIALIZED, GUI_SIGNAL_INITIALIZED
     global gui_thread, gui_ready, used_gui_threads
+    e = None
     try:
         if caplog is not None:
             assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors)
@@ -281,22 +282,24 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
         try:
             if gui_ready is None:  # gui was not initialized fully only the environment
                 rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
-                wait_for_gui()  # is needed to empty the idle add queue and not party destroy elements in next test
             # check that state machine manager is empty
             assert not rafcon.core.singleton.state_machine_manager.state_machines
             if gui_ready:
                 assert not rafcon.gui.singleton.state_machine_manager_model.state_machines
-        except:
-            raise
+        except Exception as e:
+            pass
         finally:
             rewind_and_set_libraries()
             reload_config(config, gui_config)
+            wait_for_gui()  # is needed to empty the idle add queue and not party destroy elements in next test
             GUI_INITIALIZED = GUI_SIGNAL_INITIALIZED = False
             gui_thread = gui_ready = None
             test_multithreading_lock.release()
 
     if unpatch_threading:
         unpatch_gtkmvc_model_mt()
+    if e:
+        raise e
 
 
 def shutdown_environment_only_core(config=True, caplog=None, expected_warnings=0, expected_errors=0):
