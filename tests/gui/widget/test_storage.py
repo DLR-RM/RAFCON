@@ -1,6 +1,7 @@
 import os
 import logging
 import shutil
+import pytest
 # general tool elements
 from rafcon.utils import log
 
@@ -271,42 +272,31 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
     check_state(sm_m.state_machine, state_machine=True)
 
 
-def _test_storage_without_gui(caplog):
-    print "test storage without gui"
-    testing_utils.initialize_environment(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
-                                         gui_already_started=False)
+@pytest.mark.parametrize("with_gui", [True, False])
+def test_storage_with_gui(with_gui, caplog):
+    print "test storage with gui", with_gui
+
+    if with_gui:
+        testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+    else:
+        testing_utils.initialize_environment(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
+                                             gui_already_started=False)
+
+    e = None
     try:
-        save_state_machine(with_gui=False)
-    except Exception:
-        raise
+        save_state_machine(with_gui)
+    except Exception as e:
+        pass
     finally:
-        # delete all state machines
-        from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
-        from rafcon.gui.singleton import main_window_controller, state_machine_manager_model
-        state_machine_manager.delete_all_state_machines()
+        if with_gui:
+            testing_utils.close_gui()
+            testing_utils.shutdown_environment(caplog=caplog)
+        else:
+            testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
-        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
-        print "test storage without gui finished"
-
-
-def test_storage_with_gui(caplog):
-    print "test storage with gui"
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    try:
-        save_state_machine(with_gui=True)
-    except Exception:
-        raise
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
-
-    from rafcon.core.singleton import state_machine_manager
-    print "%" * 10, state_machine_manager.state_machines
-
-    # this test must not be called by py.test directly
-    # as it is a test without gui it must not create the core and gui singletons
-    # otherwise the multi-threading test will fail
-    _test_storage_without_gui(caplog)
+    if e:
+        raise e
+    print "test storage with gui {0} finished".format(with_gui)
 
 
 # TODO add examples of bad naming that cause before problems \n or [ ] and so on
@@ -349,9 +339,8 @@ def test_on_clean_storing_with_name_in_path(caplog):
 
 
 if __name__ == '__main__':
-    test_storage_with_gui(None)
-    test_storage_without_gui(None)
-    # # test_storage_with_gui(None)
+    test_storage_with_gui(with_gui=True, caplog=None)
+    test_storage_with_gui(with_gui=False, caplog=None)
     test_on_clean_storing_with_name_in_path(None)
     # import pytest
     # pytest.main(['-s', __file__])
