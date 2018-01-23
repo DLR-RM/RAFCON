@@ -515,6 +515,9 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
 def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
     assert tab_key in main_window_controller.get_controller('states_editor_ctrl').tabs
     time_waited = 0.0
+    time_start = time.time()
+    testing_utils.wait_for_gui()
+    time_waited += time.time() - time_start
     state_editor_ctrl = None
     while state_editor_ctrl is None:
         state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
@@ -549,14 +552,21 @@ check_list_root_PCS = ['ports', 'outcomes', 'states', 'scoped_variables', 'trans
 check_list_root_BCS = ['ports', 'outcomes', 'states', 'scoped_variables', 'transitions_internal', 'data_flows_internal']
 
 
-def get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controller, sleep_time_max, logger):
+def debug_logger_print(s, logger):
+    if logger:
+        logger.debug(s)
+    else:
+        print s
+
+
+def get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controller, sleep_time_max, logger=None):
     states_editor_controller = main_window_controller.get_controller('states_editor_ctrl')
     # - do state selection to generate state editor widget
     sm_m.selection.set(state_m)
     # - get states-editor controller
     state_identifier = states_editor_controller.get_state_identifier(state_m)
     [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, state_identifier, sleep_time_max)
-    logger.debug("wait for state's state editor %s" % time_waited)
+    debug_logger_print("wait for state's state editor %s" % time_waited, logger)
     assert state_editor_ctrl.model == state_m
     # - find right row in combo box
     store = state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].get_model()
