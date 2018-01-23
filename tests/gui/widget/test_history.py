@@ -1160,8 +1160,6 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     if with_gui:
         try:
             trigger_state_type_change_tests(with_gui)
-        # except:
-        #     raise
         finally:
             testing_utils.close_gui()
             testing_utils.shutdown_environment(caplog=caplog)
@@ -1176,14 +1174,12 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
 
 
 @pytest.mark.parametrize("with_gui", [True])
-def test_state_type_change_bugs_with_gui(with_gui, caplog):
+def _test_state_type_change_bugs_with_gui(with_gui, caplog):
 
     if with_gui:
         testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
         try:
             trigger_state_type_change_typical_bug_tests(with_gui=True)
-        # except:
-        #     raise
         finally:
             testing_utils.close_gui()
             testing_utils.shutdown_environment(caplog=caplog)
@@ -1201,8 +1197,6 @@ def test_multiple_undo_redo_bug_with_gui(caplog):
     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
     try:
         trigger_multiple_undo_redo_bug_tests(with_gui=True)
-    # except:
-    #     raise
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
