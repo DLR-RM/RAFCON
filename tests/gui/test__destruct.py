@@ -312,45 +312,16 @@ def run_model_construction():
 
 def run_controller_construction(caplog, with_gui):
     from gui.widget.test_states_editor import trigger_state_type_change_tests
-    import gtk
-    import threading
-    from rafcon.gui.controllers.main_window import MainWindowController, MainWindowView
-    import rafcon.gui.models.state_element
 
     # for a start load one of the type change tests to generate a lot of controllers which also close the GUI
     # from gui.widget.test_states_editor import create_models, MainWindowView, \
     #     MainWindowController, trigger_state_type_change_tests, gtk, threading
 
-    _, sm_m, state_dict = create_models()
+    _, sm_m, state_dict = testing_utils.call_gui_callback(create_models)
 
     print "start 3"
-    main_window_controller = None
-    if with_gui:
-        main_window_view = MainWindowView()
 
-        # load the meta data for the state machine
-        rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
-
-        main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
-        # Wait for GUI to initialize
-        while gtk.events_pending():
-            gtk.main_iteration(False)
-    else:
-        # load the meta data for the state machine
-        rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
-
-    thread = threading.Thread(target=trigger_state_type_change_tests,
-                              args=[rafcon.gui.singleton.state_machine_manager_model, main_window_controller,
-                                    sm_m, state_dict, with_gui, logger])
-
-    thread.start()
-    if with_gui:
-        gtk.main()
-        logger.debug("Gtk main loop exited!")
-        thread.join()
-        logger.debug("Joined test triggering thread!")
-    else:
-        thread.join()
+    trigger_state_type_change_tests(with_gui=True)
 
 
 def patch_core_classes_with_log():
@@ -386,7 +357,6 @@ def patch_core_classes_with_log():
         with open(gen_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(self, id(self), "state_element", self.gen_time_stamp))
         old_state_element_init(self, parent)
-
 
     rafcon.core.states.state.State.__init__ = state_init
     rafcon.core.state_elements.state_element.StateElement.__init__ = state_element_init
@@ -591,76 +561,78 @@ def test_model_and_core_destruct(caplog):
 
 def _test_model_and_core_destruct_with_gui(caplog):
 
+    testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
+
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
-
-    # TODO make it fully working
-
-    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
     patch_core_classes_with_log()
     patch_model_classes_with_log()
     patch_ctrl_classes_with_log()
+    try:
+        run_controller_construction(caplog, with_gui=True)
 
-    run_controller_construction(caplog, with_gui=True)
+        elements = [('state', False, rafcon.core.states.state.State),
+                    ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
+                    ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
+                    ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
+                    ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
+                    ]
 
-    elements = [('state', False, rafcon.core.states.state.State),
-                ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
-                ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
-                ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
-                ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
-                ]
-
-    check_destruction_logs(elements)
-
-    un_patch_core_classes_from_log()
-    un_patch_model_classes_from_log()
-    un_patch_ctrl_classes_from_log()
-
-    testing_utils.shutdown_environment(caplog=caplog)
+        check_destruction_logs(elements)
+    except Exception as e:
+        raise e
+    finally:
+        un_patch_core_classes_from_log()
+        un_patch_model_classes_from_log()
+        un_patch_ctrl_classes_from_log()
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 def _test_widget_destruct(caplog):
 
+    # TODO make it fully working and later activate modification history and auto backup
+    testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
+
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
-
-    # TODO make it fully working and later activate modification history and auto backup
-
-    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
     patch_core_classes_with_log()
     patch_model_classes_with_log()
     patch_ctrl_classes_with_log()
     patch_gtkmvc_classes_with_log()
 
-    run_controller_construction(caplog, with_gui=True)
+    try:
+        run_controller_construction(caplog, with_gui=True)
 
-    elements = [('state', False, rafcon.core.states.state.State),
-                ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
-                ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
-                ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
-                ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
-                ('gtkmvc_view', False, gtkmvc.view.View),
-                ('gtkmvc_controller', False, gtkmvc.controller.Controller),
-                ]
+        elements = [('state', False, rafcon.core.states.state.State),
+                    ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
+                    ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
+                    ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
+                    ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
+                    ('gtkmvc_view', False, gtkmvc.view.View),
+                    ('gtkmvc_controller', False, gtkmvc.controller.Controller),
+                    ]
 
-    check_destruction_logs(elements)
-
-    un_patch_core_classes_from_log()
-    un_patch_model_classes_from_log()
-    un_patch_ctrl_classes_from_log()
-    un_patch_gtkmvc_classes_from_log()
-
-    testing_utils.shutdown_environment(caplog=caplog)
+        check_destruction_logs(elements)
+    except Exception as e:
+        raise e
+    finally:
+        un_patch_core_classes_from_log()
+        un_patch_model_classes_from_log()
+        un_patch_ctrl_classes_from_log()
+        un_patch_gtkmvc_classes_from_log()
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':
+    # _test_widget_destruct(None)
+    # _test_model_and_core_destruct_with_gui(None)
     test_core_destruct(None)
     test_model_and_core_destruct(None)
-    # test_model_and_core_destruct_with_gui(None)
-    # test_widget_destruct(None)
     # import pytest
     # pytest.main(['-s', __file__])
