@@ -561,6 +561,9 @@ def test_core_destruct(caplog):
 
 def test_model_and_core_destruct(caplog):
 
+    import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.state_element
+
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False},
                                          gui_already_started=False)
 
@@ -587,6 +590,10 @@ def test_model_and_core_destruct(caplog):
 
 
 def _test_model_and_core_destruct_with_gui(caplog):
+
+    import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.state_element
+    import rafcon.gui.controllers.utils.extended_controller
 
     # TODO make it fully working
 
@@ -615,6 +622,10 @@ def _test_model_and_core_destruct_with_gui(caplog):
 
 
 def _test_widget_destruct(caplog):
+
+    import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.state_element
+    import rafcon.gui.controllers.utils.extended_controller
 
     # TODO make it fully working and later activate modification history and auto backup
 
