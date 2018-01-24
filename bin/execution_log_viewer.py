@@ -3,17 +3,18 @@
 # example basictreeview.py
 
 import pygtk
-pygtk.require('2.0')
 import gtk
 import shelve
 import argparse
+
+import rafcon.utils.execution_log as log_helper
+
+pygtk.require('2.0')
 
 parser = argparse.ArgumentParser()
 parser.add_argument("file", help="path to the log file")
 args = parser.parse_args()
 
-import json
-import rafcon.utils.execution_log as log_helper
 
 class BasicTreeViewExample:
 
@@ -25,16 +26,22 @@ class BasicTreeViewExample:
     def add_collapsed_key(self, parent, key):
         piter = self.treestore.append(parent, ["%s (%s)" % (self.items[key]['state_name'],self.items[key]['state_type']), str(key)])
 
+        returns = []
         if key in self.next_:
-            self.add_collapsed_key(parent, self.next_[key])
+            # self.add_collapsed_key(parent, self.next_[key])
+            returns.append((parent, self.next_[key]))
 
         if key in self.hierarchy:
-            self.add_collapsed_key(piter, self.hierarchy[key])
+            # self.add_collapsed_key(piter, self.hierarchy[key])
+            returns.append((piter, self.hierarchy[key]))
 
         if key in self.concurrent:
             for i, next_key in enumerate(self.concurrent[key]):
                 tmppiter = self.treestore.append(piter, [str(i), None])
-                self.add_collapsed_key(tmppiter, next_key)
+                # self.add_collapsed_key(tmppiter, next_key)
+                returns.append((tmppiter, next_key))
+
+        return returns
 
     def add_key(self, parent, key):
         piter = self.treestore.append(parent, [str(key)])
@@ -57,7 +64,9 @@ class BasicTreeViewExample:
     def __init__(self, filename):
         self.hist_items = shelve.open(filename, 'r')
         self.start, self.next_, self.concurrent, self.hierarchy, self.items = \
-            log_helper.log_to_collapsed_structure(self.hist_items)
+            log_helper.log_to_collapsed_structure(self.hist_items,
+                                                  throw_on_pickle_error=False,
+                                                  include_erroneous_data_ports=True)
 
         # Create a new window
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -68,16 +77,16 @@ class BasicTreeViewExample:
 
         self.window.connect("delete_event", self.delete_event)
 
-        #Setting up the self.grid in which the elements are to be positionned
+        # Setting up the self.grid in which the elements are to be positioned
         self.paned = gtk.HPaned()
         self.window.add(self.paned)
 
-        #setting up the layout, putting the treeview in a scrollwindow, and the buttons in a row
+        # setting up the layout, putting the treeview in a scrollwindow, and the buttons in a row
         self.scrollable_treelist = gtk.ScrolledWindow()
-#        self.scrollable_treelist.set_vexpand(True)
+        # self.scrollable_treelist.set_vexpand(True)
         self.paned.add1(self.scrollable_treelist)
 
-        #setting up text view
+        # setting up text view
         self.scrollable_textview = gtk.ScrolledWindow()
         self.paned.add2(self.scrollable_textview)
 
@@ -89,8 +98,20 @@ class BasicTreeViewExample:
         # create a TreeStore with one string column to use as the model
         self.treestore = gtk.TreeStore(str, str)
 
-        # we'll aidd some data now - 4 rows with 3 child rows each
-        self.add_collapsed_key(None, self.start['run_id'])
+        # we'll add some data now - 4 rows with 3 child rows each
+        if not self.start:
+            print 'WARNING: no start item found, just listing all items'
+            elements = [(None, run_id) for run_id in self.items.keys()]
+        else:
+            elements = [(None, self.start['run_id'])]
+        while True:
+            new_elements = []
+            for e in elements:
+                new_elements.extend(self.add_collapsed_key(e[0], e[1]))
+            if len(new_elements) == 0:
+                break
+            else:
+                elements = new_elements
 #        for parent in range(4):
 #            piter = self.treestore.append(None, ['parent %i' % parent])
 #            for child in range(3):
@@ -140,6 +161,7 @@ class BasicTreeViewExample:
 
 def main():
     gtk.main()
+
 
 if __name__ == "__main__":
     tvexample = BasicTreeViewExample(args.file)

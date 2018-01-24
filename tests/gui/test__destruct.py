@@ -3,13 +3,6 @@ import gc
 import time
 import gtkmvc
 
-import rafcon
-import rafcon.gui
-import rafcon.gui.controllers
-import rafcon.gui.controllers.utils.extended_controller
-import rafcon.gui.models
-import rafcon.gui.models.state_element
-
 import rafcon.core.singleton
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
@@ -37,15 +30,15 @@ GTKMVC_FILES = ['gtkmvc_view', 'gtkmvc_controller']
 FILES = CORE_FILES + MODEL_FILES + CTRL_FILES
 
 # store method of core element classes
-old_state_init = rafcon.core.states.state.State.__init__
-old_state_element_init = rafcon.core.state_elements.state_element.StateElement.__init__
+old_state_init = None
+old_state_element_init = None
 
 # store method of model element classes
-old_abstract_state_model_init = rafcon.gui.models.abstract_state.AbstractStateModel.__init__
-old_state_element_model_init = rafcon.gui.models.state_element.StateElementModel.__init__
+old_abstract_state_model_init = None
+old_state_element_model_init = None
 
 # store method of extended ctrl class
-old_extended_controller_init = rafcon.gui.controllers.utils.extended_controller.ExtendedController.__init__
+old_extended_controller_init = None
 
 # store method of gtkmvc element classes
 old_gtkmvc_view_init = gtkmvc.View.__init__
@@ -184,6 +177,87 @@ def remove_log_files(elements):
             os.remove(log_file_path)
 
 
+def create_models():
+    import logging
+    import rafcon.core.singleton
+    from rafcon.core.state_machine import StateMachine
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    import rafcon.gui.singleton
+
+    # global_gui_config.set_config_value('HISTORY_ENABLED', True)
+    logger = log.get_logger(__name__)
+    logger.setLevel(logging.DEBUG)
+    for handler in logging.getLogger('gtkmvc').handlers:
+        logging.getLogger('gtkmvc').removeHandler(handler)
+
+    state1 = ExecutionState('State1', state_id='STATE1')
+    output_state1 = state1.add_output_data_port("output", "int")
+    input_state1 = state1.add_input_data_port("input", "str", "zero")
+    state2 = ExecutionState('State2', state_id='STATE2')
+    input_par_state2 = state2.add_input_data_port("par", "int", 0)
+    output_res_state2 = state2.add_output_data_port("res", "int")
+    state4 = HierarchyState(name='Nested', state_id='NESTED')
+    state4.add_outcome('GoGo')
+    output_state4 = state4.add_output_data_port("out", "int")
+    state5 = ExecutionState('Nested2', state_id='NESTED2')
+    state5.add_outcome('HereWeGo')
+    input_state5 = state5.add_input_data_port("in", "int", 0)
+    state3 = HierarchyState(name='State3', state_id='STATE3')
+    input_state3 = state3.add_input_data_port("input", "int", 0)
+    output_state3 = state3.add_output_data_port("output", "int")
+    state3.add_state(state4)
+    state3.add_state(state5)
+    state3.set_start_state(state4)
+    state3.add_scoped_variable("share", "int", 3)
+    state3.add_transition(state4.state_id, 0, state5.state_id, None)
+    state3.add_transition(state5.state_id, 0, state3.state_id, 0)
+    state3.add_data_flow(state4.state_id, output_state4, state5.state_id, input_state5)
+    state3.add_outcome('Branch1')
+    state3.add_outcome('Branch2')
+
+    ctr_state = HierarchyState(name="Container", state_id='CONT2')
+    ctr_state.add_state(state1)
+    ctr_state.add_state(state2)
+    ctr_state.add_state(state3)
+    input_ctr_state = ctr_state.add_input_data_port("ctr_in", "str", "zero")
+    output_ctr_state = ctr_state.add_output_data_port("ctr_out", "int")
+    ctr_state.set_start_state(state1)
+    ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)
+    ctr_state.add_transition(state2.state_id, 0, state3.state_id, None)
+    ctr_state.add_transition(state3.state_id, 0, ctr_state.state_id, 0)
+    ctr_state.add_data_flow(state1.state_id, output_state1, state2.state_id, input_par_state2)
+    ctr_state.add_data_flow(state2.state_id, output_res_state2, state3.state_id, input_state3)
+    ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, state1.state_id, input_state1)
+    ctr_state.add_data_flow(state3.state_id, output_state3, ctr_state.state_id, output_ctr_state)
+    ctr_state.name = "Container"
+
+    ctr_state.add_input_data_port("input", "str", "default_value1")
+    ctr_state.add_input_data_port("pos_x", "str", "default_value2")
+    ctr_state.add_input_data_port("pos_y", "str", "default_value3")
+
+    ctr_state.add_output_data_port("output", "str", "default_value1")
+    ctr_state.add_output_data_port("result", "str", "default_value2")
+
+    scoped_variable1_ctr_state = ctr_state.add_scoped_variable("scoped", "str", "default_value1")
+    scoped_variable3_ctr_state = ctr_state.add_scoped_variable("ctr", "int", 42)
+
+    ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
+    ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
+
+    state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
+                  'Nested2': state5}
+    sm = StateMachine(ctr_state)
+    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
+    rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
+    testing_utils.wait_for_gui()
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    # sm_m.history.fake = False
+    # print "with_prints is: ", sm_m.history.with_prints
+    # sm_m.history.with_prints = False
+    return logger, sm_m, state_dict
+
+
 def check_destruction_logs(elements, print_method=None):
     print_method = logger.warning if print_method is None else print_method
     result_dict = get_log_elements(elements, with_prints=True, print_method=print_method)
@@ -218,12 +292,13 @@ def check_destruction_logs(elements, print_method=None):
 
 
 def run_model_construction():
+    import rafcon.core.singleton
+    import rafcon.gui.models.state
 
-    from gui.test_history import create_models
     logger, sm_m, state_dict = create_models()
     # root_state = sm_m.root_state
 
-    c_state, state_dict= create_container_state()
+    c_state, state_dict = create_container_state()
     s_m = rafcon.gui.models.state.StateModel(c_state.states['STATE1'])
     rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
     s_m.prepare_destruction()
@@ -236,11 +311,17 @@ def run_model_construction():
 
 
 def run_controller_construction(caplog, with_gui):
-    # for a start load one of the type change tests to generate a lot of controllers which also close the GUI
-    from gui.widget.test_states_editor import create_models, MainWindowView, \
-        MainWindowController, trigger_state_type_change_tests, gtk, threading
+    from gui.widget.test_states_editor import trigger_state_type_change_tests
+    import gtk
+    import threading
+    from rafcon.gui.controllers.main_window import MainWindowController, MainWindowView
+    import rafcon.gui.models.state_element
 
-    sm_m, state_dict = create_models()
+    # for a start load one of the type change tests to generate a lot of controllers which also close the GUI
+    # from gui.widget.test_states_editor import create_models, MainWindowView, \
+    #     MainWindowController, trigger_state_type_change_tests, gtk, threading
+
+    _, sm_m, state_dict = create_models()
 
     print "start 3"
     main_window_controller = None
@@ -274,6 +355,14 @@ def run_controller_construction(caplog, with_gui):
 
 def patch_core_classes_with_log():
 
+    import rafcon.core.states.state
+    import rafcon.core.state_elements.state_element
+
+    global old_state_init, old_state_element_init
+
+    old_state_init = rafcon.core.states.state.State.__init__
+    old_state_element_init = rafcon.core.state_elements.state_element.StateElement.__init__
+
     check_log_files(CORE_FILES)
 
     def state_init(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
@@ -304,12 +393,25 @@ def patch_core_classes_with_log():
 
 
 def un_patch_core_classes_from_log():
+    import rafcon.core.states.state
+    import rafcon.core.state_elements.state_element
+
+    global old_state_init, old_state_element_init
+
     rafcon.core.states.state.State.__init__ = old_state_init
     rafcon.core.state_elements.state_element.StateElement.__init__ = old_state_element_init
     remove_log_files(CORE_FILES)
 
 
 def patch_model_classes_with_log():
+
+    import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.state_element
+
+    global old_abstract_state_model_init, old_state_element_model_init
+
+    old_abstract_state_model_init = rafcon.gui.models.abstract_state.AbstractStateModel.__init__
+    old_state_element_model_init = rafcon.gui.models.state_element.StateElementModel.__init__
 
     check_log_files(MODEL_FILES)
 
@@ -342,6 +444,11 @@ def patch_model_classes_with_log():
 
 
 def un_patch_model_classes_from_log():
+    import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.state_element
+
+    global old_abstract_state_model_init, old_state_element_model_init
+
     rafcon.gui.models.abstract_state.AbstractStateModel.__init__ = old_abstract_state_model_init
     rafcon.gui.models.state_element.StateElementModel.__init__ = old_state_element_model_init
     remove_log_files(MODEL_FILES)
@@ -350,6 +457,10 @@ def un_patch_model_classes_from_log():
 def patch_ctrl_classes_with_log():
 
     # TODO maybe remove this again because the gtkmvc classes are covering this case
+    import rafcon.gui.controllers.utils.extended_controller
+    global old_extended_controller_init
+
+    old_extended_controller_init = rafcon.gui.controllers.utils.extended_controller.ExtendedController.__init__
 
     check_log_files(CTRL_FILES)
 
@@ -371,11 +482,15 @@ def patch_ctrl_classes_with_log():
 
 
 def un_patch_ctrl_classes_from_log():
+    import rafcon.gui.controllers.utils.extended_controller
+    global old_extended_controller_init
     rafcon.gui.controllers.utils.extended_controller.ExtendedController.__init__ = old_extended_controller_init
     remove_log_files(CTRL_FILES)
 
 
 def patch_gtkmvc_classes_with_log():
+
+    global old_gtkmvc_view_init, old_gtkmvc_controller_init
 
     check_log_files(GTKMVC_FILES)
 
@@ -406,6 +521,7 @@ def patch_gtkmvc_classes_with_log():
 
 
 def un_patch_gtkmvc_classes_from_log():
+    global old_gtkmvc_view_init, old_gtkmvc_controller_init
     gtkmvc.View.__init__ = old_gtkmvc_view_init
     gtkmvc.Controller.__init__ = old_gtkmvc_controller_init
     remove_log_files(GTKMVC_FILES)
@@ -417,7 +533,7 @@ def print_func(s):
 
 def test_core_destruct(caplog):
 
-    testing_utils.initialize_environment_only_core()
+    testing_utils.initialize_environment_core()
 
     patch_core_classes_with_log()
 
@@ -440,12 +556,13 @@ def test_core_destruct(caplog):
 
     un_patch_core_classes_from_log()
 
-    testing_utils.shutdown_environment_only_core(caplog=caplog)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_model_and_core_destruct(caplog):
 
-    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False},
+                                         gui_already_started=False)
 
     patch_core_classes_with_log()
     patch_model_classes_with_log()
@@ -466,7 +583,7 @@ def test_model_and_core_destruct(caplog):
     un_patch_core_classes_from_log()
     un_patch_model_classes_from_log()
 
-    testing_utils.shutdown_environment(caplog=caplog)
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def _test_model_and_core_destruct_with_gui(caplog):

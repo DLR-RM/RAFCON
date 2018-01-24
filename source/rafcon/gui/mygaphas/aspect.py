@@ -11,6 +11,7 @@
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from simplegeneric import generic
 from gaphas.geometry import distance_line_point, distance_rectangle_point
 from gaphas.segment import Segment
 from gaphas.aspect import HandleFinder, ItemHandleFinder, HandleSelection, ItemHandleSelection, ItemHandleInMotion, \
@@ -187,9 +188,28 @@ class SegmentHandleSelection(ItemHandleSelection):
         after = handles[handle_index + 1]
         d, p = distance_line_point(before.pos, after.pos, handle.pos)
 
-        if d < 1. / item.hierarchy_level:
+        # Checks how far the waypoint is from an imaginary line connecting the previous and next way/end point
+        # If it is close, the two segments are merged to one
+        merge_distance = item.line_width * 4
+        if d < merge_distance:
             assert len(self.view.canvas.solver._marked_cons) == 0
             Segment(item, self.view).merge_segment(segment)
 
         if handle:
             item.request_update()
+
+
+class ItemPaintHovered(object):
+    """
+    Paints on top of all items, just for the hovered item (see painter.HoveredItemPainter)
+    """
+
+    def __init__(self, item, view):
+        self.item = item
+        self.view = view
+
+    def paint(self, context, selected):
+        pass
+
+
+PaintHovered = generic(ItemPaintHovered)

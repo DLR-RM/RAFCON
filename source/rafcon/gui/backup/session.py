@@ -3,6 +3,7 @@
 import os
 
 from rafcon.core.storage import storage
+from rafcon.gui.utils import wait_for_gui
 from rafcon.utils import log, storage_utils
 logger = log.get_logger(__name__)
 
@@ -127,6 +128,7 @@ def restore_session_from_runtime_config():
             # logger.info("backup from last saved", path, sm_meta_dict)
             state_machine = storage.load_state_machine_from_path(path)
             state_machine_manager_model.state_machine_manager.add_state_machine(state_machine)
+            wait_for_gui()
             state_machine_m = state_machine_manager_model.state_machines[state_machine.state_machine_id]
 
         open_sm[idx] = state_machine_m
@@ -134,9 +136,7 @@ def restore_session_from_runtime_config():
     global_runtime_config.extend_recently_opened_by_current_open_state_machines()
 
     if global_gui_config.get_config_value('GAPHAS_EDITOR'):
-        import gtk
-        while gtk.events_pending():
-            gtk.main_iteration(False)
+        wait_for_gui()
 
     # restore all state machine selections separate to avoid states-editor and state editor creation problems
     for idx, tab_meta_dict in enumerate(open_tabs):

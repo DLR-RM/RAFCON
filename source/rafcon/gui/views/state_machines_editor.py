@@ -16,7 +16,6 @@ import gobject
 from gtkmvc import View
 from rafcon.gui.utils import constants
 from rafcon.gui.config import global_gui_config as gui_config
-from rafcon.gui.helpers.label import create_image_menu_item
 
 
 class StateMachinesEditorView(View):
@@ -34,13 +33,7 @@ class StateMachinesEditorView(View):
         self.top = 'notebook'
 
 
-# gobject.signal_new("add_state_machine", gtk.VBox, gobject.SIGNAL_RUN_FIRST, None, (gtk.VBox,))
-# gobject.signal_new("switch-page", gtk.VBox, gobject.SIGNAL_RUN_LAST, None,
-#                    (gtk.Notebook, gobject.GPointer, gobject.TYPE_UINT))
-
-
-gobject.signal_new("add_state_machine", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, ())
-gobject.signal_new("close_state_machine", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, (int, gobject.TYPE_PYOBJECT))
+gobject.signal_new("add_clicked", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, ())
 
 
 class PlusAddNotebook(gtk.Notebook):
@@ -87,53 +80,11 @@ class PlusAddNotebook(gtk.Notebook):
         if pb_x - constants.ICON_MARGIN <= event.x <= right_row_end_x and \
                 pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN and \
                 event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
-            self.emit("add_state_machine")
-            return True
-
-        elif pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN and \
-                event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
-
-            number_of_pages = self.get_n_pages()
-            menu = gtk.Menu()
-            for p in range(number_of_pages):
-                page = self.get_nth_page(p)
-                hbox_tab_label = self.get_tab_label(page)
-                text = hbox_tab_label.tab_label.get_text()
-                menu_item = create_image_menu_item(text, constants.BUTTON_EXCHANGE,
-                                                   callback=self.change_page, callback_args=[p])
-                menu.append(menu_item)
-
-            menu_item = create_image_menu_item("New State Machine", constants.BUTTON_ADD,
-                                               callback=self.do_emit, callback_args=["add_state_machine"])
-            menu.append(menu_item)
-
-            page_number = self.get_current_page()
-            if page_number is not None:
-                menu_item = create_image_menu_item("Close State Machine", constants.BUTTON_CLOSE,
-                                                   callback=self.do_emit, callback_args=["close_state_machine",
-                                                                                         page_number, event])
-                menu.append(menu_item)
-
-            menu.show_all()
-            menu.popup(None, None, None, event.button, event.time)
+            self.emit("add_clicked")
             return True
 
     def do_emit(self, *args):
         self.emit(*args[1:])
-
-    def change_page(self, widget, new_page_number):
-        self.set_current_page(new_page_number)
-
-    def get_page_number_of_the_page_below_the_cursor(self, widget, event):
-        x, y = event.x, event.y
-        for i in range(0, self.get_n_pages()):
-            alloc = self.get_tab_label(self.get_nth_page(i)).get_allocation()
-            widget_position = widget.get_allocation()
-            mouse_x = widget_position.x + x
-            mouse_y = widget_position.y + y
-            if alloc.x < mouse_x < alloc.x + alloc.width and alloc.y < mouse_y < alloc.y + alloc.height:
-                return i
-        return None
 
     def on_button_release(self, widget, event):
         """ Emit an add_state_machine signal if a left click is performed on the drawn pix-buffer add button area and 
@@ -147,14 +98,8 @@ class PlusAddNotebook(gtk.Notebook):
         if pb_x - constants.ICON_MARGIN <= event.x <= pb_x + pb_width + constants.ICON_MARGIN and \
                 pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN \
                 and self._add_button_drawn and event.state & gtk.gdk.BUTTON1_MASK:
-            self.emit("add_state_machine")
+            self.emit("add_clicked")
             return True
-
-        if event.state & gtk.gdk.BUTTON2_MASK:
-            page_number = self.get_page_number_of_the_page_below_the_cursor(widget, event)
-            if page_number is not None:
-                self.emit("close_state_machine", page_number, event)
-                return True
 
     def on_expose_event(self, widget, event):
         if self.get_n_pages() > 0 and self.enable_add_button:

@@ -37,7 +37,7 @@ def open_folder(query):
 
 def test_library_relocation(caplog):
 
-    testing_utils.initialize_environment_only_core(libraries={"test_scripts": testing_utils.TEST_ASSETS_PATH})
+    testing_utils.initialize_environment_core(libraries={"test_scripts": testing_utils.TEST_ASSETS_PATH})
 
     interface.open_folder_func = open_folder
 
@@ -47,6 +47,7 @@ def test_library_relocation(caplog):
         os.path.join("unit_test_state_machines", "library_relocation_test")))
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
     rafcon.core.singleton.state_machine_execution_engine.start()
     rafcon.core.singleton.state_machine_execution_engine.join()

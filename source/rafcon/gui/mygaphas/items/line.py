@@ -23,7 +23,7 @@ from rafcon.gui.mygaphas.constraint import KeepPointWithinConstraint, KeepPortDi
 from rafcon.gui.mygaphas.items.ports import IncomeView, OutcomeView, ScopedVariablePortView, \
                                             InputPortView, OutputPortView, LogicPortView, PortView
 from rafcon.gui.utils import constants
-from rafcon.gui.mygaphas.utils.gap_draw_helper import get_text_layout
+from rafcon.gui.mygaphas.utils.gap_draw_helper import get_text_layout, FONT_SIZE
 from rafcon.gui.mygaphas.utils.cache.image_cache import ImageCache
 
 
@@ -264,8 +264,15 @@ class PerpLine(Line):
         # Parameters have changed or nothing in cache => redraw
         else:
             # First retrieve pango layout to determine and store size of label
-            layout = get_text_layout(c, self.name, outcome_side)
-            label_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
+            layout = get_text_layout(c, self.name, FONT_SIZE)
+
+            ink_extents, logical_extents = layout.get_extents()
+            extents = [extent / float(SCALE) for extent in logical_extents]
+            real_label_size = extents[2], extents[3]
+            desired_height = outcome_side * 3
+            scale_factor = real_label_size[1] / desired_height
+            label_size = real_label_size[0] / scale_factor, desired_height
+
             self._last_label_size = label_size
 
             # The size information is used to update the caching parameters and retrieve a new context with an image
@@ -274,6 +281,7 @@ class PerpLine(Line):
             c = self._label_image_cache.get_context_for_image(current_zoom)
 
             c.set_source_rgba(*self._arrow_color)
+            c.scale(1. / scale_factor, 1. / scale_factor)
             c.update_layout(layout)
             c.show_layout(layout)
 

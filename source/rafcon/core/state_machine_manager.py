@@ -104,8 +104,6 @@ class StateMachineManager(Observable):
                 raise AttributeError("The state machine is already open {0}".format(state_machine.file_system_path))
         logger.debug("Add new state machine with id {0}".format(state_machine.state_machine_id))
         self._state_machines[state_machine.state_machine_id] = state_machine
-        if self.active_state_machine_id is None:
-            self.active_state_machine_id = state_machine.state_machine_id
 
     @Observable.observed
     def remove_state_machine(self, state_machine_id):

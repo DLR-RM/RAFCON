@@ -141,6 +141,8 @@ class MyCanvas(gaphas.canvas.Canvas):
         def priority_handled(event):
             event.set()
         priority = (gobject.PRIORITY_HIGH_IDLE + gobject.PRIORITY_DEFAULT_IDLE) / 2
+        # idle_add is necessary here, as we do not want to block the user from interacting with the GUI
+        # while gaphas is redrawing
         gobject.idle_add(priority_handled, event, priority=priority)
         while not event.is_set():
             gtk.main_iteration(False)

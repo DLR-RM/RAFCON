@@ -62,37 +62,37 @@ def reduce_to_parent_states(models):
 
 def updates_selection(update_selection):
     """ Decorator indicating that the decorated method could change the selection"""
-    def handle_update(self, *args, **kwargs):
+    def handle_update(selection, *args, **kwargs):
         """Check for changes in the selection
 
         If the selection is changed by the decorated method, the internal core element lists are updated and a signal is
         emitted with the old and new selection as well as the name of the method that caused the change..
         """
-        old_selection = self.get_all()
-        update_selection(self, *args, **kwargs)
-        new_selection = self.get_all()
+        old_selection = selection.get_all()
+        update_selection(selection, *args, **kwargs)
+        new_selection = selection.get_all()
 
         affected_models = old_selection ^ new_selection
         if len(affected_models) != 0:  # The selection was updated
             deselected_models = old_selection - new_selection
             selected_models = new_selection - old_selection
-            map(self.relieve_model, deselected_models)
-            map(self.observe_model, selected_models)
+            map(selection.relieve_model, deselected_models)
+            map(selection.observe_model, selected_models)
 
             # Maintain internal lists for fast access
-            self.update_core_element_lists()
+            selection.update_core_element_lists()
 
             # Clear focus if no longer in selection
-            if self.focus and self.focus not in new_selection:
-                del self.focus
+            if selection.focus and selection.focus not in new_selection:
+                del selection.focus
 
             # Send notifications about changes
             affected_classes = set(model.core_element.__class__ for model in affected_models)
             msg_namedtuple = SelectionChangedSignalMsg(update_selection.__name__, new_selection, old_selection,
                                                        affected_classes)
-            self.selection_changed_signal.emit(msg_namedtuple)
-            if self.parent_signal is not None:
-                self.parent_signal.emit(msg_namedtuple)
+            selection.selection_changed_signal.emit(msg_namedtuple)
+            if selection.parent_signal is not None:
+                selection.parent_signal.emit(msg_namedtuple)
     return handle_update
 
 
@@ -134,13 +134,13 @@ class Selection(ModelMT):
         ModelMT.__init__(self)
 
         self._selected = set()
-        self._input_data_ports = []
-        self._output_data_ports = []
-        self._outcomes = []
-        self._data_flows = []
-        self._transitions = []
-        self._states = []
-        self._scoped_variables = []
+        self._input_data_ports = set()
+        self._output_data_ports = set()
+        self._outcomes = set()
+        self._data_flows = set()
+        self._transitions = set()
+        self._states = set()
+        self._scoped_variables = set()
         self.selection_changed_signal = Signal()
         self.focus_signal = Signal()
         self.parent_signal = parent_signal
@@ -258,7 +258,6 @@ class Selection(ModelMT):
         return self._focus
 
     @focus.setter
-    @updates_selection
     def focus(self, model):
         """Sets the passed model as focused element
 
@@ -269,9 +268,11 @@ class Selection(ModelMT):
             return
 
         self._check_model_types(model)
+        self.add(model)
         focus_msg = FocusSignalMsg(model, self._focus)
         self._focus = model
         self._selected.add(model)
+        self._selected = reduce_to_parent_states(self._selected)
         self.focus_signal.emit(focus_msg)
 
     @focus.deleter

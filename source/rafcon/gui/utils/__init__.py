@@ -9,3 +9,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+
+def wait_for_gui():
+    import gtk
+    while gtk.events_pending():
+        gtk.main_iteration(False)

@@ -2,23 +2,6 @@ import pytest
 
 from gtkmvc.observer import Observer
 
-from rafcon.core.states.state import State
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
-from rafcon.core.state_elements.scope import ScopedVariable
-from rafcon.core.state_elements.outcome import Outcome
-from rafcon.core.state_elements.transition import Transition
-from rafcon.core.state_elements.data_flow import DataFlow
-
-from rafcon.gui.models.selection import Selection, reduce_to_parent_states
-from rafcon.gui.models.container_state import ContainerStateModel
-from rafcon.gui.models.data_port import DataPortModel
-from rafcon.gui.models.scoped_variable import ScopedVariableModel
-from rafcon.gui.models.transition import TransitionModel
-from rafcon.gui.models.data_flow import DataFlowModel
-from rafcon.gui.models.meta import MetaModel
-
 
 class SignalCounter(Observer):
     """Observes a s signal and counts its emits"""
@@ -42,6 +25,10 @@ class SignalCounter(Observer):
 
 
 def get_models():
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.gui.models.container_state import ContainerStateModel
+
     def get_outcome_with_name(state_m, outcome_name):
         return [outcome_m for outcome_m in state_m.outcomes if outcome_m.outcome.name == outcome_name][0]
 
@@ -76,6 +63,7 @@ def get_models():
 
 
 def test_add_set_remove_clear():
+    from rafcon.gui.models.selection import Selection
     selection = Selection()
     signal_observer = SignalCounter(selection, "selection_changed_signal")
     states_m, outcomes_e_m, outcomes_h_m = get_models()
@@ -139,6 +127,19 @@ def test_add_set_remove_clear():
 
 
 def test_all_models():
+    from rafcon.core.states.state import State
+    from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
+    from rafcon.core.state_elements.scope import ScopedVariable
+    from rafcon.core.state_elements.outcome import Outcome
+    from rafcon.core.state_elements.transition import Transition
+    from rafcon.core.state_elements.data_flow import DataFlow
+
+    from rafcon.gui.models.selection import Selection
+    from rafcon.gui.models.data_port import DataPortModel
+    from rafcon.gui.models.scoped_variable import ScopedVariableModel
+    from rafcon.gui.models.transition import TransitionModel
+    from rafcon.gui.models.data_flow import DataFlowModel
+
     selection = Selection()
     states_m, outcomes_e_m, outcomes_h_m = get_models()
 
@@ -185,6 +186,10 @@ def test_all_models():
 
 
 def test_invalid_model():
+    from rafcon.core.states.state import State
+    from rafcon.gui.models.selection import Selection
+    from rafcon.gui.models.meta import MetaModel
+
     selection = Selection()
     meta_m = MetaModel()
 
@@ -201,6 +206,8 @@ def test_invalid_model():
 
 
 def test_adding_same_model_twice():
+    from rafcon.gui.models.selection import Selection, reduce_to_parent_states
+
     selection = Selection()
     states_m, outcomes_e_m, outcomes_h_m = get_models()
     root_state_m, execution_state_m, hierarchy_state_m, child_state_m = states_m
@@ -221,6 +228,7 @@ def test_adding_same_model_twice():
 
 
 def test_selection_reduction():
+    from rafcon.gui.models.selection import Selection
     selection = Selection()
     states_m, outcomes_e_m, outcomes_h_m = get_models()
     root_state_m, execution_state_m, hierarchy_state_m, child_state_m = states_m
@@ -260,8 +268,11 @@ def test_selection_reduction():
 
 
 def test_focus():
+    from rafcon.gui.models.selection import Selection
+
     selection = Selection()
-    signal_observer = SignalCounter(selection, "focus_signal")
+    focus_signal_observer = SignalCounter(selection, "focus_signal")
+    selection_signal_observer = SignalCounter(selection, "selection_changed_signal")
     states_m, outcomes_e_m, outcomes_h_m = get_models()
     root_state_m, execution_state_m, hierarchy_state_m, child_state_m = states_m
 
@@ -272,18 +283,29 @@ def test_focus():
     assert selection.focus is execution_state_m
     assert len(selection) == 1
     assert len(selection.states) == 1
-    assert signal_observer.count == 1
+    assert focus_signal_observer.count == 1
+    assert selection_signal_observer.count == 1
 
     # Set focus to same element
     selection.focus = execution_state_m
     assert selection.focus is execution_state_m
     assert len(selection) == 1
     assert len(selection.states) == 1
-    assert signal_observer.count == 2
+    assert focus_signal_observer.count == 2
+    assert selection_signal_observer.count == 1
 
     # Clear selection => causes focus to me removed
     selection.clear()
     assert selection.focus is None
     assert len(selection) == 0
     assert len(selection.states) == 0
-    assert signal_observer.count == 3
+    assert focus_signal_observer.count == 3
+    assert selection_signal_observer.count == 2
+
+if __name__ == '__main__':
+    test_add_set_remove_clear()
+    test_adding_same_model_twice()
+    test_all_models()
+    test_focus()
+    test_invalid_model()
+    # pytest.main(['-s', __file__])

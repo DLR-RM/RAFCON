@@ -294,7 +294,11 @@ class ModificationsHistoryModel(ModelMT):
                                                     overview=overview)
             elif isinstance(overview['instance'][-1], State):
                 assert overview['instance'][-1] is overview['model'][-1].state
-                if "add_" in cause:
+                if "semantic_data" in overview['method_name'][-1]:
+                    self.active_action = StateAction(parent_path=overview['instance'][-1].get_path(),
+                                                     state_machine_model=self.state_machine_model,
+                                                     overview=overview)
+                elif "add_" in cause:
                     if self.with_debug_logs:
                         self.store_test_log_file("#3 ADD \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
                     self.active_action = AddObjectAction(parent_path=overview['instance'][-1].get_path(),

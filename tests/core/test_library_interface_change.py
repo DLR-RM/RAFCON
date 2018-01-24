@@ -33,6 +33,7 @@ def test_load_data_ports_not_existing(caplog):
     # state_machine = get_test_state_machine("correct_library_inclusion")
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
     rafcon.core.singleton.state_machine_execution_engine.start()
     rafcon.core.singleton.state_machine_execution_engine.join()
@@ -54,6 +55,7 @@ def test_load_wrong_data_types(caplog):
     state_machine = get_test_state_machine("wrong_data_types")
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
     rafcon.core.singleton.state_machine_execution_engine.start()
     rafcon.core.singleton.state_machine_execution_engine.join()
@@ -79,6 +81,7 @@ def test_load_not_existing_outcome(caplog):
     # state_machine = get_test_state_machine("correct_library_inclusion")
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
     testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=1)
 

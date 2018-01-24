@@ -69,7 +69,8 @@ STATE_TUPLE_CHILD_STATES_INDEX = 1
 STATE_TUPLE_META_DICT_INDEX = 2
 STATE_TUPLE_PATH_INDEX = 3
 STATE_TUPLE_SCRIPT_TEXT_INDEX = 4
-STATE_TUPLE_FILE_SYSTEM_PATH_INDEX = 4
+STATE_TUPLE_FILE_SYSTEM_PATH_INDEX = 5
+STATE_TUPLE_SEMANTIC_DATA_INDEX = 6
 
 
 def get_state_tuple(state, state_m=None):
@@ -80,6 +81,8 @@ def get_state_tuple(state, state_m=None):
     [2] dict of model_meta-data of self and elements
     [3] path of state in state machine
     [4] script_text
+    [5] file system path
+    [6] semantic data
     #   states-meta - [state-, transitions-, data_flows-, outcomes-, inputs-, outputs-, scopes, states-meta]
 
     :param rafcon.core.states.state.State state: The state that should be stored
@@ -100,7 +103,7 @@ def get_state_tuple(state, state_m=None):
     script_content = state.script.script if isinstance(state, ExecutionState) else None
 
     state_tuple = (state_str, state_tuples_dict, state_meta_dict, state.get_path(), script_content,
-                   state.file_system_path)
+                   state.file_system_path, copy.deepcopy(state.semantic_data))
 
     return state_tuple
 
@@ -119,6 +122,8 @@ def get_state_from_state_tuple(state_tuple):
         data_flows = state_info[2]
 
     state._file_system_path = state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX]
+    # print "got state tuple with sd", state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX], state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX]
+    state.semantic_data = state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX]
 
     if isinstance(state, BarrierConcurrencyState):
         # logger.debug("\n\ninsert decider_state\n\n")
@@ -738,6 +743,7 @@ class Action(ModelMT, AbstractAction):
                 state.remove_scoped_variable(dp_id)
 
         state.name = stored_state.name
+        state.semantic_data = stored_state.semantic_data
         # state.script = stored_state.script
         # logger.debug("script0: " + stored_state.script.script)
         if isinstance(state, ExecutionState):
@@ -1455,13 +1461,17 @@ class StateAction(Action):
                              'set_use_input_runtime_value', 'set_use_output_runtime_value',
                              'input_data_port_runtime_values', 'output_data_port_runtime_values',
                              'use_runtime_value_input_data_ports', 'use_runtime_value_output_data_ports',
-                             'group_states', 'ungroup_state', 'substitute_state', 'paste', 'cut']
+                             'group_states', 'ungroup_state', 'substitute_state', 'paste', 'cut',
+                             'semantic_data', 'add_semantic_data', 'remove_semantic_data'
+                             ]
     possible_args = ['name', 'description', 'script_text', 'start_state_id',  # ContainerState
                      'library_name', 'library_path', 'version', 'state_copy',  # LibraryState
                      'input_data_port_runtime_values', 'output_data_port_runtime_values',
                      'use_runtime_value_input_data_ports', 'use_runtime_value_output_data_ports',
                      'set_input_runtime_value', 'set_output_runtime_value',
-                     'set_use_input_runtime_value', 'set_use_output_runtime_value']
+                     'set_use_input_runtime_value', 'set_use_output_runtime_value',
+                     'semantic_data'
+                     ]
     substitute_dict = {'set_input_runtime_value': 'input_data_port_runtime_values',
                        'set_output_runtime_value': 'output_data_port_runtime_values',
                        'set_use_input_runtime_value': 'use_runtime_value_input_data_ports',
@@ -1501,6 +1511,8 @@ class StateAction(Action):
             self.description_diff = '\n'.join(diff)
         else:
             self.description_diff = None
+        if 'semantic_data' in overview['method_name'][-1]:
+            self.action_type = 'semantic_data'
 
     def as_dict(self):
         d = Action.as_dict(self)
@@ -1510,9 +1522,11 @@ class StateAction(Action):
     @staticmethod
     def get_set_of_arguments(s):
         if isinstance(s, ContainerState):
-            return {'name': s.name, 'description': s.description, 'state_id': s.state_id, 'start_state_id': s.start_state_id}
+            return {'name': s.name, 'description': s.description, 'state_id': s.state_id,
+                    'start_state_id': s.start_state_id, 'semantic_data': copy.deepcopy(s.semantic_data)}
         elif isinstance(s, LibraryState):
             return {'name': s.name, 'description': s.description, 'state_id': s.state_id,
+                    'semantic_data': copy.deepcopy(s.semantic_data),
                     'library_name': s.library_name, 'library_path': s.library_path, 'version': s.version, # LibraryState
                     'state_copy': s.state_copy,
                     'input_data_port_runtime_values': copy.deepcopy(s.input_data_port_runtime_values),
@@ -1520,7 +1534,8 @@ class StateAction(Action):
                     'use_runtime_value_input_data_ports': copy.deepcopy(s.use_runtime_value_input_data_ports),
                     'use_runtime_value_output_data_ports': copy.deepcopy(s.use_runtime_value_output_data_ports)}
         else:
-            return {'name': s.name, 'description': s.description, 'script_text': s.script_text, 'state_id': s.state_id}
+            return {'name': s.name, 'description': s.description, 'script_text': s.script_text,
+                    'state_id': s.state_id, 'semantic_data': copy.deepcopy(s.semantic_data)}
 
     def set_after(self, overview):
         Action.set_after(self, overview)

@@ -118,7 +118,7 @@ style "basic_layout"
     GtkToolbar::space-style                      = GTK_TOOLBAR_SPACE_NONE
 
     GtkTreeView::allow-rules                     = 1
-    GtkTreeView::expander-size                   = 0
+    GtkTreeView::expander-size                   = 12
     GtkTreeView::grid-line-pattern               = "\1\1"
     GtkTreeView::grid-line-width                 = 1
     GtkTreeView::indent-expanders                = 1
@@ -267,6 +267,7 @@ style "rafcon-notebook" {
     bg[SELECTED]      = @accent
 }
 widget_class "*Notebook" style : highest "rafcon-notebook"
+widget "*.tab_label" style : highest "rafcon-notebook"
 
 style "rafcon-space" {
     bg[ACTIVE]        = @accent

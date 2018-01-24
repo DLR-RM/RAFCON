@@ -112,6 +112,7 @@ class LibraryStateModel(AbstractStateModel):
         return self.__copy__()
 
     def update_hash(self, obj_hash):
+        super(LibraryStateModel, self).update_hash(obj_hash)
         self.update_hash_from_dict(obj_hash, self.state_copy)
 
     def _load_input_data_port_models(self):

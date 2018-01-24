@@ -64,6 +64,12 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
     def __del__(self):
         self._parent = None
 
+    def __cmp__(self, other):
+        if isinstance(other, StateElement):
+            if self.__class__ is other.__class__:
+                return self.core_element_id.__cmp__(other.core_element_id)
+            return -1 if self.__class__.__name__ < other.__class__.__name__ else 1
+
     @property
     def parent(self):
         """Getter for the parent state of the state element

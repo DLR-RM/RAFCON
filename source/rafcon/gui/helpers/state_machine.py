@@ -40,6 +40,7 @@ from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateMode
 from rafcon.gui.singleton import library_manager_model
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
 from rafcon.utils import log
+import rafcon.gui.utils
 
 logger = log.get_logger(__name__)
 
@@ -61,17 +62,16 @@ def new_state_machine():
     root_state = HierarchyState("new root state")
     state_machine = StateMachine(root_state)
     state_machine_manager.add_state_machine(state_machine)
-    state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
+    rafcon.gui.utils.wait_for_gui()
+    state_machine_manager.active_state_machine_id = state_machine.state_machine_id
+
+    # this is needed in order that the model is already there, when it is access via get_selected_state_machine_model()
+    rafcon.gui.utils.wait_for_gui()
     state_machine_m = state_machine_manager_model.get_selected_state_machine_model()
-    # If idle_add isn't used, gaphas crashes, as the view is not ready
-    glib.idle_add(state_machine_m.selection.set, state_machine_m.root_state)
+    state_machine_m.selection.set(state_machine_m.root_state)
 
-    def grab_focus():
-        editor_controller = state_machines_editor_ctrl.get_controller(state_machine.state_machine_id)
-        editor_controller.view.editor.grab_focus()
-
-    # The editor parameter of view is created belated, thus we have to use idle_add again
-    glib.idle_add(grab_focus)
+    editor_controller = state_machines_editor_ctrl.get_controller(state_machine.state_machine_id)
+    editor_controller.view.editor.grab_focus()
 
 
 def open_state_machine(path=None, recent_opened_notification=False):
@@ -104,15 +104,16 @@ def open_state_machine(path=None, recent_opened_notification=False):
     try:
         state_machine = storage.load_state_machine_from_path(load_path)
         state_machine_manager.add_state_machine(state_machine)
+        if state_machine_manager.active_state_machine_id is None:
+            state_machine_manager.active_state_machine_id = state_machine.state_machine_id
         if recent_opened_notification:
-            sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
-            global_runtime_config.update_recently_opened_state_machines_with(sm_m)
+            global_runtime_config.update_recently_opened_state_machines_with(state_machine)
+        duration = time.time() - start_time
+        stat = state_machine.root_state.get_states_statistics(0)
+        logger.info("It took {0} seconds to load {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
     except (AttributeError, ValueError, IOError) as e:
         logger.error('Error while trying to open state machine: {0}'.format(e))
 
-    duration = time.time() - start_time
-    stat = state_machine.root_state.get_states_statistics(0)
-    logger.info("It took {0} seconds to load {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
     return state_machine
 
 
@@ -189,7 +190,7 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
                                        delete_old_state_machine=delete_old_state_machine, as_copy=as_copy)
     if recent_opened_notification and \
             (not previous_path == save_path or previous_path == save_path and previous_marked_dirty):
-        global_runtime_config.update_recently_opened_state_machines_with(state_machine_m)
+        global_runtime_config.update_recently_opened_state_machines_with(state_machine_m.state_machine)
     state_machine_m.store_meta_data(copy_path=copy_path if as_copy else None)
     logger.debug("Saved state machine and its meta data.")
     library_manager_model.state_machine_was_stored(state_machine_m, old_file_system_path)
@@ -846,7 +847,7 @@ def substitute_selected_state(state, as_template=False, keep_name=False):
 
 
 def substitute_selected_library_state_with_template(keep_name=True):
-    selection = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selections
+    selection = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection
     selected_state_m = selection.get_selected_state()
     if len(selection.states) == 1 and isinstance(selected_state_m, LibraryStateModel):
         # print "start substitute library state with template"

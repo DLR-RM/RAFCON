@@ -34,7 +34,6 @@ from rafcon.gui.mygaphas.utils.enums import SnappedSide
 from rafcon.gui.mygaphas.utils.gap_draw_helper import get_col_rgba
 from rafcon.gui.mygaphas.utils import gap_draw_helper
 from rafcon.gui.mygaphas.utils.cache.image_cache import ImageCache
-from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
 
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
 from rafcon.gui.helpers.meta_data import contains_geometric_info
@@ -43,6 +42,9 @@ from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+
+# Fixed width of the Pango layout. The higher this value, the better is the accuracy, but the more memory is consumed
+BASE_WIDTH = 100.
 
 
 class StateView(Element):
@@ -75,7 +77,6 @@ class StateView(Element):
         self.port_constraints = {}
 
         self._moving = False
-        self._transparent = False
 
         self._view = None
         self._parent = None
@@ -83,6 +84,12 @@ class StateView(Element):
         self.__symbol_size_cache = {}
         self._image_cache = ImageCache()
 
+        self._border_width = Variable(min(self.width, self.height) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
+        border_width_constraint = BorderWidthConstraint(self._handles[NW].pos, self._handles[SE].pos,
+                                                        self._border_width, constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
+        self._constraints.append(border_width_constraint)
+
+        # Initialize NameView
         name_meta = state_m.get_meta_data_editor()['name']
         if not contains_geometric_info(name_meta['size']):
             name_width = self.width * 0.8
@@ -93,14 +100,9 @@ class StateView(Element):
         self._name_view = NameView(state_m.state.name, name_size)
 
         if not contains_geometric_info(name_meta['rel_pos']):
-            name_meta['rel_pos'] = (0, 0)
+            name_meta['rel_pos'] = (self.border_width, self.border_width)
         name_pos = name_meta['rel_pos']
         self.name_view.matrix.translate(*name_pos)
-
-        self._border_width = Variable(min(self.width, self.height) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
-        border_width_constraint = BorderWidthConstraint(self._handles[NW].pos, self._handles[SE].pos,
-                                                        self._border_width, constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
-        self._constraints.append(border_width_constraint)
 
     @property
     def selected(self):
@@ -302,13 +304,30 @@ class StateView(Element):
         return self._name_view
 
     @property
-    def transparent(self):
-        return self._transparent
+    def transparency(self):
+        """Calculates the transparency for the state
+
+        :return: State transparency
+        :rtype: float
+        """
+        # TODO: Implement transparency logic here (e.g. for different viewing modes)
+        return 0.
 
     def child_state_views(self):
         for child in self.canvas.get_children(self):
             if isinstance(child, StateView):
                 yield child
+
+    def show_content(self, with_content=False):
+        """Checks if the state is a library with the `show_content` flag set
+
+        :param with_content: If this parameter is `True`, the method return only True if the library represents a
+          ContainerState
+        :return: Whether the content of a library state is shown
+        """
+        if isinstance(self.model, LibraryStateModel) and self.model.show_content():
+            return not with_content or isinstance(self.model.state_copy, ContainerStateModel)
+        return False
 
     @staticmethod
     def get_state_drawing_area(state):
@@ -323,12 +342,6 @@ class StateView(Element):
         state_se_pos = Position((state_se_pos_x, state_se_pos_y))
 
         return state_nw_pos, state_se_pos
-
-    def foreground(self):
-        self._transparent = False
-
-    def background(self):
-        self._transparent = True
 
     def apply_meta_data(self, recursive=False):
         state_meta = self.model.get_meta_data_editor()
@@ -377,7 +390,7 @@ class StateView(Element):
         height = self.height
         border_width = self.border_width
         view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
-        if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY and self.parent:
+        if min(view_width, view_height) < constants.MINIMUM_STATE_SIZE_FOR_DISPLAY and self.parent:
             return
 
         c = context.cairo
@@ -387,7 +400,7 @@ class StateView(Element):
             'selected': self.selected,
             'moving': self.moving,
             'border_width': border_width,
-            'transparent': self._transparent
+            'transparency': self.transparency
         }
 
         upper_left_corner = (nw.x.value, nw.y.value)
@@ -420,9 +433,9 @@ class StateView(Element):
                 state_border_color = gui_config.gtk_colors['STATE_SELECTED_BORDER']
                 state_border_outline_color = gui_config.gtk_colors['STATE_SELECTED_BORDER_OUTLINE']
 
-            c.set_source_rgba(*get_col_rgba(state_border_color, self._transparent))
+            c.set_source_rgba(*get_col_rgba(state_border_color, self.transparency))
             c.fill_preserve()
-            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self._transparent))
+            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self.transparency))
             # The line gets cropped at the context border, therefore the line width must be doubled
             c.set_line_width(default_line_width * 2)
             c.stroke()
@@ -431,7 +444,7 @@ class StateView(Element):
             c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
             c.set_source_rgba(*get_col_rgba(state_background_color))
             c.fill_preserve()
-            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self._transparent))
+            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self.transparency))
             c.set_line_width(default_line_width)
             c.stroke()
 
@@ -454,16 +467,13 @@ class StateView(Element):
             scoped_variable_v.draw(context, self)
 
         if isinstance(self.model, LibraryStateModel) and not self.moving:
-            max_width = width / 2.
-            max_height = height / 2.
-            self._draw_symbol(context, constants.SIGN_LIB, True, (max_width, max_height))
+            symbol_transparency = 0.9 if self.show_content(with_content=True) else 0.75
+            self._draw_symbol(context, constants.SIGN_LIB, gui_config.gtk_colors['STATE_NAME'], symbol_transparency)
 
         if self.moving:
-            max_width = width - 2 * border_width
-            max_height = height - 2 * border_width
-            self._draw_symbol(context, constants.SIGN_ARROW, False, (max_width, max_height))
+            self._draw_symbol(context, constants.SIGN_ARROW, gui_config.gtk_colors['STATE_NAME'])
 
-    def _draw_symbol(self, context, symbol, is_library_state, max_size):
+    def _draw_symbol(self, context, symbol, color, transparency=0.):
         c = context.cairo
         width = self.width
         height = self.height
@@ -500,14 +510,7 @@ class StateView(Element):
         c.move_to(width / 2. - layout.get_size()[0] / float(SCALE) / 2.,
                   height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
 
-        alpha = 1.
-        if is_library_state and self.transparent:
-            alpha = 0.0625
-        elif is_library_state:
-            alpha = 0.25
-
-        c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['STATE_NAME'], is_library_state,
-                                                         alpha=alpha))
+        c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.update_layout(layout)
         c.show_layout(layout)
 
@@ -832,10 +835,9 @@ class StateView(Element):
 
                 for child_state_v in state_v.child_state_views():
                     resize_child_state_v(child_state_v)
-            elif isinstance(state_v.model, LibraryStateModel):
-                if state_v.model.meta['gui']["show_content"]:
-                    state_copy_v = self.canvas.get_view_for_model(state_v.model.state_copy)
-                    resize_child_state_v(state_copy_v)
+            elif state_v.show_content():
+                state_copy_v = self.canvas.get_view_for_model(state_v.model.state_copy)
+                resize_child_state_v(state_copy_v)
 
         new_size = (self.width, self.height)
         resize_state_v(self, old_size, new_size, paste)
@@ -858,7 +860,6 @@ class NameView(Element):
         self._view = None
 
         self._image_cache = ImageCache(multiplicator=1.5)
-        self._value_cache = ValueCache()
 
     def update_minimum_size(self):
         min_side_length = min(self.parent.width, self.parent.height) / constants.MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO
@@ -899,11 +900,18 @@ class NameView(Element):
             self._view = self.canvas.get_first_view()
         return self._view
 
+    @property
+    def transparency(self):
+        if self.parent.show_content(with_content=True):
+            return gui_config.get_config_value('SHOW_CONTENT_LIBRARY_NAME_TRANSPARENCY', 0.5)
+        return self.parent.transparency
+
     def apply_meta_data(self):
         name_meta = self.parent.model.get_meta_data_editor()['name']
         # logger.info("name rel_pos {}".format(name_meta['rel_pos']))
         # logger.info("name size {}".format(name_meta['size']))
         self.position = name_meta['rel_pos']
+        # print "name pos from meta", name_meta['rel_pos']
         self.width = name_meta['size'][0]
         self.height = name_meta['size'][1]
 
@@ -918,13 +926,15 @@ class NameView(Element):
         width = self.width
         height = self.height
         view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
-        if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY:
+        if min(view_width, view_height) < constants.MINIMUM_NAME_SIZE_FOR_DISPLAY:
             return
+        font_transparency = self.transparency
 
         c = context.cairo
         parameters = {
             'name': self.name,
-            'selected': context.selected
+            'selected': context.selected,
+            'transparency': font_transparency
         }
 
         upper_left_corner = (0, 0)
@@ -932,17 +942,16 @@ class NameView(Element):
         from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
-            # print "from cache"
             self._image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
         else:
-            # print "draw"
             c = self._image_cache.get_context_for_image(current_zoom)
 
             if context.selected:
+                # Draw light background color if selected
                 c.rectangle(0, 0, width, height)
-                c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], alpha=.1))
+                c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], transparency=.9))
                 c.fill_preserve()
                 c.set_source_rgba(0, 0, 0, 0)
                 c.stroke()
@@ -951,7 +960,7 @@ class NameView(Element):
 
             layout = c.create_layout()
             layout.set_wrap(WRAP_WORD)
-            layout.set_width(int(width) * SCALE)
+            layout.set_width(int(round(BASE_WIDTH * SCALE)))
             layout.set_text(self.name)
 
             def set_font_description(font_size):
@@ -960,24 +969,62 @@ class NameView(Element):
 
             font_name = constants.INTERFACE_FONT
 
-            font_size_parameters = {"text": self.name, "width": width, "height": height}
-            font_size = self._value_cache.get_value("font_size", font_size_parameters)
+            zoom_scale = BASE_WIDTH / width
+            scaled_height = height * zoom_scale
+            font_size_parameters = {"text": self.name, "height": scaled_height}
+            font_size = self.view.value_cache.get_value("font_size", font_size_parameters)
 
             if font_size:
                 set_font_description(font_size)
             else:
-                font_size = height * 0.8
-                set_font_description(font_size)
-                pango_size = (width * SCALE, height * SCALE)
-                while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
-                    font_size *= 0.9
-                    set_font_description(font_size)
-                self._value_cache.store_value("font_size", font_size, font_size_parameters)
+                available_size = (BASE_WIDTH * SCALE, scaled_height * SCALE)
+                word_count = len(self.name.split(" "))
+                # Set max font size to available height
+                max_font_size = scaled_height * 0.9
+                # Calculate minimum size that is still to be drawn
+                min_name_height = max_font_size / 10.
+                # Calculate line height if all words are wrapped
+                line_height = max_font_size / word_count
+                # Use minimum if previous values and add safety margin
+                min_font_size = min(line_height * 0.5, min_name_height)
+
+                # Iteratively calculate font size by always choosing the average of the maximum and minimum size
+                working_font_size = None
+                current_font_size = (max_font_size + min_font_size) / 2.
+                set_font_description(current_font_size)
+
+                while True:
+                    logical_extents = layout.get_size()
+                    width_factor = logical_extents[0] / available_size[0]
+                    height_factor = logical_extents[1] / available_size[1]
+                    max_factor = max(width_factor, height_factor)
+
+                    if max_factor > 1:  # font size too large
+                        max_font_size = current_font_size
+                    elif max_factor > 0.9:  # font size fits!
+                        break
+                    else:  # font size too small
+                        # Nevertheless store the font size in case we do not find anything better
+                        if not working_font_size or current_font_size > working_font_size:
+                            working_font_size = current_font_size
+                        min_font_size = current_font_size
+                    if 0.99 < min_font_size / max_font_size < 1.01:  # Stop criterion: changes too small
+                        if working_font_size:
+                            current_font_size = working_font_size
+                            set_font_description(current_font_size)
+                        break
+                    current_font_size = (max_font_size + min_font_size) / 2.
+                    set_font_description(current_font_size)
+                self.view.value_cache.store_value("font_size", current_font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
-            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], self.parent.transparent))
+            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
+            c.save()
+            # The pango layout has a fixed width and needs to be fitted to the context size
+            c.scale(1. / zoom_scale, 1. / zoom_scale)
             c.update_layout(layout)
             c.show_layout(layout)
+            c.restore()
 
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)

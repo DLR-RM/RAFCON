@@ -15,10 +15,10 @@ from cairo import ANTIALIAS_NONE, Matrix
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.utils import constants
 
-from gaphas.aspect import PaintFocused, ItemPaintFocused
 import gaphas.painter
 
-from rafcon.gui.mygaphas.items.connection import ConnectionView, DataFlowView
+from rafcon.gui.mygaphas.aspect import PaintHovered, ItemPaintHovered
+from rafcon.gui.mygaphas.items.connection import ConnectionView, TransitionView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils.gap_draw_helper import get_col_rgba, get_side_length_of_resize_handle
 
@@ -28,21 +28,17 @@ from rafcon.gui.mygaphas.utils.gap_draw_helper import get_col_rgba, get_side_len
 # painter.DEBUG_DRAW_BOUNDING_BOX = True
 
 
-class CornerHandlePainter(gaphas.painter.HandlePainter):
-    """Base class for drawing corner handle for resize operations
+class CornerHandlePainter(ItemPaintHovered):
+    """Base class for drawing corner handles for resize operations
     """
 
     fill_color = gui_config.gtk_colors['STATE_RESIZE_HANDLE_FILL']
     border_color = gui_config.gtk_colors['STATE_RESIZE_HANDLE_BORDER']
 
-    def __init__(self, view=None, item_type=type(None)):
-        super(gaphas.painter.HandlePainter, self).__init__(view)
-        self._item_type = item_type
-
     def _get_handle_side_length(self, item):
         return get_side_length_of_resize_handle(self.view, item)
 
-    def _draw_handles(self, item, cairo, opacity=None, inner=False):
+    def _draw_handles(self, item, cairo, opacity=None):
         view = self.view
         cairo.save()
         i2v = view.get_matrix_i2v(item)
@@ -63,51 +59,39 @@ class CornerHandlePainter(gaphas.painter.HandlePainter):
             cairo.translate(*i2v.transform_point(*handle.pos))
             cairo.rectangle(-side_length / 2., -side_length / 2., side_length, side_length)
             # Fill
-            cairo.set_source_rgba(*get_col_rgba(self.fill_color, alpha=opacity))
+            cairo.set_source_rgba(*get_col_rgba(self.fill_color, opacity=opacity))
             cairo.fill_preserve()
             # Border
-            cairo.set_source_rgba(*get_col_rgba(self.border_color, alpha=opacity))
+            cairo.set_source_rgba(*get_col_rgba(self.border_color, opacity=opacity))
             cairo.stroke()
         cairo.restore()
 
-    def paint(self, context):
-        view = self.view
-        canvas = view.canvas
-        cairo = context.cairo
-        # Order matters here:
-        for item in canvas.sort(view.selected_items):
-            if isinstance(item, self._item_type):
-                self._draw_handles(item, cairo)
-        # Draw nice opaque handles when hovering an item:
-        item = view.hovered_item
-        if item and item not in view.selected_items and isinstance(item, self._item_type):
-            self._draw_handles(item, cairo, opacity=.25)
+    def paint(self, context, selected):
+        if selected:
+            self._draw_handles(self.item, context.cairo)
+        else:
+            # Draw nice opaque handles when hovering an non-selected item:
+            self._draw_handles(self.item, context.cairo, opacity=.25)
 
 
+@PaintHovered.when_type(StateView)
 class StateCornerHandlePainter(CornerHandlePainter):
-    """Draw corner handles of StateViews
-    """
+    """ Draw corner handles of StateViews """
 
     fill_color = gui_config.gtk_colors['STATE_RESIZE_HANDLE_FILL']
     border_color = gui_config.gtk_colors['STATE_RESIZE_HANDLE_BORDER']
 
-    def __init__(self, view=None):
-        super(StateCornerHandlePainter, self).__init__(view, StateView)
 
-
+@PaintHovered.when_type(NameView)
 class NameCornerHandlePainter(CornerHandlePainter):
-    """Draw corner handles of NameViews
-    """
+    """ Draw corner handles of NameViews """
 
     fill_color = gui_config.gtk_colors['NAME_RESIZE_HANDLE_FILL']
     border_color = gui_config.gtk_colors['NAME_RESIZE_HANDLE_BORDER']
 
-    def __init__(self, view=None):
-        super(NameCornerHandlePainter, self).__init__(view, NameView)
 
-
-@PaintFocused.when_type(ConnectionView)
-class LineSegmentPainter(ItemPaintFocused):
+@PaintHovered.when_type(TransitionView)
+class LineSegmentPainter(ItemPaintHovered):
     """
     This painter draws pseudo-handles on gaphas.item.Line objects. Each
     line can be split by dragging those points, which will result in
@@ -120,33 +104,30 @@ class LineSegmentPainter(ItemPaintFocused):
     fill_color = gui_config.gtk_colors['TRANSITION_HANDLE_FILL']
     border_color = gui_config.gtk_colors['TRANSITION_HANDLE_BORDER']
 
-    def paint(self, context):
+    def paint(self, context, selected):
         view = self.view
-        item = view.hovered_item
-        if isinstance(item, DataFlowView):
-            return
-        if item and item is view.focused_item:
-            cr = context.cairo
-            h = item.handles()
-            side_length = get_side_length_of_resize_handle(self.view, item.parent) / 1.5
-            for h1, h2 in zip(h[1:-2], h[2:-1]):
-                p1, p2 = h1.pos, h2.pos
-                cx = (p1.x + p2.x) / 2
-                cy = (p1.y + p2.y) / 2
-                cr.save()
-                cr.set_line_width(self.view.get_zoom_factor() / 4.)
-                cr.identity_matrix()
-                m = Matrix(*view.get_matrix_i2v(item))
+        item = self.item
+        cr = context.cairo
+        h = item.handles()
+        side_length = get_side_length_of_resize_handle(self.view, item.parent) / 1.5
+        for h1, h2 in zip(h[1:-2], h[2:-1]):
+            p1, p2 = h1.pos, h2.pos
+            cx = (p1.x + p2.x) / 2
+            cy = (p1.y + p2.y) / 2
+            cr.save()
+            cr.set_line_width(self.view.get_zoom_factor() / 4.)
+            cr.identity_matrix()
+            m = Matrix(*view.get_matrix_i2v(item))
 
-                cr.set_antialias(ANTIALIAS_NONE)
-                cr.translate(*m.transform_point(cx, cy))
-                cr.rectangle(-side_length / 2., -side_length / 2., side_length, side_length)
-                cr.set_source_rgba(*get_col_rgba(self.fill_color))
-                cr.fill_preserve()
-                cr.set_source_rgba(*get_col_rgba(self.border_color))
-                cr.set_line_width(1)
-                cr.stroke()
-                cr.restore()
+            cr.set_antialias(ANTIALIAS_NONE)
+            cr.translate(*m.transform_point(cx, cy))
+            cr.rectangle(-side_length / 2., -side_length / 2., side_length, side_length)
+            cr.set_source_rgba(*get_col_rgba(self.fill_color))
+            cr.fill_preserve()
+            cr.set_source_rgba(*get_col_rgba(self.border_color))
+            cr.set_line_width(1)
+            cr.stroke()
+            cr.restore()
 
 
 class BoundingBoxPainter(gaphas.painter.BoundingBoxPainter):
@@ -159,7 +140,7 @@ class BoundingBoxPainter(gaphas.painter.BoundingBoxPainter):
 
     def _draw_item(self, item, cairo, area=None):
         cairo = gaphas.painter.CairoBoundingBoxContext(cairo)
-        super(BoundingBoxPainter, self)._draw_item(item, cairo)
+        super(gaphas.painter.BoundingBoxPainter, self)._draw_item(item, cairo)
         bounds = cairo.get_bounds()
 
         view = self.view
@@ -179,3 +160,17 @@ class BoundingBoxPainter(gaphas.painter.BoundingBoxPainter):
 
         bounds.expand(1)
         view.set_item_bounding_box(item, bounds)
+
+
+class HoveredItemPainter(gaphas.painter.Painter):
+    """
+    This painter allows for drawing on top off all other layers for the
+    hovered item.
+    """
+
+    def paint(self, context):
+        view = self.view
+        item = view.hovered_item
+        if item:
+            selected = item in view.selected_items
+            PaintHovered(item, view).paint(context, selected)

@@ -21,6 +21,7 @@
 
 """
 
+import os
 import glib
 import gtk
 from functools import partial
@@ -56,7 +57,7 @@ class MenuBarController(ExtendedController):
 
     :param rafcon.gui.models.state_machine_manager.StateMachineManagerModel state_machine_manager_model: The state
         machine manager model, holding data regarding state machines. Should be exchangeable.
-    :param rafcon.gui.views.menu_bar.MenuBarView view: The GTK View showing the Menu Bar and Menu Items.
+    :param rafcon.gui.views.main_window.MainWindowView view: The GTK View showing the Menu Bar and Menu Items.
     """
 
     def __init__(self, state_machine_manager_model, view, shortcut_manager, sm_execution_engine):
@@ -83,10 +84,11 @@ class MenuBarController(ExtendedController):
         self.full_screen_window.add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.right_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.left_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
-        self.main_window_view.console_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
+        self.main_window_view.console_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(MenuBarController, self).register_view(view)
         data_flow_mode = global_runtime_config.get_config_value("DATA_FLOW_MODE", False)
         view["data_flow_mode"].set_active(data_flow_mode)
 
@@ -190,6 +192,8 @@ class MenuBarController(ExtendedController):
         for sm_path in global_runtime_config.get_config_value("recently_opened_state_machines", []):
             # define label string
             root_state_name = gui_helper_state_machine.get_root_state_name_of_sm_file_system_path(sm_path)
+            if root_state_name is None and not os.path.isdir(sm_path):
+                root_state_name = 'NOT_ACCESSIBLE'
             label_string = "'{0}' in {1}".format(root_state_name, sm_path) if root_state_name is not None else sm_path
 
             # define icon of menu item
@@ -485,23 +489,12 @@ class MenuBarController(ExtendedController):
         return False
 
     def on_destroy(self, widget, data=None):
-        from rafcon.core.start import reactor_required
+        from rafcon.gui.start import stop_gtk
 
         logger.debug("The GUI is being closed now")
         self.main_window_view.hide()
 
-        if reactor_required():  # shutdown reactor
-            from twisted.internet import reactor
-            if reactor.running:
-                reactor.callFromThread(reactor.stop)
-            else:
-                glib.idle_add(gtk.main_quit)
-        else:  # shutdown gtk
-            glib.idle_add(gtk.main_quit)
-
-        # Run the GTK loop until no more events are being generated and thus the GUI is fully destroyed
-        while gtk.events_pending():
-            gtk.main_iteration(False)
+        stop_gtk()
 
     ######################################################
     # menu bar functionality - Edit

@@ -21,7 +21,8 @@ class PyTest(TestCommand):
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
-        self.pytest_args = '-vxs -p no:pytest_capturelog'
+        # Add further test folder with 'or my_test_folder'
+        self.pytest_args = '-vx -s -k "core or gui or share_elements"'
 
     def run_tests(self):
         import shlex
@@ -31,14 +32,10 @@ class PyTest(TestCommand):
         sys.path.insert(0, test_path)
         sys.path.insert(0, rafcon_path)
         os.environ["PYTHONPATH"] = rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
-        print "=== Running network tests ==="
-        error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'network')])
-        if not error_number:
-            print "=== Running core tests ==="
-            error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'core')])
-        if not error_number:
-            print "=== Running GUI tests ==="
-            error_number = pytest.main(shlex.split(self.pytest_args) + [path.join('tests', 'gui')])
+        print
+        print "Running pytest with the following arguments:", shlex.split(self.pytest_args) + ['tests']
+        print
+        error_number = pytest.main(shlex.split(self.pytest_args) + ['tests'])
         sys.exit(error_number)
 
 

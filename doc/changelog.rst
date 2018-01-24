@@ -6,7 +6,97 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 
 Next release
 ------------
+
+- Improvements:
+
+    - Optimize NameView font size calculations, noticeable during zooming
+    - ports outside of the visible view are no longer drawn, which increases the performance, especially while
+      zooming in large state machines
+    - Hash calculations of state machines
+    - Placement of NameView
+
+- Bug Fixes:
+
+    - :issue:`450`
+    - :issue:`447`: Hashes of state machine in storage different then the reopened state machine after saving it
+
+
+Patch releases 0.12.\*
+----------------------
+
+0.12.1
+""""""
+
 - New Features:
+
+    - Semantic data editor supports external editor
+    - Transparency of library states improved when content is shown
+
+- Improvements:
+
+    -
+
+- Bug Fixes:
+
+    - :issue:`427`
+    - :issue:`428`
+    - :issue:`430`
+    - :issue:`431`
+
+
+0.12.0
+""""""
+
+- New Features:
+
+    - Semantic meta data editor and storage for every state
+    - :issue:`411` Allow outputting data from preempted states
+
+- Improvements:
+
+    -
+
+- Bug Fixes:
+
+    - :issue:`426` Again meta data of library ports are screwed after insertion
+    - :issue:`425` Connection via points not visible
+    - :issue:`424` Wrong path for tooltip for state machines editor tabs
+    - :issue:`431` Test for recently opened state machine fails
+    - :issue:`430` Selection test fails
+
+
+
+Patch releases 0.11.\*
+----------------------
+
+0.11.6
+""""""
+
+- Bug Fixes:
+
+    - :issue:`428` fix recursion problem in execution log viewer
+    - :issue:`427` Middle click on state machine tab label close wrong state machine
+    - :issue:`419` wrong outcome data in execution history
+
+- Improvements:
+
+    - :issue:`411` Allow outputting data from preempted states
+    - drag'n drop with focus can be enabled and disabled by using the gui config flag DRAG_N_DROP_WITH_FOCUS
+    - graphical editor add way points around the state for self transitions as support for the user
+    - refactor state machines editor tab click methods and small fixing
+    - better on double click focus by gaphas editor and now also triggered by state machine tree
+
+0.11.5
+""""""
+
+- Bug Fixes:
+    - :issue:`421` RAFCON does not remember window size after closing -> final part
+
+0.11.4
+""""""
+
+- New Features:
+
     - Move into viewport: Double click on elements in several widgets cause the element to moved into the viewport
     (not yet supported by all widgets)
     - Usage of selection modifiers (e.g. <Ctrl>, <Shift>) should now be more consistent
@@ -15,37 +105,43 @@ Next release
     - Ports can be removed from within the graphical editor
 
 - Improvements:
+
     - Refactoring of the selection
     - Unit tests for selection
+    - :issue:`411` Allow outputting data from preempted states
+    - :issue:`410` Refactor selection
+    - :issue:`403` Incomes and outcomes cannot be differentiated visually
 
 - Bug Fixes:
+
     - Memory leak fixes
-
-
-
-Patch releases 0.11.\*
-----------------------
+    - :issue:`402` Connections end in nowhere
+    - :issue:`417` ports of root state do not move with roots state
+    - :issue:`421` RAFCON does not remeber window size after closing -> first part
 
 0.11.3
 """"""
 
 - Improvements:
-    - :issue:`405`
-    - :issue:`404`
-    - :issue:`403`
+
+    - :issue:`405` Possibility to zoom in and out while drawing a connection
+    - :issue:`404` Possibility to scroll left and right in graphical editor
+    - :issue:`403` Incomes and outcomes cannot be differentiated visually
 
 - Bug Fixes:
-    - :issue:`412`
-    - :issue:`413`
-    - :issue:`406`
+
+    - :issue:`412` global variables cannot be removed
+    - :issue:`413` tree view controller error
 
 0.11.2
 """"""
 
 - Improvements:
+
     - meta data scaling more robust and protect other elements from side effects of it
 
 - Bug Fixes:
+
     - :issue:`393` $HOME/.config/rafcon is not generated initially + tests
     - :issue:`406` Empty library root state without child states cause meta data resize problems with side effects in
       gaphas drawing

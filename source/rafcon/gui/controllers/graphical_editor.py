@@ -41,7 +41,8 @@ from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuCon
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import react_to_event
-from rafcon.gui.helpers.meta_data import contains_geometric_info, add_pos, subtract_pos
+from rafcon.gui.helpers.meta_data import contains_geometric_info, add_pos, subtract_pos, \
+    insert_self_transition_meta_data
 from rafcon.gui.models import ContainerStateModel, TransitionModel, DataFlowModel
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.data_port import DataPortModel
@@ -99,8 +100,8 @@ class GraphicalEditorController(ExtendedController):
         """Constructor"""
         assert isinstance(model, StateMachineModel)
         assert isinstance(view, GraphicalEditorView)
-        ExtendedController.__init__(self, model, view)
-        self.state_right_click_ctrl = StateRightClickMenuControllerOpenGLEditor(model, view)
+        super(GraphicalEditorController, self).__init__(model, view)
+        self.add_controller("state_right_click_ctrl", StateRightClickMenuControllerOpenGLEditor(model, view))
 
         self.root_state_m = model.root_state
 
@@ -136,6 +137,7 @@ class GraphicalEditorController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(GraphicalEditorController, self).register_view(view)
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
         view.editor.connect('button-release-event', self._on_mouse_release)
@@ -1028,6 +1030,9 @@ class GraphicalEditorController(ExtendedController):
                     transition_m = responsible_parent_m.get_transition_m(transition_id)
                     transition_m.set_meta_data_editor('waypoints', self.temporary_waypoints, from_gaphas=False)
                     self._meta_data_changed(model=transition_m, change='append_to_last_change')
+                elif from_state_id == to_state_id:
+                    insert_self_transition_meta_data(responsible_parent_m.states[from_state_id], transition_id,
+                                                     combined_action=True)
         except (AttributeError, ValueError) as e:
             logger.warn("Transition couldn't be added: {0}".format(e))
             # import traceback

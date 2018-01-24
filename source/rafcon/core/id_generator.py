@@ -30,6 +30,7 @@ data_flow_id_counter = 0
 script_id_counter = 0
 run_id_counter = 0
 history_item_id_counter = 0
+semantic_data_id_counter = 0
 
 used_state_ids = []
 used_run_ids = []
@@ -76,6 +77,15 @@ def generate_data_port_id(used_data_port_ids):
         if data_port_id_counter not in used_data_port_ids:
             break
     return data_port_id_counter
+
+
+def generate_semantic_data_key(used_semantic_keys):
+    semantic_data_id_counter = -1
+    while True:
+        semantic_data_id_counter += 1
+        if "semantic data key " + str(semantic_data_id_counter) not in used_semantic_keys:
+            break
+    return "semantic data key " + str(semantic_data_id_counter)
 
 
 def generate_script_id():

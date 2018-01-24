@@ -17,12 +17,13 @@ def wait_and_join(state_machine, state_id):
 
 def test_custom_entry_point(caplog):
 
-    testing_utils.initialize_environment_only_core()
+    testing_utils.initialize_environment_core()
 
     state_machine = storage.load_state_machine_from_path(
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "stepping_test")))
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
     rafcon.core.singleton.state_machine_execution_engine.step_mode()
     time.sleep(0.2)  # let the state machine start properly

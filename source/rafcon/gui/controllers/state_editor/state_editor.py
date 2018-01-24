@@ -33,8 +33,10 @@ from rafcon.gui.controllers.state_editor.scoped_variable_list import ScopedVaria
 from rafcon.gui.controllers.state_editor.source_editor import SourceEditorController
 from rafcon.gui.controllers.state_editor.transitions import StateTransitionsEditorController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
+from rafcon.gui.controllers.state_editor.semantic_data_editor import SemanticDataEditorController
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, LibraryStateModel
 from rafcon.gui.views.state_editor.state_editor import StateEditorView
+from rafcon.gui.config import global_gui_config
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -75,12 +77,14 @@ class StateEditorController(ExtendedController):
         if not isinstance(model, ContainerStateModel) and not isinstance(model, LibraryStateModel) or \
                 isinstance(model, LibraryStateModel) and not isinstance(model.state_copy, ContainerStateModel):
             self.add_controller('source_ctrl', SourceEditorController(sv_and_source_script_state_m, view.source_view))
+        self.add_controller('semantic_data_ctrl', SemanticDataEditorController(model, view.semantic_data_view))
 
     def register_view(self, view):
         """Called when the View was registered
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
+        super(StateEditorController, self).register_view(view)
         view['add_input_port_button'].connect('clicked', self.inputs_ctrl.on_add)
         view['add_output_port_button'].connect('clicked', self.outputs_ctrl.on_add)
         view['add_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_add)
@@ -127,10 +131,13 @@ class StateEditorController(ExtendedController):
                 view.remove_scoped_variables_tab()
             view.remove_source_tab()
 
-        if isinstance(self.model.state, LibraryState):
-            view.bring_tab_to_the_top('Description')
+        if global_gui_config.get_config_value("SEMANTIC_DATA_MODE", False):
+            view.bring_tab_to_the_top('Semantic Data')
         else:
-            view.bring_tab_to_the_top('Linkage Overview')
+            if isinstance(self.model.state, LibraryState):
+                view.bring_tab_to_the_top('Description')
+            else:
+                view.bring_tab_to_the_top('Linkage Overview')
 
         if isinstance(self.model, ContainerStateModel):
             self.scopes_ctrl.reload_scoped_variables_list_store()

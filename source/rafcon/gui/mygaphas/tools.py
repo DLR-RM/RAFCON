@@ -59,6 +59,12 @@ class ToolChain(gaphas.tool.ToolChain):
 
         return rt
 
+    def ungrab(self, tool):
+        """Fixes parental ungrab method for the case `tool` is None"""
+        if tool is None:
+            return
+        super(ToolChain, self).ungrab(tool)
+
 
 class PanTool(gaphas.tool.PanTool):
     def __init__(self, view=None):
@@ -688,6 +694,7 @@ class ConnectionModificationTool(ConnectionTool):
 class RightClickTool(gaphas.tool.ItemTool):
     def __init__(self, view=None, buttons=(3,)):
         super(RightClickTool, self).__init__(view, buttons)
+        # TODO correct destruction of the StateRightClickMenu-Controller
         self.sm_right_click_menu = StateRightClickMenuGaphas()
 
     def on_button_press(self, event):

@@ -94,11 +94,11 @@ class TransitionView(ConnectionView):
 
         if context.selected:
             self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE_SELECTED'],
-                                                            self.parent.transparent)
+                                                            self.parent.transparency)
         else:
             self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE'],
-                                                            self.parent.transparent)
-        self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], self.parent.transparent)
+                                                            self.parent.transparency)
+        self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], self.parent.transparency)
         super(TransitionView, self).draw(context)
 
     def apply_meta_data(self):

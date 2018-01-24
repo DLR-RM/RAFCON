@@ -13,7 +13,7 @@ import testing_utils
 
 
 def test_preemption_behaviour_in_preemption_state(caplog):
-    testing_utils.initialize_environment_only_core()
+    testing_utils.initialize_environment_core()
 
     sm = state_machine_execution_engine.execute_state_machine_from_path(
         path=testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "preemption_behaviour_test_sm")))
@@ -33,11 +33,12 @@ def trigger_stop(sm, execution_engine):
 
 
 def test_preemption_behaviour_during_stop(caplog):
-    testing_utils.initialize_environment_only_core()
+    testing_utils.initialize_environment_core()
 
     path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "preemption_behaviour_during_stop"))
     state_machine = storage.load_state_machine_from_path(path)
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
     thread = threading.Thread(target=trigger_stop, args=[state_machine,
                                                          rafcon.core.singleton.state_machine_execution_engine])

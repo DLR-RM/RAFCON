@@ -1,16 +1,4 @@
-import threading
 
-# gui elements
-import rafcon.gui.singleton
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
-
-# core elements
-import rafcon.core.singleton
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.state_machine import StateMachine
-
-# general tool elements
 from rafcon.utils import log
 
 # test environment elements
@@ -35,6 +23,10 @@ class StructHelper:
 
 
 def create_models(*args, **kargs):
+    import rafcon.core.singleton
+    import rafcon.gui.singleton
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.state_machine import StateMachine
 
     state1 = HierarchyState('State1', state_id="State1")
 
@@ -46,6 +38,7 @@ def create_models(*args, **kargs):
 
     # add new state machine
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
+    testing_utils.wait_for_gui()
     # select state machine
     rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
@@ -60,14 +53,17 @@ def trigger_drag_and_drop_tests(*args):
     library_tree_controller = main_window_controller.get_controller('library_controller')
     state_icon_controller = main_window_controller.get_controller('state_icon_controller')
     graphical_editor_controller = states_machines_editor_controller.get_child_controllers()[0]
-    call_gui_callback(graphical_editor_controller.view.editor.set_size_request, 500, 500)
 
-    library_tree_controller.view.expand_all()
+    # the view is required here; as it is created asynchronously we explicitly wait for its creation
+    while not graphical_editor_controller.view:
+        testing_utils.wait_for_gui()
+
+    call_gui_callback(graphical_editor_controller.view.editor.set_size_request, 500, 500)
+    call_gui_callback(library_tree_controller.view.expand_all)
     # generic and unit_test_state_machines in library tree index 1 is unit_test_state_machines
-    library_tree_controller.view.get_selection().select_path((1, 0))
+    call_gui_callback(library_tree_controller.view.get_selection().select_path, (1, 0))
 
     selection_data = StructHelper(0, 0, None)
-
     state_machine_m = sm_manager_model.get_selected_state_machine_model()
 
     # insert state in root_state
@@ -112,53 +108,21 @@ def trigger_drag_and_drop_tests(*args):
     call_gui_callback(graphical_editor_controller.on_drag_data_received, None, None, 20, 20, selection_data, None, None)
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states['State1'].states) == 1
 
-    print "quitting"
-    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    call_gui_callback(main_window_controller.prepare_destruction)
 
 def test_drag_and_drop_test(caplog):
+    testing_utils.run_gui(
+        gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False},
+        libraries={"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
+    )
+    import rafcon.core.singleton
+    call_gui_callback(create_models)
 
-    # testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True},
-    #                       libraries={"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")})
-    # create_models()
-    # try:
-    #     trigger_drag_and_drop_tests(rafcon.gui.singleton.state_machine_manager_model,
-    #                                 rafcon.gui.singleton.main_window_controller)
-    # finally:
-    #     menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
-    #     menubar_ctrl.on_quit_activate(None, None, True)
-    #
-    # testing_utils.reload_config()
-    # testing_utils.assert_logger_warnings_and_errors(caplog, 0, 1)
-
-    testing_utils.initialize_environment(libraries={"unit_test_state_machines":
-                                                    testing_utils.get_test_sm_path("unit_test_state_machines")})
-
-    create_models()
-
-    main_window_view = MainWindowView()
-
-    # load the meta data for the state machine
-    rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().root_state.load_meta_data()
-
-    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
-
-    testing_utils.wait_for_gui()
-    thread = threading.Thread(target=trigger_drag_and_drop_tests,
-                              args=[rafcon.gui.singleton.state_machine_manager_model, main_window_controller])
-    thread.start()
-
-    import gtk
-    gtk.main()
-    logger.debug("Gtk main loop exited!")
-    sm = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
-    if sm:
-        sm.root_state.join()
-        logger.debug("Joined currently executing state machine!")
-        thread.join()
-        logger.debug("Joined test triggering thread!")
-
-    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=1, expected_errors=0)
+    try:
+        trigger_drag_and_drop_tests(rafcon.gui.singleton.state_machine_manager_model,
+                                    rafcon.gui.singleton.main_window_controller)
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=1, expected_errors=0)
 
 
 if __name__ == '__main__':

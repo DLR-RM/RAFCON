@@ -79,24 +79,32 @@ def create_sticky_button(callback, *additional_parameters):
 
 
 def create_tab_header(title, close_callback, sticky_callback, *additional_parameters):
-    hbox = gtk.HBox()
-    hbox.set_name("tab_label")
+    def handle_middle_click(widget, event, callback, *additional_parameters):
+        """Calls `callback` in case the middle mouse button was pressed"""
+        if event.button == 2 and callback:
+            callback(event, *additional_parameters)
 
     sticky_button = None
+    label = gtk.Label(title)
+    label.set_max_width_chars(STATE_NAME_MAX_CHARS)
+    close_button = create_tab_close_button(close_callback, *additional_parameters)
+
+    hbox = gtk.HBox()
     if global_gui_config.get_config_value('KEEP_ONLY_STICKY_STATES_OPEN', True):
         sticky_button = create_sticky_button(sticky_callback, *additional_parameters)
         sticky_button.set_name('sticky_button')
         hbox.pack_start(sticky_button, expand=False, fill=False, padding=0)
-
-    label = gtk.Label()
-    label.set_max_width_chars(STATE_NAME_MAX_CHARS)
-    close_button = create_tab_close_button(close_callback, *additional_parameters)
-
     hbox.pack_start(label, expand=True, fill=True, padding=0)
     hbox.pack_start(close_button, expand=False, fill=False, padding=0)
-    hbox.show_all()
 
-    return hbox, label, sticky_button
+    event_box = gtk.EventBox()
+    event_box.set_name("tab_label")  # required for gtkrc
+    event_box.connect('button-press-event', handle_middle_click, close_callback, *additional_parameters)
+    event_box.tab_label = label
+    event_box.add(hbox)
+    event_box.show_all()
+
+    return event_box, label, sticky_button
 
 
 def set_tab_label_texts(label, state_m, unsaved_changes=False):
@@ -138,6 +146,7 @@ class StatesEditorController(ExtendedController):
         self.closed_tabs = {}
 
     def register_view(self, view):
+        super(StatesEditorController, self).register_view(view)
         self.view.notebook.connect('switch-page', self.on_switch_page)
         if self.current_state_machine_m:
             self.add_state_editor(self.current_state_machine_m.root_state)
@@ -150,6 +159,10 @@ class StatesEditorController(ExtendedController):
         """
         shortcut_manager.add_callback_for_action('rename', self.rename_selected_state)
         super(StatesEditorController, self).register_actions(shortcut_manager)
+
+    def prepare_destruction(self):
+        # -> do not generate new state editor TODO tbd (deleted)
+        self.relieve_model(self.model)
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):

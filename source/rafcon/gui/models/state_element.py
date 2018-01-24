@@ -58,9 +58,14 @@ class StateElementModel(MetaModel, Hashable):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __cmp__(self, other):
+        if isinstance(other, StateElementModel):
+            return self.core_element.__cmp__(other.core_element)
+
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.core_element)
-        self.update_hash_from_dict(obj_hash, self.meta)
+        if self.parent and not self.parent.state.get_library_root_state():
+            self.update_hash_from_dict(obj_hash, self.meta)
 
     @property
     def parent(self):

@@ -29,11 +29,20 @@ logger = log.get_logger(__name__)
 class ExtendedController(Controller):
     def __init__(self, model, view, spurious=False):
         self.__registered_models = set()
-        Controller.__init__(self, model, view, spurious=spurious)
+        self._view_initialized = False
+        super(ExtendedController, self).__init__(model, view, spurious=spurious)
         self.__action_registered_controllers = []
         self.__child_controllers = dict()
         self.__shortcut_manager = None
         self.__parent = None
+
+    def register_view(self, view):
+        """Called when the View was registered
+
+        Can be used e.g. to connect signals. Here, this implements a convenient feature that observes if thread problems
+        are possible by destroying a controller before being fully initialized.
+        """
+        self._view_initialized = True
 
     def add_controller(self, key, controller):
         """Add child controller
@@ -72,9 +81,8 @@ class ExtendedController(Controller):
             key = controller
         # print self.__class__.__name__, " remove key ", key, self.__child_controllers.keys()
         if key in self.__child_controllers:
-            if key in self.__action_registered_controllers:
-                self.__action_registered_controllers.remove(self.__child_controllers[key])
             if self.__shortcut_manager is not None:
+                self.__action_registered_controllers.remove(self.__child_controllers[key])
                 self.__child_controllers[key].unregister_actions(self.__shortcut_manager)
             self.__child_controllers[key].destroy()
             del self.__child_controllers[key]
@@ -146,7 +154,7 @@ class ExtendedController(Controller):
                 try:
                     controller.register_actions(shortcut_manager)
                 except Exception as e:
-                    logger.error("Error while registering action for {0}: {1}".format(controller.__name__, e))
+                    logger.error("Error while registering action for {0}: {1}".format(controller.__class__.__name__, e))
                 self.__action_registered_controllers.append(controller)
 
     def unregister_actions(self, shortcut_manager):
@@ -173,9 +181,13 @@ class ExtendedController(Controller):
         self.relieve_all_models()
         if self.parent:
             self.__parent = None
-        # TODO remove this check if possible -> insert to tolerate bad habit new action_signal and related functions
-        if self.view is not None:
+        if self._view_initialized:
             self.view.get_top_widget().destroy()
+            self.view = None
+        else:
+            logger.warning("The controller {0} seems to be destroyed before the view was fully initialized. {1} "
+                           "Check if you maybe do not call {2} or there exist most likely threading problems."
+                           "".format(self.__class__.__name__, self.model, ExtendedController.register_view))
 
     def observe_model(self, model):
         """Make this model observable within the controller
@@ -190,7 +202,7 @@ class ExtendedController(Controller):
     def relieve_model(self, model):
         """Do no longer observe the model
 
-        The model is also removed from the internal list of tracked models.
+        The model is also removed from the internal set of tracked models.
 
         :param gtkmvc.Model model: The model to be relieved
         """
@@ -200,10 +212,9 @@ class ExtendedController(Controller):
     def relieve_all_models(self):
         """Relieve all registered models
 
-        The method uses the list of registered models to relieve them.
+        The method uses the set of registered models to relieve them.
         """
-        models = [model for model in self.__registered_models]
-        map(self.relieve_model, models)
+        map(self.relieve_model, list(self.__registered_models))
         self.__registered_models.clear()
 
     def get_root_window(self):
