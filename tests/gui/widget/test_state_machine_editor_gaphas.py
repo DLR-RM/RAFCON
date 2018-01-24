@@ -25,7 +25,7 @@ def trigger_copy_delete_bug_signals():
     state is removed.
     """
     from rafcon.core.states.hierarchy_state import HierarchyState
-    from gui.widget._test_menu_bar import select_and_paste_state
+    from gui.widget.test_menu_bar import select_and_paste_state
     import rafcon.gui.singleton
     import rafcon.gui.config as gui_config
     import rafcon.gui.controllers.graphical_editor_gaphas as graphical_editor_gaphas
