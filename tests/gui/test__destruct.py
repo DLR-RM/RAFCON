@@ -258,11 +258,18 @@ def create_models():
     return logger, sm_m, state_dict
 
 
-def check_destruction_logs(elements, print_method=None):
+def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=None, log_file=True):
+    found_objects = []
+    if ignored_objects is None:
+        ignored_objects = []
     print_method = logger.warning if print_method is None else print_method
-    result_dict = get_log_elements(elements, with_prints=True, print_method=print_method)
+    if log_file:
+        result_dict = get_log_elements(elements, with_prints=True, print_method=print_method)
+    else:
+        result_dict = {name: {'gen_file': []} for name, check_it, object_class in elements}
     for name, check_it, object_class in elements:
-        found_objects_of_kind = [o for o in gc.get_objects() if isinstance(o, object_class)]
+        found_objects_of_kind = [o for o in gc.get_objects() if isinstance(o, object_class) and o not in ignored_objects]
+        found_objects += found_objects_of_kind
         if not len(found_objects_of_kind) == 0:
             collection_counts = [len(gc.get_referrers(o)) for o in found_objects_of_kind]
             class_types_found = set([o.__class__.__name__ for o in found_objects_of_kind])
@@ -275,7 +282,7 @@ def check_destruction_logs(elements, print_method=None):
                   "".format(object_class, len(found_objects_of_kind), len(result_dict[name]['gen_file']))
         if check_it:
             assert len(found_objects_of_kind) == 0
-    return
+    return found_objects
 
     # for element_name, with_assert, object_class in elements:
     #     print "finally ", element_name, "__init__:", len(result_dict[element_name]['gen_file']), "__del__:", \
@@ -502,6 +509,13 @@ def print_func(s):
 
 
 def test_core_destruct(caplog):
+    gc.collect()
+    elements = [('state', True, rafcon.core.states.state.State),
+                ('state_element', True, rafcon.core.state_elements.state_element.StateElement),
+                ]
+
+    already_existing_objects = check_existing_objects_of_kind([(n, False, c) for n, _, c in elements],
+                                                              logger.debug, log_file=False)
 
     testing_utils.initialize_environment_core()
 
@@ -518,11 +532,7 @@ def test_core_destruct(caplog):
 
     gc.collect()
 
-    elements = [('state', True, rafcon.core.states.state.State),
-                ('state_element', True, rafcon.core.state_elements.state_element.StateElement),
-                ]
-
-    check_destruction_logs(elements)
+    check_existing_objects_of_kind(elements, ignored_objects=already_existing_objects)
 
     un_patch_core_classes_from_log()
 
@@ -530,19 +540,12 @@ def test_core_destruct(caplog):
 
 
 def test_model_and_core_destruct(caplog):
-
-    import rafcon.gui.models.abstract_state
-    import rafcon.gui.models.state_element
-
+    gc.collect()
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False},
                                          gui_already_started=False)
 
-    patch_core_classes_with_log()
-    patch_model_classes_with_log()
-
-    run_model_construction()
-
-    gc.collect()
+    import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.state_element
 
     # TODO make this test at least run with all flags True
     elements = [('state', False, rafcon.core.states.state.State),
@@ -551,7 +554,17 @@ def test_model_and_core_destruct(caplog):
                 ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
                 ]
 
-    check_destruction_logs(elements, logger.debug)
+    already_existing_objects = check_existing_objects_of_kind([(n, False, c) for n, check_it, c in elements],
+                                                              logger.debug, log_file=False)
+
+    patch_core_classes_with_log()
+    patch_model_classes_with_log()
+
+    run_model_construction()
+
+    gc.collect()
+
+    check_existing_objects_of_kind(elements, logger.debug, already_existing_objects)
 
     un_patch_core_classes_from_log()
     un_patch_model_classes_from_log()
@@ -580,7 +593,7 @@ def _test_model_and_core_destruct_with_gui(caplog):
                     ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
                     ]
 
-        check_destruction_logs(elements)
+        check_existing_objects_of_kind(elements)
     except Exception as e:
         raise e
     finally:
@@ -617,7 +630,7 @@ def _test_widget_destruct(caplog):
                     ('gtkmvc_controller', False, gtkmvc.controller.Controller),
                     ]
 
-        check_destruction_logs(elements)
+        check_existing_objects_of_kind(elements)
     except Exception as e:
         raise e
     finally:
@@ -632,7 +645,7 @@ def _test_widget_destruct(caplog):
 if __name__ == '__main__':
     # _test_widget_destruct(None)
     # _test_model_and_core_destruct_with_gui(None)
-    test_core_destruct(None)
-    test_model_and_core_destruct(None)
-    # import pytest
-    # pytest.main(['-s', __file__])
+    # test_core_destruct(None)
+    # test_model_and_core_destruct(None)
+    import pytest
+    pytest.main(['-s', __file__])
