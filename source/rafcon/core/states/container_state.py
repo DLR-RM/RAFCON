@@ -1072,7 +1072,7 @@ class ContainerState(State):
 
         :param StateElement state_element: State or state element to be removed
         :param bool force: if the removal should be forced without checking constraints
-        :param bool destruct:
+        :param bool destruct: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, State):
             self.remove_state(state_element.state_id, force=force, destruct=destruct)
@@ -1220,7 +1220,7 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_transition(self, transition_id, force=False):
+    def remove_transition(self, transition_id, destruct=True):
         """Removes a transition from the container state
 
         :param transition_id: the id of the transition to remove
@@ -1285,7 +1285,7 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_data_flow(self, data_flow_id):
+    def remove_data_flow(self, data_flow_id, destruct=True):
         """ Removes a data flow from the container state
 
         :param int data_flow_id: the id of the data_flow to remove
@@ -1368,7 +1368,7 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_scoped_variable(self, scoped_variable_id):
+    def remove_scoped_variable(self, scoped_variable_id, destruct=True):
         """Remove a scoped variable from the container state
 
         :param scoped_variable_id: the id of the scoped variable to remove

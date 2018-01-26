@@ -390,7 +390,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @lock_state_machine
     @Observable.observed
-    def remove_input_data_port(self, data_port_id, force=False):
+    def remove_input_data_port(self, data_port_id, force=False, destruct=True):
         """Remove an input data port from the state
 
         :param int data_port_id: the id or the output data port to remove
@@ -451,7 +451,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @lock_state_machine
     @Observable.observed
-    def remove_output_data_port(self, data_port_id, force=False):
+    def remove_output_data_port(self, data_port_id, force=False, destruct=True):
         """Remove an output data port from the state
 
         :param int data_port_id: the id of the output data port to remove
@@ -629,7 +629,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         :param StateElement state_element: State element to be removed
         :param bool force: if the removal should be forced without checking constraints
-        :param bool destruct:
+        :param bool destruct: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, Outcome):
             self.remove_outcome(state_element.outcome_id, force, destruct=destruct)
@@ -642,7 +642,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @lock_state_machine
     @Observable.observed
-    def remove_outcome(self, outcome_id, force=False):
+    def remove_outcome(self, outcome_id, force=False, destruct=True):
         """Remove an outcome from the state
 
         :param int outcome_id: the id of the outcome to remove

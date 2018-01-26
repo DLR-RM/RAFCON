@@ -282,7 +282,7 @@ class BarrierConcurrencyState(ConcurrencyState):
                 self.add_state(state)
 
     @lock_state_machine
-    def remove_state(self, state_id, recursive_deletion=True, force=False, destruct=False):
+    def remove_state(self, state_id, recursive_deletion=True, force=False, destruct=True):
         """ Overwrite the parent class remove state method by checking if the user tries to delete the decider state
 
         :param state_id: the id of the state to remove
