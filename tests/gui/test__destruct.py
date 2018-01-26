@@ -309,6 +309,7 @@ def run_model_construction():
     s_m = rafcon.gui.models.state.StateModel(c_state.states['STATE1'])
     rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
     s_m.prepare_destruction()
+    testing_utils.wait_for_gui()
     # s_m._reset_property_notification()
 
     # del logger
@@ -547,13 +548,14 @@ def test_model_and_core_destruct(caplog):
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
 
-    # TODO make this test at least run with all flags True
-    elements = [('state', False, rafcon.core.states.state.State),
-                ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
-                ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
-                ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
+    elements = [('state', True, rafcon.core.states.state.State),
+                ('state_element', True, rafcon.core.state_elements.state_element.StateElement),
+                ('abstract_state_model', True, rafcon.gui.models.abstract_state.AbstractStateModel),
+                ('state_element_model', True, rafcon.gui.models.state_element.StateElementModel),
                 ]
 
+    # TODO make this return no existing model of kind State, StateElement, AbstractStateModel, StateElementModel
+    # if core test run before
     already_existing_objects = check_existing_objects_of_kind([(n, False, c) for n, check_it, c in elements],
                                                               logger.debug, log_file=False)
 
