@@ -1,11 +1,8 @@
 import threading
 
-import gtkmvc
-import gtkmvc.model_mt
-
 # test environment elements
 import testing_utils
-from testing_utils import call_gui_callback, patch_gtkmvc_model_mt, unpatch_gtkmvc_model_mt
+from testing_utils import call_gui_callback
 
 
 def run_create():
