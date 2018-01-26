@@ -31,6 +31,7 @@ from rafcon.core.id_generator import history_item_id_generator
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 import os
+import subprocess
 import pickle
 
 
@@ -67,11 +68,17 @@ class ExecutionHistoryStorage(object):
         finally:
             self.store_lock.release()
 
-    def close(self):
+    def close(self, make_readable_for_all=False):
         self.store_lock.acquire()
         try:
             self.store.close()
             logger.debug('Closed log file %s' % self.filename)
+            if make_readable_for_all:
+                ret = subprocess.call(['chmod', 'a+r', self.filename])
+                if ret:
+                    logger.debug('Could not make log file readable for all. chmod a+r failed on %s.' % self.filename)
+                else:
+                    logger.debug('Set log file readable for all via chmod a+r, file %s' % self.filename)
         except Exception as e:
             logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
