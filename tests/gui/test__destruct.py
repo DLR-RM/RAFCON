@@ -2,6 +2,7 @@ import os
 import gc
 import time
 import gtkmvc
+from pprint import pprint
 
 import rafcon.core.singleton
 from rafcon.core.states.execution_state import ExecutionState
@@ -258,7 +259,8 @@ def create_models():
     return logger, sm_m, state_dict
 
 
-def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=None, log_file=True):
+def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=None, log_file=True,
+                                   searched_type=None):
     found_objects = []
     if ignored_objects is None:
         ignored_objects = []
@@ -286,40 +288,48 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
                   "".format(object_class, len(found_objects_of_kind), len(result_dict[name]['gen_file']))
         if check_it:
             assert len(found_objects_of_kind) == 0
+
     # Use this commented lines to find you references of you classes which you wanna debug
     # BE AWARE every list generated in this script (above) is in the reference list, too!!!
-    # -> e.g. target_objects and found_objects_of_kind
-    searched_type = "GraphicalEditorView"
-    target_objects = [o for o in found_objects if o.__class__.__name__ == searched_type]
-    if target_objects:
-        for i1, e in enumerate(target_objects):
-            print "# TARGET {0} {1} #".format(i1 + 1, searched_type)*10
-            # print id(e.model.state), e, e.model
-            print e
-            import pprint
+    # -> target_object.g. target_objects and found_objects_of_kind
+    if not searched_type:
+        return
 
-            def get_classes_in_iter(it, name=True):
-                if name:
-                    return set([element_in_iter.__class__.__name__ for element_in_iter in it])
-                else:
-                    return set([element_in_iter.__class__ for element_in_iter in it])
-            r = gc.get_referrers(e)
-            pprint.pprint([(i3, elem) for i3, elem in enumerate(r)
-                           if not isinstance(elem, (list, tuple, dict)) or len(elem) < 10])
-            print "#### found list objects ###"
-            for i2, elem in enumerate(r):
-                gc.collect()
-                pprint.pprint([(i3, elem) for i3, elem in enumerate(r)
-                               if not isinstance(elem, (list, tuple, dict))])
-                gc.collect()
-                if isinstance(elem, (list, tuple, dict)):
-                    # print [ee for ee in gc.get_referrers(elem) if not isinstance(ee, (list, tuple)) or len(ee) < 10]
-                    print "part {1} of {3} with id {0}: length {2}\n".format(i1, i2, len(elem), searched_type)
-                    gc.collect()
-                    pprint.pprint([(i3, elem.__class__.__name__, "with", get_classes_in_iter(elem), elem if len(elem) < 30 else "to many {0} > 10".format(len(elem)))
-                                   for i3, elem in enumerate(r)
-                                   if isinstance(elem, (list, tuple, dict))])
-            print "#"*50 + "\n"
+    target_objects = [o for o in found_objects if o.__class__.__name__ == searched_type]
+
+    def get_classes_in_iter(it, name=True):
+        if name:
+            return set([element_in_iter.__class__.__name__ for element_in_iter in it])
+        else:
+            return set([element_in_iter.__class__ for element_in_iter in it])
+
+    def print_referrer(referrer):
+        if not hasattr(referrer, '__len__'):
+            pprint(referrer)
+        elif len(referrer) <= 3:
+            pprint(["list with {} elements:".format(len(referrer)), referrer])
+        else:
+            pprint(["list with {} elements of type:".format(len(referrer)), get_classes_in_iter(referrer)])
+
+    if target_objects:
+        for index_target_object, target_object in enumerate(target_objects):
+            print
+            print
+            print "# Referrers of #{0} {1}:".format(index_target_object + 1, searched_type), target_object
+
+            target_object_referrers = gc.get_referrers(target_object)
+            list_referrers = [referrer for referrer in target_object_referrers if hasattr(referrer, '__iter__')]
+
+            print "## simple referrers"
+            map(print_referrer, [referrer for referrer in target_object_referrers if referrer not in list_referrers])
+
+            print "## list referrers"
+            gc.collect()
+
+            for referrer in list_referrers:
+                print_referrer(referrer)
+                print "### referrers of list referrer"
+                map(print_referrer, gc.get_referrers(referrer))
 
     return found_objects
 
@@ -678,7 +688,8 @@ def test_widget_destruct(caplog):
         raise e
     finally:
         testing_utils.close_gui()
-        check_existing_objects_of_kind(elements, logger.debug, ignored_objects=already_existing_objects)
+        check_existing_objects_of_kind(elements, logger.debug, ignored_objects=already_existing_objects,
+                                       searched_type="SourceEditorView")
         un_patch_core_classes_from_log()
         un_patch_model_classes_from_log()
         un_patch_ctrl_classes_from_log()
