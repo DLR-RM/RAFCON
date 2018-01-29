@@ -27,11 +27,19 @@ class TransitionSegment(LineSegment):
     """
 
     _view = None
+    _item = None
 
     def __init__(self, item, view):
-        self.item = item
+        if item:
+            self._item = ref(item)
         if view:
             self._view = ref(view)
+
+    @property
+    def item(self):
+        if self._item:
+            return self._item()
+        return None
 
     @property
     def view(self):
