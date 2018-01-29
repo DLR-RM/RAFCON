@@ -77,6 +77,8 @@ class StateEditorController(ExtendedController):
         if not isinstance(model, ContainerStateModel) and not isinstance(model, LibraryStateModel) or \
                 isinstance(model, LibraryStateModel) and not isinstance(model.state_copy, ContainerStateModel):
             self.add_controller('source_ctrl', SourceEditorController(sv_and_source_script_state_m, view.source_view))
+        else:
+            view.source_view.get_top_widget().destroy()
         self.add_controller('semantic_data_ctrl', SemanticDataEditorController(model, view.semantic_data_view))
 
     def register_view(self, view):
