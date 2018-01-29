@@ -319,7 +319,7 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
                                max_depth=7, extra_ignore=(), filter=None, too_many=10,
                                highlight=None,
                                extra_info=None, refcounts=True, shortnames=False,
-                               filename='/home/brun_sb/sample-graph.png')
+                               filename='/tmp/sample-graph.png')
 
         print "generate graph finished"
 
@@ -675,15 +675,17 @@ def test_widget_destruct(caplog):
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
 
-    elements = [('state', False, rafcon.core.states.state.State),
-                ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
-                ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
-                ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
-                ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
+    elements = [
+        # ('state', False, rafcon.core.states.state.State),
+        #         ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
+        #         ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
+        #         ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
+        #         ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
                 ('gtkmvc_view', False, gtkmvc.view.View),
-                ('gtkmvc_controller', False, gtkmvc.controller.Controller),
+                # ('gtkmvc_controller', False, gtkmvc.controller.Controller),
                 ]
-
+    testing_utils.call_gui_callback(testing_utils.wait_for_gui)
+    testing_utils.wait_for_gui()
     # if core test run before
     already_existing_objects = check_existing_objects_of_kind([(n, False, c) for n, check_it, c in elements],
                                                               logger.debug, log_file=False)
@@ -700,7 +702,7 @@ def test_widget_destruct(caplog):
     finally:
         testing_utils.close_gui()
         check_existing_objects_of_kind(elements, logger.debug, ignored_objects=already_existing_objects,
-                                       searched_type="SourceEditorView")
+                                       searched_type="SemanticDataEditorView")
         un_patch_core_classes_from_log()
         un_patch_model_classes_from_log()
         un_patch_ctrl_classes_from_log()
