@@ -324,9 +324,10 @@ class StateOutcomesListController(ListViewController):
     @ExtendedController.observe("destruction_signal", signal=True)
     def get_destruction_signal(self, model, prop_name, info):
         """ Close state editor when state is being destructed """
-        # TODO why the controller is not already destroyed before all transitions or outcomes are deleted
+        # TODO D-Find out why the controller is not already destroyed before all transitions or outcomes are deleted
         # therefore the models are relieved here -> points on the fact that the controllers are not proper destroyed
         self.relieve_all_models()
+        # TODO end ################################
 
 
 class StateOutcomesEditorController(ExtendedController):

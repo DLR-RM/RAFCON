@@ -160,10 +160,13 @@ class LinkageListController(ListViewController):
     @ListViewController.observe("destruction_signal", signal=True)
     def get_destruction_signal(self, model, prop_name, info):
         """ Close state editor when state is being destructed """
-        # TODO why the controller is not already destroyed before all transitions, data flows or ports are deleted
-        # therefore the models are relieved here -> points on the fact that the controllers are not proper destroyed
+        # TODO D-Find out why the controller is not already destroyed before all transitions, data flows or ports
+        # are deleted therefore the models are relieved here -> points on the fact that the controllers are not
+        # proper destroyed
+        # !!! seems to be fixed but let it in to first fix the destruction !!!
         if model in [self.model, self.model.parent, self.model.get_state_machine_m()]:
             self.relieve_all_models()
+        # TODO end ########################################################
 
     def store_debug_log_file(self, string):
         with open('{1}/{0}_debug_log_file.txt'.format(self.__class__.__name__, RAFCON_TEMP_PATH_BASE), 'a+') as f:

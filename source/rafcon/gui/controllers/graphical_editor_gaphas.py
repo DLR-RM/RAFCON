@@ -303,9 +303,10 @@ class GraphicalEditorController(ExtendedController):
     @ExtendedController.observe("destruction_signal", signal=True)
     def state_machine_destruction(self, model, prop_name, info):
         """ Close state editor when state is being destructed """
-        # TODO fix this -> this has to be performed by the state machines editor
+        # TODO D-Decide if this has to be performed by the state machines editor ####
         if self.model is model:
             self.relieve_all_models()
+        # TODO end ##################################################################
 
     @ExtendedController.observe("state_meta_signal", signal=True)
     def meta_changed_notify_after(self, state_machine_m, _, info):

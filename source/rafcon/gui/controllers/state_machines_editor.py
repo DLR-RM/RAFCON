@@ -185,9 +185,11 @@ class StateMachinesEditorController(ExtendedController):
         page = notebook.get_nth_page(page_num)
         for tab_info in self.tabs.itervalues():
             if tab_info['page'] is page:
+                # TODO D-Remove but if necessary its an improvement #####
                 if tab_info['state_machine_m'].state_machine is None:
                     logger.info("This notification should not occur.")
                     break
+                # TODO end ##############################################
                 new_sm_id = get_state_machine_id(tab_info['state_machine_m'])
                 if self.model.selected_state_machine_id != new_sm_id:
                     self.model.selected_state_machine_id = new_sm_id
@@ -203,10 +205,12 @@ class StateMachinesEditorController(ExtendedController):
                                                state_machine_m, 'refused')
             set_tab_label_texts(tab_label, state_machine_m, state_machine_m.state_machine.marked_dirty)
             page = self.tabs[sm_id]['page']
+            # TODO D-Remove but if necessary its an improvement #####
             if sm_id not in self.tabs:
                 logger.info("This notification should not happen")
             else:
                 self.view.notebook.remove_page(self.get_page_num(sm_id))
+            # TODO end ##############################################
             self.view.notebook.insert_page(page, tab, page_num)
 
     def get_page_num(self, state_machine_id):
@@ -299,8 +303,10 @@ class StateMachinesEditorController(ExtendedController):
     def model_changed(self, model, prop_name, info):
         from rafcon.gui.utils.notification_overview import NotificationOverview
         overview = NotificationOverview(info, initiator_string=self.__class__.__name__)
+        # TODO D-Remove but if necessary its an improvement #####
         if isinstance(overview['result'][-1], Exception):
             logger.info("This notification should not occur {0}".format(overview))
+        # TODO end ##############################################
         # Check for new state machines
         for sm_id, sm in self.model.state_machine_manager.state_machines.iteritems():
             if sm_id not in self.tabs:
@@ -312,9 +318,11 @@ class StateMachinesEditorController(ExtendedController):
             if sm_id not in self.model.state_machine_manager.state_machines:
                 state_machines_to_be_deleted.append(self.tabs[sm_id]['state_machine_m'])
         for state_machine_m in state_machines_to_be_deleted:
+            # TODO D-Remove but if necessary its an improvement #####
             if state_machine_m.state_machine is None:
                 logger.info("This notification should not occur.")
                 continue
+            # TODO end ##############################################
             self.remove_state_machine(state_machine_m)
 
     @ExtendedController.observe("state_machine", after=True)

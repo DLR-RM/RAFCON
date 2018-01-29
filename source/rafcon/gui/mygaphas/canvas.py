@@ -41,10 +41,11 @@ class MyCanvas(gaphas.canvas.Canvas):
         def delete_model_from_maps(model):
             try:
                 view = self._model_view_map.pop(model)
-                # TODO remove this check later again -> work around for test_menu_bar repeated copy/paste result error
+                # TODO D-Decide to remove this later -> work around for test_menu_bar repeated copy/paste result error
                 if view in self._core_view_map.values():
                     core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
                     del self._core_view_map[core_element]
+                # TODO end -> maybe also look at next TODO why it is there? ##############
             except KeyError:
                 from rafcon.gui.models.library_state import LibraryStateModel
                 if not isinstance(model.parent, LibraryStateModel):

@@ -78,12 +78,14 @@ class StateMachineManagerModel(ModelMT):
 
     @ModelMT.observe("state_machine_manager", after=True)
     def model_changed(self, model, prop_name, info):
+        # TODO D-Decide if necessary or improvement #####
         from rafcon.gui.utils.notification_overview import NotificationOverview
         overview = NotificationOverview(info)
         if isinstance(overview['result'][-1], Exception):
             logger.info("result type is {0} and the full notification {1}".format(type(overview['result'][-1]),
                                                                                   overview))
             return
+        # TODO end ######################################
         if info["method_name"] == "add_state_machine":
             logger.debug("Add new state machine model ... ")
             for sm_id, sm in self.state_machine_manager.state_machines.iteritems():
