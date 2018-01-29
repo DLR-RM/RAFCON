@@ -47,7 +47,7 @@ class PortView(object):
         self._side = None
         self.direction = None
         self.side = side
-        self._parent = parent
+        self._parent = ref(parent)
         self._view = None
 
         self._draw_connection_to_port = False
@@ -117,7 +117,7 @@ class PortView(object):
 
     @property
     def parent(self):
-        return self._parent
+        return self._parent()
 
     @property
     def pos(self):
@@ -138,7 +138,7 @@ class PortView(object):
     @property
     def view(self):
         if not self._view:
-            self._view = self._parent.canvas.get_first_view()
+            self._view = self.parent.canvas.get_first_view()
         return self._view
 
     def has_outgoing_connection(self):
@@ -162,7 +162,7 @@ class PortView(object):
         return False
 
     def is_selected(self):
-        return self in self._parent.canvas.get_first_view().selected_items
+        return self in self.parent.canvas.get_first_view().selected_items
 
     def _add_connection(self, connection_view):
         if connection_view not in self.connected_connections:
@@ -229,7 +229,7 @@ class PortView(object):
 
     def draw_port(self, context, fill_color, transparency, value=None):
         c = context.cairo
-        view = self._parent.canvas.get_first_view()
+        view = self.parent.canvas.get_first_view()
         side_length = self.port_side_size
         position = self.pos
 
@@ -247,8 +247,8 @@ class PortView(object):
                 view_center[1] - view_length / 2. > view.allocation[3]:
             return
 
-        parent_state_m = self._parent.model
-        is_library_state_with_content_shown = self._parent.show_content()
+        parent_state_m = self.parent.model
+        is_library_state_with_content_shown = self.parent.show_content()
 
         parameters = {
             'selected': self.is_selected(),
@@ -319,7 +319,7 @@ class PortView(object):
 
         upper_left_corner = (position[0] + self._last_label_relative_pos[0],
                              position[1] + self._last_label_relative_pos[1])
-        current_zoom = self._parent.canvas.get_first_view().get_zoom_factor()
+        current_zoom = self.parent.canvas.get_first_view().get_zoom_factor()
         from_cache, image, zoom = self._label_image_cache.get_cached_image(self._last_label_size[0],
                                                                            self._last_label_size[1],
                                                                            current_zoom, parameters)
@@ -362,9 +362,9 @@ class PortView(object):
             # As we are using drawing operation, not supported by Gaphas, we manually need to update the bounding box
             if context.draw_all:
                 from gaphas.geometry import Rectangle
-                view = self._parent.canvas.get_first_view()
-                abs_pos = view.get_matrix_i2v(self._parent).transform_point(*label_pos)
-                abs_pos1 = view.get_matrix_i2v(self._parent).transform_point(extents[2], extents[3])
+                view = self.parent.canvas.get_first_view()
+                abs_pos = view.get_matrix_i2v(self.parent).transform_point(*label_pos)
+                abs_pos1 = view.get_matrix_i2v(self.parent).transform_point(extents[2], extents[3])
                 bounds = Rectangle(abs_pos[0], abs_pos[1], x1=abs_pos1[0], y1=abs_pos1[1])
                 context.cairo._update_bounds(bounds)
 
@@ -683,7 +683,7 @@ class ScopedVariablePortView(PortView):
             return
 
         c = context.cairo
-        view = self._parent.canvas.get_first_view()
+        view = self.parent.canvas.get_first_view()
         side_length = self.port_side_size
 
         parameters = {
