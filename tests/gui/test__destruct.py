@@ -272,7 +272,11 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
         found_objects += found_objects_of_kind
         if not len(found_objects_of_kind) == 0:
             collection_counts = [len(gc.get_referrers(o)) for o in found_objects_of_kind]
-            class_types_found = set([o.__class__.__name__ for o in found_objects_of_kind])
+            class_types_found = set([o.__class__ for o in found_objects_of_kind])
+            class_types_found = set(["{0}x {1}"
+                                     "".format(len([o for o in found_objects_of_kind if isinstance(o, class_type)]),
+                                               class_type.__name__)
+                                     for class_type in class_types_found])
             print_method("of object of kind '{0}' have been generated {3} and there are {1} left over instances "
                          "with respective reference numbers of {2} and those types {4}"
                          "".format(object_class, len(found_objects_of_kind), collection_counts,
@@ -282,6 +286,41 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
                   "".format(object_class, len(found_objects_of_kind), len(result_dict[name]['gen_file']))
         if check_it:
             assert len(found_objects_of_kind) == 0
+    # Use this commented lines to find you references of you classes which you wanna debug
+    # BE AWARE every list generated in this script (above) is in the reference list, too!!!
+    # -> e.g. target_objects and found_objects_of_kind
+    searched_type = "GraphicalEditorView"
+    target_objects = [o for o in found_objects if o.__class__.__name__ == searched_type]
+    if target_objects:
+        for i1, e in enumerate(target_objects):
+            print "# TARGET {0} {1} #".format(i1 + 1, searched_type)*10
+            # print id(e.model.state), e, e.model
+            print e
+            import pprint
+
+            def get_classes_in_iter(it, name=True):
+                if name:
+                    return set([element_in_iter.__class__.__name__ for element_in_iter in it])
+                else:
+                    return set([element_in_iter.__class__ for element_in_iter in it])
+            r = gc.get_referrers(e)
+            pprint.pprint([(i3, elem) for i3, elem in enumerate(r)
+                           if not isinstance(elem, (list, tuple, dict)) or len(elem) < 10])
+            print "#### found list objects ###"
+            for i2, elem in enumerate(r):
+                gc.collect()
+                pprint.pprint([(i3, elem) for i3, elem in enumerate(r)
+                               if not isinstance(elem, (list, tuple, dict))])
+                gc.collect()
+                if isinstance(elem, (list, tuple, dict)):
+                    # print [ee for ee in gc.get_referrers(elem) if not isinstance(ee, (list, tuple)) or len(ee) < 10]
+                    print "part {1} of {3} with id {0}: length {2}\n".format(i1, i2, len(elem), searched_type)
+                    gc.collect()
+                    pprint.pprint([(i3, elem.__class__.__name__, "with", get_classes_in_iter(elem), elem if len(elem) < 30 else "to many {0} > 10".format(len(elem)))
+                                   for i3, elem in enumerate(r)
+                                   if isinstance(elem, (list, tuple, dict))])
+            print "#"*50 + "\n"
+
     return found_objects
 
     # for element_name, with_assert, object_class in elements:
@@ -606,7 +645,7 @@ def _test_model_and_core_destruct_with_gui(caplog):
         testing_utils.shutdown_environment(caplog=caplog)
 
 
-def _test_widget_destruct(caplog):
+def test_widget_destruct(caplog):
 
     # TODO make it fully working and later activate modification history and auto backup
     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
@@ -615,6 +654,19 @@ def _test_widget_destruct(caplog):
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
 
+    elements = [('state', False, rafcon.core.states.state.State),
+                ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
+                ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
+                ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
+                ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
+                ('gtkmvc_view', False, gtkmvc.view.View),
+                ('gtkmvc_controller', False, gtkmvc.controller.Controller),
+                ]
+
+    # if core test run before
+    already_existing_objects = check_existing_objects_of_kind([(n, False, c) for n, check_it, c in elements],
+                                                              logger.debug, log_file=False)
+
     patch_core_classes_with_log()
     patch_model_classes_with_log()
     patch_ctrl_classes_with_log()
@@ -622,32 +674,23 @@ def _test_widget_destruct(caplog):
 
     try:
         run_controller_construction(caplog, with_gui=True)
-
-        elements = [('state', False, rafcon.core.states.state.State),
-                    ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
-                    ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
-                    ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
-                    ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
-                    ('gtkmvc_view', False, gtkmvc.view.View),
-                    ('gtkmvc_controller', False, gtkmvc.controller.Controller),
-                    ]
-
-        check_existing_objects_of_kind(elements)
     except Exception as e:
         raise e
     finally:
+        testing_utils.close_gui()
+        check_existing_objects_of_kind(elements, ignored_objects=already_existing_objects)
         un_patch_core_classes_from_log()
         un_patch_model_classes_from_log()
         un_patch_ctrl_classes_from_log()
         un_patch_gtkmvc_classes_from_log()
-        testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':
-    # _test_widget_destruct(None)
     # _test_model_and_core_destruct_with_gui(None)
     # test_core_destruct(None)
     # test_model_and_core_destruct(None)
-    import pytest
-    pytest.main(['-s', __file__])
+    # testing_utils.dummy_gui(None)
+    test_widget_destruct(None)
+    # import pytest
+    # pytest.main(['-s', __file__])
