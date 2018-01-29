@@ -12,6 +12,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from contextlib import contextmanager
+from weakref import ref
 from gtkmvc.observer import Observer
 
 from gaphas.view import GtkView
@@ -35,7 +36,11 @@ class ExtendedGtkView(GtkView, Observer):
         self.observe_model(self._selection)
         self.observe_model(state_machine_m.root_state)
         self._bounding_box_painter = BoundingBoxPainter(self)
-        self.graphical_editor = graphical_editor_v
+        self._graphical_editor = ref(graphical_editor_v)
+
+    @property
+    def graphical_editor(self):
+        return self._graphical_editor()
 
     def get_port_at_point(self, vpos, distance=10, exclude=None, exclude_port_fun=None):
         """
