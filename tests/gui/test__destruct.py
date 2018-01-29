@@ -293,7 +293,7 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
     # BE AWARE every list generated in this script (above) is in the reference list, too!!!
     # -> target_object.g. target_objects and found_objects_of_kind
     if not searched_type:
-        return
+        return found_objects
 
     target_objects = [o for o in found_objects if o.__class__.__name__ == searched_type]
 
@@ -312,6 +312,17 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
             pprint(["list with {} elements of type:".format(len(referrer)), get_classes_in_iter(referrer)])
 
     if target_objects:
+
+        print "generate graph"
+        import objgraph
+        objgraph.show_backrefs(target_objects,
+                               max_depth=7, extra_ignore=(), filter=None, too_many=10,
+                               highlight=None,
+                               extra_info=None, refcounts=True, shortnames=False,
+                               filename='/home/brun_sb/sample-graph.png')
+
+        print "generate graph finished"
+
         for index_target_object, target_object in enumerate(target_objects):
             print
             print
