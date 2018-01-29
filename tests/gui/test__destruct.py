@@ -678,7 +678,7 @@ def test_widget_destruct(caplog):
         raise e
     finally:
         testing_utils.close_gui()
-        check_existing_objects_of_kind(elements, ignored_objects=already_existing_objects)
+        check_existing_objects_of_kind(elements, logger.debug, ignored_objects=already_existing_objects)
         un_patch_core_classes_from_log()
         un_patch_model_classes_from_log()
         un_patch_ctrl_classes_from_log()
