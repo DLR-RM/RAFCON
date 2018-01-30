@@ -89,11 +89,13 @@ class StateEditorController(ExtendedController):
         super(StateEditorController, self).register_view(view)
         view['add_input_port_button'].connect('clicked', self.inputs_ctrl.on_add)
         view['add_output_port_button'].connect('clicked', self.outputs_ctrl.on_add)
-        view['add_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_add)
+        if isinstance(self.model, ContainerStateModel):
+            view['add_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_add)
 
         view['remove_input_port_button'].connect('clicked', self.inputs_ctrl.on_remove)
         view['remove_output_port_button'].connect('clicked', self.outputs_ctrl.on_remove)
-        view['remove_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_remove)
+        if isinstance(self.model, ContainerStateModel):
+            view['remove_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_remove)
 
         if isinstance(self.model, LibraryStateModel) or self.model.state.get_library_root_state():
             view['add_input_port_button'].set_sensitive(False)
