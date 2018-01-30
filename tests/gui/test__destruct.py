@@ -1,6 +1,7 @@
 import os
 import gc
 import time
+import shutil
 import gtkmvc
 from pprint import pprint
 
@@ -261,6 +262,8 @@ def create_models():
 
 def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=None, log_file=True,
                                    searched_type=None):
+    # initial collect to avoid cross effects
+    gc.collect()
     found_objects = []
     if ignored_objects is None:
         ignored_objects = []
@@ -288,6 +291,8 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
                   "".format(object_class, len(found_objects_of_kind), len(result_dict[name]['gen_file']))
         if check_it:
             assert len(found_objects_of_kind) == 0
+
+    found_objects = list(set(found_objects))  # TODO why there are duplicated elements in
 
     # Use this commented lines to find you references of you classes which you wanna debug
     # BE AWARE every list generated in this script (above) is in the reference list, too!!!
@@ -319,28 +324,43 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
             pprint(["{1} with {0} elements of type: ".format(len(referrer), referrer.__class__.__name__),
                     get_classes_in_iter(referrer)])
 
-    def generate_graph(target_object):
-        print "generate graph"
+    def generate_graphs(target_object_s):
         try:
             import objgraph
         except ImportError:
             print "ImportError no generation of graph"
             return
-        folder_path = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "..", "..", target_object.__class__.__name__)
-        graph_file_name = os.path.join(folder_path, str(id(target_object)) + "_sample-graph.png")
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-        objgraph.show_backrefs(target_object,
-                               max_depth=20, extra_ignore=(), filter=None, too_many=100,
-                               highlight=None,
-                               extra_info=None, refcounts=True, shortnames=False,
-                               filename=graph_file_name)
-        print "generate graph finished"
+
+        if isinstance(target_object_s, list):
+            target_object = target_object_s[0]
+            folder_path = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "..", "..",
+                                       target_object.__class__.__name__)
+            if os.path.exists(folder_path):
+                shutil.rmtree(folder_path)
+            for to in set(target_object_s):  # set used to additional avoid multiple identical graph generation
+                generate_graphs(to)
+        else:
+            print "generate graph"
+            target_object = target_object_s
+            folder_path = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "..", "..",
+                                       target_object.__class__.__name__)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+            graph_file_name = os.path.join(folder_path, str(id(target_object)) + "_sample-graph.png")
+            objgraph.show_backrefs(target_object,
+                                   max_depth=20, extra_ignore=(), filter=None, too_many=100,
+                                   highlight=None,
+                                   extra_info=None, refcounts=True, shortnames=False,
+                                   filename=graph_file_name)
+            print "generate graph finished"
+
+    print "ignored_objects", ignored_objects
+    print "found_objects", found_objects
+    print "target_objects", target_objects
 
     if target_objects:
-
+        generate_graphs(target_objects)
         for index_target_object, target_object in enumerate(target_objects):
-            generate_graph(target_object)
             print
             print
             print "# Referrers of #{0} {1}:".format(index_target_object + 1, searched_type), target_object
@@ -676,16 +696,15 @@ def _test_model_and_core_destruct_with_gui(caplog):
 def test_widget_destruct(caplog):
 
     # TODO make it fully working and later activate modification history and auto backup
-    testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
+    if not testing_utils.used_gui_threads:
+        testing_utils.dummy_gui(None)
 
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
 
-    import rafcon.gui.views.state_editor.semantic_data_editor
-    searched_class = rafcon.gui.views.state_editor.semantic_data_editor.SemanticDataEditorView
-    # import rafcon.gui.controllers.state_editor.outcomes
-    # searched_class = rafcon.gui.controllers.state_editor.outcomes.StateOutcomesEditorController
+    import rafcon.gui.controllers.menu_bar
+    searched_class = rafcon.gui.controllers.menu_bar.MenuBarController
 
     elements = [
                 # ('state', False, rafcon.core.states.state.State),
@@ -693,13 +712,14 @@ def test_widget_destruct(caplog):
                 # ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
                 # ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
                 # ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
-                ('gtkmvc_view', False, gtkmvc.view.View),
+                ('gtkmvc_view', True, gtkmvc.view.View),
                 # ('gtkmvc_controller', False, gtkmvc.controller.Controller),
                 # ('extended_controller', False, searched_class),
                 ]
     # if core test run before
     already_existing_objects = check_existing_objects_of_kind([(n, False, c) for n, check_it, c in elements],
                                                               logger.debug, log_file=False)
+    testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
     patch_core_classes_with_log()
     patch_model_classes_with_log()

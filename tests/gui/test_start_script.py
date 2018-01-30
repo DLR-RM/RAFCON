@@ -131,4 +131,4 @@ if __name__ == '__main__':
     # test_start_script_open()
     # test_start_script_state()
     # test_start_script_valid_config()
-    pytest.main([__file__])
+    pytest.main(['-s', __file__])
