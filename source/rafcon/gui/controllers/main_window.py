@@ -664,4 +664,16 @@ class MainWindowController(ExtendedController):
         # idle_add seems not to be necessary here
         # glib.idle_add(log_helpers.LoggingViewHandler.remove_logging_view, 'main')
         log_helpers.LoggingViewHandler.remove_logging_view('main')
+
+        # gtkmvc installs a global glade custom handler that holds a reference to the last created View class,
+        # preventing it from being destructed. By installing a dummy callback handler, after all views have been
+        # created, the old handler is being removed and with it the reference, allowing all Views to be destructed.
+        try:
+            from gtk import glade
+            def dummy(*args, **kwargs):
+                pass
+            glade.set_custom_handler(dummy)
+        except ImportError:
+            pass
+
         self.destroy()
