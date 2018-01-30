@@ -703,8 +703,15 @@ def test_widget_destruct(caplog):
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
 
-    import rafcon.gui.controllers.menu_bar
-    searched_class = rafcon.gui.controllers.menu_bar.MenuBarController
+    import rafcon.gui.controllers.state_editor.data_flows
+    searched_class = rafcon.gui.controllers.state_editor.data_flows.StateDataFlowsListController
+    import rafcon.gui.controllers.state_editor.transitions
+    searched_class = rafcon.gui.controllers.state_editor.transitions.StateTransitionsListController
+    import rafcon.gui.controllers.state_editor.io_data_port_list
+    searched_class = rafcon.gui.controllers.state_editor.io_data_port_list.InputPortListController
+    searched_class = rafcon.gui.controllers.state_editor.io_data_port_list.OutputPortListController
+    import rafcon.gui.controllers.state_editor.scoped_variable_list
+    searched_class = rafcon.gui.controllers.state_editor.scoped_variable_list.ScopedVariableListController
 
     elements = [
                 # ('state', False, rafcon.core.states.state.State),
@@ -713,8 +720,8 @@ def test_widget_destruct(caplog):
                 # ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
                 # ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
                 ('gtkmvc_view', True, gtkmvc.view.View),
-                # ('gtkmvc_controller', False, gtkmvc.controller.Controller),
-                # ('extended_controller', False, searched_class),
+                ('gtkmvc_controller', False, gtkmvc.controller.Controller),
+                ('extended_controller', False, searched_class),
                 ]
     # if core test run before
     already_existing_objects = check_existing_objects_of_kind([(n, False, c) for n, check_it, c in elements],

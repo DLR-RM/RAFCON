@@ -56,7 +56,7 @@ class DataPortListController(ListViewController):
     data_port_model_list = None
 
     def __init__(self):
-        raise NotImplementedError("You have to instatiate a subclass of DataPortListController")
+        raise NotImplementedError("You have to instantiate a subclass of DataPortListController")
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -76,8 +76,10 @@ class DataPortListController(ListViewController):
                 view['default_value_col'].set_title("Used value")
             if self.model.state.get_library_root_state() is None:  # never enabled means it is disabled
                 view['default_value_text'].set_property("editable", True)
+                # TODO D-Substitute the set_cell_data_func or disconnect them cause un-mortal controller ##
                 view['default_value_col'].set_cell_data_func(view['default_value_text'],
                                                              self._default_value_cell_data_func)
+                # TODO end ################################################################################
 
         self._apply_value_on_edited_and_focus_out(view['name_text'], self._apply_new_data_port_name)
         self._apply_value_on_edited_and_focus_out(view['data_type_text'], self._apply_new_data_port_type)

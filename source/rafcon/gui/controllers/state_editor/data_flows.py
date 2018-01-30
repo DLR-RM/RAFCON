@@ -110,10 +110,12 @@ class StateDataFlowsListController(LinkageListController):
             else:
                 logger.warning("Column has no cell_data_func %s %s" % (column.get_name(), column.get_title()))
 
+        # TODO D-Substitute the set_cell_data_func or disconnect them cause un-mortal controller ##
         view['from_state_col'].set_cell_data_func(view['from_state_combo'], cell_text, self.model)
         view['to_state_col'].set_cell_data_func(view['to_state_combo'], cell_text, self.model)
         view['from_key_col'].set_cell_data_func(view['from_key_combo'], cell_text, self.model)
         view['to_key_col'].set_cell_data_func(view['to_key_combo'], cell_text, self.model)
+        # TODO end ################################################################################
 
         if self.model.state.get_library_root_state():
             view['from_state_combo'].set_property("editable", False)
