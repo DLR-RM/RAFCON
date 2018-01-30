@@ -298,40 +298,59 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
     target_objects = [o for o in found_objects if o.__class__.__name__ == searched_type]
 
     def get_classes_in_iter(it, name=True):
-        if name:
-            return set([element_in_iter.__class__.__name__ for element_in_iter in it])
+        if isinstance(it, dict):
+            if name:
+                return set([key + ": " + element_in_iter.__class__.__name__ for key, element_in_iter in it.iteritems()])
+            else:
+                return set([key + ": " + str(element_in_iter.__class__) for key, element_in_iter in it.iteritems()])
         else:
-            return set([element_in_iter.__class__ for element_in_iter in it])
+            if name:
+                return set([element_in_iter.__class__.__name__ for element_in_iter in it])
+            else:
+                return set([element_in_iter.__class__ for element_in_iter in it])
 
     def print_referrer(referrer):
         if not hasattr(referrer, '__len__'):
             pprint(referrer)
         elif len(referrer) <= 3:
-            pprint(["list with {} elements:".format(len(referrer)), referrer])
+            pprint(["{1} with {0} elements: ".format(len(referrer), referrer.__class__.__name__),
+                    referrer])
         else:
-            pprint(["list with {} elements of type:".format(len(referrer)), get_classes_in_iter(referrer)])
+            pprint(["{1} with {0} elements of type: ".format(len(referrer), referrer.__class__.__name__),
+                    get_classes_in_iter(referrer)])
+
+    def generate_graph(target_object):
+        print "generate graph"
+        try:
+            import objgraph
+        except ImportError:
+            print "ImportError no generation of graph"
+            return
+        folder_path = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "..", "..", target_object.__class__.__name__)
+        graph_file_name = os.path.join(folder_path, str(id(target_object)) + "_sample-graph.png")
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+        objgraph.show_backrefs(target_object,
+                               max_depth=20, extra_ignore=(), filter=None, too_many=100,
+                               highlight=None,
+                               extra_info=None, refcounts=True, shortnames=False,
+                               filename=graph_file_name)
+        print "generate graph finished"
 
     if target_objects:
 
-        print "generate graph"
-        import objgraph
-        objgraph.show_backrefs(target_objects,
-                               max_depth=7, extra_ignore=(), filter=None, too_many=10,
-                               highlight=None,
-                               extra_info=None, refcounts=True, shortnames=False,
-                               filename='/tmp/sample-graph.png')
-
-        print "generate graph finished"
-
         for index_target_object, target_object in enumerate(target_objects):
+            generate_graph(target_object)
             print
             print
             print "# Referrers of #{0} {1}:".format(index_target_object + 1, searched_type), target_object
 
+            # TODO the referrer prints should avoid to print the local variables list (by checking element keys)
+            # TODO the referrer prints should avoid to print the list generated in this script (by inherit)
             target_object_referrers = gc.get_referrers(target_object)
             list_referrers = [referrer for referrer in target_object_referrers if hasattr(referrer, '__iter__')]
 
-            print "## simple referrers"
+            print "## simple referrers", len(target_object_referrers)
             map(print_referrer, [referrer for referrer in target_object_referrers if referrer not in list_referrers])
 
             print "## list referrers"
@@ -339,23 +358,11 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
 
             for referrer in list_referrers:
                 print_referrer(referrer)
-                print "### referrers of list referrer"
-                map(print_referrer, gc.get_referrers(referrer))
+                second_instance_list_referrers = gc.get_referrers(referrer)
+                print "### referrers of list referrer", len(second_instance_list_referrers)
+                map(print_referrer, second_instance_list_referrers)
 
     return found_objects
-
-    # for element_name, with_assert, object_class in elements:
-    #     print "finally ", element_name, "__init__:", len(result_dict[element_name]['gen_file']), "__del__:", \
-    #         len(result_dict[element_name]['del_file']), "check with assert: ", with_assert
-    #     ratio = float(len(result_dict[element_name]['del_file']))/float(len(result_dict[element_name]['gen_file']))
-    #     diff = len(result_dict[element_name]['gen_file']) - len(result_dict[element_name]['del_file'])
-    #     print "Ratio of destroyed/generated {0} objects is: {1} and diff: {2}".format(element_name, ratio, diff)
-    #     if diff > 0:
-    #         print "## WARNING ## We have more created then destroyed elements {0} < {1} -> diff {2} of kine: {3}" \
-    #               "".format(len(result_dict[element_name]['del_file']), len(result_dict[element_name]['gen_file']),
-    #                         diff, element_name)
-    #     if with_assert:
-    #         assert 0 == diff
 
 
 def run_model_construction():
@@ -675,17 +682,21 @@ def test_widget_destruct(caplog):
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
 
+    import rafcon.gui.views.state_editor.semantic_data_editor
+    searched_class = rafcon.gui.views.state_editor.semantic_data_editor.SemanticDataEditorView
+    # import rafcon.gui.controllers.state_editor.outcomes
+    # searched_class = rafcon.gui.controllers.state_editor.outcomes.StateOutcomesEditorController
+
     elements = [
-        # ('state', False, rafcon.core.states.state.State),
-        #         ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
-        #         ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
-        #         ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
-        #         ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
+                # ('state', False, rafcon.core.states.state.State),
+                # ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
+                # ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
+                # ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
+                # ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
                 ('gtkmvc_view', False, gtkmvc.view.View),
                 # ('gtkmvc_controller', False, gtkmvc.controller.Controller),
+                # ('extended_controller', False, searched_class),
                 ]
-    testing_utils.call_gui_callback(testing_utils.wait_for_gui)
-    testing_utils.wait_for_gui()
     # if core test run before
     already_existing_objects = check_existing_objects_of_kind([(n, False, c) for n, check_it, c in elements],
                                                               logger.debug, log_file=False)
@@ -702,7 +713,7 @@ def test_widget_destruct(caplog):
     finally:
         testing_utils.close_gui()
         check_existing_objects_of_kind(elements, logger.debug, ignored_objects=already_existing_objects,
-                                       searched_type="SemanticDataEditorView")
+                                       searched_type=searched_class.__name__)
         un_patch_core_classes_from_log()
         un_patch_model_classes_from_log()
         un_patch_ctrl_classes_from_log()
