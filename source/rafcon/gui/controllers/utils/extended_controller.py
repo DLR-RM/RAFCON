@@ -28,6 +28,7 @@ logger = log.get_logger(__name__)
 
 class ExtendedController(Controller):
     def __init__(self, model, view, spurious=False):
+        # print "init extended controller", self.__class__.__name__, view, self  # model.core_element, model.core_element.get_path(), model.core_element.semantic_data  # id(model.core_element)
         self.__registered_models = set()
         self._view_initialized = False
         super(ExtendedController, self).__init__(model, view, spurious=spurious)
@@ -182,8 +183,18 @@ class ExtendedController(Controller):
         if self.parent:
             self.__parent = None
         if self._view_initialized:
+            # print self.__class__.__name__, "destroy view", self.view, self
             self.view.get_top_widget().destroy()
             self.view = None
+            self._Observer__PROP_TO_METHS.clear()  # prop name --> set of observing methods
+            self._Observer__METH_TO_PROPS.clear()  # method --> set of observed properties
+
+            # like __PROP_TO_METHS but only for pattern names (to optimize search)
+            self._Observer__PAT_TO_METHS.clear()
+
+            self._Observer__METH_TO_PAT.clear()  # method --> pattern
+            self._Observer__PAT_METH_TO_KWARGS.clear()  # (pattern, method) --> info
+            self.observe = None
         else:
             logger.warning("The controller {0} seems to be destroyed before the view was fully initialized. {1} "
                            "Check if you maybe do not call {2} or there exist most likely threading problems."
