@@ -202,6 +202,13 @@ class HoverItemTool(gaphas.tool.HoverTool):
         super(HoverItemTool, self).__init__(view)
         self._prev_hovered_item = None
 
+    @staticmethod
+    def dismiss_upper_items(items, item):
+        try:
+            return items[items.index(item):]
+        except ValueError:
+            return []
+
     def _filter_library_state(self, items):
         """Filters our child elements of library state when they cannot be hovered
 
@@ -215,12 +222,6 @@ class HoverItemTool(gaphas.tool.HoverTool):
         if not items:
             return items
 
-        def dismiss_upper_items(item):
-            try:
-                return items[items.index(item):]
-            except ValueError:
-                return []
-
         top_most_item = items[0]
         # If the hovered item is e.g. a connection, we need to get the parental state
         top_most_state_v = top_most_item if isinstance(top_most_item, StateView) else top_most_item.parent
@@ -231,7 +232,7 @@ class HoverItemTool(gaphas.tool.HoverTool):
             # select the library state instead of the library_root_state because it is hidden
             if state.is_root_state_of_library:
                 new_topmost_item = self.view.canvas.get_view_for_core_element(state.parent)
-                return dismiss_upper_items(new_topmost_item)
+                return self.dismiss_upper_items(items, new_topmost_item)
             return items
         else:
             # Find state_copy of uppermost LibraryState
@@ -241,7 +242,7 @@ class HoverItemTool(gaphas.tool.HoverTool):
             if library_root_state:
                 library_state = library_root_state.parent
                 library_state_v = self.view.canvas.get_view_for_core_element(library_state)
-                return dismiss_upper_items(library_state_v)
+                return self.dismiss_upper_items(items, library_state_v)
             return items
 
     def _filter_hovered_items(self, items, event):
@@ -258,24 +259,28 @@ class HoverItemTool(gaphas.tool.HoverTool):
         top_most_item = items[0]
         second_top_most_item = items[1] if len(items) > 1 else None
 
+        # States/Names take precedence over connections if the connections is on the same hierarchy
+        first_state_v = filter(lambda item: isinstance(item, (NameView, StateView)), items)[0]
+        first_state_v = first_state_v.parent if isinstance(first_state_v, NameView) else first_state_v
+        if first_state_v:
+            for item in items:
+                # There can be several connections above the state/name, skip those and find teh first non-connection-item
+                if isinstance(item, ConnectionView):
+                    # connection is on the same hierarchy level as the state/name, thus we dismiss it
+                    if self.view.canvas.get_parent(top_most_item) is not first_state_v:
+                        continue
+                break
+            items = self.dismiss_upper_items(items, item)
+            top_most_item = items[0]
+            second_top_most_item = items[1] if len(items) > 1 else None
+
         # NameView can only be hovered if it or its parent state is selected
         if isinstance(top_most_item, NameView):
             state_v = second_top_most_item  # second item in the list must be the parent state of the NameView
             if state_v not in self.view.selected_items and top_most_item not in self.view.selected_items:
                 items = items[1:]
 
-        # States take precedence over connections if the connections is connected to the state
-        if isinstance(top_most_item, ConnectionView):
-            if isinstance(second_top_most_item, StateView) and \
-                    not self.view.canvas.get_parent(top_most_item) is second_top_most_item:
-                v2i = self.view.get_matrix_v2i(second_top_most_item)
-                ix, iy = v2i.transform_point(event.x, event.y)
-                distance = second_top_most_item.point((ix, iy))
-                if distance < 0.1:
-                    items = items[1:]
-
         return items
-
 
     def on_motion_notify(self, event):
         from gaphas.tool import HandleFinder
