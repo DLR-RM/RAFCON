@@ -708,16 +708,17 @@ def test_widget_destruct(caplog):
     searched_class = rafcon.gui.controllers.utils.extended_controller.ExtendedController
 
     elements = [
-                # ('state', False, rafcon.core.states.state.State),
-                # ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
-                # ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
-                # ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
-                ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
+                ('state', False, rafcon.core.states.state.State),
+                ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
+                ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
+                ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
+                ('extended_controller', True, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
                 ('gtkmvc_view', True, gtkmvc.view.View),
-                ('gtkmvc_controller', False, gtkmvc.controller.Controller),
+                ('gtkmvc_controller', True, gtkmvc.controller.Controller),
                 ('extended_controller', False, searched_class),
                 ]
     # if core test run before
+    rafcon.gui.singleton.main_window_controller = None
     already_existing_objects = check_existing_objects_of_kind([(n, False, c) for n, check_it, c in elements],
                                                               logger.debug, log_file=False)
     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
@@ -733,6 +734,7 @@ def test_widget_destruct(caplog):
         raise e
     finally:
         testing_utils.close_gui()
+        rafcon.gui.singleton.main_window_controller = None  # could be moved to the testing_utils but is not needed
         check_existing_objects_of_kind(elements, logger.debug, ignored_objects=already_existing_objects,
                                        searched_type=searched_class.__name__)
         un_patch_core_classes_from_log()

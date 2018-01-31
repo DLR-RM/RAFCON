@@ -86,6 +86,10 @@ class MenuBarController(ExtendedController):
         self.main_window_view.left_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.console_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
 
+    def destroy(self):
+        super(MenuBarController, self).destroy()
+        self.full_screen_window.destroy()
+
     def register_view(self, view):
         """Called when the View was registered"""
         super(MenuBarController, self).register_view(view)
