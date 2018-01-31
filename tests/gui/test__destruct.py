@@ -406,18 +406,24 @@ def run_model_construction():
     # del state_dict
     return s_m
 
+def run_simple_controller_construction():
 
-def run_controller_construction(caplog, with_gui):
-    from gui.widget.test_states_editor import trigger_state_type_change_tests
+    testing_utils.call_gui_callback(create_models)
+
+    import rafcon.gui.singleton
+    from gui.widget.test_states_editor import check_state_editor_models
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    testing_utils.call_gui_callback(check_state_editor_models, sm_m, sm_m.root_state)
+
+
+def run_complex_controller_construction():
+
+    testing_utils.call_gui_callback(create_models)
 
     # for a start load one of the type change tests to generate a lot of controllers which also close the GUI
     # from gui.widget.test_states_editor import create_models, MainWindowView, \
     #     MainWindowController, trigger_state_type_change_tests, gtk, threading
-
-    _, sm_m, state_dict = testing_utils.call_gui_callback(create_models)
-
-    print "start 3"
-
+    from gui.widget.test_states_editor import trigger_state_type_change_tests
     trigger_state_type_change_tests(with_gui=True)
 
 
@@ -663,41 +669,31 @@ def test_model_and_core_destruct(caplog):
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
-def _test_model_and_core_destruct_with_gui(caplog):
-
-    testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
+def test_simple_model_and_core_destruct_with_gui(caplog):
+    # TODO make it fully working and later activate modification history and auto backup
+    if not testing_utils.used_gui_threads:
+        testing_utils.dummy_gui(None)
 
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
 
-    patch_core_classes_with_log()
-    patch_model_classes_with_log()
-    patch_ctrl_classes_with_log()
-    try:
-        run_controller_construction(caplog, with_gui=True)
+    searched_class = rafcon.gui.controllers.utils.extended_controller.ExtendedController
 
-        elements = [('state', False, rafcon.core.states.state.State),
-                    ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
-                    ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
-                    ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
-                    ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
-                    ]
-
-        check_existing_objects_of_kind(elements)
-    except Exception as e:
-        raise e
-    finally:
-        un_patch_core_classes_from_log()
-        un_patch_model_classes_from_log()
-        un_patch_ctrl_classes_from_log()
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
+    elements = [
+                ('state', True, rafcon.core.states.state.State),
+                ('state_element', True, rafcon.core.state_elements.state_element.StateElement),
+                ('abstract_state_model', True, rafcon.gui.models.abstract_state.AbstractStateModel),
+                ('state_element_model', True, rafcon.gui.models.state_element.StateElementModel),
+                ('extended_controller', True, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
+                ('gtkmvc_view', True, gtkmvc.view.View),
+                ('gtkmvc_controller', True, gtkmvc.controller.Controller),
+                # ('extended_controller', True, searched_class),
+                ]
+    _test_widget_destruct(caplog, elements, searched_class, run_simple_controller_construction)
 
 
-def test_widget_destruct(caplog):
-
-    # TODO make it fully working and later activate modification history and auto backup
+def test_complex_model_and_core_destruct_with_gui(caplog):
     if not testing_utils.used_gui_threads:
         testing_utils.dummy_gui(None)
 
@@ -715,12 +711,18 @@ def test_widget_destruct(caplog):
                 ('extended_controller', True, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
                 ('gtkmvc_view', True, gtkmvc.view.View),
                 ('gtkmvc_controller', True, gtkmvc.controller.Controller),
-                ('extended_controller', False, searched_class),
+                # ('extended_controller', False, searched_class),
                 ]
+    _test_widget_destruct(caplog, elements, searched_class, run_complex_controller_construction)
+
+
+def _test_widget_destruct(caplog, elements, searched_class, func):
     # if core test run before
+    import rafcon.gui.singleton
     rafcon.gui.singleton.main_window_controller = None
     already_existing_objects = check_existing_objects_of_kind([(n, False, c) for n, check_it, c in elements],
                                                               logger.debug, log_file=False)
+    # TODO make it fully working and later activate modification history and auto backup
     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
     patch_core_classes_with_log()
@@ -729,7 +731,7 @@ def test_widget_destruct(caplog):
     patch_gtkmvc_classes_with_log()
 
     try:
-        run_controller_construction(caplog, with_gui=True)
+        func()
     except Exception as e:
         raise e
     finally:
@@ -745,10 +747,10 @@ def test_widget_destruct(caplog):
 
 
 if __name__ == '__main__':
-    # _test_model_and_core_destruct_with_gui(None)
-    # test_core_destruct(None)
-    # test_model_and_core_destruct(None)
-    # testing_utils.dummy_gui(None)
-    test_widget_destruct(None)
+    testing_utils.dummy_gui(None)
+    test_core_destruct(None)
+    test_model_and_core_destruct(None)
+    test_simple_model_and_core_destruct_with_gui(None)
+    test_complex_model_and_core_destruct_with_gui(None)
     # import pytest
     # pytest.main(['-s', __file__])
