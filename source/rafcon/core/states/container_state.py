@@ -1077,7 +1077,7 @@ class ContainerState(State):
         if isinstance(state_element, State):
             self.remove_state(state_element.state_id, force=force, destruct=destruct)
         elif isinstance(state_element, Transition):
-            self.remove_transition(state_element.transition_id, force, destruct=destruct)
+            self.remove_transition(state_element.transition_id, destruct=destruct)
         elif isinstance(state_element, DataFlow):
             self.remove_data_flow(state_element.data_flow_id, destruct=destruct)
         elif isinstance(state_element, ScopedVariable):
