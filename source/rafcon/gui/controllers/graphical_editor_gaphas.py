@@ -86,6 +86,11 @@ class GraphicalEditorController(ExtendedController):
 
         view.editor.drag_dest_set(gtk.DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
 
+    def destroy(self):
+        super(GraphicalEditorController, self).destroy()
+        # TODO D-find out why this destroys half of left over core objects, this should already be empty at the end
+        self.canvas._core_view_map.clear()
+
     def register_view(self, view):
         """Called when the View was registered"""
         super(GraphicalEditorController, self).register_view(view)
