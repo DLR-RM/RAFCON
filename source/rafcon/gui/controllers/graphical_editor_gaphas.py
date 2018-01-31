@@ -90,6 +90,7 @@ class GraphicalEditorController(ExtendedController):
         super(GraphicalEditorController, self).destroy()
         # TODO D-find out why this destroys half of left over core objects, this should already be empty at the end
         self.canvas._core_view_map.clear()
+        self.canvas._model_view_map.clear()
 
     def register_view(self, view):
         """Called when the View was registered"""
