@@ -381,6 +381,8 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
                 second_instance_list_referrers = gc.get_referrers(referrer)
                 print "### referrers of list referrer", len(second_instance_list_referrers)
                 map(print_referrer, second_instance_list_referrers)
+    # else:
+    #     generate_graphs(found_objects)
 
     return found_objects
 
@@ -703,22 +705,14 @@ def test_widget_destruct(caplog):
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
 
-    import rafcon.gui.controllers.state_editor.data_flows
-    searched_class = rafcon.gui.controllers.state_editor.data_flows.StateDataFlowsListController
-    import rafcon.gui.controllers.state_editor.transitions
-    searched_class = rafcon.gui.controllers.state_editor.transitions.StateTransitionsListController
-    import rafcon.gui.controllers.state_editor.io_data_port_list
-    searched_class = rafcon.gui.controllers.state_editor.io_data_port_list.InputPortListController
-    searched_class = rafcon.gui.controllers.state_editor.io_data_port_list.OutputPortListController
-    import rafcon.gui.controllers.state_editor.scoped_variable_list
-    searched_class = rafcon.gui.controllers.state_editor.scoped_variable_list.ScopedVariableListController
+    searched_class = rafcon.gui.controllers.utils.extended_controller.ExtendedController
 
     elements = [
                 # ('state', False, rafcon.core.states.state.State),
                 # ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
                 # ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
                 # ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
-                # ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
+                ('extended_controller', False, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
                 ('gtkmvc_view', True, gtkmvc.view.View),
                 ('gtkmvc_controller', False, gtkmvc.controller.Controller),
                 ('extended_controller', False, searched_class),
