@@ -201,6 +201,7 @@ def create_models():
     output_res_state2 = state2.add_output_data_port("res", "int")
     state4 = HierarchyState(name='Nested', state_id='NESTED')
     state4.add_outcome('GoGo')
+    state4.add_transition(state4.state_id, None, state4.state_id, 0)
     output_state4 = state4.add_output_data_port("out", "int")
     state5 = ExecutionState('Nested2', state_id='NESTED2')
     state5.add_outcome('HereWeGo')
@@ -222,6 +223,7 @@ def create_models():
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
     ctr_state.add_state(state3)
+    ctr_state.add_transition(ctr_state.state_id, None, state1.state_id, None)
     input_ctr_state = ctr_state.add_input_data_port("ctr_in", "str", "zero")
     output_ctr_state = ctr_state.add_output_data_port("ctr_out", "int")
     ctr_state.set_start_state(state1)
@@ -348,7 +350,7 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
                 os.makedirs(folder_path)
             graph_file_name = os.path.join(folder_path, str(id(target_object)) + "_sample-graph.png")
             objgraph.show_backrefs(target_object,
-                                   max_depth=20, extra_ignore=(), filter=None, too_many=100,
+                                   max_depth=7, extra_ignore=(), filter=None, too_many=20,
                                    highlight=None,
                                    extra_info=None, refcounts=True, shortnames=False,
                                    filename=graph_file_name)
@@ -406,6 +408,7 @@ def run_model_construction():
     # del state_dict
     return s_m
 
+
 def run_simple_controller_construction():
 
     testing_utils.call_gui_callback(create_models)
@@ -414,6 +417,26 @@ def run_simple_controller_construction():
     from gui.widget.test_states_editor import check_state_editor_models
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     testing_utils.call_gui_callback(check_state_editor_models, sm_m, sm_m.root_state)
+
+
+def run_simple_execution_controller_construction():
+
+    testing_utils.call_gui_callback(create_models)
+
+    import rafcon.core.execution.execution_engine
+    import rafcon.gui.singleton
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    testing_utils.call_gui_callback(rafcon.gui.singleton.state_machine_manager.__setattr__, "active_state_machine_id",
+                                    sm_m.state_machine.state_machine_id)
+    execution_engine = rafcon.gui.singleton.state_machine_execution_engine
+    sm_execution_status = rafcon.core.execution.execution_engine.StateMachineExecutionStatus
+    testing_utils.call_gui_callback(execution_engine.start)
+
+    while execution_engine.status.execution_mode is not sm_execution_status.FINISHED:
+        print "execution not finished yet wait ones"
+        time.sleep(0.01)
+    # TODO the destroy also has to work without this and thereby only by main window destroy
+    testing_utils.call_gui_callback(sm_m.state_machine.clear_execution_histories)
 
 
 def run_complex_controller_construction():
@@ -693,6 +716,30 @@ def test_simple_model_and_core_destruct_with_gui(caplog):
     _test_widget_destruct(caplog, elements, searched_class, run_simple_controller_construction)
 
 
+def test_simple_execution_model_and_core_destruct_with_gui(caplog):
+
+    if not testing_utils.used_gui_threads:
+        testing_utils.dummy_gui(None)
+
+    import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.state_element
+    import rafcon.gui.controllers.utils.extended_controller
+
+    searched_class = rafcon.core.states.execution_state.ExecutionState
+    # TODO make it fully work with all flags True and also without calling clear of execution histories
+    elements = [
+                ('state', False, rafcon.core.states.state.State),
+                ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
+                ('abstract_state_model', True, rafcon.gui.models.abstract_state.AbstractStateModel),
+                ('state_element_model', True, rafcon.gui.models.state_element.StateElementModel),
+                ('extended_controller', True, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
+                ('gtkmvc_view', True, gtkmvc.view.View),
+                ('gtkmvc_controller', True, gtkmvc.controller.Controller),
+                ('state', False, searched_class),
+                ]
+    _test_widget_destruct(caplog, elements, searched_class, run_simple_execution_controller_construction)
+
+
 def test_complex_model_and_core_destruct_with_gui(caplog):
     if not testing_utils.used_gui_threads:
         testing_utils.dummy_gui(None)
@@ -750,6 +797,7 @@ if __name__ == '__main__':
     testing_utils.dummy_gui(None)
     test_core_destruct(None)
     test_model_and_core_destruct(None)
+    test_simple_execution_model_and_core_destruct_with_gui(None)
     test_simple_model_and_core_destruct_with_gui(None)
     test_complex_model_and_core_destruct_with_gui(None)
     # import pytest
