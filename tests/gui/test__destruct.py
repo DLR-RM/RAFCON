@@ -29,7 +29,9 @@ CTRL_FILES = ['extended_controller']
 
 GTKMVC_FILES = ['gtkmvc_view', 'gtkmvc_controller']
 
-FILES = CORE_FILES + MODEL_FILES + CTRL_FILES
+GAPHAS_FILES = ['gaphas_state_view', 'gaphas_extended_view']
+
+FILES = CORE_FILES + MODEL_FILES + CTRL_FILES + GAPHAS_FILES
 
 # store method of core element classes
 old_state_init = None
@@ -45,6 +47,10 @@ old_extended_controller_init = None
 # store method of gtkmvc element classes
 old_gtkmvc_view_init = gtkmvc.View.__init__
 old_gtkmvc_controller_init = gtkmvc.Controller.__init__
+
+# store method of gaphas element classes
+old_gaphas_state_view_init = None
+old_gaphas_extended_view_init = None
 
 
 def create_container_state(*args, **kargs):
@@ -116,10 +122,14 @@ def generate_sm_for_garbage_collector():
 
 
 def get_log_elements(elements, with_prints=False, print_method=None):
-
+    param_dict = get_param_dict()
     log_result_dict = {}
-    for element_name, with_assert, object_class in elements:
-        gen_file = os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, GENERATION_LOG_FILE_APPENDIX))
+    for object_class, with_assert in elements:
+        file_name = param_dict.get(object_class, None)[LOG_FILE_NAME_ID] if param_dict.get(object_class, None) else None
+        if file_name is None:
+            continue
+        gen_file = os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(file_name, GENERATION_LOG_FILE_APPENDIX))
+        print gen_file
         with open(gen_file) as f:
             element_gen_file = f.readlines()
         element_gen_file = [line.replace('\n', '') for line in element_gen_file]
@@ -135,7 +145,7 @@ def get_log_elements(elements, with_prints=False, print_method=None):
             if with_prints:
                 _print_method = logger.error if with_assert else print_method
                 if (mem_id[-2], mem_id[-1]) not in [(e.split(" ")[-2], e.split(" ")[-1]) for e in element_del_file]:
-                    s = "{0} object still in memory: \n{1}\nDeleted are:\n{2}".format(element_name, elem,
+                    s = "{0} object still in memory: \n{1}\nDeleted are:\n{2}".format(file_name, elem,
                                                                                       '\n'.join(element_del_file))
                 else:
                     s = None
@@ -146,7 +156,7 @@ def get_log_elements(elements, with_prints=False, print_method=None):
                     else:
                         print s
 
-        log_result_dict[element_name] = {'gen_file': element_gen_file, 'del_file': element_del_file}
+        log_result_dict[file_name] = {'gen_file': element_gen_file, 'del_file': element_del_file}
 
     # print '\n'.join(["{0}: \n{1}\n{2}".format(element_name, log_files['gen_file'], log_files['del_file'])
     #                  for element_name, log_files in log_result_dict.iteritems()])
@@ -265,6 +275,8 @@ def create_models():
 def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=None, log_file=True,
                                    searched_type=None):
     # initial collect to avoid cross effects
+    param_dict = get_param_dict()
+    gc.collect()
     gc.collect()
     found_objects = []
     if ignored_objects is None:
@@ -273,8 +285,11 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
     if log_file:
         result_dict = get_log_elements(elements, with_prints=True, print_method=print_method)
     else:
-        result_dict = {name: {'gen_file': []} for name, check_it, object_class in elements}
-    for name, check_it, object_class in elements:
+        result_dict = {param_dict.get(object_class, None)[LOG_FILE_NAME_ID]
+                       if param_dict.get(object_class, None) else str(object_class): {'gen_file': []}
+                       for object_class, check_it in elements}
+    for object_class, check_it in elements:
+        name = param_dict.get(object_class, None)[LOG_FILE_NAME_ID] if param_dict.get(object_class, None) else None
         found_objects_of_kind = [o for o in gc.get_objects() if isinstance(o, object_class) and o not in ignored_objects]
         found_objects += found_objects_of_kind
         if not len(found_objects_of_kind) == 0:
@@ -287,10 +302,11 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
             print_method("of object of kind '{0}' have been generated {3} and there are {1} left over instances "
                          "with respective reference numbers of {2} and those types {4}"
                          "".format(object_class, len(found_objects_of_kind), collection_counts,
-                                   len(result_dict[name]['gen_file']), class_types_found))
+                                   len(result_dict[name]['gen_file']) if name else None, class_types_found))
         else:
             print "of object of kind '{0}' have been generated {2} and there are {1} left over instances " \
-                  "".format(object_class, len(found_objects_of_kind), len(result_dict[name]['gen_file']))
+                  "".format(object_class, len(found_objects_of_kind),
+                            len(result_dict[name]['gen_file']) if name else None)
         if check_it:
             assert len(found_objects_of_kind) == 0
 
@@ -350,7 +366,7 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
                 os.makedirs(folder_path)
             graph_file_name = os.path.join(folder_path, str(id(target_object)) + "_sample-graph.png")
             objgraph.show_backrefs(target_object,
-                                   max_depth=7, extra_ignore=(), filter=None, too_many=20,
+                                   max_depth=5, extra_ignore=(), filter=None, too_many=10,
                                    highlight=None,
                                    extra_info=None, refcounts=True, shortnames=False,
                                    filename=graph_file_name)
@@ -623,95 +639,194 @@ def un_patch_gtkmvc_classes_from_log():
     remove_log_files(GTKMVC_FILES)
 
 
+def patch_gaphas_classes_with_log():
+
+    import rafcon.gui.mygaphas.view
+    import rafcon.gui.mygaphas.items.state
+    global old_gaphas_state_view_init, old_gaphas_extended_view_init
+
+    old_gaphas_state_view_init = rafcon.gui.mygaphas.items.state.StateView.__init__
+    old_gaphas_extended_view_init = rafcon.gui.mygaphas.view.ExtendedGtkView.__init__
+    check_log_files(GAPHAS_FILES)
+
+    def gaphas_extended_view_init(self, graphical_editor_v, state_machine_m, *args):
+        self._patch = None
+        self.__gen_time_stamp = int(round(time.time() * 1000))
+        self.__kind = 'gaphas_extended_view'
+        self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
+                                                                                   GENERATION_LOG_FILE_APPENDIX))
+        with open(self.__gen_log_file, 'a+') as f:
+            f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
+                                                      self.__kind, self.__gen_time_stamp))
+        old_gaphas_extended_view_init(self, graphical_editor_v, state_machine_m, *args)
+
+    def gaphas_state_view_init(self, state_m, size, hierarchy_level):
+        self._patch = None
+        self.__gen_time_stamp = int(round(time.time() * 1000))
+        self.__kind = 'gaphas_state_view'
+        self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
+                                                                                   GENERATION_LOG_FILE_APPENDIX))
+        with open(self.__gen_log_file, 'a+') as f:
+            f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
+                                                      self.__kind, self.__gen_time_stamp))
+        old_gaphas_state_view_init(self, state_m, size, hierarchy_level)
+
+    # TODO port view
+    # TODO connection view
+
+    rafcon.gui.mygaphas.items.state.StateView.__init__ = gaphas_state_view_init
+    rafcon.gui.mygaphas.view.ExtendedGtkView.__init__ = gaphas_extended_view_init
+
+
+def un_patch_gaphas_classes_from_log():
+    import rafcon.gui.mygaphas.view
+    import rafcon.gui.mygaphas.items.state
+    global old_gaphas_state_view_init, old_gaphas_extended_view_init
+    rafcon.gui.mygaphas.items.state.StateView.__init__ = old_gaphas_state_view_init
+    rafcon.gui.mygaphas.view.ExtendedGtkView.__init__ = old_gaphas_extended_view_init
+    remove_log_files(GAPHAS_FILES)
+
+
 def print_func(s):
     print s
 
 
+LOG_FILE_NAME_ID = 0
+PATCH_FUNCTION_ID = 1
+UN_PATCH_FUNCTION_ID = 2
+
+
+def get_param_dict():
+
+    import rafcon.core
+    import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.state_element
+    import rafcon.gui.controllers.utils.extended_controller
+    import rafcon.gui.mygaphas.items.state
+    import rafcon.gui.mygaphas.view
+    param_dict = {
+                  rafcon.core.states.state.State:
+                      ('state', patch_core_classes_with_log, un_patch_core_classes_from_log),
+                  rafcon.core.state_elements.state_element.StateElement:
+                      ('state_element', patch_core_classes_with_log, un_patch_core_classes_from_log),
+                  rafcon.gui.models.abstract_state.AbstractStateModel:
+                      ('abstract_state_model', patch_model_classes_with_log, un_patch_model_classes_from_log),
+                  rafcon.gui.models.state_element.StateElementModel:
+                      ('state_element_model', patch_model_classes_with_log, un_patch_model_classes_from_log),
+                  rafcon.gui.controllers.utils.extended_controller.ExtendedController:
+                      ('extended_controller', patch_ctrl_classes_with_log, un_patch_ctrl_classes_from_log),
+                  gtkmvc.view.View:
+                      ('gtkmvc_view', patch_gtkmvc_classes_with_log, un_patch_gtkmvc_classes_from_log),
+                  gtkmvc.controller.Controller:
+                      ('gtkmvc_controller', patch_gtkmvc_classes_with_log, un_patch_gtkmvc_classes_from_log),
+                  rafcon.gui.mygaphas.view.ExtendedGtkView:
+                      ('gaphas_extended_view', patch_gaphas_classes_with_log, un_patch_gaphas_classes_from_log),
+                  rafcon.gui.mygaphas.items.state.StateView:
+                      ('gaphas_state_view', patch_gaphas_classes_with_log, un_patch_gaphas_classes_from_log),
+                 }
+    return param_dict
+
+
+def run_patching(elements):
+    param_dict = get_param_dict()
+    f_set = set([param_dict[class_to_patch][PATCH_FUNCTION_ID] for class_to_patch, _ in elements
+                 if class_to_patch in param_dict])
+    for func in f_set:
+        print "patch with: ", func
+        func()
+
+
+def run_un_patching(elements):
+    param_dict = get_param_dict()
+    f_set = set([param_dict[class_to_patch][UN_PATCH_FUNCTION_ID] for class_to_patch, check_it in elements
+                 if class_to_patch in param_dict])
+    for func in f_set:
+        print "un-patch with: ", func
+        func()
+
+
 def test_core_destruct(caplog):
-    gc.collect()
-    elements = [('state', True, rafcon.core.states.state.State),
-                ('state_element', True, rafcon.core.state_elements.state_element.StateElement),
+    elements = [
+                (rafcon.core.states.state.State, True),
+                (rafcon.core.state_elements.state_element.StateElement, True),
                 ]
 
-    already_existing_objects = check_existing_objects_of_kind([(n, False, c) for n, _, c in elements],
+    already_existing_objects = check_existing_objects_of_kind([(c, False) for c, check_it in elements],
                                                               logger.debug, log_file=False)
 
     testing_utils.initialize_environment_core()
 
-    patch_core_classes_with_log()
+    run_patching(elements)
 
     basic_state_machines.test_create_state(caplog)
-
     basic_state_machines.test_create_container_state(caplog)
-
     basic_state_machines.test_port_and_outcome_removal(caplog)
-
     # test
     generate_sm_for_garbage_collector()
 
-    gc.collect()
-
     check_existing_objects_of_kind(elements, ignored_objects=already_existing_objects)
 
-    un_patch_core_classes_from_log()
+    run_un_patching(elements)
 
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_model_and_core_destruct(caplog):
-    gc.collect()
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False},
                                          gui_already_started=False)
 
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
 
-    elements = [('state', True, rafcon.core.states.state.State),
-                ('state_element', True, rafcon.core.state_elements.state_element.StateElement),
-                ('abstract_state_model', True, rafcon.gui.models.abstract_state.AbstractStateModel),
-                ('state_element_model', True, rafcon.gui.models.state_element.StateElementModel),
+    elements = [(rafcon.core.states.state.State, True),
+                (rafcon.core.state_elements.state_element.StateElement, True),
+                (rafcon.gui.models.abstract_state.AbstractStateModel, True),
+                (rafcon.gui.models.state_element.StateElementModel, True),
                 ]
 
-    # TODO make this return no existing model of kind State, StateElement, AbstractStateModel, StateElementModel
-    # if core test run before
-    already_existing_objects = check_existing_objects_of_kind([(n, False, c) for n, check_it, c in elements],
-                                                              logger.debug, log_file=False)
+    run_patching(elements)
 
-    patch_core_classes_with_log()
-    patch_model_classes_with_log()
+    # if core test run before
+    already_existing_objects = check_existing_objects_of_kind([(c, False) for c, check_it in elements],
+                                                              logger.debug, log_file=False)
 
     run_model_construction()
 
-    gc.collect()
-
     check_existing_objects_of_kind(elements, logger.debug, already_existing_objects)
 
-    un_patch_core_classes_from_log()
-    un_patch_model_classes_from_log()
+    run_un_patching(elements)
 
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_simple_model_and_core_destruct_with_gui(caplog):
-    # TODO make it fully working and later activate modification history and auto backup
+
     if not testing_utils.used_gui_threads:
         testing_utils.dummy_gui(None)
 
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
+    import rafcon.gui.mygaphas.view
+    import rafcon.gui.mygaphas.items.state
+    import rafcon.gui.mygaphas.items.connection
+    import rafcon.gui.mygaphas.items.ports
 
     searched_class = rafcon.gui.controllers.utils.extended_controller.ExtendedController
 
     elements = [
-                ('state', True, rafcon.core.states.state.State),
-                ('state_element', True, rafcon.core.state_elements.state_element.StateElement),
-                ('abstract_state_model', True, rafcon.gui.models.abstract_state.AbstractStateModel),
-                ('state_element_model', True, rafcon.gui.models.state_element.StateElementModel),
-                ('extended_controller', True, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
-                ('gtkmvc_view', True, gtkmvc.view.View),
-                ('gtkmvc_controller', True, gtkmvc.controller.Controller),
-                # ('extended_controller', True, searched_class),
+                (rafcon.core.states.state.State, True),
+                (rafcon.core.state_elements.state_element.StateElement, True),
+                (rafcon.gui.models.abstract_state.AbstractStateModel, True),
+                (rafcon.gui.models.state_element.StateElementModel, True),
+                (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
+                (gtkmvc.view.View, True),
+                (gtkmvc.controller.Controller, True),
+                (rafcon.gui.mygaphas.view.ExtendedGtkView, False),
+                (rafcon.gui.mygaphas.items.connection.ConnectionView, False),
+                (rafcon.gui.mygaphas.items.ports.PortView, False),
+                (rafcon.gui.mygaphas.items.state.StateView, False),
+                # (searched_class, False),
                 ]
     _test_widget_destruct(caplog, elements, searched_class, run_simple_controller_construction)
 
@@ -725,17 +840,17 @@ def test_simple_execution_model_and_core_destruct_with_gui(caplog):
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
 
-    searched_class = rafcon.core.states.execution_state.ExecutionState
+    searched_class = rafcon.core.states.state.State
     # TODO make it fully work with all flags True and also without calling clear of execution histories
     elements = [
-                ('state', False, rafcon.core.states.state.State),
-                ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
-                ('abstract_state_model', True, rafcon.gui.models.abstract_state.AbstractStateModel),
-                ('state_element_model', True, rafcon.gui.models.state_element.StateElementModel),
-                ('extended_controller', True, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
-                ('gtkmvc_view', True, gtkmvc.view.View),
-                ('gtkmvc_controller', True, gtkmvc.controller.Controller),
-                ('state', False, searched_class),
+                (rafcon.core.states.state.State, False),
+                (rafcon.core.state_elements.state_element.StateElement, False),
+                (rafcon.gui.models.abstract_state.AbstractStateModel, True),
+                (rafcon.gui.models.state_element.StateElementModel, True),
+                (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
+                (gtkmvc.view.View, True),
+                (gtkmvc.controller.Controller, True),
+                (searched_class, False),
                 ]
     _test_widget_destruct(caplog, elements, searched_class, run_simple_execution_controller_construction)
 
@@ -751,14 +866,14 @@ def test_complex_model_and_core_destruct_with_gui(caplog):
     searched_class = rafcon.gui.controllers.utils.extended_controller.ExtendedController
 
     elements = [
-                ('state', False, rafcon.core.states.state.State),
-                ('state_element', False, rafcon.core.state_elements.state_element.StateElement),
-                ('abstract_state_model', False, rafcon.gui.models.abstract_state.AbstractStateModel),
-                ('state_element_model', False, rafcon.gui.models.state_element.StateElementModel),
-                ('extended_controller', True, rafcon.gui.controllers.utils.extended_controller.ExtendedController),
-                ('gtkmvc_view', True, gtkmvc.view.View),
-                ('gtkmvc_controller', True, gtkmvc.controller.Controller),
-                # ('extended_controller', False, searched_class),
+                (rafcon.core.states.state.State, False),
+                (rafcon.core.state_elements.state_element.StateElement, False),
+                (rafcon.gui.models.abstract_state.AbstractStateModel, False),
+                (rafcon.gui.models.state_element.StateElementModel, False),
+                (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
+                (gtkmvc.view.View, True),
+                (gtkmvc.controller.Controller, True),
+                (searched_class, False),
                 ]
     _test_widget_destruct(caplog, elements, searched_class, run_complex_controller_construction)
 
@@ -767,15 +882,12 @@ def _test_widget_destruct(caplog, elements, searched_class, func):
     # if core test run before
     import rafcon.gui.singleton
     rafcon.gui.singleton.main_window_controller = None
-    already_existing_objects = check_existing_objects_of_kind([(n, False, c) for n, check_it, c in elements],
+    already_existing_objects = check_existing_objects_of_kind([(c, False) for c, check_it in elements],
                                                               logger.debug, log_file=False)
     # TODO make it fully working and later activate modification history and auto backup
     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
-    patch_core_classes_with_log()
-    patch_model_classes_with_log()
-    patch_ctrl_classes_with_log()
-    patch_gtkmvc_classes_with_log()
+    run_patching(elements)
 
     try:
         func()
@@ -786,10 +898,7 @@ def _test_widget_destruct(caplog, elements, searched_class, func):
         rafcon.gui.singleton.main_window_controller = None  # could be moved to the testing_utils but is not needed
         check_existing_objects_of_kind(elements, logger.debug, ignored_objects=already_existing_objects,
                                        searched_type=searched_class.__name__)
-        un_patch_core_classes_from_log()
-        un_patch_model_classes_from_log()
-        un_patch_ctrl_classes_from_log()
-        un_patch_gtkmvc_classes_from_log()
+        run_un_patching(elements)
         testing_utils.shutdown_environment(caplog=caplog)
 
 
@@ -797,8 +906,8 @@ if __name__ == '__main__':
     testing_utils.dummy_gui(None)
     test_core_destruct(None)
     test_model_and_core_destruct(None)
-    test_simple_execution_model_and_core_destruct_with_gui(None)
     test_simple_model_and_core_destruct_with_gui(None)
+    test_simple_execution_model_and_core_destruct_with_gui(None)
     test_complex_model_and_core_destruct_with_gui(None)
     # import pytest
     # pytest.main(['-s', __file__])
