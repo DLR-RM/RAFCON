@@ -147,6 +147,7 @@ class ExecutionEngine(Observable):
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
+        self.__running_state_machine = None
 
     def join(self, timeout=None):
         """Blocking wait for the execution to finish

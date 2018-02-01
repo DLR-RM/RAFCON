@@ -449,10 +449,9 @@ def run_simple_execution_controller_construction():
     testing_utils.call_gui_callback(execution_engine.start)
 
     while execution_engine.status.execution_mode is not sm_execution_status.FINISHED:
-        print "execution not finished yet wait ones"
+        print "execution not finished yet: wait"
         time.sleep(0.01)
-    # TODO the destroy also has to work without this and thereby only by main window destroy
-    testing_utils.call_gui_callback(sm_m.state_machine.clear_execution_histories)
+    testing_utils.call_gui_callback(rafcon.core.singleton.state_machine_manager.delete_all_state_machines)
 
 
 def run_complex_controller_construction():
@@ -840,11 +839,11 @@ def test_simple_execution_model_and_core_destruct_with_gui(caplog):
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
 
-    searched_class = rafcon.core.states.state.State
+    searched_class = rafcon.core.states.execution_state.ExecutionState
     # TODO make it fully work with all flags True and also without calling clear of execution histories
     elements = [
-                (rafcon.core.states.state.State, False),
-                (rafcon.core.state_elements.state_element.StateElement, False),
+                (rafcon.core.states.state.State, True),
+                (rafcon.core.state_elements.state_element.StateElement, True),
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
@@ -884,18 +883,25 @@ def _test_widget_destruct(caplog, elements, searched_class, func):
     rafcon.gui.singleton.main_window_controller = None
     already_existing_objects = check_existing_objects_of_kind([(c, False) for c, check_it in elements],
                                                               logger.debug, log_file=False)
+
     # TODO make it fully working and later activate modification history and auto backup
     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
     run_patching(elements)
 
     try:
+        print "%" * 50
+        print "before test function print"
+        print "%" * 50
         func()
     except Exception as e:
         raise e
     finally:
         testing_utils.close_gui()
         rafcon.gui.singleton.main_window_controller = None  # could be moved to the testing_utils but is not needed
+        print "%" * 50
+        print "check for existing objects print"
+        print "%" * 50
         check_existing_objects_of_kind(elements, logger.debug, ignored_objects=already_existing_objects,
                                        searched_type=searched_class.__name__)
         run_un_patching(elements)
