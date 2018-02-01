@@ -259,12 +259,13 @@ class HoverItemTool(gaphas.tool.HoverTool):
         top_most_item = items[0]
         second_top_most_item = items[1] if len(items) > 1 else None
 
-        # States/Names take precedence over connections if the connections is on the same hierarchy
+        # States/Names take precedence over connections if the connections are on the same hierarchy
         first_state_v = filter(lambda item: isinstance(item, (NameView, StateView)), items)[0]
         first_state_v = first_state_v.parent if isinstance(first_state_v, NameView) else first_state_v
         if first_state_v:
             for item in items:
-                # There can be several connections above the state/name, skip those and find teh first non-connection-item
+                # There can be several connections above the state/name
+                # skip those and find the first non-connection-item
                 if isinstance(item, ConnectionView):
                     # connection is on the same hierarchy level as the state/name, thus we dismiss it
                     if self.view.canvas.get_parent(top_most_item) is not first_state_v:
