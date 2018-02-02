@@ -54,7 +54,7 @@ class PortView(object):
 
         self._incoming_handles = []
         self._outgoing_handles = []
-        self._connected_connections = []
+        self.connected_connections = []
         self._tmp_incoming_connected = False
         self._tmp_outgoing_connected = False
 
@@ -163,20 +163,20 @@ class PortView(object):
 
     def _add_connection(self, connection_view):
         if connection_view not in self.connected_connections:
-            self._connected_connections.append(ref(connection_view))
+            self.connected_connections.append(connection_view)
 
     def remove_connected_handle(self, handle):
         assert isinstance(handle, Handle)
         if handle in self._incoming_handles:
             self._incoming_handles.remove(handle)
-            for conn in self.connected_connections:
+            for conn in self.connected_connections[:]:
                 if conn.to_handle() is handle:
-                    self._connected_connections.remove(ref(conn))
+                    self.connected_connections.remove(conn)
         elif handle in self._outgoing_handles:
             self._outgoing_handles.remove(handle)
-            for conn in self.connected_connections:
+            for conn in self.connected_connections[:]:
                 if conn.from_handle() is handle:
-                    self._connected_connections.remove(ref(conn))
+                    self.connected_connections.remove(conn)
 
     def tmp_connect(self, handle, connection_view):
         if handle is connection_view.from_handle():
@@ -203,10 +203,6 @@ class PortView(object):
         if len(self._incoming_handles) == 0:
             return self._tmp_incoming_connected
         return True
-
-    @property
-    def connected_connections(self):
-        return [connection() for connection in self._connected_connections]
 
     def get_port_area(self, view):
         """Calculates the drawing area affected by the (hovered) port
