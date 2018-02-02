@@ -639,11 +639,11 @@ class GraphicalEditorController(ExtendedController):
 
     @lock_state_machine
     def adapt_complex_action(self, old_state_m, new_state_m):
-        state_v = self.canvas.get_view_for_model(old_state_m)
+        old_state_v = self.canvas.get_view_for_model(old_state_m)
 
         # If the root state has been changed, we recreate the whole state machine view
         if old_state_m is self.root_state_m:
-            state_v.remove()
+            old_state_v.remove()
 
             # Create and and new root state view from new root state model
             self.root_state_m = new_state_m
@@ -656,12 +656,12 @@ class GraphicalEditorController(ExtendedController):
             # TODO use the handed affected_models list
 
             # 1st Recreate StateView by removing the old one and adding the new one
-            parent_v = self.canvas.get_view_for_model(state_v.model.parent)
-            state_v.remove()
-            self.add_state_view_with_meta_data_for_model(new_state_m, parent_v.model)
+            parent_state_v = self.canvas.get_view_for_model(old_state_v.model.parent)
+            old_state_v.remove()
+            self.add_state_view_with_meta_data_for_model(new_state_m, parent_state_v.model)
 
             # 2nd Recreate connections to the replaced StateView to ensure correct connectivity
-            parent_state = parent_v.model.state
+            parent_state = parent_state_v.model.state
             connected_transitions, connected_data_flows = parent_state.related_linkage_state(new_state_m.state.state_id)
             external_connections = connected_transitions['external']['ingoing'] + \
                                    connected_transitions['external']['outgoing'] + \
@@ -673,11 +673,11 @@ class GraphicalEditorController(ExtendedController):
                 connection_v.prepare_destruction()
                 self.canvas.remove(connection_v)
                 if isinstance(connection_m, TransitionModel):
-                    self.add_transition_view_for_model(connection_m, parent_v.model)
+                    self.add_transition_view_for_model(connection_m, parent_state_v.model)
                 else:
-                    self.add_data_flow_view_for_model(connection_m, parent_v.model)
+                    self.add_data_flow_view_for_model(connection_m, parent_state_v.model)
 
-            self.canvas.request_update(parent_v)
+            self.canvas.request_update(parent_state_v)
 
         self.canvas.perform_update()
 
