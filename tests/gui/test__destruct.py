@@ -325,9 +325,11 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
     def get_classes_in_iter(it, name=True):
         if isinstance(it, dict):
             if name:
-                return set([key + ": " + element_in_iter.__class__.__name__ for key, element_in_iter in it.iteritems()])
+                return set(["{0}: {1}".format(key, element_in_iter.__class__.__name__)
+                            for key, element_in_iter in it.iteritems()])
             else:
-                return set([key + ": " + str(element_in_iter.__class__) for key, element_in_iter in it.iteritems()])
+                return set(["{0}: {1}".format(key, element_in_iter.__class__)
+                            for key, element_in_iter in it.iteritems()])
         else:
             if name:
                 return set([element_in_iter.__class__.__name__ for element_in_iter in it])
