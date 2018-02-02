@@ -38,6 +38,11 @@ class ExtendedGtkView(GtkView, Observer):
         self._bounding_box_painter = BoundingBoxPainter(self)
         self._graphical_editor = ref(graphical_editor_v)
 
+    def prepare_destruction(self):
+        """Get rid of circular references"""
+        self._tool = None
+        self._painter = None
+
     @property
     def graphical_editor(self):
         return self._graphical_editor()

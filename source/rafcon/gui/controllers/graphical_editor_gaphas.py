@@ -87,6 +87,8 @@ class GraphicalEditorController(ExtendedController):
         view.editor.drag_dest_set(gtk.DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
 
     def destroy(self):
+        if self.view:
+            self.view.editor.prepare_destruction()
         super(GraphicalEditorController, self).destroy()
 
     def register_view(self, view):
