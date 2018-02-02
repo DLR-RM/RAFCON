@@ -28,7 +28,6 @@ from rafcon.gui.models.outcome import OutcomeModel
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.container_state import ContainerStateModel
-from rafcon.gui.models.library_state import LibraryStateModel
 
 from rafcon.gui.mygaphas.connector import RectanglePointPort
 from rafcon.gui.mygaphas.utils import gap_draw_helper
@@ -49,8 +48,6 @@ class PortView(object):
         self.side = side
         self._parent = parent
         self._view = None
-
-        self._draw_connection_to_port = False
 
         self.text_color = gui_config.gtk_colors['LABEL']
         self.fill_color = gui_config.gtk_colors['LABEL']
@@ -192,6 +189,10 @@ class PortView(object):
         self._tmp_outgoing_connected = False
 
     @property
+    def connected(self):
+        return self.connected_incoming or self.connected_outgoing
+
+    @property
     def connected_outgoing(self):
         if len(self._outgoing_handles) == 0:
             return self._tmp_outgoing_connected
@@ -292,9 +293,8 @@ class PortView(object):
 
     def draw_name(self, context, transparency, value):
         c = context.cairo
-        side_length = self.port_side_size
+        port_height = self.port_size[1]
         label_position = self.side if not self.label_print_inside else self.side.opposite()
-        fill_color = gap_draw_helper.get_col_rgba(self.fill_color, transparency)
         position = self.pos
 
         show_additional_value = False
@@ -303,9 +303,9 @@ class PortView(object):
 
         parameters = {
             'name': self.name,
-            'side_length': side_length,
+            'port_height': port_height,
             'side': label_position,
-            'fill_color': fill_color,
+            'transparency': transparency,
             'show_additional_value': show_additional_value
         }
 
@@ -330,8 +330,7 @@ class PortView(object):
 
             # First we have to do a "dry run", in order to determine the size of the new label
             c.move_to(position.x.value, position.y.value)
-            extents = gap_draw_helper.draw_port_label(c, self.name, fill_color, self.text_color, transparency,
-                                                      False, label_position, side_length, self._draw_connection_to_port,
+            extents = gap_draw_helper.draw_port_label(c, self, transparency, False, label_position,
                                                       show_additional_value, value, only_extent_calculations=True)
             from rafcon.gui.mygaphas.utils.gap_helper import extend_extents
             extents = extend_extents(extents, factor=1.1)
@@ -346,9 +345,7 @@ class PortView(object):
             c = self._label_image_cache.get_context_for_image(current_zoom)
             c.move_to(-relative_pos[0], -relative_pos[1])
 
-            gap_draw_helper.draw_port_label(c, self.name, fill_color, self.text_color, transparency,
-                                            False, label_position, side_length, self._draw_connection_to_port,
-                                            show_additional_value, value)
+            gap_draw_helper.draw_port_label(c, self, transparency, False, label_position, show_additional_value, value)
 
             # Copy image surface to current cairo context
             upper_left_corner = (position[0] + relative_pos[0], position[1] + relative_pos[1])
@@ -388,8 +385,7 @@ class PortView(object):
         c.restore()
 
         # Colorize the generated connector path
-        if isinstance(self, IncomeView) and self.connected_incoming or \
-                isinstance(self, OutcomeView) and self.connected_outgoing:
+        if self.connected:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
             c.set_source_color(gui_config.gtk_colors['BLACK'])
