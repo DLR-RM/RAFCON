@@ -79,7 +79,6 @@ class StateView(Element):
         self._moving = False
 
         self._view = None
-        self._parent = None
 
         self.__symbol_size_cache = {}
         self._image_cache = ImageCache()
@@ -122,7 +121,7 @@ class StateView(Element):
         self._income = self.add_income()
 
         canvas = self.canvas
-        parent = canvas.get_parent(self)
+        parent = self.parent
 
         self.update_minimum_size()
 
@@ -222,7 +221,7 @@ class StateView(Element):
         name_constraint = self.keep_rect_constraints[self.name_view]
         solver.remove_constraint(name_constraint)
 
-        parent_state_v = canvas.get_parent(self)
+        parent_state_v = self.parent
         if parent_state_v is not None and isinstance(parent_state_v, StateView):
             constraint = parent_state_v.keep_rect_constraints[self]
             solver.remove_constraint(constraint)
@@ -264,11 +263,7 @@ class StateView(Element):
 
     @property
     def parent(self):
-        if not self._parent:
-            if not self.canvas:
-                return None
-            self._parent = self.canvas.get_parent(self)
-        return self._parent
+        return self.canvas.get_parent(self)
 
     @property
     def corner_handles(self):

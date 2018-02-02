@@ -71,9 +71,7 @@ class PerpLine(Line):
 
     @property
     def parent(self):
-        if not self._parent:
-            self._parent = self.canvas.get_parent(self)
-        return self._parent
+        return self.canvas.get_parent(self)
 
     @property
     def from_port(self):
