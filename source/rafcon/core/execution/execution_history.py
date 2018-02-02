@@ -74,11 +74,11 @@ class ExecutionHistoryStorage(object):
             self.store.close()
             logger.debug('Closed log file %s' % self.filename)
             if make_readable_for_all:
-                ret = subprocess.call(['chmod', 'a+r', self.filename])
+                ret = subprocess.call(['chmod', 'a+rw', self.filename])
                 if ret:
-                    logger.debug('Could not make log file readable for all. chmod a+r failed on %s.' % self.filename)
+                    logger.debug('Could not make log file readable for all. chmod a+rw failed on %s.' % self.filename)
                 else:
-                    logger.debug('Set log file readable for all via chmod a+r, file %s' % self.filename)
+                    logger.debug('Set log file readable for all via chmod a+rw, file %s' % self.filename)
         except Exception as e:
             logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
