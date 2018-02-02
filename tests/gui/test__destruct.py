@@ -29,7 +29,7 @@ CTRL_FILES = ['extended_controller']
 
 GTKMVC_FILES = ['gtkmvc_view', 'gtkmvc_controller']
 
-GAPHAS_FILES = ['gaphas_state_view', 'gaphas_extended_view']
+GAPHAS_FILES = ['gaphas_state_view', 'gaphas_extended_view', 'gaphas_port_view', 'gaphas_connection_view']
 
 FILES = CORE_FILES + MODEL_FILES + CTRL_FILES + GAPHAS_FILES
 
@@ -49,6 +49,8 @@ old_gtkmvc_view_init = gtkmvc.View.__init__
 old_gtkmvc_controller_init = gtkmvc.Controller.__init__
 
 # store method of gaphas element classes
+old_gaphas_port_view_init = None
+old_gaphas_connection_view_init = None
 old_gaphas_state_view_init = None
 old_gaphas_extended_view_init = None
 
@@ -479,7 +481,6 @@ def patch_core_classes_with_log():
 
     def state_init(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                    parent=None):
-        self._patch = None
         self._name = name
         if state_id is None:
             self._state_id = rafcon.core.states.state.state_id_generator()
@@ -492,7 +493,6 @@ def patch_core_classes_with_log():
         old_state_init(self, name, self._state_id, input_data_ports, output_data_ports, outcomes, parent)
 
     def state_element_init(self, parent=None):
-        self._patch = None
         self.gen_time_stamp = int(round(time.time() * 1000))
         gen_file = os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format("state_element", GENERATION_LOG_FILE_APPENDIX))
         with open(gen_file, 'a+') as f:
@@ -527,7 +527,6 @@ def patch_model_classes_with_log():
     check_log_files(MODEL_FILES)
 
     def abstract_state_model_init(self, state, parent=None, meta=None):
-        self._patch = None
         self._state = None
         self.__gen_time_stamp = int(round(time.time() * 1000))
         self.__kind = 'abstract_state_model'
@@ -539,7 +538,6 @@ def patch_model_classes_with_log():
         old_abstract_state_model_init(self, state, parent, meta)
 
     def state_element_model_init(self, parent, meta=None):
-        self._patch = None
         self.parent = parent
         self.__gen_time_stamp = int(round(time.time() * 1000))
         self.__kind = 'state_element_model'
@@ -576,7 +574,6 @@ def patch_ctrl_classes_with_log():
     check_log_files(CTRL_FILES)
 
     def extended_controller_init(self, model, view, spurious=None):
-        self._patch = None
         self.__gen_time_stamp = int(round(time.time() * 1000))
         self.__kind = 'extended_controller'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
@@ -606,7 +603,6 @@ def patch_gtkmvc_classes_with_log():
     check_log_files(GTKMVC_FILES)
 
     def gtkmvc_view_init(self, glade=None, top=None, parent=None, builder=None):
-        self._patch = None
         self.__gen_time_stamp = int(round(time.time() * 1000))
         self.__kind = 'gtkmvc_view'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
@@ -617,7 +613,6 @@ def patch_gtkmvc_classes_with_log():
         old_gtkmvc_view_init(self, glade, top, parent, builder)
 
     def gtkmvc_controller_init(self, model, view, spurious=False, auto_adapt=False):
-        self._patch = None
         self.__gen_time_stamp = int(round(time.time() * 1000))
         self.__kind = 'gtkmvc_controller'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
@@ -641,15 +636,20 @@ def un_patch_gtkmvc_classes_from_log():
 def patch_gaphas_classes_with_log():
 
     import rafcon.gui.mygaphas.view
+    import rafcon.gui.mygaphas.items.ports
+    from rafcon.gui.mygaphas.items.ports import SnappedSide
+    import rafcon.gui.mygaphas.items.connection
     import rafcon.gui.mygaphas.items.state
-    global old_gaphas_state_view_init, old_gaphas_extended_view_init
+    global old_gaphas_state_view_init, old_gaphas_extended_view_init, \
+        old_gaphas_port_view_init, old_gaphas_connection_view_init
 
+    old_gaphas_port_view_init = rafcon.gui.mygaphas.items.ports.PortView.__init__
+    old_gaphas_connection_view_init = rafcon.gui.mygaphas.items.connection.ConnectionView.__init__
     old_gaphas_state_view_init = rafcon.gui.mygaphas.items.state.StateView.__init__
     old_gaphas_extended_view_init = rafcon.gui.mygaphas.view.ExtendedGtkView.__init__
     check_log_files(GAPHAS_FILES)
 
     def gaphas_extended_view_init(self, graphical_editor_v, state_machine_m, *args):
-        self._patch = None
         self.__gen_time_stamp = int(round(time.time() * 1000))
         self.__kind = 'gaphas_extended_view'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
@@ -660,7 +660,6 @@ def patch_gaphas_classes_with_log():
         old_gaphas_extended_view_init(self, graphical_editor_v, state_machine_m, *args)
 
     def gaphas_state_view_init(self, state_m, size, hierarchy_level):
-        self._patch = None
         self.__gen_time_stamp = int(round(time.time() * 1000))
         self.__kind = 'gaphas_state_view'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
@@ -670,17 +669,41 @@ def patch_gaphas_classes_with_log():
                                                       self.__kind, self.__gen_time_stamp))
         old_gaphas_state_view_init(self, state_m, size, hierarchy_level)
 
-    # TODO port view
-    # TODO connection view
+    def gaphas_port_view_init(self, in_port, name=None, parent=None, side=SnappedSide.RIGHT):
+        self.__gen_time_stamp = int(round(time.time() * 1000))
+        self.__kind = 'gaphas_port_view'
+        self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
+                                                                                   GENERATION_LOG_FILE_APPENDIX))
+        with open(self.__gen_log_file, 'a+') as f:
+            f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
+                                                      self.__kind, self.__gen_time_stamp))
+        old_gaphas_port_view_init(self, in_port, name, parent, side)
 
+    def gaphas_connection_view_init(self, hierarchy_level):
+        self.__gen_time_stamp = int(round(time.time() * 1000))
+        self.__kind = 'gaphas_connection_view'
+        self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
+                                                                                   GENERATION_LOG_FILE_APPENDIX))
+        with open(self.__gen_log_file, 'a+') as f:
+            f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
+                                                      self.__kind, self.__gen_time_stamp))
+        old_gaphas_connection_view_init(self, hierarchy_level)
+
+    rafcon.gui.mygaphas.items.ports.PortView.__init__ = gaphas_port_view_init
+    rafcon.gui.mygaphas.items.connection.ConnectionView.__init__ = gaphas_connection_view_init
     rafcon.gui.mygaphas.items.state.StateView.__init__ = gaphas_state_view_init
     rafcon.gui.mygaphas.view.ExtendedGtkView.__init__ = gaphas_extended_view_init
 
 
 def un_patch_gaphas_classes_from_log():
     import rafcon.gui.mygaphas.view
+    import rafcon.gui.mygaphas.items.ports
+    import rafcon.gui.mygaphas.items.connection
     import rafcon.gui.mygaphas.items.state
-    global old_gaphas_state_view_init, old_gaphas_extended_view_init
+    global old_gaphas_state_view_init, old_gaphas_extended_view_init, \
+        old_gaphas_port_view_init, old_gaphas_connection_view_init
+    rafcon.gui.mygaphas.items.ports.PortView.__init__ = old_gaphas_port_view_init
+    rafcon.gui.mygaphas.items.connection.ConnectionView.__init__ = old_gaphas_connection_view_init
     rafcon.gui.mygaphas.items.state.StateView.__init__ = old_gaphas_state_view_init
     rafcon.gui.mygaphas.view.ExtendedGtkView.__init__ = old_gaphas_extended_view_init
     remove_log_files(GAPHAS_FILES)
@@ -701,6 +724,8 @@ def get_param_dict():
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
+    import rafcon.gui.mygaphas.items.ports
+    import rafcon.gui.mygaphas.items.connection
     import rafcon.gui.mygaphas.items.state
     import rafcon.gui.mygaphas.view
     param_dict = {
@@ -722,6 +747,10 @@ def get_param_dict():
                       ('gaphas_extended_view', patch_gaphas_classes_with_log, un_patch_gaphas_classes_from_log),
                   rafcon.gui.mygaphas.items.state.StateView:
                       ('gaphas_state_view', patch_gaphas_classes_with_log, un_patch_gaphas_classes_from_log),
+                  rafcon.gui.mygaphas.items.ports.PortView:
+                      ('gaphas_port_view', patch_gaphas_classes_with_log, un_patch_gaphas_classes_from_log),
+                  rafcon.gui.mygaphas.items.connection.ConnectionView:
+                      ('gaphas_connection_view', patch_gaphas_classes_with_log, un_patch_gaphas_classes_from_log),
                  }
     return param_dict
 
@@ -751,7 +780,7 @@ def test_core_destruct(caplog):
                 ]
 
     already_existing_objects = check_existing_objects_of_kind([(c, False) for c, check_it in elements],
-                                                              logger.debug, log_file=False)
+                                                              print_func, log_file=False)
 
     testing_utils.initialize_environment_core()
 
@@ -787,11 +816,11 @@ def test_model_and_core_destruct(caplog):
 
     # if core test run before
     already_existing_objects = check_existing_objects_of_kind([(c, False) for c, check_it in elements],
-                                                              logger.debug, log_file=False)
+                                                              print_func, log_file=False)
 
     run_model_construction()
 
-    check_existing_objects_of_kind(elements, logger.debug, already_existing_objects)
+    check_existing_objects_of_kind(elements, print_func, already_existing_objects)
 
     run_un_patching(elements)
 
@@ -811,7 +840,7 @@ def test_simple_model_and_core_destruct_with_gui(caplog):
     import rafcon.gui.mygaphas.items.connection
     import rafcon.gui.mygaphas.items.ports
 
-    searched_class = rafcon.gui.controllers.utils.extended_controller.ExtendedController
+    searched_class = rafcon.gui.mygaphas.items.ports.InputPortView
 
     elements = [
                 (rafcon.core.states.state.State, True),
@@ -825,7 +854,7 @@ def test_simple_model_and_core_destruct_with_gui(caplog):
                 (rafcon.gui.mygaphas.items.connection.ConnectionView, False),
                 (rafcon.gui.mygaphas.items.ports.PortView, False),
                 (rafcon.gui.mygaphas.items.state.StateView, False),
-                # (searched_class, False),
+                (searched_class, False),
                 ]
     _test_widget_destruct(caplog, elements, searched_class, run_simple_controller_construction)
 
@@ -882,7 +911,7 @@ def _test_widget_destruct(caplog, elements, searched_class, func):
     import rafcon.gui.singleton
     rafcon.gui.singleton.main_window_controller = None
     already_existing_objects = check_existing_objects_of_kind([(c, False) for c, check_it in elements],
-                                                              logger.debug, log_file=False)
+                                                              print_func, log_file=False)
 
     # TODO make it fully working and later activate modification history and auto backup
     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
@@ -902,7 +931,7 @@ def _test_widget_destruct(caplog, elements, searched_class, func):
         print "%" * 50
         print "check for existing objects print"
         print "%" * 50
-        check_existing_objects_of_kind(elements, logger.debug, ignored_objects=already_existing_objects,
+        check_existing_objects_of_kind(elements, print_func, ignored_objects=already_existing_objects,
                                        searched_type=searched_class.__name__)
         run_un_patching(elements)
         testing_utils.shutdown_environment(caplog=caplog)
@@ -910,10 +939,10 @@ def _test_widget_destruct(caplog, elements, searched_class, func):
 
 if __name__ == '__main__':
     testing_utils.dummy_gui(None)
-    test_core_destruct(None)
-    test_model_and_core_destruct(None)
+    # test_core_destruct(None)
+    # test_model_and_core_destruct(None)
     test_simple_model_and_core_destruct_with_gui(None)
-    test_simple_execution_model_and_core_destruct_with_gui(None)
-    test_complex_model_and_core_destruct_with_gui(None)
+    # test_simple_execution_model_and_core_destruct_with_gui(None)
+    # test_complex_model_and_core_destruct_with_gui(None)
     # import pytest
     # pytest.main(['-s', __file__])
