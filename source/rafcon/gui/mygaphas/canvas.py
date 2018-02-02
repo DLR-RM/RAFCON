@@ -65,6 +65,11 @@ class MyCanvas(gaphas.canvas.Canvas):
         self._core_view_map[port_m.core_element] = port_v
         self._model_view_map[port_m] = port_v
 
+    def remove_port(self, port_v):
+        port_m = port_v.model
+        del self._core_view_map[port_m.core_element]
+        del self._model_view_map[port_m]
+
     def exchange_model(self, old_model, new_model):
         view = self._core_view_map[old_model.core_element]
         del self._core_view_map[old_model.core_element]

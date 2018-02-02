@@ -190,6 +190,15 @@ class StateView(Element):
                 child.remove()
             if isinstance(child, NameView):
                 self.canvas.remove(child)
+        for outcome_v in self.outcomes[:]:
+            self.remove_outcome(outcome_v)
+        for input_port_v in self.inputs[:]:
+            self.remove_input_port(input_port_v)
+        for output_port_v in self.outputs[:]:
+            self.remove_output_port(output_port_v)
+        for scoped_variable_port_v in self.scoped_variables[:]:
+            self.remove_scoped_variable(scoped_variable_port_v)
+
         self.remove_keep_rect_within_constraint_from_parent()
         for constraint in self._constraints:
             self.canvas.solver.remove_constraint(constraint)
@@ -649,6 +658,7 @@ class StateView(Element):
         self._ports.remove(outcome_v.port)
         self._handles.remove(outcome_v.handle)
 
+        self.canvas.remove_port(outcome_v)
         if outcome_v in self.port_constraints:
             self.canvas.solver.remove_constraint(self.port_constraints[outcome_v])
 
@@ -679,6 +689,7 @@ class StateView(Element):
         self._ports.remove(input_port_v.port)
         self._handles.remove(input_port_v.handle)
 
+        self.canvas.remove_port(input_port_v)
         if input_port_v in self.port_constraints:
             self.canvas.solver.remove_constraint(self.port_constraints[input_port_v])
 
@@ -709,6 +720,7 @@ class StateView(Element):
         self._ports.remove(output_port_v.port)
         self._handles.remove(output_port_v.handle)
 
+        self.canvas.remove_port(output_port_v)
         if output_port_v in self.port_constraints:
             self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
 
@@ -744,6 +756,7 @@ class StateView(Element):
         self._ports.remove(scoped_variable_port_v.port)
         self._handles.remove(scoped_variable_port_v.handle)
 
+        self.canvas.remove_port(scoped_variable_port_v)
         if scoped_variable_port_v in self.port_constraints:
             self.canvas.solver.remove_constraint(self.port_constraints[scoped_variable_port_v])
 

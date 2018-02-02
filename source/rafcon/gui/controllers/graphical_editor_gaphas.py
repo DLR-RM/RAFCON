@@ -88,9 +88,6 @@ class GraphicalEditorController(ExtendedController):
 
     def destroy(self):
         super(GraphicalEditorController, self).destroy()
-        # TODO D-find out why this destroys half of left over core objects, this should already be empty at the end
-        self.canvas._core_view_map.clear()
-        self.canvas._model_view_map.clear()
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -308,7 +305,9 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("destruction_signal", signal=True)
     def state_machine_destruction(self, model, prop_name, info):
-        """ Close state editor when state is being destructed """
+        """ Clean up when state machine is being destructed """
+        root_state_v = self.canvas.get_view_for_model(self.root_state_m)
+        root_state_v.remove()
         # TODO D-Decide if this has to be performed by the state machines editor ####
         if self.model is model:
             self.relieve_all_models()
