@@ -14,11 +14,13 @@ Next release
       zooming in large state machines
     - Hash calculations of state machines
     - Placement of NameView
+    - drawing of connections, ports and labels, especially when deeply nested
 
 - Bug Fixes:
 
     - :issue:`450`
     - :issue:`447`: Hashes of state machine in storage different then the reopened state machine after saving it
+    - :issue:`449`: ports (of transitions or data flows) cannot be moved
 
 
 Patch releases 0.12.\*
