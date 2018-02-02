@@ -199,8 +199,9 @@ class StateView(Element):
             self.remove_scoped_variable(scoped_variable_port_v)
 
         self.remove_keep_rect_within_constraint_from_parent()
-        for constraint in self._constraints:
+        for constraint in self._constraints[:]:
             self.canvas.solver.remove_constraint(constraint)
+            self._constraints.remove(constraint)
         self.canvas.remove(self)
 
     @staticmethod
@@ -218,12 +219,12 @@ class StateView(Element):
         canvas = self.canvas
         solver = canvas.solver
 
-        name_constraint = self.keep_rect_constraints[self.name_view]
+        name_constraint = self.keep_rect_constraints.pop(self.name_view)
         solver.remove_constraint(name_constraint)
 
         parent_state_v = self.parent
         if parent_state_v is not None and isinstance(parent_state_v, StateView):
-            constraint = parent_state_v.keep_rect_constraints[self]
+            constraint = parent_state_v.keep_rect_constraints.pop(self)
             solver.remove_constraint(constraint)
 
     def has_selected_child(self):
