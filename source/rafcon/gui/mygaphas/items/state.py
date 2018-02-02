@@ -186,6 +186,8 @@ class StateView(Element):
 
         for child in self.canvas.get_children(self)[:]:
             child.remove()
+
+        self.remove_income()
         for outcome_v in self.outcomes[:]:
             self.remove_outcome(outcome_v)
         for input_port_v in self.inputs[:]:
@@ -618,6 +620,16 @@ class StateView(Element):
         self.add_rect_constraint_for_port(income_v)
         return income_v
 
+    def remove_income(self):
+        income_v = self._income
+        del self._map_handles_port_v[income_v.handle]
+        self._income = None
+        self._ports.remove(income_v.port)
+        self._handles.remove(income_v.handle)
+
+        if income_v in self.port_constraints:
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(income_v))
+
     def add_outcome(self, outcome_m):
         outcome_v = OutcomeView(outcome_m, self)
         self.canvas.add_port(outcome_v)
@@ -654,7 +666,7 @@ class StateView(Element):
 
         self.canvas.remove_port(outcome_v)
         if outcome_v in self.port_constraints:
-            self.canvas.solver.remove_constraint(self.port_constraints[outcome_v])
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(outcome_v))
 
     def add_input_port(self, port_m):
         input_port_v = InputPortView(self, port_m)
@@ -685,7 +697,7 @@ class StateView(Element):
 
         self.canvas.remove_port(input_port_v)
         if input_port_v in self.port_constraints:
-            self.canvas.solver.remove_constraint(self.port_constraints[input_port_v])
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(input_port_v))
 
     def add_output_port(self, port_m):
         output_port_v = OutputPortView(self, port_m)
@@ -716,7 +728,7 @@ class StateView(Element):
 
         self.canvas.remove_port(output_port_v)
         if output_port_v in self.port_constraints:
-            self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(output_port_v))
 
     def add_scoped_variable(self, scoped_variable_m):
         scoped_variable_port_v = ScopedVariablePortView(self, scoped_variable_m)
@@ -752,7 +764,7 @@ class StateView(Element):
 
         self.canvas.remove_port(scoped_variable_port_v)
         if scoped_variable_port_v in self.port_constraints:
-            self.canvas.solver.remove_constraint(self.port_constraints[scoped_variable_port_v])
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(scoped_variable_port_v))
 
     def add_rect_constraint_for_port(self, port):
         constraint = PortRectConstraint((self.handles()[NW].pos, self.handles()[SE].pos), port.pos, port)
