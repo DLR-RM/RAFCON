@@ -357,6 +357,7 @@ class StateMachineRightClickMenuController(ExtendedController, StateMachineRight
 class StateMachineTreeRightClickMenuController(StateMachineRightClickMenuController):
 
     def register_view(self, view):
+        ExtendedController.register_view(self, view)
         view.connect('button_press_event', self.mouse_click)
 
     def activate_menu(self, event, menu):
@@ -375,6 +376,7 @@ class StateMachineTreeRightClickMenuController(StateMachineRightClickMenuControl
 class StateRightClickMenuControllerOpenGLEditor(StateMachineRightClickMenuController):
 
     def register_view(self, view):
+        ExtendedController.register_view(self, view)
         from rafcon.gui.views.graphical_editor import GraphicalEditorView
         assert isinstance(view, GraphicalEditorView)
         view.editor.connect('button_press_event', self.mouse_click)

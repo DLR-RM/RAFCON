@@ -762,6 +762,7 @@ class ConnectionModificationTool(ConnectionTool):
 class RightClickTool(gaphas.tool.ItemTool):
     def __init__(self, view=None, buttons=(3,)):
         super(RightClickTool, self).__init__(view, buttons)
+        # TODO correct destruction of the StateRightClickMenu-Controller
         self.sm_right_click_menu = StateRightClickMenuGaphas()
 
     def on_button_press(self, event):

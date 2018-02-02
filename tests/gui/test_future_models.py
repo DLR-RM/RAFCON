@@ -1,10 +1,8 @@
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.gui.models.state import StateModel
-from rafcon.gui.models.container_state import ContainerStateModel
-
 
 def test_default():
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.gui.models.container_state import ContainerStateModel
     parent_state = HierarchyState()
     parent_state_m = ContainerStateModel(parent_state)
 
@@ -18,6 +16,10 @@ def test_default():
 
 
 def test_single_future_element():
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.gui.models.state import StateModel
+    from rafcon.gui.models.container_state import ContainerStateModel
     parent_state = HierarchyState()
     parent_state_m = ContainerStateModel(parent_state)
 
@@ -35,6 +37,10 @@ def test_single_future_element():
 
 
 def test_multiple_future_element():
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.gui.models.state import StateModel
+    from rafcon.gui.models.container_state import ContainerStateModel
     parent_state = HierarchyState()
     parent_state_m = ContainerStateModel(parent_state)
 

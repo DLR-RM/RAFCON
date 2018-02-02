@@ -167,6 +167,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return item in self.outcomes.values() or item in self.input_data_ports.values() \
                or item in self.output_data_ports.values()
 
+    def __cmp__(self, other):
+        if isinstance(other, State):
+            if self.state_id == other.state_id:
+                return 0
+            return -1 if self.state_id < other.state_id else 1
+
     @property
     def core_element_id(self):
         return self._state_id

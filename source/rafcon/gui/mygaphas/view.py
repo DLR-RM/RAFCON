@@ -18,6 +18,7 @@ from gaphas.view import GtkView
 from gaphas.item import Element
 
 from rafcon.gui.mygaphas.painter import BoundingBoxPainter
+from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
 
 
 
@@ -30,6 +31,7 @@ class ExtendedGtkView(GtkView, Observer):
         GtkView.__init__(self, *args)
         Observer.__init__(self)
         self._selection = state_machine_m.selection
+        self.value_cache = ValueCache()
         self.observe_model(self._selection)
         self.observe_model(state_machine_m.root_state)
         self._bounding_box_painter = BoundingBoxPainter(self)

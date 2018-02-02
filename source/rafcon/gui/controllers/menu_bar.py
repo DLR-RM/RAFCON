@@ -88,6 +88,7 @@ class MenuBarController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(MenuBarController, self).register_view(view)
         data_flow_mode = global_runtime_config.get_config_value("DATA_FLOW_MODE", False)
         view["data_flow_mode"].set_active(data_flow_mode)
 

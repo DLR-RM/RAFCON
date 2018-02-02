@@ -230,8 +230,18 @@ class PortView(object):
         side_length = self.port_side_size
         position = self.pos
 
-        view_length, _ = view.get_matrix_i2v(self.parent).transform_distance(side_length, 0)
-        if view_length < constants.MINIMUM_SIZE_FOR_DISPLAY:
+        # Do not draw ports below a certain threshold size
+        matrix_i2v = view.get_matrix_i2v(self.parent)
+        view_length, _ = matrix_i2v.transform_distance(side_length, 0)
+        if view_length < constants.MINIMUM_PORT_SIZE_FOR_DISPLAY:
+            return
+        # Do not draw port outside of the view
+        center = (position.x.value, position.y.value)
+        view_center = matrix_i2v.transform_point(*center)
+        if view_center[0] + view_length / 2. < 0 or \
+                view_center[0] - view_length / 2. > view.allocation[2] or \
+                view_center[1] + view_length / 2. < 0 or \
+                view_center[1] - view_length / 2. > view.allocation[3]:
             return
 
         parent_state_m = self._parent.model
@@ -249,6 +259,7 @@ class PortView(object):
         }
 
         upper_left_corner = (position.x.value - side_length / 2., position.y.value - side_length / 2.)
+
         current_zoom = view.get_zoom_factor()
         from_cache, image, zoom = self._port_image_cache.get_cached_image(side_length, side_length,
                                                                           current_zoom, parameters)
@@ -322,7 +333,7 @@ class PortView(object):
             extents = gap_draw_helper.draw_port_label(c, self, transparency, False, label_position,
                                                       show_additional_value, value, only_extent_calculations=True)
             from rafcon.gui.mygaphas.utils.gap_helper import extend_extents
-            extents = extend_extents(extents, factor=1.02)
+            extents = extend_extents(extents, factor=1.1)
             label_pos = extents[0], extents[1]
             relative_pos = label_pos[0] - position[0], label_pos[1] - position[1]
             label_size = extents[2] - extents[0], extents[3] - extents[1]
@@ -734,31 +745,40 @@ class ScopedVariablePortView(PortView):
 
         layout = c.create_layout()
         font_name = constants.INTERFACE_FONT
-        font_size = side_length * .6
+        font_size = gap_draw_helper.FONT_SIZE
         font = FontDescription(font_name + " " + str(font_size))
         layout.set_font_description(font)
         layout.set_text(self.name)
 
+        ink_extents, logical_extents = layout.get_extents()
+        extents = [extent / float(SCALE) for extent in logical_extents]
+        real_name_size = extents[2], extents[3]
+        desired_height = side_length * 0.75
+        scale_factor = real_name_size[1] / desired_height
+
         # Determine the size of the text, increase the width to have more margin left and right of the text
-        real_name_size = layout.get_size()[0] / float(SCALE), layout.get_size()[1] / float(SCALE)
-        name_size = real_name_size[0] + side_length / 2., side_length
+        margin = side_length / 4.
+        name_size = real_name_size[0] / scale_factor, desired_height
+        name_size_with_margin = name_size[0] + margin * 2, name_size[1] + margin * 2
 
         # Only the size is required, stop here
         if only_calculate_size:
-            return name_size
+            return name_size_with_margin
 
         # Current position is the center of the port rectangle
         c.save()
         if self.side is SnappedSide.RIGHT or self.side is SnappedSide.LEFT:
             c.rotate(deg2rad(-90))
-        c.rel_move_to(-real_name_size[0] / 2., -real_name_size[1] / 2.)
+        c.rel_move_to(-name_size[0] / 2, -name_size[1] / 2)
+        c.scale(1. / scale_factor, 1. / scale_factor)
+        c.rel_move_to(-extents[0], -extents[1])
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(self.text_color, transparency))
         c.update_layout(layout)
         c.show_layout(layout)
         c.restore()
 
-        return name_size
+        return name_size_with_margin
 
     def _draw_rectangle_path(self, context, width, height, only_get_extents=False):
         """Draws the rectangle path for the port

@@ -100,8 +100,8 @@ class GraphicalEditorController(ExtendedController):
         """Constructor"""
         assert isinstance(model, StateMachineModel)
         assert isinstance(view, GraphicalEditorView)
-        ExtendedController.__init__(self, model, view)
-        self.state_right_click_ctrl = StateRightClickMenuControllerOpenGLEditor(model, view)
+        super(GraphicalEditorController, self).__init__(model, view)
+        self.add_controller("state_right_click_ctrl", StateRightClickMenuControllerOpenGLEditor(model, view))
 
         self.root_state_m = model.root_state
 
@@ -137,6 +137,7 @@ class GraphicalEditorController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(GraphicalEditorController, self).register_view(view)
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
         view.editor.connect('button-release-event', self._on_mouse_release)

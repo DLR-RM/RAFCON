@@ -209,6 +209,7 @@ class MainWindowController(ExtendedController):
         global_runtime_config.store_widget_properties(widget, name)
 
     def register_view(self, view):
+        super(MainWindowController, self).register_view(view)
         self.register_actions(self.shortcut_manager)
 
         self.view.get_top_widget().connect("key-press-event", self._on_key_press)
@@ -655,8 +656,8 @@ class MainWindowController(ExtendedController):
 
         global_runtime_config.save_configuration()
         
-        import glib
-        # Should close all tabs
+        # close all tabs
+        self.get_controller('states_editor_ctrl').prepare_destruction()  # avoid new state editor TODO tbd (deleted)
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
         # Recursively destroys the main window
         self.get_controller('menu_bar_controller').logging_console_view.quit_flag = True

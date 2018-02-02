@@ -134,13 +134,13 @@ class Selection(ModelMT):
         ModelMT.__init__(self)
 
         self._selected = set()
-        self._input_data_ports = []
-        self._output_data_ports = []
-        self._outcomes = []
-        self._data_flows = []
-        self._transitions = []
-        self._states = []
-        self._scoped_variables = []
+        self._input_data_ports = set()
+        self._output_data_ports = set()
+        self._outcomes = set()
+        self._data_flows = set()
+        self._transitions = set()
+        self._states = set()
+        self._scoped_variables = set()
         self.selection_changed_signal = Signal()
         self.focus_signal = Signal()
         self.parent_signal = parent_signal

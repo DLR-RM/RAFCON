@@ -73,6 +73,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.update()
 
     def register_view(self, view):
+        super(ExecutionHistoryTreeController, self).register_view(view)
         self.history_tree.connect('button_press_event', self.mouse_click)
         view['reload_button'].connect('clicked', self.reload_history)
         view['clean_button'].connect('clicked', self.clean_history)

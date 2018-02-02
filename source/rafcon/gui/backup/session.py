@@ -128,6 +128,7 @@ def restore_session_from_runtime_config():
             # logger.info("backup from last saved", path, sm_meta_dict)
             state_machine = storage.load_state_machine_from_path(path)
             state_machine_manager_model.state_machine_manager.add_state_machine(state_machine)
+            wait_for_gui()
             state_machine_m = state_machine_manager_model.state_machines[state_machine.state_machine_id]
 
         open_sm[idx] = state_machine_m

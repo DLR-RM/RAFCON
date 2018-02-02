@@ -42,7 +42,7 @@ class TopToolBarController(ExtendedController):
     """
 
     def __init__(self, state_machine_manager_model, view, top_level_window):
-        ExtendedController.__init__(self, state_machine_manager_model, view)
+        super(TopToolBarController, self).__init__(state_machine_manager_model, view)
         self.shortcut_manager = None
         self.top_level_window = top_level_window
         self.full_screen = False
@@ -51,6 +51,7 @@ class TopToolBarController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(TopToolBarController, self).register_view(view)
         view.get_top_widget().connect("motion_notify_event", self.motion_detected)
         view.get_top_widget().connect("button_press_event", self.button_pressed_event)
         view['minimize_button'].connect('clicked', self.on_minimize_button_clicked)
@@ -122,6 +123,7 @@ class TopToolBarUndockedWindowController(TopToolBarController):
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(TopToolBarUndockedWindowController, self).register_view(view)
         view.get_top_widget().connect("motion_notify_event", self.motion_detected)
         view.get_top_widget().connect("button_press_event", self.button_pressed_event)
         view['maximize_button'].connect('clicked', self.on_maximize_button_clicked)

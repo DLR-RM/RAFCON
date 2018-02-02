@@ -42,6 +42,7 @@ class StateIconController(ExtendedController):
         view.drag_source_set(gtk.gdk.BUTTON1_MASK, [('STRING', 0, 0)], gtk.gdk.ACTION_COPY)
 
     def register_view(self, view):
+        super(StateIconController, self).register_view(view)
         self.view.connect("drag-data-get", self.on_drag_data_get)
         self.view.connect("drag-begin", self.on_drag_begin)
         self.view.connect("drag-end", self.on_drag_end)
