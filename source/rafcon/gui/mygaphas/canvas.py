@@ -14,6 +14,9 @@
 import gaphas.canvas
 from gaphas.item import Item
 
+from rafcon.utils import log
+logger = log.get_logger(__name__)
+
 
 class MyCanvas(gaphas.canvas.Canvas):
 
@@ -67,7 +70,12 @@ class MyCanvas(gaphas.canvas.Canvas):
 
     def remove_port(self, port_v):
         port_m = port_v.model
-        del self._core_view_map[port_m.core_element]
+        # TODO D-Find out why local test runs have missing core elements but not model elements in map (threading?) ###
+        if port_m.core_element in self._core_view_map:
+            del self._core_view_map[port_m.core_element]
+        else:
+            logger.info("Core element is missing in canvas._core_view_map.")
+        # TODO end -- logging message occur in recent-open, resave-libraries and menu-bar test ########################
         del self._model_view_map[port_m]
 
     def exchange_model(self, old_model, new_model):
