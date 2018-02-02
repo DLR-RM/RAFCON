@@ -30,8 +30,8 @@ class MyCanvas(gaphas.canvas.Canvas):
 
     def add(self, item, parent=None, index=None):
         from rafcon.gui.mygaphas.items.state import StateView
-        from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
-        if isinstance(item, (StateView, DataFlowView, TransitionView)):
+        from rafcon.gui.mygaphas.items.connection import ConnectionView
+        if isinstance(item, (StateView, ConnectionView)):
             model = item.model
             self._core_view_map[model.core_element] = item
             self._model_view_map[model] = item
@@ -39,7 +39,7 @@ class MyCanvas(gaphas.canvas.Canvas):
 
     def remove(self, item):
         from rafcon.gui.mygaphas.items.state import StateView
-        from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
+        from rafcon.gui.mygaphas.items.connection import ConnectionView
 
         def delete_model_from_maps(model):
             try:
@@ -59,7 +59,7 @@ class MyCanvas(gaphas.canvas.Canvas):
             map(delete_model_from_maps, [outcome.model for outcome in item.outcomes])
             map(delete_model_from_maps, [input.model for input in item.inputs])
             map(delete_model_from_maps, [output.model for output in item.outputs])
-        elif isinstance(item, (DataFlowView, TransitionView)):
+        elif isinstance(item, ConnectionView):
             delete_model_from_maps(item.model)
         super(MyCanvas, self).remove(item)
 
