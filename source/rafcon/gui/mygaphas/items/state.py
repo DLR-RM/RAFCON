@@ -183,12 +183,9 @@ class StateView(Element):
         """Remove recursively all children and then the StateView itself
         """
         self.canvas.get_first_view().unselect_item(self)
-        children = self.canvas.get_children(self)[:]
-        for child in children:
-            if isinstance(child, StateView):
-                child.remove()
-            if isinstance(child, NameView):
-                self.canvas.remove(child)
+
+        for child in self.canvas.get_children(self)[:]:
+            child.remove()
         for outcome_v in self.outcomes[:]:
             self.remove_outcome(outcome_v)
         for input_port_v in self.inputs[:]:
@@ -870,6 +867,9 @@ class NameView(Element):
         self._view = None
 
         self._image_cache = ImageCache(multiplicator=1.5)
+
+    def remove(self):
+        self.canvas.remove(self)
 
     def update_minimum_size(self):
         min_side_length = min(self.parent.width, self.parent.height) / constants.MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO

@@ -105,6 +105,11 @@ class PerpLine(Line):
                                                                   self.is_in_port(port))
             self.canvas.solver.add_constraint(self._to_port_constraint)
 
+    def remove(self):
+        self.reset_from_port()
+        self.reset_to_port()
+        self.canvas.remove(self)
+
     @property
     def view(self):
         if not self._view:
