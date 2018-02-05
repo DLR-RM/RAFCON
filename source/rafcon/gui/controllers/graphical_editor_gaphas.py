@@ -310,10 +310,6 @@ class GraphicalEditorController(ExtendedController):
         """ Clean up when state machine is being destructed """
         root_state_v = self.canvas.get_view_for_model(self.root_state_m)
         root_state_v.remove()
-        # TODO D-Decide if this has to be performed by the state machines editor ####
-        if self.model is model:
-            self.relieve_all_models()
-        # TODO end ##################################################################
 
     @ExtendedController.observe("state_meta_signal", signal=True)
     def meta_changed_notify_after(self, state_machine_m, _, info):
