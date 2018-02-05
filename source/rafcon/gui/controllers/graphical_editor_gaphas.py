@@ -463,8 +463,7 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'remove_transition':
                 transition_v = self.canvas.get_view_for_core_element(result)
                 if transition_v:
-                    transition_v.prepare_destruction()
-                    self.canvas.remove(transition_v)
+                    transition_v.remove()
                     self.canvas.perform_update()
             elif method_name == 'transition_change':
                 transition_m = model
@@ -486,8 +485,7 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'remove_data_flow':
                 data_flow_v = self.canvas.get_view_for_core_element(result)
                 if data_flow_v:
-                    data_flow_v.prepare_destruction()
-                    self.canvas.remove(data_flow_v)
+                    data_flow_v.remove()
                     self.canvas.perform_update()
             elif method_name == 'data_flow_change':
                 data_flow_m = model
@@ -670,8 +668,7 @@ class GraphicalEditorController(ExtendedController):
             for connection in external_connections:
                 connection_v = self.canvas.get_view_for_core_element(connection)
                 connection_m = connection_v.model
-                connection_v.prepare_destruction()
-                self.canvas.remove(connection_v)
+                connection_v.remove()
                 if isinstance(connection_m, TransitionModel):
                     self.add_transition_view_for_model(connection_m, parent_state_v.model)
                 else:
