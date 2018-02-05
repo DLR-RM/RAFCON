@@ -21,38 +21,34 @@ logger = log.get_logger(__name__)
 GENERATION_LOG_FILE_APPENDIX = 'gen_log_file.txt'
 DELETION_LOG_FILE_APPENDIX = 'del_log_file.txt'
 
-CORE_FILES = ['state', 'state_element']
-
-MODEL_FILES = ['abstract_state_model', 'state_element_model']
-
-CTRL_FILES = ['extended_controller']
-
-GTKMVC_FILES = ['gtkmvc_view', 'gtkmvc_controller']
-
-GAPHAS_FILES = ['gaphas_state_view', 'gaphas_extended_view', 'gaphas_port_view', 'gaphas_connection_view']
-
-FILES = CORE_FILES + MODEL_FILES + CTRL_FILES + GAPHAS_FILES
-
 # store method of core element classes
+CORE_FILES = ['state', 'state_element']
 old_state_init = None
 old_state_element_init = None
 
 # store method of model element classes
+MODEL_FILES = ['abstract_state_model', 'state_element_model']
 old_abstract_state_model_init = None
 old_state_element_model_init = None
 
 # store method of extended ctrl class
+CTRL_FILES = ['extended_controller']
 old_extended_controller_init = None
 
 # store method of gtkmvc element classes
+GTKMVC_FILES = ['gtkmvc_view', 'gtkmvc_controller']
 old_gtkmvc_view_init = gtkmvc.View.__init__
+old_gtkmvc_model_mt_init = gtkmvc.ModelMT.__init__
 old_gtkmvc_controller_init = gtkmvc.Controller.__init__
 
 # store method of gaphas element classes
+GAPHAS_FILES = ['gaphas_state_view', 'gaphas_extended_view', 'gaphas_port_view', 'gaphas_connection_view']
 old_gaphas_port_view_init = None
 old_gaphas_connection_view_init = None
 old_gaphas_state_view_init = None
 old_gaphas_extended_view_init = None
+
+FILES = CORE_FILES + MODEL_FILES + CTRL_FILES + GAPHAS_FILES
 
 
 def create_container_state(*args, **kargs):
@@ -600,7 +596,7 @@ def un_patch_ctrl_classes_from_log():
 
 def patch_gtkmvc_classes_with_log():
 
-    global old_gtkmvc_view_init, old_gtkmvc_controller_init
+    global old_gtkmvc_view_init, old_gtkmvc_controller_init, old_gtkmvc_model_mt_init
 
     check_log_files(GTKMVC_FILES)
 
@@ -624,13 +620,25 @@ def patch_gtkmvc_classes_with_log():
                                                       self.__kind, self.__gen_time_stamp))
         old_gtkmvc_controller_init(self, model, view, spurious, auto_adapt)
 
+    def gtkmvc_model_mt_init(self):
+        self.__gen_time_stamp = int(round(time.time() * 1000))
+        self.__kind = 'gtkmvc_model_mt'
+        self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
+                                                                                   GENERATION_LOG_FILE_APPENDIX))
+        with open(self.__gen_log_file, 'a+') as f:
+            f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
+                                                      self.__kind, self.__gen_time_stamp))
+        old_gtkmvc_model_mt_init(self, glade, top, parent, builder)
+
     gtkmvc.View.__init__ = gtkmvc_view_init
+    # gtkmvc.ModelMT.__init__ = gtkmvc_model_mt_init
     gtkmvc.Controller.__init__ = gtkmvc_controller_init
 
 
 def un_patch_gtkmvc_classes_from_log():
-    global old_gtkmvc_view_init, old_gtkmvc_controller_init
+    global old_gtkmvc_view_init, old_gtkmvc_controller_init, old_gtkmvc_model_mt_init
     gtkmvc.View.__init__ = old_gtkmvc_view_init
+    # gtkmvc.ModelMT.__init__ = old_gtkmvc_model_mt_init
     gtkmvc.Controller.__init__ = old_gtkmvc_controller_init
     remove_log_files(GTKMVC_FILES)
 
@@ -741,9 +749,11 @@ def get_param_dict():
                       ('state_element_model', patch_model_classes_with_log, un_patch_model_classes_from_log),
                   rafcon.gui.controllers.utils.extended_controller.ExtendedController:
                       ('extended_controller', patch_ctrl_classes_with_log, un_patch_ctrl_classes_from_log),
-                  gtkmvc.view.View:
+                  gtkmvc.View:
                       ('gtkmvc_view', patch_gtkmvc_classes_with_log, un_patch_gtkmvc_classes_from_log),
-                  gtkmvc.controller.Controller:
+                  # gtkmvc.ModelMT:
+                  #     ('gtkmvc_model_mt', patch_gtkmvc_classes_with_log, un_patch_gtkmvc_classes_from_log),
+                  gtkmvc.Controller:
                       ('gtkmvc_controller', patch_gtkmvc_classes_with_log, un_patch_gtkmvc_classes_from_log),
                   rafcon.gui.mygaphas.view.ExtendedGtkView:
                       ('gaphas_extended_view', patch_gaphas_classes_with_log, un_patch_gaphas_classes_from_log),
@@ -850,12 +860,12 @@ def test_simple_model_and_core_destruct_with_gui(caplog):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.view.View, True),
-                (gtkmvc.controller.Controller, True),
-                (rafcon.gui.mygaphas.view.ExtendedGtkView, False),
-                (rafcon.gui.mygaphas.items.connection.ConnectionView, False),
-                (rafcon.gui.mygaphas.items.ports.PortView, False),
-                (rafcon.gui.mygaphas.items.state.StateView, False),
+                (gtkmvc.View, True),
+                (gtkmvc.Controller, True),
+                (rafcon.gui.mygaphas.view.ExtendedGtkView, True),
+                (rafcon.gui.mygaphas.items.connection.ConnectionView, True),
+                (rafcon.gui.mygaphas.items.ports.PortView, True),
+                (rafcon.gui.mygaphas.items.state.StateView, True),
                 (searched_class, False),
                 ]
     _test_widget_destruct(caplog, elements, searched_class, run_simple_controller_construction)
@@ -871,16 +881,17 @@ def test_simple_execution_model_and_core_destruct_with_gui(caplog):
     import rafcon.gui.controllers.utils.extended_controller
 
     searched_class = rafcon.core.states.execution_state.ExecutionState
-    # TODO make it fully work with all flags True and also without calling clear of execution histories
+
     elements = [
                 (rafcon.core.states.state.State, True),
                 (rafcon.core.state_elements.state_element.StateElement, True),
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.view.View, True),
-                (gtkmvc.controller.Controller, True),
-                (searched_class, False),
+                (gtkmvc.View, True),
+                # (gtkmvc.ModelMT, True),
+                (gtkmvc.Controller, True),
+                # (searched_class, False),
                 ]
     _test_widget_destruct(caplog, elements, searched_class, run_simple_execution_controller_construction)
 
@@ -892,8 +903,9 @@ def test_complex_model_and_core_destruct_with_gui(caplog):
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
+    import rafcon.core.states.hierarchy_state
 
-    searched_class = rafcon.gui.controllers.utils.extended_controller.ExtendedController
+    searched_class = rafcon.core.states.hierarchy_state.HierarchyState
 
     elements = [
                 (rafcon.core.states.state.State, False),
@@ -901,8 +913,8 @@ def test_complex_model_and_core_destruct_with_gui(caplog):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, False),
                 (rafcon.gui.models.state_element.StateElementModel, False),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.view.View, True),
-                (gtkmvc.controller.Controller, True),
+                (gtkmvc.View, True),
+                (gtkmvc.Controller, True),
                 (searched_class, False),
                 ]
     _test_widget_destruct(caplog, elements, searched_class, run_complex_controller_construction)
@@ -941,10 +953,10 @@ def _test_widget_destruct(caplog, elements, searched_class, func):
 
 if __name__ == '__main__':
     testing_utils.dummy_gui(None)
-    # test_core_destruct(None)
-    # test_model_and_core_destruct(None)
+    test_core_destruct(None)
+    test_model_and_core_destruct(None)
     test_simple_model_and_core_destruct_with_gui(None)
-    # test_simple_execution_model_and_core_destruct_with_gui(None)
-    # test_complex_model_and_core_destruct_with_gui(None)
+    test_simple_execution_model_and_core_destruct_with_gui(None)
+    test_complex_model_and_core_destruct_with_gui(None)
     # import pytest
     # pytest.main(['-s', __file__])
