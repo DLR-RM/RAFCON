@@ -472,9 +472,6 @@ class Clipboard(Observable):
     def destroy(self):
         """ Destroys the clipboard by relieving all model references.
         """
-        print "%" * 50
-        print "destroy clipboard"
-        print "%" * 50
         if self.model_copies:
             for model_list in self.model_copies.itervalues():
                 if isinstance(model_list, (list, tuple)):
