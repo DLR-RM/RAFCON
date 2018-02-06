@@ -677,3 +677,5 @@ class MainWindowController(ExtendedController):
             pass
 
         self.destroy()
+        from rafcon.gui.clipboard import global_clipboard
+        global_clipboard.destroy()
