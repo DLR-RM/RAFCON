@@ -866,9 +866,10 @@ def test_simple_model_and_core_destruct_with_gui(caplog):
                 (rafcon.gui.mygaphas.items.connection.ConnectionView, True),
                 (rafcon.gui.mygaphas.items.ports.PortView, True),
                 (rafcon.gui.mygaphas.items.state.StateView, True),
-                (searched_class, False),
+                # (searched_class, False),
                 ]
-    _test_widget_destruct(caplog, elements, searched_class, run_simple_controller_construction)
+    _test_widget_destruct(caplog, elements, searched_class, run_simple_controller_construction,
+                          gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
 def test_simple_execution_model_and_core_destruct_with_gui(caplog):
@@ -893,7 +894,8 @@ def test_simple_execution_model_and_core_destruct_with_gui(caplog):
                 (gtkmvc.Controller, True),
                 # (searched_class, False),
                 ]
-    _test_widget_destruct(caplog, elements, searched_class, run_simple_execution_controller_construction)
+    _test_widget_destruct(caplog, elements, searched_class, run_simple_execution_controller_construction,
+                          gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
 def test_complex_model_and_core_destruct_with_gui(caplog):
@@ -915,12 +917,13 @@ def test_complex_model_and_core_destruct_with_gui(caplog):
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
                 (gtkmvc.View, True),
                 (gtkmvc.Controller, True),
-                (searched_class, False),
+                # (searched_class, False),
                 ]
-    _test_widget_destruct(caplog, elements, searched_class, run_complex_controller_construction)
+    _test_widget_destruct(caplog, elements, searched_class, run_complex_controller_construction,
+                          gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
-def _test_widget_destruct(caplog, elements, searched_class, func):
+def _test_widget_destruct(caplog, elements, searched_class, func, gui_config):
     # if core test run before
     import rafcon.gui.singleton
     rafcon.gui.singleton.main_window_controller = None
@@ -928,7 +931,7 @@ def _test_widget_destruct(caplog, elements, searched_class, func):
                                                               print_func, log_file=False)
 
     # TODO make it fully working and later activate modification history and auto backup
-    testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
+    testing_utils.run_gui(gui_config=gui_config)
 
     run_patching(elements)
 
