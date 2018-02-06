@@ -489,6 +489,12 @@ class AbstractAction(object):
         self.after_overview = None
         self.after_storage = None  # tuple of state and states-list of storage tuple
 
+    def prepare_destrutcion(self):
+        self.before_overview.prepare_destruction()
+        if self. after_overview:
+            self.after_overview.prepare_destruction()
+        self.state_machine_model = None
+
     @property
     def version_id(self):
         return self.__version_id

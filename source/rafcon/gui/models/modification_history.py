@@ -96,6 +96,7 @@ class ModificationsHistoryModel(ModelMT):
             self.relieve_model(self.state_machine_model)
             assert self.__buffered_root_state_model is self.state_machine_model.root_state
             self.relieve_model(self.__buffered_root_state_model)
+            self.modifications.prepare_destruction()
         except KeyError:  # Might happen if the observer was already unregistered
             pass
 
@@ -782,6 +783,9 @@ class HistoryTreeElement(object):
     def __str__(self):
         return "prev_id: {0} next_id: {1} and other next_ids: {2}".format(self._prev_id, self._next_id, self._old_next_ids)
 
+    def prepare_destruction(self):
+        self.action.prepare_destrutcion()
+
     @property
     def prev_id(self):
         return self._prev_id
@@ -840,6 +844,12 @@ class ModificationsHistory(Observable):
 
         # insert initial dummy element
         self.insert_action(ActionDummy())
+
+    def prepare_destruction(self):
+        del self.trail_history[:]
+        for tree_element in self.all_time_history:
+            tree_element.prepare_destruction()
+        del self.all_time_history[:]
 
     @Observable.observed
     def insert_action(self, action):
