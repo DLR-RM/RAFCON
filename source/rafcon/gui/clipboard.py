@@ -469,6 +469,25 @@ class Clipboard(Observable):
 
         return selected_models_dict, parent_m
 
+    def destroy(self):
+        """ Destroys the clipboard by relieving all model references.
+        """
+        print "%" * 50
+        print "destroy clipboard"
+        print "%" * 50
+        if self.model_copies:
+            for model_list in self.model_copies.itervalues():
+                if isinstance(model_list, (list, tuple)):
+                    for model in model_list:
+                        model.prepare_destruction()
+                else:
+                    raise Exception("wrong data in clipboard")
+        self.model_copies = None
+        self.copy_parent_state_id = None
+        self.outcome_id_mapping_dict = None
+        self.port_id_mapping_dict = None
+        self.state_id_mapping_dict = None
+
 
 # To enable copy, cut and paste between state machines a global clipboard is used
 global_clipboard = Clipboard()

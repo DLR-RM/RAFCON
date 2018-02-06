@@ -429,6 +429,8 @@ class MenuBarController(ExtendedController):
             force = True
         avoid_shutdown = self.on_delete_event(widget, None, force=force)
         if not avoid_shutdown:
+            from rafcon.gui.clipboard import global_clipboard
+            global_clipboard.destroy()
             self.on_destroy(None)
 
     def on_delete_event(self, widget, event, data=None, force=False):
