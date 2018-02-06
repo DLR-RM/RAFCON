@@ -148,8 +148,8 @@ class StateMachine(Observable, JSONObject, Hashable):
         # execution finished, close execution history log file (if present)
         if len(self._execution_histories) > 0:
             if self._execution_histories[-1].execution_history_storage is not None:
-                set_readable_for_all = global_config.get_config_value("EXECUTION_LOG_SET_READABLE_FOR_ALL", False)
-                self._execution_histories[-1].execution_history_storage.close(set_readable_for_all)
+                set_read_and_writable_for_all = global_config.get_config_value("EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL", False)
+                self._execution_histories[-1].execution_history_storage.close(set_read_and_writable_for_all)
         from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 

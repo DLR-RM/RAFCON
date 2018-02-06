@@ -68,12 +68,12 @@ class ExecutionHistoryStorage(object):
         finally:
             self.store_lock.release()
 
-    def close(self, make_readable_for_all=False):
+    def close(self, make_read_and_writable_for_all=False):
         self.store_lock.acquire()
         try:
             self.store.close()
             logger.debug('Closed log file %s' % self.filename)
-            if make_readable_for_all:
+            if make_read_and_writable_for_all:
                 ret = subprocess.call(['chmod', 'a+rw', self.filename])
                 if ret:
                     logger.debug('Could not make log file readable for all. chmod a+rw failed on %s.' % self.filename)
