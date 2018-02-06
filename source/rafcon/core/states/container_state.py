@@ -471,7 +471,7 @@ class ContainerState(State):
         # print_df_from_and_to(outgoing_data_linkage_for_port)
 
         ############################# CREATE NEW STATE #############################
-        [self.remove_state(state_id, recursive_deletion=False, destroy=False) for state_id in state_ids]
+        [self.remove_state(state_id, recursive=False, destroy=False) for state_id in state_ids]
         [self.remove_scoped_variable(sv_id) for sv_id in scoped_variable_ids]
         # TODO if the version is final create the ingoing and outgoing internal linkage before and hand it while state creation
         from rafcon.core.states.hierarchy_state import HierarchyState
@@ -646,7 +646,7 @@ class ContainerState(State):
         child_scoped_variables = [sv for sv_id, sv in state.scoped_variables.iteritems()]
 
         # remove state that should be ungrouped
-        self.remove_state(state_id, recursive_deletion=False, destroy=False)
+        self.remove_state(state_id, recursive=False, destroy=False)
 
         # fill elements into parent state and remember id mapping from child to parent state to map other properties
         state_id_dict = {}
@@ -746,11 +746,11 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_state(self, state_id, recursive_deletion=True, force=True, destroy=True):
+    def remove_state(self, state_id, recursive=True, force=True, destroy=True):
         """Remove a state from the container state.
 
         :param state_id: the id of the state to remove
-        :param recursive_deletion: a flag to indicate a recursive deletion of all substates
+        :param recursive: a flag to indicate a recursive disassembling of all substates
         :param force: a flag to indicate forcefully deletion of all states (important for the decider state in the
                 barrier concurrency state)
         :param destroy: a flag which indicates if the state should not only be disconnected from the state but also
@@ -779,7 +779,7 @@ class ContainerState(State):
         for key in keys_to_delete:
             self.remove_data_flow(key)
 
-        if recursive_deletion:
+        if recursive:
             # Recursively delete all transitions, data flows and states within the state to be deleted
             if isinstance(self.states[state_id], ContainerState):
                 for transition_id in self.states[state_id].transitions.keys():
@@ -789,7 +789,7 @@ class ContainerState(State):
                 for child_state_id in self.states[state_id].states.keys():
                     is_barrier_state = isinstance(self.states[state_id], BarrierConcurrencyState)
                     self.states[state_id].remove_state(child_state_id,
-                                                       recursive_deletion=recursive_deletion,
+                                                       recursive=recursive,
                                                        force=True if force or not force and is_barrier_state else False,
                                                        destroy=destroy)
 
