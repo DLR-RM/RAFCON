@@ -378,6 +378,7 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
 
     if target_objects:
         generate_graphs(target_objects)
+        return
         for index_target_object, target_object in enumerate(target_objects):
             print
             print
@@ -433,6 +434,30 @@ def run_simple_controller_construction():
     from gui.widget.test_states_editor import check_state_editor_models
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     testing_utils.call_gui_callback(check_state_editor_models, sm_m, sm_m.root_state)
+
+
+def run_simple_modification_construction():
+
+    testing_utils.call_gui_callback(create_models)
+
+    import rafcon.gui.singleton
+    from gui.widget.test_states_editor import check_state_editor_models
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    testing_utils.call_gui_callback(check_state_editor_models, sm_m, sm_m.root_state)
+    import rafcon.gui.helpers.state
+    list_exsisting_state_ids = sm_m.root_state.states.keys()
+    testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
+                                    rafcon.gui.helpers.state.StateType.EXECUTION)
+    testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
+                                    rafcon.gui.helpers.state.StateType.HIERARCHY)
+
+    new_state_ids = [state_id for state_id, state_m in sm_m.root_state.states.iteritems() if state_id not in list_exsisting_state_ids]
+    for state_id in new_state_ids:
+        testing_utils.call_gui_callback(sm_m.root_state.state.remove_state, state_id)
+    import time
+    time.sleep(1)
+    # import test_group_ungroup
+    # test_group_ungroup.trigger_ungroup_signals()
 
 
 def run_simple_execution_controller_construction():
@@ -923,6 +948,31 @@ def test_complex_model_and_core_destruct_with_gui(caplog):
                           gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
+def test_model_and_core_modification_history_destruct_with_gui(caplog):
+    if not testing_utils.used_gui_threads:
+        testing_utils.dummy_gui(None)
+
+    import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.state_element
+    import rafcon.gui.controllers.utils.extended_controller
+    import rafcon.core.states.hierarchy_state
+
+    searched_class = rafcon.core.states.hierarchy_state.HierarchyState
+
+    elements = [
+                (rafcon.core.states.state.State, False),
+                (rafcon.core.state_elements.state_element.StateElement, False),
+                (rafcon.gui.models.abstract_state.AbstractStateModel, False),
+                (rafcon.gui.models.state_element.StateElementModel, False),
+                (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
+                (gtkmvc.View, True),
+                (gtkmvc.Controller, True),
+                (searched_class, False),
+                ]
+    _test_widget_destruct(caplog, elements, searched_class, run_simple_modification_construction,
+                          gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
+
+
 def _test_widget_destruct(caplog, elements, searched_class, func, gui_config):
     # if core test run before
     import rafcon.gui.singleton
@@ -958,8 +1008,9 @@ if __name__ == '__main__':
     testing_utils.dummy_gui(None)
     test_core_destruct(None)
     test_model_and_core_destruct(None)
-    test_simple_model_and_core_destruct_with_gui(None)
-    test_simple_execution_model_and_core_destruct_with_gui(None)
-    test_complex_model_and_core_destruct_with_gui(None)
+    # test_simple_model_and_core_destruct_with_gui(None)
+    # test_simple_execution_model_and_core_destruct_with_gui(None)
+    # test_complex_model_and_core_destruct_with_gui(None)
+    test_model_and_core_modification_history_destruct_with_gui(None)
     # import pytest
     # pytest.main(['-s', __file__])
