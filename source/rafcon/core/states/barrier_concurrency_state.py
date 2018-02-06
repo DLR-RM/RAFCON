@@ -282,21 +282,21 @@ class BarrierConcurrencyState(ConcurrencyState):
                 self.add_state(state)
 
     @lock_state_machine
-    def remove_state(self, state_id, recursive_deletion=True, force=False, destruct=True):
+    def remove_state(self, state_id, recursive_deletion=True, force=False, destroy=True):
         """ Overwrite the parent class remove state method by checking if the user tries to delete the decider state
 
         :param state_id: the id of the state to remove
         :param recursive_deletion: a flag to indicate a recursive deletion of all substates
         :param force: a flag to indicate forcefully deletion of all states (important of the decider state in the
                 barrier concurrency state)
-        :param destruct: a flag which indicates if the state should not only be disconnected from the state but also
-                destructed, including all its state elements
+        :param destroy: a flag which indicates if the state should not only be disconnected from the state but also
+                destroyed, including all its state elements
         :raises exceptions.AttributeError: if the state_id parameter is the decider state
         """
         if state_id == UNIQUE_DECIDER_STATE_ID and force is False:
             raise AttributeError("You are not allowed to delete the decider state.")
         else:
-            ContainerState.remove_state(self, state_id, recursive_deletion, force, destruct)
+            ContainerState.remove_state(self, state_id, recursive_deletion, force, destroy)
 
     @classmethod
     def from_dict(cls, dictionary):

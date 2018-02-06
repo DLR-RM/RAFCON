@@ -94,7 +94,7 @@ class Clipboard(Observable):
                                                            affected_models=[], after=False,
                                                            kwargs={'remove': non_empty_lists_dict}))
         for state_element_attr, models_list in selection_dict_of_copied_models.iteritems():
-            gui_helper_state_machine.delete_core_elements_of_models(models_list, destruct=False)
+            gui_helper_state_machine.delete_core_elements_of_models(models_list, destroy=False)
         affected_models = [model for models in non_empty_lists_dict.itervalues() for model in models]
         action_parent_m.action_signal.emit(ActionSignalMsg(action='cut', origin='clipboard',
                                                            action_parent_m=action_parent_m,

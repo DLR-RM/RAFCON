@@ -471,7 +471,7 @@ class ContainerState(State):
         # print_df_from_and_to(outgoing_data_linkage_for_port)
 
         ############################# CREATE NEW STATE #############################
-        [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
+        [self.remove_state(state_id, recursive_deletion=False, destroy=False) for state_id in state_ids]
         [self.remove_scoped_variable(sv_id) for sv_id in scoped_variable_ids]
         # TODO if the version is final create the ingoing and outgoing internal linkage before and hand it while state creation
         from rafcon.core.states.hierarchy_state import HierarchyState
@@ -646,7 +646,7 @@ class ContainerState(State):
         child_scoped_variables = [sv for sv_id, sv in state.scoped_variables.iteritems()]
 
         # remove state that should be ungrouped
-        self.remove_state(state_id, recursive_deletion=False)
+        self.remove_state(state_id, recursive_deletion=False, destroy=False)
 
         # fill elements into parent state and remember id mapping from child to parent state to map other properties
         state_id_dict = {}
@@ -746,15 +746,15 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_state(self, state_id, recursive_deletion=True, force=True, destruct=True):
+    def remove_state(self, state_id, recursive_deletion=True, force=True, destroy=True):
         """Remove a state from the container state.
 
         :param state_id: the id of the state to remove
         :param recursive_deletion: a flag to indicate a recursive deletion of all substates
         :param force: a flag to indicate forcefully deletion of all states (important for the decider state in the
                 barrier concurrency state)
-        :param destruct: a flag which indicates if the state should not only be disconnected from the state but also
-                destructed, including all its state elements
+        :param destroy: a flag which indicates if the state should not only be disconnected from the state but also
+                destroyed, including all its state elements
         :raises exceptions.AttributeError: if state.state_id does not
         """
         from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
@@ -791,14 +791,23 @@ class ContainerState(State):
                     self.states[state_id].remove_state(child_state_id,
                                                        recursive_deletion=recursive_deletion,
                                                        force=True if force or not force and is_barrier_state else False,
-                                                       destruct=destruct)
+                                                       destroy=destroy)
 
-        if destruct:
-            self.states[state_id].destruct()
+        if destroy:
+            self.states[state_id].destroy()
         else:
             self.states[state_id].parent = None
         # final delete the state it self
         return self.states.pop(state_id)
+
+    # do not observe
+    def destroy(self):
+        for transition_id in self.transitions.keys():
+            self.remove_transition(transition_id)
+        for data_flow_id in self.data_flows.keys():
+            self.remove_data_flow(data_flow_id)
+        self.states.clear()
+        super(ContainerState, self).destroy()
 
     def related_linkage_state(self, state_id):
         """ TODO: document
@@ -1067,23 +1076,23 @@ class ContainerState(State):
         return self.states[self.start_state_id]
 
     @lock_state_machine
-    def remove(self, state_element, force=False, destruct=True):
+    def remove(self, state_element, force=False, destroy=True):
         """Remove item from state
 
         :param StateElement state_element: State or state element to be removed
         :param bool force: if the removal should be forced without checking constraints
-        :param bool destruct: a flag that signals that the state element will be fully removed and disassembled
+        :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, State):
-            self.remove_state(state_element.state_id, force=force, destruct=destruct)
+            self.remove_state(state_element.state_id, force=force, destroy=destroy)
         elif isinstance(state_element, Transition):
-            self.remove_transition(state_element.transition_id, destruct=destruct)
+            self.remove_transition(state_element.transition_id, destroy=destroy)
         elif isinstance(state_element, DataFlow):
-            self.remove_data_flow(state_element.data_flow_id, destruct=destruct)
+            self.remove_data_flow(state_element.data_flow_id, destroy=destroy)
         elif isinstance(state_element, ScopedVariable):
-            self.remove_scoped_variable(state_element.data_port_id, destruct=destruct)
+            self.remove_scoped_variable(state_element.data_port_id, destroy=destroy)
         else:
-            super(ContainerState, self).remove(state_element, force, destruct=destruct)
+            super(ContainerState, self).remove(state_element, force, destroy=destroy)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------- transition functions -------------------------------------
@@ -1220,7 +1229,7 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_transition(self, transition_id, destruct=True):
+    def remove_transition(self, transition_id, destroy=True):
         """Removes a transition from the container state
 
         :param transition_id: the id of the transition to remove
@@ -1285,7 +1294,7 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_data_flow(self, data_flow_id, destruct=True):
+    def remove_data_flow(self, data_flow_id, destroy=True):
         """ Removes a data flow from the container state
 
         :param int data_flow_id: the id of the data_flow to remove
@@ -1368,7 +1377,7 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_scoped_variable(self, scoped_variable_id, destruct=True):
+    def remove_scoped_variable(self, scoped_variable_id, destroy=True):
         """Remove a scoped variable from the container state
 
         :param scoped_variable_id: the id of the scoped variable to remove

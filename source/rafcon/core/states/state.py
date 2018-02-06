@@ -390,7 +390,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @lock_state_machine
     @Observable.observed
-    def remove_input_data_port(self, data_port_id, force=False, destruct=True):
+    def remove_input_data_port(self, data_port_id, force=False, destroy=True):
         """Remove an input data port from the state
 
         :param int data_port_id: the id or the output data port to remove
@@ -451,7 +451,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @lock_state_machine
     @Observable.observed
-    def remove_output_data_port(self, data_port_id, force=False, destruct=True):
+    def remove_output_data_port(self, data_port_id, force=False, destroy=True):
         """Remove an output data port from the state
 
         :param int data_port_id: the id of the output data port to remove
@@ -624,25 +624,25 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return outcome_id
 
     @lock_state_machine
-    def remove(self, state_element, force=False, destruct=True):
+    def remove(self, state_element, force=False, destroy=True):
         """Remove item from state
 
         :param StateElement state_element: State element to be removed
         :param bool force: if the removal should be forced without checking constraints
-        :param bool destruct: a flag that signals that the state element will be fully removed and disassembled
+        :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, Outcome):
-            self.remove_outcome(state_element.outcome_id, force, destruct=destruct)
+            self.remove_outcome(state_element.outcome_id, force, destroy=destroy)
         elif isinstance(state_element, InputDataPort):
-            self.remove_input_data_port(state_element.data_port_id, force, destruct=destruct)
+            self.remove_input_data_port(state_element.data_port_id, force, destroy=destroy)
         elif isinstance(state_element, OutputDataPort):
-            self.remove_output_data_port(state_element.data_port_id, force, destruct=destruct)
+            self.remove_output_data_port(state_element.data_port_id, force, destroy=destroy)
         else:
             raise ValueError("Cannot remove state_element with invalid type")
 
     @lock_state_machine
     @Observable.observed
-    def remove_outcome(self, outcome_id, force=False, destruct=True):
+    def remove_outcome(self, outcome_id, force=False, destroy=True):
         """Remove an outcome from the state
 
         :param int outcome_id: the id of the outcome to remove
@@ -907,7 +907,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return removed_element
 
     @lock_state_machine
-    def destruct(self):
+    def destroy(self):
         """ Removes all the state elements.
 
         :return:
