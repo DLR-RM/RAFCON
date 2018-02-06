@@ -13,6 +13,7 @@ test_multithreading_lock = Lock()
 
 gui_thread = None
 gui_ready = None
+gui_executed_once = False
 exception_info = None
 result = None
 
@@ -341,7 +342,7 @@ def run_gui_thread(gui_config=None, runtime_config=None):
 def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=None, timeout=5, patch_threading=True):
     if patch_threading:
         patch_gtkmvc_model_mt()
-    global gui_ready, gui_thread
+    global gui_ready, gui_thread, gui_executed_once
     # IMPORTANT enforce gtk.gtkgl import in the python main thread to avoid segfaults
     import gtk.gtkgl
 
@@ -362,6 +363,7 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     # IMPORTANT signal handler and respective import of gui.start to avoid that singletons are created in this thread
     # -> TODO cleanup with app-class creation
     initialize_signal_handler()
+    gui_executed_once = True
 
 
 def wait_for_gui_quit(timeout=5):
@@ -501,12 +503,14 @@ def dummy_gui(caplog):
     :param caplog: the caplog object provided by pytests's caplog fixture
     :return: None
     """
-    run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    try:
-        # do nothing, just open gui and close it afterwards
-        assert True
-    except:
-        raise
-    finally:
-        close_gui()
-        shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+    global gui_executed_once
+    if not gui_executed_once:
+        run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+        try:
+            # do nothing, just open gui and close it afterwards
+            assert True
+        except:
+            raise
+        finally:
+            close_gui()
+            shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
