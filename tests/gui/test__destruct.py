@@ -446,14 +446,25 @@ def run_simple_modification_construction():
     testing_utils.call_gui_callback(check_state_editor_models, sm_m, sm_m.root_state)
     import rafcon.gui.helpers.state
     list_exsisting_state_ids = sm_m.root_state.states.keys()
-    testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
-                                    rafcon.gui.helpers.state.StateType.EXECUTION)
+
+    print "%" * 50
+    print "check before add_state"
+    print "%" * 50
+
+    # testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
+    #                                 rafcon.gui.helpers.state.StateType.EXECUTION)
+    print "%" * 50
+    print "after first add"
+    print "%" * 50
     testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
                                     rafcon.gui.helpers.state.StateType.HIERARCHY)
 
     new_state_ids = [state_id for state_id, state_m in sm_m.root_state.states.iteritems() if state_id not in list_exsisting_state_ids]
     for state_id in new_state_ids:
         testing_utils.call_gui_callback(sm_m.root_state.state.remove_state, state_id)
+    print "%" * 50
+    print "after deletes"
+    print "%" * 50
     import time
     time.sleep(1)
     # import test_group_ungroup
@@ -973,6 +984,83 @@ def test_model_and_core_modification_history_destruct_with_gui(caplog):
                           gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
 
 
+def run_copy_and_paste():
+
+    testing_utils.call_gui_callback(create_models)
+
+    import rafcon.gui.helpers.state
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    from rafcon.gui.singleton import main_window_controller
+    import rafcon.gui.singleton as gui_singletons
+    menu_bar_controller = main_window_controller.get_controller("menu_bar_controller")
+    state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
+
+    # select state 1
+    for sm_model in sm_m.root_state.states.values():
+        if sm_model.state.name == "State1":
+            selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
+            testing_utils.call_gui_callback(selection.add, sm_model)
+            print "select state: ", sm_model.state
+
+    # focus correct page
+    page_id = state_machines_ctrl.get_page_num(sm_m.state_machine.state_machine_id)
+    page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
+    from gui.widget.test_menu_bar import focus_graphical_editor_in_page
+    focus_graphical_editor_in_page(page)
+
+    # copy state 1
+    testing_utils.call_gui_callback(menu_bar_controller.on_copy_selection_activate, None, None)
+    print "copy state: ", sm_model.state
+
+    # clear selection
+    testing_utils.call_gui_callback(selection.clear)
+
+    # select state 3
+    for sm_model in sm_m.root_state.states.values():
+        if sm_model.state.name == "State3":
+            from rafcon.gui.models.container_state import ContainerStateModel
+            assert isinstance(sm_model, ContainerStateModel)
+            testing_utils.call_gui_callback(selection.add, sm_model)
+            print "select state: ", sm_model.state
+
+    # focus
+    focus_graphical_editor_in_page(page)
+
+    # paste state 1 into state 3
+    testing_utils.call_gui_callback(menu_bar_controller.on_paste_clipboard_activate, None, None)
+    print "paste state into target state: ", sm_model.state
+
+    # import time
+    # time.sleep(10.0)
+
+    testing_utils.call_gui_callback(rafcon.core.singleton.state_machine_manager.delete_all_state_machines)
+
+
+def test_copy_paste_with_modification_history_destruct_with_gui(caplog):
+    if not testing_utils.used_gui_threads:
+        testing_utils.dummy_gui(None)
+
+    import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.state_element
+    import rafcon.gui.controllers.utils.extended_controller
+    import rafcon.core.states.hierarchy_state
+
+    searched_class = rafcon.core.states.execution_state.ExecutionState
+
+    elements = [
+                (rafcon.core.states.state.State, False),
+                (rafcon.core.state_elements.state_element.StateElement, False),
+                (rafcon.gui.models.abstract_state.AbstractStateModel, False),
+                (rafcon.gui.models.state_element.StateElementModel, False),
+                (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
+                (gtkmvc.View, True),
+                (gtkmvc.Controller, True),
+                (searched_class, False),
+                ]
+    _test_widget_destruct(caplog, elements, searched_class, run_copy_and_paste,
+                          gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
+
+
 def _test_widget_destruct(caplog, elements, searched_class, func, gui_config):
     # if core test run before
     import rafcon.gui.singleton
@@ -985,16 +1073,20 @@ def _test_widget_destruct(caplog, elements, searched_class, func, gui_config):
 
     run_patching(elements)
 
+    exception_during_test_method = None
+
     try:
         print "%" * 50
         print "before test function print"
         print "%" * 50
         func()
     except Exception as e:
-        raise e
+        exception_during_test_method = e
     finally:
         testing_utils.close_gui()
         rafcon.gui.singleton.main_window_controller = None  # could be moved to the testing_utils but is not needed
+        if exception_during_test_method:
+            raise exception_during_test_method
         print "%" * 50
         print "check for existing objects print"
         print "%" * 50
@@ -1006,11 +1098,12 @@ def _test_widget_destruct(caplog, elements, searched_class, func, gui_config):
 
 if __name__ == '__main__':
     testing_utils.dummy_gui(None)
-    test_core_destruct(None)
-    test_model_and_core_destruct(None)
+    # test_core_destruct(None)
+    # test_model_and_core_destruct(None)
     # test_simple_model_and_core_destruct_with_gui(None)
     # test_simple_execution_model_and_core_destruct_with_gui(None)
     # test_complex_model_and_core_destruct_with_gui(None)
-    test_model_and_core_modification_history_destruct_with_gui(None)
+    # test_model_and_core_modification_history_destruct_with_gui(None)
+    test_copy_paste_with_modification_history_destruct_with_gui(None)
     # import pytest
     # pytest.main(['-s', __file__])
