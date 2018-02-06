@@ -148,7 +148,8 @@ class StateMachine(Observable, JSONObject, Hashable):
         # execution finished, close execution history log file (if present)
         if len(self._execution_histories) > 0:
             if self._execution_histories[-1].execution_history_storage is not None:
-                self._execution_histories[-1].execution_history_storage.close()
+                set_read_and_writable_for_all = global_config.get_config_value("EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL", False)
+                self._execution_histories[-1].execution_history_storage.close(set_read_and_writable_for_all)
         from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
@@ -221,9 +222,9 @@ class StateMachine(Observable, JSONObject, Hashable):
                 base_dir = base_dir.replace('%RAFCON_TEMP_PATH_BASE', RAFCON_TEMP_PATH_BASE)
             if not os.path.exists(base_dir):
                 os.makedirs(base_dir)
-            shelve_name = os.path.join(base_dir, 'rafcon_execution_log_%s_%s.shelve' %
-                                       (self.root_state.name.replace(' ', '-'),
-                                        time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())))
+            shelve_name = os.path.join(base_dir, '%s_rafcon_execution_log_%s.shelve' %
+                                       (time.strftime('%Y-%m-%d-%H:%M:%S', time.localtime()),
+                                        self.root_state.name.replace(' ', '-')))
             execution_history_store = ExecutionHistoryStorage(shelve_name)
             new_execution_history.set_execution_history_storage(execution_history_store)
         self._execution_histories.append(new_execution_history)
