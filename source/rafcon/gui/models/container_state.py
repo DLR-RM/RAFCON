@@ -247,7 +247,10 @@ class ContainerStateModel(StateModel):
             if "add" in info.method_name:
                 self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
             elif "remove" in info.method_name:
-                self.remove_additional_model(model_list, data_list, model_name, model_key)
+                # TODO D-Enable the next lines with default value destroy True
+                # print "remove", info.method_name, info.args, info.kwargs, 'destroy', info.kwargs.get('destroy', False)
+                destroy = info.kwargs.get('destroy', False)
+                self.remove_additional_model(model_list, data_list, model_name, model_key, destroy)
             elif info.method_name in ["transitions", "data_flows", "states", "scoped_variables"]:
                 self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
 
@@ -255,7 +258,6 @@ class ContainerStateModel(StateModel):
     def change_state_type(self, model, prop_name, info):
         if info.method_name != 'change_state_type':
             return
-
         self.change_state_type.__func__.last_notification_model = model
         self.change_state_type.__func__.last_notification_prop_name = prop_name
         self.change_state_type.__func__.last_notification_info = info

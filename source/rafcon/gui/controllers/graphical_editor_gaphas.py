@@ -309,7 +309,9 @@ class GraphicalEditorController(ExtendedController):
     def state_machine_destruction(self, model, prop_name, info):
         """ Clean up when state machine is being destructed """
         root_state_v = self.canvas.get_view_for_model(self.root_state_m)
-        root_state_v.remove()
+        # TODO D-Fix this work around
+        if root_state_v:
+            root_state_v.remove()
 
     @ExtendedController.observe("state_meta_signal", signal=True)
     def meta_changed_notify_after(self, state_machine_m, _, info):

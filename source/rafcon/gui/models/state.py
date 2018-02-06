@@ -237,7 +237,7 @@ class StateModel(AbstractStateModel):
             return True
         return False
 
-    def remove_additional_model(self, model_list_or_dict, core_objects_dict, model_name, model_key):
+    def remove_additional_model(self, model_list_or_dict, core_objects_dict, model_name, model_key, destroy=True):
         """Remove one unnecessary model
 
         The method will search for the first model-object out of
@@ -260,10 +260,12 @@ class StateModel(AbstractStateModel):
                     break
             if not found:
                 if model_key is None:
-                    # model.prepare_destruction()
+                    # if destroy:
+                    #     model.prepare_destruction()
                     model_list_or_dict.remove(model)
                 else:
-                    # model_list_or_dict[model_or_key].prepare_destruction()
+                    # if destroy:
+                    #     model_list_or_dict[model_or_key].prepare_destruction()
                     del model_list_or_dict[model_or_key]
                 return
 

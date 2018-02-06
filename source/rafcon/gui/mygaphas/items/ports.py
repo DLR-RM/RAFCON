@@ -77,7 +77,14 @@ class PortView(object):
         :param str name: Name of teh requested attribute
         :return: Parental value of the attribute
         """
-        return getattr(self.parent, name)
+        # TODO D-Find the reason why this work around is needed -> maybe prepare_destruction ##############
+        try:
+            return getattr(self.parent, name)
+        except Exception:
+            if name == "name":
+                return self._name
+            raise
+        # TODO end ########################################################################################
 
     def handles(self):
         return [self.handle]

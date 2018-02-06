@@ -646,7 +646,7 @@ class ContainerState(State):
         child_scoped_variables = [sv for sv_id, sv in state.scoped_variables.iteritems()]
 
         # remove state that should be ungrouped
-        self.remove_state(state_id, recursive=False, destroy=False)
+        self.remove_state(state_id, recursive=False, destroy=True)
 
         # fill elements into parent state and remember id mapping from child to parent state to map other properties
         state_id_dict = {}
