@@ -61,18 +61,18 @@ class ContainerStateModel(StateModel):
             # Create hierarchy
             model_class = get_state_model_class_for_state(state)
             if model_class is not None:
-                self.add_specific_model(self.states, state, model_class, state.state_id, load_meta_data)
+                self._add_model(self.states, state, model_class, state.state_id, load_meta_data)
             else:
                 logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
 
         for transition in container_state.transitions.itervalues():
-            self.add_specific_model(self.transitions, transition, TransitionModel)
+            self._add_model(self.transitions, transition, TransitionModel)
 
         for data_flow in container_state.data_flows.itervalues():
-            self.add_specific_model(self.data_flows, data_flow, DataFlowModel)
+            self._add_model(self.data_flows, data_flow, DataFlowModel)
 
         for scoped_variable in self.state.scoped_variables.itervalues():
-            self.add_specific_model(self.scoped_variables, scoped_variable, ScopedVariableModel)
+            self._add_model(self.scoped_variables, scoped_variable, ScopedVariableModel)
 
         self.update_child_is_start()
 
