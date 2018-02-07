@@ -340,6 +340,14 @@ def run_gui_thread(gui_config=None, runtime_config=None):
 
 
 def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=None, timeout=5, patch_threading=True):
+
+    if gui_config is None:
+        gui_config = {'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False}
+    if 'HISTORY_ENABLED' not in gui_config.keys():
+        gui_config['HISTORY_ENABLED'] = False
+    if 'AUTO_BACKUP_ENABLED' not in gui_config.keys():
+        gui_config['AUTO_BACKUP_ENABLED'] = False
+
     if patch_threading:
         patch_gtkmvc_model_mt()
     global gui_ready, gui_thread, gui_executed_once
