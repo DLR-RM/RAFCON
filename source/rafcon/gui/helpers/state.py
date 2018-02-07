@@ -152,7 +152,7 @@ def extract_child_models_of_state(state_m, new_state_class):
 
     child_models = {}
     for prop_name in model_properties:
-        child_models[prop_name] = state_m.__getattribute__(prop_name)
+        child_models[prop_name] = getattr(state_m, prop_name)
 
     return child_models
 
@@ -191,7 +191,7 @@ def create_state_model_for_state(new_state, state_element_models):
                     del new_state_m.states[child_state_id]
 
             # Then, the old state models can be assigned
-            new_state_m.__setattr__(prop_name, value)
+            setattr(new_state_m, prop_name, value)
             for state_m in new_state_m.states.itervalues():
                 state_m.parent = new_state_m
 
@@ -201,17 +201,17 @@ def create_state_model_for_state(new_state, state_element_models):
 
         elif prop_name in ['outcomes', 'input_data_ports', 'output_data_ports', 'data_flows', 'scoped_variables']:
             # First, all automatically generated child elements must be removed
-            for model in new_state_m.__getattribute__(prop_name):
+            for model in getattr(new_state_m, prop_name, []):
                 model.prepare_destruction()
-            del new_state_m.__getattribute__(prop_name)[:]
+            del getattr(new_state_m, prop_name, [])[:]
 
             # Then, the old state element models can be assigned
-            new_state_m.__setattr__(prop_name, value)
-            for model in new_state_m.__getattribute__(prop_name):
+            setattr(new_state_m, prop_name, value)
+            for model in getattr(new_state_m, prop_name, []):
                 model.parent = new_state_m
         else:
             # Only the old meta data is left to be assigned
-            new_state_m.__setattr__(prop_name, value)
+            setattr(new_state_m, prop_name, value)
 
     # handle special case of BarrierConcurrencyState -> re-insert decider state model
     if isinstance(new_state, BarrierConcurrencyState):
