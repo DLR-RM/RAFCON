@@ -88,6 +88,7 @@ def trigger_dialog_tests():
 
 
 def test_dialog_test(caplog):
+    testing_utils.dummy_gui(None)
 
     testing_utils.initialize_environment(gui_already_started=False)
 

@@ -220,6 +220,9 @@ def test_add_remove_history(caplog):
     # remove data_flow
 
     # create testbed
+
+    testing_utils.dummy_gui(None)
+
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     [logger, sm_model, state_dict] = create_sm_model()
@@ -569,6 +572,9 @@ def test_state_property_modifications_history(caplog):
     # change child_execution
 
     # create testbed
+
+    testing_utils.dummy_gui(None)
+
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     [logger, sm_model, state_dict] = create_sm_model()
@@ -711,6 +717,9 @@ def test_outcome_property_modifications_history(caplog):
     # change name
 
     # create testbed
+
+    testing_utils.dummy_gui(None)
+
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     [logger, sm_model, state_dict] = create_sm_model()
@@ -786,6 +795,9 @@ def test_transition_property_modifications_history(caplog):
     # modify_transition_to_state
 
     # create testbed
+
+    testing_utils.dummy_gui(None)
+
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     [logger, sm_model, state_dict] = create_sm_model()
@@ -887,6 +899,9 @@ def test_input_port_modify_notification(caplog):
     # change datatype
 
     # create testbed
+
+    testing_utils.dummy_gui(None)
+
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     [logger, sm_model, state_dict] = create_sm_model()
@@ -938,6 +953,9 @@ def test_output_port_modify_notification(caplog):
     # change datatype
 
     # create testbed
+
+    testing_utils.dummy_gui(None)
+
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     [logger, sm_model, state_dict] = create_sm_model()
@@ -986,6 +1004,9 @@ def test_scoped_variable_modify_notification(caplog):
     # change datatype
 
     # create testbed
+
+    testing_utils.dummy_gui(None)
+
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     [logger, sm_model, state_dict] = create_sm_model()
@@ -1049,6 +1070,9 @@ def test_data_flow_property_modifications_history(caplog):
     # modify_transition_to_state
 
     # create testbed
+
+    testing_utils.dummy_gui(None)
+
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     [logger, sm_model, state_dict] = create_sm_model()
@@ -1156,6 +1180,8 @@ def test_data_flow_property_modifications_history(caplog):
 @pytest.mark.parametrize("with_gui", [False, True])
 def test_state_machine_modifications_with_gui(with_gui, caplog):
 
+    testing_utils.dummy_gui(None)
+
     if with_gui:
         testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
         e = None
@@ -1180,6 +1206,8 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
 
 @pytest.mark.parametrize("with_gui", [True])
 def test_state_type_change_bugs_with_gui(with_gui, caplog):
+
+    testing_utils.dummy_gui(None)
 
     if with_gui:
         testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})

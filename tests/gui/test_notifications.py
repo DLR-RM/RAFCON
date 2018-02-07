@@ -417,6 +417,7 @@ def full_observer_dict_reset(observer_dict):
 
 
 def test_outcome_add_remove_notification(caplog):
+    testing_utils.dummy_gui(None)
     import rafcon.gui.singleton
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -467,6 +468,7 @@ def test_outcome_modify_notification(caplog):
         - name      (setter-method -> 1 before and 1 after notification)
         Observable Methods of Outcome DO NOT EXIST.
     """
+    testing_utils.dummy_gui(None)
     # core elements
     import rafcon.core.singleton
 
@@ -545,6 +547,7 @@ def test_outcome_modify_notification(caplog):
 
 
 def test_input_port_add_remove_notification(caplog):
+    testing_utils.dummy_gui(None)
     # core elements
     import rafcon.core.singleton
     # create testbed
@@ -601,6 +604,7 @@ def test_input_port_modify_notification(caplog):
         Observable Methods of InputDataPort are:
         - change_data_type  (method + data_type-setter -> 2 before and 2 after notification)
     """
+    testing_utils.dummy_gui(None)
     # core elements
     import rafcon.core.singleton
 
@@ -664,6 +668,7 @@ def test_input_port_modify_notification(caplog):
 
 
 def test_output_port_add_remove_notification(caplog):
+    testing_utils.dummy_gui(None)
     import rafcon.core.singleton
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
@@ -720,6 +725,7 @@ def test_output_port_modify_notification(caplog):
         Observable Methods of OutputDataPort are:
         - change_data_type  (method + data_type-setter -> 2 before and 2 after notification)
     """
+    testing_utils.dummy_gui(None)
     # core elements
     import rafcon.core.singleton
 
@@ -784,6 +790,7 @@ def test_output_port_modify_notification(caplog):
 
 
 def test_scoped_variable_add_remove_notification(caplog):
+    testing_utils.dummy_gui(None)
     import rafcon.core.singleton
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
@@ -840,6 +847,7 @@ def test_scoped_variable_modify_notification(caplog):
         Observable Methods of ScopedVariable are:
         - change_data_type  (method + data_type-setter -> 2 before and 2 after notification)
     """
+    testing_utils.dummy_gui(None)
     # core elements
     import rafcon.core.singleton
 
@@ -939,6 +947,7 @@ def test_scoped_variable_modify_notification(caplog):
 
 
 def test_data_flow_add_remove_notification(caplog):
+    testing_utils.dummy_gui(None)
     import rafcon.core.singleton
     from rafcon.core.states.execution_state import ExecutionState
     # create testbed
@@ -1006,6 +1015,7 @@ def test_data_flow_modify_notification(caplog):
         - modify_origin     (method -> 1 before and 1 after notification)
         - modify_target     (method -> 1 before and 1 after notification)
     """
+    testing_utils.dummy_gui(None)
     import rafcon.core.singleton
     from rafcon.core.states.execution_state import ExecutionState
 
@@ -1120,6 +1130,7 @@ def test_transition_add_remove_notification(caplog):
     # core elements
     import rafcon.core.singleton
     from rafcon.core.states.execution_state import ExecutionState
+    testing_utils.dummy_gui(None)
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -1187,6 +1198,7 @@ def test_transition_modify_notification(caplog):
         - modify_target     (method -> 1 before and 1 after notification)
     """
     # core elements
+    testing_utils.dummy_gui(None)
     import rafcon.core.singleton
     from rafcon.core.states.execution_state import ExecutionState
 
@@ -1299,6 +1311,7 @@ def test_transition_modify_notification(caplog):
 
 def test_state_add_remove_notification(caplog):
     # core elements
+    testing_utils.dummy_gui(None)
     import rafcon.core.singleton
     from rafcon.core.states.execution_state import ExecutionState
     # create testbed
@@ -1401,6 +1414,7 @@ def test_state_property_modify_notification(caplog):
         - add_data_flow, remove_data_flow
         - add_scoped_variable, remove_scoped_variable
     """
+    testing_utils.dummy_gui(None)
     # core elements
     import rafcon.core.singleton
     from rafcon.core.states.execution_state import ExecutionState

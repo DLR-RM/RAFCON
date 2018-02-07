@@ -16,6 +16,8 @@ def test_start_script_open():
     """ Test core.start.py script run on console which open a state machine, run it and final checks the output file on
     consistency.
     """
+    testing_utils.dummy_gui(None)
+
     script = join(testing_utils.RAFCON_PATH, "core", "start.py")
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     cmd = "%s -o %s" % (script, start_path)
@@ -33,6 +35,7 @@ def test_start_script_state():
     """ Test core.start.py script run by python call which open a state machine, run from a specific state and  final
     checks the output file on consistency.
     """
+    testing_utils.dummy_gui(None)
     script = join(testing_utils.RAFCON_PATH, "core", "start.py")
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     state_path = "UTUOSC/AHWBOG"
@@ -51,6 +54,7 @@ def test_start_script_state():
 def test_initial_default_config_folder_generation():
     """ Test core.start.py and gui.start.py script run on console which should initiate the config folder.
     """
+    testing_utils.dummy_gui(None)
 
     user_config_folder = rafcon.utils.filesystem.get_default_config_path()
     backup_user_config_folder = os.path.join(os.path.expanduser('~'), '.config', 'rafcon_backup')
@@ -75,6 +79,7 @@ def test_start_script_valid_config():
     """ Test rafcon_start console call which run a rafcon instance with handed config.yaml file, open a state machine,
     run it and final checks the output file on consistency.
     """
+    testing_utils.dummy_gui(None)
     # valid config
     bin_path = join(dirname(testing_utils.RAFCON_PATH), "..", "bin")
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
@@ -93,6 +98,7 @@ def test_start_script_valid_config():
 def test_start_script_valid_rmpm_env():
     """Tests the execution of rafcon_start in an environment created by RMPM
     """
+    testing_utils.dummy_gui(None)
     import distutils.spawn
     rmpm_env = os.environ.copy()
     rmpm_env["PATH"] = "/volume/software/common/packages/rmpm/latest/bin/{}:".format(os.getenv(
@@ -115,6 +121,7 @@ def test_start_script_print_help_with_gui():
     """ Test rafcon_start_gui console call which run a RAFCON instance and let it print the helper message and checks
     if the process terminates correctly.
     """
+    testing_utils.dummy_gui(None)
     script = join(testing_utils.RAFCON_PATH, "gui", "start.py")
     # start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     # cmd = "%s -o %s" % (script, start_path)

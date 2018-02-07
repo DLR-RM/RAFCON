@@ -747,6 +747,7 @@ def test_add_remove_models(caplog):
     # - change data_flow
 
     # remove data_flow
+    testing_utils.dummy_gui(None)
 
     from rafcon.gui.config import global_gui_config
     from rafcon.core.script import Script
@@ -1052,6 +1053,7 @@ def test_state_property_models_consistency(caplog):
     # change start_state_id
 
     # change child_execution
+    testing_utils.dummy_gui(None)
 
     from rafcon.gui.config import global_gui_config
     from rafcon.core.script import Script
@@ -1187,6 +1189,7 @@ def test_outcome_property__models_consistency(caplog):
     # outcome properties
 
     # change name
+    testing_utils.dummy_gui(None)
 
     from rafcon.gui.config import global_gui_config
 
@@ -1247,6 +1250,7 @@ def test_transition_property_models_consistency(caplog):
     # modify_transition_to_outcome
 
     # modify_transition_to_state
+    testing_utils.dummy_gui(None)
 
     from rafcon.gui.config import global_gui_config
     from rafcon.core.states.execution_state import ExecutionState
@@ -1332,6 +1336,7 @@ def test_input_port_modify_notification(caplog):
     # change default_value
 
     # change datatype
+    testing_utils.dummy_gui(None)
 
     from rafcon.gui.config import global_gui_config
 
@@ -1374,6 +1379,7 @@ def test_output_port_modify_notification(caplog):
     # change default_value
 
     # change datatype
+    testing_utils.dummy_gui(None)
 
     from rafcon.gui.config import global_gui_config
 
@@ -1415,6 +1421,7 @@ def test_scoped_variable_modify_notification(caplog):
     # change default_value
 
     # change datatype
+    testing_utils.dummy_gui(None)
 
     from rafcon.gui.config import global_gui_config
 
@@ -1472,6 +1479,7 @@ def test_data_flow_property_modifications_history(caplog):
     # modify_transition_to_key
 
     # modify_transition_to_state
+    testing_utils.dummy_gui(None)
 
     from rafcon.gui.config import global_gui_config
     from rafcon.core.states.execution_state import ExecutionState

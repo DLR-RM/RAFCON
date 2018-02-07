@@ -1,4 +1,5 @@
 import pytest
+import testing_utils
 
 from gtkmvc.observer import Observer
 
@@ -63,6 +64,7 @@ def get_models():
 
 
 def test_add_set_remove_clear():
+    testing_utils.dummy_gui(None)
     from rafcon.gui.models.selection import Selection
     selection = Selection()
     signal_observer = SignalCounter(selection, "selection_changed_signal")
@@ -127,6 +129,7 @@ def test_add_set_remove_clear():
 
 
 def test_all_models():
+    testing_utils.dummy_gui(None)
     from rafcon.core.states.state import State
     from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
     from rafcon.core.state_elements.scope import ScopedVariable
@@ -186,6 +189,7 @@ def test_all_models():
 
 
 def test_invalid_model():
+    testing_utils.dummy_gui(None)
     from rafcon.core.states.state import State
     from rafcon.gui.models.selection import Selection
     from rafcon.gui.models.meta import MetaModel
@@ -206,6 +210,7 @@ def test_invalid_model():
 
 
 def test_adding_same_model_twice():
+    testing_utils.dummy_gui(None)
     from rafcon.gui.models.selection import Selection, reduce_to_parent_states
 
     selection = Selection()
@@ -228,6 +233,7 @@ def test_adding_same_model_twice():
 
 
 def test_selection_reduction():
+    testing_utils.dummy_gui(None)
     from rafcon.gui.models.selection import Selection
     selection = Selection()
     states_m, outcomes_e_m, outcomes_h_m = get_models()
@@ -268,6 +274,7 @@ def test_selection_reduction():
 
 
 def test_focus():
+    testing_utils.dummy_gui(None)
     from rafcon.gui.models.selection import Selection
 
     selection = Selection()

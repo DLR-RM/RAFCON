@@ -351,7 +351,7 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     gui_thread = Thread(target=run_gui_thread, args=[gui_config, runtime_config])
     gui_thread.start()
 
-    used_gui_threads.append(gui_thread)  # TODO why now here before it was in shutdown
+    used_gui_threads.append(gui_thread)
     print "used_gui_threads", used_gui_threads
     # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
     call_gui_callback(initialize_environment_core, core_config, libraries)

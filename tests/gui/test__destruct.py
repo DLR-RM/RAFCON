@@ -822,6 +822,8 @@ def run_un_patching(elements):
 
 
 def test_core_destruct(caplog):
+    testing_utils.dummy_gui(None)
+
     elements = [
                 (rafcon.core.states.state.State, True),
                 (rafcon.core.state_elements.state_element.StateElement, True),
@@ -848,6 +850,9 @@ def test_core_destruct(caplog):
 
 
 def test_model_and_core_destruct(caplog):
+
+    testing_utils.dummy_gui(None)
+
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False},
                                          gui_already_started=False)
 
@@ -877,8 +882,7 @@ def test_model_and_core_destruct(caplog):
 
 def test_simple_model_and_core_destruct_with_gui(caplog):
 
-    if not testing_utils.used_gui_threads:
-        testing_utils.dummy_gui(None)
+    testing_utils.dummy_gui(None)
 
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
@@ -910,8 +914,7 @@ def test_simple_model_and_core_destruct_with_gui(caplog):
 
 def test_simple_execution_model_and_core_destruct_with_gui(caplog):
 
-    if not testing_utils.used_gui_threads:
-        testing_utils.dummy_gui(None)
+    testing_utils.dummy_gui(None)
 
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
@@ -935,8 +938,8 @@ def test_simple_execution_model_and_core_destruct_with_gui(caplog):
 
 
 def test_complex_model_and_core_destruct_with_gui(caplog):
-    if not testing_utils.used_gui_threads:
-        testing_utils.dummy_gui(None)
+
+    testing_utils.dummy_gui(None)
 
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
@@ -960,8 +963,8 @@ def test_complex_model_and_core_destruct_with_gui(caplog):
 
 
 def test_model_and_core_modification_history_destruct_with_gui(caplog):
-    if not testing_utils.used_gui_threads:
-        testing_utils.dummy_gui(None)
+
+    testing_utils.dummy_gui(None)
 
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
@@ -1037,8 +1040,8 @@ def run_copy_and_paste():
 
 
 def test_copy_paste_with_modification_history_destruct_with_gui(caplog):
-    if not testing_utils.used_gui_threads:
-        testing_utils.dummy_gui(None)
+
+    testing_utils.dummy_gui(None)
 
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element

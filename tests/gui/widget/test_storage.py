@@ -276,6 +276,8 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
 def test_storage_with_gui(with_gui, caplog):
     print "test storage with gui", with_gui
 
+    testing_utils.dummy_gui(None)
+
     if with_gui:
         testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
     else:
@@ -313,6 +315,9 @@ def check_state_recursively_if_state_scripts_are_valid(state):
 
 def test_on_clean_storing_with_name_in_path(caplog):
     print "test_on_clean_storing_with_name_in_path"
+
+    testing_utils.dummy_gui(None)
+
     testing_utils.initialize_environment(
         gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False}, gui_already_started=False)
 
