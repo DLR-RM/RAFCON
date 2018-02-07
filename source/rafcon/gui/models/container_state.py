@@ -55,24 +55,12 @@ class ContainerStateModel(StateModel):
         self.data_flows = []
         self.scoped_variables = []
 
-        # Create model for each child class
-        states = container_state.states
-        for state in states.itervalues():
-            # Create hierarchy
-            model_class = get_state_model_class_for_state(state)
-            if model_class is not None:
-                self._add_model(self.states, state, model_class, state.state_id, load_meta_data)
-            else:
-                logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
+        self._load_scoped_variable_models()
 
-        for transition in container_state.transitions.itervalues():
-            self._add_model(self.transitions, transition, TransitionModel)
+        self._load_child_state_models(load_meta_data)
 
-        for data_flow in container_state.data_flows.itervalues():
-            self._add_model(self.data_flows, data_flow, DataFlowModel)
-
-        for scoped_variable in self.state.scoped_variables.itervalues():
-            self._add_model(self.scoped_variables, scoped_variable, ScopedVariableModel)
+        self._load_transition_models()
+        self._load_data_flow_models()
 
         self.update_child_is_start()
 
@@ -81,6 +69,36 @@ class ContainerStateModel(StateModel):
 
         # this class is an observer of its own properties:
         self.register_observer(self)
+
+    def _load_child_state_models(self, load_meta_data):
+        """Adds models for each child state of the state
+
+        :param bool load_meta_data: Whether to load the meta data of the child state
+        """
+        # Create model for each child class
+        child_states = self.state.states
+        for child_state in child_states.itervalues():
+            # Create hierarchy
+            model_class = get_state_model_class_for_state(child_state)
+            if model_class is not None:
+                self._add_model(self.states, child_state, model_class, child_state.state_id, load_meta_data)
+            else:
+                logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(child_state)))
+
+    def _load_scoped_variable_models(self):
+        """ Adds models for each scoped variable of the state """
+        for scoped_variable in self.state.scoped_variables.itervalues():
+            self._add_model(self.scoped_variables, scoped_variable, ScopedVariableModel)
+
+    def _load_data_flow_models(self):
+        """ Adds models for each data flow of the state """
+        for data_flow in self.state.data_flows.itervalues():
+            self._add_model(self.data_flows, data_flow, DataFlowModel)
+
+    def _load_transition_models(self):
+        """ Adds models for each transition of the state """
+        for transition in self.state.transitions.itervalues():
+            self._add_model(self.transitions, transition, TransitionModel)
 
     def __contains__(self, item):
         """Checks whether `item` is an element of the container state model
