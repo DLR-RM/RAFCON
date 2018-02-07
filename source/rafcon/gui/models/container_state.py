@@ -44,11 +44,11 @@ class ContainerStateModel(StateModel):
 
     __observables__ = ("states", "transitions", "data_flows", "scoped_variables")
 
-    def __init__(self, container_state, parent=None, meta=None, load_meta_data=True):
+    def __init__(self, container_state, parent=None, meta=None, load_meta_data=True, expected_future_models=None):
         """Constructor
         """
         assert isinstance(container_state, ContainerState)
-        super(ContainerStateModel, self).__init__(container_state, parent, meta)
+        super(ContainerStateModel, self).__init__(container_state, parent, meta, load_meta_data, expected_future_models)
 
         self.states = {}
         self.transitions = []
@@ -61,18 +61,18 @@ class ContainerStateModel(StateModel):
             # Create hierarchy
             model_class = get_state_model_class_for_state(state)
             if model_class is not None:
-                self.states[state.state_id] = model_class(state, parent=self, load_meta_data=load_meta_data)
+                self.add_specific_model(self.states, state, model_class, state.state_id, load_meta_data)
             else:
                 logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(state)))
 
         for transition in container_state.transitions.itervalues():
-            self.transitions.append(TransitionModel(transition, self))
+            self.add_specific_model(self.transitions, transition, TransitionModel)
 
         for data_flow in container_state.data_flows.itervalues():
-            self.data_flows.append(DataFlowModel(data_flow, self))
+            self.add_specific_model(self.data_flows, data_flow, DataFlowModel)
 
         for scoped_variable in self.state.scoped_variables.itervalues():
-            self.scoped_variables.append(ScopedVariableModel(scoped_variable, self))
+            self.add_specific_model(self.scoped_variables, scoped_variable, ScopedVariableModel)
 
         self.update_child_is_start()
 

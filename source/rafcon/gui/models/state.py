@@ -37,11 +37,10 @@ class StateModel(AbstractStateModel):
 
     expected_future_models = None
 
-    def __init__(self, state, parent=None, meta=None, load_meta_data=True):
+    def __init__(self, state, parent=None, meta=None, load_meta_data=True, expected_future_models=None):
         """Constructor"""
+        self.expected_future_models = set() if expected_future_models is None else expected_future_models
         super(StateModel, self).__init__(state, parent, meta)
-
-        self.expected_future_models = set()
 
         if load_meta_data and type(self) == StateModel:
             self.load_meta_data()
@@ -158,21 +157,21 @@ class StateModel(AbstractStateModel):
         """
         self.input_data_ports = []
         for input_data_port in self.state.input_data_ports.itervalues():
-            self.input_data_ports.append(DataPortModel(input_data_port, self))
+            self.add_specific_model(self.input_data_ports, input_data_port, DataPortModel)
 
     def _load_output_data_port_models(self):
         """Reloads the output data port models directly from the the state
         """
         self.output_data_ports = []
         for output_data_port in self.state.output_data_ports.itervalues():
-            self.output_data_ports.append(DataPortModel(output_data_port, self))
+            self.add_specific_model(self.output_data_ports, output_data_port, DataPortModel)
 
     def _load_outcome_models(self):
         """Reloads the input data port models directly from the the state
         """
         self.outcomes = []
         for outcome in self.state.outcomes.itervalues():
-            self.outcomes.append(OutcomeModel(outcome, self))
+            self.add_specific_model(self.outcomes, outcome, OutcomeModel)
 
     def re_initiate_model_list(self, model_list_or_dict, core_objects_dict, model_name, model_class, model_key):
         """Recreate model list
@@ -193,6 +192,31 @@ class StateModel(AbstractStateModel):
         if core_objects_dict:
             for _ in core_objects_dict:
                 self.add_missing_model(model_list_or_dict, core_objects_dict, model_name, model_class, model_key)
+
+    def add_specific_model(self, model_list_or_dict, core_element, model_class, model_key=None, load_meta_data=True):
+        """ Adds one model for a specific core element.
+
+        The method will add a model for a respective core object and checks if there is a respective model class in the
+        expected model list. The method does not check if an object with respective model is already inserted.
+
+        :param model_list_or_dict:  could be a list or dictionary of one model type
+        :param core_element: the core element to a model for, can be state or state element
+        :param model_class: model-class of the elements that should be insert
+        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element
+                          (e.g. 'state_id')
+        :param load_meta_data: specific argument for loading meta data
+        :return:
+        """
+
+        found_model = self._get_future_expected_model(core_element)
+        if found_model:
+            found_model.parent = self
+
+        if model_key is None:
+            model_list_or_dict.append(found_model if found_model else model_class(core_element, self))
+        else:
+            model_list_or_dict[model_key] = found_model if found_model else model_class(core_element, self,
+                                                                                        load_meta_data=load_meta_data)
 
     def add_missing_model(self, model_list_or_dict, core_elements_dict, model_name, model_class, model_key):
         """Adds one missing model
