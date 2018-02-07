@@ -127,10 +127,8 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
 def extract_child_models_of_state(state_m, new_state_class):
     """Retrieve child models of state model
 
-    The function stores model information like meta data of external (in the parent of the state) related
-    transitions
-    and data flows as well as StateModel-attributes of the original Models (of the original state) for operations
-    on the newly generated models after core-operations.
+    The function extracts the child state and state element models of the given state model into a dict. It only
+    extracts those properties that are required for a state of type `new_state_class`. Transitions are always left out.
 
     :param state_m: state model of which children are to be extracted from
     :param new_state_class: The type of the new class
@@ -145,80 +143,33 @@ def extract_child_models_of_state(state_m, new_state_class):
     new_state_is_container = issubclass(new_state_class, ContainerState)
 
     # define which model references to hold for new state
-    model_properties = ['meta', 'input_data_ports', 'output_data_ports', 'outcomes']
+    model_properties = ['input_data_ports', 'output_data_ports', 'outcomes']
     if current_state_is_container and new_state_is_container:  # hold some additional references
         # transition are removed when changing the state type, thus do not copy them
         model_properties.extend(['states', 'data_flows', 'scoped_variables'])
 
     child_models = {}
     for prop_name in model_properties:
-        child_models[prop_name] = getattr(state_m, prop_name)
+        # ._obj is needed as gaphas wraps observable lists and dicts into a gaphas.support.ObsWrapper
+        child_models[prop_name] = getattr(state_m, prop_name)._obj
 
     return child_models
 
 
-def create_state_model_for_state(new_state, state_element_models):
+def create_state_model_for_state(new_state, meta, state_element_models):
     """Create a new state model with the defined properties
 
     A state model is created for a state of the type of new_state. All child models in state_element_models (
     model list for port, connections and states) are added to the new model.
 
-    :param new_state: The new state object with the correct type
-    :param state_element_models: All state element and child state models of the original state model
+    :param StateModel new_state: The new state object with the correct type
+    :param Vividict meta: Meta data for the state model
+    :param list state_element_models: All state element and child state models of the original state model
     :return: New state model for new_state with all childs of state_element_models
     """
     from rafcon.gui.models.abstract_state import get_state_model_class_for_state
     state_m_class = get_state_model_class_for_state(new_state)
-    new_state_m = state_m_class(new_state)
-
-    # handle special case of BarrierConcurrencyState -> secure decider state model to not be overwritten
-    if isinstance(new_state, BarrierConcurrencyState):
-        decider_state_m = new_state_m.states[UNIQUE_DECIDER_STATE_ID]
-
-    # by default all transitions are left out if the new and original state are container states
-    # -> because Barrier, Preemptive or Hierarchy has always different rules
-    if isinstance(state_element_models, ContainerStateModel):
-        state_element_models['transitions'] = []
-
-    # insert and link original state model attributes (child-models) into/with new state model (the new parent)
-    for prop_name, value in state_element_models.iteritems():
-        if prop_name == "states":
-            # First, all automatically generated child states must be removed
-            child_state_ids = [state_id for state_id in new_state_m.states]
-            for child_state_id in child_state_ids:
-                if child_state_id != UNIQUE_DECIDER_STATE_ID:
-                    new_state_m.states[child_state_id].prepare_destruction()
-                    del new_state_m.states[child_state_id]
-
-            # Then, the old state models can be assigned
-            setattr(new_state_m, prop_name, value)
-            for state_m in new_state_m.states.itervalues():
-                state_m.parent = new_state_m
-
-            # Delete decider state model, if existing
-            if UNIQUE_DECIDER_STATE_ID in new_state_m.states:
-                del new_state_m.states[UNIQUE_DECIDER_STATE_ID]
-
-        elif prop_name in ['outcomes', 'input_data_ports', 'output_data_ports', 'data_flows', 'scoped_variables']:
-            # First, all automatically generated child elements must be removed
-            for model in getattr(new_state_m, prop_name, []):
-                model.prepare_destruction()
-            del getattr(new_state_m, prop_name, [])[:]
-
-            # Then, the old state element models can be assigned
-            setattr(new_state_m, prop_name, value)
-            for model in getattr(new_state_m, prop_name, []):
-                model.parent = new_state_m
-        else:
-            # Only the old meta data is left to be assigned
-            setattr(new_state_m, prop_name, value)
-
-    # handle special case of BarrierConcurrencyState -> re-insert decider state model
-    if isinstance(new_state, BarrierConcurrencyState):
-        decider_state_m.parent = new_state_m
-        new_state_m.states[UNIQUE_DECIDER_STATE_ID] = decider_state_m
-    if isinstance(new_state, ContainerState):
-        new_state_m.update_child_is_start()
+    new_state_m = state_m_class(new_state, meta=meta, load_meta_data=False, expected_future_models=state_element_models)
 
     return new_state_m
 
@@ -229,60 +180,39 @@ def change_state_type(state_m, target_class):
     old_state_m = state_m
     state_id = old_state.state_id
     is_root_state = old_state.is_root_state
+    state_machine_m = gui_singletons.state_machine_manager_model.get_state_machine_model(old_state_m)
+
+    # Before the state type is actually changed, we extract the information from the old state model, to apply it
+    # later on to the new state model
+    child_models = extract_child_models_of_state(old_state_m, target_class)
+    old_state_meta = old_state_m.meta
+    # By convention, the first element within the affected models list is the root model that has been affected
+    affected_models = [old_state_m]
+    for state_elements in child_models.itervalues():
+        affected_models.extend(state_elements if isinstance(state_elements, list) else state_elements.values())
+    state_element_models = affected_models[1:]  # Leave out the old parent state model
 
     # TODO ??? maybe separate again into state machine function and state function in respective helper module
     if is_root_state:
-
-        state_machine_m = gui_singletons.state_machine_manager_model.get_state_machine_model(old_state_m)
         assert isinstance(state_machine_m, StateMachineModel)
         assert state_machine_m.root_state is old_state_m
-
-        # print "\n\nEMIT-BEFORE OLDSTATE\n\n"
         old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
                                                        action_parent_m=state_machine_m,
-                                                       affected_models=[old_state_m, ],
+                                                       affected_models=affected_models,
                                                        after=False,
                                                        kwargs={'target_class': target_class}))
-        old_state_m.unregister_observer(old_state_m)
         old_state_m.unregister_observer(state_machine_m)
-        # logger.info("UNREGISTER OBSERVER")
-
-        # Before the root state type is actually changed, we extract the information from the old state model
-        # Extract child models of state, as they have to be applied to the new state model
-        child_models = extract_child_models_of_state(old_state_m, target_class)
-        state_machine_m.change_root_state_type.__func__.child_models = child_models  # static variable of class method
         state_machine_m.suppress_new_root_state_model_one_time = True
     else:
+        parent_state_m = old_state_m.parent
+        assert isinstance(parent_state_m, ContainerStateModel)
 
-        action_parent_m = old_state_m.parent
-        assert isinstance(action_parent_m, ContainerStateModel)
-        state_machine_m = gui_singletons.state_machine_manager_model.get_state_machine_model(old_state_m)
-
-        def list_dict_to_list(list_or_dict):
-            if isinstance(list_or_dict, dict) and not isinstance(list_or_dict, Vividict):
-                return list_or_dict.values()
-            elif isinstance(list_or_dict, list):
-                return list_or_dict
-            else:
-                return []
-
-        # Before the state type is actually changed, we extract the information from the old state model
-        # Extract child models of state, as they have to be applied to the new state model
-        child_models = extract_child_models_of_state(old_state_m, target_class)
-        affected_models = [old_state_m, ]
-        for list_or_dict in child_models.itervalues():
-            affected_models.extend(list_dict_to_list(list_or_dict))
-        # print "\n\nEMIT-BEFORE OLDSTATE\n\n"
         old_state_m.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model',
-                                                       action_parent_m=action_parent_m,
+                                                       action_parent_m=parent_state_m,
                                                        affected_models=affected_models,
                                                        after=False,
                                                        kwargs={'state': old_state, 'target_class': target_class}))
-        old_state_m.unregister_observer(old_state_m)
-        # remove selection from StateMachineModel.selection -> find state machine model
-
-        action_parent_m.change_state_type.__func__.child_models = child_models  # static variable of class method
-        action_parent_m.change_state_type.__func__.affected_models = affected_models
+    old_state_m.unregister_observer(old_state_m)
 
     # CORE
     new_state = new_state_m = e = None
@@ -297,47 +227,34 @@ def change_state_type(state_m, target_class):
     # AFTER MODEL
     # After the state has been changed in the core, we create a new model for it with all information extracted
     # from the old state model
+    if new_state:
+        # Create a new state model based on the new state and apply the extracted child models
+        new_state_m = create_state_model_for_state(new_state, old_state_meta, state_element_models)
+        # By convention, tha last model within the affected model list, is the newly created model
+        affected_models.append(new_state_m)
+
     if is_root_state:
-        if new_state:
-            # logger.info("start after TO STATE TYPE CHANGE")
-            # Create a new state model based on the new state and apply the extracted child models
-            child_models = state_machine_m.change_root_state_type.__func__.child_models
-            new_state_m = create_state_model_for_state(new_state, child_models)
 
+        if new_state_m:
             new_state_m.register_observer(state_machine_m)
-            # state_machine_m.register_observer(state_machine_m)
             state_machine_m.root_state = new_state_m
-            # logger.info("ASSIGNED after TO STATE TYPE CHANGE")
 
-        # print "\n\nEMIT-AFTER OLDSTATE\n\n"
         old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
                                                        action_parent_m=state_machine_m,
                                                        affected_models=[new_state_m, ],
                                                        after=True, result=e))
 
-        del state_machine_m.change_root_state_type.__func__.child_models
-
     else:
-        if new_state:
-            # Create a new state model based on the new state and apply the extracted child models
-            child_models = action_parent_m.change_state_type.__func__.child_models
-            new_state_m = create_state_model_for_state(new_state, child_models)
-            # Set this state model (action_root_state_m) to be the parent of our new state model
-            new_state_m.parent = action_parent_m
+        if new_state_m:
+            new_state_m.parent = parent_state_m
             # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
-            action_parent_m.states[state_id] = new_state_m
-            action_parent_m.update_child_is_start()
-
-            affected_models = action_parent_m.change_state_type.__func__.affected_models
-            affected_models.append(new_state_m)
+            parent_state_m.states[state_id] = new_state_m
+            parent_state_m.update_child_is_start()
 
         old_state_m.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model',
-                                                       action_parent_m=action_parent_m,
+                                                       action_parent_m=parent_state_m,
                                                        affected_models=affected_models,
                                                        after=True, result=e))
-
-        del action_parent_m.change_state_type.__func__.child_models
-        del action_parent_m.change_state_type.__func__.affected_models
 
     if is_root_state:
         state_machine_m._send_root_state_notification(state_machine_m.change_root_state_type.__func__.last_notification_model,
