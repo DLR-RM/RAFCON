@@ -143,7 +143,7 @@ def trigger_repetitive_group_ungroup(*args):
 def test_repetitive_ungroup_state_and_group_states(caplog):
     """Check if repetitive group and ungroup works"""
     libraries = {"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
-    testing_utils.run_gui(libraries=libraries)
+    testing_utils.run_gui(libraries=libraries, gui_config={'HISTORY_ENABLED': True})
     try:
         trigger_repetitive_group_ungroup()
     except Exception:
