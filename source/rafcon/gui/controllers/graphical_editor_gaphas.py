@@ -368,38 +368,48 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
-        if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state',
-                                                    'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
-            if info['arg'].after is False:
-                self._complex_action = True
-                if info['arg'].action in ['group_states', 'paste', 'cut']:
-                    self.observe_model(info['arg'].action_parent_m)
-                else:
-                    self.observe_model(info['arg'].affected_models[0])
+        if not ('arg' in info and info['arg'].after is False):
+            return
 
-                # assert not hasattr(self.state_action_signal.__func__, "affected_models")
-                # assert not hasattr(self.state_action_signal.__func__, "target")
-                self.state_action_signal.__func__.affected_models = info['arg'].affected_models
-                self.state_action_signal.__func__.target = info['arg'].action_parent_m
+        action = info['arg'].action
+        action_parent_m = info['arg'].action_parent_m
+        affected_models = info['arg'].affected_models
+
+        if action in ['change_root_state_type', 'change_state_type', 'substitute_state',
+                      'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
+
+            # print self.__class__.__name__, 'add complex action', action
+            self._complex_action = True
+            if action in ['group_states', 'paste', 'cut']:
+                self.observe_model(action_parent_m)
+            else:
+                self.observe_model(affected_models[0])
+
+            self.state_action_signal.__func__.affected_models = affected_models
+            self.state_action_signal.__func__.target = action_parent_m
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
-        if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
-                        info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut',
-                                               'undo/redo']:
+        if not (isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after):
+            return
 
+        action = info['arg'].action
+        action_parent_m = info['arg'].action_parent_m
+        affected_models = info['arg'].affected_models
+
+        if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
             old_state_m = self.state_action_signal.__func__.target
-            new_state_m = info['arg'].action_parent_m
+            new_state_m = action_parent_m
 
-        elif isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
-                        info['arg'].action in ['change_state_type', 'change_root_state_type']:
-
+        elif action in ['change_state_type', 'change_root_state_type']:
             old_state_m = model
-            new_state_m = info['arg'].affected_models[-1]
+            new_state_m = affected_models[-1]
 
         else:
             return
 
+        # print self.__class__.__name__, 'remove complex action', action, \
+        #     id(old_state_m), id(new_state_m), old_state_m, new_state_m
         self._complex_action = False
         self.relieve_model(model)
 
