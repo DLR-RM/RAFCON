@@ -779,35 +779,36 @@ class ContainerState(State):
         for key in keys_to_delete:
             self.remove_data_flow(key)
 
-        if recursive:
-            # Recursively delete all transitions, data flows and states within the state to be deleted
-            if isinstance(self.states[state_id], ContainerState):
-                for transition_id in self.states[state_id].transitions.keys():
-                    self.states[state_id].remove_transition(transition_id)
-                for data_flow_id in self.states[state_id].data_flows.keys():
-                    self.states[state_id].remove_data_flow(data_flow_id)
-                for child_state_id in self.states[state_id].states.keys():
-                    is_barrier_state = isinstance(self.states[state_id], BarrierConcurrencyState)
-                    self.states[state_id].remove_state(child_state_id,
-                                                       recursive=recursive,
-                                                       force=True if force or not force and is_barrier_state else False,
-                                                       destroy=destroy)
+        if recursive and not destroy:
+            raise AttributeError("The recursive flag requires the destroy flag to be set, too.")
 
         if destroy:
-            self.states[state_id].destroy()
+            # Recursively delete all transitions, data flows and states within the state to be deleted
+            self.states[state_id].destroy(recursive)
         else:
             self.states[state_id].parent = None
         # final delete the state it self
+        print "return removed_state", self.states[state_id]
         return self.states.pop(state_id)
 
     # do not observe
-    def destroy(self):
+    def destroy(self, recursive):
+        """ Removes all the state elements.
+
+        :param recursive: Flag whether to destroy all state elements which are removed
+        """
         for transition_id in self.transitions.keys():
-            self.remove_transition(transition_id)
+            self.remove_transition(transition_id, destroy=recursive)
         for data_flow_id in self.data_flows.keys():
-            self.remove_data_flow(data_flow_id)
-        self.states.clear()
-        super(ContainerState, self).destroy()
+            self.remove_data_flow(data_flow_id, destroy=recursive)
+        for scoped_variable_id in self.scoped_variables.keys():
+            self.remove_scoped_variable(scoped_variable_id, destroy=recursive)
+        for state_id in self.states.keys():
+            if recursive:
+                self.remove_state(state_id, recursive, force=True, destroy=recursive)
+            else:
+                del self.states[state_id]
+        super(ContainerState, self).destroy(recursive)
 
     def related_linkage_state(self, state_id):
         """ TODO: document

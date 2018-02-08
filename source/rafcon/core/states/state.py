@@ -907,19 +907,19 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return removed_element
 
     @lock_state_machine
-    def destroy(self):
+    def destroy(self, recursive):
         """ Removes all the state elements.
 
-        :return:
+        :param recursive: Flag wether to destroy all state elements which are removed
         """
         for in_key in self.input_data_ports.keys():
-            self.remove_input_data_port(in_key, True)
+            self.remove_input_data_port(in_key, force=True, destroy=recursive)
 
         for out_key in self.output_data_ports.keys():
-            self.remove_output_data_port(out_key, True)
+            self.remove_output_data_port(out_key, force=True, destroy=recursive)
 
         for outcome_key in self.outcomes.keys():
-            self.remove_outcome(outcome_key, True)
+            self.remove_outcome(outcome_key, force=True, destroy=recursive)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
