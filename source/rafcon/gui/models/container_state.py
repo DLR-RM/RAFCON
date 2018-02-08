@@ -276,9 +276,6 @@ class ContainerStateModel(StateModel):
     def change_state_type(self, model, prop_name, info):
         if info.method_name != 'change_state_type':
             return
-        self.change_state_type.__func__.last_notification_model = model
-        self.change_state_type.__func__.last_notification_prop_name = prop_name
-        self.change_state_type.__func__.last_notification_info = info
 
     def insert_meta_data_from_models_dict(self, source_models_dict):
 
