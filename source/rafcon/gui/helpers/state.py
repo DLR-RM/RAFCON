@@ -194,6 +194,10 @@ def change_state_type(state_m, target_class):
     for state_elements in child_models.itervalues():
         affected_models.extend(state_elements if isinstance(state_elements, list) else state_elements.values())
     state_element_models = affected_models[1:]  # Leave out the old parent state model
+    # Leave out DeciderState
+    state_element_models = filter(lambda element: not isinstance(element, StateModel) or \
+                                                  not element.state.state_id == UNIQUE_DECIDER_STATE_ID,
+                                  state_element_models)
 
     # TODO ??? maybe separate again into state machine function and state function in respective helper module
     if is_root_state:
