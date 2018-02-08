@@ -131,6 +131,7 @@ class GraphicalEditorController(ExtendedController):
         self.changes_affect_children = False
         self._last_meta_data_changed = None
 
+        self._ongoing_complex_actions = []
         self._suspend_drawing = False
 
         self.last_time = time.time()
@@ -208,32 +209,40 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_action_signal", signal=True)
     def state_action_signal_before(self, model, prop_name, info):
+        if not ('arg' in info and info['arg'].after is False):
+            return
+
+        action = info['arg'].action
         # from rafcon.gui.utils.notification_overview import NotificationOverview
         # logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
-        if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'ungroup_state',
-                                  'undo/redo']:
-            if not info['arg'].after:
-                self.suspend_drawing = True
-                # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
-                self.observe_model(info['arg'].affected_models[0])
-        if info['arg'].action in ['group_states', 'paste', 'cut']:
-            if not info['arg'].after:
-                self.suspend_drawing = True
-                # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
-                self.observe_model(info['arg'].action_parent_m)
+        if action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'ungroup_state', 'undo/redo']:
+            self.suspend_drawing = True
+            self._ongoing_complex_actions.append(action)
+            # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
+            self.observe_model(info['arg'].affected_models[0])
+        if action in ['group_states', 'paste', 'cut']:
+            self.suspend_drawing = True
+            self._ongoing_complex_actions.append(action)
+            # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
+            self.observe_model(info['arg'].action_parent_m)
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal_after(self, model, prop_name, info):
+        if not ('arg' in info and info['arg'].after):
+            return
+
+        action = info['arg'].action
         # from rafcon.gui.utils.notification_overview import NotificationOverview
         # logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
-        if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'group_states',
-                                  'ungroup_state', 'paste', 'cut', 'undo/redo']:
-            if info['arg'].after:
+        if action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'group_states',
+                      'ungroup_state', 'paste', 'cut', 'undo/redo']:
+            self._ongoing_complex_actions.remove(action)
+            if not self._ongoing_complex_actions:
                 self.suspend_drawing = False
                 self.relieve_model(model)
-                # logger.info("drawing suspended: {0} redraw".format(self.suspend_drawing))
-                if not info['arg'].action in ['paste', 'cut']:
-                    self._redraw()
+            # logger.info("drawing suspended: {0} redraw".format(self.suspend_drawing))
+            if action not in ['paste', 'cut'] and not self._ongoing_complex_actions:
+                self._redraw()
 
     @ExtendedController.observe("state_machine", after=True)
     @ExtendedController.observe("meta_signal", signal=True)  # meta data of state machine changed
