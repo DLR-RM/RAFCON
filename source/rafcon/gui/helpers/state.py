@@ -95,12 +95,15 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
             assert UNIQUE_DECIDER_STATE_ID not in source_state.states
 
         new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
-                                       input_data_ports=source_state.input_data_ports,
-                                       output_data_ports=source_state.output_data_ports,
-                                       outcomes=source_state.outcomes, states=source_state.states,
-                                       transitions=state_transitions, data_flows=source_state.data_flows,
-                                       start_state_id=state_start_state_id,
-                                       scoped_variables=source_state.scoped_variables)
+                                       input_data_ports=dict(source_state.input_data_ports),
+                                       output_data_ports=dict(source_state.output_data_ports),
+                                       scoped_variables=dict(source_state.scoped_variables),
+                                       outcomes=dict(source_state.outcomes),
+                                       transitions=state_transitions,
+                                       data_flows=dict(source_state.data_flows),
+                                       states=dict(source_state.states),
+                                       start_state_id=state_start_state_id)
+
 
     else:  # TRANSFORM from EXECUTION- TO CONTAINER-STATE or FROM CONTAINER- TO EXECUTION-STATE
 
@@ -113,14 +116,13 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
                 source_state.remove_state(state_id)
 
         new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
-                                       input_data_ports=source_state.input_data_ports,
-                                       output_data_ports=source_state.output_data_ports,
-                                       outcomes=source_state.outcomes)
+                                       input_data_ports=dict(source_state.input_data_ports),
+                                       output_data_ports=dict(source_state.output_data_ports),
+                                       outcomes=dict(source_state.outcomes))
 
     if source_state.description is not None and len(source_state.description) > 0:
         new_state.description = source_state.description
-    new_state.semantic_data = source_state.semantic_data
-
+    new_state.semantic_data = Vividict(source_state.semantic_data)
     return new_state
 
 
