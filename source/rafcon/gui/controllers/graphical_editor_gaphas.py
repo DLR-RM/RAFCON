@@ -65,7 +65,7 @@ class GraphicalEditorController(ExtendedController):
         element
     """
 
-    _complex_action = False
+    _ongoing_complex_actions = {}
     drag_motion_handler_id = None
     focus_changed_handler_id = None
 
@@ -330,7 +330,7 @@ class GraphicalEditorController(ExtendedController):
         notification = meta_signal_message.notification
         if not notification:    # For changes applied to the root state, there are always two notifications
             return              # Ignore the one with less information
-        if self._complex_action:
+        if self._ongoing_complex_actions:
             return
 
         model = notification.model
@@ -379,14 +379,20 @@ class GraphicalEditorController(ExtendedController):
                       'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
 
             # print self.__class__.__name__, 'add complex action', action
-            self._complex_action = True
-            if action in ['group_states', 'paste', 'cut']:
-                self.observe_model(action_parent_m)
-            else:
-                self.observe_model(affected_models[0])
+            if not self._ongoing_complex_actions:
+                self._action_where_in = []
 
-            self.state_action_signal.__func__.affected_models = affected_models
-            self.state_action_signal.__func__.target = action_parent_m
+            self._ongoing_complex_actions[action] = {}
+            if action in ['group_states', 'paste', 'cut']:
+                self.observe_model(info['arg'].action_parent_m)
+            else:
+                self.observe_model(info['arg'].affected_models[0])
+
+            self._ongoing_complex_actions[action]['affected_models'] = affected_models
+            if action in ['change_state_type', 'change_root_state_type']:
+                self._ongoing_complex_actions[action]['target'] = affected_models[0]
+            else:
+                self._ongoing_complex_actions[action]['target'] = action_parent_m
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
@@ -398,22 +404,25 @@ class GraphicalEditorController(ExtendedController):
         affected_models = info['arg'].affected_models
 
         if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
-            old_state_m = self.state_action_signal.__func__.target
+            old_state_m = self._ongoing_complex_actions[action]['target']
             new_state_m = action_parent_m
-
         elif action in ['change_state_type', 'change_root_state_type']:
-            old_state_m = model
+            old_state_m = self._ongoing_complex_actions[action]['target']
             new_state_m = affected_models[-1]
 
+            # old_state_m = self.root_state_m
+            # new_state_m = self.model.root_state
         else:
             return
 
-        # print self.__class__.__name__, 'remove complex action', action, \
+        # print self.__class__.__name__, 'remove complex action', action
         #     id(old_state_m), id(new_state_m), old_state_m, new_state_m
-        self._complex_action = False
-        self.relieve_model(model)
-
-        self.adapt_complex_action(old_state_m, new_state_m)
+        del self._ongoing_complex_actions[action]
+        self._action_where_in.append(action)
+        if not self._ongoing_complex_actions:
+            self.relieve_model(model)
+            self.adapt_complex_action(old_state_m, new_state_m)
+            self._action_where_in = []
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
@@ -430,7 +439,7 @@ class GraphicalEditorController(ExtendedController):
         if 'method_name' in info and info['method_name'] == 'root_state_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
-            if self._complex_action:
+            if self._ongoing_complex_actions:
                 return
 
             # The method causing the change raised an exception, thus nothing was changed
@@ -987,11 +996,11 @@ class GraphicalEditorController(ExtendedController):
 
     def react_to_event(self, event):
         """Check whether the given event should be handled
-        
-        Checks, whether the editor widget has the focus and whether the selected state machine corresponds to the 
+
+        Checks, whether the editor widget has the focus and whether the selected state machine corresponds to the
         state machine of this editor.
-        
-        :param event: GTK event object 
+
+        :param event: GTK event object
         :return: True if the event should be handled, else False
         :rtype: bool
         """
