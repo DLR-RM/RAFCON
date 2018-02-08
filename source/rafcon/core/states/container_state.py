@@ -757,7 +757,6 @@ class ContainerState(State):
                 destroyed, including all its state elements
         :raises exceptions.AttributeError: if state.state_id does not
         """
-        from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
         if state_id not in self.states:
             raise AttributeError("State_id %s does not exist" % state_id)
 
@@ -788,7 +787,6 @@ class ContainerState(State):
         else:
             self.states[state_id].parent = None
         # final delete the state it self
-        print "return removed_state", self.states[state_id]
         return self.states.pop(state_id)
 
     # do not observe
