@@ -261,9 +261,9 @@ def change_state_type(state_m, target_class):
     old_state.destroy(recursive=False)
 
     if is_root_state:
-        state_machine_m._send_root_state_notification(state_machine_m.change_root_state_type.__func__.last_notification_model,
-                                                      state_machine_m.change_root_state_type.__func__.last_notification_prop_name,
-                                                      state_machine_m.change_root_state_type.__func__.last_notification_info)
+        suppressed_notification_parameters = state_machine_m.change_root_state_type.__func__.suppressed_notification_parameters
+        state_machine_m.change_root_state_type.__func__.suppressed_notification_parameters = None
+        state_machine_m._send_root_state_notification(*suppressed_notification_parameters)
     return new_state_m
 
 
