@@ -291,15 +291,12 @@ class StateMachineModel(ModelMT, Hashable):
         if info.method_name != 'change_root_state_type':
             return
 
-        self.change_root_state_type.__func__.last_notification_model = model
-        self.change_root_state_type.__func__.last_notification_prop_name = prop_name
-        self.change_root_state_type.__func__.last_notification_info = info
-
         if 'before' in info:
-            # logger.info("BEFORE {0}".format(info.method_name))
             self._send_root_state_notification(model, prop_name, info)
-        # else:
-        #     logger.info("AFTER {0}".format(info.method_name))
+        else:
+            # Do not forward the notification yet, but store its parameters locally at the function
+            # The function helpers.state.change_state_type will forward the notification after some preparation
+            self.change_root_state_type.__func__.suppressed_notification_parameters = [model, prop_name, info]
 
     def _send_root_state_notification(self, model, prop_name, info):
         cause = 'root_state_change'
