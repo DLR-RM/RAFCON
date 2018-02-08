@@ -746,7 +746,7 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_state(self, state_id, recursive=True, force=True, destroy=True):
+    def remove_state(self, state_id, recursive=True, force=False, destroy=True):
         """Remove a state from the container state.
 
         :param state_id: the id of the state to remove
@@ -1085,7 +1085,7 @@ class ContainerState(State):
         :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, State):
-			return self.remove_state(state_element.state_id, recursive=recursive, force=force, destroy=destroy)
+            return self.remove_state(state_element.state_id, recursive=recursive, force=force, destroy=destroy)
         elif isinstance(state_element, Transition):
             return self.remove_transition(state_element.transition_id, destroy=destroy)
         elif isinstance(state_element, DataFlow):

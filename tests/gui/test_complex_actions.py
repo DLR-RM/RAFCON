@@ -126,6 +126,7 @@ def trigger_repetitive_group_ungroup(*args):
     # time.sleep(10)
     call_gui_callback(sm_m.history.undo)
     print "wait2 undo"
+    # import time
     # time.sleep(10)
 
     # exception test
@@ -143,7 +144,7 @@ def trigger_repetitive_group_ungroup(*args):
 def test_repetitive_ungroup_state_and_group_states(caplog):
     """Check if repetitive group and ungroup works"""
     libraries = {"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
-    testing_utils.run_gui(libraries=libraries, gui_config={'HISTORY_ENABLED': True})
+    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True}, libraries=libraries)
     try:
         trigger_repetitive_group_ungroup()
     except Exception:
