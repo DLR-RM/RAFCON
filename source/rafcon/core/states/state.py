@@ -632,11 +632,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, Outcome):
-            self.remove_outcome(state_element.outcome_id, force, destroy=destroy)
+            return self.remove_outcome(state_element.outcome_id, force, destroy=destroy)
         elif isinstance(state_element, InputDataPort):
-            self.remove_input_data_port(state_element.data_port_id, force, destroy=destroy)
+            return self.remove_input_data_port(state_element.data_port_id, force, destroy=destroy)
         elif isinstance(state_element, OutputDataPort):
-            self.remove_output_data_port(state_element.data_port_id, force, destroy=destroy)
+            return self.remove_output_data_port(state_element.data_port_id, force, destroy=destroy)
         else:
             raise ValueError("Cannot remove state_element with invalid type")
 

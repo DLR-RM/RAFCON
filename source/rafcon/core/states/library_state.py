@@ -218,7 +218,7 @@ class LibraryState(State):
         :raises exceptions.NotImplementedError: in any case
         """
         if force:
-            State.remove_outcome(self, outcome_id, force)
+            return State.remove_outcome(self, outcome_id, force)
         else:
             raise NotImplementedError("Remove outcome is not implemented for library state {}".format(self))
 

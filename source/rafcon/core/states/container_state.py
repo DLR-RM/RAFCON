@@ -1085,13 +1085,13 @@ class ContainerState(State):
         :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, State):
-            self.remove_state(state_element.state_id, force=force, destroy=destroy)
+            return self.remove_state(state_element.state_id, force=force, destroy=destroy)
         elif isinstance(state_element, Transition):
-            self.remove_transition(state_element.transition_id, destroy=destroy)
+            return self.remove_transition(state_element.transition_id, destroy=destroy)
         elif isinstance(state_element, DataFlow):
-            self.remove_data_flow(state_element.data_flow_id, destroy=destroy)
+            return self.remove_data_flow(state_element.data_flow_id, destroy=destroy)
         elif isinstance(state_element, ScopedVariable):
-            self.remove_scoped_variable(state_element.data_port_id, destroy=destroy)
+            return self.remove_scoped_variable(state_element.data_port_id, destroy=destroy)
         else:
             super(ContainerState, self).remove(state_element, force, destroy=destroy)
 
@@ -1391,7 +1391,7 @@ class ContainerState(State):
         self.remove_data_flows_with_data_port_id(self._scoped_variables[scoped_variable_id].data_port_id)
 
         # delete scoped variable
-        del self._scoped_variables[scoped_variable_id]
+        return self._scoped_variables.pop(scoped_variable_id)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------- scoped variables functions end ---------------------------------
