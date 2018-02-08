@@ -258,6 +258,8 @@ def change_state_type(state_m, target_class):
                                                        affected_models=affected_models,
                                                        after=True, result=e))
 
+    old_state.destroy()
+
     if is_root_state:
         state_machine_m._send_root_state_notification(state_machine_m.change_root_state_type.__func__.last_notification_model,
                                                       state_machine_m.change_root_state_type.__func__.last_notification_prop_name,
