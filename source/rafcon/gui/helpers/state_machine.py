@@ -472,7 +472,7 @@ def refresh_all(force=False):
     state_machines_editor_ctrl.refresh_all_state_machines()
 
 
-def delete_core_element_of_model(model, raise_exceptions=False, destroy=True):
+def delete_core_element_of_model(model, raise_exceptions=False, recursive=True, destroy=True):
     """Deletes respective core element of handed model of its state machine
 
     If the model is one of state, data flow or transition, it is tried to delete that model together with its
@@ -500,7 +500,7 @@ def delete_core_element_of_model(model, raise_exceptions=False, destroy=True):
 
     try:
         if core_element in state:
-            state.remove(core_element, destroy=destroy)
+            state.remove(core_element, recursive=recursive, destroy=destroy)
             return True
         return False
     except (AttributeError, ValueError) as e:
@@ -510,7 +510,7 @@ def delete_core_element_of_model(model, raise_exceptions=False, destroy=True):
         return False
 
 
-def delete_core_elements_of_models(models, raise_exceptions=False, destroy=True):
+def delete_core_elements_of_models(models, raise_exceptions=False, recursive=True, destroy=True):
     """Deletes all respective core elements for the given models
 
     Calls the :func:`delete_core_element_of_model` for all given models.
@@ -523,7 +523,8 @@ def delete_core_elements_of_models(models, raise_exceptions=False, destroy=True)
     # If only one model is given, make a list out of it
     if not hasattr(models, '__iter__'):
         models = [models]
-    return sum(delete_core_element_of_model(model, raise_exceptions, destroy=destroy) for model in models)
+    return sum(delete_core_element_of_model(model, raise_exceptions, recursive=recursive, destroy=destroy)
+               for model in models)
 
 
 def is_selection_inside_of_library_state(state_machine_m=None, selected_elements=None):
@@ -561,7 +562,7 @@ def delete_selected_elements(state_machine_m):
         return
 
     if len(state_machine_m.selection) > 0:
-        delete_core_elements_of_models(state_machine_m.selection.get_all())
+        delete_core_elements_of_models(state_machine_m.selection.get_all(), recursive=True, destroy=True)
         return True
 
 

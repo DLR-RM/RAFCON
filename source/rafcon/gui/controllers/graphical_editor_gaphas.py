@@ -1011,4 +1011,4 @@ class GraphicalEditorController(ExtendedController):
     @lock_state_machine
     def _remove_selected_elements(self, *event):
         if self.react_to_event(event):
-            gui_helper_state_machine.delete_core_elements_of_models(self.model.selection.get_all())
+            gui_helper_state_machine.delete_selected_elements(self.model)

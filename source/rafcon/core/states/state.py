@@ -624,10 +624,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return outcome_id
 
     @lock_state_machine
-    def remove(self, state_element, force=False, destroy=True):
+    def remove(self, state_element, recursive=True, force=False, destroy=True):
         """Remove item from state
 
         :param StateElement state_element: State element to be removed
+        :param bool recursive: Only applies to removal of state and decides whether the removal should be called
+            recursively on all child states
         :param bool force: if the removal should be forced without checking constraints
         :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """

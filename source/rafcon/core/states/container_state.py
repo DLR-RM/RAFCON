@@ -1077,15 +1077,17 @@ class ContainerState(State):
         return self.states[self.start_state_id]
 
     @lock_state_machine
-    def remove(self, state_element, force=False, destroy=True):
+    def remove(self, state_element, recursive=True, force=False, destroy=True):
         """Remove item from state
 
         :param StateElement state_element: State or state element to be removed
+        :param bool recursive: Only applies to removal of state and decides whether the removal should be called
+            recursively on all child states
         :param bool force: if the removal should be forced without checking constraints
         :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, State):
-            return self.remove_state(state_element.state_id, force=force, destroy=destroy)
+			return self.remove_state(state_element.state_id, recursive=recursive, force=force, destroy=destroy)
         elif isinstance(state_element, Transition):
             return self.remove_transition(state_element.transition_id, destroy=destroy)
         elif isinstance(state_element, DataFlow):
