@@ -72,7 +72,7 @@ class StateOutcomesListController(ListViewController):
         self.dict_to_other_outcome = {}
         # not used at the moment key-outcome_id -> label,  from_state_id,  transition_id
         self.dict_from_other_state = {}  # if widget gets extended
-
+        self.relieve_model(model)
         if not model.state.is_root_state:
             self.observe_model(model.parent)
 

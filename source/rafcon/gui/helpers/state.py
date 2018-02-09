@@ -616,6 +616,8 @@ def ungroup_state(state_m):
                                                    action_parent_m=action_parent_m,
                                                    affected_models=affected_models, after=True, result=e))
 
+    # old_state_m.state.destroy(recursive=True)
+    # old_state_m.prepare_destruction()
     del action_parent_m.ungroup_state.__func__.tmp_models_storage
     del action_parent_m.group_states.__func__.affected_models
 
