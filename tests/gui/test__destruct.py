@@ -990,7 +990,7 @@ def test_model_and_core_modification_history_destruct_with_gui(caplog):
                           # gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
-def run_copy_and_paste():
+def run_copy_cut_and_paste():
 
     testing_utils.call_gui_callback(create_models)
 
@@ -998,8 +998,13 @@ def run_copy_and_paste():
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     from rafcon.gui.singleton import main_window_controller
     import rafcon.gui.singleton as gui_singletons
+    from gui.widget.test_menu_bar import focus_graphical_editor_in_page
     menu_bar_controller = main_window_controller.get_controller("menu_bar_controller")
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
+
+    #########################################
+    # copy tests
+    #########################################
 
     # select state 1
     for sm_model in sm_m.root_state.states.values():
@@ -1011,7 +1016,6 @@ def run_copy_and_paste():
     # focus correct page
     page_id = state_machines_ctrl.get_page_num(sm_m.state_machine.state_machine_id)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
-    from gui.widget.test_menu_bar import focus_graphical_editor_in_page
     focus_graphical_editor_in_page(page)
 
     # copy state 1
@@ -1035,10 +1039,55 @@ def run_copy_and_paste():
     # paste state 1 into state 3
     testing_utils.call_gui_callback(menu_bar_controller.on_paste_clipboard_activate, None, None)
     print "paste state into target state: ", sm_model.state
+    # another time
+    testing_utils.call_gui_callback(menu_bar_controller.on_paste_clipboard_activate, None, None)
+
+    #########################################
+    # cut tests
+    #########################################
+
+    # select state 1
+    for sm_model in sm_m.root_state.states.values():
+        if sm_model.state.name == "State1":
+            state1 = sm_model.state
+            selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
+            testing_utils.call_gui_callback(selection.add, sm_model)
+            print "select state: ", sm_model.state
+
+    # focus correct page
+    page_id = state_machines_ctrl.get_page_num(sm_m.state_machine.state_machine_id)
+    page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
+    focus_graphical_editor_in_page(page)
+
+    # cut state 1
+    testing_utils.call_gui_callback(menu_bar_controller.on_cut_selection_activate, None, None)
+    print "cut state: ", sm_model.state
+
+    # destroy state test
+    # print "%" * 20, "before  ", "%" * 20
+    # testing_utils.call_gui_callback(sm_m.root_state.state.remove_state, state1.state_id)
+    # print "%" * 20, "after  ", "%" * 20
+
+    # clear selection
+    testing_utils.call_gui_callback(selection.clear)
+
+    # select state 3
+    for sm_model in sm_m.root_state.states.values():
+        if sm_model.state.name == "State3":
+            from rafcon.gui.models.container_state import ContainerStateModel
+            assert isinstance(sm_model, ContainerStateModel)
+            testing_utils.call_gui_callback(selection.add, sm_model)
+            print "select state: ", sm_model.state
+
+    # focus
+    focus_graphical_editor_in_page(page)
+
+    # paste state 1 into state 3
+    testing_utils.call_gui_callback(menu_bar_controller.on_paste_clipboard_activate, None, None)
+    print "paste state into target state: ", sm_model.state
 
     # import time
     # time.sleep(10.0)
-
     testing_utils.call_gui_callback(rafcon.core.singleton.state_machine_manager.delete_all_state_machines)
 
 
@@ -1051,7 +1100,12 @@ def test_copy_paste_with_modification_history_destruct_with_gui(caplog):
     import rafcon.gui.controllers.utils.extended_controller
     import rafcon.core.states.hierarchy_state
 
-    searched_class = rafcon.core.states.execution_state.ExecutionState
+    # searched_class = rafcon.core.states.execution_state.ExecutionState
+    # searched_class = rafcon.gui.models.container_state.ContainerStateModel
+    # searched_class = rafcon.gui.models.state.StateModel
+    # searched_class = rafcon.core.state_elements.data_flow.DataFlow
+    searched_class = rafcon.core.state_elements.transition.Transition
+    # searched_class = rafcon.gui.models.transition.TransitionModel
 
     elements = [
                 (rafcon.core.states.state.State, False),
@@ -1063,8 +1117,8 @@ def test_copy_paste_with_modification_history_destruct_with_gui(caplog):
                 (gtkmvc.Controller, True),
                 (searched_class, False),
                 ]
-    _test_widget_destruct(caplog, elements, searched_class, run_copy_and_paste,
-                          gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
+    _test_widget_destruct(caplog, elements, searched_class, run_copy_cut_and_paste,
+                          gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
 def _test_widget_destruct(caplog, elements, searched_class, func, gui_config):
@@ -1109,8 +1163,8 @@ if __name__ == '__main__':
     # test_simple_model_and_core_destruct_with_gui(None)
     # test_simple_execution_model_and_core_destruct_with_gui(None)
     # test_model_and_core_modification_history_destruct_with_gui(None)
-    # test_copy_paste_with_modification_history_destruct_with_gui(None)
-    test_model_and_core_modification_history_destruct_with_gui(None)
+    test_copy_paste_with_modification_history_destruct_with_gui(None)
+    # test_model_and_core_modification_history_destruct_with_gui(None)
     # test_complex_model_and_core_destruct_with_gui(None)
     # import pytest
     # pytest.main(['-s', __file__])
