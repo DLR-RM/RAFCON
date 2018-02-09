@@ -99,6 +99,7 @@ def test_copy_delete_bug(caplog):
 
 
 if __name__ == '__main__':
-    test_copy_delete_bug(None)
-    # import pytest
-    # pytest.main(['-s', __file__])
+    # testing_utils.dummy_gui(None)
+    # test_copy_delete_bug(None)
+    import pytest
+    pytest.main(['-s', __file__])

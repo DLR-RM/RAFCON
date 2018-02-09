@@ -1178,7 +1178,7 @@ def test_data_flow_property_modifications_history(caplog):
 
 
 @pytest.mark.parametrize("with_gui", [False, True])
-def test_state_machine_modifications_with_gui(with_gui, caplog):
+def _test_state_machine_modifications_with_gui(with_gui, caplog):
 
     testing_utils.dummy_gui(None)
 
@@ -1846,6 +1846,7 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
 
 
 if __name__ == '__main__':
+    testing_utils.dummy_gui(None)
     # test_add_remove_history(None)
     # test_state_property_modifications_history(None)
     #
@@ -1857,8 +1858,8 @@ if __name__ == '__main__':
     # test_scoped_variable_modify_notification(None)
     # test_data_flow_property_modifications_history(None)
 
-    # test_state_machine_modifications_with_gui(with_gui=True, caplog=None)
+    # _test_state_machine_modifications_with_gui(with_gui=True, caplog=None)
     # test_state_type_change_bugs_with_gui(with_gui=False, caplog=None)
-    test_state_type_change_bugs_with_gui(with_gui=True, caplog=None)
+    # test_state_type_change_bugs_with_gui(with_gui=True, caplog=None)
     # test_multiple_undo_redo_bug_with_gui(None)
-    # pytest.main(['-s', __file__])
+    pytest.main(['-xs', __file__])

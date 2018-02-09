@@ -68,4 +68,4 @@ def test_slim_observer(caplog):
 
 if __name__ == '__main__':
     # test_slim_observer(None)
-    pytest.main([__file__])
+    pytest.main(['-s', __file__])

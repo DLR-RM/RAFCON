@@ -451,6 +451,9 @@ def patch_gtkmvc_model_mt():
         direct method call depending whether the caller's thread is
         different from the observer's thread"""
 
+        if not self._ModelMT__observer_threads.has_key(observer):
+            logger.error("ASSERT WILL COME observer not in observable threads observer: {0} observable: {1}"
+                         "".format(observer, self))
         assert self._ModelMT__observer_threads.has_key(observer)
         if _threading.currentThread() == self._ModelMT__observer_threads[observer]:
             # standard call => single threaded

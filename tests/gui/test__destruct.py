@@ -451,15 +451,16 @@ def run_simple_modification_construction():
     print "check before add_state"
     print "%" * 50
 
-    # testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
-    #                                 rafcon.gui.helpers.state.StateType.EXECUTION)
+    testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
+                                    rafcon.gui.helpers.state.StateType.EXECUTION)
     print "%" * 50
     print "after first add"
     print "%" * 50
     testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
                                     rafcon.gui.helpers.state.StateType.HIERARCHY)
 
-    new_state_ids = [state_id for state_id, state_m in sm_m.root_state.states.iteritems() if state_id not in list_exsisting_state_ids]
+    new_state_ids = [state_id for state_id, state_m in sm_m.root_state.states.iteritems()
+                     if state_id not in list_exsisting_state_ids]
     for state_id in new_state_ids:
         testing_utils.call_gui_callback(sm_m.root_state.state.remove_state, state_id)
     print "%" * 50
@@ -664,7 +665,7 @@ def patch_gtkmvc_classes_with_log():
         with open(self.__gen_log_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
-        old_gtkmvc_model_mt_init(self, glade, top, parent, builder)
+        old_gtkmvc_model_mt_init(self)
 
     gtkmvc.View.__init__ = gtkmvc_view_init
     # gtkmvc.ModelMT.__init__ = gtkmvc_model_mt_init
@@ -892,7 +893,7 @@ def test_simple_model_and_core_destruct_with_gui(caplog):
     import rafcon.gui.mygaphas.items.connection
     import rafcon.gui.mygaphas.items.ports
 
-    searched_class = rafcon.gui.mygaphas.items.ports.InputPortView
+    searched_class = rafcon.core.states.hierarchy_state.HierarchyState
 
     elements = [
                 (rafcon.core.states.state.State, True),
@@ -909,6 +910,7 @@ def test_simple_model_and_core_destruct_with_gui(caplog):
                 # (searched_class, False),
                 ]
     _test_widget_destruct(caplog, elements, searched_class, run_simple_controller_construction,
+    # _test_widget_destruct(caplog, elements, searched_class, run_simple_modification_construction,
                           gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
@@ -953,10 +955,10 @@ def test_complex_model_and_core_destruct_with_gui(caplog):
                 (rafcon.core.state_elements.state_element.StateElement, False),
                 (rafcon.gui.models.abstract_state.AbstractStateModel, False),
                 (rafcon.gui.models.state_element.StateElementModel, False),
-                (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.View, True),
-                (gtkmvc.Controller, True),
-                # (searched_class, False),
+                # (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
+                # (gtkmvc.View, True),
+                # (gtkmvc.Controller, True),
+                (searched_class, False),
                 ]
     _test_widget_destruct(caplog, elements, searched_class, run_complex_controller_construction,
                           gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
@@ -974,10 +976,10 @@ def test_model_and_core_modification_history_destruct_with_gui(caplog):
     searched_class = rafcon.core.states.hierarchy_state.HierarchyState
 
     elements = [
-                (rafcon.core.states.state.State, False),
-                (rafcon.core.state_elements.state_element.StateElement, False),
-                (rafcon.gui.models.abstract_state.AbstractStateModel, False),
-                (rafcon.gui.models.state_element.StateElementModel, False),
+                (rafcon.core.states.state.State, True),
+                (rafcon.core.state_elements.state_element.StateElement, True),
+                (rafcon.gui.models.abstract_state.AbstractStateModel, True),
+                (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
                 (gtkmvc.View, True),
                 (gtkmvc.Controller, True),
@@ -985,6 +987,7 @@ def test_model_and_core_modification_history_destruct_with_gui(caplog):
                 ]
     _test_widget_destruct(caplog, elements, searched_class, run_simple_modification_construction,
                           gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
+                          # gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
 def run_copy_and_paste():
@@ -1105,8 +1108,9 @@ if __name__ == '__main__':
     # test_model_and_core_destruct(None)
     # test_simple_model_and_core_destruct_with_gui(None)
     # test_simple_execution_model_and_core_destruct_with_gui(None)
-    # test_complex_model_and_core_destruct_with_gui(None)
     # test_model_and_core_modification_history_destruct_with_gui(None)
-    test_copy_paste_with_modification_history_destruct_with_gui(None)
+    # test_copy_paste_with_modification_history_destruct_with_gui(None)
+    test_model_and_core_modification_history_destruct_with_gui(None)
+    # test_complex_model_and_core_destruct_with_gui(None)
     # import pytest
     # pytest.main(['-s', __file__])
