@@ -91,8 +91,6 @@ class GraphicalEditorController(ExtendedController):
     def destroy(self):
         if self.view:
             self.view.editor.prepare_destruction()
-        self.state_action_signal.__func__.affected_models = None
-        self.state_action_signal.__func__.target = None
         super(GraphicalEditorController, self).destroy()
 
     def register_view(self, view):
