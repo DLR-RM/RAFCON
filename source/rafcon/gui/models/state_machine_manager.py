@@ -82,8 +82,8 @@ class StateMachineManagerModel(ModelMT):
         from rafcon.gui.utils.notification_overview import NotificationOverview
         overview = NotificationOverview(info)
         if isinstance(overview['result'][-1], Exception):
-            logger.error("result type is {0} and the full notification {1}".format(type(overview['result'][-1]),
-                                                                                  overview))
+            logger.error("result type is {0} and the full notification {1}"
+                         "".format(type(overview['result'][-1]), overview))
             return
         # TODO end ######################################
         if info["method_name"] == "add_state_machine":
