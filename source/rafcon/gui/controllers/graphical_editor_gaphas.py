@@ -65,7 +65,6 @@ class GraphicalEditorController(ExtendedController):
         element
     """
 
-    _ongoing_complex_actions = {}
     drag_motion_handler_id = None
     focus_changed_handler_id = None
 
@@ -81,6 +80,9 @@ class GraphicalEditorController(ExtendedController):
         self.canvas = MyCanvas()
         self.zoom = 3.
         self.perform_drag_and_drop = False
+
+        self._ongoing_complex_actions = {}
+        self._action_where_in = []
 
         view.setup_canvas(self.canvas, self.zoom)
 
@@ -391,8 +393,10 @@ class GraphicalEditorController(ExtendedController):
             self._ongoing_complex_actions[action]['affected_models'] = affected_models
             if action in ['change_state_type', 'change_root_state_type']:
                 self._ongoing_complex_actions[action]['target'] = affected_models[0]
+                self._ongoing_complex_actions[action]['target_v'] = self.canvas.get_view_for_model(affected_models[0])
             else:
                 self._ongoing_complex_actions[action]['target'] = action_parent_m
+                self._ongoing_complex_actions[action]['target_v'] = self.canvas.get_view_for_model(action_parent_m)
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
@@ -414,6 +418,7 @@ class GraphicalEditorController(ExtendedController):
             # new_state_m = self.model.root_state
         else:
             return
+        old_state_v = self._ongoing_complex_actions[action]['target_v']
 
         # print self.__class__.__name__, 'remove complex action', action
         #     id(old_state_m), id(new_state_m), old_state_m, new_state_m
@@ -421,7 +426,7 @@ class GraphicalEditorController(ExtendedController):
         self._action_where_in.append(action)
         if not self._ongoing_complex_actions:
             self.relieve_model(model)
-            self.adapt_complex_action(old_state_m, new_state_m)
+            self.adapt_complex_action(old_state_m, new_state_m, old_state_v)
             self._action_where_in = []
 
     @ExtendedController.observe("state_machine", after=True)
@@ -653,8 +658,9 @@ class GraphicalEditorController(ExtendedController):
                     raise
 
     @lock_state_machine
-    def adapt_complex_action(self, old_state_m, new_state_m):
-        old_state_v = self.canvas.get_view_for_model(old_state_m)
+    def adapt_complex_action(self, old_state_m, new_state_m, old_state_v=None):
+        if not old_state_v:
+            old_state_v = self.canvas.get_view_for_model(old_state_m)
 
         # If the root state has been changed, we recreate the whole state machine view
         if old_state_m is self.root_state_m:
