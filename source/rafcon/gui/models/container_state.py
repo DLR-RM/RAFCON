@@ -116,22 +116,23 @@ class ContainerStateModel(StateModel):
                or item in self.transitions or item in self.data_flows \
                or item in self.scoped_variables
 
-    def prepare_destruction(self):
+    def prepare_destruction(self, recursive=True):
         """Prepares the model for destruction
 
         Recursively un-registers all observers and removes references to child models. Extends the destroy method of
         the base class by child elements of a container state.
         """
-        super(ContainerStateModel, self).prepare_destruction()
-        for scoped_variable in self.scoped_variables:
-            scoped_variable.prepare_destruction()
+        super(ContainerStateModel, self).prepare_destruction(recursive)
+        if recursive:
+            for scoped_variable in self.scoped_variables:
+                scoped_variable.prepare_destruction()
+            for connection in self.transitions[:] + self.data_flows[:]:
+                connection.prepare_destruction()
+            for state in self.states.itervalues():
+                state.prepare_destruction(recursive)
         del self.scoped_variables[:]
-        for connection in self.transitions[:] + self.data_flows[:]:
-            connection.prepare_destruction()
         del self.transitions[:]
         del self.data_flows[:]
-        for state in self.states.itervalues():
-            state.prepare_destruction()
         self.states.clear()
 
     def update_hash(self, obj_hash):

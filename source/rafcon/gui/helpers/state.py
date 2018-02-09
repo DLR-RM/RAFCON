@@ -264,6 +264,8 @@ def change_state_type(state_m, target_class):
                                                        after=True, result=e))
 
     old_state.destroy(recursive=False)
+    if not is_root_state:  # TODO make it work without excluding root state type changes
+        old_state_m.prepare_destruction(recursive=False)
 
     if is_root_state:
         suppressed_notification_parameters = state_machine_m.change_root_state_type.__func__.suppressed_notification_parameters
