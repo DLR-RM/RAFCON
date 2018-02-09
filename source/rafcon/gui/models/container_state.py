@@ -251,7 +251,6 @@ class ContainerStateModel(StateModel):
         if info.method_name in ['start_state_id', 'add_transition', 'remove_transition']:
             self.update_child_is_start()
 
-        model_list = None
         if info.method_name in ["add_transition", "remove_transition", "transitions"]:
             (model_list, data_list, model_name, model_class, model_key) = self._get_model_info("transition")
         elif info.method_name in ["add_data_flow", "remove_data_flow", "data_flows"]:
@@ -260,17 +259,22 @@ class ContainerStateModel(StateModel):
             (model_list, data_list, model_name, model_class, model_key) = self._get_model_info("state", info)
         elif info.method_name in ["add_scoped_variable", "remove_scoped_variable", "scoped_variables"]:
             (model_list, data_list, model_name, model_class, model_key) = self._get_model_info("scoped_variable")
+        else:
+            return
 
-        if model_list is not None:
-            if "add" in info.method_name:
-                self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
-            elif "remove" in info.method_name:
-                # TODO D-Enable the next lines with default value destroy True
-                # print "remove", info.method_name, info.args, info.kwargs, 'destroy', info.kwargs.get('destroy', False)
-                destroy = info.kwargs.get('destroy', False)
-                self.remove_additional_model(model_list, data_list, model_name, model_key, destroy)
-            elif info.method_name in ["transitions", "data_flows", "states", "scoped_variables"]:
-                self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
+        if "add" in info.method_name:
+            self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
+        elif "remove" in info.method_name:
+            # print self.__class__.__name__, "remove", info.method_name, 'destroy: ', info.kwargs.get('destroy', True)
+            # print self.__class__.__name__, "args", info.args, model_list, info.result, model_key, destroy, info
+            destroy = info.kwargs.get('destroy', True)
+            if not isinstance(info.result, Exception):
+                self.remove_specific_model(model_list, info.result, model_key, destroy)
+            else:
+                raise Exception("There was already an exception raised by and catched by gtmvc {0}"
+                                "".format(info.result))
+        elif info.method_name in ["transitions", "data_flows", "states", "scoped_variables"]:
+            self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
 
     @ModelMT.observe("state", after=True, before=True)
     def change_state_type(self, model, prop_name, info):
