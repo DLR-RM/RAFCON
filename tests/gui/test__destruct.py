@@ -349,6 +349,8 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
             print "ImportError no generation of graph"
             return
 
+        print "graph from object: ", target_object_s, id(target_object_s)
+
         if isinstance(target_object_s, list):
             target_object = target_object_s[0]
             folder_path = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "..", "..",
@@ -366,7 +368,7 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
                 os.makedirs(folder_path)
             graph_file_name = os.path.join(folder_path, str(id(target_object)) + "_sample-graph.png")
             objgraph.show_backrefs(target_object,
-                                   max_depth=5, extra_ignore=(), filter=None, too_many=10,
+                                   max_depth=7, extra_ignore=(), filter=None, too_many=10,
                                    highlight=None,
                                    extra_info=None, refcounts=True, shortnames=False,
                                    filename=graph_file_name)
@@ -939,31 +941,6 @@ def test_simple_execution_model_and_core_destruct_with_gui(caplog):
                           gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
-def test_complex_model_and_core_destruct_with_gui(caplog):
-
-    testing_utils.dummy_gui(None)
-
-    import rafcon.gui.models.abstract_state
-    import rafcon.gui.models.state_element
-    import rafcon.gui.controllers.utils.extended_controller
-    import rafcon.core.states.hierarchy_state
-
-    searched_class = rafcon.core.states.hierarchy_state.HierarchyState
-
-    elements = [
-                (rafcon.core.states.state.State, False),
-                (rafcon.core.state_elements.state_element.StateElement, False),
-                (rafcon.gui.models.abstract_state.AbstractStateModel, False),
-                (rafcon.gui.models.state_element.StateElementModel, False),
-                # (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                # (gtkmvc.View, True),
-                # (gtkmvc.Controller, True),
-                (searched_class, False),
-                ]
-    _test_widget_destruct(caplog, elements, searched_class, run_complex_controller_construction,
-                          gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
-
-
 def test_model_and_core_modification_history_destruct_with_gui(caplog):
 
     testing_utils.dummy_gui(None)
@@ -1121,6 +1098,33 @@ def test_copy_paste_with_modification_history_destruct_with_gui(caplog):
                           gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
+def test_complex_model_and_core_destruct_with_gui(caplog):
+
+    testing_utils.dummy_gui(None)
+
+    import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.state_element
+    import rafcon.gui.controllers.utils.extended_controller
+    import rafcon.core.states.hierarchy_state
+
+    import rafcon.gui.models.container_state
+    # searched_class = rafcon.core.states.hierarchy_state.HierarchyState
+    searched_class = rafcon.gui.models.container_state.ContainerStateModel
+
+    elements = [
+                (rafcon.core.states.state.State, True),
+                (rafcon.core.state_elements.state_element.StateElement, True),
+                (rafcon.gui.models.abstract_state.AbstractStateModel, True),
+                (rafcon.gui.models.state_element.StateElementModel, True),
+                (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
+                (gtkmvc.View, True),
+                (gtkmvc.Controller, True),
+                (searched_class, False),
+                ]
+    _test_widget_destruct(caplog, elements, searched_class, run_complex_controller_construction,
+                          gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
+
+
 def _test_widget_destruct(caplog, elements, searched_class, func, gui_config):
     # if core test run before
     import rafcon.gui.singleton
@@ -1142,18 +1146,19 @@ def _test_widget_destruct(caplog, elements, searched_class, func, gui_config):
         func()
     except Exception as e:
         exception_during_test_method = e
-    finally:
-        testing_utils.close_gui()
-        rafcon.gui.singleton.main_window_controller = None  # could be moved to the testing_utils but is not needed
-        if exception_during_test_method:
-            raise exception_during_test_method
-        print "%" * 50
-        print "check for existing objects print"
-        print "%" * 50
-        check_existing_objects_of_kind(elements, print_func, ignored_objects=already_existing_objects,
-                                       searched_type=searched_class.__name__)
-        run_un_patching(elements)
-        testing_utils.shutdown_environment(caplog=caplog)
+        raise
+    # finally:
+    testing_utils.close_gui()
+    rafcon.gui.singleton.main_window_controller = None  # could be moved to the testing_utils but is not needed
+    if exception_during_test_method:
+        raise exception_during_test_method
+    print "%" * 50
+    print "check for existing objects print"
+    print "%" * 50
+    check_existing_objects_of_kind(elements, print_func, ignored_objects=already_existing_objects,
+                                   searched_type=searched_class.__name__)
+    run_un_patching(elements)
+    testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':
@@ -1163,8 +1168,8 @@ if __name__ == '__main__':
     # test_simple_model_and_core_destruct_with_gui(None)
     # test_simple_execution_model_and_core_destruct_with_gui(None)
     # test_model_and_core_modification_history_destruct_with_gui(None)
-    test_copy_paste_with_modification_history_destruct_with_gui(None)
+    # test_copy_paste_with_modification_history_destruct_with_gui(None)
     # test_model_and_core_modification_history_destruct_with_gui(None)
-    # test_complex_model_and_core_destruct_with_gui(None)
+    test_complex_model_and_core_destruct_with_gui(None)
     # import pytest
     # pytest.main(['-s', __file__])

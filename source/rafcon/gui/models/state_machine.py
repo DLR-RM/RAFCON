@@ -143,6 +143,7 @@ class StateMachineModel(ModelMT, Hashable):
 
         Unregister itself as observer from the state machine and the root state
         """
+        self.selection.clear()  # TODO D-Check ones more this was needed for the root state type change with gaphas
         self.destruction_signal.emit()
         if self.history is not None:
             self.history.prepare_destruction()

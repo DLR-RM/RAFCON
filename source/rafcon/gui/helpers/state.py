@@ -274,12 +274,11 @@ def change_state_type(state_m, target_class):
         else:
             del getattr(old_state_m, prop_name)[:]
 
-    if not is_root_state:  # TODO D-make it work without excluding root state type changes -> gaphas problems
-        old_state.destroy(recursive=True)
-        old_state_m.prepare_destruction(recursive=True)
-        if unique_decider_state_m:
-            unique_decider_state_m.state.destroy(recursive=True)
-            unique_decider_state_m.prepare_destruction(recursive=True)
+    old_state.destroy(recursive=True)
+    old_state_m.prepare_destruction(recursive=True)
+    if unique_decider_state_m:
+        unique_decider_state_m.state.destroy(recursive=True)
+        unique_decider_state_m.prepare_destruction(recursive=True)
 
     if is_root_state:
         suppressed_notification_parameters = state_machine_m.change_root_state_type.__func__.suppressed_notification_parameters
