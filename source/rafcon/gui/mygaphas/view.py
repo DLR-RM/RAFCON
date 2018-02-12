@@ -42,6 +42,7 @@ class ExtendedGtkView(GtkView, Observer):
         """Get rid of circular references"""
         self._tool = None
         self._painter = None
+        self.relieve_model(self._selection)
 
     @property
     def graphical_editor(self):
@@ -190,7 +191,6 @@ class ExtendedGtkView(GtkView, Observer):
     @Observer.observe("destruction_signal", signal=True)
     def _on_root_state_destruction(self, root_state_m, signal_name, signal_msg):
         """Ignore future selection changes when state machine is being destroyed"""
-        self.relieve_model(self._selection)
         self.relieve_model(root_state_m)
 
     @Observer.observe("selection_changed_signal", signal=True)
