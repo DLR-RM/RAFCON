@@ -247,7 +247,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         :return:
         """
         state_id = super(BarrierConcurrencyState, self).add_state(state)
-        if not storage_load and state.state_id is not UNIQUE_DECIDER_STATE_ID:
+        if not storage_load and not state.state_id == UNIQUE_DECIDER_STATE_ID:
             # the transitions must only be created for the initial add_state call and not during each load procedure
             for o_id, o in state.outcomes.iteritems():
                 if not o_id == -1 and not o_id == -2:
