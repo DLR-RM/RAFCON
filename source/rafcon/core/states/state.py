@@ -633,7 +633,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param bool force: if the removal should be forced without checking constraints
         :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
-        print self.__class__.__name__, "State method remove", state_element, recursive, force, destroy
         if isinstance(state_element, Outcome):
             return self.remove_outcome(state_element.outcome_id, force=force, destroy=destroy)
         elif isinstance(state_element, InputDataPort):
