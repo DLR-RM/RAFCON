@@ -271,7 +271,9 @@ def change_state_type(state_m, target_class):
     for prop_name in model_properties:  # this maybe can be moved into the extract children function, later
         if hasattr(getattr(old_state_m, prop_name), 'keys'):
             getattr(old_state_m, prop_name).clear()
+            getattr(old_state_m.state, prop_name).clear()
         else:
+            getattr(old_state_m.state, prop_name).clear()
             del getattr(old_state_m, prop_name)[:]
 
     old_state.destroy(recursive=True)
