@@ -66,7 +66,7 @@ class PatchedFileChooserDialog(gtk.FileChooserDialog):
     pass
 
 
-def _test_gui_tests(monkeypatch, caplog):
+def test_gui_tests(monkeypatch, caplog):
     # let the gui thread create the gui singletons by opening and closing an empty gui
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
 

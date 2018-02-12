@@ -13,7 +13,6 @@ import rafcon.core.state_elements.state_element
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
-import core.test_states as basic_state_machines
 import testing_utils
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -839,8 +838,9 @@ def test_core_destruct(caplog):
 
     run_patching(elements)
 
-    basic_state_machines.test_create_state(caplog)
-    basic_state_machines.test_create_container_state(caplog)
+    import core.test_states as basic_state_machines
+    # basic_state_machines.test_create_state(caplog)
+    # basic_state_machines.test_create_container_state(caplog)
     basic_state_machines.test_port_and_outcome_removal(caplog)
     # test
     generate_sm_for_garbage_collector()
@@ -911,9 +911,9 @@ def test_simple_model_and_core_destruct_with_gui(caplog):
                 (rafcon.gui.mygaphas.items.state.StateView, True),
                 # (searched_class, False),
                 ]
-    _test_widget_destruct(caplog, elements, searched_class, run_simple_controller_construction,
-    # _test_widget_destruct(caplog, elements, searched_class, run_simple_modification_construction,
-                          gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
+    run_setup_gui_destruct(caplog, elements, searched_class, run_simple_controller_construction,
+                           # run_setup_gui_destruct(caplog, elements, searched_class, run_simple_modification_construction,
+                           gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
 def test_simple_execution_model_and_core_destruct_with_gui(caplog):
@@ -937,8 +937,8 @@ def test_simple_execution_model_and_core_destruct_with_gui(caplog):
                 (gtkmvc.Controller, True),
                 # (searched_class, False),
                 ]
-    _test_widget_destruct(caplog, elements, searched_class, run_simple_execution_controller_construction,
-                          gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
+    run_setup_gui_destruct(caplog, elements, searched_class, run_simple_execution_controller_construction,
+                           gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
 def test_model_and_core_modification_history_destruct_with_gui(caplog):
@@ -962,9 +962,9 @@ def test_model_and_core_modification_history_destruct_with_gui(caplog):
                 (gtkmvc.Controller, True),
                 (searched_class, False),
                 ]
-    _test_widget_destruct(caplog, elements, searched_class, run_simple_modification_construction,
-                          gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
-                          # gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
+    run_setup_gui_destruct(caplog, elements, searched_class, run_simple_modification_construction,
+                           gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
+                           # gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
 def run_copy_cut_and_paste():
@@ -1085,17 +1085,17 @@ def test_copy_paste_with_modification_history_destruct_with_gui(caplog):
     # searched_class = rafcon.gui.models.transition.TransitionModel
 
     elements = [
-                (rafcon.core.states.state.State, False),
-                (rafcon.core.state_elements.state_element.StateElement, False),
-                (rafcon.gui.models.abstract_state.AbstractStateModel, False),
-                (rafcon.gui.models.state_element.StateElementModel, False),
+                (rafcon.core.states.state.State, True),
+                (rafcon.core.state_elements.state_element.StateElement, True),
+                (rafcon.gui.models.abstract_state.AbstractStateModel, True),
+                (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
                 (gtkmvc.View, True),
                 (gtkmvc.Controller, True),
                 (searched_class, False),
                 ]
-    _test_widget_destruct(caplog, elements, searched_class, run_copy_cut_and_paste,
-                          gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
+    run_setup_gui_destruct(caplog, elements, searched_class, run_copy_cut_and_paste,
+                           gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False}, expected_warnings=1)
 
 
 def test_complex_model_and_core_destruct_with_gui(caplog):
@@ -1121,11 +1121,11 @@ def test_complex_model_and_core_destruct_with_gui(caplog):
                 (gtkmvc.Controller, True),
                 (searched_class, False),
                 ]
-    _test_widget_destruct(caplog, elements, searched_class, run_complex_controller_construction,
-                          gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
+    run_setup_gui_destruct(caplog, elements, searched_class, run_complex_controller_construction,
+                           gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
-def _test_widget_destruct(caplog, elements, searched_class, func, gui_config):
+def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, expected_warnings=0, expected_errors=0):
     # if core test run before
     import rafcon.gui.singleton
     rafcon.gui.singleton.main_window_controller = None
@@ -1158,7 +1158,7 @@ def _test_widget_destruct(caplog, elements, searched_class, func, gui_config):
     check_existing_objects_of_kind(elements, print_func, ignored_objects=already_existing_objects,
                                    searched_type=searched_class.__name__)
     run_un_patching(elements)
-    testing_utils.shutdown_environment(caplog=caplog)
+    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=expected_warnings, expected_errors=expected_errors)
 
 
 if __name__ == '__main__':
@@ -1170,6 +1170,6 @@ if __name__ == '__main__':
     # test_model_and_core_modification_history_destruct_with_gui(None)
     # test_copy_paste_with_modification_history_destruct_with_gui(None)
     # test_model_and_core_modification_history_destruct_with_gui(None)
-    test_complex_model_and_core_destruct_with_gui(None)
-    # import pytest
-    # pytest.main(['-s', __file__])
+    # test_complex_model_and_core_destruct_with_gui(None)
+    import pytest
+    pytest.main(['-s', __file__])

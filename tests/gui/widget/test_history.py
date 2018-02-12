@@ -156,15 +156,15 @@ def prepare_state_machine_model(state_machine):
 
 
 def create_sm_model(with_gui=False, add_state_machine=False):
-    [logger, sm, state_dict] = create_state_machine()
 
     # create state machine model
     import rafcon.gui.singleton
     if with_gui:
-        [logger, sm, state_dict] = create_state_machine()
+        [logger, sm, state_dict] = call_gui_callback(create_state_machine)
         call_gui_callback(prepare_state_machine_model, sm)
         sm_model = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     else:
+        [logger, sm, state_dict] = create_state_machine()
         if add_state_machine:
             print "sm model 1"
             prepare_state_machine_model(sm)
@@ -1178,7 +1178,7 @@ def test_data_flow_property_modifications_history(caplog):
 
 
 @pytest.mark.parametrize("with_gui", [False, True])
-def _test_state_machine_modifications_with_gui(with_gui, caplog):
+def test_state_machine_modifications_with_gui(with_gui, caplog):
 
     testing_utils.dummy_gui(None)
 
@@ -1191,9 +1191,9 @@ def _test_state_machine_modifications_with_gui(with_gui, caplog):
             pass
         finally:
             testing_utils.close_gui()
-            testing_utils.shutdown_environment(caplog=caplog)
             if e:
-                raise e
+                logging.exception("Test failed with exception {0}".format(e))
+            testing_utils.shutdown_environment(caplog=caplog)
     else:
         testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True},
                                              gui_already_started=False)
@@ -1694,6 +1694,11 @@ def trigger_state_type_change_tests(with_gui):
                          stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
         call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
+        # final wait for gaphas
+        testing_utils.call_gui_callback(testing_utils.wait_for_gui)
+    else:
+        # final wait for models
+        testing_utils.wait_for_gui()
 
     check_elements_ignores.remove("internal_transitions")
     print check_elements_ignores
@@ -1858,8 +1863,8 @@ if __name__ == '__main__':
     # test_scoped_variable_modify_notification(None)
     # test_data_flow_property_modifications_history(None)
 
-    # _test_state_machine_modifications_with_gui(with_gui=True, caplog=None)
+    test_state_machine_modifications_with_gui(with_gui=True, caplog=None)
     # test_state_type_change_bugs_with_gui(with_gui=False, caplog=None)
     # test_state_type_change_bugs_with_gui(with_gui=True, caplog=None)
     # test_multiple_undo_redo_bug_with_gui(None)
-    pytest.main(['-xs', __file__])
+    # pytest.main(['-xs', __file__])
