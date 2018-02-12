@@ -1093,7 +1093,7 @@ class ContainerState(State):
         elif isinstance(state_element, ScopedVariable):
             return self.remove_scoped_variable(state_element.data_port_id, destroy=destroy)
         else:
-            super(ContainerState, self).remove(state_element, force, destroy=destroy)
+            super(ContainerState, self).remove(state_element, force=force, destroy=destroy)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------- transition functions -------------------------------------
