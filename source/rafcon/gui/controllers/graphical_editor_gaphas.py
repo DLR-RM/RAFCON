@@ -91,6 +91,8 @@ class GraphicalEditorController(ExtendedController):
     def destroy(self):
         if self.view:
             self.view.editor.prepare_destruction()
+        self.canvas._core_view_map.clear()  # TODO D-Remove this line again -> at the moment the maps are very screwed after a type change
+        self.canvas._model_view_map.clear()
         super(GraphicalEditorController, self).destroy()
 
     def register_view(self, view):
@@ -392,11 +394,19 @@ class GraphicalEditorController(ExtendedController):
 
             self._ongoing_complex_actions[action]['affected_models'] = affected_models
             if action in ['change_state_type', 'change_root_state_type']:
-                self._ongoing_complex_actions[action]['target'] = affected_models[0]
-                self._ongoing_complex_actions[action]['target_v'] = self.canvas.get_view_for_model(affected_models[0])
+                old_state_m = affected_models[0]
+                self._ongoing_complex_actions[action]['target'] = old_state_m
+                if action == 'change_state_type':
+                    self._ongoing_complex_actions[action]['target_parent_v'] = self.canvas.get_view_for_model(old_state_m.parent)
+                else:
+                    self._ongoing_complex_actions[action]['target_parent_v'] = self.canvas.get_view_for_model(old_state_m)
             else:
                 self._ongoing_complex_actions[action]['target'] = action_parent_m
-                self._ongoing_complex_actions[action]['target_v'] = self.canvas.get_view_for_model(action_parent_m)
+                self._ongoing_complex_actions[action]['target_parent_v'] = self.canvas.get_view_for_model(action_parent_m.parent)
+                old_state_m = action_parent_m
+            if not self._ongoing_complex_actions and action in ['change_state_type', 'change_root_state_type']:
+                old_state_v = self.canvas.get_view_for_model(old_state_m)
+                old_state_v.remove()
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
@@ -413,20 +423,26 @@ class GraphicalEditorController(ExtendedController):
         elif action in ['change_state_type', 'change_root_state_type']:
             old_state_m = self._ongoing_complex_actions[action]['target']
             new_state_m = affected_models[-1]
-
-            # old_state_m = self.root_state_m
-            # new_state_m = self.model.root_state
         else:
             return
-        old_state_v = self._ongoing_complex_actions[action]['target_v']
+        if action == 'undo/redo' and 'change_root_state_type' in self._action_where_in:
+            old_state_m = self.root_state_m
+            new_state_m = self.model.root_state
 
-        # print self.__class__.__name__, 'remove complex action', action
+        parent_state_v = self._ongoing_complex_actions[action]['target_parent_v']
+
+        # print self.__class__.__name__, 'remove complex action', action, \
         #     id(old_state_m), id(new_state_m), old_state_m, new_state_m
         del self._ongoing_complex_actions[action]
         self._action_where_in.append(action)
+
         if not self._ongoing_complex_actions:
+            # common case romve the view here in the after action signal
+            if 'change_root_state_type' not in self._action_where_in and 'change_state_type' not in self._action_where_in:
+                old_state_v = self.canvas.get_view_for_model(old_state_m)
+                old_state_v.remove()
             self.relieve_model(model)
-            self.adapt_complex_action(old_state_m, new_state_m, old_state_v)
+            self.adapt_complex_action(old_state_m, new_state_m, parent_state_v)
             self._action_where_in = []
 
     @ExtendedController.observe("state_machine", after=True)
@@ -658,13 +674,9 @@ class GraphicalEditorController(ExtendedController):
                     raise
 
     @lock_state_machine
-    def adapt_complex_action(self, old_state_m, new_state_m, old_state_v=None):
-        if not old_state_v:
-            old_state_v = self.canvas.get_view_for_model(old_state_m)
-
+    def adapt_complex_action(self, old_state_m, new_state_m, parent_state_v):
         # If the root state has been changed, we recreate the whole state machine view
         if old_state_m is self.root_state_m:
-            old_state_v.remove()
 
             # Create and and new root state view from new root state model
             self.root_state_m = new_state_m
@@ -677,8 +689,6 @@ class GraphicalEditorController(ExtendedController):
             # TODO use the handed affected_models list
 
             # 1st Recreate StateView by removing the old one and adding the new one
-            parent_state_v = self.canvas.get_view_for_model(old_state_v.model.parent)
-            old_state_v.remove()
             self.add_state_view_with_meta_data_for_model(new_state_m, parent_state_v.model)
 
             # 2nd Recreate connections to the replaced StateView to ensure correct connectivity

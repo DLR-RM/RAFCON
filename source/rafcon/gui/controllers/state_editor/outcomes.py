@@ -81,6 +81,27 @@ class StateOutcomesListController(ListViewController):
         else:
             logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
 
+
+    #     self._ongoing_complex_actions = []
+    #
+    #     self._path = model.state.get_path()
+    #     self.register_model()
+    #
+    #     print self.__class__.__name__, [self, id(model), id(self)], model, model.state
+    #
+    # def register_model(self):
+    #     self.relieve_all_models()
+    #     self.model = self.model.get_state_machine_m().get_state_model_by_path(self._path)
+    #     self.observe_model(self.model.get_state_machine_m().get_state_model_by_path(self._path))
+    #
+    #     if not self.model.state.is_root_state:
+    #         self.observe_model(self.model.parent)
+    #
+    #     if self.model.get_state_machine_m() is not None:
+    #         self.observe_model(self.model.get_state_machine_m())
+    #     else:
+    #         logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
+
     def register_view(self, view):
         """Called when the View was registered
 
@@ -154,6 +175,7 @@ class StateOutcomesListController(ListViewController):
                 transition_parent_state = self.model.parent.state
                 to_state_id = new_state_identifier.split('.')[1]
                 try:
+                    print self.__class__.__name__
                     t_id = transition_parent_state.add_transition(from_state_id=self.model.state.state_id,
                                                                   from_outcome=outcome_id,
                                                                   to_state_id=to_state_id,
@@ -198,6 +220,7 @@ class StateOutcomesListController(ListViewController):
                 to_outcome = int(new_outcome_identifier.split('.')[2])
 
                 try:
+                    print self.__class__.__name__
                     self.model.parent.state.add_transition(from_state_id=self.model.state.state_id,
                                                            from_outcome=outcome_id,
                                                            to_state_id=self.model.parent.state.state_id,
@@ -319,7 +342,20 @@ class StateOutcomesListController(ListViewController):
     @ListViewController.observe("outcomes", after=True)
     @ListViewController.observe("transitions", after=True)
     def outcomes_changed(self, model, prop_name, info):
+        # if not self._ongoing_complex_actions:
         self.update()
+    #
+    # @ExtendedController.observe("action_signal", signal=True)
+    # def get_action_signal(self, model, prop_name, info):
+    #     print self.__class__.__name__, "ACTION", info['arg'].action, self.model
+    #     if info['arg'].action in ['change_state_type', 'change_root_state_type', 'group_states', 'ungroup_state',
+    #                               'paste', 'cut', 'undo/redo']:
+    #         if info['arg'].after:
+    #             self._ongoing_complex_actions.remove(info['arg'].action)
+    #             self.register_model()
+    #             self.update()
+    #         else:
+    #             self._ongoing_complex_actions.append(info['arg'].action)
 
     @ExtendedController.observe("destruction_signal", signal=True)
     def get_destruction_signal(self, model, prop_name, info):
