@@ -294,7 +294,6 @@ class StateMachineModel(ModelMT, Hashable):
 
         if 'before' in info:
             self._send_root_state_notification(model, prop_name, info)
-            self.change_root_state_type.__func__.suppressed_notification_parameters = None
         else:
             # Do not forward the notification yet, but store its parameters locally at the function
             # The function helpers.state.change_state_type will forward the notification after some preparation
