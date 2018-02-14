@@ -334,6 +334,7 @@ def insert_state_as(target_state_m, state, as_template):
     # If inserted as template, we have to extract the state_copy and respective model
     else:
         assert isinstance(state, LibraryState)
+        old_lib_state_m = state_m
         state_m = state_m.state_copy
 
         gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
@@ -341,6 +342,8 @@ def insert_state_as(target_state_m, state, as_template):
         gui_helper_meta_data.put_default_meta_on_state_m(state_m, target_state_m)
         # TODO check if the not as template case maybe has to be run with the prepare call
         prepare_state_m_for_insert_as(state_m, previous_state_size)
+
+        old_lib_state_m.prepare_destruction(recursive=False)
 
     # explicit secure that there is no state_id conflict within target state child states
     while state_m.state.state_id in target_state_m.state.states:
