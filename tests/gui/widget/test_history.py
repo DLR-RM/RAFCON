@@ -181,6 +181,7 @@ def create_sm_model(with_gui=False, add_state_machine=False):
 
 # TODO introduce test_add_remove_history with_gui=True to have a more reliable unit-test
 def test_add_remove_history(caplog):
+    testing_utils.dummy_gui(None)
     ##################
     # Root_state elements
 
