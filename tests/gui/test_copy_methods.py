@@ -366,7 +366,7 @@ def run_copy_performance_test_and_check_storage_copy(*args):
     print "model_copy_duration: {}".format(model_copy_duration)
 
 
-def _test_simple(caplog):
+def test_simple(caplog):
     """Do all copy strategies possible in RAFCON and check if all Objects have different memory location to secure
     reference free assignments from origin to new state.
     :param caplog:
@@ -465,14 +465,15 @@ def test_complex(caplog):
     # This test must not be called by py.test directly!
     # As it is a test without gui it must not create the core and gui singletons,
     # otherwise the multi-threading test will fail
-    _test_simple(caplog)
+    # test_simple(caplog)
 
 
 if __name__ == '__main__':
+    testing_utils.dummy_gui(None)
     # import cProfile
     # import re
     # import copy
     # cProfile.run('test_state_add_remove_notification(None)')
     test_complex(None)
-    # _test_simple(None)
+    # test_simple(None)
     # pytest.main(['-s', __file__])

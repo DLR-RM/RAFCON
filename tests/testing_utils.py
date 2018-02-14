@@ -453,7 +453,7 @@ def patch_gtkmvc_model_mt():
 
         if not self._ModelMT__observer_threads.has_key(observer):
             logger.error("ASSERT WILL COME observer not in observable threads observer: {0} observable: {1}"
-                         "".format(observer, self))
+                         "-> known threads are {2}".format(observer, self, self._ModelMT__observer_threads))
         assert self._ModelMT__observer_threads.has_key(observer)
         if _threading.currentThread() == self._ModelMT__observer_threads[observer]:
             # standard call => single threaded

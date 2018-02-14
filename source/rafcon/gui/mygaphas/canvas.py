@@ -43,6 +43,8 @@ class MyCanvas(gaphas.canvas.Canvas):
 
         def delete_model_from_maps(model):
             try:
+                if model not in self._model_view_map:  # TODO D-Remove this line again
+                    return
                 view = self._model_view_map.pop(model)
                 core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
                 del self._core_view_map[core_element]
@@ -72,8 +74,10 @@ class MyCanvas(gaphas.canvas.Canvas):
             del self._core_view_map[port_m.core_element]
         else:
             logger.info("Core element is missing in canvas._core_view_map.")
-        # TODO end -- logging message occur in recent-open, resave-libraries and menu-bar test ########################
-        del self._model_view_map[port_m]
+        if port_m.core_element in self._core_view_map:   # TODO D-Remove this line again
+            del self._model_view_map[port_m]
+        else:
+            logger.info("Model is missing in canvas._model_view_map.")
 
     def exchange_model(self, old_model, new_model):
         view = self._core_view_map[old_model.core_element]
