@@ -489,7 +489,7 @@ class AbstractAction(object):
         self.after_overview = None
         self.after_storage = None  # tuple of state and states-list of storage tuple
 
-    def prepare_destrutcion(self):
+    def prepare_destruction(self):
         self.before_overview.prepare_destruction()
         if self. after_overview:
             self.after_overview.prepare_destruction()
@@ -895,8 +895,9 @@ class StateMachineAction(Action, ModelMT):
                  # logger.debug("DO root version change")
 
         previous_model = self.state_machine_model.root_state
+        affected_models = [previous_model, ]
         # TODO affected models should be more to allow recursive notification scheme and less updated elements
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=affected_models, after=False)
 
         if self.action_type == 'change_root_state_type':
             # observe root state model (type change signal)
@@ -922,8 +923,8 @@ class StateMachineAction(Action, ModelMT):
         #     insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
         #                            state_model=self.state_machine_model.root_state)
 
-        # TODO check if this ok ... see type change performance in graphical editor
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
+        affected_models.append(self.state_machine_model.root_state)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=affected_models, after=True)
 
     @ModelMT.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):

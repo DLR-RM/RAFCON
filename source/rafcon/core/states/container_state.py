@@ -348,15 +348,6 @@ class ContainerState(State):
         [related_transitions, related_data_flows] = self.related_linkage_states_and_scoped_variables(state_ids,
                                                                                                      scoped_variable_ids)
 
-        # all states
-        states_to_group = {state_id: self.states[state_id] for state_id in state_ids}
-        # all internal scoped variables
-        scoped_variables_to_group = {dp_id: self.scoped_variables[dp_id] for dp_id in scoped_variable_ids}
-        # all internal transitions
-        transitions_internal = {t.transition_id: t for t in related_transitions['enclosed']}
-        # all internal data flows
-        data_flows_internal = {df.data_flow_id: df for df in related_data_flows['enclosed']}
-
         def assign_ingoing_outgoing(df, going_data_linkage_for_port, ingoing=True):
             internal = 'internal' if ingoing else 'external'
             external = 'external' if ingoing else 'internal'
@@ -471,8 +462,14 @@ class ContainerState(State):
         # print_df_from_and_to(outgoing_data_linkage_for_port)
 
         ############################# CREATE NEW STATE #############################
-        [self.remove_state(state_id, recursive=False, destroy=False) for state_id in state_ids]
-        [self.remove_scoped_variable(sv_id) for sv_id in scoped_variable_ids]
+        # all internal scoped variables
+        scoped_variables_to_group = {dp_id: self.remove_scoped_variable(dp_id, destroy=False) for dp_id in scoped_variable_ids}
+        # all internal transitions
+        transitions_internal = {t.transition_id: self.remove_transition(t.transition_id) for t in related_transitions['enclosed']}
+        # all internal data flows
+        data_flows_internal = {df.data_flow_id: self.remove_data_flow(df.data_flow_id) for df in related_data_flows['enclosed']}
+        # all states
+        states_to_group = {state_id: self.remove_state(state_id, recursive=False, destroy=False) for state_id in state_ids}
         # TODO if the version is final create the ingoing and outgoing internal linkage before and hand it while state creation
         from rafcon.core.states.hierarchy_state import HierarchyState
         s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
@@ -540,11 +537,14 @@ class ContainerState(State):
         # external outgoing transitions
         for goal, name in outcomes_outgoing_transitions.iteritems():
             try:
+                # avoid to use a outcome twice
+                if not any(t for t in s.transitions.itervalues()
+                           if t.from_state == s.state_id and t.from_outcome == new_outcome_ids[name]):
+                    continue
+                # add the transition for the outcome
                 self.add_transition(s.state_id, new_outcome_ids[name], goal[0], goal[1])
             except ValueError:
-                from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
-                if not isinstance(self, BarrierConcurrencyState):
-                    logger.exception("Error while recreation of logical linkage.")
+                logger.exception("Error while recreation of logical linkage.")
         # internal outgoing transitions
         for t_id, t in transitions_outgoing.iteritems():
             name = outcomes_outgoing_transitions[(t.to_state, t.to_outcome)]
@@ -646,7 +646,7 @@ class ContainerState(State):
         child_scoped_variables = [sv for sv_id, sv in state.scoped_variables.iteritems()]
 
         # remove state that should be ungrouped
-        self.remove_state(state_id, recursive=False, destroy=True)
+        old_state = self.remove_state(state_id, recursive=False, destroy=False)
 
         # fill elements into parent state and remember id mapping from child to parent state to map other properties
         state_id_dict = {}
@@ -718,6 +718,11 @@ class ContainerState(State):
         self.ungroup_state.__func__.enclosed_df_id_dict = enclosed_df_id_dict
         self.ungroup_state.__func__.enclosed_t_id_dict = enclosed_t_id_dict
 
+        old_state.states.clear()
+        old_state.destroy(recursive=True)
+
+        return old_state
+
     @lock_state_machine
     @Observable.observed
     def add_state(self, state, storage_load=False):
@@ -746,7 +751,7 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_state(self, state_id, recursive=True, force=True, destroy=True):
+    def remove_state(self, state_id, recursive=True, force=False, destroy=True):
         """Remove a state from the container state.
 
         :param state_id: the id of the state to remove
@@ -1085,7 +1090,7 @@ class ContainerState(State):
         :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, State):
-			return self.remove_state(state_element.state_id, recursive=recursive, force=force, destroy=destroy)
+            return self.remove_state(state_element.state_id, recursive=recursive, force=force, destroy=destroy)
         elif isinstance(state_element, Transition):
             return self.remove_transition(state_element.transition_id, destroy=destroy)
         elif isinstance(state_element, DataFlow):
@@ -1093,7 +1098,7 @@ class ContainerState(State):
         elif isinstance(state_element, ScopedVariable):
             return self.remove_scoped_variable(state_element.data_port_id, destroy=destroy)
         else:
-            super(ContainerState, self).remove(state_element, force, destroy=destroy)
+            super(ContainerState, self).remove(state_element, force=force, destroy=destroy)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------- transition functions -------------------------------------

@@ -88,7 +88,14 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
             counted_warnings += 1
         elif record.levelno == logging.ERROR:
             counted_errors += 1
+        # the exception info dict can hold references core and model objects
+        # -> so the caplog does not allow gc to collect them
+        if hasattr(record, 'exc_info'):
+            record.exc_info = None
+
+    print "counted_warnings == expected_warnings", counted_warnings, expected_warnings
     assert counted_warnings == expected_warnings
+    print "counted_errors == expected_errors", counted_errors, expected_errors
     assert counted_errors == expected_errors
 
 
@@ -451,6 +458,9 @@ def patch_gtkmvc_model_mt():
         direct method call depending whether the caller's thread is
         different from the observer's thread"""
 
+        if not self._ModelMT__observer_threads.has_key(observer):
+            logger.error("ASSERT WILL COME observer not in observable threads observer: {0} observable: {1}"
+                         "-> known threads are {2}".format(observer, self, self._ModelMT__observer_threads))
         assert self._ModelMT__observer_threads.has_key(observer)
         if _threading.currentThread() == self._ModelMT__observer_threads[observer]:
             # standard call => single threaded

@@ -116,22 +116,23 @@ class ContainerStateModel(StateModel):
                or item in self.transitions or item in self.data_flows \
                or item in self.scoped_variables
 
-    def prepare_destruction(self):
+    def prepare_destruction(self, recursive=True):
         """Prepares the model for destruction
 
         Recursively un-registers all observers and removes references to child models. Extends the destroy method of
         the base class by child elements of a container state.
         """
-        super(ContainerStateModel, self).prepare_destruction()
-        for scoped_variable in self.scoped_variables:
-            scoped_variable.prepare_destruction()
+        super(ContainerStateModel, self).prepare_destruction(recursive)
+        if recursive:
+            for scoped_variable in self.scoped_variables:
+                scoped_variable.prepare_destruction()
+            for connection in self.transitions[:] + self.data_flows[:]:
+                connection.prepare_destruction()
+            for state in self.states.itervalues():
+                state.prepare_destruction(recursive)
         del self.scoped_variables[:]
-        for connection in self.transitions[:] + self.data_flows[:]:
-            connection.prepare_destruction()
         del self.transitions[:]
         del self.data_flows[:]
-        for state in self.states.itervalues():
-            state.prepare_destruction()
         self.states.clear()
 
     def update_hash(self, obj_hash):
@@ -251,7 +252,6 @@ class ContainerStateModel(StateModel):
         if info.method_name in ['start_state_id', 'add_transition', 'remove_transition']:
             self.update_child_is_start()
 
-        model_list = None
         if info.method_name in ["add_transition", "remove_transition", "transitions"]:
             (model_list, data_list, model_name, model_class, model_key) = self._get_model_info("transition")
         elif info.method_name in ["add_data_flow", "remove_data_flow", "data_flows"]:
@@ -260,17 +260,23 @@ class ContainerStateModel(StateModel):
             (model_list, data_list, model_name, model_class, model_key) = self._get_model_info("state", info)
         elif info.method_name in ["add_scoped_variable", "remove_scoped_variable", "scoped_variables"]:
             (model_list, data_list, model_name, model_class, model_key) = self._get_model_info("scoped_variable")
+        else:
+            return
 
-        if model_list is not None:
-            if "add" in info.method_name:
-                self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
-            elif "remove" in info.method_name:
-                # TODO D-Enable the next lines with default value destroy True
-                # print "remove", info.method_name, info.args, info.kwargs, 'destroy', info.kwargs.get('destroy', False)
-                destroy = info.kwargs.get('destroy', False)
-                self.remove_additional_model(model_list, data_list, model_name, model_key, destroy)
-            elif info.method_name in ["transitions", "data_flows", "states", "scoped_variables"]:
-                self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
+        if "add" in info.method_name:
+            self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
+        elif "remove" in info.method_name:
+            destroy = info.kwargs.get('destroy', True)
+            recursive = info.kwargs.get('recursive', True)
+            # print self.__class__.__name__, "remove", info.method_name, 'destroy: ', destroy, 'recursive:', recursive, info.result
+            # print self.__class__.__name__, "args", info.args, model_list, info.result, model_key, destroy, info
+            if not isinstance(info.result, Exception):
+                self.remove_specific_model(model_list, info.result, model_key, recursive, destroy)
+            else:
+                raise Exception("There was already an exception raised by and catched by gtmvc {0}"
+                                "".format(info.result))
+        elif info.method_name in ["transitions", "data_flows", "states", "scoped_variables"]:
+            self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
 
     @ModelMT.observe("state", after=True, before=True)
     def change_state_type(self, model, prop_name, info):
@@ -278,7 +284,7 @@ class ContainerStateModel(StateModel):
             return
 
     def insert_meta_data_from_models_dict(self, source_models_dict):
-
+        # TODO D-Clean this up and integrate proper into group/ungroup functionality
         related_models = []
         if 'state' in source_models_dict:
             self.meta = source_models_dict['state'].meta
@@ -288,6 +294,7 @@ class ContainerStateModel(StateModel):
                 if child_state_id in self.states:
                     self.states[child_state_id].meta = child_state_m.meta
                     related_models.append(self.states[child_state_id])
+                    child_state_m.prepare_destruction()
                 else:
                     logger.warning("state model to set meta data could not be found -> {0}".format(child_state_m.state))
         if 'scoped_variables' in source_models_dict:
@@ -295,6 +302,7 @@ class ContainerStateModel(StateModel):
                 if self.get_scoped_variable_m(sv_data_port_id):
                     self.get_scoped_variable_m(sv_data_port_id).meta = sv_m.meta
                     related_models.append(self.get_scoped_variable_m(sv_data_port_id))
+                    sv_m.prepare_destruction()
                 else:
                     logger.warning("scoped variable model to set meta data could not be found"
                                    " -> {0}".format(sv_m.scoped_variable))
@@ -303,6 +311,7 @@ class ContainerStateModel(StateModel):
                 if self.get_transition_m(t_id) is not None:
                     self.get_transition_m(t_id).meta = t_m.meta
                     related_models.append(self.get_transition_m(t_id))
+                    t_m.prepare_destruction()
                 else:
                     logger.warning("transition model to set meta data could not be found -> {0}".format(t_m.transition))
         if 'data_flows' in source_models_dict:
@@ -310,6 +319,7 @@ class ContainerStateModel(StateModel):
                 if self.get_data_flow_m(df_id) is not None:
                     self.get_data_flow_m(df_id).meta = df_m.meta
                     related_models.append(self.get_data_flow_m(df_id))
+                    df_m.prepare_destruction()
                 else:
                     logger.warning("data flow model to set meta data could not be found -> {0}".format(df_m.data_flow))
 

@@ -136,21 +136,25 @@ class StateModel(AbstractStateModel):
             output-data-port models
             outcome models
         """
-        model_list = None
+
         if info.method_name in ["add_input_data_port", "remove_input_data_port", "input_data_ports"]:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("input_data_port")
         elif info.method_name in ["add_output_data_port", "remove_output_data_port", "output_data_ports"]:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("output_data_port")
         elif info.method_name in ["add_outcome", "remove_outcome", "outcomes"]:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("outcome")
+        else:
+            return
 
-        if model_list is not None:
-            if "add" in info.method_name:
-                self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
-            elif "remove" in info.method_name:
-                self.remove_additional_model(model_list, data_list, model_name, model_key)
-            elif info.method_name in ["input_data_ports", "output_data_ports", "outcomes"]:
-                self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
+        if "add" in info.method_name:
+            self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
+        elif "remove" in info.method_name:
+            destroy = info.kwargs.get('destroy', True)
+            # print self.__class__.__name__, "remove", info.method_name, 'destroy: ', destroy
+            # print "remove", info.method_name, 'destroy', info.kwargs.get('destroy', False), info.args, info.kwargs
+            self.remove_specific_model(model_list, info.result, model_key, destroy)
+        elif info.method_name in ["input_data_ports", "output_data_ports", "outcomes"]:
+            self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
 
     def _load_input_data_port_models(self):
         """Reloads the input data port models directly from the the state
@@ -236,6 +240,8 @@ class StateModel(AbstractStateModel):
         :return: True, is a new model was added, False else
         :rtype: bool
         """
+        #print self.__class__.__name__, "try to add_missing_model"
+
         def core_element_has_model(core_object):
             for model_or_key in model_list_or_dict:
                 model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
@@ -255,12 +261,29 @@ class StateModel(AbstractStateModel):
                 new_model = model_class(core_element, self)
 
             # insert new model into list or dict
+            #print self.__class__.__name__, "add_missing_model", new_model, core_element, id(self), self
             if model_key is None:
                 model_list_or_dict.append(new_model)
             else:
                 model_list_or_dict[getattr(core_element, model_key)] = new_model
             return True
         return False
+
+    def remove_specific_model(self, model_list_or_dict, core_element, model_key=None, recursive=True, destroy=True):
+        # print self.__class__.__name__, "try to remove", "|",  core_element, "|", model_list_or_dict, model_key, destroy
+        for model_or_key in model_list_or_dict:
+            model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
+            if model.core_element is core_element:
+                if model_key is None:
+                    if destroy:
+                        model.prepare_destruction()
+                    model_list_or_dict.remove(model)
+                else:
+                    if destroy:
+                        model_list_or_dict[model_or_key].prepare_destruction(recursive)
+                    del model_list_or_dict[model_or_key]
+                return
+        # print self.__class__.__name__, "failed to remove", "|",  core_element, "|", model_list_or_dict, model_key, destroy
 
     def remove_additional_model(self, model_list_or_dict, core_objects_dict, model_name, model_key, destroy=True):
         """Remove one unnecessary model
@@ -285,12 +308,12 @@ class StateModel(AbstractStateModel):
                     break
             if not found:
                 if model_key is None:
-                    # if destroy:
-                    #     model.prepare_destruction()
+                    if destroy:
+                        model.prepare_destruction()
                     model_list_or_dict.remove(model)
                 else:
-                    # if destroy:
-                    #     model_list_or_dict[model_or_key].prepare_destruction()
+                    if destroy:
+                        model_list_or_dict[model_or_key].prepare_destruction()
                     del model_list_or_dict[model_or_key]
                 return
 

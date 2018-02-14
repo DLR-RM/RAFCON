@@ -344,8 +344,8 @@ def test_on_clean_storing_with_name_in_path(caplog):
 
 
 if __name__ == '__main__':
-    test_storage_with_gui(with_gui=True, caplog=None)
-    test_storage_with_gui(with_gui=False, caplog=None)
-    test_on_clean_storing_with_name_in_path(None)
-    # import pytest
-    # pytest.main(['-s', __file__])
+    # test_storage_with_gui(with_gui=True, caplog=None)
+    # test_storage_with_gui(with_gui=False, caplog=None)
+    # test_on_clean_storing_with_name_in_path(None)
+    import pytest
+    pytest.main(['-s', __file__])

@@ -472,7 +472,7 @@ def refresh_all(force=False):
     state_machines_editor_ctrl.refresh_all_state_machines()
 
 
-def delete_core_element_of_model(model, raise_exceptions=False, recursive=True, destroy=True):
+def delete_core_element_of_model(model, raise_exceptions=False, recursive=True, destroy=True, force=True):
     """Deletes respective core element of handed model of its state machine
 
     If the model is one of state, data flow or transition, it is tried to delete that model together with its
@@ -500,7 +500,7 @@ def delete_core_element_of_model(model, raise_exceptions=False, recursive=True, 
 
     try:
         if core_element in state:
-            state.remove(core_element, recursive=recursive, destroy=destroy)
+            state.remove(core_element, recursive=recursive, destroy=destroy, force=force)
             return True
         return False
     except (AttributeError, ValueError) as e:
@@ -510,7 +510,7 @@ def delete_core_element_of_model(model, raise_exceptions=False, recursive=True, 
         return False
 
 
-def delete_core_elements_of_models(models, raise_exceptions=False, recursive=True, destroy=True):
+def delete_core_elements_of_models(models, raise_exceptions=False, recursive=True, destroy=True, force=True):
     """Deletes all respective core elements for the given models
 
     Calls the :func:`delete_core_element_of_model` for all given models.
@@ -523,7 +523,7 @@ def delete_core_elements_of_models(models, raise_exceptions=False, recursive=Tru
     # If only one model is given, make a list out of it
     if not hasattr(models, '__iter__'):
         models = [models]
-    return sum(delete_core_element_of_model(model, raise_exceptions, recursive=recursive, destroy=destroy)
+    return sum(delete_core_element_of_model(model, raise_exceptions, recursive=recursive, destroy=destroy, force=force)
                for model in models)
 
 
@@ -882,7 +882,7 @@ def group_selected_states_and_scoped_variables():
         logger.debug("Group selected states: {0} scoped variables: {1}".format(selected_states, selected_scoped_vars))
         # TODO remove un-select workaround (used to avoid wrong selections in gaphas and inconsistent selection)
         sm_m.selection.clear()
-        gui_helper_state.group_states_and_scoped_variables(selected_states, selected_scoped_vars)
+        return gui_helper_state.group_states_and_scoped_variables(selected_states, selected_scoped_vars)
 
 
 def ungroup_selected_state():
@@ -895,7 +895,7 @@ def ungroup_selected_state():
         if is_selection_inside_of_library_state(selected_elements=[selected_state_m]):
             logger.warn("Ungroup is not performed because target state is inside of a library state.")
             return
-        gui_helper_state.ungroup_state(selected_state_m)
+        return gui_helper_state.ungroup_state(selected_state_m)
 
 
 def get_root_state_name_of_sm_file_system_path(file_system_path):

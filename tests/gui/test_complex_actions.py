@@ -25,6 +25,9 @@ def create_models(*args, **kargs):
     ctr_state = HierarchyState(name="Root", state_id="Root")
     ctr_state.add_state(state1)
     ctr_state.add_state(state2)
+    ctr_state.start_state_id = state1.state_id
+    ctr_state.add_transition(state1.state_id, from_outcome=0, to_state_id=state2.state_id, to_outcome=None)
+    ctr_state.add_transition(state2.state_id, from_outcome=0, to_state_id=ctr_state.state_id, to_outcome=0)
     ctr_state.name = "Container"
 
     sm = StateMachine(ctr_state)
@@ -90,7 +93,6 @@ def trigger_repetitive_group_ungroup(*args):
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values()[0])
     # time.sleep(1)
     call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
-    # return
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0])
     # time.sleep(1)
     call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
@@ -107,7 +109,6 @@ def trigger_repetitive_group_ungroup(*args):
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0])
     call_gui_callback(gui_helper_state.change_state_type, sm_m.root_state.states.values()[0], BarrierConcurrencyState)
     # time.sleep(1)
-    # return
 
     # raw_input("enter")
     selected_states = [sm_m.root_state.states.values()[0].states[state_id] for state_id in ['State1', 'State2']]
@@ -126,6 +127,7 @@ def trigger_repetitive_group_ungroup(*args):
     # time.sleep(10)
     call_gui_callback(sm_m.history.undo)
     print "wait2 undo"
+    # import time
     # time.sleep(10)
 
     # exception test
@@ -134,6 +136,7 @@ def trigger_repetitive_group_ungroup(*args):
     print "select: ", [str(state_m) for state_m in selected_states]
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values())
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
+    # return
 
     # exception core test
     # call_gui_callback(sm_m.root_state.states.values()[0].state.group_states, ['State1', 'State2', UNIQUE_DECIDER_STATE_ID])
@@ -143,7 +146,7 @@ def trigger_repetitive_group_ungroup(*args):
 def test_repetitive_ungroup_state_and_group_states(caplog):
     """Check if repetitive group and ungroup works"""
     libraries = {"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
-    testing_utils.run_gui(libraries=libraries)
+    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True}, libraries=libraries)
     try:
         trigger_repetitive_group_ungroup()
     except Exception:
@@ -161,5 +164,6 @@ def test_repetitive_ungroup_state_and_group_states(caplog):
 #     pass
 
 if __name__ == '__main__':
-    test_repetitive_ungroup_state_and_group_states(None)
-    # pytest.main([__file__, '-xs'])
+    testing_utils.dummy_gui(None)
+    # test_repetitive_ungroup_state_and_group_states(None)
+    pytest.main([__file__, '-xs'])

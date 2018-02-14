@@ -65,7 +65,6 @@ class GraphicalEditorController(ExtendedController):
         element
     """
 
-    _complex_action = False
     drag_motion_handler_id = None
     focus_changed_handler_id = None
 
@@ -82,6 +81,9 @@ class GraphicalEditorController(ExtendedController):
         self.zoom = 3.
         self.perform_drag_and_drop = False
 
+        self._ongoing_complex_actions = {}
+        self._action_where_in = []
+
         view.setup_canvas(self.canvas, self.zoom)
 
         view.editor.drag_dest_set(gtk.DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
@@ -89,6 +91,8 @@ class GraphicalEditorController(ExtendedController):
     def destroy(self):
         if self.view:
             self.view.editor.prepare_destruction()
+        self.canvas._core_view_map.clear()  # TODO D-Remove this line again -> at the moment the maps are very screwed after a type change
+        self.canvas._model_view_map.clear()
         super(GraphicalEditorController, self).destroy()
 
     def register_view(self, view):
@@ -330,7 +334,7 @@ class GraphicalEditorController(ExtendedController):
         notification = meta_signal_message.notification
         if not notification:    # For changes applied to the root state, there are always two notifications
             return              # Ignore the one with less information
-        if self._complex_action:
+        if self._ongoing_complex_actions:
             return
 
         model = notification.model
@@ -368,42 +372,83 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
-        if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state',
-                                                    'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
-            if info['arg'].after is False:
-                self._complex_action = True
-                if info['arg'].action in ['group_states', 'paste', 'cut']:
-                    self.observe_model(info['arg'].action_parent_m)
-                else:
-                    self.observe_model(info['arg'].affected_models[0])
+        if not ('arg' in info and info['arg'].after is False):
+            return
 
-                # assert not hasattr(self.state_action_signal.__func__, "affected_models")
-                # assert not hasattr(self.state_action_signal.__func__, "target")
-                self.state_action_signal.__func__.affected_models = info['arg'].affected_models
-                self.state_action_signal.__func__.target = info['arg'].action_parent_m
+        action = info['arg'].action
+        action_parent_m = info['arg'].action_parent_m
+        affected_models = info['arg'].affected_models
+
+        if action in ['change_root_state_type', 'change_state_type', 'substitute_state',
+                      'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
+
+            # print self.__class__.__name__, 'add complex action', action
+            if not self._ongoing_complex_actions:
+                self._action_where_in = []
+
+            self._ongoing_complex_actions[action] = {}
+            if action in ['group_states', 'paste', 'cut']:
+                self.observe_model(info['arg'].action_parent_m)
+            else:
+                self.observe_model(info['arg'].affected_models[0])
+
+            self._ongoing_complex_actions[action]['affected_models'] = affected_models
+            if action in ['change_state_type', 'change_root_state_type']:
+                old_state_m = affected_models[0]
+                self._ongoing_complex_actions[action]['target'] = old_state_m
+                if action == 'change_state_type':
+                    self._ongoing_complex_actions[action]['target_parent_v'] = self.canvas.get_view_for_model(old_state_m.parent)
+                else:
+                    self._ongoing_complex_actions[action]['target_parent_v'] = self.canvas.get_view_for_model(old_state_m)
+            else:
+                self._ongoing_complex_actions[action]['target'] = action_parent_m
+                self._ongoing_complex_actions[action]['target_parent_v'] = self.canvas.get_view_for_model(action_parent_m.parent)
+                old_state_m = action_parent_m
+            if not self._ongoing_complex_actions and action in ['change_state_type', 'change_root_state_type']:
+                old_state_v = self.canvas.get_view_for_model(old_state_m)
+                old_state_v.remove()
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
-        if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
-                        info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut',
-                                               'undo/redo']:
-
-            old_state_m = self.state_action_signal.__func__.target
-            new_state_m = info['arg'].action_parent_m
-
-        elif isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
-                        info['arg'].action in ['change_state_type', 'change_root_state_type']:
-
-            old_state_m = model
-            new_state_m = info['arg'].affected_models[-1]
-
-        else:
+        if not (isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after):
             return
 
-        self._complex_action = False
-        self.relieve_model(model)
+        action = info['arg'].action
+        action_parent_m = info['arg'].action_parent_m
+        affected_models = info['arg'].affected_models
 
-        self.adapt_complex_action(old_state_m, new_state_m)
+        if isinstance(info['arg'].result, Exception) and action in self._ongoing_complex_actions:
+            del self._ongoing_complex_actions[action]
+            self._action_where_in.append(action)
+            return
+
+        if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
+            old_state_m = self._ongoing_complex_actions[action]['target']
+            new_state_m = action_parent_m
+        elif action in ['change_state_type', 'change_root_state_type']:
+            old_state_m = self._ongoing_complex_actions[action]['target']
+            new_state_m = affected_models[-1]
+        else:
+            return
+        if action == 'undo/redo' and 'change_root_state_type' in self._action_where_in:
+            old_state_m = self.root_state_m
+            new_state_m = self.model.root_state
+
+        parent_state_v = self._ongoing_complex_actions[action]['target_parent_v']
+
+        # print self.__class__.__name__, 'remove complex action', action, \
+        #     id(old_state_m), id(new_state_m), old_state_m, new_state_m
+        del self._ongoing_complex_actions[action]
+        self._action_where_in.append(action)
+
+        if not self._ongoing_complex_actions:
+            # common case romve the view here in the after action signal
+            if 'change_root_state_type' not in self._action_where_in and 'change_state_type' not in self._action_where_in:
+                old_state_v = self.canvas.get_view_for_model(old_state_m)
+                old_state_v.remove()
+            self.relieve_model(model)
+            self.adapt_complex_action(old_state_m, new_state_m, parent_state_v)
+            self._action_where_in = []
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
@@ -420,7 +465,7 @@ class GraphicalEditorController(ExtendedController):
         if 'method_name' in info and info['method_name'] == 'root_state_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
-            if self._complex_action:
+            if self._ongoing_complex_actions:
                 return
 
             # The method causing the change raised an exception, thus nothing was changed
@@ -630,16 +675,13 @@ class GraphicalEditorController(ExtendedController):
                 try:
                     self._meta_data_changed(None, model, 'append_to_last_change', True)
                 except Exception as e:
-                    logger.error('Error while trying to emit meta data signal {}'.format(e))
+                    logger.exception('Error while trying to emit meta data signal {0} {1}'.format(e))
                     raise
 
     @lock_state_machine
-    def adapt_complex_action(self, old_state_m, new_state_m):
-        old_state_v = self.canvas.get_view_for_model(old_state_m)
-
+    def adapt_complex_action(self, old_state_m, new_state_m, parent_state_v):
         # If the root state has been changed, we recreate the whole state machine view
         if old_state_m is self.root_state_m:
-            old_state_v.remove()
 
             # Create and and new root state view from new root state model
             self.root_state_m = new_state_m
@@ -652,8 +694,6 @@ class GraphicalEditorController(ExtendedController):
             # TODO use the handed affected_models list
 
             # 1st Recreate StateView by removing the old one and adding the new one
-            parent_state_v = self.canvas.get_view_for_model(old_state_v.model.parent)
-            old_state_v.remove()
             self.add_state_view_with_meta_data_for_model(new_state_m, parent_state_v.model)
 
             # 2nd Recreate connections to the replaced StateView to ensure correct connectivity
@@ -679,7 +719,8 @@ class GraphicalEditorController(ExtendedController):
         try:
             self._meta_data_changed(None, new_state_m, 'append_to_last_change', True)
         except Exception as e:
-            logger.error('Error while trying to emit meta data signal {}'.format(e))
+            logger.exception('Error while trying to emit meta data signal {}'.format(e))
+            raise
 
     @staticmethod
     def _extract_info_data(info):
@@ -977,11 +1018,11 @@ class GraphicalEditorController(ExtendedController):
 
     def react_to_event(self, event):
         """Check whether the given event should be handled
-        
-        Checks, whether the editor widget has the focus and whether the selected state machine corresponds to the 
+
+        Checks, whether the editor widget has the focus and whether the selected state machine corresponds to the
         state machine of this editor.
-        
-        :param event: GTK event object 
+
+        :param event: GTK event object
         :return: True if the event should be handled, else False
         :rtype: bool
         """

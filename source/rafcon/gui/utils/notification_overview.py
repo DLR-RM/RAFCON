@@ -169,6 +169,9 @@ class NotificationOverview(dict):
             # change
             s += "\n{0}affected_models={1}".format(level + "\t", meta_signal_msg_tuple.affected_models)
             meta_signal_dict['affected_models'] = meta_signal_msg_tuple.affected_models
+            if meta_signal_msg_tuple.after:
+                s += "\n{0}result={1}".format(level + "\t", meta_signal_msg_tuple.result)
+                meta_signal_dict['result'] = meta_signal_msg_tuple.result
 
             return s
 
