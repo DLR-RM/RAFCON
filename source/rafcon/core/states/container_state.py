@@ -1388,7 +1388,8 @@ class ContainerState(State):
             raise AttributeError("A scoped variable with id %s does not exist" % str(scoped_variable_id))
 
         # delete all data flows connected to scoped_variable
-        self.remove_data_flows_with_data_port_id(self._scoped_variables[scoped_variable_id].data_port_id)
+        if destroy:
+            self.remove_data_flows_with_data_port_id(scoped_variable_id)
 
         # delete scoped variable
         return self._scoped_variables.pop(scoped_variable_id)

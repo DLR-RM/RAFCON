@@ -398,7 +398,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :raises exceptions.AttributeError: if the specified input data port does not exist
         """
         if data_port_id in self._input_data_ports:
-            self.remove_data_flows_with_data_port_id(data_port_id)
+            if destroy:
+                self.remove_data_flows_with_data_port_id(data_port_id)
             return self._input_data_ports.pop(data_port_id)
         else:
             raise AttributeError("input data port with name %s does not exit", data_port_id)
@@ -458,7 +459,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :raises exceptions.AttributeError: if the specified input data port does not exist
         """
         if data_port_id in self._output_data_ports:
-            self.remove_data_flows_with_data_port_id(data_port_id)
+            if destroy:
+                self.remove_data_flows_with_data_port_id(data_port_id)
             return self._output_data_ports.pop(data_port_id)
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
@@ -662,7 +664,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.remove_outcome_hook(outcome_id)
 
         # delete possible transition connected to this outcome
-        if not self.is_root_state:
+        if destroy and not self.is_root_state:
             for transition_id, transition in self.parent.transitions.iteritems():
                 if transition.from_outcome == outcome_id and transition.from_state == self.state_id:
                     self.parent.remove_transition(transition_id)
