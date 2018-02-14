@@ -93,7 +93,7 @@ def copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menu_bar_ctrl)
 
 
 @log.log_exceptions(None, gtk_quit=True)
-def trigger_gui_signals(*args):
+def trigger_gui_signals(with_refresh=True):
     """The function triggers and test basic functions of the menu bar.
 
     At the moment those functions are tested:
@@ -292,13 +292,14 @@ def trigger_gui_signals(*args):
     assert len(data_flows_after['external']['ingoing']) == 1
     assert state_m_parent.state.states[new_state_id].input_data_ports.items()[0][1].default_value == 2.0
 
-    call_gui_callback(menubar_ctrl.on_refresh_libraries_activate)
-    call_gui_callback(testing_utils.wait_for_gui)
-    call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
-    call_gui_callback(testing_utils.wait_for_gui)
-    assert len(sm_manager_model.state_machines) == 1
+    if with_refresh:
+        call_gui_callback(menubar_ctrl.on_refresh_libraries_activate)
+        call_gui_callback(testing_utils.wait_for_gui)
+        call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
+        call_gui_callback(testing_utils.wait_for_gui)
+        assert len(sm_manager_model.state_machines) == 1
 
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
+        call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
 
 
 def test_gui(caplog):

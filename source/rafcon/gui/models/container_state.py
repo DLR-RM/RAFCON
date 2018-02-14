@@ -266,11 +266,12 @@ class ContainerStateModel(StateModel):
         if "add" in info.method_name:
             self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
         elif "remove" in info.method_name:
-            # print self.__class__.__name__, "remove", info.method_name, 'destroy: ', info.kwargs.get('destroy', True)
-            # print self.__class__.__name__, "args", info.args, model_list, info.result, model_key, destroy, info
             destroy = info.kwargs.get('destroy', True)
+            recursive = info.kwargs.get('recursive', True)
+            # print self.__class__.__name__, "remove", info.method_name, 'destroy: ', destroy, 'recursive:', recursive, info.result
+            # print self.__class__.__name__, "args", info.args, model_list, info.result, model_key, destroy, info
             if not isinstance(info.result, Exception):
-                self.remove_specific_model(model_list, info.result, model_key, destroy)
+                self.remove_specific_model(model_list, info.result, model_key, recursive, destroy)
             else:
                 raise Exception("There was already an exception raised by and catched by gtmvc {0}"
                                 "".format(info.result))
@@ -283,7 +284,7 @@ class ContainerStateModel(StateModel):
             return
 
     def insert_meta_data_from_models_dict(self, source_models_dict):
-
+        # TODO D-Clean this up and integrate proper into group/ungroup functionality
         related_models = []
         if 'state' in source_models_dict:
             self.meta = source_models_dict['state'].meta
@@ -293,6 +294,7 @@ class ContainerStateModel(StateModel):
                 if child_state_id in self.states:
                     self.states[child_state_id].meta = child_state_m.meta
                     related_models.append(self.states[child_state_id])
+                    child_state_m.prepare_destruction()
                 else:
                     logger.warning("state model to set meta data could not be found -> {0}".format(child_state_m.state))
         if 'scoped_variables' in source_models_dict:
@@ -300,6 +302,7 @@ class ContainerStateModel(StateModel):
                 if self.get_scoped_variable_m(sv_data_port_id):
                     self.get_scoped_variable_m(sv_data_port_id).meta = sv_m.meta
                     related_models.append(self.get_scoped_variable_m(sv_data_port_id))
+                    sv_m.prepare_destruction()
                 else:
                     logger.warning("scoped variable model to set meta data could not be found"
                                    " -> {0}".format(sv_m.scoped_variable))
@@ -308,6 +311,7 @@ class ContainerStateModel(StateModel):
                 if self.get_transition_m(t_id) is not None:
                     self.get_transition_m(t_id).meta = t_m.meta
                     related_models.append(self.get_transition_m(t_id))
+                    t_m.prepare_destruction()
                 else:
                     logger.warning("transition model to set meta data could not be found -> {0}".format(t_m.transition))
         if 'data_flows' in source_models_dict:
@@ -315,6 +319,7 @@ class ContainerStateModel(StateModel):
                 if self.get_data_flow_m(df_id) is not None:
                     self.get_data_flow_m(df_id).meta = df_m.meta
                     related_models.append(self.get_data_flow_m(df_id))
+                    df_m.prepare_destruction()
                 else:
                     logger.warning("data flow model to set meta data could not be found -> {0}".format(df_m.data_flow))
 

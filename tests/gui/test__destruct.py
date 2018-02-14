@@ -367,7 +367,7 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
                 os.makedirs(folder_path)
             graph_file_name = os.path.join(folder_path, str(id(target_object)) + "_sample-graph.png")
             objgraph.show_backrefs(target_object,
-                                   max_depth=7, extra_ignore=(), filter=None, too_many=10,
+                                   max_depth=15, extra_ignore=(), filter=None, too_many=10,
                                    highlight=None,
                                    extra_info=None, refcounts=True, shortnames=False,
                                    filename=graph_file_name)
@@ -468,9 +468,24 @@ def run_simple_modification_construction():
     print "after deletes"
     print "%" * 50
     import time
-    time.sleep(1)
-    # import test_group_ungroup
-    # test_group_ungroup.trigger_ungroup_signals()
+    # TODO D-get this test also running with refresh
+    print "%" * 50
+    print "do test menu bar"
+    print "%" * 50
+    import widget.test_menu_bar
+    # TODO D-Check why the third hierarchy of self copy-paste is not drawn
+    widget.test_menu_bar.trigger_gui_signals(with_refresh=False)
+    print "%" * 50
+    print "do test complex actions, group & ungroup"
+    print "%" * 50
+    import test_complex_actions
+    test_complex_actions.trigger_repetitive_group_ungroup()
+    print "%" * 50
+    print "do test ungroup"
+    print "%" * 50
+    import test_group_ungroup
+    test_group_ungroup.trigger_ungroup_signals()
+    testing_utils.call_gui_callback(testing_utils.wait_for_gui)
 
 
 def run_simple_execution_controller_construction():
@@ -942,15 +957,16 @@ def test_simple_execution_model_and_core_destruct_with_gui(caplog):
 
 
 def test_model_and_core_modification_history_destruct_with_gui(caplog):
-
     testing_utils.dummy_gui(None)
 
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
     import rafcon.core.states.hierarchy_state
+    import rafcon.core.states.execution_state
 
     searched_class = rafcon.core.states.hierarchy_state.HierarchyState
+    searched_class = rafcon.core.states.execution_state.ExecutionState
 
     elements = [
                 (rafcon.core.states.state.State, True),
@@ -962,8 +978,12 @@ def test_model_and_core_modification_history_destruct_with_gui(caplog):
                 (gtkmvc.Controller, True),
                 (searched_class, False),
                 ]
+    libraries = {"ros": os.path.join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
+                 "turtle_libraries": os.path.join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
+                 "generic": os.path.join(testing_utils.LIBRARY_SM_PATH, "generic")}
     run_setup_gui_destruct(caplog, elements, searched_class, run_simple_modification_construction,
-                           gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
+                           gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True}, libraries=libraries,
+                           expected_warnings=0, expected_errors=1)
                            # gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
@@ -1125,7 +1145,7 @@ def test_complex_model_and_core_destruct_with_gui(caplog):
                            gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
-def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, expected_warnings=0, expected_errors=0):
+def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, libraries=None, expected_warnings=0, expected_errors=0):
     # if core test run before
     import rafcon.gui.singleton
     rafcon.gui.singleton.main_window_controller = None
@@ -1133,7 +1153,7 @@ def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, e
                                                               print_func, log_file=False)
 
     # TODO make it fully working and later activate modification history and auto backup
-    testing_utils.run_gui(gui_config=gui_config)
+    testing_utils.run_gui(gui_config=gui_config, libraries=libraries)
 
     run_patching(elements)
 
@@ -1155,10 +1175,10 @@ def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, e
     print "%" * 50
     print "check for existing objects print"
     print "%" * 50
+    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=expected_warnings, expected_errors=expected_errors)
     check_existing_objects_of_kind(elements, print_func, ignored_objects=already_existing_objects,
                                    searched_type=searched_class.__name__)
     run_un_patching(elements)
-    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=expected_warnings, expected_errors=expected_errors)
 
 
 if __name__ == '__main__':

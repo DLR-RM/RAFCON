@@ -99,6 +99,13 @@ class ModificationsHistoryModel(ModelMT):
             self.modifications.prepare_destruction()
         except KeyError:  # Might happen if the observer was already unregistered
             pass
+        if self.active_action:
+            try:
+                self.active_action.prepare_destruction()
+            except Exception as e:
+                logger.exception("The modification history has had left over an active-action and "
+                                 "could not destroy it {0}.".format(e))
+            self.active_action = None
 
     def get_state_element_meta_from_internal_tmp_storage(self, state_path):
         path_elements = state_path.split('/')
@@ -214,7 +221,8 @@ class ModificationsHistoryModel(ModelMT):
         else:
             logger.info("Active Action {} is interrupted and removed.".format(info['prop_name']))
         # self.busy = True
-        # self.actual_action.undo()
+        self.active_action.prepare_destruction()
+        self.active_action = None
         # self.busy = False
         self.locked = False
         self.count_before = 0
@@ -441,6 +449,7 @@ class ModificationsHistoryModel(ModelMT):
         try:
             self.active_action.set_after(overview)
             self.state_machine_model.history.modifications.insert_action(self.active_action)
+            self.active_action = None
             # logger.debug("history is now: %s" % self.state_machine_model.history.modifications.single_trail_history())
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
         except:
@@ -451,7 +460,7 @@ class ModificationsHistoryModel(ModelMT):
         self.change_count += 1
 
     def re_initiate_meta_data(self):
-        self.active_action = []
+        self.active_action = None
         self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
 
     @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state_model changed
@@ -576,7 +585,7 @@ class ModificationsHistoryModel(ModelMT):
             if info['arg'].action in ['change_state_type', 'paste', 'cut',
                                       'substitute_state', 'group_states', 'ungroup_state']:
 
-                if not model.state.is_root_state:
+                if self.__buffered_root_state_model is not model:
                     self.relieve_model(model)
                     # print "RELIEVE MODEL", model
 
@@ -784,7 +793,7 @@ class HistoryTreeElement(object):
         return "prev_id: {0} next_id: {1} and other next_ids: {2}".format(self._prev_id, self._next_id, self._old_next_ids)
 
     def prepare_destruction(self):
-        self.action.prepare_destrutcion()
+        self.action.prepare_destruction()
 
     @property
     def prev_id(self):

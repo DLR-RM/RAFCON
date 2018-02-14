@@ -369,6 +369,7 @@ def insert_state_as(target_state_m, state, as_template):
     # If inserted as template, we have to extract the state_copy and respective model
     else:
         assert isinstance(state, LibraryState)
+        old_lib_state_m = state_m
         state_m = state_m.state_copy
 
         gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
@@ -376,6 +377,8 @@ def insert_state_as(target_state_m, state, as_template):
         gui_helper_meta_data.put_default_meta_on_state_m(state_m, target_state_m)
         # TODO check if the not as template case maybe has to be run with the prepare call
         prepare_state_m_for_insert_as(state_m, previous_state_size)
+
+        old_lib_state_m.prepare_destruction(recursive=False)
 
     # explicit secure that there is no state_id conflict within target state child states
     while state_m.state.state_id in target_state_m.state.states:
@@ -574,6 +577,8 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
     del action_parent_m.group_states.__func__.tmp_models_storage
     del action_parent_m.group_states.__func__.affected_models
 
+    return new_state
+
 
 def ungroup_state(state_m):
 
@@ -648,9 +653,10 @@ def ungroup_state(state_m):
                                                    affected_models=affected_models, after=True, result=e))
 
     # old_state_m.state.destroy(recursive=True)
-    # old_state_m.prepare_destruction()
+    old_state_m.prepare_destruction()
     del action_parent_m.ungroup_state.__func__.tmp_models_storage
     del action_parent_m.group_states.__func__.affected_models
+    return old_state_m
 
 
 def toggle_show_content_flag_of_library_state_model(state_m):

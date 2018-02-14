@@ -88,7 +88,14 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
             counted_warnings += 1
         elif record.levelno == logging.ERROR:
             counted_errors += 1
+        # the exception info dict can hold references core and model objects
+        # -> so the caplog does not allow gc to collect them
+        if hasattr(record, 'exc_info'):
+            record.exc_info = None
+
+    print "counted_warnings == expected_warnings", counted_warnings, expected_warnings
     assert counted_warnings == expected_warnings
+    print "counted_errors == expected_errors", counted_errors, expected_errors
     assert counted_errors == expected_errors
 
 

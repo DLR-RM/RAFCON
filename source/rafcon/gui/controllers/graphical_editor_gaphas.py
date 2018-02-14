@@ -417,6 +417,11 @@ class GraphicalEditorController(ExtendedController):
         action_parent_m = info['arg'].action_parent_m
         affected_models = info['arg'].affected_models
 
+        if isinstance(info['arg'].result, Exception) and action in self._ongoing_complex_actions:
+            del self._ongoing_complex_actions[action]
+            self._action_where_in.append(action)
+            return
+
         if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
             old_state_m = self._ongoing_complex_actions[action]['target']
             new_state_m = action_parent_m
@@ -670,7 +675,7 @@ class GraphicalEditorController(ExtendedController):
                 try:
                     self._meta_data_changed(None, model, 'append_to_last_change', True)
                 except Exception as e:
-                    logger.error('Error while trying to emit meta data signal {}'.format(e))
+                    logger.exception('Error while trying to emit meta data signal {0} {1}'.format(e))
                     raise
 
     @lock_state_machine
@@ -714,7 +719,8 @@ class GraphicalEditorController(ExtendedController):
         try:
             self._meta_data_changed(None, new_state_m, 'append_to_last_change', True)
         except Exception as e:
-            logger.error('Error while trying to emit meta data signal {}'.format(e))
+            logger.exception('Error while trying to emit meta data signal {}'.format(e))
+            raise
 
     @staticmethod
     def _extract_info_data(info):
