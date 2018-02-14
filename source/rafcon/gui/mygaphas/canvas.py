@@ -31,19 +31,33 @@ class MyCanvas(gaphas.canvas.Canvas):
     def _add_view_maps(self, view):
         model = view.model
         if model.core_element in self._core_view_map:
-            raise RuntimeError("Core element is already existing in _core_view_map")
+            view = self._core_view_map[model.core_element]
+            if view and view.remove: # self.canvas:
+                view.remove()
+            # raise RuntimeError("Core element is already existing in _core_view_map")
+            logger.info("Core element is already existing in _core_view_map {0}".format(model.core_element))
         if model in self._model_view_map:
-            raise RuntimeError("Model is already existing in _model_view_map")
+            view = self._model_view_map[model]
+            if view and view.remove: # self.canvas:
+                view.remove()
+            # raise RuntimeError("Model is already existing in _model_view_map")
+            logger.info("Model is already existing in _model_view_map {0}".format(model))
         self._core_view_map[model.core_element] = view
         self._model_view_map[model] = view
 
     def _remove_view_maps(self, view):
         try:
             model = view.model
-            del self._model_view_map[model]
+            if model in self._model_view_map:
+                del self._model_view_map[model]
+            else:
+                logger.info("View is missing in _model_view_map {0}".format(view))
             # Do not retrieve core element from model, as the model could have already been destroyed
-            core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
-            del self._core_view_map[core_element]
+            if view in self._core_view_map.values():
+                core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
+                del self._core_view_map[core_element]
+            else:
+                logger.info("View is missing in _core_view_map {0}".format(view))
         except KeyError:
             from rafcon.gui.models.library_state import LibraryStateModel
             if not isinstance(model.parent, LibraryStateModel):

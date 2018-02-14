@@ -83,6 +83,9 @@ class PortView(object):
         except Exception:
             if name == "name":
                 return self._name
+            elif name == 'remove':
+                if self.parent is None:
+                    return None
             raise
         # TODO end ########################################################################################
 

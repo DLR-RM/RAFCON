@@ -703,10 +703,11 @@ class GraphicalEditorController(ExtendedController):
                                    connected_transitions['external']['outgoing'] + \
                                    connected_data_flows['external']['ingoing'] + \
                                    connected_data_flows['external']['outgoing']
-            for connection in external_connections:
-                connection_v = self.canvas.get_view_for_core_element(connection)
-                connection_m = connection_v.model
-                connection_v.remove()
+            for connection_m in external_connections:
+                connection_v = self.canvas.get_view_for_core_element(connection_m)
+                if connection_v:
+                    connection_m = connection_v.model
+                    connection_v.remove()
                 if isinstance(connection_m, TransitionModel):
                     self.add_transition_view_for_model(connection_m, parent_state_v.model)
                 else:
