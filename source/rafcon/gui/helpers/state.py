@@ -145,17 +145,41 @@ def extract_child_models_of_state(state_m, new_state_class):
     new_state_is_container = issubclass(new_state_class, ContainerState)
 
     # define which model references to hold for new state
-    model_properties = ['input_data_ports', 'output_data_ports', 'outcomes']
+    required_model_properties = ['input_data_ports', 'output_data_ports', 'outcomes']
+    obsolete_model_properties = []
     if current_state_is_container and new_state_is_container:  # hold some additional references
         # transition are removed when changing the state type, thus do not copy them
-        model_properties.extend(['states', 'data_flows', 'scoped_variables'])
+        required_model_properties.extend(['states', 'data_flows', 'scoped_variables'])
+        obsolete_model_properties.append('transitions')
+    elif current_state_is_container:
+        obsolete_model_properties.extend(['states', 'transitions', 'data_flows', 'scoped_variables'])
 
-    child_models = {}
-    for prop_name in model_properties:
+    def get_element_list(state_m, prop_name):
+        wrapper = getattr(state_m, prop_name)
         # ._obj is needed as gaphas wraps observable lists and dicts into a gaphas.support.ObsWrapper
-        child_models[prop_name] = getattr(state_m, prop_name)._obj
+        list_or_dict = wrapper._obj
+        if isinstance(list_or_dict, list):
+            return list_or_dict[:]  # copy list
+        return list_or_dict.values()  # dict
 
-    return child_models, model_properties
+    required_child_models = {}
+    for prop_name in required_model_properties:
+        required_child_models[prop_name] = get_element_list(state_m, prop_name)
+    obsolete_child_models = {}
+    for prop_name in obsolete_model_properties:
+        obsolete_child_models[prop_name] = get_element_list(state_m, prop_name)
+
+    # Special handling of BarrierState, which includes the DeciderState that always becomes obsolete
+    if isinstance(state_m, ContainerStateModel):
+        decider_state_m = state_m.states.get(UNIQUE_DECIDER_STATE_ID, None)
+        if decider_state_m:
+            if new_state_is_container:
+                required_child_models['states'].remove(decider_state_m)
+                obsolete_child_models['states'] = [decider_state_m]
+            else:
+                obsolete_child_models['states'].append(decider_state_m)
+
+    return required_child_models, obsolete_child_models
 
 
 def create_state_model_for_state(new_state, meta, state_element_models):
@@ -187,21 +211,18 @@ def change_state_type(state_m, target_class):
 
     # Before the state type is actually changed, we extract the information from the old state model, to apply it
     # later on to the new state model
-    child_models, model_properties = extract_child_models_of_state(old_state_m, target_class)
+    required_child_models, obsolete_child_models = extract_child_models_of_state(old_state_m, target_class)
     old_state_meta = old_state_m.meta
     # By convention, the first element within the affected models list is the root model that has been affected
     affected_models = [old_state_m]
-    for state_elements in child_models.itervalues():
-        affected_models.extend(state_elements if isinstance(state_elements, list) else state_elements.values())
-
-    state_element_models = affected_models[1:]  # Leave out the old parent state model
-    # Leave out DeciderState but remember
-    if isinstance(state_m, ContainerStateModel):
-        unique_decider_state_m = state_m.states.get(UNIQUE_DECIDER_STATE_ID, None)
-    else:
-        unique_decider_state_m = None
-    if unique_decider_state_m:
-            state_element_models.remove(unique_decider_state_m)
+    state_element_models = []
+    obsolete_state_element_models = []
+    for state_elements in required_child_models.itervalues():
+        affected_models.extend(state_elements)
+        state_element_models.extend(state_elements)
+    for state_elements in obsolete_child_models.itervalues():
+        affected_models.extend(state_elements)
+        obsolete_state_element_models.extend(state_elements)
 
     # TODO ??? maybe separate again into state machine function and state function in respective helper module
     if is_root_state:
@@ -267,18 +288,13 @@ def change_state_type(state_m, target_class):
                                                        affected_models=affected_models,
                                                        after=True, result=e))
 
-    # secure destruction of all not used elements and the old state it self
-    for prop_name in model_properties:  # this maybe can be moved into the extract children function, later
-        if hasattr(getattr(old_state_m, prop_name), 'keys'):
-            getattr(old_state_m, prop_name).clear()
-        else:
-            del getattr(old_state_m, prop_name)[:]
-
-    old_state.destroy(recursive=True)
-    old_state_m.prepare_destruction(recursive=True)
-    if unique_decider_state_m:
-        unique_decider_state_m.state.destroy(recursive=True)
-        unique_decider_state_m.prepare_destruction(recursive=True)
+    # Destroy all states and state elements (core and models) that are no longer required
+    old_state.destroy(recursive=False)
+    old_state_m.prepare_destruction(recursive=False)
+    for state_element_m in obsolete_state_element_models:
+        if isinstance(state_element_m, AbstractStateModel):
+            state_element_m.core_element.destroy(recursive=True)
+        state_element_m.prepare_destruction()
 
     if is_root_state:
         suppressed_notification_parameters = state_machine_m.change_root_state_type.__func__.suppressed_notification_parameters
