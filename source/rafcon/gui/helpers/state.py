@@ -562,6 +562,8 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
     del action_parent_m.group_states.__func__.tmp_models_storage
     del action_parent_m.group_states.__func__.affected_models
 
+    return new_state
+
 
 def ungroup_state(state_m):
 
@@ -636,9 +638,10 @@ def ungroup_state(state_m):
                                                    affected_models=affected_models, after=True, result=e))
 
     # old_state_m.state.destroy(recursive=True)
-    # old_state_m.prepare_destruction()
+    old_state_m.prepare_destruction()
     del action_parent_m.ungroup_state.__func__.tmp_models_storage
     del action_parent_m.group_states.__func__.affected_models
+    return old_state_m
 
 
 def toggle_show_content_flag_of_library_state_model(state_m):

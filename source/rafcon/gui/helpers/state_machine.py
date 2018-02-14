@@ -882,7 +882,7 @@ def group_selected_states_and_scoped_variables():
         logger.debug("Group selected states: {0} scoped variables: {1}".format(selected_states, selected_scoped_vars))
         # TODO remove un-select workaround (used to avoid wrong selections in gaphas and inconsistent selection)
         sm_m.selection.clear()
-        gui_helper_state.group_states_and_scoped_variables(selected_states, selected_scoped_vars)
+        return gui_helper_state.group_states_and_scoped_variables(selected_states, selected_scoped_vars)
 
 
 def ungroup_selected_state():
@@ -895,7 +895,7 @@ def ungroup_selected_state():
         if is_selection_inside_of_library_state(selected_elements=[selected_state_m]):
             logger.warn("Ungroup is not performed because target state is inside of a library state.")
             return
-        gui_helper_state.ungroup_state(selected_state_m)
+        return gui_helper_state.ungroup_state(selected_state_m)
 
 
 def get_root_state_name_of_sm_file_system_path(file_system_path):
