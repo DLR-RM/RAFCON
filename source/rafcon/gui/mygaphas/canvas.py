@@ -28,56 +28,49 @@ class MyCanvas(gaphas.canvas.Canvas):
         self._core_view_map = {}
         self._model_view_map = {}
 
+    def _add_view_maps(self, view):
+        model = view.model
+        if model.core_element in self._core_view_map:
+            raise RuntimeError("Core element is already existing in _core_view_map")
+        if model in self._model_view_map:
+            raise RuntimeError("Model is already existing in _model_view_map")
+        self._core_view_map[model.core_element] = view
+        self._model_view_map[model] = view
+
+    def _remove_view_maps(self, view):
+        try:
+            model = view.model
+            del self._model_view_map[model]
+            # Do not retrieve core element from model, as the model could have already been destroyed
+            core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
+            del self._core_view_map[core_element]
+        except KeyError:
+            from rafcon.gui.models.library_state import LibraryStateModel
+            if not isinstance(model.parent, LibraryStateModel):
+                # TODO: Check if this exception can really be ignored
+                raise
+
     def add(self, item, parent=None, index=None):
         from rafcon.gui.mygaphas.items.state import StateView
         from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView
         if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
-            model = item.model
-            self._core_view_map[model.core_element] = item
-            self._model_view_map[model] = item
+            self._add_view_maps(item)
         super(MyCanvas, self).add(item, parent, index)
 
     def remove(self, item):
         from rafcon.gui.mygaphas.items.state import StateView
-        from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView
-
-        def delete_model_from_maps(model):
-            try:
-                if model not in self._model_view_map:  # TODO D-Remove this line again
-                    return
-                view = self._model_view_map.pop(model)
-                core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
-                del self._core_view_map[core_element]
-            except KeyError:
-                from rafcon.gui.models.library_state import LibraryStateModel
-                if not isinstance(model.parent, LibraryStateModel):
-                    # TODO: Check if this exception can really be ignored
-                    raise
-        if isinstance(item, StateView):
-            delete_model_from_maps(item.model)
-            map(delete_model_from_maps, [outcome.model for outcome in item.outcomes])
-            map(delete_model_from_maps, [input.model for input in item.inputs])
-            map(delete_model_from_maps, [output.model for output in item.outputs])
-        elif isinstance(item, ConnectionView) and not isinstance(item, ConnectionPlaceholderView):
-            delete_model_from_maps(item.model)
+        from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, DataFlowView
+        print "remove view", item, hex(id(item))
+        print "for model", item.model, hex(id(item.model))
+        if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
+            self._remove_view_maps(item)
         super(MyCanvas, self).remove(item)
 
     def add_port(self, port_v):
-        port_m = port_v.model
-        self._core_view_map[port_m.core_element] = port_v
-        self._model_view_map[port_m] = port_v
+        self._add_view_maps(port_v)
 
     def remove_port(self, port_v):
-        port_m = port_v.model
-        # TODO D-Find out why local test runs have missing core elements but not model elements in map (threading?) ###
-        if port_m.core_element in self._core_view_map:
-            del self._core_view_map[port_m.core_element]
-        else:
-            logger.info("Core element is missing in canvas._core_view_map.")
-        if port_m.core_element in self._core_view_map:   # TODO D-Remove this line again
-            del self._model_view_map[port_m]
-        else:
-            logger.info("Model is missing in canvas._model_view_map.")
+        self._remove_view_maps(port_v)
 
     def exchange_model(self, old_model, new_model):
         view = self._core_view_map[old_model.core_element]
