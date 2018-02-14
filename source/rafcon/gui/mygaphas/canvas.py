@@ -60,8 +60,6 @@ class MyCanvas(gaphas.canvas.Canvas):
     def remove(self, item):
         from rafcon.gui.mygaphas.items.state import StateView
         from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, DataFlowView
-        print "remove view", item, hex(id(item))
-        print "for model", item.model, hex(id(item.model))
         if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
             self._remove_view_maps(item)
         super(MyCanvas, self).remove(item)
