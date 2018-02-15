@@ -305,10 +305,10 @@ class StateMachineModel(ModelMT, Hashable):
                 self.state_machine._notify_method_before(self.state_machine, cause, (self.state_machine, ), info)
             elif 'after' in info:
                 self.state_machine._notify_method_after(self.state_machine, cause, None, (self.state_machine, ), info)
-        except AssertionError:
+        except AssertionError as e:
             # This fixes an AssertionError raised by GTKMVC. It can probably occur, when a controller unregisters
             # itself from a model, while the notification chain still propagates upwards.
-            pass
+            logger.exception("A exception occurs in the _send_root_state_notification method {0}.".format(e))
 
     #######################################################
     # --------------------- meta data methods ---------------------

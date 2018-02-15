@@ -367,7 +367,7 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
                 os.makedirs(folder_path)
             graph_file_name = os.path.join(folder_path, str(id(target_object)) + "_sample-graph.png")
             objgraph.show_backrefs(target_object,
-                                   max_depth=15, extra_ignore=(), filter=None, too_many=10,
+                                   max_depth=7, extra_ignore=(), filter=None, too_many=10,
                                    highlight=None,
                                    extra_info=None, refcounts=True, shortnames=False,
                                    filename=graph_file_name)
@@ -468,12 +468,11 @@ def run_simple_modification_construction():
     print "after deletes"
     print "%" * 50
     import time
-    # TODO D-get this test also running with refresh
     print "%" * 50
     print "do test menu bar"
     print "%" * 50
     import widget.test_menu_bar
-    # TODO D-Check why the third hierarchy of self copy-paste is not drawn
+    # TODO D-get this test also running with refresh
     widget.test_menu_bar.trigger_gui_signals(with_refresh=False)
     print "%" * 50
     print "do test complex actions, group & ungroup"

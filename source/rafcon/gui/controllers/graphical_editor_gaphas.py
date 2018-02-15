@@ -82,7 +82,7 @@ class GraphicalEditorController(ExtendedController):
         self.perform_drag_and_drop = False
 
         self._ongoing_complex_actions = {}
-        self._action_where_in = []
+        self._action_where_in = {}  # the variable is for debugging -> I like to have it to improve complex actions
 
         view.setup_canvas(self.canvas, self.zoom)
 
@@ -91,8 +91,6 @@ class GraphicalEditorController(ExtendedController):
     def destroy(self):
         if self.view:
             self.view.editor.prepare_destruction()
-        self.canvas._core_view_map.clear()  # TODO D-Remove this line again -> at the moment the maps are very screwed after a type change
-        self.canvas._model_view_map.clear()
         super(GraphicalEditorController, self).destroy()
 
     def register_view(self, view):
@@ -312,10 +310,8 @@ class GraphicalEditorController(ExtendedController):
     @ExtendedController.observe("destruction_signal", signal=True)
     def state_machine_destruction(self, model, prop_name, info):
         """ Clean up when state machine is being destructed """
-        root_state_v = self.canvas.get_view_for_model(self.root_state_m)
-        # TODO D-Fix this work around
-        if root_state_v:
-            root_state_v.remove()
+        if self.model is model:  # only used for the state machine destruction case
+            self.canvas.get_view_for_model(self.root_state_m).remove()
 
     @ExtendedController.observe("state_meta_signal", signal=True)
     def meta_changed_notify_after(self, state_machine_m, _, info):
@@ -384,7 +380,7 @@ class GraphicalEditorController(ExtendedController):
 
             # print self.__class__.__name__, 'add complex action', action
             if not self._ongoing_complex_actions:
-                self._action_where_in = []
+                self._action_where_in = {}
 
             self._ongoing_complex_actions[action] = {}
             if action in ['group_states', 'paste', 'cut']:
@@ -404,9 +400,8 @@ class GraphicalEditorController(ExtendedController):
                 self._ongoing_complex_actions[action]['target'] = action_parent_m
                 self._ongoing_complex_actions[action]['target_parent_v'] = self.canvas.get_view_for_model(action_parent_m.parent)
                 old_state_m = action_parent_m
-            if not self._ongoing_complex_actions and action in ['change_state_type', 'change_root_state_type']:
-                old_state_v = self.canvas.get_view_for_model(old_state_m)
-                old_state_v.remove()
+            # print "## actions in", self._ongoing_complex_actions.keys(), action == 'change_root_state_type'
+            # print self._ongoing_complex_actions
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
@@ -418,37 +413,29 @@ class GraphicalEditorController(ExtendedController):
         affected_models = info['arg'].affected_models
 
         if isinstance(info['arg'].result, Exception) and action in self._ongoing_complex_actions:
-            del self._ongoing_complex_actions[action]
-            self._action_where_in.append(action)
+            self._action_where_in.update({action: self._ongoing_complex_actions.pop(action)})
             return
 
-        if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
-            old_state_m = self._ongoing_complex_actions[action]['target']
+        if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut']:
             new_state_m = action_parent_m
-        elif action in ['change_state_type', 'change_root_state_type']:
-            old_state_m = self._ongoing_complex_actions[action]['target']
+        elif action in ['change_state_type', 'change_root_state_type', 'undo/redo']:
             new_state_m = affected_models[-1]
         else:
             return
-        if action == 'undo/redo' and 'change_root_state_type' in self._action_where_in:
-            old_state_m = self.root_state_m
-            new_state_m = self.model.root_state
+
+        old_state_m = self._ongoing_complex_actions[action]['target']
 
         parent_state_v = self._ongoing_complex_actions[action]['target_parent_v']
 
         # print self.__class__.__name__, 'remove complex action', action, \
         #     id(old_state_m), id(new_state_m), old_state_m, new_state_m
-        del self._ongoing_complex_actions[action]
-        self._action_where_in.append(action)
+        self._action_where_in.update({action: self._ongoing_complex_actions.pop(action)})
 
         if not self._ongoing_complex_actions:
-            # common case romve the view here in the after action signal
-            if 'change_root_state_type' not in self._action_where_in and 'change_state_type' not in self._action_where_in:
-                old_state_v = self.canvas.get_view_for_model(old_state_m)
-                old_state_v.remove()
+            # common case remove the view here in the after action signal
             self.relieve_model(model)
             self.adapt_complex_action(old_state_m, new_state_m, parent_state_v)
-            self._action_where_in = []
+            self._action_where_in = {}
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
@@ -680,9 +667,11 @@ class GraphicalEditorController(ExtendedController):
 
     @lock_state_machine
     def adapt_complex_action(self, old_state_m, new_state_m, parent_state_v):
+        old_state_v = self.canvas.get_view_for_model(old_state_m)
+        old_state_v.remove()
+
         # If the root state has been changed, we recreate the whole state machine view
         if old_state_m is self.root_state_m:
-
             # Create and and new root state view from new root state model
             self.root_state_m = new_state_m
             root_state_v = self.add_state_view_for_model(self.root_state_m)
@@ -708,6 +697,9 @@ class GraphicalEditorController(ExtendedController):
                 if connection_v:
                     connection_m = connection_v.model
                     connection_v.remove()
+                else:
+                    logger.info("The connection element was not existing before and therefore not removed, now."
+                                "{0}".format(connection_m))
                 if isinstance(connection_m, TransitionModel):
                     self.add_transition_view_for_model(connection_m, parent_state_v.model)
                 else:
