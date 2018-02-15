@@ -82,7 +82,8 @@ class GraphicalEditorController(ExtendedController):
         self.perform_drag_and_drop = False
 
         self._ongoing_complex_actions = {}
-        self._action_where_in = {}  # the variable is for debugging -> I like to have it to improve complex actions
+        # the variable is for debugging -> I like to have it to improve complex actions
+        self._convoluted_action_already_in = {}
 
         view.setup_canvas(self.canvas, self.zoom)
 
@@ -380,7 +381,7 @@ class GraphicalEditorController(ExtendedController):
 
             # print self.__class__.__name__, 'add complex action', action
             if not self._ongoing_complex_actions:
-                self._action_where_in = {}
+                self._convoluted_action_already_in = {}
 
             self._ongoing_complex_actions[action] = {}
             if action in ['group_states', 'paste', 'cut']:
@@ -413,7 +414,7 @@ class GraphicalEditorController(ExtendedController):
         affected_models = info['arg'].affected_models
 
         if isinstance(info['arg'].result, Exception) and action in self._ongoing_complex_actions:
-            self._action_where_in.update({action: self._ongoing_complex_actions.pop(action)})
+            self._convoluted_action_already_in.update({action: self._ongoing_complex_actions.pop(action)})
             return
 
         if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut']:
@@ -429,13 +430,13 @@ class GraphicalEditorController(ExtendedController):
 
         # print self.__class__.__name__, 'remove complex action', action, \
         #     id(old_state_m), id(new_state_m), old_state_m, new_state_m
-        self._action_where_in.update({action: self._ongoing_complex_actions.pop(action)})
+        self._convoluted_action_already_in.update({action: self._ongoing_complex_actions.pop(action)})
 
         if not self._ongoing_complex_actions:
             # common case remove the view here in the after action signal
             self.relieve_model(model)
             self.adapt_complex_action(old_state_m, new_state_m, parent_state_v)
-            self._action_where_in = {}
+            self._convoluted_action_already_in = {}
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
@@ -662,8 +663,7 @@ class GraphicalEditorController(ExtendedController):
                 try:
                     self._meta_data_changed(None, model, 'append_to_last_change', True)
                 except Exception as e:
-                    logger.exception('Error while trying to emit meta data signal {0} {1}'.format(e))
-                    raise
+                    logger.exception('Error while trying to emit meta data signal {0} {1}'.format(e, model))
 
     @lock_state_machine
     def adapt_complex_action(self, old_state_m, new_state_m, parent_state_v):
@@ -712,8 +712,7 @@ class GraphicalEditorController(ExtendedController):
         try:
             self._meta_data_changed(None, new_state_m, 'append_to_last_change', True)
         except Exception as e:
-            logger.exception('Error while trying to emit meta data signal {}'.format(e))
-            raise
+            logger.exception('Error while trying to emit meta data signal {0} {1}'.format(e, new_state_m))
 
     @staticmethod
     def _extract_info_data(info):
