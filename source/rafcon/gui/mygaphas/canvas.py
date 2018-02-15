@@ -31,13 +31,13 @@ class MyCanvas(gaphas.canvas.Canvas):
     def _add_view_maps(self, view):
         model = view.model
         if model.core_element in self._core_view_map:
-            view = self._core_view_map[model.core_element]
-            # if view and view.remove: # the following lines are here for debugging reasons
-            #     print "remove while add", model, view
-            #     # view.remove()
-            logger.info("Core element is already existing in _core_view_map "
-                        "{0}  {2} {1}".format(model.core_element, view, hash(model.core_element)))
-            # raise RuntimeError("Core element is already existing in _core_view_map")
+            # view = self._core_view_map[model.core_element]
+            # # if view and view.remove: # the following lines are here for debugging reasons
+            # #     print "remove while add", model, view
+            # #     # view.remove()
+            # logger.info("Core element is already existing in _core_view_map "
+            #             "{0}  {2} {1}".format(model.core_element, view, hash(model.core_element)))
+            raise RuntimeError("Core element is already existing in _core_view_map")
         if model in self._model_view_map:
             # view = self._model_view_map[model]  # the following lines are here for debugging reasons
             # if view and view.remove:  # self.canvas:
@@ -49,27 +49,21 @@ class MyCanvas(gaphas.canvas.Canvas):
         self._model_view_map[model] = view
 
     def _remove_view_maps(self, view):
-        try:
-            model = view.model
-            from rafcon.gui.models.abstract_state import AbstractStateModel
-            if model in self._model_view_map:
-                del self._model_view_map[model]
-            else:
-                logger.info("View is missing in _model_view_map {0} {1}".format(view, model))
-            # del self._model_view_map[model]
-            # # Do not retrieve core element from model, as the model could have already been destroyed
-            # core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
-            # del self._core_view_map[core_element]
-            if view in self._core_view_map.values():
-                core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
-                del self._core_view_map[core_element]
-            else:
-                logger.info("View is missing in _core_view_map {0} {1}".format(view, model))
-        except KeyError:
-            from rafcon.gui.models.library_state import LibraryStateModel
-            if not isinstance(model.parent, LibraryStateModel):
-                # TODO: Check if this exception can really be ignored
-                raise
+        model = view.model
+        # from rafcon.gui.models.abstract_state import AbstractStateModel
+        # if model in self._model_view_map:
+        #     del self._model_view_map[model]
+        # else:
+        #     logger.info("View is missing in _model_view_map {0} {1}".format(view, model))
+        del self._model_view_map[model]
+        # Do not retrieve core element from model, as the model could have already been destroyed
+        core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
+        del self._core_view_map[core_element]
+        # if view in self._core_view_map.values():
+        #     core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
+        #     del self._core_view_map[core_element]
+        # else:
+        #     logger.info("View is missing in _core_view_map {0} {1}".format(view, model))
 
     def add(self, item, parent=None, index=None):
         from rafcon.gui.mygaphas.items.state import StateView
@@ -89,12 +83,12 @@ class MyCanvas(gaphas.canvas.Canvas):
 
     def add_port(self, port_v):
         # The LibraryState and its state_copy share the same port core_elements
-        if not port_v.parent.model.state.is_root_state_of_library:
+        if not port_v.parent.is_root_state_of_library:
             self._add_view_maps(port_v)
 
     def remove_port(self, port_v):
         # The LibraryState and its state_copy share the same port core_elements
-        if not port_v.parent.model.state.is_root_state_of_library:
+        if not port_v.parent.is_root_state_of_library:
             self._remove_view_maps(port_v)
 
     def exchange_model(self, old_model, new_model):

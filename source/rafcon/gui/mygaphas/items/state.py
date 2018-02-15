@@ -63,6 +63,8 @@ class StateView(Element):
         self.width = size[0]
         self.height = size[1]
 
+        self.is_root_state_of_library = state_m.state.is_root_state_of_library
+
         self._state_m = ref(state_m)
         self.hierarchy_level = hierarchy_level
 
