@@ -791,11 +791,11 @@ class GraphicalEditorController(ExtendedController):
         # Draw state above data flows and NameView but beneath transitions
         num_data_flows = len(state_m.state.parent.data_flows) if isinstance(state_m.parent, ContainerStateModel) else 0
         index = 1 if not parent_v else num_data_flows + 1
-        if self.model.root_state is state_m:
-            print "init root_state", state_m, state_v
-        else:
-            print "init state", state_m, state_v
-        print [hash(elem) for elem in state_m.state.outcomes.itervalues()]
+        # if self.model.root_state is state_m:
+        #     print "init root_state", state_m, state_v
+        # else:
+        #     print "init state", state_m, state_v
+        # print [hash(elem) for elem in state_m.state.outcomes.itervalues()]
         self.canvas.add(state_v, parent_v, index=index)
         state_v.matrix.translate(*rel_pos)
 

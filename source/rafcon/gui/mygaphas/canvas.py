@@ -88,12 +88,14 @@ class MyCanvas(gaphas.canvas.Canvas):
         super(MyCanvas, self).remove(item)
 
     def add_port(self, port_v):
-        # print "add view", port_v
-        self._add_view_maps(port_v)
+        # The LibraryState and its state_copy share the same port core_elements
+        if not port_v.parent.model.state.is_root_state_of_library:
+            self._add_view_maps(port_v)
 
     def remove_port(self, port_v):
-        # print "remove", port_v
-        self._remove_view_maps(port_v)
+        # The LibraryState and its state_copy share the same port core_elements
+        if not port_v.parent.model.state.is_root_state_of_library:
+            self._remove_view_maps(port_v)
 
     def exchange_model(self, old_model, new_model):
         # print "exchange model", old_model, new_model
