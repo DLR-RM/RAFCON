@@ -31,19 +31,20 @@ class MyCanvas(gaphas.canvas.Canvas):
     def _add_view_maps(self, view):
         model = view.model
         if model.core_element in self._core_view_map:
-            # view = self._core_view_map[model.core_element]
+            view = self._core_view_map[model.core_element]
             # if view and view.remove: # the following lines are here for debugging reasons
-            #     print "remove while add", model
+            #     print "remove while add", model, view
             #     # view.remove()
-            logger.info("Core element is already existing in _core_view_map {0}".format(model.core_element))
+            logger.info("Core element is already existing in _core_view_map "
+                        "{0}  {2} {1}".format(model.core_element, view, hash(model.core_element)))
             # raise RuntimeError("Core element is already existing in _core_view_map")
         if model in self._model_view_map:
             # view = self._model_view_map[model]  # the following lines are here for debugging reasons
             # if view and view.remove:  # self.canvas:
-            #     print "remove while add", model
+            #     print "remove while add", model, view
             #     # view.remove()
-            logger.info("Model is already existing in _model_view_map {0}".format(model))
-            # raise RuntimeError("Model is already existing in _model_view_map")
+            # logger.info("Model is already existing in _model_view_map {0} {1}".format(model, view))
+            raise RuntimeError("Model is already existing in _model_view_map")
         self._core_view_map[model.core_element] = view
         self._model_view_map[model] = view
 
@@ -87,12 +88,15 @@ class MyCanvas(gaphas.canvas.Canvas):
         super(MyCanvas, self).remove(item)
 
     def add_port(self, port_v):
+        # print "add view", port_v
         self._add_view_maps(port_v)
 
     def remove_port(self, port_v):
+        # print "remove", port_v
         self._remove_view_maps(port_v)
 
     def exchange_model(self, old_model, new_model):
+        # print "exchange model", old_model, new_model
         view = self._core_view_map[old_model.core_element]
         del self._core_view_map[old_model.core_element]
         del self._model_view_map[old_model]
