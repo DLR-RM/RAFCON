@@ -109,10 +109,6 @@ def set_tab_label_texts(label, state_machine_m, unsaved_changes=False):
     label.set_tooltip_text(tooltip_text)
 
 
-def get_state_machine_id(state_machine_m):
-    return state_machine_m.state_machine.state_machine_id
-
-
 def add_state_machine(widget, event=None):
     """Create a new state-machine when the user clicks on the '+' next to the tabs"""
     logger.debug("Creating new state-machine...")
@@ -179,18 +175,13 @@ class StateMachinesEditorController(ExtendedController):
     def on_switch_page(self, notebook, page_pointer, page_num):
         # Important: The method notification_selected_sm_changed will trigger this method, which in turn will trigger
         #               the notification_selected_sm_changed method again, thus some parts of this function will be
-        #               triggerd twice => take care
+        #               triggered twice => take care
         # From documentation: Note the page parameter is a GPointer and not usable within PyGTK. Use the page_num
         # parameter to retrieve the new current page using the get_nth_page() method.
         page = notebook.get_nth_page(page_num)
         for tab_info in self.tabs.itervalues():
-            if tab_info['page'] is page:
-                # TODO D-Remove but if necessary its an improvement #####
-                if tab_info['state_machine_m'].state_machine is None:
-                    logger.info("This notification should not occur.")
-                    break
-                # TODO end ##############################################
-                new_sm_id = get_state_machine_id(tab_info['state_machine_m'])
+            if tab_info['page'] is page and tab_info['state_machine_m'].state_machine:
+                new_sm_id = tab_info['state_machine_m'].state_machine.state_machine_id
                 if self.model.selected_state_machine_id != new_sm_id:
                     self.model.selected_state_machine_id = new_sm_id
                 if self.last_focused_state_machine_ids and \
@@ -205,12 +196,7 @@ class StateMachinesEditorController(ExtendedController):
                                                state_machine_m, 'refused')
             set_tab_label_texts(tab_label, state_machine_m, state_machine_m.state_machine.marked_dirty)
             page = self.tabs[sm_id]['page']
-            # TODO D-Remove but if necessary its an improvement #####
-            if sm_id not in self.tabs:
-                logger.info("This notification should not happen")
-            else:
-                self.view.notebook.remove_page(self.get_page_num(sm_id))
-            # TODO end ##############################################
+            self.view.notebook.remove_page(self.get_page_num(sm_id))
             self.view.notebook.insert_page(page, tab, page_num)
 
     def get_page_num(self, state_machine_id):
@@ -224,7 +210,7 @@ class StateMachinesEditorController(ExtendedController):
     def get_state_machine_id_for_page(self, page):
         for tab_info in self.tabs.itervalues():
             if tab_info['page'] is page:
-                return get_state_machine_id(tab_info['state_machine_m'])
+                return tab_info['state_machine_m'].state_machine.state_machine_id
 
     def add_graphical_state_machine_editor(self, state_machine_m):
         """Add to for new state machine
@@ -235,7 +221,7 @@ class StateMachinesEditorController(ExtendedController):
         """
         assert isinstance(state_machine_m, StateMachineModel)
 
-        sm_id = get_state_machine_id(state_machine_m)
+        sm_id = state_machine_m.state_machine.state_machine_id
         logger.debug("Create new graphical editor for state machine with id %s" % str(sm_id))
 
         if global_gui_config.get_config_value('GAPHAS_EDITOR', False) and GAPHAS_AVAILABLE:
@@ -301,12 +287,6 @@ class StateMachinesEditorController(ExtendedController):
 
     @ExtendedController.observe("state_machines", after=True)
     def model_changed(self, model, prop_name, info):
-        from rafcon.gui.utils.notification_overview import NotificationOverview
-        overview = NotificationOverview(info, initiator_string=self.__class__.__name__)
-        # TODO D-Remove but if necessary its an improvement #####
-        if isinstance(overview['result'][-1], Exception):
-            logger.info("This notification should not occur {0}".format(overview))
-        # TODO end ##############################################
         # Check for new state machines
         for sm_id, sm in self.model.state_machine_manager.state_machines.iteritems():
             if sm_id not in self.tabs:
@@ -318,11 +298,6 @@ class StateMachinesEditorController(ExtendedController):
             if sm_id not in self.model.state_machine_manager.state_machines:
                 state_machines_to_be_deleted.append(self.tabs[sm_id]['state_machine_m'])
         for state_machine_m in state_machines_to_be_deleted:
-            # TODO D-Remove but if necessary its an improvement #####
-            if state_machine_m.state_machine is None:
-                logger.info("This notification should not occur.")
-                continue
-            # TODO end ##############################################
             self.remove_state_machine(state_machine_m)
 
     @ExtendedController.observe("state_machine", after=True)
@@ -410,7 +385,7 @@ class StateMachinesEditorController(ExtendedController):
 
         def push_sm_dirty_dialog():
 
-            sm_id = get_state_machine_id(state_machine_m)
+            sm_id = state_machine_m.state_machine.state_machine_id
             root_state_name = state_machine_m.root_state.state.name
             message_string = "There are unsaved changed in the state machine '{0}' with id {1}. Do you want to close " \
                              "the state machine anyway?".format(root_state_name, sm_id)
@@ -445,7 +420,7 @@ class StateMachinesEditorController(ExtendedController):
 
         :param state_machine_m: The selected state machine model.
         """
-        sm_id = get_state_machine_id(state_machine_m)
+        sm_id = state_machine_m.state_machine_id
         self.relieve_model(state_machine_m)
 
         copy_of_last_opened_state_machines = copy.deepcopy(self.last_focused_state_machine_ids)

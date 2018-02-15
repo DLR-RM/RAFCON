@@ -68,6 +68,7 @@ class StateMachineModel(ModelMT, Hashable):
         assert isinstance(state_machine, StateMachine)
 
         self.state_machine = state_machine
+        self.state_machine_id = state_machine.state_machine_id
 
         root_state = self.state_machine.root_state
         if isinstance(root_state, ContainerState):
