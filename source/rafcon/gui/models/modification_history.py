@@ -96,6 +96,8 @@ class ModificationsHistoryModel(ModelMT):
             self.relieve_model(self.state_machine_model)
             assert self.__buffered_root_state_model is self.state_machine_model.root_state
             self.relieve_model(self.__buffered_root_state_model)
+            self.state_machine_model = None
+            self.__buffered_root_state_model = None
             self.modifications.prepare_destruction()
         except KeyError:  # Might happen if the observer was already unregistered
             pass

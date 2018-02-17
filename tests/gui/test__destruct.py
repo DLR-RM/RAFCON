@@ -473,7 +473,7 @@ def run_simple_modification_construction():
     print "%" * 50
     import widget.test_menu_bar
     # TODO D-get this test also running with refresh
-    widget.test_menu_bar.trigger_gui_signals(with_refresh=False)
+    widget.test_menu_bar.trigger_gui_signals(with_refresh=True)
     print "%" * 50
     print "do test complex actions, group & ungroup"
     print "%" * 50
@@ -959,13 +959,19 @@ def test_model_and_core_modification_history_destruct_with_gui(caplog):
     testing_utils.dummy_gui(None)
 
     import rafcon.gui.models.abstract_state
+    import rafcon.gui.models.container_state
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
     import rafcon.core.states.hierarchy_state
     import rafcon.core.states.execution_state
+    import rafcon.gui.mygaphas.view
+    import rafcon.gui.mygaphas.items.state
+    import rafcon.gui.mygaphas.items.connection
+    import rafcon.gui.mygaphas.items.ports
 
     searched_class = rafcon.core.states.hierarchy_state.HierarchyState
-    searched_class = rafcon.core.states.execution_state.ExecutionState
+    # searched_class = rafcon.core.states.execution_state.ExecutionState
+    searched_class = rafcon.gui.models.container_state.ContainerStateModel
 
     elements = [
                 (rafcon.core.states.state.State, True),
@@ -975,6 +981,10 @@ def test_model_and_core_modification_history_destruct_with_gui(caplog):
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
                 (gtkmvc.View, True),
                 (gtkmvc.Controller, True),
+                (rafcon.gui.mygaphas.view.ExtendedGtkView, False),
+                (rafcon.gui.mygaphas.items.connection.ConnectionView, False),
+                (rafcon.gui.mygaphas.items.ports.PortView, False),
+                (rafcon.gui.mygaphas.items.state.StateView, False),
                 (searched_class, False),
                 ]
     libraries = {"ros": os.path.join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
@@ -1098,9 +1108,9 @@ def test_copy_paste_with_modification_history_destruct_with_gui(caplog):
 
     # searched_class = rafcon.core.states.execution_state.ExecutionState
     # searched_class = rafcon.gui.models.container_state.ContainerStateModel
-    # searched_class = rafcon.gui.models.state.StateModel
+    searched_class = rafcon.gui.models.state.AbstractStateModel
     # searched_class = rafcon.core.state_elements.data_flow.DataFlow
-    searched_class = rafcon.core.state_elements.transition.Transition
+    # searched_class = rafcon.core.state_elements.transition.Transition
     # searched_class = rafcon.gui.models.transition.TransitionModel
 
     elements = [
@@ -1188,7 +1198,6 @@ if __name__ == '__main__':
     # test_simple_execution_model_and_core_destruct_with_gui(None)
     # test_model_and_core_modification_history_destruct_with_gui(None)
     # test_copy_paste_with_modification_history_destruct_with_gui(None)
-    # test_model_and_core_modification_history_destruct_with_gui(None)
     # test_complex_model_and_core_destruct_with_gui(None)
     import pytest
     pytest.main(['-s', __file__])

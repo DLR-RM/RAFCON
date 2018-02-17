@@ -372,6 +372,7 @@ def test_simple(caplog):
     :param caplog:
     :return:
     """
+    testing_utils.dummy_gui(None)
     print "start test simple"
     # create testbed
     testing_utils.initialize_environment(gui_already_started=False,
@@ -405,7 +406,7 @@ def test_complex(caplog):
     :param caplog:
     :return:
     """
-
+    testing_utils.dummy_gui(None)
     with_gui = True
 
     if with_gui:

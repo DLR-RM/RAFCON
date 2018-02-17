@@ -299,8 +299,6 @@ def trigger_gui_signals(with_refresh=True):
         call_gui_callback(testing_utils.wait_for_gui)
         assert len(sm_manager_model.state_machines) == 1
 
-        call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
-
 
 def test_gui(caplog):
     from os.path import join
