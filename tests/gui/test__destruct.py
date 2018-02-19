@@ -1038,15 +1038,25 @@ def run_copy_cut_and_paste():
             assert isinstance(sm_model, ContainerStateModel)
             testing_utils.call_gui_callback(selection.add, sm_model)
             print "select state: ", sm_model.state
-
     # focus
     focus_graphical_editor_in_page(page)
-
     # paste state 1 into state 3
     testing_utils.call_gui_callback(menu_bar_controller.on_paste_clipboard_activate, None, None)
-    print "paste state into target state: ", sm_model.state
+    print "pasted state into target state for the first time: ", sm_model.state
+
     # another time
+    # select state 3
+    for sm_model in sm_m.root_state.states.values():
+        if sm_model.state.name == "State3":
+            from rafcon.gui.models.container_state import ContainerStateModel
+            assert isinstance(sm_model, ContainerStateModel)
+            testing_utils.call_gui_callback(selection.add, sm_model)
+            print "select state: ", sm_model.state
+    # focus
+    focus_graphical_editor_in_page(page)
+    # paste state 1 into state 3
     testing_utils.call_gui_callback(menu_bar_controller.on_paste_clipboard_activate, None, None)
+    print "pasted state into target state for the second time: ", sm_model.state
 
     #########################################
     # cut tests
@@ -1124,7 +1134,7 @@ def test_copy_paste_with_modification_history_destruct_with_gui(caplog):
                 (searched_class, False),
                 ]
     run_setup_gui_destruct(caplog, elements, searched_class, run_copy_cut_and_paste,
-                           gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False}, expected_warnings=1)
+                           gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False}, expected_warnings=0)
 
 
 def test_complex_model_and_core_destruct_with_gui(caplog):
@@ -1191,13 +1201,13 @@ def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, l
 
 
 if __name__ == '__main__':
-    testing_utils.dummy_gui(None)
+    # testing_utils.dummy_gui(None)
     # test_core_destruct(None)
     # test_model_and_core_destruct(None)
     # test_simple_model_and_core_destruct_with_gui(None)
     # test_simple_execution_model_and_core_destruct_with_gui(None)
     # test_model_and_core_modification_history_destruct_with_gui(None)
-    # test_copy_paste_with_modification_history_destruct_with_gui(None)
+    test_copy_paste_with_modification_history_destruct_with_gui(None)
     # test_complex_model_and_core_destruct_with_gui(None)
-    import pytest
-    pytest.main(['-s', __file__])
+    # import pytest
+    # pytest.main(['-s', __file__])
