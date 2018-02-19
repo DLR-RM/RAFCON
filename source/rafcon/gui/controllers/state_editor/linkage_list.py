@@ -70,7 +70,7 @@ class LinkageListController(ListViewController):
 
     def check_info_on_no_update_flags(self, info):
         """Stop updates while multi-actions"""
-        #TODO that could need a second clean up
+        # TODO that could need a second clean up
         # avoid updates because of state destruction
         if 'before' in info and info['method_name'] == "remove_state":
             if info.instance is self.model.state:
@@ -147,26 +147,6 @@ class LinkageListController(ListViewController):
             return
         # do not update while multi-actions
         self.check_info_on_no_update_flags(info)
-
-    @ListViewController.observe("root_state", assign=True)
-    def root_state_changed(self, model, prop_name, info):
-        """ Relieve all observed models to avoid updates on old root state.
-        """
-        # TODO may re-observe if the states-editor supports this feature
-        if self.model.state.is_root_state:
-            # self.relieve_all_models()
-            self.destroy()
-
-    @ListViewController.observe("destruction_signal", signal=True)
-    def get_destruction_signal(self, model, prop_name, info):
-        """ Close state editor when state is being destructed """
-        # TODO D-Find out why the controller is not already destroyed before all transitions, data flows or ports
-        # are deleted therefore the models are relieved here -> points on the fact that the controllers are not
-        # proper destroyed
-        # !!! seems to be fixed but let it in to first fix the destruction !!!
-        if model in [self.model, self.model.parent, self.model.get_state_machine_m()]:
-            self.relieve_all_models()
-        # TODO end ########################################################
 
     def store_debug_log_file(self, string):
         with open('{1}/{0}_debug_log_file.txt'.format(self.__class__.__name__, RAFCON_TEMP_PATH_BASE), 'a+') as f:

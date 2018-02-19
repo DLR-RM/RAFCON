@@ -72,7 +72,7 @@ class StateOutcomesListController(ListViewController):
         self.dict_to_other_outcome = {}
         # not used at the moment key-outcome_id -> label,  from_state_id,  transition_id
         self.dict_from_other_state = {}  # if widget gets extended
-        self.relieve_model(model)
+
         if not model.state.is_root_state:
             self.observe_model(model.parent)
 
@@ -241,7 +241,8 @@ class StateOutcomesListController(ListViewController):
         self.dict_to_other_outcome.clear()
         self.dict_from_other_state.clear()
 
-        if not model.state.is_root_state:
+        # TODO check this work around -> it could be avoided by observation of remove-before-notifications
+        if not model.state.is_root_state and self.model.parent.state:  # if parent model is not already destroyed
             # check for "to state combos" -> so all states in parent
             parent_id = model.parent.state.state_id
             for parent_child_state_m in model.parent.states.values():
@@ -321,13 +322,15 @@ class StateOutcomesListController(ListViewController):
     def outcomes_changed(self, model, prop_name, info):
         self.update()
 
-    @ExtendedController.observe("destruction_signal", signal=True)
-    def get_destruction_signal(self, model, prop_name, info):
-        """ Close state editor when state is being destructed """
-        # TODO D-Find out why the controller is not already destroyed before all transitions or outcomes are deleted
-        # therefore the models are relieved here -> points on the fact that the controllers are not proper destroyed
-        self.relieve_all_models()
-        # TODO end ################################
+    # TODO D-Find out why the observation of the destruction_signal cause threading problems
+    # @ExtendedController.observe("destruction_signal", signal=True)
+    # def get_destruction_signal(self, model, prop_name, info):
+    #     """ Relieve models if the parent state model """
+    #     # this is necessary because the controller use data of its parent model and would try to adapt to
+    #     # transition changes before the self.model is destroyed, too
+    #     if not self.model.state.is_root_state and self.model.parent is model:
+    #         # as long as a relieve of models before the after will cause threading issues the controller is suspended
+    #         self.__suspended = True
 
 
 class StateOutcomesEditorController(ExtendedController):
