@@ -545,12 +545,17 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
     action_parent_m.group_states.__func__.tmp_models_storage = tmp_models_dict
     action_parent_m.group_states.__func__.affected_models = affected_models
 
+    assert len(action_parent_m.expected_future_models) == 0
+    for key in ['states', 'scoped_variables', 'transitions', 'data_flows']:
+        for model in tmp_models_dict[key].values():
+            action_parent_m.expected_future_models.add(model)
+    # print "## number #1 of models", len(action_parent_m.expected_future_models), action_parent_m.expected_future_models
+
     # CORE
     new_state = e = None
     try:
         assert isinstance(action_parent_m.state, ContainerState)
         new_state = action_parent_m.state.group_states(state_ids, sv_ids)
-        # new_state = action_parent_m.state.states[new_state_id]
     except Exception as e:
         logger.exception("State group failed")
 
@@ -559,16 +564,19 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         tmp_models_dict = action_parent_m.group_states.__func__.tmp_models_storage
         grouped_state_m = action_parent_m.states[new_state.state_id]
         tmp_models_dict['state'] = grouped_state_m
-        # TODO re-organize and use partly the expected_models pattern the next lines
-        if not gui_helper_meta_data.scale_meta_data_according_states(tmp_models_dict):
-            del action_parent_m.group_states.__func__.tmp_models_storage
-            return
 
-        grouped_state_m.insert_meta_data_from_models_dict(tmp_models_dict)
+        # if models are left over check if the model remove methods have eaten your models because destroy flag was True
+        # print "## number #2 of models", len(action_parent_m.expected_future_models), action_parent_m.expected_future_models
+        assert len(action_parent_m.expected_future_models) == 0
+        if not gui_helper_meta_data.scale_meta_data_according_states(tmp_models_dict):
+            logger.error("Meta data adaptation for group states failed.")
+        else:
+            # at the moment this is only used to check and generate error logger messages in case
+            grouped_state_m.insert_meta_data_from_models_dict(tmp_models_dict, logger.error)
 
         affected_models = action_parent_m.group_states.__func__.affected_models
-        affected_models.append(grouped_state_m)
         # print "EMIT-AFTER ON ACTION PARENT"
+        affected_models.append(grouped_state_m)
 
     action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
                                                        action_parent_m=action_parent_m,
@@ -607,7 +615,16 @@ def ungroup_state(state_m):
                                                    affected_models=affected_models, after=False,
                                                    kwargs={'state_id': state_id}))
     action_parent_m.ungroup_state.__func__.tmp_models_storage = tmp_models_dict
-    action_parent_m.group_states.__func__.affected_models = affected_models
+    action_parent_m.ungroup_state.__func__.affected_models = affected_models
+    # print "ungroup", id(old_state_m), [id(m) for m in tmp_models_dict['states']]
+
+    # print "set future models"
+    assert len(action_parent_m.expected_future_models) == 0
+    for key in ['states']:  # , 'scoped_variables', 'transitions', 'data_flows']:
+        for m in tmp_models_dict[key].values():
+            if not m.state.state_id == UNIQUE_DECIDER_STATE_ID:
+                action_parent_m.expected_future_models.add(m)
+    # print "## number #1 of models", len(action_parent_m.expected_future_models), action_parent_m.expected_future_models
 
     # CORE
     e = None
@@ -616,46 +633,49 @@ def ungroup_state(state_m):
     except Exception as e:
         logger.exception("State ungroup failed")
 
+    # print "## number #2 of models", len(action_parent_m.expected_future_models), action_parent_m.expected_future_models
+    assert len(action_parent_m.expected_future_models) == 0
+
     # AFTER MODEL
     if e is None:
         tmp_models_dict = action_parent_m.ungroup_state.__func__.tmp_models_storage
         # TODO re-organize and use partly the expected_models pattern the next lines
+        # TODO -> when transitions/data flows only hold references onto respective logical/data ports
         if not gui_helper_meta_data.offset_rel_pos_of_models_meta_data_according_parent_state(tmp_models_dict):
-            del action_parent_m.ungroup_state.__func__.tmp_models_storage
-            return
+            logger.error("Meta data adaptation for group states failed.")
+        else:
+            # reduce tmp models by not applied state meta data
+            tmp_models_dict.pop('state')
 
-        # reduce tmp models by not applied state meta data
-        tmp_models_dict.pop('state')
+            # correct state element ids with new state element ids to set meta data on right state element
+            tmp_models_dict['states'] = \
+                {new_state_id: tmp_models_dict['states'][old_state_id]
+                 for old_state_id, new_state_id in action_parent_m.state.ungroup_state.__func__.state_id_dict.iteritems()}
+            tmp_models_dict['scoped_variables'] = \
+                {new_sv_id: tmp_models_dict['scoped_variables'][old_sv_id]
+                 for old_sv_id, new_sv_id in action_parent_m.state.ungroup_state.__func__.sv_id_dict.iteritems()}
+            tmp_models_dict['transitions'] = \
+                {new_t_id: tmp_models_dict['transitions'][old_t_id]
+                 for old_t_id, new_t_id in action_parent_m.state.ungroup_state.__func__.enclosed_t_id_dict.iteritems()}
+            tmp_models_dict['data_flows'] = \
+                {new_df_id: tmp_models_dict['data_flows'][old_df_id]
+                 for old_df_id, new_df_id in action_parent_m.state.ungroup_state.__func__.enclosed_df_id_dict.iteritems()}
 
-        # correct state element ids with new state element ids to set meta data on right state element
-        tmp_models_dict['states'] = \
-            {new_state_id: tmp_models_dict['states'][old_state_id]
-             for old_state_id, new_state_id in action_parent_m.state.ungroup_state.__func__.state_id_dict.iteritems()}
-        tmp_models_dict['scoped_variables'] = \
-            {new_sv_id: tmp_models_dict['scoped_variables'][old_sv_id]
-             for old_sv_id, new_sv_id in action_parent_m.state.ungroup_state.__func__.sv_id_dict.iteritems()}
-        tmp_models_dict['transitions'] = \
-            {new_t_id: tmp_models_dict['transitions'][old_t_id]
-             for old_t_id, new_t_id in action_parent_m.state.ungroup_state.__func__.enclosed_t_id_dict.iteritems()}
-        tmp_models_dict['data_flows'] = \
-            {new_df_id: tmp_models_dict['data_flows'][old_df_id]
-             for old_df_id, new_df_id in action_parent_m.state.ungroup_state.__func__.enclosed_df_id_dict.iteritems()}
+            action_parent_m.insert_meta_data_from_models_dict(tmp_models_dict, logger.info)
 
-        action_parent_m.insert_meta_data_from_models_dict(tmp_models_dict)
-
-        affected_models = action_parent_m.group_states.__func__.affected_models
+        affected_models = action_parent_m.ungroup_state.__func__.affected_models
         for elemets_dict in tmp_models_dict.itervalues():
             affected_models.extend(elemets_dict.itervalues())
-        # print "EMIT-AFTER ON OLD_STATE ", state_id
 
     old_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
                                                    action_parent_m=action_parent_m,
                                                    affected_models=affected_models, after=True, result=e))
 
-    # old_state_m.state.destroy(recursive=True)
-    old_state_m.prepare_destruction()
+    old_state_m.prepare_destruction(recursive=True)
+    # print "prepare destruction finished"
     del action_parent_m.ungroup_state.__func__.tmp_models_storage
-    del action_parent_m.group_states.__func__.affected_models
+    del action_parent_m.ungroup_state.__func__.affected_models
+    # print "## ungroup finished"
     return old_state_m
 
 

@@ -263,18 +263,16 @@ class ContainerStateModel(StateModel):
         else:
             return
 
-        if "add" in info.method_name:
+        if isinstance(info.result, Exception):
+            raise Exception("There was raised an exception {0}.".format(info.result))
+        elif "add" in info.method_name:
             self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
         elif "remove" in info.method_name:
             destroy = info.kwargs.get('destroy', True)
             recursive = info.kwargs.get('recursive', True)
             # print self.__class__.__name__, "remove", info.method_name, 'destroy: ', destroy, 'recursive:', recursive, info.result
             # print self.__class__.__name__, "args", info.args, model_list, info.result, model_key, destroy, info
-            if not isinstance(info.result, Exception):
-                self.remove_specific_model(model_list, info.result, model_key, recursive, destroy)
-            else:
-                raise Exception("There was already an exception raised by and catched by gtmvc {0}"
-                                "".format(info.result))
+            self.remove_specific_model(model_list, info.result, model_key, recursive, destroy)
         elif info.method_name in ["transitions", "data_flows", "states", "scoped_variables"]:
             self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
 
@@ -283,45 +281,53 @@ class ContainerStateModel(StateModel):
         if info.method_name != 'change_state_type':
             return
 
-    def insert_meta_data_from_models_dict(self, source_models_dict):
+    def insert_meta_data_from_models_dict(self, source_models_dict, notify_logger_method):
         # TODO D-Clean this up and integrate proper into group/ungroup functionality
-        related_models = []
-        if 'state' in source_models_dict:
-            self.meta = source_models_dict['state'].meta
-            related_models.append(self)
         if 'states' in source_models_dict:
-            for child_state_id, child_state_m in source_models_dict['states'].iteritems():
-                if child_state_id in self.states:
-                    self.states[child_state_id].meta = child_state_m.meta
-                    related_models.append(self.states[child_state_id])
-                    child_state_m.prepare_destruction()
+            for child_state_id, old_state_m in source_models_dict['states'].iteritems():
+                new_state_m = self.states[child_state_id]
+                if new_state_m is None:
+                    raise RuntimeError("State model to set meta data could not be found"
+                                       " -> {0}".format(old_state_m.state))
+                if new_state_m is old_state_m:
+                    logger.debug("Old {0} is new model {1}".format(old_state_m, new_state_m))
                 else:
-                    logger.warning("state model to set meta data could not be found -> {0}".format(child_state_m.state))
+                    new_state_m.meta = old_state_m.meta
+                    notify_logger_method("Should only happen in ungroup - new model {0}".format(new_state_m))
         if 'scoped_variables' in source_models_dict:
-            for sv_data_port_id, sv_m in source_models_dict['scoped_variables'].iteritems():
-                if self.get_scoped_variable_m(sv_data_port_id):
-                    self.get_scoped_variable_m(sv_data_port_id).meta = sv_m.meta
-                    related_models.append(self.get_scoped_variable_m(sv_data_port_id))
-                    sv_m.prepare_destruction()
+            for sv_dp_id, old_sv_m in source_models_dict['scoped_variables'].iteritems():
+                new_sv_m = self.get_scoped_variable_m(sv_dp_id)
+                if new_sv_m is None:
+                    raise RuntimeError("Scoped variable model to set meta data could not be found"
+                                       " -> {0}".format(old_sv_m.scoped_variable))
+                if new_sv_m is old_sv_m:
+                    logger.debug("Old {0} is new model {1}".format(old_sv_m, new_sv_m))
                 else:
-                    logger.warning("scoped variable model to set meta data could not be found"
-                                   " -> {0}".format(sv_m.scoped_variable))
+                    new_sv_m.meta = old_sv_m.meta
+                    notify_logger_method("Should only happen in ungroup - new model {0}".format(new_sv_m))
+
         if 'transitions' in source_models_dict:
-            for t_id, t_m in source_models_dict['transitions'].iteritems():
-                if self.get_transition_m(t_id) is not None:
-                    self.get_transition_m(t_id).meta = t_m.meta
-                    related_models.append(self.get_transition_m(t_id))
-                    t_m.prepare_destruction()
+            for t_id, old_t_m in source_models_dict['transitions'].iteritems():
+                new_t_m = self.get_transition_m(t_id)
+                if new_t_m is None:
+                    raise RuntimeError("transition model to set meta data could not be found"
+                                       " -> {0}".format(old_t_m.transition))
+                if new_t_m is old_t_m:
+                    logger.debug("Old {0} is new model {1}".format(old_t_m, new_t_m))
                 else:
-                    logger.warning("transition model to set meta data could not be found -> {0}".format(t_m.transition))
+                    new_t_m.meta = old_t_m.meta
+                    notify_logger_method("Should only happen in ungroup - new model {0}".format(new_t_m))
         if 'data_flows' in source_models_dict:
-            for df_id, df_m in source_models_dict['data_flows'].iteritems():
-                if self.get_data_flow_m(df_id) is not None:
-                    self.get_data_flow_m(df_id).meta = df_m.meta
-                    related_models.append(self.get_data_flow_m(df_id))
-                    df_m.prepare_destruction()
+            for df_id, old_df_m in source_models_dict['data_flows'].iteritems():
+                new_df_m = self.get_data_flow_m(df_id)
+                if new_df_m is None:
+                    raise RuntimeError("data flow model to set meta data could not be found"
+                                       " -> {0}".format(old_df_m.data_flow))
+                if new_df_m is old_df_m:
+                    logger.debug("Old model {0} is new model {1}".format(old_df_m, new_df_m))
                 else:
-                    logger.warning("data flow model to set meta data could not be found -> {0}".format(df_m.data_flow))
+                    new_df_m.meta = old_df_m.meta
+                    notify_logger_method("Should only happen in ungroup - new model {0}".format(new_df_m))
 
     @ModelMT.observe("state", after=True, before=True)
     def substitute_state(self, model, prop_name, info):

@@ -872,13 +872,14 @@ def group_selected_states_and_scoped_variables():
     selected_scoped_vars = list(selection.scoped_variables)
     selected_state_m = selection.get_selected_state()
     if len(selected_states) > 0 and isinstance(selected_state_m.parent, StateModel) or len(selected_scoped_vars):
-        # # check if all elements have the same parent or leave it to the parent
-        # parent_list = []
-        # for state_m in selected_state_m_list:
-        #     parent_list.append(state_m.state)
-        # for sv_m in selected_sv_m:
-        #     parent_list.append(sv_m.scoped_variable.parent)
-        # assert len(set(parent_list))
+        # check if all elements have the same parent or leave it to the parent
+        parent_list = []
+        for state_m in selected_states:
+            parent_list.append(state_m.state.parent)
+        for sv_m in selected_scoped_vars:
+            parent_list.append(sv_m.scoped_variable.parent)
+        if not len(set(parent_list)) == 1:
+            raise AttributeError("All elements that should be grouped have to have one direct parent state.")
         logger.debug("Group selected states: {0} scoped variables: {1}".format(selected_states, selected_scoped_vars))
         # TODO remove un-select workaround (used to avoid wrong selections in gaphas and inconsistent selection)
         sm_m.selection.clear()

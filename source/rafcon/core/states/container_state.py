@@ -462,18 +462,27 @@ class ContainerState(State):
         # print_df_from_and_to(outgoing_data_linkage_for_port)
 
         ############################# CREATE NEW STATE #############################
-        # all internal scoped variables
-        scoped_variables_to_group = {dp_id: self.remove_scoped_variable(dp_id, destroy=False) for dp_id in scoped_variable_ids}
         # all internal transitions
-        transitions_internal = {t.transition_id: self.remove_transition(t.transition_id) for t in related_transitions['enclosed']}
+        transitions_internal = {t.transition_id: self.remove_transition(t.transition_id, destroy=False)
+                                for t in related_transitions['enclosed']}
         # all internal data flows
-        data_flows_internal = {df.data_flow_id: self.remove_data_flow(df.data_flow_id) for df in related_data_flows['enclosed']}
+        data_flows_internal = {df.data_flow_id: self.remove_data_flow(df.data_flow_id, destroy=False)
+                               for df in related_data_flows['enclosed']}
+        # all internal scoped variables
+        scoped_variables_to_group = {dp_id: self.remove_scoped_variable(dp_id, destroy=False)
+                                     for dp_id in scoped_variable_ids}
         # all states
-        states_to_group = {state_id: self.remove_state(state_id, recursive=False, destroy=False) for state_id in state_ids}
-        # TODO if the version is final create the ingoing and outgoing internal linkage before and hand it while state creation
+        states_to_group = {state_id: self.remove_state(state_id, recursive=False, destroy=False)
+                           for state_id in state_ids}
         from rafcon.core.states.hierarchy_state import HierarchyState
+        # secure state id conflicts for the taken transitions
+        from rafcon.core.id_generator import state_id_generator
+        state_ids.append(self.state_id)
+        state_id = state_id_generator()
+        while state_id in state_ids:
+            state_id = state_id_generator()
         s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
-                           scoped_variables=scoped_variables_to_group, state_id=self.state_id)
+                           scoped_variables=scoped_variables_to_group, state_id=state_id)
         state_id = self.add_state(s)
 
         def find_logical_destinations_of_transitions(transitions):
@@ -610,6 +619,7 @@ class ContainerState(State):
         :return:
         """
         state = self.states[state_id]
+        assert isinstance(state, ContainerState)
         from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, UNIQUE_DECIDER_STATE_ID
         if isinstance(state, BarrierConcurrencyState):
             state.remove_state(state_id=UNIQUE_DECIDER_STATE_ID, force=True)
@@ -640,9 +650,7 @@ class ContainerState(State):
                     if (ext_df.from_state, ext_df.from_key) == (df.to_state, df.to_key):
                         outgoing_data_linkage_for_port[(df.to_state, df.to_key)]['external'].append(ext_df)
         # hold states and scoped variables to rebuild
-        from rafcon.core.states.barrier_concurrency_state import DeciderState
-        child_states = [state.states[child_state_id] for child_state_id in state.states
-                        if not isinstance(state.states[child_state_id], DeciderState)]
+        child_states = [state.remove_state(s_id, recursive=False, destroy=False) for s_id in state.states.keys()]
         child_scoped_variables = [sv for sv_id, sv in state.scoped_variables.iteritems()]
 
         # remove state that should be ungrouped
@@ -655,9 +663,9 @@ class ContainerState(State):
         enclosed_t_id_dict = {}
 
         # re-create states
-        for state in child_states:
-            new_state_id = self.add_state(state)
-            state_id_dict[state.state_id] = new_state_id
+        for child_state in child_states:
+            new_state_id = self.add_state(child_state)
+            state_id_dict[child_state.state_id] = new_state_id
         # re-create scoped variables
         for sv in child_scoped_variables:
             name = sv.name
@@ -718,9 +726,7 @@ class ContainerState(State):
         self.ungroup_state.__func__.enclosed_df_id_dict = enclosed_df_id_dict
         self.ungroup_state.__func__.enclosed_t_id_dict = enclosed_t_id_dict
 
-        old_state.states.clear()
         old_state.destroy(recursive=True)
-
         return old_state
 
     @lock_state_machine
