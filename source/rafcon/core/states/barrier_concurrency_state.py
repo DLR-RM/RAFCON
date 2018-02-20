@@ -298,7 +298,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         if state_id == UNIQUE_DECIDER_STATE_ID and force is False:
             raise AttributeError("You are not allowed to delete the decider state.")
         else:
-            return ContainerState.remove_state(self, state_id, recursive, force, destroy)
+            return ContainerState.remove_state(self, state_id, recursive=recursive, force=force, destroy=destroy)
 
     @classmethod
     def from_dict(cls, dictionary):
