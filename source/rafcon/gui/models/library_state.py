@@ -91,13 +91,12 @@ class LibraryStateModel(AbstractStateModel):
                     # TODO setting data ports None in a Library state cause gtkmvc attribute getter problems
                     # port.prepare_destruction()
                     pass
-            # TODO D-Figure out why there can be double calls of prepare_destruction -> seems to be group/ungroup related
+
             if self.state_copy:
                 self.state_copy.prepare_destruction(recursive)
                 self.state_copy = None
             else:
-                logger.info("Double calls of prepare destruction for {0}".format(self))
-                # raise RuntimeError("Double calls of prepare destruction for {0} {1}".format(self, id(self)))
+                logger.info("Multiple calls of prepare destruction for {0}".format(self))
 
         del self.input_data_ports[:]
         del self.output_data_ports[:]
