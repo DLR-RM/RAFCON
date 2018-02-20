@@ -215,16 +215,16 @@ class GraphicalEditorController(ExtendedController):
         action = info['arg'].action
         # from rafcon.gui.utils.notification_overview import NotificationOverview
         # logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
-        if action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'ungroup_state', 'undo/redo']:
-            self.suspend_drawing = True
+        if action in ['change_root_state_type', 'change_state_type', 'substitute_state',
+                      'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
             self._ongoing_complex_actions.append(action)
-            # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
-            self.observe_model(info['arg'].affected_models[0])
-        if action in ['group_states', 'paste', 'cut']:
             self.suspend_drawing = True
-            self._ongoing_complex_actions.append(action)
+            # print self.__class__.__name__, 'add complex action', action
             # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
-            self.observe_model(info['arg'].action_parent_m)
+            if action in ['group_states', 'paste', 'cut']:
+                self.observe_model(info['arg'].action_parent_m)
+            else:
+                self.observe_model(info['arg'].affected_models[0])
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal_after(self, model, prop_name, info):
@@ -237,11 +237,11 @@ class GraphicalEditorController(ExtendedController):
         if action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'group_states',
                       'ungroup_state', 'paste', 'cut', 'undo/redo']:
             self._ongoing_complex_actions.remove(action)
+            self.relieve_model(model)
+            # print self.__class__.__name__, 'remove complex action', action
             if not self._ongoing_complex_actions:
                 self.suspend_drawing = False
-                self.relieve_model(model)
-            # logger.info("drawing suspended: {0} redraw".format(self.suspend_drawing))
-            if action not in ['paste', 'cut'] and not self._ongoing_complex_actions:
+                # logger.info("drawing suspended: {0} redraw".format(self.suspend_drawing))
                 self._redraw()
 
     @ExtendedController.observe("state_machine", after=True)
@@ -258,6 +258,10 @@ class GraphicalEditorController(ExtendedController):
         :param dict info: Information about the change
         """
         if 'method_name' in info:
+            if isinstance(info['result'], Exception):
+                logger.info("Exception handling in opengl")
+                return
+
             if info['method_name'] == 'root_state_change':
                 self._redraw()
             elif info['method_name'] == 'marked_dirty' and info['args'][1]:
@@ -333,14 +337,12 @@ class GraphicalEditorController(ExtendedController):
         First triggers the configure event to cause the perspective to be updated, then trigger the actual expose
         event to redraw.
         """
+        if self.suspend_drawing:
+            return
+
         redraw_after = 1 / 50.  # sec
         # Check if initialized
         # and whether the last redraw was more than redraw_after ago
-        # TODO D-Remove but if necessary its an improvement #####
-        if self.model.state_machine is None:
-            logger.info("This notification should not occur")
-            return
-        # TODO end ##############################################
         if hasattr(self.view, "editor") and (time.time() - self.last_time > redraw_after) and \
                         rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id == \
                         self.model.state_machine.state_machine_id \
@@ -1533,11 +1535,10 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("destruction_signal", signal=True)
     def state_machine_destruction(self, model, prop_name, info):
-        """ Close state editor when state is being destructed """
-        # TODO D-Decide if this has to be performed by the state machines editor #######
+        """ Close state editor when state machine is being destroyed """
         if self.model is model:
-            self.relieve_all_models()
-        # TODO end #####################################################################
+            self.suspend_drawing = True
+            # self.relieve_all_models()
 
     @lock_state_machine
     def draw_state(self, state_m, rel_pos=(0, 0), size=(100, 100), depth=1):
@@ -1576,11 +1577,6 @@ class GraphicalEditorController(ExtendedController):
                     state_meta = state_m.set_meta_data_editor('size', size, from_gaphas=False)
 
         size = state_meta['size']
-        # TODO D-Remove but if necessary its an improvement #####
-        if state_m.state is None:
-            logger.info("The notification which cause this has to be avoided")
-            return
-        # TODO end ##############################################
         # Root state is always in the origin
         if state_m.state.is_root_state:
             pos = (0, 0)

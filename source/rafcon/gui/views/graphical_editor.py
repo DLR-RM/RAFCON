@@ -415,7 +415,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # Every state has at least the default outcomes "aborted" and "preempted"
         num_outcomes = max(0, len(outcomes))
         if num_outcomes < 2:
-            logger.warn("Expecting at least 2 outcomes, found {num:d}".format(num=num_outcomes))
+            # logger.warn("Expecting at least 2 outcomes, found {num:d}".format(num=num_outcomes))
+            pass
         else:
             num_outcomes -= 2
         i = 0
