@@ -92,8 +92,6 @@ class GraphicalEditorController(ExtendedController):
     def destroy(self):
         if self.view:
             self.view.editor.prepare_destruction()
-        self.canvas._core_view_map.clear()  # TODO D-investigate the refresh-all gaphas destruction to solve this todo
-        self.canvas._model_view_map.clear()
         super(GraphicalEditorController, self).destroy()
 
     def register_view(self, view):
