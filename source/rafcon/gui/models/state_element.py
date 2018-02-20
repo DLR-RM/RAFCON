@@ -108,6 +108,8 @@ class StateElementModel(MetaModel, Hashable):
 
         Unregisters the model from observing itself.
         """
+        if self.core_element is None:
+            logger.warning("Multiple calls of prepare destruction for {0}".format(self))
         self.destruction_signal.emit()
         try:
             self.unregister_observer(self)

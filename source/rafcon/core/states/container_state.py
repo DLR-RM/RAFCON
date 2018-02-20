@@ -348,15 +348,6 @@ class ContainerState(State):
         [related_transitions, related_data_flows] = self.related_linkage_states_and_scoped_variables(state_ids,
                                                                                                      scoped_variable_ids)
 
-        # all states
-        states_to_group = {state_id: self.states[state_id] for state_id in state_ids}
-        # all internal scoped variables
-        scoped_variables_to_group = {dp_id: self.scoped_variables[dp_id] for dp_id in scoped_variable_ids}
-        # all internal transitions
-        transitions_internal = {t.transition_id: t for t in related_transitions['enclosed']}
-        # all internal data flows
-        data_flows_internal = {df.data_flow_id: df for df in related_data_flows['enclosed']}
-
         def assign_ingoing_outgoing(df, going_data_linkage_for_port, ingoing=True):
             internal = 'internal' if ingoing else 'external'
             external = 'external' if ingoing else 'internal'
@@ -471,12 +462,27 @@ class ContainerState(State):
         # print_df_from_and_to(outgoing_data_linkage_for_port)
 
         ############################# CREATE NEW STATE #############################
-        [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
-        [self.remove_scoped_variable(sv_id) for sv_id in scoped_variable_ids]
-        # TODO if the version is final create the ingoing and outgoing internal linkage before and hand it while state creation
+        # all internal transitions
+        transitions_internal = {t.transition_id: self.remove_transition(t.transition_id, destroy=False)
+                                for t in related_transitions['enclosed']}
+        # all internal data flows
+        data_flows_internal = {df.data_flow_id: self.remove_data_flow(df.data_flow_id, destroy=False)
+                               for df in related_data_flows['enclosed']}
+        # all internal scoped variables
+        scoped_variables_to_group = {dp_id: self.remove_scoped_variable(dp_id, destroy=False)
+                                     for dp_id in scoped_variable_ids}
+        # all states
+        states_to_group = {state_id: self.remove_state(state_id, recursive=False, destroy=False)
+                           for state_id in state_ids}
         from rafcon.core.states.hierarchy_state import HierarchyState
+        # secure state id conflicts for the taken transitions
+        from rafcon.core.id_generator import state_id_generator
+        state_ids.append(self.state_id)
+        state_id = state_id_generator()
+        while state_id in state_ids:
+            state_id = state_id_generator()
         s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
-                           scoped_variables=scoped_variables_to_group, state_id=self.state_id)
+                           scoped_variables=scoped_variables_to_group, state_id=state_id)
         state_id = self.add_state(s)
 
         def find_logical_destinations_of_transitions(transitions):
@@ -540,11 +546,14 @@ class ContainerState(State):
         # external outgoing transitions
         for goal, name in outcomes_outgoing_transitions.iteritems():
             try:
+                # avoid to use a outcome twice
+                if not any(t for t in s.transitions.itervalues()
+                           if t.from_state == s.state_id and t.from_outcome == new_outcome_ids[name]):
+                    continue
+                # add the transition for the outcome
                 self.add_transition(s.state_id, new_outcome_ids[name], goal[0], goal[1])
             except ValueError:
-                from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
-                if not isinstance(self, BarrierConcurrencyState):
-                    logger.exception("Error while recreation of logical linkage.")
+                logger.exception("Error while recreation of logical linkage.")
         # internal outgoing transitions
         for t_id, t in transitions_outgoing.iteritems():
             name = outcomes_outgoing_transitions[(t.to_state, t.to_outcome)]
@@ -610,6 +619,7 @@ class ContainerState(State):
         :return:
         """
         state = self.states[state_id]
+        assert isinstance(state, ContainerState)
         from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, UNIQUE_DECIDER_STATE_ID
         if isinstance(state, BarrierConcurrencyState):
             state.remove_state(state_id=UNIQUE_DECIDER_STATE_ID, force=True)
@@ -640,13 +650,11 @@ class ContainerState(State):
                     if (ext_df.from_state, ext_df.from_key) == (df.to_state, df.to_key):
                         outgoing_data_linkage_for_port[(df.to_state, df.to_key)]['external'].append(ext_df)
         # hold states and scoped variables to rebuild
-        from rafcon.core.states.barrier_concurrency_state import DeciderState
-        child_states = [state.states[child_state_id] for child_state_id in state.states
-                        if not isinstance(state.states[child_state_id], DeciderState)]
+        child_states = [state.remove_state(s_id, recursive=False, destroy=False) for s_id in state.states.keys()]
         child_scoped_variables = [sv for sv_id, sv in state.scoped_variables.iteritems()]
 
         # remove state that should be ungrouped
-        self.remove_state(state_id, recursive_deletion=False)
+        old_state = self.remove_state(state_id, recursive=False, destroy=False)
 
         # fill elements into parent state and remember id mapping from child to parent state to map other properties
         state_id_dict = {}
@@ -655,9 +663,9 @@ class ContainerState(State):
         enclosed_t_id_dict = {}
 
         # re-create states
-        for state in child_states:
-            new_state_id = self.add_state(state)
-            state_id_dict[state.state_id] = new_state_id
+        for child_state in child_states:
+            new_state_id = self.add_state(child_state)
+            state_id_dict[child_state.state_id] = new_state_id
         # re-create scoped variables
         for sv in child_scoped_variables:
             name = sv.name
@@ -718,6 +726,9 @@ class ContainerState(State):
         self.ungroup_state.__func__.enclosed_df_id_dict = enclosed_df_id_dict
         self.ungroup_state.__func__.enclosed_t_id_dict = enclosed_t_id_dict
 
+        old_state.destroy(recursive=True)
+        return old_state
+
     @lock_state_machine
     @Observable.observed
     def add_state(self, state, storage_load=False):
@@ -746,18 +757,17 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_state(self, state_id, recursive_deletion=True, force=True, destruct=True):
+    def remove_state(self, state_id, recursive=True, force=False, destroy=True):
         """Remove a state from the container state.
 
         :param state_id: the id of the state to remove
-        :param recursive_deletion: a flag to indicate a recursive deletion of all substates
+        :param recursive: a flag to indicate a recursive disassembling of all substates
         :param force: a flag to indicate forcefully deletion of all states (important for the decider state in the
                 barrier concurrency state)
-        :param destruct: a flag which indicates if the state should not only be disconnected from the state but also
-                destructed, including all its state elements
+        :param destroy: a flag which indicates if the state should not only be disconnected from the state but also
+                destroyed, including all its state elements
         :raises exceptions.AttributeError: if state.state_id does not
         """
-        from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
         if state_id not in self.states:
             raise AttributeError("State_id %s does not exist" % state_id)
 
@@ -779,26 +789,35 @@ class ContainerState(State):
         for key in keys_to_delete:
             self.remove_data_flow(key)
 
-        if recursive_deletion:
-            # Recursively delete all transitions, data flows and states within the state to be deleted
-            if isinstance(self.states[state_id], ContainerState):
-                for transition_id in self.states[state_id].transitions.keys():
-                    self.states[state_id].remove_transition(transition_id)
-                for data_flow_id in self.states[state_id].data_flows.keys():
-                    self.states[state_id].remove_data_flow(data_flow_id)
-                for child_state_id in self.states[state_id].states.keys():
-                    is_barrier_state = isinstance(self.states[state_id], BarrierConcurrencyState)
-                    self.states[state_id].remove_state(child_state_id,
-                                                       recursive_deletion=recursive_deletion,
-                                                       force=True if force or not force and is_barrier_state else False,
-                                                       destruct=destruct)
+        if recursive and not destroy:
+            raise AttributeError("The recursive flag requires the destroy flag to be set, too.")
 
-        if destruct:
-            self.states[state_id].destruct()
+        if destroy:
+            # Recursively delete all transitions, data flows and states within the state to be deleted
+            self.states[state_id].destroy(recursive)
         else:
             self.states[state_id].parent = None
         # final delete the state it self
         return self.states.pop(state_id)
+
+    # do not observe
+    def destroy(self, recursive):
+        """ Removes all the state elements.
+
+        :param recursive: Flag whether to destroy all state elements which are removed
+        """
+        for transition_id in self.transitions.keys():
+            self.remove_transition(transition_id, destroy=recursive)
+        for data_flow_id in self.data_flows.keys():
+            self.remove_data_flow(data_flow_id, destroy=recursive)
+        for scoped_variable_id in self.scoped_variables.keys():
+            self.remove_scoped_variable(scoped_variable_id, destroy=recursive)
+        for state_id in self.states.keys():
+            if recursive:
+                self.remove_state(state_id, recursive, force=True, destroy=recursive)
+            else:
+                del self.states[state_id]
+        super(ContainerState, self).destroy(recursive)
 
     def related_linkage_state(self, state_id):
         """ TODO: document
@@ -1067,22 +1086,25 @@ class ContainerState(State):
         return self.states[self.start_state_id]
 
     @lock_state_machine
-    def remove(self, state_element, force=False):
+    def remove(self, state_element, recursive=True, force=False, destroy=True):
         """Remove item from state
 
         :param StateElement state_element: State or state element to be removed
+        :param bool recursive: Only applies to removal of state and decides whether the removal should be called
+            recursively on all child states
         :param bool force: if the removal should be forced without checking constraints
+        :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, State):
-            self.remove_state(state_element.state_id, force=force)
+            return self.remove_state(state_element.state_id, recursive=recursive, force=force, destroy=destroy)
         elif isinstance(state_element, Transition):
-            self.remove_transition(state_element.transition_id, force)
+            return self.remove_transition(state_element.transition_id, destroy=destroy)
         elif isinstance(state_element, DataFlow):
-            self.remove_data_flow(state_element.data_flow_id)
+            return self.remove_data_flow(state_element.data_flow_id, destroy=destroy)
         elif isinstance(state_element, ScopedVariable):
-            self.remove_scoped_variable(state_element.data_port_id)
+            return self.remove_scoped_variable(state_element.data_port_id, destroy=destroy)
         else:
-            super(ContainerState, self).remove(state_element, force)
+            super(ContainerState, self).remove(state_element, force=force, destroy=destroy)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------- transition functions -------------------------------------
@@ -1219,7 +1241,7 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_transition(self, transition_id, force=False):
+    def remove_transition(self, transition_id, destroy=True):
         """Removes a transition from the container state
 
         :param transition_id: the id of the transition to remove
@@ -1284,7 +1306,7 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_data_flow(self, data_flow_id):
+    def remove_data_flow(self, data_flow_id, destroy=True):
         """ Removes a data flow from the container state
 
         :param int data_flow_id: the id of the data_flow to remove
@@ -1367,7 +1389,7 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_scoped_variable(self, scoped_variable_id):
+    def remove_scoped_variable(self, scoped_variable_id, destroy=True):
         """Remove a scoped variable from the container state
 
         :param scoped_variable_id: the id of the scoped variable to remove
@@ -1377,10 +1399,11 @@ class ContainerState(State):
             raise AttributeError("A scoped variable with id %s does not exist" % str(scoped_variable_id))
 
         # delete all data flows connected to scoped_variable
-        self.remove_data_flows_with_data_port_id(self._scoped_variables[scoped_variable_id].data_port_id)
+        if destroy:
+            self.remove_data_flows_with_data_port_id(scoped_variable_id)
 
         # delete scoped variable
-        del self._scoped_variables[scoped_variable_id]
+        return self._scoped_variables.pop(scoped_variable_id)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------- scoped variables functions end ---------------------------------

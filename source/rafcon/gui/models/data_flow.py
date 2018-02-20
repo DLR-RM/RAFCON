@@ -58,3 +58,7 @@ class DataFlowModel(StateElementModel):
     @ModelMT.observe("data_flow", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(DataFlowModel, self).model_changed(model, prop_name, info)
+
+    def prepare_destruction(self):
+        super(DataFlowModel, self).prepare_destruction()
+        self.data_flow = None

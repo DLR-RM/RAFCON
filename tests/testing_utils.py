@@ -13,6 +13,7 @@ test_multithreading_lock = Lock()
 
 gui_thread = None
 gui_ready = None
+gui_executed_once = False
 exception_info = None
 result = None
 
@@ -87,7 +88,14 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
             counted_warnings += 1
         elif record.levelno == logging.ERROR:
             counted_errors += 1
+        # the exception info dict can hold references core and model objects
+        # -> so the caplog does not allow gc to collect them
+        if hasattr(record, 'exc_info'):
+            record.exc_info = None
+
+    print "counted_warnings == expected_warnings", counted_warnings, expected_warnings
     assert counted_warnings == expected_warnings
+    print "counted_errors == expected_errors", counted_errors, expected_errors
     assert counted_errors == expected_errors
 
 
@@ -339,9 +347,17 @@ def run_gui_thread(gui_config=None, runtime_config=None):
 
 
 def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=None, timeout=5, patch_threading=True):
+
+    if gui_config is None:
+        gui_config = {'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False}
+    if 'HISTORY_ENABLED' not in gui_config.keys():
+        gui_config['HISTORY_ENABLED'] = False
+    if 'AUTO_BACKUP_ENABLED' not in gui_config.keys():
+        gui_config['AUTO_BACKUP_ENABLED'] = False
+
     if patch_threading:
         patch_gtkmvc_model_mt()
-    global gui_ready, gui_thread
+    global gui_ready, gui_thread, gui_executed_once
     # IMPORTANT enforce gtk.gtkgl import in the python main thread to avoid segfaults
     import gtk.gtkgl
 
@@ -350,7 +366,7 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     gui_thread = Thread(target=run_gui_thread, args=[gui_config, runtime_config])
     gui_thread.start()
 
-    used_gui_threads.append(gui_thread)  # TODO why now here before it was in shutdown
+    used_gui_threads.append(gui_thread)
     print "used_gui_threads", used_gui_threads
     # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
     call_gui_callback(initialize_environment_core, core_config, libraries)
@@ -362,6 +378,7 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     # IMPORTANT signal handler and respective import of gui.start to avoid that singletons are created in this thread
     # -> TODO cleanup with app-class creation
     initialize_signal_handler()
+    gui_executed_once = True
 
 
 def wait_for_gui_quit(timeout=5):
@@ -441,6 +458,9 @@ def patch_gtkmvc_model_mt():
         direct method call depending whether the caller's thread is
         different from the observer's thread"""
 
+        if not self._ModelMT__observer_threads.has_key(observer):
+            logger.error("ASSERT WILL COME observer not in observable threads observer: {0} observable: {1}"
+                         "-> known threads are {2}".format(observer, self, self._ModelMT__observer_threads))
         assert self._ModelMT__observer_threads.has_key(observer)
         if _threading.currentThread() == self._ModelMT__observer_threads[observer]:
             # standard call => single threaded
@@ -501,12 +521,14 @@ def dummy_gui(caplog):
     :param caplog: the caplog object provided by pytests's caplog fixture
     :return: None
     """
-    run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    try:
-        # do nothing, just open gui and close it afterwards
-        assert True
-    except:
-        raise
-    finally:
-        close_gui()
-        shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+    global gui_executed_once
+    if not gui_executed_once:
+        run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+        try:
+            # do nothing, just open gui and close it afterwards
+            assert True
+        except:
+            raise
+        finally:
+            close_gui()
+            shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)

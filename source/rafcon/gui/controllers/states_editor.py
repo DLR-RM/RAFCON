@@ -521,46 +521,6 @@ class StatesEditorController(ExtendedController):
             self.activate_state_tab(state_machine_m.selection.get_selected_state())
 
     @ExtendedController.observe("state_machine", after=True)
-    def notify_state_removal(self, model, prop_name, info):
-        """Close tabs of states that are being removed
-
-        'after' is used here in order to receive deletion events of children first. In addition, only successful
-        deletion events are handled. This has the drawback that the model of removed states are no longer existing in
-        the parent state model. Therefore, we use the helper method close_state_of_parent, which looks at all open
-        tabs as well as closed tabs and the ids of their states.
-        """
-        def close_state_of_parent(parent_state_m, state_id):
-
-            for tab_info in self.tabs.itervalues():
-                state_m = tab_info['state_m']
-                # The state id is only unique within the parent
-                # logger.debug("tabs: %s %s %s %s" % (state_m.state.state_id, state_id, state_m.parent, parent_state_m))
-                if state_m.state.state_id == state_id and state_m.parent is parent_state_m:
-                    state_identifier = self.get_state_identifier(state_m)
-                    self.close_page(state_identifier, delete=True)
-                    return True
-
-            for tab_info in self.closed_tabs.itervalues():
-                state_m = tab_info['controller'].model
-                # The state id is only unique within the parent
-                # logger.debug("closed_tabs: %s %s %s %s" % (state_m.state.state_id, state_id, state_m.parent,
-                # parent_state_m))
-                if state_m.state.state_id == state_id and state_m.parent is parent_state_m:
-                    # state_identifier in self.closed_tabs or state_identifier in self.tabs:
-                    state_identifier = self.get_state_identifier(state_m)
-                    self.close_page(state_identifier, delete=True)
-                    return True
-
-            return False
-
-        if not is_execution_status_update_notification_from_state_machine_model(prop_name, info):
-            overview = NotificationOverview(info, initiator_string='states-editor')
-            if overview['prop_name'][-1] in ['state', 'states'] and overview['method_name'][-1] == 'remove_state':
-                state_id = overview['args'][-1][1] if not len(overview['args'][-1]) == 1 else overview['kwargs'][-1]['state_id']
-                parent_state_m = overview['model'][-1]
-                close_state_of_parent(parent_state_m, state_id)
-
-    @ExtendedController.observe("state_machine", after=True)
     def notify_state_name_change(self, model, prop_name, info):
         """Checks whether the name of a state was changed and change the tab label accordingly
         """

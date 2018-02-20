@@ -1,5 +1,10 @@
+import testing_utils
+
 
 def test_value_retrieval():
+
+    testing_utils.dummy_gui(None)
+
     from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
     cache = ValueCache()
 

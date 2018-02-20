@@ -18,6 +18,7 @@ from rafcon.gui import glade
 from rafcon.gui.views.utils.tree import TreeView
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
+import weakref
 
 
 class LinkageOverviewDataView(TreeView):
@@ -34,8 +35,11 @@ class LinkageOverviewLogicView(TreeView):
 
     def __init__(self):
         super(LinkageOverviewLogicView, self).__init__()
+        self._treeView = weakref.ref(self)
 
-        self.treeView = self
+    @property
+    def treeView(self):
+        return self._treeView()
 
 
 class LinkageOverviewView(View):

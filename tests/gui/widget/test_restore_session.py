@@ -350,5 +350,5 @@ def test_restore_session(caplog):
 
 
 if __name__ == '__main__':
-    test_restore_session(None)
-    # pytest.main(['-s', __file__])
+    # test_restore_session(None)
+    pytest.main(['-s', __file__])

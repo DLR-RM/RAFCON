@@ -77,6 +77,8 @@ class StateEditorController(ExtendedController):
         if not isinstance(model, ContainerStateModel) and not isinstance(model, LibraryStateModel) or \
                 isinstance(model, LibraryStateModel) and not isinstance(model.state_copy, ContainerStateModel):
             self.add_controller('source_ctrl', SourceEditorController(sv_and_source_script_state_m, view.source_view))
+        else:
+            view.source_view.get_top_widget().destroy()
         self.add_controller('semantic_data_ctrl', SemanticDataEditorController(model, view.semantic_data_view))
 
     def register_view(self, view):
@@ -87,11 +89,13 @@ class StateEditorController(ExtendedController):
         super(StateEditorController, self).register_view(view)
         view['add_input_port_button'].connect('clicked', self.inputs_ctrl.on_add)
         view['add_output_port_button'].connect('clicked', self.outputs_ctrl.on_add)
-        view['add_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_add)
+        if isinstance(self.model, ContainerStateModel):
+            view['add_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_add)
 
         view['remove_input_port_button'].connect('clicked', self.inputs_ctrl.on_remove)
         view['remove_output_port_button'].connect('clicked', self.outputs_ctrl.on_remove)
-        view['remove_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_remove)
+        if isinstance(self.model, ContainerStateModel):
+            view['remove_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_remove)
 
         if isinstance(self.model, LibraryStateModel) or self.model.state.get_library_root_state():
             view['add_input_port_button'].set_sensitive(False)
@@ -179,3 +183,11 @@ class StateEditorController(ExtendedController):
             new_state_m = msg.affected_models[-1]
             states_editor_ctrl = gui_singletons.main_window_controller.get_controller('states_editor_ctrl')
             states_editor_ctrl.recreate_state_editor(self.model, new_state_m)
+
+    @ExtendedController.observe("destruction_signal", signal=True)
+    def state_destruction(self, model, prop_name, info):
+        """ Close state editor when state is being destructed """
+        import rafcon.gui.singleton as gui_singletons
+        states_editor_ctrl = gui_singletons.main_window_controller.get_controller('states_editor_ctrl')
+        state_identifier = states_editor_ctrl.get_state_identifier(self.model)
+        states_editor_ctrl.close_page(state_identifier, delete=True)

@@ -58,11 +58,31 @@ class AbstractTreeViewController(ExtendedController):
 
         self.active_entry_widget = None
         self.widget_columns = self.tree_view.get_columns()
+        self.signal_handlers = []
+
+    def destroy(self):
+        super(AbstractTreeViewController, self).destroy()
+        # self.tree_view.destroy() # does not help
+        # self._tree_selection.destroy() # creates problems with selection update notification
+        # print "disconnect in", self.__class__.__name__, self.signal_handlers
+        for widget, handler_id in self.signal_handlers:
+            # print "disconnect", widget, handler_id
+            widget.disconnect(handler_id)
+            # widget.destroy() # creates problems with selection update notification
+        self.signal_handlers = []
+        for column in self.widget_columns:
+            renderers = column.get_cell_renderers()
+            for r in renderers:
+                r.ctrl = None
+                r.destroy()
 
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
         super(AbstractTreeViewController, self).register_view(view)
-        self._tree_selection.connect('changed', self.selection_changed)
+        self.signal_handlers.append((self._tree_selection,
+                                     self._tree_selection.connect('changed', self.selection_changed)))
+        # self.handler_ids.append((self.tree_view,
+        #                          self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)))
         self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         self.update_selection_sm_prior()

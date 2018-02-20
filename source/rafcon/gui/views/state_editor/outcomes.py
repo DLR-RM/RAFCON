@@ -32,7 +32,7 @@ class StateOutcomesTreeView(TreeView):
 class StateOutcomesEditorView(View):
 
     def __init__(self):
-        View.__init__(self)
+        super(StateOutcomesEditorView, self).__init__()
 
         self.vbox = gtk.VBox()
         self.treeView = StateOutcomesTreeView()
@@ -56,7 +56,7 @@ class StateOutcomesEditorView(View):
 
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrollable.add(self.treeView['tree_view'])
+        scrollable.add(self.treeView.get_top_widget())
         self.treeView.scrollbar_widget = scrollable
 
         outcomes_label = gui_helper_label.create_label_with_text_and_spacing("OUTCOMES",

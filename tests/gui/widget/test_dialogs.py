@@ -88,6 +88,7 @@ def trigger_dialog_tests():
 
 
 def test_dialog_test(caplog):
+    testing_utils.dummy_gui(None)
 
     testing_utils.initialize_environment(gui_already_started=False)
 
@@ -121,5 +122,6 @@ def test_dialog_test(caplog):
 # library states those maybe should be tested, too
 
 if __name__ == '__main__':
-    test_dialog_test(None)
-    # pytest.main([__file__, '-xs'])
+    # test_dialog_test(None)
+    import pytest
+    pytest.main([__file__, '-xs'])

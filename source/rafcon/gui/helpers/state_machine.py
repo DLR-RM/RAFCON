@@ -472,7 +472,7 @@ def refresh_all(force=False):
     state_machines_editor_ctrl.refresh_all_state_machines()
 
 
-def delete_core_element_of_model(model, raise_exceptions=False):
+def delete_core_element_of_model(model, raise_exceptions=False, recursive=True, destroy=True, force=True):
     """Deletes respective core element of handed model of its state machine
 
     If the model is one of state, data flow or transition, it is tried to delete that model together with its
@@ -480,6 +480,7 @@ def delete_core_element_of_model(model, raise_exceptions=False):
 
     :param model: The model of respective core element to delete
     :param bool raise_exceptions: Whether to raise exceptions or only log errors in case of failures
+    :param bool destroy: Access the destroy flag of the core remove methods
     :return: True if successful, False else
     """
     state_m = model.parent
@@ -499,7 +500,7 @@ def delete_core_element_of_model(model, raise_exceptions=False):
 
     try:
         if core_element in state:
-            state.remove(core_element)
+            state.remove(core_element, recursive=recursive, destroy=destroy, force=force)
             return True
         return False
     except (AttributeError, ValueError) as e:
@@ -509,19 +510,21 @@ def delete_core_element_of_model(model, raise_exceptions=False):
         return False
 
 
-def delete_core_elements_of_models(models, raise_exceptions=False):
+def delete_core_elements_of_models(models, raise_exceptions=False, recursive=True, destroy=True, force=True):
     """Deletes all respective core elements for the given models
 
     Calls the :func:`delete_core_element_of_model` for all given models.
 
     :param models: A single model or a list of models of respective core element to be deleted
     :param bool raise_exceptions: Whether to raise exceptions or log error messages in case of an error
+    :param bool destroy:  Access the destroy flag of the core remove methods
     :return: The number of models that were successfully deleted
     """
     # If only one model is given, make a list out of it
     if not hasattr(models, '__iter__'):
         models = [models]
-    return sum(delete_core_element_of_model(model, raise_exceptions) for model in models)
+    return sum(delete_core_element_of_model(model, raise_exceptions, recursive=recursive, destroy=destroy, force=force)
+               for model in models)
 
 
 def is_selection_inside_of_library_state(state_machine_m=None, selected_elements=None):
@@ -559,7 +562,7 @@ def delete_selected_elements(state_machine_m):
         return
 
     if len(state_machine_m.selection) > 0:
-        delete_core_elements_of_models(state_machine_m.selection.get_all())
+        delete_core_elements_of_models(state_machine_m.selection.get_all(), recursive=True, destroy=True)
         return True
 
 
@@ -869,17 +872,18 @@ def group_selected_states_and_scoped_variables():
     selected_scoped_vars = list(selection.scoped_variables)
     selected_state_m = selection.get_selected_state()
     if len(selected_states) > 0 and isinstance(selected_state_m.parent, StateModel) or len(selected_scoped_vars):
-        # # check if all elements have the same parent or leave it to the parent
-        # parent_list = []
-        # for state_m in selected_state_m_list:
-        #     parent_list.append(state_m.state)
-        # for sv_m in selected_sv_m:
-        #     parent_list.append(sv_m.scoped_variable.parent)
-        # assert len(set(parent_list))
+        # check if all elements have the same parent or leave it to the parent
+        parent_list = []
+        for state_m in selected_states:
+            parent_list.append(state_m.state.parent)
+        for sv_m in selected_scoped_vars:
+            parent_list.append(sv_m.scoped_variable.parent)
+        if not len(set(parent_list)) == 1:
+            raise AttributeError("All elements that should be grouped have to have one direct parent state.")
         logger.debug("Group selected states: {0} scoped variables: {1}".format(selected_states, selected_scoped_vars))
         # TODO remove un-select workaround (used to avoid wrong selections in gaphas and inconsistent selection)
         sm_m.selection.clear()
-        gui_helper_state.group_states_and_scoped_variables(selected_states, selected_scoped_vars)
+        return gui_helper_state.group_states_and_scoped_variables(selected_states, selected_scoped_vars)
 
 
 def ungroup_selected_state():
@@ -892,7 +896,7 @@ def ungroup_selected_state():
         if is_selection_inside_of_library_state(selected_elements=[selected_state_m]):
             logger.warn("Ungroup is not performed because target state is inside of a library state.")
             return
-        gui_helper_state.ungroup_state(selected_state_m)
+        return gui_helper_state.ungroup_state(selected_state_m)
 
 
 def get_root_state_name_of_sm_file_system_path(file_system_path):

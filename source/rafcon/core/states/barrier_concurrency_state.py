@@ -64,7 +64,7 @@ class BarrierConcurrencyState(ConcurrencyState):
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None,
                  decider_state=None, load_from_storage=False):
-
+        self.__init_running = True
         if decider_state is not None:
             if isinstance(decider_state, DeciderState):
                 decider_state.state_id = UNIQUE_DECIDER_STATE_ID
@@ -75,7 +75,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         if not load_from_storage:
             if states is not None and UNIQUE_DECIDER_STATE_ID not in states:
                 states[UNIQUE_DECIDER_STATE_ID] = (DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID))
-
+        # TODO figure out how to solve those two clinch better of copy/add state and already existing transitions #1 #2
         ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes,
                                   states, transitions, data_flows, start_state_id, scoped_variables)
 
@@ -85,7 +85,9 @@ class BarrierConcurrencyState(ConcurrencyState):
         for state_id, state in self.states.iteritems():
             if not state_id == UNIQUE_DECIDER_STATE_ID:
                 for outcome in self.states[state_id].outcomes.values():
-                    if not outcome.outcome_id < 0:
+                    # TODO figure out how to solve this clinch better #3
+                    match = [t.from_state == state_id and t.from_outcome == outcome.outcome_id for t in self.transitions.itervalues()]
+                    if not outcome.outcome_id < 0 and not any(match):
                         try:
                             self.add_transition(from_state_id=state_id, from_outcome=outcome.outcome_id,
                                                 to_state_id=UNIQUE_DECIDER_STATE_ID, to_outcome=None)
@@ -93,6 +95,7 @@ class BarrierConcurrencyState(ConcurrencyState):
                             if "transition origin already connected to another transition" not in str(e):
                                 logger.error("default decider state transition could not be added: {}".format(e))
                                 raise
+        self.__init_running = False
 
     def run(self):
         """ This defines the sequence of actions that are taken when the barrier concurrency state is executed
@@ -247,7 +250,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         :return:
         """
         state_id = super(BarrierConcurrencyState, self).add_state(state)
-        if not storage_load and state.state_id is not UNIQUE_DECIDER_STATE_ID:
+        if not storage_load and not self.__init_running and not state.state_id == UNIQUE_DECIDER_STATE_ID:
             # the transitions must only be created for the initial add_state call and not during each load procedure
             for o_id, o in state.outcomes.iteritems():
                 if not o_id == -1 and not o_id == -2:
@@ -281,22 +284,21 @@ class BarrierConcurrencyState(ConcurrencyState):
             for state in states.itervalues():
                 self.add_state(state)
 
-    @lock_state_machine
-    def remove_state(self, state_id, recursive_deletion=True, force=False, destruct=False):
+    def remove_state(self, state_id, recursive=True, force=False, destroy=True):
         """ Overwrite the parent class remove state method by checking if the user tries to delete the decider state
 
         :param state_id: the id of the state to remove
-        :param recursive_deletion: a flag to indicate a recursive deletion of all substates
+        :param recursive: a flag to indicate a recursive disassembling of all substates
         :param force: a flag to indicate forcefully deletion of all states (important of the decider state in the
                 barrier concurrency state)
-        :param destruct: a flag which indicates if the state should not only be disconnected from the state but also
-                destructed, including all its state elements
+        :param destroy: a flag which indicates if the state should not only be disconnected from the state but also
+                destroyed, including all its state elements
         :raises exceptions.AttributeError: if the state_id parameter is the decider state
         """
         if state_id == UNIQUE_DECIDER_STATE_ID and force is False:
             raise AttributeError("You are not allowed to delete the decider state.")
         else:
-            ContainerState.remove_state(self, state_id, recursive_deletion, force, destruct)
+            return ContainerState.remove_state(self, state_id, recursive=recursive, force=force, destroy=destroy)
 
     @classmethod
     def from_dict(cls, dictionary):

@@ -241,7 +241,8 @@ class StateOutcomesListController(ListViewController):
         self.dict_to_other_outcome.clear()
         self.dict_from_other_state.clear()
 
-        if not model.state.is_root_state:
+        # TODO check this work around -> it could be avoided by observation of remove-before-notifications
+        if not model.state.is_root_state and self.model.parent.state:  # if parent model is not already destroyed
             # check for "to state combos" -> so all states in parent
             parent_id = model.parent.state.state_id
             for parent_child_state_m in model.parent.states.values():
@@ -321,13 +322,23 @@ class StateOutcomesListController(ListViewController):
     def outcomes_changed(self, model, prop_name, info):
         self.update()
 
+    # TODO D-Find out why the observation of the destruction_signal cause threading problems
+    # @ExtendedController.observe("destruction_signal", signal=True)
+    # def get_destruction_signal(self, model, prop_name, info):
+    #     """ Relieve models if the parent state model """
+    #     # this is necessary because the controller use data of its parent model and would try to adapt to
+    #     # transition changes before the self.model is destroyed, too
+    #     if not self.model.state.is_root_state and self.model.parent is model:
+    #         # as long as a relieve of models before the after will cause threading issues the controller is suspended
+    #         self.__suspended = True
+
 
 class StateOutcomesEditorController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor
         """
-        ExtendedController.__init__(self, model, view)
+        super(StateOutcomesEditorController, self).__init__(model, view)
         self.oc_list_ctrl = StateOutcomesListController(model, view.treeView)
         self.add_controller('oc_list_ctrl', self.oc_list_ctrl)
 

@@ -33,6 +33,7 @@ logger = log.get_logger(__name__)
 import os
 import subprocess
 import pickle
+from weakref import ref
 
 
 class ExecutionHistoryStorage(object):
@@ -238,14 +239,20 @@ class HistoryItem(object):
     """
 
     def __init__(self, state, prev, run_id):
-        self.state_reference = state
-        self.path = state.get_path()
+        self._state_reference = ref(state)
+        self.path = copy.deepcopy(state.get_path())
         self.timestamp = time.time()
         self.run_id = run_id
         self.prev = prev
         self.next = None
         self.history_item_id = history_item_id_generator()
         self.state_type = str(type(state).__name__)
+
+    @property
+    def state_reference(self):
+        """Property for the state_reference field
+        """
+        return self._state_reference()
 
     def __str__(self):
         return "HistoryItem with reference state name %s (time: %s)" % (self.state_reference.name, self.timestamp)

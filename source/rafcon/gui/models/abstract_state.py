@@ -188,21 +188,25 @@ class AbstractStateModel(MetaModel, Hashable):
     def hierarchy_level(self):
         return len(self.state.get_path().split('/'))
 
-    def prepare_destruction(self):
+    def prepare_destruction(self, recursive=True):
         """Prepares the model for destruction
 
         Recursively un-registers all observers and removes references to child models
         """
+        if self.state is None:
+            logger.warning("Multiple calls of prepare destruction for {0}".format(self))
         self.destruction_signal.emit()
         try:
             self.unregister_observer(self)
         except KeyError:  # Might happen if the observer was already unregistered
             pass
-        for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
-            port.prepare_destruction()
+        if recursive:
+            for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
+                port.prepare_destruction()
         del self.input_data_ports[:]
         del self.output_data_ports[:]
         del self.outcomes[:]
+        self.state = None
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.core_element)

@@ -390,7 +390,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @lock_state_machine
     @Observable.observed
-    def remove_input_data_port(self, data_port_id, force=False):
+    def remove_input_data_port(self, data_port_id, force=False, destroy=True):
         """Remove an input data port from the state
 
         :param int data_port_id: the id or the output data port to remove
@@ -398,7 +398,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :raises exceptions.AttributeError: if the specified input data port does not exist
         """
         if data_port_id in self._input_data_ports:
-            self.remove_data_flows_with_data_port_id(data_port_id)
+            if destroy:
+                self.remove_data_flows_with_data_port_id(data_port_id)
             return self._input_data_ports.pop(data_port_id)
         else:
             raise AttributeError("input data port with name %s does not exit", data_port_id)
@@ -451,14 +452,15 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @lock_state_machine
     @Observable.observed
-    def remove_output_data_port(self, data_port_id, force=False):
+    def remove_output_data_port(self, data_port_id, force=False, destroy=True):
         """Remove an output data port from the state
 
         :param int data_port_id: the id of the output data port to remove
         :raises exceptions.AttributeError: if the specified input data port does not exist
         """
         if data_port_id in self._output_data_ports:
-            self.remove_data_flows_with_data_port_id(data_port_id)
+            if destroy:
+                self.remove_data_flows_with_data_port_id(data_port_id)
             return self._output_data_ports.pop(data_port_id)
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
@@ -624,24 +626,27 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return outcome_id
 
     @lock_state_machine
-    def remove(self, state_element, force=False):
+    def remove(self, state_element, recursive=True, force=False, destroy=True):
         """Remove item from state
 
         :param StateElement state_element: State element to be removed
+        :param bool recursive: Only applies to removal of state and decides whether the removal should be called
+            recursively on all child states
         :param bool force: if the removal should be forced without checking constraints
+        :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, Outcome):
-            self.remove_outcome(state_element.outcome_id, force)
+            return self.remove_outcome(state_element.outcome_id, force=force, destroy=destroy)
         elif isinstance(state_element, InputDataPort):
-            self.remove_input_data_port(state_element.data_port_id, force)
+            return self.remove_input_data_port(state_element.data_port_id, force, destroy=destroy)
         elif isinstance(state_element, OutputDataPort):
-            self.remove_output_data_port(state_element.data_port_id, force)
+            return self.remove_output_data_port(state_element.data_port_id, force, destroy=destroy)
         else:
             raise ValueError("Cannot remove state_element with invalid type")
 
     @lock_state_machine
     @Observable.observed
-    def remove_outcome(self, outcome_id, force=False):
+    def remove_outcome(self, outcome_id, force=False, destroy=True):
         """Remove an outcome from the state
 
         :param int outcome_id: the id of the outcome to remove
@@ -659,7 +664,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.remove_outcome_hook(outcome_id)
 
         # delete possible transition connected to this outcome
-        if not self.is_root_state:
+        if destroy and not self.is_root_state:
             for transition_id, transition in self.parent.transitions.iteritems():
                 if transition.from_outcome == outcome_id and transition.from_state == self.state_id:
                     self.parent.remove_transition(transition_id)
@@ -906,19 +911,19 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return removed_element
 
     @lock_state_machine
-    def destruct(self):
+    def destroy(self, recursive):
         """ Removes all the state elements.
 
-        :return:
+        :param recursive: Flag wether to destroy all state elements which are removed
         """
         for in_key in self.input_data_ports.keys():
-            self.remove_input_data_port(in_key, True)
+            self.remove_input_data_port(in_key, force=True, destroy=recursive)
 
         for out_key in self.output_data_ports.keys():
-            self.remove_output_data_port(out_key, True)
+            self.remove_output_data_port(out_key, force=True, destroy=recursive)
 
         for outcome_key in self.outcomes.keys():
-            self.remove_outcome(outcome_key, True)
+            self.remove_outcome(outcome_key, force=True, destroy=recursive)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc

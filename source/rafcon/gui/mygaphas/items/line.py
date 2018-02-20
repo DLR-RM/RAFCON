@@ -71,9 +71,7 @@ class PerpLine(Line):
 
     @property
     def parent(self):
-        if not self._parent:
-            self._parent = self.canvas.get_parent(self)
-        return self._parent
+        return self.canvas.get_parent(self)
 
     @property
     def from_port(self):
@@ -106,6 +104,14 @@ class PerpLine(Line):
                                                                           self._head_offset(self.to_port),
                                                                   self.is_in_port(port))
             self.canvas.solver.add_constraint(self._to_port_constraint)
+
+    def remove(self):
+        self.canvas.solver.remove_constraint(self._from_port_constraint)
+        self.canvas.solver.remove_constraint(self._to_port_constraint)
+        self.remove_all_waypoints()
+        self.reset_from_port()
+        self.reset_to_port()
+        self.canvas.remove(self)
 
     @property
     def view(self):
@@ -141,11 +147,6 @@ class PerpLine(Line):
 
     def to_handle(self):
         return self._to_handle
-
-    def prepare_destruction(self):
-        self.canvas.solver.remove_constraint(self._from_port_constraint)
-        self.canvas.solver.remove_constraint(self._to_port_constraint)
-        self.remove_all_waypoints()
 
     def get_parent_state_v(self):
         if not self._parent_state_v:

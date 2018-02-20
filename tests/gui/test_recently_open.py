@@ -216,6 +216,7 @@ def trigger_gui_signals(*args):
     call_gui_callback(global_runtime_config.update_recently_opened_state_machines_with, lib_sm_m.state_machine)
     lib_sm_path = lib_sm_m.state_machine.file_system_path
     shutil.rmtree(lib_sm_m.state_machine.file_system_path)
+    lib_sm_before_remove = lib_sm_m.state_machine
     call_gui_callback(sm_manager_model.state_machine_manager.remove_state_machine, lib_sm_m.state_machine.state_machine_id)
     call_gui_callback(testing_utils.wait_for_gui)
     call_gui_callback(menubar_ctrl.view.sub_menu_open_recently.get_children()[2].activate)
@@ -226,7 +227,7 @@ def trigger_gui_signals(*args):
     assert lib_sm_path in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
     call_gui_callback(global_runtime_config.clean_recently_opened_state_machines)
     assert lib_sm_path not in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
-    call_gui_callback(global_runtime_config.update_recently_opened_state_machines_with, lib_sm_m.state_machine)
+    call_gui_callback(global_runtime_config.update_recently_opened_state_machines_with, lib_sm_before_remove)
     assert 'NOT_ACCESSIBLE' in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
 
     # TODO maybe finally move this into the auto-backup or restore test module

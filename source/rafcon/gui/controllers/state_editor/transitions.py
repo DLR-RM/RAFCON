@@ -68,6 +68,13 @@ class StateTransitionsListController(LinkageListController):
         self.debug_log = False
         super(StateTransitionsListController, self).__init__(model, view, view.get_top_widget(), list_store, logger)
 
+    def destroy(self):
+        self.view['from_state_col'].set_cell_data_func(self.view['from_state_combo'], None)
+        self.view['to_state_col'].set_cell_data_func(self.view['to_state_combo'], None)
+        self.view['from_outcome_col'].set_cell_data_func(self.view['from_outcome_combo'], None)
+        self.view['to_outcome_col'].set_cell_data_func(self.view['to_outcome_combo'], None)
+        super(StateTransitionsListController, self).destroy()
+
     def register_view(self, view):
         """Called when the View was registered
         """

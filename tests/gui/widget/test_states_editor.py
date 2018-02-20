@@ -93,8 +93,10 @@ def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
     return state_editor_ctrl, time_waited
 
 
-def check_state_editor_models(sm_m, parent_state_m, main_window_controller, logger):
+def check_state_editor_models(sm_m, parent_state_m, logger=None):
     from rafcon.gui.models import ContainerStateModel
+    import rafcon.gui.singleton
+    main_window_controller = rafcon.gui.singleton.main_window_controller
 
     sleep_time_max = 5.0
     states_editor_controller = main_window_controller.get_controller('states_editor_ctrl')
@@ -165,7 +167,7 @@ def trigger_state_type_change_tests(with_gui=True):
         state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active(state_type_row_id)
         # - check child state editor widgets
         new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-        check_state_editor_models(sm_m, new_state_m, main_window_controller, logger)
+        check_state_editor_models(sm_m, new_state_m, logger)
         input_and_return_list.append(new_state_m)
 
     ####### General Type Change inside of a state machine (NO ROOT STATE) ############

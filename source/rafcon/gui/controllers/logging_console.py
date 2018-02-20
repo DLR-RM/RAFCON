@@ -94,16 +94,3 @@ class LoggingConsoleController(ExtendedController):
             self._enables = current_enables
             self.view.set_enables(self._enables)
             self.update_filtered_buffer()
-
-    def _get_config_enables(self):
-        keys = ['INFO', 'DEBUG', 'WARNING', 'ERROR']
-        return {key: self.model.config.get_config_value('LOGGING_SHOW_' + key, True) for key in keys}
-
-    @ExtendedController.observe("config", after=True)
-    def model_changed(self, model, prop_name, info):
-        """ React to configuration changes """
-        current_enables = self._get_config_enables()
-        if not self._enables == current_enables:
-            self._enables = current_enables
-            self.view.set_enables(self._enables)
-            self.update_filtered_buffer()

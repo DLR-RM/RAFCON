@@ -11,6 +11,8 @@
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from weakref import ref
+
 from gaphas.geometry import distance_point_point
 from gaphas.segment import LineSegment, Segment
 
@@ -23,6 +25,27 @@ class TransitionSegment(LineSegment):
     This class is used to redefine the behavior of transitions and how new waypoints may be added.
     It checks if the waypoint that should be created is not between the perpendicular connectors to the ports.
     """
+
+    _view = None
+    _item = None
+
+    def __init__(self, item, view):
+        if item:
+            self._item = ref(item)
+        if view:
+            self._view = ref(view)
+
+    @property
+    def item(self):
+        if self._item:
+            return self._item()
+        return None
+
+    @property
+    def view(self):
+        if self._view:
+            return self._view()
+        return None
 
     def split(self, pos):
         item = self.item

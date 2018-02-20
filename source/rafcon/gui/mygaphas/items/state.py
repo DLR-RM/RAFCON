@@ -63,6 +63,8 @@ class StateView(Element):
         self.width = size[0]
         self.height = size[1]
 
+        self.is_root_state_of_library = state_m.state.is_root_state_of_library
+
         self._state_m = ref(state_m)
         self.hierarchy_level = hierarchy_level
 
@@ -79,7 +81,6 @@ class StateView(Element):
         self._moving = False
 
         self._view = None
-        self._parent = None
 
         self.__symbol_size_cache = {}
         self._image_cache = ImageCache()
@@ -122,7 +123,7 @@ class StateView(Element):
         self._income = self.add_income()
 
         canvas = self.canvas
-        parent = canvas.get_parent(self)
+        parent = self.parent
 
         self.update_minimum_size()
 
@@ -184,15 +185,24 @@ class StateView(Element):
         """Remove recursively all children and then the StateView itself
         """
         self.canvas.get_first_view().unselect_item(self)
-        children = self.canvas.get_children(self)[:]
-        for child in children:
-            if isinstance(child, StateView):
-                child.remove()
-            if isinstance(child, NameView):
-                self.canvas.remove(child)
+
+        for child in self.canvas.get_children(self)[:]:
+            child.remove()
+
+        self.remove_income()
+        for outcome_v in self.outcomes[:]:
+            self.remove_outcome(outcome_v)
+        for input_port_v in self.inputs[:]:
+            self.remove_input_port(input_port_v)
+        for output_port_v in self.outputs[:]:
+            self.remove_output_port(output_port_v)
+        for scoped_variable_port_v in self.scoped_variables[:]:
+            self.remove_scoped_variable(scoped_variable_port_v)
+
         self.remove_keep_rect_within_constraint_from_parent()
-        for constraint in self._constraints:
+        for constraint in self._constraints[:]:
             self.canvas.solver.remove_constraint(constraint)
+            self._constraints.remove(constraint)
         self.canvas.remove(self)
 
     @staticmethod
@@ -210,12 +220,12 @@ class StateView(Element):
         canvas = self.canvas
         solver = canvas.solver
 
-        name_constraint = self.keep_rect_constraints[self.name_view]
+        name_constraint = self.keep_rect_constraints.pop(self.name_view)
         solver.remove_constraint(name_constraint)
 
-        parent_state_v = canvas.get_parent(self)
+        parent_state_v = self.parent
         if parent_state_v is not None and isinstance(parent_state_v, StateView):
-            constraint = parent_state_v.keep_rect_constraints[self]
+            constraint = parent_state_v.keep_rect_constraints.pop(self)
             solver.remove_constraint(constraint)
 
     def has_selected_child(self):
@@ -255,11 +265,7 @@ class StateView(Element):
 
     @property
     def parent(self):
-        if not self._parent:
-            if not self.canvas:
-                return None
-            self._parent = self.canvas.get_parent(self)
-        return self._parent
+        return self.canvas.get_parent(self)
 
     @property
     def corner_handles(self):
@@ -380,8 +386,10 @@ class StateView(Element):
     def draw(self, context):
         # Do not draw if
         # * state (or its parent) is currently moved
+        # * core element is no longer existing (must have just been removed)
         # * is root state of a library (drawing would hide the LibraryState itself)
-        if self.moving and self.parent and self.parent.moving or self.model.state.is_root_state_of_library:
+        if not self.model.state or self.moving and self.parent and self.parent.moving or \
+                self.model.state.is_root_state_of_library:
             if not context.draw_all:
                 return
 
@@ -614,6 +622,16 @@ class StateView(Element):
         self.add_rect_constraint_for_port(income_v)
         return income_v
 
+    def remove_income(self):
+        income_v = self._income
+        del self._map_handles_port_v[income_v.handle]
+        self._income = None
+        self._ports.remove(income_v.port)
+        self._handles.remove(income_v.handle)
+
+        if income_v in self.port_constraints:
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(income_v))
+
     def add_outcome(self, outcome_m):
         outcome_v = OutcomeView(outcome_m, self)
         self.canvas.add_port(outcome_v)
@@ -648,8 +666,9 @@ class StateView(Element):
         self._ports.remove(outcome_v.port)
         self._handles.remove(outcome_v.handle)
 
+        self.canvas.remove_port(outcome_v)
         if outcome_v in self.port_constraints:
-            self.canvas.solver.remove_constraint(self.port_constraints[outcome_v])
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(outcome_v))
 
     def add_input_port(self, port_m):
         input_port_v = InputPortView(self, port_m)
@@ -678,8 +697,9 @@ class StateView(Element):
         self._ports.remove(input_port_v.port)
         self._handles.remove(input_port_v.handle)
 
+        self.canvas.remove_port(input_port_v)
         if input_port_v in self.port_constraints:
-            self.canvas.solver.remove_constraint(self.port_constraints[input_port_v])
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(input_port_v))
 
     def add_output_port(self, port_m):
         output_port_v = OutputPortView(self, port_m)
@@ -708,8 +728,9 @@ class StateView(Element):
         self._ports.remove(output_port_v.port)
         self._handles.remove(output_port_v.handle)
 
+        self.canvas.remove_port(output_port_v)
         if output_port_v in self.port_constraints:
-            self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(output_port_v))
 
     def add_scoped_variable(self, scoped_variable_m):
         scoped_variable_port_v = ScopedVariablePortView(self, scoped_variable_m)
@@ -743,8 +764,9 @@ class StateView(Element):
         self._ports.remove(scoped_variable_port_v.port)
         self._handles.remove(scoped_variable_port_v.handle)
 
+        self.canvas.remove_port(scoped_variable_port_v)
         if scoped_variable_port_v in self.port_constraints:
-            self.canvas.solver.remove_constraint(self.port_constraints[scoped_variable_port_v])
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(scoped_variable_port_v))
 
     def add_rect_constraint_for_port(self, port):
         constraint = PortRectConstraint((self.handles()[NW].pos, self.handles()[SE].pos), port.pos, port)
@@ -860,6 +882,9 @@ class NameView(Element):
 
         self._image_cache = ImageCache(multiplicator=1.5)
 
+    def remove(self):
+        self.canvas.remove(self)
+
     def update_minimum_size(self):
         min_side_length = min(self.parent.width, self.parent.height) / constants.MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO
         if min_side_length != self.min_width:
@@ -917,8 +942,9 @@ class NameView(Element):
     def draw(self, context):
         # Do not draw if
         # * state (or its parent) is currently moved
+        # * core element is no longer existing (must have just been removed)
         # * is root state of a library (drawing would hide the LibraryState itself)
-        if self.moving or self.parent.model.state.is_root_state_of_library:
+        if not self.model.state or self.moving or self.parent.model.state.is_root_state_of_library:
             return
 
         width = self.width

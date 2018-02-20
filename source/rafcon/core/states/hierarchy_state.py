@@ -138,6 +138,8 @@ class HierarchyState(ContainerState):
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
+            self.child_state = None
+            self.last_child = None
             return self.finalize(Outcome(-1, "aborted"))
 
     def _handle_backward_execution_before_child_execution(self):
@@ -280,5 +282,8 @@ class HierarchyState(ContainerState):
 
         if self.preempted:
             self.final_outcome = Outcome(-2, "preempted")
+
+        self.child_state = None
+        self.last_child = None
 
         return self.finalize(self.final_outcome)

@@ -65,7 +65,6 @@ class GraphicalEditorController(ExtendedController):
         element
     """
 
-    _complex_action = False
     drag_motion_handler_id = None
     focus_changed_handler_id = None
 
@@ -82,9 +81,18 @@ class GraphicalEditorController(ExtendedController):
         self.zoom = 3.
         self.perform_drag_and_drop = False
 
+        self._ongoing_complex_actions = {}
+        # the variable is for debugging -> I like to have it to improve complex actions
+        self._nested_action_already_in = {}
+
         view.setup_canvas(self.canvas, self.zoom)
 
         view.editor.drag_dest_set(gtk.DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
+
+    def destroy(self):
+        if self.view:
+            self.view.editor.prepare_destruction()
+        super(GraphicalEditorController, self).destroy()
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -300,6 +308,12 @@ class GraphicalEditorController(ExtendedController):
         msg = MetaSignalMsg('graphical_editor_gaphas', name, affects_children)
         model.meta_signal.emit(msg)
 
+    @ExtendedController.observe("destruction_signal", signal=True)
+    def state_machine_destruction(self, model, prop_name, info):
+        """ Clean up when state machine is being destructed """
+        if self.model is model:  # only used for the state machine destruction case
+            self.canvas.get_view_for_model(self.root_state_m).remove()
+
     @ExtendedController.observe("state_meta_signal", signal=True)
     def meta_changed_notify_after(self, state_machine_m, _, info):
         """Handle notification about the change of a state's meta data
@@ -317,7 +331,7 @@ class GraphicalEditorController(ExtendedController):
         notification = meta_signal_message.notification
         if not notification:    # For changes applied to the root state, there are always two notifications
             return              # Ignore the one with less information
-        if self._complex_action:
+        if self._ongoing_complex_actions:
             return
 
         model = notification.model
@@ -355,42 +369,64 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
-        if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state',
-                                                    'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
-            if info['arg'].after is False:
-                self._complex_action = True
-                if info['arg'].action in ['group_states', 'paste', 'cut']:
-                    self.observe_model(info['arg'].action_parent_m)
-                else:
-                    self.observe_model(info['arg'].affected_models[0])
+        if not ('arg' in info and info['arg'].after is False):
+            return
 
-                # assert not hasattr(self.state_action_signal.__func__, "affected_models")
-                # assert not hasattr(self.state_action_signal.__func__, "target")
-                self.state_action_signal.__func__.affected_models = info['arg'].affected_models
-                self.state_action_signal.__func__.target = info['arg'].action_parent_m
+        action = info['arg'].action
+        action_parent_m = info['arg'].action_parent_m
+        affected_models = info['arg'].affected_models
+
+        if action in ['change_root_state_type', 'change_state_type', 'substitute_state',
+                      'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
+
+            # print self.__class__.__name__, 'add complex action', action
+            if not self._ongoing_complex_actions:
+                self._nested_action_already_in = {}
+
+            self._ongoing_complex_actions[action] = {}
+            if action in ['group_states', 'paste', 'cut']:
+                self.observe_model(info['arg'].action_parent_m)
+            else:
+                self.observe_model(info['arg'].affected_models[0])
+
+            self._ongoing_complex_actions[action]['affected_models'] = affected_models
+            if action in ['change_state_type', 'change_root_state_type', 'undo/redo']:
+                old_state_m = affected_models[0]
+                self._ongoing_complex_actions[action]['target'] = old_state_m
+            else:
+                self._ongoing_complex_actions[action]['target'] = action_parent_m
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
-        if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
-                        info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut',
-                                               'undo/redo']:
+        if not (isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after):
+            return
 
-            old_state_m = self.state_action_signal.__func__.target
-            new_state_m = info['arg'].action_parent_m
+        action = info['arg'].action
+        action_parent_m = info['arg'].action_parent_m
+        affected_models = info['arg'].affected_models
 
-        elif isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
-                        info['arg'].action in ['change_state_type', 'change_root_state_type']:
+        if isinstance(info['arg'].result, Exception) and action in self._ongoing_complex_actions:
+            self._nested_action_already_in.update({action: self._ongoing_complex_actions.pop(action)})
+            return
 
-            old_state_m = model
-            new_state_m = info['arg'].affected_models[-1]
-
+        if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut']:
+            new_state_m = action_parent_m
+        elif action in ['change_state_type', 'change_root_state_type', 'undo/redo']:
+            new_state_m = affected_models[-1]
         else:
             return
 
-        self._complex_action = False
-        self.relieve_model(model)
+        old_state_m = self._ongoing_complex_actions[action]['target']
 
-        self.adapt_complex_action(old_state_m, new_state_m)
+        # print self.__class__.__name__, 'remove complex action', action, \
+        #     id(old_state_m), id(new_state_m), old_state_m, new_state_m
+        self._nested_action_already_in.update({action: self._ongoing_complex_actions.pop(action)})
+
+        if not self._ongoing_complex_actions:
+            # common case remove the view here in the after action signal
+            self.relieve_model(model)
+            self.adapt_complex_action(old_state_m, new_state_m)
+            self._nested_action_already_in = {}
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
@@ -407,7 +443,7 @@ class GraphicalEditorController(ExtendedController):
         if 'method_name' in info and info['method_name'] == 'root_state_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
-            if self._complex_action:
+            if self._ongoing_complex_actions:
                 return
 
             # The method causing the change raised an exception, thus nothing was changed
@@ -426,10 +462,7 @@ class GraphicalEditorController(ExtendedController):
                 if not self.perform_drag_and_drop:
                     self.canvas.perform_update()
             elif method_name == 'remove_state':
-                parent_state = arguments[0]
-                state_id = arguments[1]
-                parent_v = self.canvas.get_view_for_core_element(parent_state)
-                state_v = self.canvas.get_view_for_id(StateView, state_id, parent_v)
+                state_v = self.canvas.get_view_for_core_element(result)
                 if state_v:
                     parent_v = self.canvas.get_parent(state_v)
                     state_v.remove()
@@ -449,8 +482,10 @@ class GraphicalEditorController(ExtendedController):
                         self.canvas.perform_update()
                         break
             elif method_name == 'remove_transition':
-                self.remove_obsolete_transition_views_from_state(model)
-                self.canvas.perform_update()
+                transition_v = self.canvas.get_view_for_core_element(result)
+                if transition_v:
+                    transition_v.remove()
+                    self.canvas.perform_update()
             elif method_name == 'transition_change':
                 transition_m = model
                 transition_v = self.canvas.get_view_for_model(transition_m)
@@ -469,8 +504,10 @@ class GraphicalEditorController(ExtendedController):
                         self.canvas.perform_update()
                         break
             elif method_name == 'remove_data_flow':
-                self.remove_obsolete_data_flow_views_from_state(model)
-                self.canvas.perform_update()
+                data_flow_v = self.canvas.get_view_for_core_element(result)
+                if data_flow_v:
+                    data_flow_v.remove()
+                    self.canvas.perform_update()
             elif method_name == 'data_flow_change':
                 data_flow_m = model
                 data_flow_v = self.canvas.get_view_for_model(data_flow_m)
@@ -495,12 +532,11 @@ class GraphicalEditorController(ExtendedController):
                 if state_v is None:
                     logger.debug("no state_v found for method_name '{}'".format(method_name))
                 else:
-                    for outcome_v in state_v.outcomes:
-                        if outcome_v.outcome_id == arguments[1]:
-                            state_v.remove_outcome(outcome_v)
-                            self.canvas.request_update(state_v, matrix=False)
-                            self.canvas.perform_update()
-                            break
+                    outcome_v = self.canvas.get_view_for_core_element(result)
+                    if outcome_v:
+                        state_v.remove_outcome(outcome_v)
+                        self.canvas.request_update(state_v, matrix=False)
+                        self.canvas.perform_update()
 
             # ----------------------------------
             #           DATA PORTS
@@ -529,24 +565,22 @@ class GraphicalEditorController(ExtendedController):
                 if state_v is None:
                     logger.debug("no state_v found for method_name '{}'".format(method_name))
                 else:
-                    for input_port_v in state_v.inputs:
-                        if input_port_v.port_id == arguments[1]:
-                            state_v.remove_input_port(input_port_v)
-                            self.canvas.request_update(state_v, matrix=False)
-                            self.canvas.perform_update()
-                            break
+                    input_port_v = self.canvas.get_view_for_core_element(result)
+                    if input_port_v:
+                        state_v.remove_input_port(input_port_v)
+                        self.canvas.request_update(state_v, matrix=False)
+                        self.canvas.perform_update()
             elif method_name == 'remove_output_data_port':
                 state_m = model
                 state_v = self.canvas.get_view_for_model(state_m)
                 if state_v is None:
                     logger.debug("no state_v found for method_name '{}'".format(method_name))
                 else:
-                    for output_port_v in state_v.outputs:
-                        if output_port_v.port_id == arguments[1]:
-                            state_v.remove_output_port(output_port_v)
-                            self.canvas.request_update(state_v, matrix=False)
-                            self.canvas.perform_update()
-                            break
+                    output_port_v = self.canvas.get_view_for_core_element(result)
+                    if output_port_v:
+                        state_v.remove_output_port(output_port_v)
+                        self.canvas.request_update(state_v, matrix=False)
+                        self.canvas.perform_update()
             elif method_name in ['data_type', 'change_data_type']:
                 pass
             elif method_name == 'default_value':
@@ -570,12 +604,11 @@ class GraphicalEditorController(ExtendedController):
                 if state_v is None:
                     logger.debug("no state_v found for method_name '{}'".format(method_name))
                 else:
-                    for scoped_variable_v in state_v.scoped_variables:
-                        if scoped_variable_v.port_id == arguments[1]:
-                            state_v.remove_scoped_variable(scoped_variable_v)
-                            self.canvas.request_update(state_v, matrix=False)
-                            self.canvas.perform_update()
-                            break
+                    scoped_variable_v = self.canvas.get_view_for_core_element(result)
+                    if scoped_variable_v:
+                        state_v.remove_scoped_variable(scoped_variable_v)
+                        self.canvas.request_update(state_v, matrix=False)
+                        self.canvas.perform_update()
 
             # ----------------------------------
             #        STATE MISCELLANEOUS
@@ -620,17 +653,16 @@ class GraphicalEditorController(ExtendedController):
                 try:
                     self._meta_data_changed(None, model, 'append_to_last_change', True)
                 except Exception as e:
-                    logger.error('Error while trying to emit meta data signal {}'.format(e))
-                    raise
+                    logger.exception('Error while trying to emit meta data signal {0} {1}'.format(e, model))
 
     @lock_state_machine
     def adapt_complex_action(self, old_state_m, new_state_m):
-        state_v = self.canvas.get_view_for_model(old_state_m)
+        old_state_v = self.canvas.get_view_for_model(old_state_m)
+        parent_state_v = self.canvas.get_view_for_model(new_state_m.parent)
+        old_state_v.remove()
 
         # If the root state has been changed, we recreate the whole state machine view
         if old_state_m is self.root_state_m:
-            state_v.remove()
-
             # Create and and new root state view from new root state model
             self.root_state_m = new_state_m
             root_state_v = self.add_state_view_for_model(self.root_state_m)
@@ -642,35 +674,36 @@ class GraphicalEditorController(ExtendedController):
             # TODO use the handed affected_models list
 
             # 1st Recreate StateView by removing the old one and adding the new one
-            parent_v = self.canvas.get_view_for_model(state_v.model.parent)
-            state_v.remove()
-            self.add_state_view_with_meta_data_for_model(new_state_m, parent_v.model)
+            self.add_state_view_with_meta_data_for_model(new_state_m, new_state_m.parent)
 
             # 2nd Recreate connections to the replaced StateView to ensure correct connectivity
-            parent_state = parent_v.model.state
+            parent_state = parent_state_v.model.state
             connected_transitions, connected_data_flows = parent_state.related_linkage_state(new_state_m.state.state_id)
             external_connections = connected_transitions['external']['ingoing'] + \
                                    connected_transitions['external']['outgoing'] + \
                                    connected_data_flows['external']['ingoing'] + \
                                    connected_data_flows['external']['outgoing']
-            for connection in external_connections:
-                connection_v = self.canvas.get_view_for_core_element(connection)
-                connection_m = connection_v.model
-                connection_v.prepare_destruction()
-                self.canvas.remove(connection_v)
-                if isinstance(connection_m, TransitionModel):
-                    self.add_transition_view_for_model(connection_m, parent_v.model)
+            for connection_m in external_connections:
+                connection_v = self.canvas.get_view_for_core_element(connection_m)
+                if connection_v:
+                    connection_m = connection_v.model
+                    connection_v.remove()
                 else:
-                    self.add_data_flow_view_for_model(connection_m, parent_v.model)
+                    logger.info("The connection element was not existing before and therefore not removed, now."
+                                "{0}".format(connection_m))
+                if isinstance(connection_m, TransitionModel):
+                    self.add_transition_view_for_model(connection_m, parent_state_v.model)
+                else:
+                    self.add_data_flow_view_for_model(connection_m, parent_state_v.model)
 
-            self.canvas.request_update(parent_v)
+            self.canvas.request_update(parent_state_v)
 
         self.canvas.perform_update()
 
         try:
             self._meta_data_changed(None, new_state_m, 'append_to_last_change', True)
         except Exception as e:
-            logger.error('Error while trying to emit meta data signal {}'.format(e))
+            logger.exception('Error while trying to emit meta data signal {0} {1}'.format(e, new_state_m))
 
     @staticmethod
     def _extract_info_data(info):
@@ -748,6 +781,11 @@ class GraphicalEditorController(ExtendedController):
         # Draw state above data flows and NameView but beneath transitions
         num_data_flows = len(state_m.state.parent.data_flows) if isinstance(state_m.parent, ContainerStateModel) else 0
         index = 1 if not parent_v else num_data_flows + 1
+        # if self.model.root_state is state_m:
+        #     print "init root_state", state_m, state_v
+        # else:
+        #     print "init state", state_m, state_v
+        # print [hash(elem) for elem in state_m.state.outcomes.itervalues()]
         self.canvas.add(state_v, parent_v, index=index)
         state_v.matrix.translate(*rel_pos)
 
@@ -829,32 +867,6 @@ class GraphicalEditorController(ExtendedController):
         # Draw data flow above NameView but beneath all other state elements
         self.canvas.add(data_flow_v, parent_state_v, index=1)
         self._connect_data_flow_to_ports(data_flow_m, data_flow_v, parent_state_m)
-
-    @lock_state_machine
-    def _remove_obsolete_connections_views_of_state(self, parent_state_m, transitions=True):
-        parent_state_v = self.canvas.get_view_for_model(parent_state_m)
-
-        if transitions:
-            available_connections = parent_state_m.transitions
-        else:
-            available_connections = parent_state_m.data_flows
-
-        children = self.canvas.get_children(parent_state_v)
-        for child in list(children):
-            if transitions and isinstance(child, TransitionView) and child.model not in available_connections:
-                child.prepare_destruction()
-                self.canvas.remove(child)
-            elif not transitions and isinstance(child, DataFlowView) and child.model not in available_connections:
-                child.prepare_destruction()
-                self.canvas.remove(child)
-
-    @lock_state_machine
-    def remove_obsolete_data_flow_views_from_state(self, parent_state_m):
-        self._remove_obsolete_connections_views_of_state(parent_state_m, False)
-
-    @lock_state_machine
-    def remove_obsolete_transition_views_from_state(self, parent_state_m):
-        self._remove_obsolete_connections_views_of_state(parent_state_m)
 
     @lock_state_machine
     def add_state_view_with_meta_data_for_model(self, state_m, parent_state_m):
@@ -994,11 +1006,11 @@ class GraphicalEditorController(ExtendedController):
 
     def react_to_event(self, event):
         """Check whether the given event should be handled
-        
-        Checks, whether the editor widget has the focus and whether the selected state machine corresponds to the 
+
+        Checks, whether the editor widget has the focus and whether the selected state machine corresponds to the
         state machine of this editor.
-        
-        :param event: GTK event object 
+
+        :param event: GTK event object
         :return: True if the event should be handled, else False
         :rtype: bool
         """
@@ -1028,4 +1040,4 @@ class GraphicalEditorController(ExtendedController):
     @lock_state_machine
     def _remove_selected_elements(self, *event):
         if self.react_to_event(event):
-            gui_helper_state_machine.delete_core_elements_of_models(self.model.selection.get_all())
+            gui_helper_state_machine.delete_selected_elements(self.model)

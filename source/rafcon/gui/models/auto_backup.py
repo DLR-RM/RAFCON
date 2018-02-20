@@ -332,7 +332,6 @@ class AutoBackupModel(ModelMT):
         self.destroy()
 
     def destroy(self):
-        logger.info('destroy auto backup ' + str(self.state_machine_model.state_machine.state_machine_id))
         self.cancel_timed_thread()
         if not core_singletons.shut_down_signal:
             self.clean_lock_file(True)
