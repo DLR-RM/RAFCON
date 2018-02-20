@@ -77,17 +77,15 @@ class PortView(object):
         :param str name: Name of teh requested attribute
         :return: Parental value of the attribute
         """
-        # TODO D-Find the reason why this work around is needed -> maybe prepare_destruction ##############
         try:
             return getattr(self.parent, name)
         except Exception:
+            # This workarounds are needed because parent is a weak reference and if the the state is already destroy
+            # the name of its parent can not be accessed even if the view of the port still exists
+            # TODO D-check if ports can be destroyed proper before the state view is collected by the garbage collector
             if name == "name":
                 return self._name
-            elif name == 'remove':
-                if self.parent is None:
-                    return None
             raise
-        # TODO end ########################################################################################
 
     def handles(self):
         return [self.handle]
