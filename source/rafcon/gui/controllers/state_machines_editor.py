@@ -298,7 +298,7 @@ class StateMachinesEditorController(ExtendedController):
             if sm_id not in self.model.state_machine_manager.state_machines:
                 state_machines_to_be_deleted.append(self.tabs[sm_id]['state_machine_m'])
         for state_machine_m in state_machines_to_be_deleted:
-            self.remove_state_machine(state_machine_m)
+            self.remove_state_machine_tab(state_machine_m)
 
     @ExtendedController.observe("state_machine", after=True)
     def change_in_state_machine_data(self, model, prop_name, info):
@@ -367,6 +367,10 @@ class StateMachinesEditorController(ExtendedController):
         force = True if event is not None and hasattr(event, 'state') and \
                         event.state & SHIFT_MASK and event.state & CONTROL_MASK else force
 
+        def remove_state_machine_m():
+            state_machine_id = state_machine_m.state_machine.state_machine_id
+            self.model.state_machine_manager.remove_state_machine(state_machine_id)
+
         def push_sm_running_dialog():
 
             message_string = "The state machine is still running. Are you sure you want to close?"
@@ -377,7 +381,7 @@ class StateMachinesEditorController(ExtendedController):
             if response_id == 1:
                 logger.debug("State machine execution is being stopped")
                 state_machine_execution_engine.stop()
-                self.remove_state_machine(state_machine_m)
+                remove_state_machine_m()
                 return True
             elif response_id == 2:
                 logger.debug("State machine execution will keep running")
@@ -394,7 +398,7 @@ class StateMachinesEditorController(ExtendedController):
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:  # Close without saving pressed
-                self.remove_state_machine(state_machine_m)
+                remove_state_machine_m()
                 return True
             else:
                 logger.debug("Closing of state machine model canceled")
@@ -406,16 +410,16 @@ class StateMachinesEditorController(ExtendedController):
             return push_sm_running_dialog()
         # close is forced -> sm not saved
         elif force:
-            self.remove_state_machine(state_machine_m)
+            remove_state_machine_m()
             return True
         # sm dirty -> save sm request dialog
         elif state_machine_m.state_machine.marked_dirty:
             return push_sm_dirty_dialog()
         else:
-            self.remove_state_machine(state_machine_m)
+            remove_state_machine_m()
             return True
 
-    def remove_state_machine(self, state_machine_m):
+    def remove_state_machine_tab(self, state_machine_m):
         """
 
         :param state_machine_m: The selected state machine model.
@@ -427,18 +431,12 @@ class StateMachinesEditorController(ExtendedController):
 
         # the following statement will switch the selected notebook tab automatically and the history of the
         # last opened state machines will be destroyed
-        # Close tab and remove info
-        page_id = self.get_page_num(sm_id)
-        self.view.notebook.remove_page(page_id)
-        del self.tabs[sm_id]
-        self.remove_controller(sm_id)
-        self.last_focused_state_machine_ids = copy_of_last_opened_state_machines
 
-        # self.model is the state_machine_manager_model
-        # if the state_machine is removed by a core function the state_machine_editor listens to this event, closes
-        # the sm-tab and calls this function; in this case do not remove the state machine from the core smm again!
-        if sm_id in self.model.state_machine_manager.state_machines:
-            self.model.state_machine_manager.remove_state_machine(sm_id)
+        # Removing the controller causes the tab to be closed
+        self.remove_controller(sm_id)
+
+        del self.tabs[sm_id]
+        self.last_focused_state_machine_ids = copy_of_last_opened_state_machines
 
         # Open tab with next state machine
         sm_keys = self.model.state_machine_manager.state_machines.keys()
