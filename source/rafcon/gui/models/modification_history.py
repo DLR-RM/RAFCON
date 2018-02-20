@@ -224,7 +224,7 @@ class ModificationsHistoryModel(ModelMT):
             logger.info("Active Action {} is interrupted and removed.".format(info['prop_name']))
         # self.busy = True
         self.active_action.prepare_destruction()
-        self.active_action = None
+        # self.active_action = None
         # self.busy = False
         self.locked = False
         self.count_before = 0
@@ -451,7 +451,6 @@ class ModificationsHistoryModel(ModelMT):
         try:
             self.active_action.set_after(overview)
             self.state_machine_model.history.modifications.insert_action(self.active_action)
-            self.active_action = None
             # logger.debug("history is now: %s" % self.state_machine_model.history.modifications.single_trail_history())
             self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
         except:
@@ -462,7 +461,7 @@ class ModificationsHistoryModel(ModelMT):
         self.change_count += 1
 
     def re_initiate_meta_data(self):
-        self.active_action = None
+        self.active_action = []
         self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
 
     @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state_model changed
@@ -472,15 +471,15 @@ class ModificationsHistoryModel(ModelMT):
             return
         overview = NotificationOverview(info, False, self.__class__.__name__)
         # logger.info("meta_changed: \n{0}".format(overview))
-        # WORKAROUND: avoid multiple signals of the root_state, by comparing first and last model in overview
-        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:  # TODO test why those occur
-            # print "ALL"
+        # filter self emit and avoid multiple signals of the root_state, by comparing first and last model in overview
+        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:
+            # print "ALL", overview['signal'][0].change.startswith('sm_notification')
             return
-
         if self.busy:
             return
         if overview['signal'][-1]['origin'] == 'load_meta_data':
             return
+
         if self.active_action is None or overview['signal'][-1]['change'] in ['append_initial_change']:
             # update last actions after_storage -> meta-data
             self.re_initiate_meta_data()
