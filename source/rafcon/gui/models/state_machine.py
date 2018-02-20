@@ -144,6 +144,8 @@ class StateMachineModel(ModelMT, Hashable):
 
         Unregister itself as observer from the state machine and the root state
         """
+        if self.state_machine is None:
+            logger.warning("Multiple calls of prepare destruction for {0}".format(self))
         self.destruction_signal.emit()
         if self.history is not None:
             self.history.prepare_destruction()

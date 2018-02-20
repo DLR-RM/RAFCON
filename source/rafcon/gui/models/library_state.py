@@ -86,17 +86,18 @@ class LibraryStateModel(AbstractStateModel):
         except KeyError:  # Might happen if the observer was already unregistered
             pass
         if recursive:
-            for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
-                if port.core_element is not None:
-                    # TODO setting data ports None in a Library state cause gtkmvc attribute getter problems
-                    # port.prepare_destruction()
-                    pass
 
             if self.state_copy:
                 self.state_copy.prepare_destruction(recursive)
                 self.state_copy = None
             else:
-                logger.info("Multiple calls of prepare destruction for {0}".format(self))
+                logger.warning("Multiple calls of prepare destruction for {0}".format(self))
+
+            # The next lines are commented because not needed and create problems if used why it is an open to-do
+            # for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
+            #     if port.core_element is not None:
+            #         # TODO setting data ports None in a Library state cause gtkmvc attribute getter problems why?
+            #         port.prepare_destruction()
 
         del self.input_data_ports[:]
         del self.output_data_ports[:]

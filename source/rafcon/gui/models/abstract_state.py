@@ -193,6 +193,8 @@ class AbstractStateModel(MetaModel, Hashable):
 
         Recursively un-registers all observers and removes references to child models
         """
+        if self.state is None:
+            logger.warning("Multiple calls of prepare destruction for {0}".format(self))
         self.destruction_signal.emit()
         try:
             self.unregister_observer(self)
