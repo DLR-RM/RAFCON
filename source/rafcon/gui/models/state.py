@@ -18,7 +18,7 @@ from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.outcome import OutcomeModel
 from rafcon.core.state_elements.outcome import Outcome
-from rafcon.utils import log
+from rafcon.utils import log, type_helpers
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 
 logger = log.get_logger(__name__)
@@ -258,7 +258,12 @@ class StateModel(AbstractStateModel):
             if new_model:
                 new_model.parent = self
             else:
-                new_model = model_class(core_element, self)
+                if type_helpers.type_inherits_of_type(model_class, StateModel):
+                    new_model = model_class(core_element, self, expected_future_models=self.expected_future_models)
+                    self.expected_future_models = new_model.expected_future_models  # update reused models
+                    new_model.expected_future_models = set()  # clean the field because should not be used further
+                else:
+                    new_model = model_class(core_element, self)
 
             # insert new model into list or dict
             #print self.__class__.__name__, "add_missing_model", new_model, core_element, id(self), self
@@ -321,7 +326,7 @@ class StateModel(AbstractStateModel):
         """Hand model for an core element from expected model list and remove the model from this list"""
         for model in self.expected_future_models:
             if model.core_element is core_element:
-                # print "expected_future_models -> remove model:", model
+                # print "expected_future_model found -> remove model:", model, [model], id(model)
                 self.expected_future_models.remove(model)
                 return model
         return None
