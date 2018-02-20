@@ -142,6 +142,40 @@ def trigger_gui_signals(with_refresh=True):
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
     call_gui_callback(focus_graphical_editor_in_page, page)
 
+    # TODO keep core interface, too
+    # ##########################################################
+    # # group states
+    # # TODO improve test to related data flows
+    # state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
+    # state_ids_old = [state_id for state_id in state_m_parent.state.states]
+    # call_gui_callback(state_m_parent.state.group_states, ['PAYECU', 'UEPNNW', 'KQDJYS'])
+    #
+    # ##########################################################
+    # # ungroup new state
+    # state_new = None
+    # for state_id in state_m_parent.state.states:
+    #     if state_id not in state_ids_old:
+    #         state_new = state_m_parent.state.states[state_id]
+    # call_gui_callback(state_m_parent.state.ungroup_state, state_new.state_id)
+
+    ##########################################################
+    # group states
+    # TODO improve test to related data flows
+    print "#"*30, "\n", '#### group states \n', "#"*30, "\n"
+    state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
+    state_ids_old = [state_id for state_id in state_m_parent.state.states]
+    state_m_list = [state_m_parent.states[child_state_id] for child_state_id in ['PAYECU', 'UEPNNW', 'KQDJYS']]
+    call_gui_callback(gui_helper_state.group_states_and_scoped_variables, state_m_list, [])
+
+    ##########################################################
+    # ungroup new state
+    print "#"*30, "\n", '#### ungroup state \n', "#"*30, "\n"
+    new_state = None
+    for state_id in state_m_parent.state.states:
+        if state_id not in state_ids_old:
+            new_state = state_m_parent.state.states[state_id]
+    call_gui_callback(gui_helper_state.ungroup_state, sm_m.get_state_model_by_path(new_state.get_path()))
+
     #########################################################
     print "select & copy an execution state -> and paste it somewhere"
     select_and_paste_state(sm_m, sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ'), sm_m.get_state_model_by_path(
@@ -181,38 +215,6 @@ def trigger_gui_signals(with_refresh=True):
     copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menubar_ctrl)
     print "increase complexity by doing it twice -> increase the hierarchy-level"
     copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menubar_ctrl)
-
-    # TODO keep core interface, too
-    # ##########################################################
-    # # group states
-    # # TODO improve test to related data flows
-    # state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
-    # state_ids_old = [state_id for state_id in state_m_parent.state.states]
-    # call_gui_callback(state_m_parent.state.group_states, ['PAYECU', 'UEPNNW', 'KQDJYS'])
-    #
-    # ##########################################################
-    # # ungroup new state
-    # state_new = None
-    # for state_id in state_m_parent.state.states:
-    #     if state_id not in state_ids_old:
-    #         state_new = state_m_parent.state.states[state_id]
-    # call_gui_callback(state_m_parent.state.ungroup_state, state_new.state_id)
-
-    ##########################################################
-    # group states
-    # TODO improve test to related data flows
-    state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
-    state_ids_old = [state_id for state_id in state_m_parent.state.states]
-    state_m_list = [state_m_parent.states[child_state_id] for child_state_id in ['PAYECU', 'UEPNNW', 'KQDJYS']]
-    call_gui_callback(gui_helper_state.group_states_and_scoped_variables, state_m_list, [])
-
-    ##########################################################
-    # ungroup new state
-    new_state = None
-    for state_id in state_m_parent.state.states:
-        if state_id not in state_ids_old:
-            new_state = state_m_parent.state.states[state_id]
-    call_gui_callback(gui_helper_state.ungroup_state, sm_m.get_state_model_by_path(new_state.get_path()))
 
     ##########################################################
     # substitute state with template
