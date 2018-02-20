@@ -10,6 +10,7 @@
 # Lukas Becker <lukas.becker@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+import os
 import gtk
 import random
 from rafcon.utils.resources import resource_filename, resource_listdir
@@ -50,7 +51,8 @@ class SplashScreen(gtk.Window):
         main_vbox.pack_start(self.label, False, True, 10)
         main_vbox.set_spacing(0)
 
-        self.show_all()
+        if not os.getenv("RAFCON_START_MINIMIZED", False):
+            self.show_all()
 
     def set_text(self, text):
         self.label.set_text(text)
