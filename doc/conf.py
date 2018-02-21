@@ -111,9 +111,11 @@ modindex_common_prefix = ['rafcon.']
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
 
+# A list of warning types to suppress arbitrary warning messages.
+suppress_warnings = ['ref.python']
+
 extlinks = {'issue': ('https://rmc-github.robotic.dlr.de/common/rafcon/issues/%s',
                       'Issue #')}
-
 
 # -- Options for HTML output ----------------------------------------------
 
