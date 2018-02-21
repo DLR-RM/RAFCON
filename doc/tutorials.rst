@@ -323,10 +323,12 @@ as in the "Screenshot of the finished tutorial" and the input port
 values can be modified to generate the same console info prints while a
 run of the state machine.
 
+.. _tutorial_rafcon_library_path:
+
 Option 2
 """"""""
 
-Instead of specifying the path of the library in he config file, there
+Instead of specifying the path of the library in the config file, there
 is an alternative solution. You can also set an environmental variable
 with name :envvar:`RAFCON_LIBRARY_PATH` and colon-separated paths to state
 machines, e. g. ``~/Desktop/rafcon_tutorial_library``. These libraries

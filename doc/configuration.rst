@@ -460,6 +460,16 @@ Next to the configuration files, a number of environment variables exist that al
 
 See :ref:`Logging configuration`.
 
+:envvar:`RAFCON_LIBRARY_PATH`
+"""""""""""""""""""""""""""""
+
+An alternative option to specify your RAFCON libraries, which can e.g. be handy in combination with RMPM. See
+:ref:`tutorial_rafcon_library_path`.
+
+:envvar:`RAFCON_PLUGIN_PATH`
+""""""""""""""""""""""""""""
+
+Use this variable to specify the RAFCON plugins that are to be loaded. See :ref:`Plugin Interface`.
 
 :envvar:`RAFCON_START_MINIMIZED`
 """"""""""""""""""""""""""""""""
