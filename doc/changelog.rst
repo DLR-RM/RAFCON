@@ -22,6 +22,7 @@ Next release
     - Placement of NameView
     - drawing of connections, ports and labels, especially when deeply nested
     - :issue:`469` unit test refactorings
+    - Provide a `PULL_REQUEST_TEMPLATE` for pull requests opened in GitHub
 
 - Bug Fixes:
 
