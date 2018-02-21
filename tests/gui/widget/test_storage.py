@@ -12,9 +12,7 @@ from testing_utils import call_gui_callback
 logger = log.get_logger(__name__)
 
 
-def create_models():
-    import rafcon.core.singleton
-    import rafcon.gui.singleton
+def create_state_machine():
     from rafcon.core.states.execution_state import ExecutionState
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.state_machine import StateMachine
@@ -76,8 +74,17 @@ def create_models():
 
     ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
     ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
-    state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
+    state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
+                  'Nested2': state5}
     sm = StateMachine(ctr_state)
+    return sm
+
+
+def create_models():
+    import rafcon.core.singleton
+    import rafcon.gui.singleton
+
+    sm = create_state_machine()
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     # give gui time to create the state machine
     testing_utils.wait_for_gui()
