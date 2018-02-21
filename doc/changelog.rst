@@ -31,6 +31,7 @@ Next release
     - :issue:`450`: Names of states inside a library become smaller
     - :issue:`447`: Hashes of state machine in storage different then the reopened state machine after saving it
     - :issue:`449`: ports (of transitions or data flows) cannot be moved
+    - :issue:`449`: selection of states in hierarchies >= 5 not possible
 
 
 Patch releases 0.12.\*
