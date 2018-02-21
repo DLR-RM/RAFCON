@@ -12,6 +12,8 @@ the ``start.py`` script with argument "-c". The syntax used is
 Core configuration
 ------------------
 
+.. _core_config_example:
+
 Example
 """""""
 
@@ -29,6 +31,8 @@ A typical config file looks like this:
     PROFILER_RUN: False
     PROFILER_VIEWER: True
     PROFILER_RESULT_PATH: "/tmp/rafcon_profiler_result.prf"
+
+.. _core_config_docs:
 
 Documentation
 """""""""""""
@@ -90,6 +94,8 @@ EXECUTION_LOG_PATH:
 
 GUI configuration
 -----------------
+
+.. _gui_config_example:
 
 Example
 """""""
@@ -216,6 +222,8 @@ A typical config file looks like this:
         - <Control>Up
         - <Control><Shift>Up
         fullscreen: F11
+
+.. _gui_config_docs:
 
 Documentation
 """""""""""""
@@ -488,6 +496,8 @@ filters, formatting and more can be configured using a JSON file. The default co
 path to your configuration in the env variable :envvar:`RAFCON_LOGGING_CONF`. For information about the ``logging``
 package, please check the `official documentation <https://docs.python.org/2/library/logging.html>`__.
 
+.. _logging_config_example:
+
 Example
 """""""
 
@@ -533,6 +543,8 @@ the ``start.py`` and stored at ``~/.config/rafcon`` as
 ``network_config.yaml``. The path of the used config file can be changed
 by launching the ``start.py`` script with argument "-nc".
 
+.. _monitoring_plugin_example:
+
 Example
 """""""
 
@@ -553,6 +565,8 @@ The default ``network_config.file`` looks like:
     SERVER_UDP_PORT: 9999
     TIME_BETWEEN_BURSTS: 0.01
     TYPE: NETWORK_CONFIG
+
+.. _monitoring_plugin_docs:
 
 Documentation
 """""""""""""

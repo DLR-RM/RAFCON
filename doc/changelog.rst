@@ -106,7 +106,7 @@ Patch releases 0.11.\*
 - New Features:
 
     - Move into viewport: Double click on elements in several widgets cause the element to moved into the viewport
-    (not yet supported by all widgets)
+      (not yet supported by all widgets)
     - Usage of selection modifiers (e.g. <Ctrl>, <Shift>) should now be more consistent
     - Ports in the graphical editor can now be selection
     - The port selection is synchronized between the graphical editor and the other widgets
