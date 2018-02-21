@@ -175,7 +175,7 @@ class GraphicalEditorController(ExtendedController):
         motion.move((x, y))
         motion.stop_move()
         state_v.model.set_meta_data_editor('rel_pos', motion.item.position)
-        self.canvas.wait_for_update()
+        self.canvas.wait_for_update(trigger_update=True)
         self._meta_data_changed(None, state_v.model, 'append_to_last_change', True)
 
     @lock_state_machine
@@ -356,8 +356,6 @@ class GraphicalEditorController(ExtendedController):
                 state_copy_v = self.canvas.get_view_for_model(library_state_m.state_copy)
                 if state_copy_v:
                     state_copy_v.remove()
-                self.canvas.request_update(library_state_v)
-                self.canvas.wait_for_update()
         else:
             if isinstance(view, StateView):
                 view.apply_meta_data(recursive=meta_signal_message.affects_children)
