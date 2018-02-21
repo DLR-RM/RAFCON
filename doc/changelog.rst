@@ -7,8 +7,14 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 
+- Feature
+    - The env variable :envvar:`RAFCON_START_MINIMIZED` allows to start RAFCON minimized, which is helpful when running
+      the tests
+
 - Improvements:
 
+    - Memory optimizations: The memory usage should no longer increase over time, as unused objects are new freed
+    - A new/extended test verifies the correct destruction of removed elements
     - Optimize NameView font size calculations, noticeable during zooming
     - ports outside of the visible view are no longer drawn, which increases the performance, especially while
       zooming in large state machines
@@ -18,13 +24,30 @@ Next release
 
 - Bug Fixes:
 
-    - :issue:`450`
+    - :issue:`450`: Names of states inside a library become smaller
     - :issue:`447`: Hashes of state machine in storage different then the reopened state machine after saving it
     - :issue:`449`: ports (of transitions or data flows) cannot be moved
 
 
 Patch releases 0.12.\*
 ----------------------
+
+0.12.2
+""""""
+
+- New Features:
+
+    - Fix logging for library state execution
+    - State machines can now be baked (a snapshot of the state machine with all libraries can be saved)
+
+- Improvements:
+
+    - Improve execution logging (semantic data is supported now)
+
+- Bug Fixes:
+
+    - :issue:`446`
+    - :issue:`445`
 
 0.12.1
 """"""
@@ -100,7 +123,7 @@ Patch releases 0.11.\*
 - New Features:
 
     - Move into viewport: Double click on elements in several widgets cause the element to moved into the viewport
-    (not yet supported by all widgets)
+      (not yet supported by all widgets)
     - Usage of selection modifiers (e.g. <Ctrl>, <Shift>) should now be more consistent
     - Ports in the graphical editor can now be selection
     - The port selection is synchronized between the graphical editor and the other widgets

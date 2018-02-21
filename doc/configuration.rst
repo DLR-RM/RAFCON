@@ -12,6 +12,8 @@ the ``start.py`` script with argument "-c". The syntax used is
 Core configuration
 ------------------
 
+.. _core_config_example:
+
 Example
 """""""
 
@@ -29,6 +31,8 @@ A typical config file looks like this:
     PROFILER_RUN: False
     PROFILER_VIEWER: True
     PROFILER_RESULT_PATH: "/tmp/rafcon_profiler_result.prf"
+
+.. _core_config_docs:
 
 Documentation
 """""""""""""
@@ -90,6 +94,8 @@ EXECUTION_LOG_PATH:
 
 GUI configuration
 -----------------
+
+.. _gui_config_example:
 
 Example
 """""""
@@ -216,6 +222,8 @@ A typical config file looks like this:
         - <Control>Up
         - <Control><Shift>Up
         fullscreen: F11
+
+.. _gui_config_docs:
 
 Documentation
 """""""""""""
@@ -450,6 +458,35 @@ SHORTCUTS
     (such as 'save'), some are widget dependent (such as 'add').
 
 
+Environment variables
+---------------------
+
+Next to the configuration files, a number of environment variables exist that allow for further configuration.
+
+:envvar:`RAFCON_LOGGING_CONF`
+"""""""""""""""""""""""""""""
+
+See :ref:`Logging configuration`.
+
+:envvar:`RAFCON_LIBRARY_PATH`
+"""""""""""""""""""""""""""""
+
+An alternative option to specify your RAFCON libraries, which can e.g. be handy in combination with RMPM. See
+:ref:`tutorial_rafcon_library_path`.
+
+:envvar:`RAFCON_PLUGIN_PATH`
+""""""""""""""""""""""""""""
+
+Use this variable to specify the RAFCON plugins that are to be loaded. See :ref:`Plugin Interface`.
+
+:envvar:`RAFCON_START_MINIMIZED`
+""""""""""""""""""""""""""""""""
+
+If the env variable :envvar:`RAFCON_START_MINIMIZED` is set (i.e., has a value which is not an empty string), RAFCON is
+started minimized/iconified. This comes in handy, when the tests are run. You can then continue working, without
+RAFCON windows repeatedly being opened and closed in the foreground.
+
+
 Logging configuration
 ---------------------
 
@@ -458,6 +495,8 @@ filters, formatting and more can be configured using a JSON file. The default co
 ``source/rafcon/logging.conf``. The configuration can be overwritten with a custom JSON file. To do so, specify the
 path to your configuration in the env variable :envvar:`RAFCON_LOGGING_CONF`. For information about the ``logging``
 package, please check the `official documentation <https://docs.python.org/2/library/logging.html>`__.
+
+.. _logging_config_example:
 
 Example
 """""""
@@ -504,6 +543,8 @@ the ``start.py`` and stored at ``~/.config/rafcon`` as
 ``network_config.yaml``. The path of the used config file can be changed
 by launching the ``start.py`` script with argument "-nc".
 
+.. _monitoring_plugin_example:
+
 Example
 """""""
 
@@ -524,6 +565,8 @@ The default ``network_config.file`` looks like:
     SERVER_UDP_PORT: 9999
     TIME_BETWEEN_BURSTS: 0.01
     TYPE: NETWORK_CONFIG
+
+.. _monitoring_plugin_docs:
 
 Documentation
 """""""""""""

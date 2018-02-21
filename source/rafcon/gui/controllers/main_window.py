@@ -21,6 +21,7 @@
 
 """
 
+import os
 import logging
 import gtk
 from functools import partial
@@ -490,6 +491,8 @@ class MainWindowController(ExtendedController):
         widget_name = window_key.lower()
         undocked_window_view = getattr(self.view, undocked_window_name)
         undocked_window = undocked_window_view.get_top_widget()
+        if os.getenv("RAFCON_START_MINIMIZED", False):
+            undocked_window.iconify()
 
         gui_helper_label.set_window_size_and_position(undocked_window, window_key)
         self.view[widget_name].reparent(undocked_window_view['central_eventbox'])
