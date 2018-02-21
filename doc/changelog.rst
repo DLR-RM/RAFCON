@@ -7,6 +7,10 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 
+- Feature
+    - The env variable :envvar:`RAFCON_START_MINIMIZED` allows to start RAFCON minimized, which is helpful when running
+      the tests
+
 - Improvements:
 
     - Optimize NameView font size calculations, noticeable during zooming
