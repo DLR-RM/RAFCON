@@ -8,6 +8,24 @@ Next release
 ------------
 
 - Feature
+    -
+
+- Improvements:
+
+    -
+
+- Bug Fixes:
+
+    -
+
+
+Patch releases 0.12.\*
+----------------------
+
+0.12.3
+""""""
+
+- Feature
     - The env variable :envvar:`RAFCON_START_MINIMIZED` allows to start RAFCON minimized, which is helpful when running
       the tests
 
@@ -26,17 +44,14 @@ Next release
 
 - Bug Fixes:
 
-    - :issue:`459`: execution_log utils; backward compatibility missing and :issue:`458`: ReturnItem
-    - :issue:`454`: group/ungroup is not preserving meta data recursively
-    - :issue:`452`: Session restore, gaphas and extended controller causes exception when closing RAFCON
-    - :issue:`450`: Names of states inside a library become smaller
-    - :issue:`447`: Hashes of state machine in storage different then the reopened state machine after saving it
-    - :issue:`449`: ports (of transitions or data flows) cannot be moved
-    - :issue:`449`: selection of states in hierarchies >= 5 not possible
+    - :issue:`459` execution_log utils; backward compatibility missing and :issue:`458` ReturnItem
+    - :issue:`454` group/ungroup is not preserving meta data recursively
+    - :issue:`452` Session restore, gaphas and extended controller causes exception when closing RAFCON
+    - :issue:`450` Names of states inside a library become smaller
+    - :issue:`447` Hashes of state machine in storage different then the reopened state machine after saving it
+    - :issue:`449` ports (of transitions or data flows) cannot be moved
+    - :issue:`471` selection of states in hierarchies >= 5 not possible
 
-
-Patch releases 0.12.\*
-----------------------
 
 0.12.2
 """"""
@@ -54,6 +69,7 @@ Patch releases 0.12.\*
 - Bug Fixes:
 
     - :issue:`446` "show content" leads to sm marked as modified
+
 
 0.12.1
 """"""
