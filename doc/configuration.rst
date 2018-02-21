@@ -450,6 +450,19 @@ SHORTCUTS
     (such as 'save'), some are widget dependent (such as 'add').
 
 
+Environment variables
+---------------------
+
+Next to the configuration files, a number of environment variables exist that allow for further configuration.
+
+:envvar:`RAFCON_START_MINIMIZED`
+""""""""""""""""""""""""""""""""
+
+If the env variable :envvar:`RAFCON_START_MINIMIZED` is set (i.e., has a value which is not an empty string), RAFCON is
+started minimized/iconified. This comes in handy, when the tests are run. You can then continue working, without
+RAFCON windows repeatedly being opened and closed in the foreground.
+
+
 Logging configuration
 ---------------------
 
