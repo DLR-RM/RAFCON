@@ -13,7 +13,7 @@ Next release
 
 - Improvements:
 
-    - Memory optimizations: The memory usage should no longer increase over time, as unused objects are new freed
+    - :issue:`414` Memory optimizations: The memory usage should no longer increase over time, as unused objects are now freed
     - A new/extended test verifies the correct destruction of removed elements
     - Optimize NameView font size calculations, noticeable during zooming
     - ports outside of the visible view are no longer drawn, which increases the performance, especially while
@@ -21,9 +21,13 @@ Next release
     - Hash calculations of state machines
     - Placement of NameView
     - drawing of connections, ports and labels, especially when deeply nested
+    - :issue:`469` unit test refactorings
 
 - Bug Fixes:
 
+    - :issue:`459`: execution_log utils; backward compatibility missing and :issue:`458`: ReturnItem
+    - :issue:`454`: group/ungroup is not preserving meta data recursively
+    - :issue:`452`: Session restore, gaphas and extended controller causes exception when closing RAFCON
     - :issue:`450`: Names of states inside a library become smaller
     - :issue:`447`: Hashes of state machine in storage different then the reopened state machine after saving it
     - :issue:`449`: ports (of transitions or data flows) cannot be moved
@@ -43,11 +47,11 @@ Patch releases 0.12.\*
 - Improvements:
 
     - Improve execution logging (semantic data is supported now)
+    - :issue:`445` Tests need to ensure correct import order for GUI singletons
 
 - Bug Fixes:
 
-    - :issue:`446`
-    - :issue:`445`
+    - :issue:`446` "show content" leads to sm marked as modified
 
 0.12.1
 """"""
@@ -59,14 +63,11 @@ Patch releases 0.12.\*
 
 - Improvements:
 
-    -
+    - :issue:`415` Increase visibility of library content
 
 - Bug Fixes:
 
-    - :issue:`427`
-    - :issue:`428`
-    - :issue:`430`
-    - :issue:`431`
+    - :issue:`378` Editing default values does not work sometimes
 
 
 0.12.0
