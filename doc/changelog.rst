@@ -13,6 +13,8 @@ Next release
 
 - Improvements:
 
+    - Memory optimizations: The memory usage should no longer increase over time, as unused objects are new freed
+    - A new/extended test verifies the correct destruction of removed elements
     - Optimize NameView font size calculations, noticeable during zooming
     - ports outside of the visible view are no longer drawn, which increases the performance, especially while
       zooming in large state machines
