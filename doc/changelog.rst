@@ -32,6 +32,23 @@ Next release
 Patch releases 0.12.\*
 ----------------------
 
+0.12.2
+""""""
+
+- New Features:
+
+    - Fix logging for library state execution
+    - State machines can now be baked (a snapshot of the state machine with all libraries can be saved)
+
+- Improvements:
+
+    - Improve execution logging (semantic data is supported now)
+
+- Bug Fixes:
+
+    - :issue:`446`
+    - :issue:`445`
+
 0.12.1
 """"""
 
