@@ -24,7 +24,7 @@ Next release
 
 - Bug Fixes:
 
-    - :issue:`450`
+    - :issue:`450`: Names of states inside a library become smaller
     - :issue:`447`: Hashes of state machine in storage different then the reopened state machine after saving it
     - :issue:`449`: ports (of transitions or data flows) cannot be moved
 
