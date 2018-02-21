@@ -134,7 +134,7 @@ class MyCanvas(gaphas.canvas.Canvas):
                 return item
         return None
 
-    def perform_update(self):
+    def wait_for_update(self):
         """Update canvas and handle all events in the gtk queue
         """
         self.update_now()

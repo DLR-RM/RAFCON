@@ -175,7 +175,7 @@ class GraphicalEditorController(ExtendedController):
         motion.move((x, y))
         motion.stop_move()
         state_v.model.set_meta_data_editor('rel_pos', motion.item.position)
-        self.canvas.perform_update()
+        self.canvas.wait_for_update()
         self._meta_data_changed(None, state_v.model, 'append_to_last_change', True)
 
     @lock_state_machine
@@ -292,7 +292,7 @@ class GraphicalEditorController(ExtendedController):
             self.view.editor.zoom(zoom_factor)
             # The zoom operation must be performed before the pan operation to work on updated GtkAdjustments (scroll
             # bars)
-            self.canvas.perform_update()
+            self.canvas.wait_for_update()
 
         state_pos = self.view.editor.get_matrix_i2v(state_v).transform_point(0, 0)
         state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
@@ -357,7 +357,7 @@ class GraphicalEditorController(ExtendedController):
                 if state_copy_v:
                     state_copy_v.remove()
                 self.canvas.request_update(library_state_v)
-                self.canvas.perform_update()
+                self.canvas.wait_for_update()
         else:
             if isinstance(view, StateView):
                 view.apply_meta_data(recursive=meta_signal_message.affects_children)
@@ -365,7 +365,7 @@ class GraphicalEditorController(ExtendedController):
                 view.apply_meta_data()
 
         self.canvas.request_update(view, matrix=True)
-        self.canvas.perform_update()
+        self.canvas.wait_for_update()
 
     @ExtendedController.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
@@ -459,7 +459,7 @@ class GraphicalEditorController(ExtendedController):
                 new_state_m = model.states[new_state.state_id]
                 self.add_state_view_with_meta_data_for_model(new_state_m, model)
                 if not self.perform_drag_and_drop:
-                    self.canvas.perform_update()
+                    self.canvas.wait_for_update()
             elif method_name == 'remove_state':
                 state_v = self.canvas.get_view_for_core_element(result)
                 if state_v:
@@ -467,7 +467,7 @@ class GraphicalEditorController(ExtendedController):
                     state_v.remove()
                     if parent_v:
                         self.canvas.request_update(parent_v)
-                    self.canvas.perform_update()
+                    self.canvas.wait_for_update()
 
             # ----------------------------------
             #           TRANSITIONS
@@ -478,18 +478,18 @@ class GraphicalEditorController(ExtendedController):
                 for transition_m in transitions_models:
                     if transition_m.transition.transition_id == transition_id:
                         self.add_transition_view_for_model(transition_m, model)
-                        self.canvas.perform_update()
+                        self.canvas.wait_for_update()
                         break
             elif method_name == 'remove_transition':
                 transition_v = self.canvas.get_view_for_core_element(result)
                 if transition_v:
                     transition_v.remove()
-                    self.canvas.perform_update()
+                    self.canvas.wait_for_update()
             elif method_name == 'transition_change':
                 transition_m = model
                 transition_v = self.canvas.get_view_for_model(transition_m)
                 self._reconnect_transition(transition_v, transition_m, transition_m.parent)
-                self.canvas.perform_update()
+                self.canvas.wait_for_update()
 
             # ----------------------------------
             #           DATA FLOW
@@ -500,18 +500,18 @@ class GraphicalEditorController(ExtendedController):
                 for data_flow_m in data_flow_models:
                     if data_flow_m.data_flow.data_flow_id == data_flow_id:
                         self.add_data_flow_view_for_model(data_flow_m, model)
-                        self.canvas.perform_update()
+                        self.canvas.wait_for_update()
                         break
             elif method_name == 'remove_data_flow':
                 data_flow_v = self.canvas.get_view_for_core_element(result)
                 if data_flow_v:
                     data_flow_v.remove()
-                    self.canvas.perform_update()
+                    self.canvas.wait_for_update()
             elif method_name == 'data_flow_change':
                 data_flow_m = model
                 data_flow_v = self.canvas.get_view_for_model(data_flow_m)
                 self._reconnect_data_flow(data_flow_v, data_flow_m, data_flow_m.parent)
-                self.canvas.perform_update()
+                self.canvas.wait_for_update()
 
             # ----------------------------------
             #           OUTCOMES
@@ -523,7 +523,7 @@ class GraphicalEditorController(ExtendedController):
                     if outcome_m.outcome.outcome_id == result:
                         state_v.add_outcome(outcome_m)
                         self.canvas.request_update(state_v, matrix=False)
-                        self.canvas.perform_update()
+                        self.canvas.wait_for_update()
                         break
             elif method_name == 'remove_outcome':
                 state_m = model
@@ -535,7 +535,7 @@ class GraphicalEditorController(ExtendedController):
                     if outcome_v:
                         state_v.remove_outcome(outcome_v)
                         self.canvas.request_update(state_v, matrix=False)
-                        self.canvas.perform_update()
+                        self.canvas.wait_for_update()
 
             # ----------------------------------
             #           DATA PORTS
@@ -547,7 +547,7 @@ class GraphicalEditorController(ExtendedController):
                     if input_data_port_m.data_port.data_port_id == result:
                         state_v.add_input_port(input_data_port_m)
                         self.canvas.request_update(state_v, matrix=False)
-                        self.canvas.perform_update()
+                        self.canvas.wait_for_update()
                         break
             elif method_name == 'add_output_data_port':
                 state_m = model
@@ -556,7 +556,7 @@ class GraphicalEditorController(ExtendedController):
                     if output_data_port_m.data_port.data_port_id == result:
                         state_v.add_output_port(output_data_port_m)
                         self.canvas.request_update(state_v, matrix=False)
-                        self.canvas.perform_update()
+                        self.canvas.wait_for_update()
                         break
             elif method_name == 'remove_input_data_port':
                 state_m = model
@@ -568,7 +568,7 @@ class GraphicalEditorController(ExtendedController):
                     if input_port_v:
                         state_v.remove_input_port(input_port_v)
                         self.canvas.request_update(state_v, matrix=False)
-                        self.canvas.perform_update()
+                        self.canvas.wait_for_update()
             elif method_name == 'remove_output_data_port':
                 state_m = model
                 state_v = self.canvas.get_view_for_model(state_m)
@@ -579,7 +579,7 @@ class GraphicalEditorController(ExtendedController):
                     if output_port_v:
                         state_v.remove_output_port(output_port_v)
                         self.canvas.request_update(state_v, matrix=False)
-                        self.canvas.perform_update()
+                        self.canvas.wait_for_update()
             elif method_name in ['data_type', 'change_data_type']:
                 pass
             elif method_name == 'default_value':
@@ -595,7 +595,7 @@ class GraphicalEditorController(ExtendedController):
                     if scoped_variable_m.scoped_variable.data_port_id == result:
                         state_v.add_scoped_variable(scoped_variable_m)
                         self.canvas.request_update(state_v, matrix=False)
-                        self.canvas.perform_update()
+                        self.canvas.wait_for_update()
                         break
             elif method_name == 'remove_scoped_variable':
                 state_m = model
@@ -607,7 +607,7 @@ class GraphicalEditorController(ExtendedController):
                     if scoped_variable_v:
                         state_v.remove_scoped_variable(scoped_variable_v)
                         self.canvas.request_update(state_v, matrix=False)
-                        self.canvas.perform_update()
+                        self.canvas.wait_for_update()
 
             # ----------------------------------
             #        STATE MISCELLANEOUS
@@ -625,7 +625,7 @@ class GraphicalEditorController(ExtendedController):
                     self.canvas.request_update(state_v.name_view, matrix=False)
                 else:
                     self.canvas.request_update(state_v, matrix=False)
-                self.canvas.perform_update()
+                self.canvas.wait_for_update()
             elif method_name == 'parent':
                 pass
             elif method_name == 'description':
@@ -697,7 +697,7 @@ class GraphicalEditorController(ExtendedController):
 
             self.canvas.request_update(parent_state_v)
 
-        self.canvas.perform_update()
+        self.canvas.wait_for_update()
 
         try:
             self._meta_data_changed(None, new_state_m, 'append_to_last_change', True)
