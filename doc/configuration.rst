@@ -455,6 +455,12 @@ Environment variables
 
 Next to the configuration files, a number of environment variables exist that allow for further configuration.
 
+:envvar:`RAFCON_LOGGING_CONF`
+"""""""""""""""""""""""""""""
+
+See :ref:`Logging configuration`.
+
+
 :envvar:`RAFCON_START_MINIMIZED`
 """"""""""""""""""""""""""""""""
 
