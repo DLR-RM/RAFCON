@@ -7,8 +7,14 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 
+- Feature
+    - The env variable :envvar:`RAFCON_START_MINIMIZED` allows to start RAFCON minimized, which is helpful when running
+      the tests
+
 - Improvements:
 
+    - Memory optimizations: The memory usage should no longer increase over time, as unused objects are new freed
+    - A new/extended test verifies the correct destruction of removed elements
     - Optimize NameView font size calculations, noticeable during zooming
     - ports outside of the visible view are no longer drawn, which increases the performance, especially while
       zooming in large state machines
@@ -18,7 +24,7 @@ Next release
 
 - Bug Fixes:
 
-    - :issue:`450`
+    - :issue:`450`: Names of states inside a library become smaller
     - :issue:`447`: Hashes of state machine in storage different then the reopened state machine after saving it
     - :issue:`449`: ports (of transitions or data flows) cannot be moved
 

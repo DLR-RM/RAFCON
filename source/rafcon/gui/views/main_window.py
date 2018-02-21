@@ -16,6 +16,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+import os
+
 from gtkmvc import View
 
 from rafcon.gui.config import global_gui_config
@@ -44,6 +46,10 @@ class MainWindowView(View):
 
     def __init__(self):
         View.__init__(self)
+
+        if os.getenv("RAFCON_START_MINIMIZED", False):
+            self.get_top_widget().iconify()
+
         # Add gui components by removing their corresponding placeholders defined in the glade file first and then
         # adding the widgets.
         self.left_bar_notebooks = [self['upper_notebook'], self['lower_notebook']]

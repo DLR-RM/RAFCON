@@ -135,17 +135,19 @@ def convert(config_path, source_path, target_path=None):
     sm_manager_model = gui_singletons.state_machine_manager_model
 
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
-    main_window = main_window_view.get_top_widget()
-    size = global_runtime_config.get_config_value("WINDOW_SIZE", None)
-    position = global_runtime_config.get_config_value("WINDOW_POS", None)
-    if size:
-        main_window.resize(size[0], size[1])
-    if position:
-        position = (max(0, position[0]), max(0, position[1]))
-        screen_width = gtk.gdk.screen_width()
-        screen_height = gtk.gdk.screen_height()
-        if position[0] < screen_width and position[1] < screen_height:
-            main_window.move(position[0], position[1])
+
+    if not os.getenv("RAFCON_START_MINIMIZED", False):
+        main_window = main_window_view.get_top_widget()
+        size = global_runtime_config.get_config_value("WINDOW_SIZE", None)
+        position = global_runtime_config.get_config_value("WINDOW_POS", None)
+        if size:
+            main_window.resize(size[0], size[1])
+        if position:
+            position = (max(0, position[0]), max(0, position[1]))
+            screen_width = gtk.gdk.screen_width()
+            screen_height = gtk.gdk.screen_height()
+            if position[0] < screen_width and position[1] < screen_height:
+                main_window.move(position[0], position[1])
 
     wait_for_gui()
     thread = threading.Thread(target=trigger_gui_signals, args=[sm_manager_model,

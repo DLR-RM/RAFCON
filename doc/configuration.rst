@@ -450,6 +450,35 @@ SHORTCUTS
     (such as 'save'), some are widget dependent (such as 'add').
 
 
+Environment variables
+---------------------
+
+Next to the configuration files, a number of environment variables exist that allow for further configuration.
+
+:envvar:`RAFCON_LOGGING_CONF`
+"""""""""""""""""""""""""""""
+
+See :ref:`Logging configuration`.
+
+:envvar:`RAFCON_LIBRARY_PATH`
+"""""""""""""""""""""""""""""
+
+An alternative option to specify your RAFCON libraries, which can e.g. be handy in combination with RMPM. See
+:ref:`tutorial_rafcon_library_path`.
+
+:envvar:`RAFCON_PLUGIN_PATH`
+""""""""""""""""""""""""""""
+
+Use this variable to specify the RAFCON plugins that are to be loaded. See :ref:`Plugin Interface`.
+
+:envvar:`RAFCON_START_MINIMIZED`
+""""""""""""""""""""""""""""""""
+
+If the env variable :envvar:`RAFCON_START_MINIMIZED` is set (i.e., has a value which is not an empty string), RAFCON is
+started minimized/iconified. This comes in handy, when the tests are run. You can then continue working, without
+RAFCON windows repeatedly being opened and closed in the foreground.
+
+
 Logging configuration
 ---------------------
 
