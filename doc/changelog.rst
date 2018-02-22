@@ -8,7 +8,17 @@ Next release
 ------------
 
 - Feature
-    -
+
+- Improvements:
+
+- Bug Fixes:
+
+
+Patch releases 0.12.\*
+----------------------
+
+0.12.4
+""""""
 
 - Improvements:
 
@@ -19,9 +29,6 @@ Next release
 
     - :issue:`414` state machines with libraries cannot be closed
 
-
-Patch releases 0.12.\*
-----------------------
 
 0.12.3
 """"""
