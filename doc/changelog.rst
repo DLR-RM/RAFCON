@@ -13,6 +13,7 @@ Next release
 - Improvements:
 
     - Provide a `PULL_REQUEST_TEMPLATE` for pull requests opened in GitHub
+    - Optimize updates/redrawing of graphical editor
 
 - Bug Fixes:
 

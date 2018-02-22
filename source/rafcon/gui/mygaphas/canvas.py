@@ -134,10 +134,13 @@ class MyCanvas(gaphas.canvas.Canvas):
                 return item
         return None
 
-    def perform_update(self):
+    def wait_for_update(self, trigger_update=False):
         """Update canvas and handle all events in the gtk queue
+
+        :param bool trigger_update: Whether to call update_now() or not
         """
-        self.update_now()
+        if trigger_update:
+            self.update_now()
 
         import gtk
         import gobject
