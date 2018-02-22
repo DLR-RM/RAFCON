@@ -106,11 +106,9 @@ class PerpLine(Line):
             self.canvas.solver.add_constraint(self._to_port_constraint)
 
     def remove(self):
-        self.canvas.solver.remove_constraint(self._from_port_constraint)
-        self.canvas.solver.remove_constraint(self._to_port_constraint)
-        self.remove_all_waypoints()
         self.reset_from_port()
         self.reset_to_port()
+        self.remove_all_waypoints()
         self.canvas.remove(self)
 
     @property
