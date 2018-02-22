@@ -17,7 +17,7 @@ Next release
 
 - Bug Fixes:
 
-    -
+    - :issue:`414` state machines with libraries cannot be closed
 
 
 Patch releases 0.12.\*

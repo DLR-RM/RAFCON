@@ -106,11 +106,9 @@ class PerpLine(Line):
             self.canvas.solver.add_constraint(self._to_port_constraint)
 
     def remove(self):
-        self.canvas.solver.remove_constraint(self._from_port_constraint)
-        self.canvas.solver.remove_constraint(self._to_port_constraint)
-        self.remove_all_waypoints()
         self.reset_from_port()
         self.reset_to_port()
+        self.remove_all_waypoints()
         self.canvas.remove(self)
 
     @property
@@ -129,18 +127,20 @@ class PerpLine(Line):
         return end_handles
 
     def reset_from_port(self):
-        self._from_port = None
-        self.canvas.solver.remove_constraint(self._from_port_constraint)
-        self._from_port_constraint = None
-        self._handles.remove(self._from_waypoint)
-        self._from_waypoint = None
+        if self._from_port:
+            self._from_port = None
+            self.canvas.solver.remove_constraint(self._from_port_constraint)
+            self._from_port_constraint = None
+            self._handles.remove(self._from_waypoint)
+            self._from_waypoint = None
 
     def reset_to_port(self):
-        self._to_port = None
-        self.canvas.solver.remove_constraint(self._to_port_constraint)
-        self._to_port_constraint = None
-        self._handles.remove(self._to_waypoint)
-        self._to_waypoint = None
+        if self._to_port:
+            self._to_port = None
+            self.canvas.solver.remove_constraint(self._to_port_constraint)
+            self._to_port_constraint = None
+            self._handles.remove(self._to_waypoint)
+            self._to_waypoint = None
 
     def from_handle(self):
         return self._from_handle
