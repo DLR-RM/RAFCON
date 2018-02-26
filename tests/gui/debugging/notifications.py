@@ -81,7 +81,6 @@ def show_debug_graph(print_to_console=False, open_text_file=True, render_graph=T
                 signal_name = edge_info['info']['prop_name']
                 arg = edge_info['info']['arg']
                 change = "{signal}({arg})".format(signal=signal_name, arg=arg)
-                print "signal:", edge_info['info']
             text_file.write("{number}: {source_node}.{prop_name}[{change}] => {target_node}.{callback}".format(
                 number=sequence_number,
                 source_node=source_node_name,
