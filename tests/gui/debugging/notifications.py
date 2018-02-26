@@ -135,36 +135,18 @@ def feed_debugging_graph(observable, observer, method, *args, **kwargs):
             'info': info,
         }
 
-        if filter_self_references:
-            if source_node_id != target_node_id:
-                # info on edges
-                notification_graph_to_render.edge(source_node_id, target_node_id,
-                                                  headlabel="_" + str(dot_node_sequence_number) + "_",
-                                                  # label="_"+str(dot_node_sequence_number)+"_",
-                                                  # decorate only works for normal labels
-                                                  # decorate="true",
-                                                  labeldistance="5",
-                                                  labelfontsize="6",
-                                                  fontcolor=existing_dot_nodes_to_colors[source_node_id],
-                                                  color=existing_dot_nodes_to_colors[source_node_id])
-                # info on nodes: does not scale with many edges
-                # dot_graph.node(str(dot_node_sequence_number), node_label)
-                # dot_graph.edge(str(source_node_id), str(dot_node_sequence_number),
-                #                color=existing_dot_nodes_to_colors[source_node_id])
-                # dot_graph.edge(str(dot_node_sequence_number), str(target_node_id),
-                #                color=existing_dot_nodes_to_colors[source_node_id])
-        else:
+        if not filter_self_references or source_node_id != target_node_id:
             # info on edges
             notification_graph_to_render.edge(source_node_id, target_node_id,
                                               headlabel="_" + str(dot_node_sequence_number) + "_",
                                               # label="_"+str(dot_node_sequence_number)+"_",
                                               # decorate only works for normal labels
                                               # decorate="true",
-                                              labeldistance="15",
+                                              labeldistance="5",
                                               labelfontsize="6",
                                               fontcolor=existing_dot_nodes_to_colors[source_node_id],
                                               color=existing_dot_nodes_to_colors[source_node_id])
-            # info on nodes
+            # info on nodes: does not scale with many edges
             # dot_graph.node(str(dot_node_sequence_number), node_label)
             # dot_graph.edge(str(source_node_id), str(dot_node_sequence_number),
             #                color=existing_dot_nodes_to_colors[source_node_id])
