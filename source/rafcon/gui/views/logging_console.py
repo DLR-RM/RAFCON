@@ -54,7 +54,10 @@ class LoggingConsoleView(View):
 
     def print_message(self, message, log_level):
         self._lock.acquire()
-        if log_level <= log.logging.DEBUG and self._enables.get('DEBUG', True):
+        if log_level <= log.logging.VERBOSE and self._enables.get('VERBOSE', True):
+            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
+                          priority=glib.PRIORITY_LOW)
+        if log.logging.VERBOSE < log_level <= log.logging.DEBUG and self._enables.get('DEBUG', True):
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
                           priority=glib.PRIORITY_LOW)
         elif log.logging.DEBUG < log_level <= log.logging.INFO and self._enables.get('INFO', True):
