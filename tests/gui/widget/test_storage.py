@@ -19,7 +19,7 @@ def create_state_machine():
 
     print "create models"
 
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.VERBOSE)
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
     state1 = ExecutionState('State1', state_id='STATE1')
