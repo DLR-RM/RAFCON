@@ -7,7 +7,8 @@ from testing_utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
 # notification debugging
 debugging_enabled = False
 notification_graph_to_render = None
-full_notification_graph_to_print_out = None
+nodes = {}
+edges = OrderedDict()
 existing_dot_nodes_to_colors = dict()
 dot_node_sequence_number = None
 filter_self_references = True
@@ -15,7 +16,7 @@ filter_self_references = True
 
 def enable_debugging():
     global debugging_enabled, notification_graph_to_render, dot_node_sequence_number, existing_dot_nodes_to_colors
-    global full_notification_graph_to_print_out
+    global nodes, edges
     existing_dot_nodes_to_colors = dict()
     debugging_enabled = True
     # does not work as all edges with the same source and endpoint are merged
@@ -26,12 +27,13 @@ def enable_debugging():
     # dot_graph = Digraph(comment='Our fancy debugging graph', graph_attr={"splines": "compound"})
     # dot_graph = Digraph(comment='Our fancy debugging graph', graph_attr={"splines": "compound", "overlap": "false"})
     notification_graph_to_render = Digraph(name='notification_graph_to_render')
-    full_notification_graph_to_print_out = Digraph(name='full_notification_graph_to_print_out')
     dot_node_sequence_number = 0
+    nodes = {}
+    edges = OrderedDict()
 
 
 def show_debug_graph(print_to_console=False, open_text_file=True, render_graph=True):
-    global notification_graph_to_render, full_notification_graph_to_print_out
+    global notification_graph_to_render
     assert isinstance(notification_graph_to_render, Digraph)
     print "started rendering graph ... "
     notification_graph_to_render.engine = 'circo'  # nice
@@ -44,38 +46,32 @@ def show_debug_graph(print_to_console=False, open_text_file=True, render_graph=T
         notification_graph_to_render.render(
             join(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE, 'notification_output.gv'), view=True)
 
-    nodes = []
-    edges = {}
-    for item in full_notification_graph_to_print_out.body:
-        if "->" not in item:
-            nodes.append(item)
-        else:
-            try:
-                sequence_number = item.split("@")[1]
-                # print sequence_number
-            except IndexError:
-                continue
-            edges[sequence_number] = item
-
-    edges = OrderedDict(sorted(edges.items(), key=lambda kv: int(kv[0])))
-
     with open(join(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE, 'notification_print_out.txt'), "w") as text_file:
         # unfortunately printing a graph like this mixes nodes and edges
         # text_file.write(str(full_notification_graph_to_print_out.source))
         text_file.write("{}\n".format("#" * 50))
-        text_file.write("graph: " + str(full_notification_graph_to_print_out.name) + "\n")
         text_file.write("number of nodes: {}; number of edges: {}\n".format(len(nodes), len(edges)))
         text_file.write("{}\n".format("#" * 50))
         text_file.write("{}\n".format("#" * 30))
         text_file.write("nodes\n")
         text_file.write("{}\n".format("#" * 30))
-        for node in nodes:
-            text_file.write(str(node)+"\n-----\n")
+        for node_name in nodes.itervalues():
+            text_file.write(node_name+"\n-----\n")
         text_file.write("{}\n".format("#" * 30))
         text_file.write("edges\n")
         text_file.write("{}\n".format("#" * 30))
-        for key, edge in edges.iteritems():
-            text_file.write(str(edge)+"\n-----\n")
+        for edge, edge_info in edges.iteritems():
+            sequence_number, source_node, target_node = edge
+            source_node_id, source_node_name = source_node
+            target_node_id, target_node_name = target_node
+            text_file.write("{number}: {source_node}.{prop_name} => {target_node}.{method}".format(
+                number=sequence_number,
+                source_node=source_node_name,
+                target_node=target_node_name,
+                prop_name=edge_info['prop_name'],
+                method=edge_info['method'].__func__.func_name
+            ))
+            text_file.write("\n-----\n")
 
     if open_text_file:
         import subprocess
@@ -100,7 +96,7 @@ def disable_debugging():
 
 def feed_debugging_graph(observable, observer, method, *args, **kwargs):
     global debugging_enabled, notification_graph_to_render, existing_dot_nodes_to_colors, \
-        dot_node_sequence_number, filter_self_references
+        dot_node_sequence_number, filter_self_references, nodes, edges
 
     if debugging_enabled:
         model, prop_name, info = args
@@ -120,11 +116,11 @@ def feed_debugging_graph(observable, observer, method, *args, **kwargs):
         if source_node_id not in existing_dot_nodes_to_colors.keys():
             existing_dot_nodes_to_colors[source_node_id] = color
             notification_graph_to_render.node(source_node_id, source_node_name)
-            full_notification_graph_to_print_out.node(source_node_id, source_node_name)
+            nodes[source_node_id] = source_node_name
         if target_node_id not in existing_dot_nodes_to_colors.keys():
             existing_dot_nodes_to_colors[target_node_id] = color
             notification_graph_to_render.node(target_node_id, target_node_name)
-            full_notification_graph_to_print_out.node(target_node_id, target_node_name)
+            nodes[target_node_id] = target_node_name
 
         # for routing edges over dedicated nodes
         # problem: does not scale
@@ -132,10 +128,12 @@ def feed_debugging_graph(observable, observer, method, *args, **kwargs):
 
         # tried out: xlabel, style="invis"
 
-        # only for print out, thus no style parameters
-        full_notification_graph_to_print_out.edge(source_node_id, target_node_id,
-                                                  taillabel="method name: " + str(method),
-                                                  label="sequence number: @" + str(dot_node_sequence_number) + "@")
+        edges[(dot_node_sequence_number, (source_node_id, source_node_name), (target_node_id, target_node_name))] = {
+            'model': model,
+            'prop_name': prop_name,
+            'method': method,
+            'info': info,
+        }
 
         if filter_self_references:
             if source_node_id != target_node_id:
