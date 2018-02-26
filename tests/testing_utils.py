@@ -502,26 +502,27 @@ def feed_debugging_graph(observable, observer, method, *args, **kwargs):
 
     if debug_notifications:
         model, prop_name, info = args
-        self_id = id(observable)
-        observer_id = id(observer)
+        def node_id(node):
+            return str(id(node))
+        source_node_id = node_id(observable)
+        target_node_id = node_id(observer)
 
         import random
         color = "#%06x" % random.randint(0, 0xFFFFFF)
 
-        # source_node_name = str(self_id)
-        # target_node_name = str(observer_id)
-        # only using str() does not work in the case, if there are e.g. two models of the same core state
-        source_node_name = str(repr(observable))
-        target_node_name = str(repr(observer))
+        def node_name(node):
+            return "{class_name} ({id})".format(class_name=node.__class__.__name__, id=hex(id(node)))
+        source_node_name = node_name(observable)
+        target_node_name = node_name(observer)
 
-        if self_id not in existing_dot_nodes_to_colors.keys():
-            existing_dot_nodes_to_colors[self_id] = color
-            notification_graph_to_render.node(source_node_name, str(observable))
-            full_notification_graph_to_print_out.node(source_node_name, str(observable))
-        if observer_id not in existing_dot_nodes_to_colors.keys():
-            existing_dot_nodes_to_colors[observer_id] = color
-            notification_graph_to_render.node(target_node_name, str(observer))
-            full_notification_graph_to_print_out.node(target_node_name, str(observer))
+        if source_node_id not in existing_dot_nodes_to_colors.keys():
+            existing_dot_nodes_to_colors[source_node_id] = color
+            notification_graph_to_render.node(source_node_id, source_node_name)
+            full_notification_graph_to_print_out.node(source_node_id, source_node_name)
+        if target_node_id not in existing_dot_nodes_to_colors.keys():
+            existing_dot_nodes_to_colors[target_node_id] = color
+            notification_graph_to_render.node(target_node_id, target_node_name)
+            full_notification_graph_to_print_out.node(target_node_id, target_node_name)
 
         # for routing edges over dedicated nodes
         # problem: does not scale
@@ -530,45 +531,45 @@ def feed_debugging_graph(observable, observer, method, *args, **kwargs):
         # tried out: xlabel, style="invis"
 
         # only for print out, thus no style parameters
-        full_notification_graph_to_print_out.edge(source_node_name, target_node_name,
+        full_notification_graph_to_print_out.edge(source_node_id, target_node_id,
                                                   taillabel="method name: " + str(method),
                                                   label="sequence number: @" + str(dot_node_sequence_number) + "@")
 
         if filter_self_references:
-            if self_id != observer_id:
+            if source_node_id != target_node_id:
                 # info on edges
-                notification_graph_to_render.edge(source_node_name, target_node_name,
+                notification_graph_to_render.edge(source_node_id, target_node_id,
                                                   headlabel="_" + str(dot_node_sequence_number) + "_",
                                                   # label="_"+str(dot_node_sequence_number)+"_",
                                                   # decorate only works for normal labels
                                                   # decorate="true",
-                                                  labeldistance="15",
+                                                  labeldistance="5",
                                                   labelfontsize="6",
-                                                  fontcolor=existing_dot_nodes_to_colors[self_id],
-                                                  color=existing_dot_nodes_to_colors[self_id])
+                                                  fontcolor=existing_dot_nodes_to_colors[source_node_id],
+                                                  color=existing_dot_nodes_to_colors[source_node_id])
                 # info on nodes: does not scale with many edges
                 # dot_graph.node(str(dot_node_sequence_number), node_label)
-                # dot_graph.edge(str(self_id), str(dot_node_sequence_number),
-                #                color=existing_dot_nodes_to_colors[self_id])
-                # dot_graph.edge(str(dot_node_sequence_number), str(observer_id),
-                #                color=existing_dot_nodes_to_colors[self_id])
+                # dot_graph.edge(str(source_node_id), str(dot_node_sequence_number),
+                #                color=existing_dot_nodes_to_colors[source_node_id])
+                # dot_graph.edge(str(dot_node_sequence_number), str(target_node_id),
+                #                color=existing_dot_nodes_to_colors[source_node_id])
         else:
             # info on edges
-            notification_graph_to_render.edge(source_node_name, target_node_name,
+            notification_graph_to_render.edge(source_node_id, target_node_id,
                                               headlabel="_" + str(dot_node_sequence_number) + "_",
                                               # label="_"+str(dot_node_sequence_number)+"_",
                                               # decorate only works for normal labels
                                               # decorate="true",
                                               labeldistance="15",
                                               labelfontsize="6",
-                                              fontcolor=existing_dot_nodes_to_colors[self_id],
-                                              color=existing_dot_nodes_to_colors[self_id])
+                                              fontcolor=existing_dot_nodes_to_colors[source_node_id],
+                                              color=existing_dot_nodes_to_colors[source_node_id])
             # info on nodes
             # dot_graph.node(str(dot_node_sequence_number), node_label)
-            # dot_graph.edge(str(self_id), str(dot_node_sequence_number),
-            #                color=existing_dot_nodes_to_colors[self_id])
-            # dot_graph.edge(str(dot_node_sequence_number), str(observer_id),
-            #                color=existing_dot_nodes_to_colors[self_id])
+            # dot_graph.edge(str(source_node_id), str(dot_node_sequence_number),
+            #                color=existing_dot_nodes_to_colors[source_node_id])
+            # dot_graph.edge(str(dot_node_sequence_number), str(target_node_id),
+            #                color=existing_dot_nodes_to_colors[source_node_id])
         dot_node_sequence_number += 1
 
 
