@@ -496,11 +496,12 @@ def disable_notification_debugging():
     dot_node_sequence_number = None
 
 
-def feed_debugging_graph(observable, observer, method):
+def feed_debugging_graph(observable, observer, method, *args, **kwargs):
     global debug_notifications, notification_graph_to_render, existing_dot_nodes_to_colors, \
         dot_node_sequence_number, filter_self_references
 
     if debug_notifications:
+        model, prop_name, info = args
         self_id = id(observable)
         observer_id = id(observer)
 
@@ -630,7 +631,7 @@ def patch_gtkmvc_model_mt():
         direct method call depending whether the caller's thread is
         different from the observer's thread"""
 
-        feed_debugging_graph(self, observer, method)
+        feed_debugging_graph(self, observer, method, *args, **kwargs)
 
         if not self._ModelMT__observer_threads.has_key(observer):
             logger.error("ASSERT WILL COME observer not in observable threads observer: {0} observable: {1}"
