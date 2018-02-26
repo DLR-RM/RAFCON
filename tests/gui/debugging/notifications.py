@@ -21,6 +21,7 @@ def node_id(node):
 def node_name(node):
     return "{class_name} ({id})".format(class_name=node.__class__.__name__, id=hex(id(node)))
 
+
 def enable_debugging():
     global debugging_enabled, notification_graph_to_render, dot_node_sequence_number, existing_dot_nodes_to_colors
     global nodes, edges
@@ -71,12 +72,23 @@ def show_debug_graph(print_to_console=False, open_text_file=True, render_graph=T
             sequence_number, source_node, target_node = edge
             source_node_id, source_node_name = source_node
             target_node_id, target_node_name = target_node
-            text_file.write("{number}: {source_node}.{prop_name} => {target_node}.{method}".format(
+            if 'method_name' in edge_info['info']:
+                method_name = edge_info['info']['method_name']
+                args = ", ".join([str(arg) for arg in edge_info['info']['args'][1:]])
+                before_after = "before" if "before" in edge_info['info'] else "after"
+                change = "{method}({args}), {before_after}".format(method=method_name, args=args, before_after=before_after)
+            else:
+                signal_name = edge_info['info']['prop_name']
+                arg = edge_info['info']['arg']
+                change = "{signal}({arg})".format(signal=signal_name, arg=arg)
+                print "signal:", edge_info['info']
+            text_file.write("{number}: {source_node}.{prop_name}[{change}] => {target_node}.{callback}".format(
                 number=sequence_number,
                 source_node=source_node_name,
                 target_node=target_node_name,
                 prop_name=edge_info['prop_name'],
-                method=edge_info['method'].__func__.func_name
+                change=change,
+                callback=edge_info['callback'].__func__.func_name
             ))
             text_file.write("\n-----\n")
 
@@ -101,7 +113,7 @@ def disable_debugging():
     dot_node_sequence_number = None
 
 
-def feed_debugging_graph(observable, observer, method, *args, **kwargs):
+def feed_debugging_graph(observable, observer, callback, *args, **kwargs):
     global debugging_enabled, notification_graph_to_render, existing_dot_nodes_to_colors, \
         dot_node_sequence_number, filter_self_references, nodes, edges
 
@@ -127,14 +139,14 @@ def feed_debugging_graph(observable, observer, method, *args, **kwargs):
 
         # for routing edges over dedicated nodes
         # problem: does not scale
-        # node_label = str(dot_node_sequence_number) + "\n" + str(method)
+        # node_label = str(dot_node_sequence_number) + "\n" + str(callback)
 
         # tried out: xlabel, style="invis"
 
         edges[(dot_node_sequence_number, (source_node_id, source_node_name), (target_node_id, target_node_name))] = {
             'model': model,
             'prop_name': prop_name,
-            'method': method,
+            'callback': callback,
             'info': info,
         }
 
