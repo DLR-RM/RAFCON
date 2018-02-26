@@ -14,6 +14,13 @@ dot_node_sequence_number = None
 filter_self_references = True
 
 
+def node_id(node):
+    return str(id(node))
+
+
+def node_name(node):
+    return "{class_name} ({id})".format(class_name=node.__class__.__name__, id=hex(id(node)))
+
 def enable_debugging():
     global debugging_enabled, notification_graph_to_render, dot_node_sequence_number, existing_dot_nodes_to_colors
     global nodes, edges
@@ -100,16 +107,12 @@ def feed_debugging_graph(observable, observer, method, *args, **kwargs):
 
     if debugging_enabled:
         model, prop_name, info = args
-        def node_id(node):
-            return str(id(node))
         source_node_id = node_id(observable)
         target_node_id = node_id(observer)
 
         import random
         color = "#%06x" % random.randint(0, 0xFFFFFF)
 
-        def node_name(node):
-            return "{class_name} ({id})".format(class_name=node.__class__.__name__, id=hex(id(node)))
         source_node_name = node_name(observable)
         target_node_name = node_name(observer)
 
