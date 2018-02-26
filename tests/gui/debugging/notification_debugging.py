@@ -3,6 +3,7 @@ from os.path import exists, join
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
+from gui.debugging.notifications import enable_debugging, disable_debugging, show_debug_graph
 
 # general tool elements
 from rafcon.utils import log
@@ -43,13 +44,13 @@ def create_bigger_state_machine():
 
 
 def patch_notifications():
-    testing_utils.enable_notification_debugging()
+    enable_debugging()
     # call_gui_callback(create_bigger_state_machine)
     # call_gui_callback(create_small_state_machine)
     from gui.widget.test_storage import create_models
     call_gui_callback(create_models)
-    testing_utils.show_notification_debug_graph()
-    testing_utils.disable_notification_debugging()
+    show_debug_graph()
+    disable_debugging()
 
     from testing_utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
     assert exists(join(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE, 'notification_output.gv'))

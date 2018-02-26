@@ -5,8 +5,6 @@ import tempfile
 from os import mkdir, environ
 from os.path import join, dirname, realpath, exists, abspath
 from threading import Lock, Condition, Event, Thread, currentThread
-from graphviz import Digraph
-from collections import OrderedDict
 
 import rafcon
 from rafcon.utils import log, constants
@@ -19,14 +17,6 @@ gui_ready = None
 gui_executed_once = False
 exception_info = None
 result = None
-
-# notification debugging
-debug_notifications = False
-notification_graph_to_render = None
-full_notification_graph_to_print_out = None
-existing_dot_nodes_to_colors = dict()
-dot_node_sequence_number = None
-filter_self_references = True
 
 
 RAFCON_TEMP_PATH_TEST_BASE = join(constants.RAFCON_TEMP_PATH_BASE, 'unit_tests')
@@ -411,168 +401,6 @@ def close_gui(already_quit=False, force_quit=True):
         assert False, "Could not close the GUI"
 
 
-def enable_notification_debugging():
-    global debug_notifications, notification_graph_to_render, dot_node_sequence_number, existing_dot_nodes_to_colors
-    global full_notification_graph_to_print_out
-    existing_dot_nodes_to_colors = dict()
-    debug_notifications = True
-    # does not work as all edges with the same source and endpoint are merged
-    # dot_graph = Digraph(comment='Our fancy debugging graph', graph_attr={"concentrate": "true"})
-    # does not change anything
-    # dot_graph = Digraph(comment='Our fancy debugging graph', graph_attr={"labelfloat": "true"})
-    # "ortho" does not work for all engines, for others it does not do anything
-    # dot_graph = Digraph(comment='Our fancy debugging graph', graph_attr={"splines": "compound"})
-    # dot_graph = Digraph(comment='Our fancy debugging graph', graph_attr={"splines": "compound", "overlap": "false"})
-    notification_graph_to_render = Digraph(name='notification_graph_to_render')
-    full_notification_graph_to_print_out = Digraph(name='full_notification_graph_to_print_out')
-    dot_node_sequence_number = 0
-
-
-def show_notification_debug_graph(print_to_console=False, open_text_file=True, render_graph=True):
-    global notification_graph_to_render, full_notification_graph_to_print_out
-    assert isinstance(notification_graph_to_render, Digraph)
-    print "started rendering graph ... "
-    notification_graph_to_render.engine = 'circo'  # nice
-    # dot_graph.engine = 'fdp'  # nice, slowest
-    # dot_graph.engine = 'neato'
-    # dot_graph.engine = 'twopi'
-    # dot_graph.engine = 'dot'  # default
-    # 'dotty', 'lefty' and 'sfdp' # does not exist yet in this version
-    if render_graph:
-        notification_graph_to_render.render(
-            join(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE, 'notification_output.gv'), view=True)
-
-    nodes = []
-    edges = {}
-    for item in full_notification_graph_to_print_out.body:
-        if "->" not in item:
-            nodes.append(item)
-        else:
-            try:
-                sequence_number = item.split("@")[1]
-                # print sequence_number
-            except IndexError:
-                continue
-            edges[sequence_number] = item
-
-    edges = OrderedDict(sorted(edges.items(), key=lambda kv: int(kv[0])))
-
-    with open(join(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE, 'notification_print_out.txt'), "w") as text_file:
-        # unfortunately printing a graph like this mixes nodes and edges
-        # text_file.write(str(full_notification_graph_to_print_out.source))
-        text_file.write("{}\n".format("#" * 50))
-        text_file.write("graph: " + str(full_notification_graph_to_print_out.name) + "\n")
-        text_file.write("number of nodes: {}; number of edges: {}\n".format(len(nodes), len(edges)))
-        text_file.write("{}\n".format("#" * 50))
-        text_file.write("{}\n".format("#" * 30))
-        text_file.write("nodes\n")
-        text_file.write("{}\n".format("#" * 30))
-        for node in nodes:
-            text_file.write(str(node)+"\n-----\n")
-        text_file.write("{}\n".format("#" * 30))
-        text_file.write("edges\n")
-        text_file.write("{}\n".format("#" * 30))
-        for key, edge in edges.iteritems():
-            text_file.write(str(edge)+"\n-----\n")
-
-    if open_text_file:
-        import subprocess
-        path = join(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE, 'notification_print_out.txt')
-        subprocess.Popen("/usr/bin/gedit %s" % (path), shell=True)
-
-    if print_to_console:
-        print(full_notification_graph_to_print_out.source)
-
-    print "finished rendering graph"
-
-
-def disable_notification_debugging():
-    global debug_notifications, notification_graph_to_render, dot_node_sequence_number, existing_dot_nodes_to_colors
-    global full_notification_graph_to_print_out
-    existing_dot_nodes_to_colors = None
-    debug_notifications = False
-    notification_graph_to_render = None
-    full_notification_graph_to_print_out = None
-    dot_node_sequence_number = None
-
-
-def feed_debugging_graph(observable, observer, method, *args, **kwargs):
-    global debug_notifications, notification_graph_to_render, existing_dot_nodes_to_colors, \
-        dot_node_sequence_number, filter_self_references
-
-    if debug_notifications:
-        model, prop_name, info = args
-        def node_id(node):
-            return str(id(node))
-        source_node_id = node_id(observable)
-        target_node_id = node_id(observer)
-
-        import random
-        color = "#%06x" % random.randint(0, 0xFFFFFF)
-
-        def node_name(node):
-            return "{class_name} ({id})".format(class_name=node.__class__.__name__, id=hex(id(node)))
-        source_node_name = node_name(observable)
-        target_node_name = node_name(observer)
-
-        if source_node_id not in existing_dot_nodes_to_colors.keys():
-            existing_dot_nodes_to_colors[source_node_id] = color
-            notification_graph_to_render.node(source_node_id, source_node_name)
-            full_notification_graph_to_print_out.node(source_node_id, source_node_name)
-        if target_node_id not in existing_dot_nodes_to_colors.keys():
-            existing_dot_nodes_to_colors[target_node_id] = color
-            notification_graph_to_render.node(target_node_id, target_node_name)
-            full_notification_graph_to_print_out.node(target_node_id, target_node_name)
-
-        # for routing edges over dedicated nodes
-        # problem: does not scale
-        # node_label = str(dot_node_sequence_number) + "\n" + str(method)
-
-        # tried out: xlabel, style="invis"
-
-        # only for print out, thus no style parameters
-        full_notification_graph_to_print_out.edge(source_node_id, target_node_id,
-                                                  taillabel="method name: " + str(method),
-                                                  label="sequence number: @" + str(dot_node_sequence_number) + "@")
-
-        if filter_self_references:
-            if source_node_id != target_node_id:
-                # info on edges
-                notification_graph_to_render.edge(source_node_id, target_node_id,
-                                                  headlabel="_" + str(dot_node_sequence_number) + "_",
-                                                  # label="_"+str(dot_node_sequence_number)+"_",
-                                                  # decorate only works for normal labels
-                                                  # decorate="true",
-                                                  labeldistance="5",
-                                                  labelfontsize="6",
-                                                  fontcolor=existing_dot_nodes_to_colors[source_node_id],
-                                                  color=existing_dot_nodes_to_colors[source_node_id])
-                # info on nodes: does not scale with many edges
-                # dot_graph.node(str(dot_node_sequence_number), node_label)
-                # dot_graph.edge(str(source_node_id), str(dot_node_sequence_number),
-                #                color=existing_dot_nodes_to_colors[source_node_id])
-                # dot_graph.edge(str(dot_node_sequence_number), str(target_node_id),
-                #                color=existing_dot_nodes_to_colors[source_node_id])
-        else:
-            # info on edges
-            notification_graph_to_render.edge(source_node_id, target_node_id,
-                                              headlabel="_" + str(dot_node_sequence_number) + "_",
-                                              # label="_"+str(dot_node_sequence_number)+"_",
-                                              # decorate only works for normal labels
-                                              # decorate="true",
-                                              labeldistance="15",
-                                              labelfontsize="6",
-                                              fontcolor=existing_dot_nodes_to_colors[source_node_id],
-                                              color=existing_dot_nodes_to_colors[source_node_id])
-            # info on nodes
-            # dot_graph.node(str(dot_node_sequence_number), node_label)
-            # dot_graph.edge(str(source_node_id), str(dot_node_sequence_number),
-            #                color=existing_dot_nodes_to_colors[source_node_id])
-            # dot_graph.edge(str(dot_node_sequence_number), str(target_node_id),
-            #                color=existing_dot_nodes_to_colors[source_node_id])
-        dot_node_sequence_number += 1
-
-
 original_ModelMT_notify_observer = None
 original_state_start = None
 original_run_state_machine = None
@@ -632,6 +460,7 @@ def patch_gtkmvc_model_mt():
         direct method call depending whether the caller's thread is
         different from the observer's thread"""
 
+        from gui.debugging.notifications import feed_debugging_graph
         feed_debugging_graph(self, observer, method, *args, **kwargs)
 
         if not self._ModelMT__observer_threads.has_key(observer):
