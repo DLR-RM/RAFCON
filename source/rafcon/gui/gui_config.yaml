@@ -60,6 +60,9 @@ ZOOM_WITH_CTRL: False
 
 SEMANTIC_DATA_MODE: False
 
+# 300 is equal to glib.PRIORITY_LOW which is is lower than the default gtk priority
+LOGGING_CONSOLE_GTK_PRIORITY: 300
+
 SHORTCUTS:
     abort: Escape
     add: <Control>A
