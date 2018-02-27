@@ -72,12 +72,16 @@ def show_debug_graph(print_to_console=False, open_text_file=True, render_graph=T
             sequence_number, source_node, target_node = edge
             source_node_id, source_node_name = source_node
             target_node_id, target_node_name = target_node
-            if 'method_name' in edge_info['info']:
+            if 'method_name' in edge_info['info']:  # before/after
                 method_name = edge_info['info']['method_name']
                 args = ", ".join([str(arg) for arg in edge_info['info']['args'][1:]])
                 before_after = "before" if "before" in edge_info['info'] else "after"
                 change = "{method}({args}), {before_after}".format(method=method_name, args=args, before_after=before_after)
-            else:
+            elif 'assign' in edge_info['info']:  # assign
+                prop_name = edge_info['info']['prop_name']
+                value = edge_info['info']['new']
+                change = "{prop_name}={value}".format(prop_name=prop_name, value=value)
+            else:  # signal
                 signal_name = edge_info['info']['prop_name']
                 arg = edge_info['info']['arg']
                 change = "{signal}({arg})".format(signal=signal_name, arg=arg)
