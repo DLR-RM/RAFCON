@@ -88,9 +88,9 @@ class MainWindowController(ExtendedController):
         ######################################################
         # logging console
         ######################################################
-        self.logging_console_controller = LoggingConsoleController(gui_singletons.gui_config_model,
+        logging_console_controller = LoggingConsoleController(gui_singletons.gui_config_model,
                                                                    view.logging_console_view)
-        self.add_controller('logging_console_controller', self.logging_console_controller)
+        self.add_controller('logging_console_controller', logging_console_controller)
 
         ######################################################
         # library tree
