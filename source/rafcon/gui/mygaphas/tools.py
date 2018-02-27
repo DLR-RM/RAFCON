@@ -106,14 +106,11 @@ class MoveItemTool(gaphas.tool.ItemTool):
         if self._move_name_v:
             yield InMotion(self._item, view)
         else:
-            get_ancestors = view.canvas.get_ancestors
             selected_items = set(view.selected_items)
             for item in selected_items:
                 if not isinstance(item, Item):
                     continue
-                # Do not move subitems of selected items
-                if not set(get_ancestors(item)).intersection(selected_items):
-                    yield InMotion(item, view)
+                yield InMotion(item, view)
 
     def on_button_press(self, event):
         if event.button not in self._buttons:
