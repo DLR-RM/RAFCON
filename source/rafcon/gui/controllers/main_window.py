@@ -204,6 +204,12 @@ class MainWindowController(ExtendedController):
         self.right_bar_hidden = False
         self.console_hidden = False
 
+    def destroy(self):
+        # The sidebars have no corresponding controller that could destroy the views. Therefore, we have to do this here
+        self.left_bar_child.destroy()
+        self.right_bar_child.destroy()
+        super(MainWindowController, self).destroy()
+
     @staticmethod
     def configure_event(widget, event, name):
         # print "configure event", widget, event, name
