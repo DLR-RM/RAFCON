@@ -674,6 +674,8 @@ class MainWindowController(ExtendedController):
         except ImportError:
             pass
 
+        # Recursively destroys the main window
         self.destroy()
         from rafcon.gui.clipboard import global_clipboard
         global_clipboard.destroy()
+        gui_singletons.main_window_controller = None
