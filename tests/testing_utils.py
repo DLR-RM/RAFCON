@@ -1,6 +1,6 @@
-import sys
 import copy
 import signal
+import sys
 import tempfile
 from os import mkdir, environ
 from os.path import join, dirname, realpath, exists, abspath
@@ -16,6 +16,7 @@ gui_ready = None
 gui_executed_once = False
 exception_info = None
 result = None
+
 
 RAFCON_TEMP_PATH_TEST_BASE = join(constants.RAFCON_TEMP_PATH_BASE, 'unit_tests')
 if not exists(RAFCON_TEMP_PATH_TEST_BASE):
@@ -359,7 +360,6 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
         patch_gtkmvc_model_mt()
     global gui_ready, gui_thread, gui_executed_once
     # IMPORTANT enforce gtk.gtkgl import in the python main thread to avoid segfaults
-    import gtk.gtkgl
 
     print "WT thread: ", currentThread(), currentThread().ident
     gui_ready = Event()
@@ -415,9 +415,9 @@ def patch_gtkmvc_model_mt():
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
     import gtkmvc
-    from gtkmvc.model_mt import Model, _threading, gobject, ModelMT
+    from gtkmvc.model_mt import Model, _threading, gobject
     from rafcon.core.states.state import run_id_generator, threading
-    from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger, Queue, ExecutionEngine
+    from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger, Queue
 
     original_ModelMT_notify_observer = gtkmvc.model_mt.ModelMT.__notify_observer__
     original_state_start = rafcon.core.states.state.State.start
@@ -457,6 +457,9 @@ def patch_gtkmvc_model_mt():
         """This makes a call either through the gtk.idle list or a
         direct method call depending whether the caller's thread is
         different from the observer's thread"""
+
+        from notifications import feed_debugging_graph
+        feed_debugging_graph(self, observer, method, *args, **kwargs)
 
         if not self._ModelMT__observer_threads.has_key(observer):
             logger.error("ASSERT WILL COME observer not in observable threads observer: {0} observable: {1}"

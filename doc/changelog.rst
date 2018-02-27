@@ -41,6 +41,7 @@ Patch releases 0.12.\*
 - Feature
     - The env variable :envvar:`RAFCON_START_MINIMIZED` allows to start RAFCON minimized, which is helpful when running
       the tests
+    - Graphviz can now be used to debug gtkmvc notifications and signals
 
 - Improvements:
 
