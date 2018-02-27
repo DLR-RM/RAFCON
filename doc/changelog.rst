@@ -9,6 +9,8 @@ Next release
 
 - Feature
 
+    - new log level "VERBOSE", intended for development purposes
+
 - Improvements:
 
 - Bug Fixes:
