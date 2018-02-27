@@ -13,6 +13,8 @@ Next release
 
 - Bug Fixes:
 
+    - fix exception handling, causing issues with the graphical editor when invalid connection were created
+
 
 Patch releases 0.12.\*
 ----------------------
