@@ -33,6 +33,7 @@ Patch releases 0.12.\*
 - Bug Fixes:
 
     - :issue:`414` state machines with libraries cannot be closed
+    - When hovering the menu bar, an exception was printed
 
 
 0.12.3
