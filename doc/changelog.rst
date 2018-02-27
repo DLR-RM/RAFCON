@@ -14,6 +14,7 @@ Next release
 
     - Provide a `PULL_REQUEST_TEMPLATE` for pull requests opened in GitHub
     - Optimize updates/redrawing of graphical editor
+    - Gtk priority of logging output to the console view is now customizable via the gui_config
 
 - Bug Fixes:
 
