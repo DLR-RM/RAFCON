@@ -288,7 +288,14 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
     for object_class, check_it in elements:
         name = param_dict.get(object_class, None)[LOG_FILE_NAME_ID] if param_dict.get(object_class, None) else None
         found_objects_of_kind = [o for o in gc.get_objects() if isinstance(o, object_class) and o not in ignored_objects]
+        if any([o.__class__.__name__ == 'MainWindowController' for o in found_objects_of_kind]) and check_it:
+            mw_ctrl_list = [o for o in found_objects_of_kind if o.__class__.__name__ == 'MainWindowController']
+            ignored_mw_ctrl_list = [o for o in ignored_objects if o.__class__.__name__ == 'MainWindowController']
+            found_objects_of_kind = [o for o in found_objects_of_kind if not o.__class__.__name__ == 'MainWindowController']
+            print "ignored main window controller ids", [id(o) for o in ignored_mw_ctrl_list]
+            print "still existing main window controller ids", [id(o) for o in mw_ctrl_list]
         found_objects += found_objects_of_kind
+
         if not len(found_objects_of_kind) == 0:
             collection_counts = [len(gc.get_referrers(o)) for o in found_objects_of_kind]
             class_types_found = set([o.__class__ for o in found_objects_of_kind])
