@@ -154,37 +154,31 @@ class MoveItemTool(gaphas.tool.ItemTool):
             rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
                                                         inmotion.item.handles()[NW])
             if isinstance(inmotion.item, StateView):
-                state_m = inmotion.item.model
+                state_v = inmotion.item
+                state_m = state_v.model
+                self.view.canvas.request_update(state_v)
                 if state_m.get_meta_data_editor()['rel_pos'] != rel_pos:
                     position_changed = True
                     state_m.set_meta_data_editor('rel_pos', rel_pos)
+                    self.view.graphical_editor.emit('meta_data_changed', state_m, "position", True)
             elif isinstance(inmotion.item, NameView):
-                state_m = self.view.canvas.get_parent(inmotion.item).model
+                state_v = inmotion.item
+                state_m = self.view.canvas.get_parent(state_v).model
+                self.view.canvas.request_update(state_v)
                 if state_m.get_meta_data_editor()['name']['rel_pos'] != rel_pos:
+                    position_changed = True
                     state_m.set_meta_data_editor('name.rel_pos', rel_pos)
-                    position_changed = True
+                    self.view.graphical_editor.emit('meta_data_changed', state_m, "name_position", False)
             elif isinstance(inmotion.item, TransitionView):
-                position_changed = True
                 transition_v = inmotion.item
+                transition_m = transition_v.model
+                self.view.canvas.request_update(transition_v)
                 current_waypoints = gap_helper.get_relative_positions_of_waypoints(transition_v)
-                old_waypoints = transition_v.model.get_meta_data_editor()['waypoints']
+                old_waypoints = transition_m.get_meta_data_editor()['waypoints']
                 if current_waypoints != old_waypoints:
-                    gap_helper.update_meta_data_for_transition_waypoints(self.view.graphical_editor, transition_v, None)
                     position_changed = True
-
-        if isinstance(self._item, StateView):
-            self.view.canvas.request_update(self._item)
-            if position_changed:
-                self.view.graphical_editor.emit('meta_data_changed', self._item.model, "position", True)
-
-        if isinstance(self.view.focused_item, NameView):
-            if position_changed:
-                self.view.graphical_editor.emit('meta_data_changed', self.view.focused_item.parent.model,
-                                                "name_position", False)
-
-        if isinstance(self.view.focused_item, TransitionView):
-            if position_changed:
-                self.view.graphical_editor.emit('meta_data_changed', self._item.model, "waypoints", False)
+                    transition_m.set_meta_data_editor('waypoints', current_waypoints)
+                    self.view.graphical_editor.emit('meta_data_changed', transition_m, "waypoints", True)
 
         if not position_changed and self._old_selection is not None:
             # The selection is handled differently depending on whether states were moved or not

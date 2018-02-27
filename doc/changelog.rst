@@ -13,6 +13,7 @@ Next release
 
 - Bug Fixes:
 
+    - :issue:`486` Gaphas is not emitting meta data signal if NameView is moved
 
 Patch releases 0.12.\*
 ----------------------
