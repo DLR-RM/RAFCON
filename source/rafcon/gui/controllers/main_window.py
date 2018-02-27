@@ -662,11 +662,6 @@ class MainWindowController(ExtendedController):
         # close all tabs
         self.get_controller('states_editor_ctrl').prepare_destruction()  # avoid new state editor TODO tbd (deleted)
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
-        # Recursively destroys the main window
-        self.get_controller('menu_bar_controller').logging_console_view.quit_flag = True
-        # idle_add seems not to be necessary here
-        # glib.idle_add(log_helpers.LoggingViewHandler.remove_logging_view, 'main')
-        log_helpers.LoggingViewHandler.remove_logging_view('main')
 
         # gtkmvc installs a global glade custom handler that holds a reference to the last created View class,
         # preventing it from being destructed. By installing a dummy callback handler, after all views have been
