@@ -13,6 +13,8 @@ Next release
 
 - Bug Fixes:
 
+    - :issue:`484` label handles are hard to grasp
+
 
 Patch releases 0.12.\*
 ----------------------
