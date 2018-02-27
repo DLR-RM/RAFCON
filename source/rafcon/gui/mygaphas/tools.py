@@ -101,6 +101,10 @@ class MoveItemTool(gaphas.tool.ItemTool):
         self._old_selection = None
 
     def movable_items(self):
+        """Filter selection
+
+        Filter items of selection that cannot be moved (i.e. are not instances of `Item`) and return the rest.
+        """
         view = self.view
 
         if self._move_name_v:
@@ -113,6 +117,12 @@ class MoveItemTool(gaphas.tool.ItemTool):
                 yield InMotion(item, view)
 
     def on_button_press(self, event):
+        """Select items
+
+        When the mouse button is pressed, the selection is updated.
+
+        :param event: The button event
+        """
         if event.button not in self._buttons:
             return False  # Only handle events for registered buttons (left mouse clicks)
 
@@ -145,7 +155,15 @@ class MoveItemTool(gaphas.tool.ItemTool):
         return True
 
     def on_button_release(self, event):
-        position_changed = False
+        """Write back changes
+
+        If one or more items have been moved, the new position are stored in the corresponding meta data and a signal
+        notifying the change is emitted.
+
+        :param event: The button event
+        """
+        affected_models = {}
+
         for inmotion in self._movable_items:
             inmotion.move((event.x, event.y))
             rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
@@ -155,17 +173,15 @@ class MoveItemTool(gaphas.tool.ItemTool):
                 state_m = state_v.model
                 self.view.canvas.request_update(state_v)
                 if state_m.get_meta_data_editor()['rel_pos'] != rel_pos:
-                    position_changed = True
                     state_m.set_meta_data_editor('rel_pos', rel_pos)
-                    self.view.graphical_editor.emit('meta_data_changed', state_m, "position", True)
+                    affected_models[state_m] = ("position", True, state_v)
             elif isinstance(inmotion.item, NameView):
                 state_v = inmotion.item
                 state_m = self.view.canvas.get_parent(state_v).model
                 self.view.canvas.request_update(state_v)
                 if state_m.get_meta_data_editor()['name']['rel_pos'] != rel_pos:
-                    position_changed = True
                     state_m.set_meta_data_editor('name.rel_pos', rel_pos)
-                    self.view.graphical_editor.emit('meta_data_changed', state_m, "name_position", False)
+                    affected_models[state_m] = ("name_position", False, state_v)
             elif isinstance(inmotion.item, TransitionView):
                 transition_v = inmotion.item
                 transition_m = transition_v.model
@@ -173,11 +189,33 @@ class MoveItemTool(gaphas.tool.ItemTool):
                 current_waypoints = gap_helper.get_relative_positions_of_waypoints(transition_v)
                 old_waypoints = transition_m.get_meta_data_editor()['waypoints']
                 if current_waypoints != old_waypoints:
-                    position_changed = True
                     transition_m.set_meta_data_editor('waypoints', current_waypoints)
                     self.view.graphical_editor.emit('meta_data_changed', transition_m, "waypoints", True)
+                    affected_models[transition_m] = ("waypoints", False, transition_v)
 
-        if not position_changed and self._old_selection is not None:
+        if len(affected_models) == 1:
+            model = next(iter(affected_models))
+            change, affects_children, view = affected_models[model]
+            self.view.graphical_editor.emit('meta_data_changed', model, change, affects_children)
+        elif len(affected_models) > 1:
+            # if more than one item has been moved, we need to call the meta_data_changed signal on a common parent
+            common_parents = None
+            for change, affects_children, view in affected_models.itervalues():
+                parents_of_view = set(self.view.canvas.get_ancestors(view))
+                if common_parents is None:
+                    common_parents = parents_of_view
+                else:
+                    common_parents = common_parents.intersection(parents_of_view)
+            assert len(common_parents) > 0, "The selected elements do not have common parent element"
+            for state_v in common_parents:
+                # Find most nested state_v
+                children_of_state_v = self.view.canvas.get_all_children(state_v)
+                if any(common_parent in children_of_state_v for common_parent in common_parents):
+                    continue
+                self.view.graphical_editor.emit('meta_data_changed', state_v.model, "positions", True)
+                break
+
+        if not affected_models and self._old_selection is not None:
             # The selection is handled differently depending on whether states were moved or not
             # If no move operation was performed, we reset the selection to that is was before the button-press event
             # and let the state machine selection handle the selection
