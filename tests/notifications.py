@@ -68,10 +68,11 @@ def show_debug_graph(print_to_console=False, open_text_file=True, render_graph=T
         text_file.write("{}\n".format("#" * 30))
         text_file.write("edges\n")
         text_file.write("{}\n".format("#" * 30))
-        for edge, edge_info in edges.iteritems():
-            sequence_number, source_node, target_node = edge
-            source_node_id, source_node_name = source_node
-            target_node_id, target_node_name = target_node
+        for sequence_number, edge_info in edges.iteritems():
+            source_node_id = edge_info['source_node_id']
+            source_node_name = edge_info['source_node_name']
+            target_node_id = edge_info['target_node_id']
+            target_node_name = edge_info['target_node_name']
             if 'method_name' in edge_info['info']:  # before/after
                 method_name = edge_info['info']['method_name']
                 args = ", ".join([str(arg) for arg in edge_info['info']['args'][1:]])
@@ -146,7 +147,11 @@ def feed_debugging_graph(observable, observer, callback, *args, **kwargs):
 
         # tried out: xlabel, style="invis"
 
-        edges[(dot_node_sequence_number, (source_node_id, source_node_name), (target_node_id, target_node_name))] = {
+        edges[dot_node_sequence_number] = {
+            'source_node_id': source_node_id,
+            'source_node_name': source_node_name,
+            'target_node_id': target_node_id,
+            'target_node_name': target_node_name,
             'model': model,
             'prop_name': prop_name,
             'callback': callback,
