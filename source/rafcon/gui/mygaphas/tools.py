@@ -188,6 +188,8 @@ class MoveItemTool(gaphas.tool.ItemTool):
             self.view.select_item(self._old_selection)
             self.view.handle_new_selection(self._item)
 
+        self._move_name_v = False
+        self._old_selection = None
         return super(MoveItemTool, self).on_button_release(event)
 
 
