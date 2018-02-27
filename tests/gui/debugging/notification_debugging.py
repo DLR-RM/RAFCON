@@ -1,12 +1,13 @@
 from os.path import exists, join
 
-# test environment elements
-import testing_utils
-from testing_utils import call_gui_callback
-from gui.debugging.notifications import enable_debugging, disable_debugging, show_debug_graph
-
 # general tool elements
 from rafcon.utils import log
+
+# test environment elements
+import testing_utils
+from notifications import enable_debugging, disable_debugging, show_debug_graph
+from testing_utils import call_gui_callback
+
 logger = log.get_logger(__name__)
 
 
