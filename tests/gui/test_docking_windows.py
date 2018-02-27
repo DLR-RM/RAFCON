@@ -3,7 +3,7 @@ import pytest
 import time
 
 import testing_utils
-from testing_utils import call_gui_callback, run_gui, close_gui, wait_for_gui
+from testing_utils import call_gui_callback, wait_for_gui
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -36,8 +36,8 @@ def notify_on_resize_event(window, event=None):
 def wait_for_event_notification():
     if not ready.wait(5):
         raise RuntimeError("A timeout occurred")
-    time.sleep(0.1)
-    wait_for_gui()
+    # time.sleep(0.1)
+    call_gui_callback(wait_for_gui)
 
 
 def assert_size_equality(size1, size2):
@@ -136,7 +136,7 @@ def undock_sidebars():
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
     print "=> test console_window"
     test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
-    wait_for_gui()
+    testing_utils.call_gui_callback(wait_for_gui)
 
 
 def check_pane_positions():
@@ -228,6 +228,6 @@ def test_pane_positions(caplog):
         testing_utils.shutdown_environment(caplog=caplog)
 
 if __name__ == '__main__':
-    test_window_positions(None)
-    test_pane_positions(None)
-    # pytest.main([__file__, '-xs'])
+    # test_window_positions(None)
+    # test_pane_positions(None)
+    pytest.main([__file__, '-xs'])
