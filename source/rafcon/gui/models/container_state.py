@@ -12,6 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+import sys
 from copy import deepcopy
 
 from gtkmvc import ModelMT
@@ -264,14 +265,13 @@ class ContainerStateModel(StateModel):
             return
 
         if isinstance(info.result, Exception):
-            raise Exception("There was raised an exception {0}.".format(info.result))
+            exc_info = sys.exc_info()
+            raise exc_info[0], exc_info[1], exc_info[2]
         elif "add" in info.method_name:
             self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
         elif "remove" in info.method_name:
             destroy = info.kwargs.get('destroy', True)
             recursive = info.kwargs.get('recursive', True)
-            # print self.__class__.__name__, "remove", info.method_name, 'destroy: ', destroy, 'recursive:', recursive, info.result
-            # print self.__class__.__name__, "args", info.args, model_list, info.result, model_key, destroy, info
             self.remove_specific_model(model_list, info.result, model_key, recursive, destroy)
         elif info.method_name in ["transitions", "data_flows", "states", "scoped_variables"]:
             self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
