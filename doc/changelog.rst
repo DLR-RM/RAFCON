@@ -10,6 +10,7 @@ Next release
 - Feature
 
     - new log level "VERBOSE", intended for development purposes
+    - state machines can now be baked (a snapshot of the state machine with all libraries can be saved)
 
 - Improvements:
 
@@ -73,7 +74,6 @@ Patch releases 0.12.\*
 - New Features:
 
     - Fix logging for library state execution
-    - State machines can now be baked (a snapshot of the state machine with all libraries can be saved)
 
 - Improvements:
 
