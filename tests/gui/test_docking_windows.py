@@ -82,9 +82,9 @@ def undock_sidebars():
         logger.info("resizing...")
         time.sleep(debug_sleep_time)
         ready.clear()
-        target_size = (600, 600)
+        target_size = (800, 800)
         if new_size == target_size:
-            target_size = (700, 700)
+            target_size = (900, 900)
         logger.debug("target size: {}".format(target_size))
         call_gui_callback(window.resize,*target_size)
         wait_for_event_notification()
