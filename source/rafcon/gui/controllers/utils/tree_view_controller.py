@@ -382,7 +382,7 @@ class ListViewController(AbstractTreeViewController):
         self.tree_view.connect('button_press_event', self.mouse_click)
 
     def on_remove(self, widget, data=None):
-        """Remove respective selected core elements and select the next one"""
+        """Removes respective selected core elements and select the next one"""
 
         path_list = None
         if self.view is not None:
@@ -399,7 +399,7 @@ class ListViewController(AbstractTreeViewController):
                 self.tree_view.set_cursor(min(old_path[0], len(self.list_store) - 1))
             return True
         else:
-            self._logger.warning("Please select a element to be removed.")
+            self._logger.warning("Please select an element to be removed.")
 
     def get_state_machine_selection(self):
         """An abstract getter method for state machine selection
