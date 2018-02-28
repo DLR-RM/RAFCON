@@ -241,8 +241,9 @@ class MainWindowView(View):
 
         self['debug_eventbox'].set_border_width(0)
 
-        self['button_show_info'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_INFO', True))
+        self['button_show_verbose'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_VERBOSE', True))
         self['button_show_debug'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True))
+        self['button_show_info'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_INFO', True))
         self['button_show_warning'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_WARNING', True))
         self['button_show_error'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_ERROR', True))
 

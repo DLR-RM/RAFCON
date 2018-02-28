@@ -126,7 +126,7 @@ setup(
     ],
 
     setup_requires=['Sphinx>=1.4', 'Pygments>=2.0'] + global_requirements,
-    tests_require=['pytest', 'pytest-catchlog'] + global_requirements,
+    tests_require=['pytest', 'pytest-catchlog', 'graphviz'] + global_requirements,
     install_requires=global_requirements,
 
     dependency_links=[

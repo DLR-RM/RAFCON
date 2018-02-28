@@ -77,7 +77,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
 def create_state_machine():
 
     logger = log.get_logger(__name__)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.VERBOSE)
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
 
