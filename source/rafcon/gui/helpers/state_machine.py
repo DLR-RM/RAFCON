@@ -450,7 +450,7 @@ def generate_linux_launch_files(target_path, config_path, state_machine_path):
     make_file_executable(launch_file_without_env)
 
 
-def bake_selected_state_machine():
+def bake_selected_state_machine(path=None):
     selected_sm_id = rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id
     if not selected_sm_id:
         logger.debug("Cannot bake state machine: No state machine selected!")
@@ -464,9 +464,9 @@ def bake_selected_state_machine():
     # generate path
     selected_state_machine_model = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     folder_name = selected_state_machine_model.state_machine.root_state.name
-    path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
-                                        "The default folder name is the name of the root state.",
-                                        folder_name)
+    if path is None:
+        path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
+                                            "The default folder name is the name of the root state.", folder_name)
     if path is None:
         logger.warning("Baking canceled!")
         return False
