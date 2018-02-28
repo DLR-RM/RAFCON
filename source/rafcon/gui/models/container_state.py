@@ -12,7 +12,6 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import sys
 from copy import deepcopy
 
 from gtkmvc import ModelMT
@@ -265,6 +264,7 @@ class ContainerStateModel(StateModel):
             return
 
         if isinstance(info.result, Exception):
+            # Do nothing if the observed function raised an exception
             pass
         elif "add" in info.method_name:
             self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
