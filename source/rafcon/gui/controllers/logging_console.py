@@ -45,6 +45,11 @@ class LoggingConsoleController(ExtendedController):
         self.view.set_enables(self._enables)
         self.update_filtered_buffer()
 
+    def destroy(self):
+        self.view.quit_flag = True
+        log_helpers.LoggingViewHandler.remove_logging_view('main')
+        super(LoggingConsoleController, self).destroy()
+
     def print_message(self, message, log_level, new=True):
         if self.view is None:
             return

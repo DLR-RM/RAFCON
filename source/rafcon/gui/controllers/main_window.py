@@ -88,9 +88,9 @@ class MainWindowController(ExtendedController):
         ######################################################
         # logging console
         ######################################################
-        self.logging_console_controller = LoggingConsoleController(gui_singletons.gui_config_model,
+        logging_console_controller = LoggingConsoleController(gui_singletons.gui_config_model,
                                                                    view.logging_console_view)
-        self.add_controller('logging_console_controller', self.logging_console_controller)
+        self.add_controller('logging_console_controller', logging_console_controller)
 
         ######################################################
         # library tree
@@ -203,6 +203,14 @@ class MainWindowController(ExtendedController):
         self.left_bar_hidden = False
         self.right_bar_hidden = False
         self.console_hidden = False
+
+    def destroy(self):
+        super(MainWindowController, self).destroy()
+        # The sidebars have no corresponding controller that could destroy the views what cause the connected methods
+        # to stay connected to (hold references on) the main window controller. So, we do this here. TODO D-solve it
+        self.left_bar_child.destroy()
+        self.right_bar_child.destroy()
+        self.console_child.destroy()
 
     @staticmethod
     def configure_event(widget, event, name):
@@ -662,11 +670,6 @@ class MainWindowController(ExtendedController):
         # close all tabs
         self.get_controller('states_editor_ctrl').prepare_destruction()  # avoid new state editor TODO tbd (deleted)
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
-        # Recursively destroys the main window
-        self.get_controller('menu_bar_controller').logging_console_view.quit_flag = True
-        # idle_add seems not to be necessary here
-        # glib.idle_add(log_helpers.LoggingViewHandler.remove_logging_view, 'main')
-        log_helpers.LoggingViewHandler.remove_logging_view('main')
 
         # gtkmvc installs a global glade custom handler that holds a reference to the last created View class,
         # preventing it from being destructed. By installing a dummy callback handler, after all views have been
@@ -679,6 +682,8 @@ class MainWindowController(ExtendedController):
         except ImportError:
             pass
 
+        # Recursively destroys the main window
         self.destroy()
         from rafcon.gui.clipboard import global_clipboard
         global_clipboard.destroy()
+        gui_singletons.main_window_controller = None

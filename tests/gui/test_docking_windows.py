@@ -3,7 +3,7 @@ import pytest
 import time
 
 import testing_utils
-from testing_utils import call_gui_callback, run_gui, close_gui, wait_for_gui
+from testing_utils import call_gui_callback, wait_for_gui
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -36,8 +36,8 @@ def notify_on_resize_event(window, event=None):
 def wait_for_event_notification():
     if not ready.wait(5):
         raise RuntimeError("A timeout occurred")
-    time.sleep(0.1)
-    wait_for_gui()
+    # time.sleep(0.1)
+    call_gui_callback(wait_for_gui)
 
 
 def assert_size_equality(size1, size2):
@@ -82,9 +82,9 @@ def undock_sidebars():
         logger.info("resizing...")
         time.sleep(debug_sleep_time)
         ready.clear()
-        target_size = (600, 600)
+        target_size = (800, 800)
         if new_size == target_size:
-            target_size = (700, 700)
+            target_size = (900, 900)
         logger.debug("target size: {}".format(target_size))
         call_gui_callback(window.resize,*target_size)
         wait_for_event_notification()
@@ -136,7 +136,7 @@ def undock_sidebars():
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
     print "=> test console_window"
     test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
-    wait_for_gui()
+    testing_utils.call_gui_callback(wait_for_gui)
 
 
 def check_pane_positions():
@@ -197,7 +197,17 @@ def check_pane_positions():
 
 def test_window_positions(caplog):
     testing_utils.run_gui(core_config=None,
-                          runtime_config={},
+                          runtime_config={
+                              'LEFT_BAR_WINDOW_SIZE': (800, 800),
+                              'RIGHT_BAR_WINDOW_SIZE': (800, 800),
+                              'CONSOLE_WINDOW_SIZE': (800, 800),
+                              'LEFT_BAR_WINDOW_POS': (10, 10),
+                              'RIGHT_BAR_WINDOW_POS': (10, 10),
+                              'CONSOLE_WINDOW_POS': (10, 10),
+                              'LEFT_BAR_WINDOW_UNDOCKED': False,
+                              'RIGHT_BAR_WINDOW_UNDOCKED': False,
+                              'CONSOLE_WINDOW_UNDOCKED': False
+                          },
                           gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
     from rafcon.gui.runtime_config import global_runtime_config
     original_runtime_config = global_runtime_config.as_dict()
@@ -214,7 +224,14 @@ def test_window_positions(caplog):
 
 def test_pane_positions(caplog):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
-                          runtime_config={},)
+                          runtime_config={
+                              'LEFT_BAR_DOCKED_POS': 500,
+                              'RIGHT_BAR_DOCKED_POS': 950,
+                              'CONSOLE_DOCKED_POS': 700,
+                              'LEFT_BAR_WINDOW_UNDOCKED': False,
+                              'RIGHT_BAR_WINDOW_UNDOCKED': False,
+                              'CONSOLE_WINDOW_UNDOCKED': False
+                          })
     from rafcon.gui.runtime_config import global_runtime_config
     original_runtime_config = global_runtime_config.as_dict()
 
@@ -228,6 +245,6 @@ def test_pane_positions(caplog):
         testing_utils.shutdown_environment(caplog=caplog)
 
 if __name__ == '__main__':
-    test_window_positions(None)
-    test_pane_positions(None)
-    # pytest.main([__file__, '-xs'])
+    # test_window_positions(None)
+    # test_pane_positions(None)
+    pytest.main([__file__, '-xs'])
