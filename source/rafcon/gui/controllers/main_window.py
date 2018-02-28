@@ -272,7 +272,7 @@ class MainWindowController(ExtendedController):
                                         self.on_button_step_backward_shortcut_clicked)
 
         # Connect Debug console buttons' signals to their corresponding methods
-        for level in ["debug", "info", "warning", "error"]:
+        for level in ["verbose", "debug", "info", "warning", "error"]:
             self.connect_button_to_function("button_show_{}".format(level), "toggled", self.on_log_button_toggled,
                                             "LOGGING_SHOW_{}".format(level.upper()))
         self.update_log_button_state()
@@ -574,7 +574,7 @@ class MainWindowController(ExtendedController):
         gui_config.save_configuration()
 
     def update_log_button_state(self):
-        for level in ["debug", "info", "warning", "error"]:
+        for level in ["verbose", "debug", "info", "warning", "error"]:
             active = gui_config.get_config_value("LOGGING_SHOW_{}".format(level.upper()))
             self.view["button_show_{}".format(level)].set_active(active)
 

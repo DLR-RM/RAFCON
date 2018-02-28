@@ -264,14 +264,13 @@ class ContainerStateModel(StateModel):
             return
 
         if isinstance(info.result, Exception):
-            raise Exception("There was raised an exception {0}.".format(info.result))
+            # Do nothing if the observed function raised an exception
+            pass
         elif "add" in info.method_name:
             self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
         elif "remove" in info.method_name:
             destroy = info.kwargs.get('destroy', True)
             recursive = info.kwargs.get('recursive', True)
-            # print self.__class__.__name__, "remove", info.method_name, 'destroy: ', destroy, 'recursive:', recursive, info.result
-            # print self.__class__.__name__, "args", info.args, model_list, info.result, model_key, destroy, info
             self.remove_specific_model(model_list, info.result, model_key, recursive, destroy)
         elif info.method_name in ["transitions", "data_flows", "states", "scoped_variables"]:
             self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)

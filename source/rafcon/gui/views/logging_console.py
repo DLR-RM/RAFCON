@@ -46,6 +46,9 @@ class LoggingConsoleView(View):
         self.top = 'scrollable'
         self.quit_flag = False
 
+        from rafcon.gui.config import global_gui_config
+        self.logging_priority = global_gui_config.get_config_value("LOGGING_CONSOLE_GTK_PRIORITY", glib.PRIORITY_LOW)
+
     def clean_buffer(self):
         self.text_view.set_buffer(self.filtered_buffer)
 
@@ -54,18 +57,21 @@ class LoggingConsoleView(View):
 
     def print_message(self, message, log_level):
         self._lock.acquire()
-        if log_level <= log.logging.DEBUG and self._enables.get('DEBUG', True):
+        if log_level <= log.logging.VERBOSE and self._enables.get('VERBOSE', False):
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
                           priority=glib.PRIORITY_LOW)
+        if log.logging.VERBOSE < log_level <= log.logging.DEBUG and self._enables.get('DEBUG', True):
+            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
+                          priority=self.logging_priority)
         elif log.logging.DEBUG < log_level <= log.logging.INFO and self._enables.get('INFO', True):
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_info_color",
-                          priority=glib.PRIORITY_LOW)
+                          priority=self.logging_priority)
         elif log.logging.INFO < log_level <= log.logging.WARNING and self._enables.get('WARNING', True):
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_warning_color",
-                          priority=glib.PRIORITY_LOW)
+                          priority=self.logging_priority)
         elif log.logging.WARNING < log_level and self._enables.get('ERROR', True):
             glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_error_color",
-                          priority=glib.PRIORITY_LOW)
+                          priority=self.logging_priority)
         self._lock.release()
 
     def print_to_text_view(self, text, text_buf, use_tag=None):

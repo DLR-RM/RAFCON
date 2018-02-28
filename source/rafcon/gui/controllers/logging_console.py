@@ -88,7 +88,7 @@ class LoggingConsoleController(ExtendedController):
         menu.show_all()
 
     def _get_config_enables(self):
-        keys = ['INFO', 'DEBUG', 'WARNING', 'ERROR']
+        keys = ['VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR']
         return {key: self.model.config.get_config_value('LOGGING_SHOW_' + key, True) for key in keys}
 
     @ExtendedController.observe("config", after=True)

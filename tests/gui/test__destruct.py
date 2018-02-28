@@ -196,7 +196,7 @@ def create_models():
 
     # global_gui_config.set_config_value('HISTORY_ENABLED', True)
     logger = log.get_logger(__name__)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.VERBOSE)
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
 
