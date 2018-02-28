@@ -118,6 +118,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('menu_properties', 'activate', self.on_menu_properties_activate)
         self.connect_button_to_function('refresh_all', 'activate', self.on_refresh_all_activate)
         self.connect_button_to_function('refresh_libraries', 'activate', self.on_refresh_libraries_activate)
+        self.connect_button_to_function('bake_state_machine', 'activate', self.on_bake_state_machine_activate)
         self.connect_button_to_function('quit', 'activate', self.on_quit_activate)
 
         self.connect_button_to_function('cut', 'activate', self.on_cut_selection_activate)
@@ -390,6 +391,9 @@ class MenuBarController(ExtendedController):
     @staticmethod
     def on_refresh_libraries_activate():
         gui_helper_state_machine.refresh_libraries()
+
+    def on_bake_state_machine_activate(self, widget, data=None, force=False):
+        gui_helper_state_machine.bake_selected_state_machine()
 
     def on_refresh_all_activate(self, widget, data=None, force=False):
         gui_helper_state_machine.refresh_all(force=force)
