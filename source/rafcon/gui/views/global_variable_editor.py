@@ -25,3 +25,5 @@ class GlobalVariableEditorView(View):
 
         self['new_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['lock_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['unlock_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
