@@ -196,7 +196,7 @@ def create_models():
 
     # global_gui_config.set_config_value('HISTORY_ENABLED', True)
     logger = log.get_logger(__name__)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.VERBOSE)
     for handler in logging.getLogger('gtkmvc').handlers:
         logging.getLogger('gtkmvc').removeHandler(handler)
 
@@ -269,6 +269,39 @@ def create_models():
     return logger, sm_m, state_dict
 
 
+def generate_graphs(target_object_s):
+        try:
+            import objgraph
+        except ImportError:
+            print "ImportError no generation of graph"
+            return
+
+        print "graph from object: ", target_object_s, id(target_object_s)
+
+        if isinstance(target_object_s, list):
+            target_object = target_object_s[0]
+            folder_path = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "..", "..",
+                                       target_object.__class__.__name__)
+            if os.path.exists(folder_path):
+                shutil.rmtree(folder_path)
+            for to in set(target_object_s):  # set used to additional avoid multiple identical graph generation
+                generate_graphs(to)
+        else:
+            print "generate graph"
+            target_object = target_object_s
+            folder_path = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "..", "..",
+                                       target_object.__class__.__name__)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+            graph_file_name = os.path.join(folder_path, str(id(target_object)) + "_sample-graph.png")
+            objgraph.show_backrefs(target_object,
+                                   max_depth=7, extra_ignore=(), filter=None, too_many=10,
+                                   highlight=None,
+                                   extra_info=None, refcounts=True, shortnames=False,
+                                   filename=graph_file_name)
+            print "generate graph finished"
+
+
 def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=None, log_file=True,
                                    searched_type=None):
     # initial collect to avoid cross effects
@@ -288,7 +321,18 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
     for object_class, check_it in elements:
         name = param_dict.get(object_class, None)[LOG_FILE_NAME_ID] if param_dict.get(object_class, None) else None
         found_objects_of_kind = [o for o in gc.get_objects() if isinstance(o, object_class) and o not in ignored_objects]
+        # # DEBUGGING work around used as exception -> stays in for possible reuse or will be cleaned up later ######
+        # excepted_class_name = 'MainWindowController'
+        # if any([o.__class__.__name__ == excepted_class_name for o in found_objects_of_kind]) and check_it:
+        #     mw_ctrl_list = [o for o in found_objects_of_kind if o.__class__.__name__ == excepted_class_name]
+        #     ignored_mw_ctrl_list = [o for o in ignored_objects if o.__class__.__name__ == excepted_class_name]
+        #     found_objects_of_kind = [o for o in found_objects_of_kind if not o.__class__.__name__ == excepted_class_name]
+        #     print "ignored main window controller ids", [id(o) for o in ignored_mw_ctrl_list]
+        #     print "still existing main window controller ids", [id(o) for o in mw_ctrl_list]
+        #     generate_graphs(mw_ctrl_list + ignored_objects)
+        # # DEBUGGING work around end ###############################################################################
         found_objects += found_objects_of_kind
+
         if not len(found_objects_of_kind) == 0:
             collection_counts = [len(gc.get_referrers(o)) for o in found_objects_of_kind]
             class_types_found = set([o.__class__ for o in found_objects_of_kind])
@@ -340,38 +384,6 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
         else:
             pprint(["{1} with {0} elements of type: ".format(len(referrer), referrer.__class__.__name__),
                     get_classes_in_iter(referrer)])
-
-    def generate_graphs(target_object_s):
-        try:
-            import objgraph
-        except ImportError:
-            print "ImportError no generation of graph"
-            return
-
-        print "graph from object: ", target_object_s, id(target_object_s)
-
-        if isinstance(target_object_s, list):
-            target_object = target_object_s[0]
-            folder_path = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "..", "..",
-                                       target_object.__class__.__name__)
-            if os.path.exists(folder_path):
-                shutil.rmtree(folder_path)
-            for to in set(target_object_s):  # set used to additional avoid multiple identical graph generation
-                generate_graphs(to)
-        else:
-            print "generate graph"
-            target_object = target_object_s
-            folder_path = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "..", "..",
-                                       target_object.__class__.__name__)
-            if not os.path.exists(folder_path):
-                os.makedirs(folder_path)
-            graph_file_name = os.path.join(folder_path, str(id(target_object)) + "_sample-graph.png")
-            objgraph.show_backrefs(target_object,
-                                   max_depth=7, extra_ignore=(), filter=None, too_many=10,
-                                   highlight=None,
-                                   extra_info=None, refcounts=True, shortnames=False,
-                                   filename=graph_file_name)
-            print "generate graph finished"
 
     print "ignored_objects", ignored_objects
     print "found_objects", found_objects

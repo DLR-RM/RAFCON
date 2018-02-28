@@ -116,6 +116,7 @@ class StateEditorView(View):
 
         self.set_default_paned_positions()
 
+    def prepare_the_labels(self):
         for notebook_name in self.notebook_names:
             notebook = self[notebook_name]
             for i in xrange(notebook.get_n_pages()):

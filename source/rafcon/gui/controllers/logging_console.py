@@ -45,6 +45,11 @@ class LoggingConsoleController(ExtendedController):
         self.view.set_enables(self._enables)
         self.update_filtered_buffer()
 
+    def destroy(self):
+        self.view.quit_flag = True
+        log_helpers.LoggingViewHandler.remove_logging_view('main')
+        super(LoggingConsoleController, self).destroy()
+
     def print_message(self, message, log_level, new=True):
         if self.view is None:
             return
@@ -83,7 +88,7 @@ class LoggingConsoleController(ExtendedController):
         menu.show_all()
 
     def _get_config_enables(self):
-        keys = ['INFO', 'DEBUG', 'WARNING', 'ERROR']
+        keys = ['VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR']
         return {key: self.model.config.get_config_value('LOGGING_SHOW_' + key, True) for key in keys}
 
     @ExtendedController.observe("config", after=True)

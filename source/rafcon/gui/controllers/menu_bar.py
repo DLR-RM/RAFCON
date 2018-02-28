@@ -681,13 +681,13 @@ class MenuBarController(ExtendedController):
         is_start_state_inactive = False
         if self.model.get_selected_state_machine_model():
             state_m_list = self.model.get_selected_state_machine_model().selection.states
-            selected_state = self.model.get_selected_state_machine_model().selection.get_selected_state()
+            selected_state_m = self.model.get_selected_state_machine_model().selection.get_selected_state()
             has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
-            if len(state_m_list) == 1 and isinstance(selected_state, AbstractStateModel) and \
-                    not state_m_list[0].state.is_root_state and \
-                    not isinstance(selected_state.parent.state, has_no_start_state_state_types):
+            if len(state_m_list) == 1 and isinstance(selected_state_m, AbstractStateModel) and \
+                    not selected_state_m.state.is_root_state and \
+                    not isinstance(selected_state_m.parent.state, has_no_start_state_state_types):
                 # if is start state -> enabled-box
-                if selected_state.is_start:
+                if selected_state_m.is_start:
                     self.view.set_menu_item_icon('is_start_state', constants.BUTTON_CHECK)
                 else:  # if is not start state -> empty-box
                     self.view.set_menu_item_icon('is_start_state', constants.BUTTON_SQUARE)

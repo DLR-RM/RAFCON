@@ -87,6 +87,7 @@ class StateEditorController(ExtendedController):
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
         super(StateEditorController, self).register_view(view)
+        view.prepare_the_labels()  # the preparation of the labels is done here to take into account plugin hook changes
         view['add_input_port_button'].connect('clicked', self.inputs_ctrl.on_add)
         view['add_output_port_button'].connect('clicked', self.outputs_ctrl.on_add)
         if isinstance(self.model, ContainerStateModel):

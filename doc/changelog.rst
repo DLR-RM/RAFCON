@@ -9,11 +9,22 @@ Next release
 
 - Feature
 
+    - new log level "VERBOSE", intended for development purposes
+    - state machines can now be baked (a snapshot of the state machine with all libraries can be saved)
+    - Graphviz can now be used to debug gtkmvc notifications and signals
+
 - Improvements:
+
+    - Gtk priority of logging output to the console view is now customizable via the gui_config
+    - better plugin support of changes to the state-editor tabs
 
 - Bug Fixes:
 
+    - :issue:`484` label handles are hard to grasp
     - :issue:`486` Gaphas is not emitting meta data signal if NameView is moved
+    - fix meta data for undo/redo of add object operations
+    - fix exception handling, causing issues with the graphical editor when invalid connection were created
+    - When hovering the menu bar, an exception was printed
 
 Patch releases 0.12.\*
 ----------------------
@@ -67,7 +78,6 @@ Patch releases 0.12.\*
 - New Features:
 
     - Fix logging for library state execution
-    - State machines can now be baked (a snapshot of the state machine with all libraries can be saved)
 
 - Improvements:
 
