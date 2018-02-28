@@ -265,8 +265,7 @@ class ContainerStateModel(StateModel):
             return
 
         if isinstance(info.result, Exception):
-            exc_info = sys.exc_info()
-            raise exc_info[0], exc_info[1], exc_info[2]
+            pass
         elif "add" in info.method_name:
             self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
         elif "remove" in info.method_name:
