@@ -360,6 +360,8 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
         patch_gtkmvc_model_mt()
     global gui_ready, gui_thread, gui_executed_once
     # IMPORTANT enforce gtk.gtkgl import in the python main thread to avoid segfaults
+    # noinspection PyUnresolvedReferences
+    import gtk.gtkgl
 
     print "WT thread: ", currentThread(), currentThread().ident
     gui_ready = Event()
