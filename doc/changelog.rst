@@ -11,13 +11,17 @@ Next release
 
     - new log level "VERBOSE", intended for development purposes
     - state machines can now be baked (a snapshot of the state machine with all libraries can be saved)
+    - Graphviz can now be used to debug gtkmvc notifications and signals
 
 - Improvements:
+
+    - Gtk priority of logging output to the console view is now customizable via the gui_config
 
 - Bug Fixes:
 
     - :issue:`484` label handles are hard to grasp
     - fix exception handling, causing issues with the graphical editor when invalid connection were created
+    - When hovering the menu bar, an exception was printed
 
 
 Patch releases 0.12.\*
@@ -30,12 +34,10 @@ Patch releases 0.12.\*
 
     - Provide a `PULL_REQUEST_TEMPLATE` for pull requests opened in GitHub
     - Optimize updates/redrawing of graphical editor
-    - Gtk priority of logging output to the console view is now customizable via the gui_config
 
 - Bug Fixes:
 
     - :issue:`414` state machines with libraries cannot be closed
-    - When hovering the menu bar, an exception was printed
 
 
 0.12.3
@@ -44,7 +46,6 @@ Patch releases 0.12.\*
 - Feature
     - The env variable :envvar:`RAFCON_START_MINIMIZED` allows to start RAFCON minimized, which is helpful when running
       the tests
-    - Graphviz can now be used to debug gtkmvc notifications and signals
 
 - Improvements:
 
