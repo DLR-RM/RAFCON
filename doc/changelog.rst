@@ -16,10 +16,12 @@ Next release
 - Improvements:
 
     - Gtk priority of logging output to the console view is now customizable via the gui_config
+    - better plugin support of changes to the state-editor tabs
 
 - Bug Fixes:
 
     - :issue:`484` label handles are hard to grasp
+    - fix meta data for undo/redo of add object operations
     - fix exception handling, causing issues with the graphical editor when invalid connection were created
     - When hovering the menu bar, an exception was printed
 
