@@ -205,10 +205,12 @@ class MainWindowController(ExtendedController):
         self.console_hidden = False
 
     def destroy(self):
-        # The sidebars have no corresponding controller that could destroy the views. Therefore, we have to do this here
+        super(MainWindowController, self).destroy()
+        # The sidebars have no corresponding controller that could destroy the views what cause the connected methods
+        # to stay connected to (hold references on) the main window controller. So, we do this here. TODO D-solve it
         self.left_bar_child.destroy()
         self.right_bar_child.destroy()
-        super(MainWindowController, self).destroy()
+        self.console_child.destroy()
 
     @staticmethod
     def configure_event(widget, event, name):
