@@ -58,9 +58,14 @@ class StateElementModel(MetaModel, Hashable):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __cmp__(self, other):
+        if isinstance(other, StateElementModel):
+            return self.core_element.__cmp__(other.core_element)
+
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.core_element)
-        self.update_hash_from_dict(obj_hash, self.meta)
+        if self.parent and not self.parent.state.get_library_root_state():
+            self.update_hash_from_dict(obj_hash, self.meta)
 
     @property
     def parent(self):
@@ -103,6 +108,8 @@ class StateElementModel(MetaModel, Hashable):
 
         Unregisters the model from observing itself.
         """
+        if self.core_element is None:
+            logger.verbose("Multiple calls of prepare destruction for {0}".format(self))
         self.destruction_signal.emit()
         try:
             self.unregister_observer(self)

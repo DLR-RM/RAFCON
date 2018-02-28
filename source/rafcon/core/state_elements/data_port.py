@@ -205,9 +205,15 @@ class DataPort(StateElement):
         else:
 
             if old_data_type.__name__ == "float" and data_type == "int":
-                self._default_value = int(default_value)
+                if self.default_value:
+                    self._default_value = int(default_value)
+                else:
+                    self._default_value = 0
             elif old_data_type.__name__ == "int" and data_type == "float":
-                self._default_value = float(default_value)
+                if self.default_value:
+                    self._default_value = float(default_value)
+                else:
+                    self._default_value = 0.0
             else:
                 self._default_value = None
 

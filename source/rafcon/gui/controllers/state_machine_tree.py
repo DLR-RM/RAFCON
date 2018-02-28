@@ -61,7 +61,7 @@ class StateMachineTreeController(TreeViewController):
         tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT, str)
         super(StateMachineTreeController, self).__init__(model, view, view, tree_store)
 
-        self.state_right_click_ctrl = StateMachineTreeRightClickMenuController(model, view)
+        self.add_controller("state_right_click_ctrl", StateMachineTreeRightClickMenuController(model, view))
 
         self.view_is_registered = False
 
@@ -72,16 +72,16 @@ class StateMachineTreeController(TreeViewController):
 
         self.__expansion_state = {}
 
-        self._complex_action = False
+        self._ongoing_complex_actions = []
 
         self.register()
 
     def register_view(self, view):
         """Called when the view was registered"""
+        super(StateMachineTreeController, self).register_view(view)
         self.view.connect('button_press_event', self.mouse_click)
         self.view_is_registered = True
         self.update(with_expand=True)
-        super(StateMachineTreeController, self).register_view(view)
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -140,7 +140,8 @@ class StateMachineTreeController(TreeViewController):
     @TreeViewController.observe("state_machine", after=True)
     def states_update(self, model, prop_name, info):
 
-        if is_execution_status_update_notification_from_state_machine_model(prop_name, info) or self._complex_action:
+        if is_execution_status_update_notification_from_state_machine_model(prop_name, info) or \
+                self._ongoing_complex_actions:
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
@@ -189,7 +190,7 @@ class StateMachineTreeController(TreeViewController):
         if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state',
                                                     'group_states', 'ungroup_state', 'paste', 'undo/redo']:
             if info['arg'].after is False:
-                self._complex_action = True
+                self._ongoing_complex_actions.append(info['arg'].action)
                 if info['arg'].action in ['group_states', 'paste']:
                     self.observe_model(info['arg'].action_parent_m)
                 else:
@@ -198,20 +199,23 @@ class StateMachineTreeController(TreeViewController):
     @TreeViewController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
         # TODO check why the expansion of tree is not recovered
-        if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and\
-                info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'undo/redo']:
+        if not (isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after):
+            return
+
+        action = info['arg'].action
+        if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'undo/redo']:
             target_state_m = info['arg'].action_parent_m
-        elif isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
-                info['arg'].action in ['change_state_type', 'change_root_state_type']:
+        elif action in ['change_state_type', 'change_root_state_type']:
             target_state_m = info['arg'].affected_models[-1]
         else:
             return
 
-        self._complex_action = False
-        self.relieve_model(model)
+        self._ongoing_complex_actions.remove(action)
+        if not self._ongoing_complex_actions:
+            self.relieve_model(model)
 
-        # TODO check selection warnings if not all a the tree is recreated
-        self.update()  # if target_state_m.state.is_root_state else self.update(target_state_m.parent)
+            # TODO check selection warnings if not all a the tree is recreated
+            self.update()  # if target_state_m.state.is_root_state else self.update(target_state_m.parent)
 
     @TreeViewController.observe("root_state", assign=True)
     def state_machine_notification(self, model, property, info):

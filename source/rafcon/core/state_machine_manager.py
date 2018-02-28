@@ -104,8 +104,7 @@ class StateMachineManager(Observable):
                 raise AttributeError("The state machine is already open {0}".format(state_machine.file_system_path))
         logger.debug("Add new state machine with id {0}".format(state_machine.state_machine_id))
         self._state_machines[state_machine.state_machine_id] = state_machine
-        if self.active_state_machine_id is None:
-            self.active_state_machine_id = state_machine.state_machine_id
+        return state_machine.state_machine_id
 
     @Observable.observed
     def remove_state_machine(self, state_machine_id):
@@ -114,9 +113,10 @@ class StateMachineManager(Observable):
         :param state_machine_id: the id of the state machine to be removed
         """
         import rafcon.core.singleton as core_singletons
+        removed_state_machine = None
         if state_machine_id in self._state_machines:
             logger.debug("Remove state machine with id {0}".format(state_machine_id))
-            del self._state_machines[state_machine_id]
+            removed_state_machine = self._state_machines.pop(state_machine_id)
         else:
             logger.error("There is no state_machine with state_machine_id: %s" % state_machine_id)
 
@@ -127,6 +127,7 @@ class StateMachineManager(Observable):
                 self.active_state_machine_id = self._state_machines[self._state_machines.keys()[0]].state_machine_id
             else:
                 self.active_state_machine_id = None
+        return removed_state_machine
 
     def get_active_state_machine(self):
         """Return a reference to the active state-machine

@@ -137,6 +137,10 @@ class AbstractStateModel(MetaModel, Hashable):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __cmp__(self, other):
+        if isinstance(other, AbstractStateModel):
+            return self.core_element.__cmp__(other.core_element)
+
     def __contains__(self, item):
         """Checks whether `item` is an element of the state model
 
@@ -184,26 +188,32 @@ class AbstractStateModel(MetaModel, Hashable):
     def hierarchy_level(self):
         return len(self.state.get_path().split('/'))
 
-    def prepare_destruction(self):
+    def prepare_destruction(self, recursive=True):
         """Prepares the model for destruction
 
         Recursively un-registers all observers and removes references to child models
         """
+        if self.state is None:
+            logger.verbose("Multiple calls of prepare destruction for {0}".format(self))
         self.destruction_signal.emit()
         try:
             self.unregister_observer(self)
         except KeyError:  # Might happen if the observer was already unregistered
             pass
-        for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
-            port.prepare_destruction()
+        if recursive:
+            for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
+                port.prepare_destruction()
         del self.input_data_ports[:]
         del self.output_data_ports[:]
         del self.outcomes[:]
+        self.state = None
 
     def update_hash(self, obj_hash):
-        for state_element in self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]:
+        self.update_hash_from_dict(obj_hash, self.core_element)
+        for state_element in sorted(self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
             self.update_hash_from_dict(obj_hash, state_element)
-        self.update_hash_from_dict(obj_hash, self.meta)
+        if not self.state.get_library_root_state():
+            self.update_hash_from_dict(obj_hash, self.meta)
 
     @property
     def parent(self):
@@ -394,6 +404,8 @@ class AbstractStateModel(MetaModel, Hashable):
             from rafcon.core.singleton import state_machine_manager
             if state_machine_id is not None and state_machine_id in state_machine_manager.state_machines:
                 state_machine_manager.state_machines[state_machine_id].marked_dirty = True
+        if self.state.get_library_root_state():
+            logger.warning("You have modified core property of an inner state of a library state.")
 
     # ---------------------------------------- meta data methods ---------------------------------------------
 

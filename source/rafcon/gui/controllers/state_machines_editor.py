@@ -109,10 +109,6 @@ def set_tab_label_texts(label, state_machine_m, unsaved_changes=False):
     label.set_tooltip_text(tooltip_text)
 
 
-def get_state_machine_id(state_machine_m):
-    return state_machine_m.state_machine.state_machine_id
-
-
 def add_state_machine(widget, event=None):
     """Create a new state-machine when the user clicks on the '+' next to the tabs"""
     logger.debug("Creating new state-machine...")
@@ -140,6 +136,7 @@ class StateMachinesEditorController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(StateMachinesEditorController, self).register_view(view)
         self.view['notebook'].connect("add_clicked", add_state_machine)
         self.view['notebook'].connect('switch-page', self.on_switch_page)
 
@@ -178,13 +175,13 @@ class StateMachinesEditorController(ExtendedController):
     def on_switch_page(self, notebook, page_pointer, page_num):
         # Important: The method notification_selected_sm_changed will trigger this method, which in turn will trigger
         #               the notification_selected_sm_changed method again, thus some parts of this function will be
-        #               triggerd twice => take care
+        #               triggered twice => take care
         # From documentation: Note the page parameter is a GPointer and not usable within PyGTK. Use the page_num
         # parameter to retrieve the new current page using the get_nth_page() method.
         page = notebook.get_nth_page(page_num)
         for tab_info in self.tabs.itervalues():
-            if tab_info['page'] is page:
-                new_sm_id = get_state_machine_id(tab_info['state_machine_m'])
+            if tab_info['page'] is page and tab_info['state_machine_m'].state_machine:
+                new_sm_id = tab_info['state_machine_m'].state_machine.state_machine_id
                 if self.model.selected_state_machine_id != new_sm_id:
                     self.model.selected_state_machine_id = new_sm_id
                 if self.last_focused_state_machine_ids and \
@@ -213,7 +210,7 @@ class StateMachinesEditorController(ExtendedController):
     def get_state_machine_id_for_page(self, page):
         for tab_info in self.tabs.itervalues():
             if tab_info['page'] is page:
-                return get_state_machine_id(tab_info['state_machine_m'])
+                return tab_info['state_machine_m'].state_machine.state_machine_id
 
     def add_graphical_state_machine_editor(self, state_machine_m):
         """Add to for new state machine
@@ -224,7 +221,7 @@ class StateMachinesEditorController(ExtendedController):
         """
         assert isinstance(state_machine_m, StateMachineModel)
 
-        sm_id = get_state_machine_id(state_machine_m)
+        sm_id = state_machine_m.state_machine.state_machine_id
         logger.debug("Create new graphical editor for state machine with id %s" % str(sm_id))
 
         if global_gui_config.get_config_value('GAPHAS_EDITOR', False) and GAPHAS_AVAILABLE:
@@ -301,7 +298,7 @@ class StateMachinesEditorController(ExtendedController):
             if sm_id not in self.model.state_machine_manager.state_machines:
                 state_machines_to_be_deleted.append(self.tabs[sm_id]['state_machine_m'])
         for state_machine_m in state_machines_to_be_deleted:
-            self.remove_state_machine(state_machine_m)
+            self.remove_state_machine_tab(state_machine_m)
 
     @ExtendedController.observe("state_machine", after=True)
     def change_in_state_machine_data(self, model, prop_name, info):
@@ -370,6 +367,10 @@ class StateMachinesEditorController(ExtendedController):
         force = True if event is not None and hasattr(event, 'state') and \
                         event.state & SHIFT_MASK and event.state & CONTROL_MASK else force
 
+        def remove_state_machine_m():
+            state_machine_id = state_machine_m.state_machine.state_machine_id
+            self.model.state_machine_manager.remove_state_machine(state_machine_id)
+
         def push_sm_running_dialog():
 
             message_string = "The state machine is still running. Are you sure you want to close?"
@@ -380,7 +381,7 @@ class StateMachinesEditorController(ExtendedController):
             if response_id == 1:
                 logger.debug("State machine execution is being stopped")
                 state_machine_execution_engine.stop()
-                self.remove_state_machine(state_machine_m)
+                remove_state_machine_m()
                 return True
             elif response_id == 2:
                 logger.debug("State machine execution will keep running")
@@ -388,7 +389,7 @@ class StateMachinesEditorController(ExtendedController):
 
         def push_sm_dirty_dialog():
 
-            sm_id = get_state_machine_id(state_machine_m)
+            sm_id = state_machine_m.state_machine.state_machine_id
             root_state_name = state_machine_m.root_state.state.name
             message_string = "There are unsaved changed in the state machine '{0}' with id {1}. Do you want to close " \
                              "the state machine anyway?".format(root_state_name, sm_id)
@@ -397,7 +398,7 @@ class StateMachinesEditorController(ExtendedController):
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:  # Close without saving pressed
-                self.remove_state_machine(state_machine_m)
+                remove_state_machine_m()
                 return True
             else:
                 logger.debug("Closing of state machine model canceled")
@@ -409,39 +410,33 @@ class StateMachinesEditorController(ExtendedController):
             return push_sm_running_dialog()
         # close is forced -> sm not saved
         elif force:
-            self.remove_state_machine(state_machine_m)
+            remove_state_machine_m()
             return True
         # sm dirty -> save sm request dialog
         elif state_machine_m.state_machine.marked_dirty:
             return push_sm_dirty_dialog()
         else:
-            self.remove_state_machine(state_machine_m)
+            remove_state_machine_m()
             return True
 
-    def remove_state_machine(self, state_machine_m):
+    def remove_state_machine_tab(self, state_machine_m):
         """
 
         :param state_machine_m: The selected state machine model.
         """
-        sm_id = get_state_machine_id(state_machine_m)
+        sm_id = state_machine_m.state_machine_id
         self.relieve_model(state_machine_m)
 
         copy_of_last_opened_state_machines = copy.deepcopy(self.last_focused_state_machine_ids)
 
         # the following statement will switch the selected notebook tab automatically and the history of the
         # last opened state machines will be destroyed
-        # Close tab and remove info
-        page_id = self.get_page_num(sm_id)
-        self.view.notebook.remove_page(page_id)
-        del self.tabs[sm_id]
-        self.remove_controller(sm_id)
-        self.last_focused_state_machine_ids = copy_of_last_opened_state_machines
 
-        # self.model is the state_machine_manager_model
-        # if the state_machine is removed by a core function the state_machine_editor listens to this event, closes
-        # the sm-tab and calls this function; in this case do not remove the state machine from the core smm again!
-        if sm_id in self.model.state_machine_manager.state_machines:
-            self.model.state_machine_manager.remove_state_machine(sm_id)
+        # Removing the controller causes the tab to be closed
+        self.remove_controller(sm_id)
+
+        del self.tabs[sm_id]
+        self.last_focused_state_machine_ids = copy_of_last_opened_state_machines
 
         # Open tab with next state machine
         sm_keys = self.model.state_machine_manager.state_machines.keys()
@@ -524,6 +519,8 @@ class StateMachinesEditorController(ExtendedController):
             self.model.state_machine_manager.open_state_machines(state_machine_path_by_sm_id)
         except AttributeError as e:
             logger.warning("Not all state machines were re-open because {0}".format(e))
+        import rafcon.gui.utils
+        rafcon.gui.utils.wait_for_gui()  # TODO check again this is needed  to secure that all sm-models are generated
 
         # recover tab arrangement
         self.rearrange_state_machines(page_num_by_sm_id)

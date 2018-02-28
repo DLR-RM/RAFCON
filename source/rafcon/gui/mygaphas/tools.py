@@ -202,13 +202,98 @@ class HoverItemTool(gaphas.tool.HoverTool):
         super(HoverItemTool, self).__init__(view)
         self._prev_hovered_item = None
 
+    @staticmethod
+    def dismiss_upper_items(items, item):
+        try:
+            return items[items.index(item):]
+        except ValueError:
+            return []
+
+    def _filter_library_state(self, items):
+        """Filters our child elements of library state when they cannot be hovered
+
+        Checks if hovered item is within a LibraryState and, if so, sets the hovered item to the LibraryState or
+        upper most LibraryState
+
+        :param list items: Sorted list of items beneath the cursor
+        :return: filtered items
+        :rtype: list
+        """
+        if not items:
+            return items
+
+        top_most_item = items[0]
+        # If the hovered item is e.g. a connection, we need to get the parental state
+        top_most_state_v = top_most_item if isinstance(top_most_item, StateView) else top_most_item.parent
+        state = top_most_state_v.model.state
+
+        global_gui_config = gui_helper_state_machine.global_gui_config
+        if global_gui_config.get_config_value('STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED'):
+            # select the library state instead of the library_root_state because it is hidden
+            if state.is_root_state_of_library:
+                new_topmost_item = self.view.canvas.get_view_for_core_element(state.parent)
+                return self.dismiss_upper_items(items, new_topmost_item)
+            return items
+        else:
+            # Find state_copy of uppermost LibraryState
+            library_root_state = state.get_uppermost_library_root_state()
+
+            # If the hovered element is a child of a library, make the library the hovered_item
+            if library_root_state:
+                library_state = library_root_state.parent
+                library_state_v = self.view.canvas.get_view_for_core_element(library_state)
+                return self.dismiss_upper_items(items, library_state_v)
+            return items
+
+    def _filter_hovered_items(self, items, event):
+        """Filters out items that cannot be hovered
+
+        :param list items: Sorted list of items beneath the cursor
+        :param gtk.Event event: Motion event
+        :return: filtered items
+        :rtype: list
+        """
+        items = self._filter_library_state(items)
+        if not items:
+            return items
+        top_most_item = items[0]
+        second_top_most_item = items[1] if len(items) > 1 else None
+
+        # States/Names take precedence over connections if the connections are on the same hierarchy
+        first_state_v = filter(lambda item: isinstance(item, (NameView, StateView)), items)[0]
+        first_state_v = first_state_v.parent if isinstance(first_state_v, NameView) else first_state_v
+        if first_state_v:
+            for item in items:
+                # There can be several connections above the state/name
+                # skip those and find the first non-connection-item
+                if isinstance(item, ConnectionView):
+                    # connection is on the same hierarchy level as the state/name, thus we dismiss it
+                    if self.view.canvas.get_parent(top_most_item) is not first_state_v:
+                        continue
+                break
+            items = self.dismiss_upper_items(items, item)
+            top_most_item = items[0]
+            second_top_most_item = items[1] if len(items) > 1 else None
+
+        # NameView can only be hovered if it or its parent state is selected
+        if isinstance(top_most_item, NameView):
+            state_v = second_top_most_item  # second item in the list must be the parent state of the NameView
+            if state_v not in self.view.selected_items and top_most_item not in self.view.selected_items:
+                items = items[1:]
+
+        return items
+
     def on_motion_notify(self, event):
-        super(HoverItemTool, self).on_motion_notify(event)
         from gaphas.tool import HandleFinder
         from gaphas.view import DEFAULT_CURSOR
         from gaphas.aspect import ElementHandleSelection
 
         view = self.view
+        hovered_items = view.get_items_at_point((event.x, event.y), distance=1)
+        hovered_items = self._filter_hovered_items(hovered_items, event)
+
+        view.hovered_item = hovered_items[0] if hovered_items else None
+
         if view.hovered_handle:
             handle = view.hovered_handle
             view.hovered_handle = None
@@ -219,30 +304,14 @@ class HoverItemTool(gaphas.tool.HoverTool):
         # Reset cursor
         self.view.window.set_cursor(gtk.gdk.Cursor(DEFAULT_CURSOR))
 
-        # Check if hovered_item is within a LibraryState, if so, set hovered_item to the LibraryState or
-        # upper most LibraryState
-        if view.hovered_item:
-            if isinstance(view.hovered_item, StateView):
-                state = view.hovered_item.model.state
+        def handle_hover_of_port(hovered_handle):
+            view.hovered_handle = hovered_handle
+            port_v = state_v.get_port_for_handle(hovered_handle)
+            view.queue_draw_area(*port_v.get_port_area(view))
+            if event.state & constants.MOVE_PORT_MODIFIER:
+                self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
             else:
-                # If the hovered item is e.g. a connection, we need to get the parental state
-                hovered_state_v = view.canvas.get_parent(view.hovered_item)
-                state = hovered_state_v.model.state
-
-            global_gui_config = gui_helper_state_machine.global_gui_config
-            if global_gui_config.get_config_value('STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED'):
-                # select the library state instate library_root_state because it is hidden
-                if state.is_root_state_of_library:
-                    view.hovered_item = self.view.canvas.get_view_for_core_element(state.parent)
-            else:
-                # Find state_copy of uppermost LibraryState
-                library_root_state = state.get_uppermost_library_root_state()
-
-                # If the hovered element is a child of a library, make the library the hovered_item
-                if library_root_state:
-                    library_state = library_root_state.parent
-                    library_state_v = self.view.canvas.get_view_for_core_element(library_state)
-                    view.hovered_item = library_state_v
+                self.view.window.set_cursor(gtk.gdk.Cursor(constants.CREATION_CURSOR))
 
         if isinstance(view.hovered_item, PortView):
             if event.state & constants.MOVE_PORT_MODIFIER:
@@ -256,13 +325,7 @@ class HoverItemTool(gaphas.tool.HoverTool):
 
             # Hover over port => show hover state of port and different cursor
             if hovered_handle and hovered_handle not in state_v.corner_handles:
-                view.hovered_handle = hovered_handle
-                port_v = state_v.get_port_for_handle(hovered_handle)
-                view.queue_draw_area(*port_v.get_port_area(view))
-                if event.state & constants.MOVE_PORT_MODIFIER:
-                    self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
-                else:
-                    self.view.window.set_cursor(gtk.gdk.Cursor(constants.CREATION_CURSOR))
+                handle_hover_of_port(hovered_handle)
 
             # Hover over corner/resize handles => show with cursor
             elif hovered_handle and hovered_handle in state_v.corner_handles:
@@ -273,12 +336,17 @@ class HoverItemTool(gaphas.tool.HoverTool):
         # NameView should only be hovered, if its state is selected
         elif isinstance(view.hovered_item, NameView):
             state_v = self.view.canvas.get_parent(view.hovered_item)
-            if state_v not in self.view.selected_items and view.hovered_item not in self.view.selected_items:
+            distance = state_v.border_width / 2.
+            _, hovered_handle = HandleFinder(state_v, view).get_handle_at_point(pos, distance)
+
+            # Hover over port => show hover state of port and different cursor
+            if hovered_handle and hovered_handle not in state_v.corner_handles:
                 view.hovered_item = state_v
+                handle_hover_of_port(hovered_handle)
             else:
                 name_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos)
                 # Hover over corner/resize handles => show with cursor
-                if hovered_handle:
+                if name_v:
                     index = name_v.handles().index(hovered_handle)
                     cursors = ElementHandleSelection.CURSORS
                     self.view.window.set_cursor(cursors[index])
@@ -694,6 +762,7 @@ class ConnectionModificationTool(ConnectionTool):
 class RightClickTool(gaphas.tool.ItemTool):
     def __init__(self, view=None, buttons=(3,)):
         super(RightClickTool, self).__init__(view, buttons)
+        # TODO correct destruction of the StateRightClickMenu-Controller
         self.sm_right_click_menu = StateRightClickMenuGaphas()
 
     def on_button_press(self, event):

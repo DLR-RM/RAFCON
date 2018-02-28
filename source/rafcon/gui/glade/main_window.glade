@@ -984,8 +984,8 @@
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <child>
-                                              <object class="GtkCheckButton" id="button_show_error">
-                                                <property name="label" translatable="yes">ERROR</property>
+                                              <object class="GtkCheckButton" id="button_show_verbose">
+                                                <property name="label" translatable="yes">VERBOSE</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="receives_default">False</property>
@@ -1002,8 +1002,8 @@
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkCheckButton" id="button_show_warning">
-                                                <property name="label" translatable="yes">WARNING</property>
+                                              <object class="GtkCheckButton" id="button_show_debug">
+                                                <property name="label" translatable="yes">DEBUG</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="receives_default">False</property>
@@ -1038,8 +1038,8 @@
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkCheckButton" id="button_show_debug">
-                                                <property name="label" translatable="yes">DEBUG</property>
+                                              <object class="GtkCheckButton" id="button_show_warning">
+                                                <property name="label" translatable="yes">WARNING</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="receives_default">False</property>
@@ -1053,6 +1053,24 @@
                                                 <property name="padding">5</property>
                                                 <property name="pack_type">end</property>
                                                 <property name="position">3</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkCheckButton" id="button_show_error">
+                                                <property name="label" translatable="yes">ERROR</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="receives_default">False</property>
+                                                <property name="focus_on_click">False</property>
+                                                <property name="active">True</property>
+                                                <property name="draw_indicator">True</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="fill">False</property>
+                                                <property name="padding">5</property>
+                                                <property name="pack_type">end</property>
+                                                <property name="position">5</property>
                                               </packing>
                                             </child>
                                           </object>

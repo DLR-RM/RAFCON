@@ -64,6 +64,12 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
     def __del__(self):
         self._parent = None
 
+    def __cmp__(self, other):
+        if isinstance(other, StateElement):
+            if self.__class__ is other.__class__:
+                return self.core_element_id.__cmp__(other.core_element_id)
+            return -1 if self.__class__.__name__ < other.__class__.__name__ else 1
+
     @property
     def parent(self):
         """Getter for the parent state of the state element
@@ -109,8 +115,8 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
                     raise RecoveryModeException("{0} invalid within state \"{1}\" (id {2}): {3}".format(
                         class_name, parent.name, parent.state_id, message), do_delete_item=do_delete_item)
                 else:
-                    raise ValueError("{0} invalid within state \"{1}\" (id {2}): {3}".format(
-                        class_name, parent.name, parent.state_id, message))
+                    raise ValueError("{0} invalid within state \"{1}\" (id {2}): {3} {4}".format(
+                        class_name, parent.name, parent.state_id, message, self))
 
     @property
     def state_element_id(self):

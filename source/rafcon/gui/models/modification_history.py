@@ -96,8 +96,18 @@ class ModificationsHistoryModel(ModelMT):
             self.relieve_model(self.state_machine_model)
             assert self.__buffered_root_state_model is self.state_machine_model.root_state
             self.relieve_model(self.__buffered_root_state_model)
+            self.state_machine_model = None
+            self.__buffered_root_state_model = None
+            self.modifications.prepare_destruction()
         except KeyError:  # Might happen if the observer was already unregistered
             pass
+        if self.active_action:
+            try:
+                self.active_action.prepare_destruction()
+            except Exception as e:
+                logger.exception("The modification history has had left over an active-action and "
+                                 "could not destroy it {0}.".format(e))
+            self.active_action = None
 
     def get_state_element_meta_from_internal_tmp_storage(self, state_path):
         path_elements = state_path.split('/')
@@ -213,7 +223,8 @@ class ModificationsHistoryModel(ModelMT):
         else:
             logger.info("Active Action {} is interrupted and removed.".format(info['prop_name']))
         # self.busy = True
-        # self.actual_action.undo()
+        self.active_action.prepare_destruction()
+        # self.active_action = None
         # self.busy = False
         self.locked = False
         self.count_before = 0
@@ -460,15 +471,15 @@ class ModificationsHistoryModel(ModelMT):
             return
         overview = NotificationOverview(info, False, self.__class__.__name__)
         # logger.info("meta_changed: \n{0}".format(overview))
-        # WORKAROUND: avoid multiple signals of the root_state, by comparing first and last model in overview
-        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:  # TODO test why those occur
-            # print "ALL"
+        # filter self emit and avoid multiple signals of the root_state, by comparing first and last model in overview
+        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:
+            # print "ALL", overview['signal'][0].change.startswith('sm_notification')
             return
-
         if self.busy:
             return
         if overview['signal'][-1]['origin'] == 'load_meta_data':
             return
+
         if self.active_action is None or overview['signal'][-1]['change'] in ['append_initial_change']:
             # update last actions after_storage -> meta-data
             self.re_initiate_meta_data()
@@ -575,7 +586,7 @@ class ModificationsHistoryModel(ModelMT):
             if info['arg'].action in ['change_state_type', 'paste', 'cut',
                                       'substitute_state', 'group_states', 'ungroup_state']:
 
-                if not model.state.is_root_state:
+                if self.__buffered_root_state_model is not model:
                     self.relieve_model(model)
                     # print "RELIEVE MODEL", model
 
@@ -782,6 +793,9 @@ class HistoryTreeElement(object):
     def __str__(self):
         return "prev_id: {0} next_id: {1} and other next_ids: {2}".format(self._prev_id, self._next_id, self._old_next_ids)
 
+    def prepare_destruction(self):
+        self.action.prepare_destruction()
+
     @property
     def prev_id(self):
         return self._prev_id
@@ -840,6 +854,12 @@ class ModificationsHistory(Observable):
 
         # insert initial dummy element
         self.insert_action(ActionDummy())
+
+    def prepare_destruction(self):
+        del self.trail_history[:]
+        for tree_element in self.all_time_history:
+            tree_element.prepare_destruction()
+        del self.all_time_history[:]
 
     @Observable.observed
     def insert_action(self, action):

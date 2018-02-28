@@ -22,7 +22,7 @@ class PyTest(TestCommand):
     def initialize_options(self):
         TestCommand.initialize_options(self)
         # Add further test folder with 'or my_test_folder'
-        self.pytest_args = '-vx -k "core or gui or share_elements"'
+        self.pytest_args = '-vx -s -k "core or gui or share_elements"'
 
     def run_tests(self):
         import shlex
@@ -126,7 +126,7 @@ setup(
     ],
 
     setup_requires=['Sphinx>=1.4', 'Pygments>=2.0'] + global_requirements,
-    tests_require=['pytest', 'pytest-catchlog'] + global_requirements,
+    tests_require=['pytest', 'pytest-catchlog', 'graphviz'] + global_requirements,
     install_requires=global_requirements,
 
     dependency_links=[

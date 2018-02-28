@@ -113,6 +113,11 @@ class ExecutionEngine(Observable):
             logger.debug("Start execution engine ...")
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
+
+            if not self.state_machine_manager.active_state_machine_id:
+                logger.error("There exists no active state machine!")
+                return
+
             self.set_execution_mode(StateMachineExecutionStatus.STARTED)
 
             self.start_state_paths = []
@@ -142,6 +147,7 @@ class ExecutionEngine(Observable):
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
+        self.__running_state_machine = None
 
     def join(self, timeout=None):
         """Blocking wait for the execution to finish
@@ -407,7 +413,8 @@ class ExecutionEngine(Observable):
             state_machine = storage.load_state_machine_from_path(path)
             rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
-        rafcon.core.singleton.state_machine_execution_engine.start(start_state_path=start_state_path)
+        rafcon.core.singleton.state_machine_execution_engine.start(
+            state_machine.state_machine_id, start_state_path=start_state_path)
 
         if wait_for_execution_finished:
             self.join()

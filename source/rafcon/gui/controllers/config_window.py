@@ -64,6 +64,7 @@ class ConfigWindowController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(ConfigWindowController, self).register_view(view)
         self.view['add_library_button'].connect('clicked', self._on_add_library)
         self.view["remove_library_button"].connect('clicked', self._on_remove_library)
 

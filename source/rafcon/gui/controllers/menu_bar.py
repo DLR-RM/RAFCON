@@ -86,8 +86,13 @@ class MenuBarController(ExtendedController):
         self.main_window_view.left_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.console_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
 
+    def destroy(self):
+        super(MenuBarController, self).destroy()
+        self.full_screen_window.destroy()
+
     def register_view(self, view):
         """Called when the View was registered"""
+        super(MenuBarController, self).register_view(view)
         data_flow_mode = global_runtime_config.get_config_value("DATA_FLOW_MODE", False)
         view["data_flow_mode"].set_active(data_flow_mode)
 
@@ -680,13 +685,13 @@ class MenuBarController(ExtendedController):
         is_start_state_inactive = False
         if self.model.get_selected_state_machine_model():
             state_m_list = self.model.get_selected_state_machine_model().selection.states
-            selected_state = self.model.get_selected_state_machine_model().selection.get_selected_state()
+            selected_state_m = self.model.get_selected_state_machine_model().selection.get_selected_state()
             has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
-            if len(state_m_list) == 1 and isinstance(selected_state, AbstractStateModel) and \
-                    not state_m_list[0].state.is_root_state and \
-                    not isinstance(selected_state.parent.state, has_no_start_state_state_types):
+            if len(state_m_list) == 1 and isinstance(selected_state_m, AbstractStateModel) and \
+                    not selected_state_m.state.is_root_state and \
+                    not isinstance(selected_state_m.parent.state, has_no_start_state_state_types):
                 # if is start state -> enabled-box
-                if selected_state.is_start:
+                if selected_state_m.is_start:
                     self.view.set_menu_item_icon('is_start_state', constants.BUTTON_CHECK)
                 else:  # if is not start state -> empty-box
                     self.view.set_menu_item_icon('is_start_state', constants.BUTTON_SQUARE)

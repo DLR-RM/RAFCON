@@ -7,9 +7,87 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 
+- Feature
+
+    - new log level "VERBOSE", intended for development purposes
+    - state machines can now be baked (a snapshot of the state machine with all libraries can be saved)
+    - Graphviz can now be used to debug gtkmvc notifications and signals
+
+- Improvements:
+
+    - Gtk priority of logging output to the console view is now customizable via the gui_config
+    - better plugin support of changes to the state-editor tabs
+
+- Bug Fixes:
+
+    - :issue:`484` label handles are hard to grasp
+    - fix meta data for undo/redo of add object operations
+    - fix exception handling, causing issues with the graphical editor when invalid connection were created
+    - When hovering the menu bar, an exception was printed
+
 
 Patch releases 0.12.\*
 ----------------------
+
+0.12.4
+""""""
+
+- Improvements:
+
+    - Provide a `PULL_REQUEST_TEMPLATE` for pull requests opened in GitHub
+    - Optimize updates/redrawing of graphical editor
+
+- Bug Fixes:
+
+    - :issue:`414` state machines with libraries cannot be closed
+
+
+0.12.3
+""""""
+
+- Feature
+    - The env variable :envvar:`RAFCON_START_MINIMIZED` allows to start RAFCON minimized, which is helpful when running
+      the tests
+
+- Improvements:
+
+    - :issue:`414` Memory optimizations: The memory usage should no longer increase over time, as unused objects are now freed
+    - A new/extended test verifies the correct destruction of removed elements
+    - Optimize NameView font size calculations, noticeable during zooming
+    - ports outside of the visible view are no longer drawn, which increases the performance, especially while
+      zooming in large state machines
+    - Hash calculations of state machines
+    - Placement of NameView
+    - drawing of connections, ports and labels, especially when deeply nested
+    - :issue:`469` unit test refactorings
+
+- Bug Fixes:
+
+    - :issue:`459` execution_log utils; backward compatibility missing and :issue:`458` ReturnItem
+    - :issue:`454` group/ungroup is not preserving meta data recursively
+    - :issue:`452` Session restore, gaphas and extended controller causes exception when closing RAFCON
+    - :issue:`450` Names of states inside a library become smaller
+    - :issue:`447` Hashes of state machine in storage different then the reopened state machine after saving it
+    - :issue:`449` ports (of transitions or data flows) cannot be moved
+    - :issue:`471` selection of states in hierarchies >= 5 not possible
+
+
+0.12.2
+""""""
+
+- New Features:
+
+    - Fix logging for library state execution
+
+- Improvements:
+
+    - Improve execution logging (semantic data is supported now)
+    - :issue:`445` Tests need to ensure correct import order for GUI singletons
+
+- Bug Fixes:
+
+    - :issue:`446` "show content" leads to sm marked as modified
+
 
 0.12.1
 """"""
@@ -21,14 +99,11 @@ Patch releases 0.12.\*
 
 - Improvements:
 
-    -
+    - :issue:`415` Increase visibility of library content
 
 - Bug Fixes:
 
-    - :issue:`427`
-    - :issue:`428`
-    - :issue:`430`
-    - :issue:`431`
+    - :issue:`378` Editing default values does not work sometimes
 
 
 0.12.0
@@ -85,7 +160,7 @@ Patch releases 0.11.\*
 - New Features:
 
     - Move into viewport: Double click on elements in several widgets cause the element to moved into the viewport
-    (not yet supported by all widgets)
+      (not yet supported by all widgets)
     - Usage of selection modifiers (e.g. <Ctrl>, <Shift>) should now be more consistent
     - Ports in the graphical editor can now be selection
     - The port selection is synchronized between the graphical editor and the other widgets

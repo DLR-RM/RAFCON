@@ -53,11 +53,12 @@ class StateMachineModel(ModelMT, Hashable):
     action_signal = Signal()
     state_action_signal = Signal()
     sm_selection_changed_signal = Signal()
+    destruction_signal = Signal()
 
     suppress_new_root_state_model_one_time = False
 
     __observables__ = ("state_machine", "root_state", "meta_signal", "state_meta_signal", "sm_selection_changed_signal",
-                       "action_signal", "state_action_signal")
+                       "action_signal", "state_action_signal", "destruction_signal")
 
     def __init__(self, state_machine, meta=None, load_meta_data=True):
         """Constructor
@@ -67,6 +68,7 @@ class StateMachineModel(ModelMT, Hashable):
         assert isinstance(state_machine, StateMachine)
 
         self.state_machine = state_machine
+        self.state_machine_id = state_machine.state_machine_id
 
         root_state = self.state_machine.root_state
         if isinstance(root_state, ContainerState):
@@ -83,6 +85,7 @@ class StateMachineModel(ModelMT, Hashable):
         self.action_signal = Signal()
         self.state_action_signal = Signal()
         self.sm_selection_changed_signal = Signal()
+        self.destruction_signal = Signal()
 
         self.temp = Vividict()
 
@@ -124,9 +127,6 @@ class StateMachineModel(ModelMT, Hashable):
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
 
-    def __del__(self):
-        self.destroy()
-
     @property
     def core_element(self):
         return self.state_machine
@@ -144,6 +144,9 @@ class StateMachineModel(ModelMT, Hashable):
 
         Unregister itself as observer from the state machine and the root state
         """
+        if self.state_machine is None:
+            logger.verbose("Multiple calls of prepare destruction for {0}".format(self))
+        self.destruction_signal.emit()
         if self.history is not None:
             self.history.prepare_destruction()
         if self.auto_backup is not None:
@@ -155,6 +158,8 @@ class StateMachineModel(ModelMT, Hashable):
             pass
         with self.state_machine.modification_lock():
             self.root_state.prepare_destruction()
+        self.root_state = None
+        self.state_machine = None
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.root_state)
@@ -289,15 +294,12 @@ class StateMachineModel(ModelMT, Hashable):
         if info.method_name != 'change_root_state_type':
             return
 
-        self.change_root_state_type.__func__.last_notification_model = model
-        self.change_root_state_type.__func__.last_notification_prop_name = prop_name
-        self.change_root_state_type.__func__.last_notification_info = info
-
         if 'before' in info:
-            # logger.info("BEFORE {0}".format(info.method_name))
             self._send_root_state_notification(model, prop_name, info)
-        # else:
-        #     logger.info("AFTER {0}".format(info.method_name))
+        else:
+            # Do not forward the notification yet, but store its parameters locally at the function
+            # The function helpers.state.change_state_type will forward the notification after some preparation
+            self.change_root_state_type.__func__.suppressed_notification_parameters = [model, prop_name, info]
 
     def _send_root_state_notification(self, model, prop_name, info):
         cause = 'root_state_change'
@@ -306,10 +308,10 @@ class StateMachineModel(ModelMT, Hashable):
                 self.state_machine._notify_method_before(self.state_machine, cause, (self.state_machine, ), info)
             elif 'after' in info:
                 self.state_machine._notify_method_after(self.state_machine, cause, None, (self.state_machine, ), info)
-        except AssertionError:
+        except AssertionError as e:
             # This fixes an AssertionError raised by GTKMVC. It can probably occur, when a controller unregisters
             # itself from a model, while the notification chain still propagates upwards.
-            pass
+            logger.exception("A exception occurs in the _send_root_state_notification method {0}.".format(e))
 
     #######################################################
     # --------------------- meta data methods ---------------------

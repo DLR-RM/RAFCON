@@ -75,6 +75,35 @@ class LibraryStateModel(AbstractStateModel):
         else:
             logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(self.state)))
 
+    def prepare_destruction(self, recursive=True):
+        """Prepares the model for destruction
+
+        Recursively un-registers all observers and removes references to child models
+        """
+        self.destruction_signal.emit()
+        try:
+            self.unregister_observer(self)
+        except KeyError:  # Might happen if the observer was already unregistered
+            pass
+        if recursive:
+
+            if self.state_copy:
+                self.state_copy.prepare_destruction(recursive)
+                self.state_copy = None
+            else:
+                logger.verbose("Multiple calls of prepare destruction for {0}".format(self))
+
+            # The next lines are commented because not needed and create problems if used why it is an open to-do
+            # for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
+            #     if port.core_element is not None:
+            #         # TODO setting data ports None in a Library state cause gtkmvc attribute getter problems why?
+            #         port.prepare_destruction()
+
+        del self.input_data_ports[:]
+        del self.output_data_ports[:]
+        del self.outcomes[:]
+        self.state = None
+
     def __eq__(self, other):
         # logger.info("compare method")
         if isinstance(other, LibraryStateModel):
@@ -91,6 +120,7 @@ class LibraryStateModel(AbstractStateModel):
         return self.__copy__()
 
     def update_hash(self, obj_hash):
+        super(LibraryStateModel, self).update_hash(obj_hash)
         self.update_hash_from_dict(obj_hash, self.state_copy)
 
     def _load_input_data_port_models(self):

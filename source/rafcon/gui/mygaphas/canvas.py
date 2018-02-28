@@ -14,6 +14,9 @@
 import gaphas.canvas
 from gaphas.item import Item
 
+from rafcon.utils import log
+logger = log.get_logger(__name__)
+
 
 class MyCanvas(gaphas.canvas.Canvas):
 
@@ -25,43 +28,50 @@ class MyCanvas(gaphas.canvas.Canvas):
         self._core_view_map = {}
         self._model_view_map = {}
 
+    def _add_view_maps(self, view):
+        model = view.model
+        if model.core_element in self._core_view_map:
+            raise RuntimeError("Core element is already existing in _core_view_map")
+        if model in self._model_view_map:
+            raise RuntimeError("Model is already existing in _model_view_map")
+        self._core_view_map[model.core_element] = view
+        self._model_view_map[model] = view
+
+    def _remove_view_maps(self, view):
+        model = view.model
+        del self._model_view_map[model]
+        # Do not retrieve core element from model, as the model could have already been destroyed
+        core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
+        del self._core_view_map[core_element]
+
     def add(self, item, parent=None, index=None):
         from rafcon.gui.mygaphas.items.state import StateView
-        from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
-        if isinstance(item, (StateView, DataFlowView, TransitionView)):
-            model = item.model
-            self._core_view_map[model.core_element] = item
-            self._model_view_map[model] = item
+        from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView
+        if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
+            # print "add view", item
+            self._add_view_maps(item)
         super(MyCanvas, self).add(item, parent, index)
 
     def remove(self, item):
         from rafcon.gui.mygaphas.items.state import StateView
-        from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
-
-        def delete_model_from_maps(model):
-            try:
-                del self._core_view_map[model.core_element]
-                del self._model_view_map[model]
-            except KeyError:
-                from rafcon.gui.models.library_state import LibraryStateModel
-                if not isinstance(model.parent, LibraryStateModel):
-                    # TODO: Check if this exception can really be ignored
-                    raise
-        if isinstance(item, StateView):
-            delete_model_from_maps(item.model)
-            map(delete_model_from_maps, [outcome.model for outcome in item.outcomes])
-            map(delete_model_from_maps, [input.model for input in item.inputs])
-            map(delete_model_from_maps, [output.model for output in item.outputs])
-        elif isinstance(item, (DataFlowView, TransitionView)):
-            delete_model_from_maps(item.model)
+        from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, DataFlowView
+        if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
+            # print "remove", item
+            self._remove_view_maps(item)
         super(MyCanvas, self).remove(item)
 
     def add_port(self, port_v):
-        port_m = port_v.model
-        self._core_view_map[port_m.core_element] = port_v
-        self._model_view_map[port_m] = port_v
+        # The LibraryState and its state_copy share the same port core_elements
+        if not port_v.parent.is_root_state_of_library:
+            self._add_view_maps(port_v)
+
+    def remove_port(self, port_v):
+        # The LibraryState and its state_copy share the same port core_elements
+        if not port_v.parent.is_root_state_of_library:
+            self._remove_view_maps(port_v)
 
     def exchange_model(self, old_model, new_model):
+        # print "exchange model", old_model, new_model
         view = self._core_view_map[old_model.core_element]
         del self._core_view_map[old_model.core_element]
         del self._model_view_map[old_model]
@@ -76,7 +86,6 @@ class MyCanvas(gaphas.canvas.Canvas):
         if not isinstance(item, Item):
             return item.parent
         return super(MyCanvas, self).get_parent(item)
-            
 
     def get_first_view(self):
         """Return first registered view object
@@ -125,10 +134,13 @@ class MyCanvas(gaphas.canvas.Canvas):
                 return item
         return None
 
-    def perform_update(self):
+    def wait_for_update(self, trigger_update=False):
         """Update canvas and handle all events in the gtk queue
+
+        :param bool trigger_update: Whether to call update_now() or not
         """
-        self.update_now()
+        if trigger_update:
+            self.update_now()
 
         import gtk
         import gobject

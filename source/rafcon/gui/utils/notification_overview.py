@@ -51,13 +51,14 @@ class NotificationOverview(dict):
     _generation_time = 0.
 
     def __init__(self, info=None, with_prints=False, initiator_string=None):
-
+        from weakref import ref
         NotificationOverview._count += 1
         start_time = time.time()
         if info is None:
             info = self.empty_info
         self.initiator = initiator_string
         self.info = info
+        # self._info = ref(info)
         self.__type = 'before'
         if 'after' in info:
             self.__type = 'after'
@@ -78,6 +79,11 @@ class NotificationOverview(dict):
     #     with open(constants.RAFCON_TEMP_PATH_BASE + '/NO_debug_log_file.txt', 'a+') as f:
     #         f.write(string)
     #     f.closed
+
+    def prepare_destruction(self):
+        self.info = None
+        self. _overview_dict.clear()
+        dict.clear(self)
 
     def __str__(self):
         if self.initiator is not None:
@@ -163,6 +169,9 @@ class NotificationOverview(dict):
             # change
             s += "\n{0}affected_models={1}".format(level + "\t", meta_signal_msg_tuple.affected_models)
             meta_signal_dict['affected_models'] = meta_signal_msg_tuple.affected_models
+            if meta_signal_msg_tuple.after:
+                s += "\n{0}result={1}".format(level + "\t", meta_signal_msg_tuple.result)
+                meta_signal_dict['result'] = meta_signal_msg_tuple.result
 
             return s
 

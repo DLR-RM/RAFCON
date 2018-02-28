@@ -40,9 +40,15 @@ class LoggingConsoleController(ExtendedController):
         log_helpers.LoggingViewHandler.add_logging_view('main', self)
 
     def register_view(self, view):
+        super(LoggingConsoleController, self).register_view(view)
         view.text_view.connect('populate_popup', self.add_clear_menu_item)
         self.view.set_enables(self._enables)
         self.update_filtered_buffer()
+
+    def destroy(self):
+        self.view.quit_flag = True
+        log_helpers.LoggingViewHandler.remove_logging_view('main')
+        super(LoggingConsoleController, self).destroy()
 
     def print_message(self, message, log_level, new=True):
         if self.view is None:
@@ -82,20 +88,7 @@ class LoggingConsoleController(ExtendedController):
         menu.show_all()
 
     def _get_config_enables(self):
-        keys = ['INFO', 'DEBUG', 'WARNING', 'ERROR']
-        return {key: self.model.config.get_config_value('LOGGING_SHOW_' + key, True) for key in keys}
-
-    @ExtendedController.observe("config", after=True)
-    def model_changed(self, model, prop_name, info):
-        """ React to configuration changes """
-        current_enables = self._get_config_enables()
-        if not self._enables == current_enables:
-            self._enables = current_enables
-            self.view.set_enables(self._enables)
-            self.update_filtered_buffer()
-
-    def _get_config_enables(self):
-        keys = ['INFO', 'DEBUG', 'WARNING', 'ERROR']
+        keys = ['VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR']
         return {key: self.model.config.get_config_value('LOGGING_SHOW_' + key, True) for key in keys}
 
     @ExtendedController.observe("config", after=True)

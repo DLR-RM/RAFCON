@@ -68,6 +68,13 @@ class StateTransitionsListController(LinkageListController):
         self.debug_log = False
         super(StateTransitionsListController, self).__init__(model, view, view.get_top_widget(), list_store, logger)
 
+    def destroy(self):
+        self.view['from_state_col'].set_cell_data_func(self.view['from_state_combo'], None)
+        self.view['to_state_col'].set_cell_data_func(self.view['to_state_combo'], None)
+        self.view['from_outcome_col'].set_cell_data_func(self.view['from_outcome_combo'], None)
+        self.view['to_outcome_col'].set_cell_data_func(self.view['to_outcome_combo'], None)
+        super(StateTransitionsListController, self).destroy()
+
     def register_view(self, view):
         """Called when the View was registered
         """
@@ -657,20 +664,16 @@ class StateTransitionsListController(LinkageListController):
 
 class StateTransitionsEditorController(ExtendedController):
     def __init__(self, model, view):
-        ExtendedController.__init__(self, model, view)
+        super(StateTransitionsEditorController, self).__init__(model, view)
         self.trans_list_ctrl = StateTransitionsListController(model, view.transitions_listView)
-        # self.add_controller('trans_list_ctrl', self.trans_list_ctrl)
-
-    def destroy(self):
-        # TODO fix destroy order or refactor widget to possibly use ExtendedController destruct method
-        # self.trans_list_ctrl.relieve_all_models()
-        super(StateTransitionsEditorController, self).destroy()
+        self.add_controller('trans_list_ctrl', self.trans_list_ctrl)
 
     def register_view(self, view):
         """Called when the View was registered
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
+        super(StateTransitionsEditorController, self).register_view(view)
         view['add_t_button'].connect('clicked', self.trans_list_ctrl.on_add)
         view['remove_t_button'].connect('clicked', self.trans_list_ctrl.on_remove)
         view['connected_to_t_checkbutton'].connect('toggled', self.toggled_button, 'transitions_external')

@@ -58,10 +58,31 @@ class AbstractTreeViewController(ExtendedController):
 
         self.active_entry_widget = None
         self.widget_columns = self.tree_view.get_columns()
+        self.signal_handlers = []
+
+    def destroy(self):
+        super(AbstractTreeViewController, self).destroy()
+        # self.tree_view.destroy() # does not help
+        # self._tree_selection.destroy() # creates problems with selection update notification
+        # print "disconnect in", self.__class__.__name__, self.signal_handlers
+        for widget, handler_id in self.signal_handlers:
+            # print "disconnect", widget, handler_id
+            widget.disconnect(handler_id)
+            # widget.destroy() # creates problems with selection update notification
+        self.signal_handlers = []
+        for column in self.widget_columns:
+            renderers = column.get_cell_renderers()
+            for r in renderers:
+                r.ctrl = None
+                r.destroy()
 
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
-        self._tree_selection.connect('changed', self.selection_changed)
+        super(AbstractTreeViewController, self).register_view(view)
+        self.signal_handlers.append((self._tree_selection,
+                                     self._tree_selection.connect('changed', self.selection_changed)))
+        # self.handler_ids.append((self.tree_view,
+        #                          self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)))
         self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         self.update_selection_sm_prior()
@@ -711,11 +732,11 @@ class TreeViewController(AbstractTreeViewController):
             self.iter_tree_with_handed_function(self.update_selection_self_prior_condition,
                                                 sm_selected_model_set, selected_model_list)
             sm_selection.handle_prepared_selection_of_core_class_elements(self.CORE_ELEMENT_CLASS, sm_selected_model_set)
-            # TODO check if we can solve the difference that occurs e.g. while complex actions
+            # TODO check if we can solve the difference that occurs e.g. while complex actions?, or same state paths!
             # -> models in selection for core element not in the tree the function iter tree + condition tolerates this
             if not set(selected_model_list) == sm_selected_model_set:
                 self._logger.debug("Difference between tree view selection: \n{0} \nand state machine selection: \n{1}"
-                                   "".format(selected_model_list, sm_selected_model_set))
+                                   "".format(set(selected_model_list), sm_selected_model_set))
 
         # TODO check why sometimes not consistent with sm selection. e.g while modification history test
         if self.check_selection_consistency(sm_check=False):
@@ -753,7 +774,7 @@ class TreeViewController(AbstractTreeViewController):
             else:
                 self.tree_view.get_selection().select_path(path)
         else:
-            self.logger.warning("Path not valid: {0} (by_cursor {1})".format(str(core_element_id), str(by_cursor)))
+            self._logger.warning("Path not valid: {0} (by_cursor {1})".format(str(core_element_id), str(by_cursor)))
 
     def tree_view_keypress_callback(self, widget, event):
         """Tab back and forward tab-key motion in list widget and the scrollbar motion to follow key cursor motions

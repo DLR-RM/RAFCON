@@ -77,25 +77,25 @@ class KeepRectangleWithinConstraint(Constraint):
 
         updated = False
         # Left edge (west)
-        if self.parent_nw[0].value > self.child_nw[0].value - margin:
+        if self.parent_nw[0].value > self.child_nw[0].value - margin + EPSILON:
             width = child_width()
             _update(self.child_nw[0], self.parent_nw[0].value + margin)
             _update(self.child_se[0], self.child_nw[0].value + width)
             updated = True
         # Right edge (east)
-        elif self.parent_se[0].value < self.child_se[0].value + margin:
+        elif self.parent_se[0].value < self.child_se[0].value + margin - EPSILON:
             width = child_width()
             _update(self.child_se[0], self.parent_se[0].value - margin)
             _update(self.child_nw[0], self.child_se[0].value - width)
             updated = True
         # Upper edge (north)
-        if self.parent_nw[1].value > self.child_nw[1].value - margin:
+        if self.parent_nw[1].value > self.child_nw[1].value - margin + EPSILON:
             height = child_height()
             _update(self.child_nw[1], self.parent_nw[1].value + margin)
             _update(self.child_se[1], self.child_nw[1].value + height)
             updated = True
         # Lower edge (south)
-        elif self.parent_se[1].value < self.child_se[1].value + margin:
+        elif self.parent_se[1].value < self.child_se[1].value + margin - EPSILON:
             height = child_height()
             _update(self.child_se[1], self.parent_se[1].value - margin)
             _update(self.child_nw[1], self.child_se[1].value - height)

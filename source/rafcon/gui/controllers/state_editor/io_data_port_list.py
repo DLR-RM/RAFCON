@@ -56,7 +56,13 @@ class DataPortListController(ListViewController):
     data_port_model_list = None
 
     def __init__(self):
-        raise NotImplementedError("You have to instatiate a subclass of DataPortListController")
+        raise NotImplementedError("You have to instantiate a subclass of DataPortListController")
+
+    def destroy(self):
+        if self.model.state.get_library_root_state() is None and \
+                (isinstance(self.view, InputPortsListView) or isinstance(self.view, OutputPortsListView)):
+            self.view['default_value_col'].set_cell_data_func(self.view['default_value_text'], None)
+        super(DataPortListController, self).destroy()
 
     def register_view(self, view):
         """Called when the View was registered"""

@@ -21,6 +21,7 @@
 
 """
 
+import os
 import logging
 import gtk
 from functools import partial
@@ -87,9 +88,9 @@ class MainWindowController(ExtendedController):
         ######################################################
         # logging console
         ######################################################
-        self.logging_console_controller = LoggingConsoleController(gui_singletons.gui_config_model,
+        logging_console_controller = LoggingConsoleController(gui_singletons.gui_config_model,
                                                                    view.logging_console_view)
-        self.add_controller('logging_console_controller', self.logging_console_controller)
+        self.add_controller('logging_console_controller', logging_console_controller)
 
         ######################################################
         # library tree
@@ -203,12 +204,21 @@ class MainWindowController(ExtendedController):
         self.right_bar_hidden = False
         self.console_hidden = False
 
+    def destroy(self):
+        super(MainWindowController, self).destroy()
+        # The sidebars have no corresponding controller that could destroy the views what cause the connected methods
+        # to stay connected to (hold references on) the main window controller. So, we do this here. TODO D-solve it
+        self.left_bar_child.destroy()
+        self.right_bar_child.destroy()
+        self.console_child.destroy()
+
     @staticmethod
     def configure_event(widget, event, name):
         # print "configure event", widget, event, name
         global_runtime_config.store_widget_properties(widget, name)
 
     def register_view(self, view):
+        super(MainWindowController, self).register_view(view)
         self.register_actions(self.shortcut_manager)
 
         self.view.get_top_widget().connect("key-press-event", self._on_key_press)
@@ -264,7 +274,7 @@ class MainWindowController(ExtendedController):
                                         self.on_button_step_backward_shortcut_clicked)
 
         # Connect Debug console buttons' signals to their corresponding methods
-        for level in ["debug", "info", "warning", "error"]:
+        for level in ["verbose", "debug", "info", "warning", "error"]:
             self.connect_button_to_function("button_show_{}".format(level), "toggled", self.on_log_button_toggled,
                                             "LOGGING_SHOW_{}".format(level.upper()))
         self.update_log_button_state()
@@ -489,6 +499,8 @@ class MainWindowController(ExtendedController):
         widget_name = window_key.lower()
         undocked_window_view = getattr(self.view, undocked_window_name)
         undocked_window = undocked_window_view.get_top_widget()
+        if os.getenv("RAFCON_START_MINIMIZED", False):
+            undocked_window.iconify()
 
         gui_helper_label.set_window_size_and_position(undocked_window, window_key)
         self.view[widget_name].reparent(undocked_window_view['central_eventbox'])
@@ -564,7 +576,7 @@ class MainWindowController(ExtendedController):
         gui_config.save_configuration()
 
     def update_log_button_state(self):
-        for level in ["debug", "info", "warning", "error"]:
+        for level in ["verbose", "debug", "info", "warning", "error"]:
             active = gui_config.get_config_value("LOGGING_SHOW_{}".format(level.upper()))
             self.view["button_show_{}".format(level)].set_active(active)
 
@@ -655,12 +667,23 @@ class MainWindowController(ExtendedController):
 
         global_runtime_config.save_configuration()
         
-        import glib
-        # Should close all tabs
+        # close all tabs
+        self.get_controller('states_editor_ctrl').prepare_destruction()  # avoid new state editor TODO tbd (deleted)
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+
+        # gtkmvc installs a global glade custom handler that holds a reference to the last created View class,
+        # preventing it from being destructed. By installing a dummy callback handler, after all views have been
+        # created, the old handler is being removed and with it the reference, allowing all Views to be destructed.
+        try:
+            from gtk import glade
+            def dummy(*args, **kwargs):
+                pass
+            glade.set_custom_handler(dummy)
+        except ImportError:
+            pass
+
         # Recursively destroys the main window
-        self.get_controller('menu_bar_controller').logging_console_view.quit_flag = True
-        # idle_add seems not to be necessary here
-        # glib.idle_add(log_helpers.LoggingViewHandler.remove_logging_view, 'main')
-        log_helpers.LoggingViewHandler.remove_logging_view('main')
         self.destroy()
+        from rafcon.gui.clipboard import global_clipboard
+        global_clipboard.destroy()
+        gui_singletons.main_window_controller = None

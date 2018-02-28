@@ -260,6 +260,7 @@ def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=Fa
                 if data_flow.from_state == state_id or data_flow.to_state == state_id:
                     meta_dict['related_parent_data_flows'][data_flow.data_flow_id] = meta_dump_or_deepcopy(data_flow_m.meta)
 
+    # print "get meta", state_model.state.state_id, state_model.meta
     if with_prints:
         print "STORE META for STATE: ", state_model.state.state_id, state_model.state.name
     meta_dict['is_start'] = state_model.is_start
@@ -278,6 +279,7 @@ def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=Fa
             print "output: ", elem.data_port.data_port_id, elem.parent.state.output_data_ports.keys(), \
                 meta_dict['output_data_ports'].keys()
 
+    # print "store meta of state", state_model.state.state_id, state_model.meta
     meta_dict['state'] = meta_dump_or_deepcopy(state_model.meta)
     if isinstance(state_model, ContainerStateModel):
         for state_id, state_m in state_model.states.iteritems():
@@ -332,6 +334,7 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
                                                               meta_dict[dict_key],
                                                               dict_key[:-1].replace('_', '-')))
 
+    # print "insert meta data of state", state_model.state.state_id, meta_dict['state']
     state_model.meta = meta_dump_or_deepcopy(meta_dict['state'])
     if with_prints:
         print "INSERT META for STATE: ", state_model.state.state_id, state_model.state.name
@@ -488,6 +491,12 @@ class AbstractAction(object):
 
         self.after_overview = None
         self.after_storage = None  # tuple of state and states-list of storage tuple
+
+    def prepare_destruction(self):
+        self.before_overview.prepare_destruction()
+        if self. after_overview:
+            self.after_overview.prepare_destruction()
+        self.state_machine_model = None
 
     @property
     def version_id(self):
@@ -889,8 +898,9 @@ class StateMachineAction(Action, ModelMT):
                  # logger.debug("DO root version change")
 
         previous_model = self.state_machine_model.root_state
+        affected_models = [previous_model, ]
         # TODO affected models should be more to allow recursive notification scheme and less updated elements
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=affected_models, after=False)
 
         if self.action_type == 'change_root_state_type':
             # observe root state model (type change signal)
@@ -916,8 +926,8 @@ class StateMachineAction(Action, ModelMT):
         #     insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
         #                            state_model=self.state_machine_model.root_state)
 
-        # TODO check if this ok ... see type change performance in graphical editor
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
+        affected_models.append(self.state_machine_model.root_state)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=affected_models, after=True)
 
     @ModelMT.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
@@ -998,6 +1008,7 @@ class AddObjectAction(Action):
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
         previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
@@ -1010,7 +1021,8 @@ class AddObjectAction(Action):
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
-                               state_model=actual_state_model, level=1)
+                               state_model=actual_state_model, level=None if self.action_type == 'add_state' else 1)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     def undo(self):
 
@@ -1023,6 +1035,7 @@ class AddObjectAction(Action):
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
         previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
@@ -1040,6 +1053,7 @@ class AddObjectAction(Action):
         self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
                                state_model=actual_state_model, level=1)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     def correct_reference_state(self, state, storage_version_of_state, storage_path):
 
@@ -1146,7 +1160,7 @@ class RemoveObjectAction(Action):
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
-                               state_model=actual_state_model, level=1)
+                               state_model=actual_state_model, level=None if self.action_type == 'remove_state' else 1)
 
         self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 

@@ -31,7 +31,9 @@ from rafcon.core.id_generator import history_item_id_generator
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 import os
+import subprocess
 import pickle
+from weakref import ref
 
 
 class ExecutionHistoryStorage(object):
@@ -67,11 +69,17 @@ class ExecutionHistoryStorage(object):
         finally:
             self.store_lock.release()
 
-    def close(self):
+    def close(self, make_read_and_writable_for_all=False):
         self.store_lock.acquire()
         try:
             self.store.close()
             logger.debug('Closed log file %s' % self.filename)
+            if make_read_and_writable_for_all:
+                ret = subprocess.call(['chmod', 'a+rw', self.filename])
+                if ret:
+                    logger.debug('Could not make log file readable for all. chmod a+rw failed on %s.' % self.filename)
+                else:
+                    logger.debug('Set log file readable for all via chmod a+rw, file %s' % self.filename)
         except Exception as e:
             logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
@@ -150,6 +158,9 @@ class ExecutionHistory(Observable, Iterable, Sized):
             (e.g. backward stepping)
         """
         last_history_item = self.get_last_history_item()
+        from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
+        if isinstance(state_for_scoped_data, LibraryState):
+            state_for_scoped_data = state_for_scoped_data.state_copy
         return_item = CallItem(state, last_history_item, call_type, state_for_scoped_data, input_data,
                                state.run_id)
         return self._push_item(last_history_item, return_item)
@@ -168,6 +179,9 @@ class ExecutionHistory(Observable, Iterable, Sized):
             backward stepping)
         """
         last_history_item = self.get_last_history_item()
+        from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
+        if isinstance(state_for_scoped_data, LibraryState):
+            state_for_scoped_data = state_for_scoped_data.state_copy
         return_item = ReturnItem(state, last_history_item, call_type, state_for_scoped_data, output_data,
                                  state.run_id)
         return self._push_item(last_history_item, return_item)
@@ -225,8 +239,8 @@ class HistoryItem(object):
     """
 
     def __init__(self, state, prev, run_id):
-        self.state_reference = state
-        self.path = state.get_path()
+        self._state_reference = ref(state)
+        self.path = copy.deepcopy(state.get_path())
         self.timestamp = time.time()
         self.run_id = run_id
         self.prev = prev
@@ -234,25 +248,42 @@ class HistoryItem(object):
         self.history_item_id = history_item_id_generator()
         self.state_type = str(type(state).__name__)
 
+    @property
+    def state_reference(self):
+        """Property for the state_reference field
+        """
+        return self._state_reference()
+
     def __str__(self):
         return "HistoryItem with reference state name %s (time: %s)" % (self.state_reference.name, self.timestamp)
 
     def to_dict(self):
         record = dict()
-        record['state_name'] = self.state_reference.name
-        record['state_type'] = self.state_type
-        record['path'] = self.path
-        record['path_by_name'] = self.state_reference.get_path(by_name=True)
-        record['timestamp'] = self.timestamp
-        record['run_id'] = self.run_id
-        record['history_item_id'] = self.history_item_id
-        # in case of a Library State, the description of the Library itself should be used and not the description of
-        # the wrapper state (i.e. the description of the Library developer and not that one of the user)
+
         from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
         if isinstance(self.state_reference, LibraryState):
-            record['description'] = self.state_reference.state_copy.description
+            # in case of a Library State, all the data of the library itself should be used
+            target_state = self.state_reference.state_copy
+            record['is_library'] = True
+            record['library_state_name'] = self.state_reference.name
+            record['library_name'] = self.state_reference.library_name
+            record['library_path'] = self.state_reference.library_path
         else:
-            record['description'] = self.state_reference.description
+            target_state = self.state_reference
+            record['is_library'] = False
+            record['library_state_name'] = None
+            record['library_name'] = None
+            record['library_path'] = None
+
+        record['state_name'] = target_state.name
+        record['state_type'] = str(type(target_state).__name__)
+        record['path'] = target_state.get_path()
+        record['path_by_name'] = target_state.get_path(by_name=True)
+        record['timestamp'] = self.timestamp
+        record['run_id'] = self.run_id  # library state and state copy have the same run_id
+        record['history_item_id'] = self.history_item_id
+        record['semantic_data'] = target_state.semantic_data
+        record['description'] = target_state.description
 
         if self.prev is not None:
             record['prev_history_item_id'] = self.prev.history_item_id
@@ -386,6 +417,7 @@ class ReturnItem(ScopedDataItem):
             record['outcome_name'] = 'None'
             record['outcome_id'] = -1
         return record
+
 
 class ConcurrencyItem(HistoryItem):
     """A class to hold all the data for an invocation of several concurrent threads.

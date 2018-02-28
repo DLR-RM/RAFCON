@@ -57,7 +57,7 @@ class StateOverviewController(ExtendedController):
         """
         assert isinstance(model, AbstractStateModel)
         assert isinstance(view, StateOverviewView)
-        ExtendedController.__init__(self, model, view)
+        super(StateOverviewController, self).__init__(model, view)
 
         self._external_update = False
         self.state_types_dict = {}
@@ -89,6 +89,7 @@ class StateOverviewController(ExtendedController):
         :param rafcon.gui.views.state_editor.overview.StateOverviewView view: A state overview view instance
         """
         # prepare State Type Change ComboBox
+        super(StateOverviewController, self).register_view(view)
         self.state_types_dict = self.change_state_type_class_dict(self.model.state)
 
         view['entry_name'].connect('focus-out-event', self.on_focus_out)

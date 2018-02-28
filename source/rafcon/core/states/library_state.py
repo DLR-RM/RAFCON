@@ -160,6 +160,12 @@ class LibraryState(State):
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
 
+    def destroy(self, recursive=True):
+        super(LibraryState, self).destroy(recursive)
+        if recursive:
+            self.state_copy.destroy(recursive)
+            self._state_copy = None
+
     def run(self):
         """ This defines the sequence of actions that are taken when the library state is executed
 
@@ -209,7 +215,7 @@ class LibraryState(State):
         raise NotImplementedError("Add outcome is not implemented for library state {}".format(self))
 
     @lock_state_machine
-    def remove_outcome(self, outcome_id, force=False):
+    def remove_outcome(self, outcome_id, force=False, destroy=True):
         """Overwrites the remove_outcome method of the State class. Prevents user from removing a
         outcome from the library state.
 
@@ -218,7 +224,7 @@ class LibraryState(State):
         :raises exceptions.NotImplementedError: in any case
         """
         if force:
-            State.remove_outcome(self, outcome_id, force)
+            return State.remove_outcome(self, outcome_id, force, destroy)
         else:
             raise NotImplementedError("Remove outcome is not implemented for library state {}".format(self))
 
@@ -233,7 +239,7 @@ class LibraryState(State):
         raise NotImplementedError("Add input data port is not implemented for library state {}".format(self))
 
     @lock_state_machine
-    def remove_input_data_port(self, data_port_id, force=False):
+    def remove_input_data_port(self, data_port_id, force=False, destroy=True):
         """
         Overwrites the remove_input_data_port method of the State class. Prevents user from removing a
         input data port from the library state.
@@ -244,7 +250,7 @@ class LibraryState(State):
         :raises exceptions.NotImplementedError: in the removal is not forced
         """
         if force:
-            State.remove_input_data_port(self, data_port_id, force)
+            return State.remove_input_data_port(self, data_port_id, force, destroy)
         else:
             raise NotImplementedError("Remove input data port is not implemented for library state {}".format(self))
 
@@ -259,7 +265,7 @@ class LibraryState(State):
         raise NotImplementedError("Add a output data port is not implemented for library state {}".format(self))
 
     @lock_state_machine
-    def remove_output_data_port(self, data_port_id, force=False):
+    def remove_output_data_port(self, data_port_id, force=False, destroy=True):
         """Overwrites the remove_output_data_port method of the State class. Prevents user from removing a
         output data port from the library state.
 
@@ -268,7 +274,7 @@ class LibraryState(State):
         :raises exceptions.NotImplementedError: in the removal is not forced
         """
         if force:
-            State.remove_output_data_port(self, data_port_id, force)
+            return State.remove_output_data_port(self, data_port_id, force, destroy)
         else:
             raise NotImplementedError("Remove output data port is not implemented for library state {}".format(self))
 
