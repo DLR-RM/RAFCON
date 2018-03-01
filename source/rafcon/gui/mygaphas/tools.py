@@ -190,7 +190,6 @@ class MoveItemTool(gaphas.tool.ItemTool):
                 old_waypoints = transition_m.get_meta_data_editor()['waypoints']
                 if current_waypoints != old_waypoints:
                     transition_m.set_meta_data_editor('waypoints', current_waypoints)
-                    self.view.graphical_editor.emit('meta_data_changed', transition_m, "waypoints", True)
                     affected_models[transition_m] = ("waypoints", False, transition_v)
 
         if len(affected_models) == 1:
