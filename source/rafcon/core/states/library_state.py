@@ -163,7 +163,10 @@ class LibraryState(State):
     def destroy(self, recursive=True):
         super(LibraryState, self).destroy(recursive)
         if recursive:
-            self.state_copy.destroy(recursive)
+            if self.state_copy:
+                self.state_copy.destroy(recursive)
+            else:
+                logger.verbose("Multiple calls of destroy {0}".format(self))
             self._state_copy = None
 
     def run(self):

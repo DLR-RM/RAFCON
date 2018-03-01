@@ -293,7 +293,10 @@ def change_state_type(state_m, target_class):
     old_state_m.prepare_destruction(recursive=False)
     for state_element_m in obsolete_state_element_models:
         if isinstance(state_element_m, AbstractStateModel):
-            state_element_m.core_element.destroy(recursive=True)
+            if state_element_m.core_element:
+                state_element_m.core_element.destroy(recursive=True)
+            else:
+                logger.verbose("Multiple calls of destroy {0}".format(state_element_m))
         state_element_m.prepare_destruction()
 
     if is_root_state:
