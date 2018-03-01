@@ -17,11 +17,13 @@ Next release
 
     - Gtk priority of logging output to the console view is now customizable via the gui_config
     - better plugin support of changes to the state-editor tabs
+    - gaphas combines now complex meta data actions in one meta data changed signal -> one undo/redo-Action
 
 - Bug Fixes:
 
     - :issue:`484` label handles are hard to grasp
     - :issue:`486` Gaphas is not emitting meta data signal if NameView is moved
+    - quick fix for not working "state type change" in combination with library states -> will be fully solved in :issue:`493`
     - fix meta data for undo/redo of add object operations
     - fix exception handling, causing issues with the graphical editor when invalid connection were created
     - When hovering the menu bar, an exception was printed
