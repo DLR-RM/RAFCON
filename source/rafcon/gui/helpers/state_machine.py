@@ -17,12 +17,12 @@
 
 import copy
 import time
-
+import os
 import gtk
-import glib
 
 import rafcon.gui.helpers.state as gui_helper_state
 import rafcon.gui.singleton
+
 from rafcon.core import interface, id_generator
 from rafcon.core.singleton import state_machine_manager, state_machine_execution_engine, library_manager
 from rafcon.core.state_machine import StateMachine
@@ -31,6 +31,8 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.state import State, StateType
 from rafcon.core.storage import storage
+import rafcon.core.config
+
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
@@ -39,6 +41,7 @@ from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateMode
     DataFlowModel, DataPortModel, ScopedVariableModel, OutcomeModel, StateMachineModel
 from rafcon.gui.singleton import library_manager_model
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
+from rafcon.utils.filesystem import make_tarfile, copy_file_or_folder, create_path, make_file_executable
 from rafcon.utils import log
 import rafcon.gui.utils
 
@@ -380,6 +383,103 @@ def is_state_machine_stopped_to_proceed(selected_sm_id=None, root_window=None):
 
 def refresh_libraries():
     library_manager.refresh_libraries()
+
+
+def replace_all_libraries_by_template(state_model):
+    for s_id, child_state_model in state_model.states.iteritems():
+        if isinstance(child_state_model, LibraryStateModel):
+            library_name = child_state_model.state.library_name
+            library_path = child_state_model.state.library_path
+            library_state = LibraryState(library_path, library_name, "0.1", library_name)
+            gui_helper_state.substitute_state_as(child_state_model, library_state, True)
+        if isinstance(child_state_model, ContainerStateModel):
+            replace_all_libraries_by_template(child_state_model)
+
+
+def save_all_libraries(target_path):
+    for library_key, library_root_path in library_manager.library_root_paths.iteritems():
+        # lib_target_path = os.path.join(target_path, os.path.split(library_root_path)[1])
+        lib_target_path = os.path.join(target_path, library_key)
+        copy_file_or_folder(library_root_path, lib_target_path)
+
+
+def save_library_config(target_path):
+    config_path = os.path.join(target_path, "__generated__config")
+    create_path(config_path)
+    config_file_path = os.path.join(config_path, "core_config_generated.yaml")
+    tmp_dict = rafcon.core.config.global_config.as_dict()
+    new_config = rafcon.core.config.Config()
+
+    # copy content
+    for key, value in tmp_dict.iteritems():
+        new_config.set_config_value(key, value)
+
+    # recreate library paths to be relative to config file
+    new_library_paths_entry = {}
+    for library_key, library_root_path in library_manager.library_root_paths.iteritems():
+        new_library_paths_entry[library_key] = os.path.relpath(os.path.join(target_path, library_key), config_path)
+    new_config.set_config_value("LIBRARY_PATHS", new_library_paths_entry)
+
+    # save config file to new location
+    new_config.config_file_path = config_file_path
+    new_config.save_configuration()
+    return config_file_path
+
+
+def generate_linux_launch_files(target_path, config_path, state_machine_path):
+    launch_command = "{} -c {} -o {}".format(
+        "/volume/software/common/packages/rafcon/latest/source/rafcon/gui/start.py",
+        os.path.relpath(config_path, target_path),
+        os.path.relpath(state_machine_path, target_path))
+    she_bang = "#!/bin/bash\n\n"
+
+    launch_file_with_env = os.path.join(target_path, "launch_rafcon_with_env_generated.sh")
+    with open(launch_file_with_env, 'w') as file_pointer:
+        file_pointer.write(she_bang)
+        for key, value in os.environ.iteritems():
+            if key not in ["PWD", "BASH_FUNC_mc%%", "BASH_FUNC_module%%", "RAFCON_LIBRARY_PATH"]:
+                file_pointer.write("export {}=\"{}\"\n".format(key, value))
+        file_pointer.write("\n")
+        file_pointer.write(launch_command)
+    make_file_executable(launch_file_with_env)
+
+    launch_file_without_env = os.path.join(target_path, "launch_rafcon_generated.sh")
+    with open(launch_file_without_env, 'w') as file_pointer:
+        file_pointer.write(she_bang)
+        file_pointer.write(launch_command)
+    make_file_executable(launch_file_without_env)
+
+
+def bake_selected_state_machine(path=None):
+    selected_sm_id = rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id
+    if not selected_sm_id:
+        logger.debug("Cannot bake state machine: No state machine selected!")
+    else:
+        logger.debug("Baking state machine ...")
+    # selected_sm = state_machine_manager.state_machines[selected_sm_id]
+    selected_sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[selected_sm_id]
+    assert isinstance(selected_sm_m, StateMachineModel)
+    root_state_m = selected_sm_m.root_state
+
+    # generate path
+    selected_state_machine_model = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    folder_name = selected_state_machine_model.state_machine.root_state.name
+    if path is None:
+        path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
+                                            "The default folder name is the name of the root state.", folder_name)
+    if path is None:
+        logger.warning("Baking canceled!")
+        return False
+
+    create_path(path)
+    save_all_libraries(path)
+    config_path = save_library_config(path)
+    state_machine_path = os.path.join(path, "__generated__state_machine")
+    generate_linux_launch_files(path, config_path, state_machine_path)
+
+    save_state_machine_as(state_machine_path, as_copy=True)
+    make_tarfile(path+".tar", path)
+    logger.debug("Baking finished!")
 
 
 def refresh_selected_state_machine():

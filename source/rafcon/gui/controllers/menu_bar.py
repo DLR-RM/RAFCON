@@ -118,6 +118,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('menu_properties', 'activate', self.on_menu_properties_activate)
         self.connect_button_to_function('refresh_all', 'activate', self.on_refresh_all_activate)
         self.connect_button_to_function('refresh_libraries', 'activate', self.on_refresh_libraries_activate)
+        self.connect_button_to_function('bake_state_machine', 'activate', self.on_bake_state_machine_activate)
         self.connect_button_to_function('quit', 'activate', self.on_quit_activate)
 
         self.connect_button_to_function('cut', 'activate', self.on_cut_selection_activate)
@@ -391,6 +392,9 @@ class MenuBarController(ExtendedController):
     def on_refresh_libraries_activate():
         gui_helper_state_machine.refresh_libraries()
 
+    def on_bake_state_machine_activate(self, widget, data=None, force=False):
+        gui_helper_state_machine.bake_selected_state_machine()
+
     def on_refresh_all_activate(self, widget, data=None, force=False):
         gui_helper_state_machine.refresh_all(force=force)
 
@@ -611,6 +615,10 @@ class MenuBarController(ExtendedController):
             else:  # change the active state machine to be the selected state machine
                 core_singletons.state_machine_manager.active_state_machine_id = selected_state_machine_id
 
+        # is there no active state machine id set the selected state machine (if it is set) is now the active one
+        if selected_state_machine_id and active_state_machine_id is None:
+            gui_singletons.state_machine_manager.active_state_machine_id = selected_state_machine_id
+
     def on_start_activate(self, widget, data=None):
         self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.start(self.model.selected_state_machine_id)
@@ -681,13 +689,13 @@ class MenuBarController(ExtendedController):
         is_start_state_inactive = False
         if self.model.get_selected_state_machine_model():
             state_m_list = self.model.get_selected_state_machine_model().selection.states
-            selected_state = self.model.get_selected_state_machine_model().selection.get_selected_state()
+            selected_state_m = self.model.get_selected_state_machine_model().selection.get_selected_state()
             has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
-            if len(state_m_list) == 1 and isinstance(selected_state, AbstractStateModel) and \
-                    not state_m_list[0].state.is_root_state and \
-                    not isinstance(selected_state.parent.state, has_no_start_state_state_types):
+            if len(state_m_list) == 1 and isinstance(selected_state_m, AbstractStateModel) and \
+                    not selected_state_m.state.is_root_state and \
+                    not isinstance(selected_state_m.parent.state, has_no_start_state_state_types):
                 # if is start state -> enabled-box
-                if selected_state.is_start:
+                if selected_state_m.is_start:
                     self.view.set_menu_item_icon('is_start_state', constants.BUTTON_CHECK)
                 else:  # if is not start state -> empty-box
                     self.view.set_menu_item_icon('is_start_state', constants.BUTTON_SQUARE)

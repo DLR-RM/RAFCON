@@ -140,5 +140,30 @@
         <property name="homogeneous">True</property>
       </packing>
     </child>
+    <child>
+      <object class="GtkSeparatorToolItem" id="separatortoolitem6">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="draw">False</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkToolButton" id="button_bake_state_machine">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="is_important">True</property>
+        <property name="label" translatable="yes">Bake Selected</property>
+        <property name="use_underline">True</property>
+        <property name="stock_id">gtk-refresh</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
   </object>
 </interface>
