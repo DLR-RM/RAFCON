@@ -21,6 +21,7 @@
 """
 
 import gtk
+import time
 from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
 from gaphas.item import Item
@@ -70,6 +71,7 @@ class GraphicalEditorController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor"""
+        start_time = time.time()
         ExtendedController.__init__(self, model, view)
         assert type(view) == GraphicalEditorView
         assert isinstance(self.model, StateMachineModel)
@@ -84,10 +86,11 @@ class GraphicalEditorController(ExtendedController):
         self._ongoing_complex_actions = {}
         # the variable is for debugging -> I like to have it to improve complex actions
         self._nested_action_already_in = {}
-
         view.setup_canvas(self.canvas, self.zoom)
 
         view.editor.drag_dest_set(gtk.DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
+        logger.verbose("Time spent in init {0} seconds for state machine {1}"
+                       "".format(time.time() - start_time, self.model.state_machine_id))
 
     def destroy(self):
         if self.view:
@@ -729,6 +732,8 @@ class GraphicalEditorController(ExtendedController):
         return method_name, model, result, args, instance
 
     def setup_canvas(self):
+        logger.verbose("start setup canvas")
+        start_time_view_generation = time.time()
         with self.model.state_machine.modification_lock():
             hash_before = self.model.mutable_hash()
             self.add_state_view_for_model(self.root_state_m, rel_pos=(10, 10))
@@ -738,6 +743,8 @@ class GraphicalEditorController(ExtendedController):
                 self._meta_data_changed(None, self.root_state_m, 'append_initial_change', True)
                 logger.info("Opening the state machine caused some meta data to be generated, which will be stored "
                             " when the state machine is being saved.")
+        logger.verbose("Time spent in setup canvas {0} state machine {1}".format(time.time() - start_time_view_generation,
+                                                                                 self.model.state_machine_id))
 
     @lock_state_machine
     def add_state_view_for_model(self, state_m, parent_v=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
