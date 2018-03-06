@@ -91,7 +91,8 @@ class LibraryStateModel(AbstractStateModel):
                 self.state_copy.prepare_destruction(recursive)
                 self.state_copy = None
             else:
-                logger.verbose("Multiple calls of prepare destruction for {0}".format(self))
+                if self.state_copy_initialized:
+                    logger.verbose("Multiple calls of prepare destruction for {0}".format(self))
 
             # The next lines are commented because not needed and create problems if used why it is an open to-do
             # for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
