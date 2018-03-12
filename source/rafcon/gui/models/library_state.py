@@ -66,6 +66,8 @@ class LibraryStateModel(AbstractStateModel):
                 # gui_helper_meta_data.scale_library_ports_meta_data(self)
             else:
                 self.meta_data_was_scaled = True
+                if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
+                    self.meta_data_was_scaled = False
 
     def initiate_library_root_state_model(self):
         model_class = get_state_model_class_for_state(self.state.state_copy)

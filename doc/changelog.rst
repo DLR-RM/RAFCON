@@ -13,6 +13,7 @@ Next release
 
 - Bug Fixes:
 
+    - fix open-gl support for show-content to support fast state machine exploration (also into all leaf-states by zoom)
     - library state can be removed also when those are showing content
 
 

@@ -320,6 +320,9 @@ def get_boundaries_of_elements_in_dict(models_dict, clearance=0.):
                 # print key, rel_positions, _size, model.meta
 
             for rel_position in rel_positions:
+                # check for empty fields and ignore them at this point
+                if not contains_geometric_info(rel_position):
+                    continue
                 right, bottom = cal_max(right, bottom, rel_position, _size)
                 left, top = cal_min(left, top, rel_position, _size)
                 # print "new edges:", left, right, top, bottom, key
@@ -688,6 +691,8 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
                 height_pos_offset_to_middle = (parent_height - boundary_height_in_parent - rel_pos[1] - margin)/2.
                 rel_pos = add_pos(rel_pos, (0., height_pos_offset_to_middle))
                 # print resize_factor, rel_pos
+            if not global_gui_config.get_config_value('GAPHAS_ENABLED'):
+                resize_factor *= 0.9  # TODO check it again (needed to hold child elements in bounds of parent state)
             frame = {'rel_pos': rel_pos, 'size': mult_two_vectors((resize_factor, resize_factor), size)}
             # print models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos'], \
             #     parent_size, models_dict['state'].parent.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
