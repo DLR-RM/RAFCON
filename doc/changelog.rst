@@ -13,6 +13,8 @@ Next release
 
 - Bug Fixes:
 
+    - library state can be removed also when those are showing content
+
 
 Patch releases 0.12.\*
 ----------------------
