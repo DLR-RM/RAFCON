@@ -7,9 +7,23 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 
-- Feature
+- Features:
 
 - Improvements:
+
+- Bug Fixes:
+
+
+
+Patch releases 0.12.\*
+----------------------
+
+0.12.6
+""""""
+
+- Feature:
+
+    - tests folder is now released as well
 
 - Bug Fixes:
 
@@ -17,8 +31,6 @@ Next release
     - library state can be removed also when those are showing content
 
 
-Patch releases 0.12.\*
-----------------------
 
 0.12.5
 """"""
@@ -131,10 +143,6 @@ Patch releases 0.12.\*
 
     - Semantic meta data editor and storage for every state
     - :issue:`411` Allow outputting data from preempted states
-
-- Improvements:
-
-    -
 
 - Bug Fixes:
 
