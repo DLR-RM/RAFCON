@@ -188,7 +188,7 @@ def wait_for_state_machine_finished(state_machine):
         except Empty:
             pass
         # no logger output here to make it easier for the parser
-        print "RAFCON live signal"
+        logger.verbose("RAFCON live signal")
 
 
 def stop_reactor_on_state_machine_finish(state_machine):

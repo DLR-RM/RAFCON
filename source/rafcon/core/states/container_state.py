@@ -361,16 +361,16 @@ class ContainerState(State):
                 going_data_linkage_for_port['from'][(df.from_state, df.from_key)] = {external: [df], internal: [df]}
 
         def print_df_from_and_to(going_data_linkage_for_port):
-            print 'FROM: \n'
+            logger.verbose('data linkage FROM: ')
             for port, port_dfs in going_data_linkage_for_port['from'].iteritems():
-                print "\tport: ", port, '' if 'args' not in port_dfs else port_dfs['args']
-                print "\t\texternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['external']])
-                print "\t\tinternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['internal']])
-            print 'TO: \n'
+                logger.verbose("\tport: {0} {1}".format(port, '' if 'args' not in port_dfs else port_dfs['args']))
+                logger.verbose("\t\texternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['external']]))
+                logger.verbose("\t\tinternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['internal']]))
+            logger.verbose('data linkage TO: ')
             for port, port_dfs in going_data_linkage_for_port['to'].iteritems():
-                print "\tport: ", port, '' if 'args' not in port_dfs else port_dfs['args']
-                print "\t\texternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['external']])
-                print "\t\tinternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['internal']])
+                logger.verbose("\tport: {0} {1}".format(port, '' if 'args' not in port_dfs else port_dfs['args']))
+                logger.verbose("\t\texternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['external']]))
+                logger.verbose("\t\tinternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['internal']]))
 
         def reduce_dfs(port_data_linkages, df_id):
             for port_key in port_data_linkages.keys():
