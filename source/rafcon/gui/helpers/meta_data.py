@@ -1,5 +1,9 @@
 from copy import deepcopy
 
+import json
+from jsonconversion.decoder import JSONObjectDecoder
+from jsonconversion.encoder import JSONObjectEncoder
+
 from rafcon.gui.models.transition import mirror_waypoints
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models import LibraryStateModel, ContainerStateModel
@@ -735,6 +739,68 @@ def scale_meta_data_according_frame(models_dict, frame):
     resize_of_all_models_in_dict(models_dict, (resize_factor, resize_factor), gaphas_editor)
     offset_rel_pos_of_all_models_in_dict(models_dict, mult_two_vectors((1., y_axis_mirror), frame['rel_pos']), gaphas_editor)
     return True
+
+
+def meta_data_reference_check(meta):
+
+    def reference_free_check(v1, v2, prepend=[]):
+        """Returns elements of a dict that have the same memory addresses except strings."""
+        d = {'value': {}, 'same_ref': [], 'same_ref_value': [], 'missing_keys1': [], 'missing_keys2': []}
+        v1_keys = v1.keys()
+        v2_keys = v2.keys()
+        not_to_check = set(v1_keys).symmetric_difference(v2_keys)
+        d['missing_keys1'] = filter(lambda k: k in not_to_check, v1_keys)
+        d['missing_keys2'] = filter(lambda k: k in not_to_check, v2_keys)
+        for key in set(v1_keys + v2_keys):
+            if key not in not_to_check:
+                if not hasattr(v1[key], 'keys'):
+                    if isinstance(v1[key], str):
+                        d['value'].update({key: v1[key]})
+                    else:
+                        if id(v1[key]) == id(v2[key]):
+                            if not isinstance(v1[key], tuple):
+                                d['same_ref'].append(prepend + [key])
+                                d['same_ref_value'].append(str(v1[key]) + " == " + str(v2[key]) + ', ' + str(type(v1[key])) + " == " + str(type(v2[key])))
+                        else:
+                            d['value'].update({key: v1[key]})
+                else:
+                    if id(v1[key]) == id(v2[key]):
+                        d['same_ref'].append(prepend + [key])
+                        d['same_ref_value'].append(str(v1[key]) + " == " + str(v2[key]) + ', ' + str(type(v1[key])) + " == " + str(type(v2[key])))
+                    else:
+                        d['value'].update({key: reference_free_check(v1[key], v2[key], prepend=prepend + [key])})
+
+        return d
+
+    meta_source = meta
+    meta_str = json.dumps(meta, cls=JSONObjectEncoder,
+                          indent=4, check_circular=False, sort_keys=True)
+    meta_dump_copy = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
+    meta_deepcopy = deepcopy(meta)
+
+    meta_source_str = json.dumps(meta, cls=JSONObjectEncoder,
+                                 indent=4, check_circular=False, sort_keys=True)
+    meta_dump_copy_str = json.dumps(meta_dump_copy, cls=JSONObjectEncoder,
+                                    indent=4, check_circular=False, sort_keys=True)
+    meta_deepcopy_str = json.dumps(meta_deepcopy, cls=JSONObjectEncoder,
+                                   indent=4, check_circular=False, sort_keys=True)
+    assert meta_dump_copy_str == meta_source_str
+    assert meta_dump_copy_str == meta_deepcopy_str
+
+    def diff_print(diff):
+        if diff['same_ref']:
+            logger.verbose("same_ref: {0} {1}".format(diff['same_ref'], diff['same_ref_value']))
+            assert False
+        for value in diff['value'].itervalues():
+            if isinstance(value, dict):
+                diff_print(value)
+
+    source_dump_diff = reference_free_check(meta_source, meta_dump_copy)
+    source_deep_diff = reference_free_check(meta_source, meta_deepcopy)
+    logger.verbose("source_dump_diff")
+    diff_print(source_dump_diff)
+    logger.verbose("source_deep_diff")
+    diff_print(source_deep_diff)
 
 # Something to remember maybe
 #

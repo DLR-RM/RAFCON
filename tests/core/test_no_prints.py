@@ -25,7 +25,7 @@ def test_number_of_whitespaces():
     utils_print_lines = search_for_print_statements_in_python_files("utils")
     print "\n".join([str(line) for line in gui_print_lines])
     print len(gui_print_lines)
-    assert len(gui_print_lines) == 22
+    assert len(gui_print_lines) == 6
     print "\n".join([str(line) for line in core_print_lines])
     print len(core_print_lines)
     assert len(core_print_lines) == 0
