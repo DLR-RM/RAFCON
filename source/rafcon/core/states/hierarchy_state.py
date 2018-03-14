@@ -33,7 +33,7 @@ logger = log.get_logger(__name__)
 
 class HierarchyState(ContainerState):
 
-    """A class tto represent a hierarchy state for the state machine
+    """A class to represent a hierarchy state for the state machine
 
     The hierarchy state holds several child states, that can be container states on their own
     """
