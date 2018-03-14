@@ -29,8 +29,6 @@ import pytest
 NO_SAVE = False
 TEST_PATH = testing_utils.get_unique_temp_path()
 
-with_prints = False
-
 
 def on_save_activate(state_machine_m, logger):
     if state_machine_m is None or NO_SAVE:
@@ -150,8 +148,8 @@ def prepare_state_machine_model(state_machine):
 
     sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
     sm_m.history.fake = False
-    print "with_prints is: ", sm_m.history.with_prints
-    sm_m.history.with_prints = False
+    print "with_verbose is: ", sm_m.history.with_verbose
+    sm_m.history.with_verbose = False
     # return ctr_state, sm_m, state_dict
 
 
