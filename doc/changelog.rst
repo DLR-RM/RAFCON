@@ -18,6 +18,15 @@ Next release
 Patch releases 0.12.\*
 ----------------------
 
+0.12.7
+""""""
+
+- Improvements:
+
+    - updated documentation
+    - use verbose logging level instead of prints for modification history debug prints
+
+
 0.12.6
 """"""
 
