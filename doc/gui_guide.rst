@@ -1,10 +1,9 @@
 GUI Guide
 =========
 
-At this point a common guide for the :ref:`RAFCON`-GUI will be
-generated. The page contains advises of how to use the widgets
-effectively and will be updated with new features of widgets and their
-usage.
+The following shows a common guide for the :ref:`RAFCON`-GUI.
+The page contains advises about how to use the widgets
+effectively.
 
 Left Bar
 --------
@@ -93,7 +92,11 @@ element 0 which is labeled by action "None".
 Execution History widget
 """"""""""""""""""""""""
 
-Description in progress ...
+In the execution history widget all runs of the currently selected state
+machine are visualized in a tree like structure. This can be used for
+debugging purposes as also all the context data of each executed state
+is visualized. The execution history can also be logged to disk.
+(see the logging variables in the :ref:`Core configuration`)
 
 Center Pane
 -----------
@@ -207,20 +210,11 @@ the input ports is shown, while "Target State" and "Target Port" shows
 the targets of the output ports. With the buttons "Add" and "Remove",
 additional rows can be inserted and edited as like selected ones removed
 
-Data Linkage widget
-"""""""""""""""""""
+Data and Logical Linkage widget
+"""""""""""""""""""""""""""""""
 
-Description in progress ...
+A quick overview over all data ports and outcomes of the selected states.
 
-Logical Linkage widget
-""""""""""""""""""""""
-
-Description in progress ...
-
-Linkage Overview widget
-"""""""""""""""""""""""
-
-Description in progress ...
 
 State Description widget
 """"""""""""""""""""""""
@@ -228,3 +222,8 @@ State Description widget
 The State Description sub-widget can be reached by clicking the second
 tab of the lower notebook. It is an editor, where comments or a
 description can be placed.
+
+Semantic Editor widget
+""""""""""""""""""""""
+
+Here semantic data of a state can be edited in a tree like data structure.

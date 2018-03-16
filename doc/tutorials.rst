@@ -182,7 +182,10 @@ Starting the basic turtle demo statemachine using ROS
 The basic turtle demo is a demo to demonstrate the use of libraries and
 to show the easy integration of `ROS <ROS>`__ into the RAFCON. To start
 the turtle demo just change into the RAFCON directory and open the
-basic\_turtle\_state\_machine:
+basic\_turtle\_state\_machine (the following code blocks include code lines
+to generate the correct environment in the shell before executing the commands
+themselves; in an e.g. Ubuntu setup, where the environment is statically specified
+in the ~/.bashrc these environment generating commands can be omitted):
 
 .. code:: python
 

@@ -11,7 +11,7 @@ States
 A state does not represent a state of the system, but usually executes
 some action or calculates some result and finally return an outcome (see
 later). States can have an arbitrary number of input ports and output
-ports. There are different types of states:
+ports. There are different types of states:''''''
 
 The simplest type of states is called **Execution state**. An execution
 state includes an ``execute`` function that is run when the
