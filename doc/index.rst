@@ -10,7 +10,7 @@ RAFCON
 
 **Develop your robotic tasks using an intuitive graphical user interface**
 
-RAFCON (**R**\ MC **a**\ wesome [or advanced] **F**\ low **Con**\ roltool) uses hierarchical state machines, featuring
+RAFCON (**R**\ MC **a**\ dvanced **F**\ low **Con**\ rol) uses hierarchical state machines, featuring
 concurrent state execution, to represent robot programs. It ships with a graphical user interface supporting the
 creation of state machines and contains IDE like debugging mechanisms. Alternatively, state machines can
 programmatically be generated using RAFCON's API.
@@ -23,7 +23,7 @@ programmatically be generated using RAFCON's API.
 
 .. toctree::
    :maxdepth: 1
-   :numbered:
+   :numbered: 2
    :caption: Table of Contents
 
    concepts.rst
