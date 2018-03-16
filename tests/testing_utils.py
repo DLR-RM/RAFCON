@@ -395,7 +395,8 @@ def close_gui(already_quit=False, force_quit=True):
     if not already_quit:
         call_gui_callback(state_machine_execution_engine.stop)
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        # delete_all_state_machines should be done  by the quit gui method -> TODO maybe add the force quit flag as option to the arguments
+        # delete_all_state_machines should be done by the quit gui method
+        # TODO maybe add the force quit flag as option to the arguments
         call_gui_callback(menubar_ctrl.on_quit_activate, None, None, force_quit)
     if not wait_for_gui_quit():
         assert False, "Could not close the GUI"
@@ -433,7 +434,7 @@ def patch_gtkmvc_model_mt():
             self._run_id = run_id_generator()
         self.backward_execution = copy.copy(backward_execution)
         self.thread = threading.Thread(target=self.run)
-        # !!!!!!!!!!!!! pachted line !!!!!!!!!!!!!
+        # !!!!!!!!!!!!! patched line !!!!!!!!!!!!!
         state_threads.append(self.thread)
         self.thread.start()
 
@@ -448,7 +449,7 @@ def patch_gtkmvc_model_mt():
             self._ExecutionEngine__running_state_machine.start()
 
             self._ExecutionEngine__wait_for_finishing_thread = threading.Thread(target=self._wait_for_finishing)
-            # !!!!!!!!!!!!! pachted line !!!!!!!!!!!!!
+            # !!!!!!!!!!!!! patched line !!!!!!!!!!!!!
             state_threads.append(self._ExecutionEngine__wait_for_finishing_thread)
             self._ExecutionEngine__wait_for_finishing_thread.start()
         else:
