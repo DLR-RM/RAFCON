@@ -77,6 +77,13 @@ class LibraryStateModel(AbstractStateModel):
         else:
             logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(self.state)))
 
+    def enforce_generation_of_state_copy_model(self):
+        """This enforce a load of state copy model without considering meta data"""
+        self.initiate_library_root_state_model()
+        self._load_input_data_port_models()
+        self._load_output_data_port_models()
+        self._load_outcome_models()
+
     def prepare_destruction(self, recursive=True):
         """Prepares the model for destruction
 
