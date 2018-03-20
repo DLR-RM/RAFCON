@@ -17,7 +17,7 @@
    :synopsis: A module to represent a library state in the state machine
 
 """
-from copy import copy
+from copy import copy, deepcopy
 
 from gtkmvc import Observable
 from rafcon.core.states.state import StateExecutionStatus
@@ -154,6 +154,7 @@ class LibraryState(State):
         # overwrite may by default set True flags by False
         state.use_runtime_value_input_data_ports = copy(self.use_runtime_value_input_data_ports)
         state.use_runtime_value_output_data_ports = copy(self.use_runtime_value_output_data_ports)
+        state.semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
         return state
 
