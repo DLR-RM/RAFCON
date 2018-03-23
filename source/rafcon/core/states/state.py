@@ -130,6 +130,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.execution_history = None
         self.backward_execution = False
 
+        self.marked_dirty = False
+
         # logger.debug("New {0} created".format(self))
 
     # ---------------------------------------------------------------------------------------------

@@ -118,8 +118,23 @@ class LibraryState(State):
                 self.use_runtime_value_input_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
             elif isinstance(self.input_data_port_runtime_values[data_port_id], basestring):
-                self.input_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
-                    self.input_data_port_runtime_values[data_port_id], data_port.data_type)
+                try:
+                    self.input_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
+                        self.input_data_port_runtime_values[data_port_id], data_port.data_type)
+                except AttributeError:
+                    # the parameter cannot be converted
+                    # this can be the case when the data type of port of the library state changed
+                    self.input_data_port_runtime_values[data_port_id] = data_port.default_value
+                    self.use_runtime_value_input_data_ports[data_port_id] = True
+                    self.marked_dirty = True
+
+        # if there is a key existing in the runtime values but not in the input_data_ports we delete it
+        for key in self.use_runtime_value_input_data_ports.keys():
+            if key not in self.input_data_ports.keys():
+                del self.use_runtime_value_input_data_ports[key]
+                del self.input_data_port_runtime_values[key]
+                # state machine cannot be marked dirty directly, as it does not exist yet
+                self.marked_dirty = True
 
         # handle output runtime values
         self.output_data_port_runtime_values = output_data_port_runtime_values
@@ -131,8 +146,24 @@ class LibraryState(State):
                 self.use_runtime_value_output_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
             elif isinstance(self.output_data_port_runtime_values[data_port_id], basestring):
-                self.output_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
-                    self.output_data_port_runtime_values[data_port_id], data_port.data_type)
+                try:
+                    self.output_data_port_runtime_values[data_port_id] = \
+                        type_helpers.convert_string_value_to_type_value(
+                            self.output_data_port_runtime_values[data_port_id], data_port.data_type)
+                except AttributeError:
+                    # the parameter cannot be converted
+                    # this can be the case when the data type of port of the library state changed
+                    self.output_data_port_runtime_values[data_port_id] = data_port.default_value
+                    self.use_runtime_value_output_data_ports[data_port_id] = True
+                    self.marked_dirty = True
+
+        # if there is a key existing in the runtime values but not in the output_data_ports we delete it
+        for key in self.use_runtime_value_output_data_ports.keys():
+            if key not in self.output_data_ports.keys():
+                del self.use_runtime_value_output_data_ports[key]
+                del self.output_data_port_runtime_values[key]
+                # state machine cannot be marked dirty directly, as it does not exist yet
+                self.marked_dirty = True
 
         self.initialized = True
 
