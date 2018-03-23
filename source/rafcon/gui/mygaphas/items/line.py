@@ -242,16 +242,11 @@ class PerpLine(Line):
             else:
                 angle = 0
 
-        if self.from_port:
-            outcome_side = self.from_port.port_side_size
-        else:  # self.to_port:
-            outcome_side = self.to_port.port_side_size
-
         c.set_antialias(ANTIALIAS_SUBPIXEL)
 
         parameters = {
             'name': self.name,
-            'side': outcome_side,
+            'line_width': self.line_width,
             'color': self._arrow_color
         }
 
@@ -274,7 +269,7 @@ class PerpLine(Line):
             ink_extents, logical_extents = layout.get_extents()
             extents = [extent / float(SCALE) for extent in logical_extents]
             real_label_size = extents[2], extents[3]
-            desired_height = outcome_side * 1.1
+            desired_height = self.line_width * 2.5
             scale_factor = real_label_size[1] / desired_height
             label_size = real_label_size[0] / scale_factor, desired_height
 
