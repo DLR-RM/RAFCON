@@ -349,6 +349,10 @@ class PortView(object):
             label_pos = extents[0], extents[1]
             relative_pos = label_pos[0] - position[0], label_pos[1] - position[1]
             label_size = extents[2] - extents[0], extents[3] - extents[1]
+
+            # print label_size[0], self.name, self.parent.model.state.name
+            if label_size[0] < constants.MINIMUM_PORT_NAME_SIZE_FOR_DISPLAY and self.parent:
+                return
             self._last_label_relative_pos = relative_pos
             self._last_label_size = label_size
 

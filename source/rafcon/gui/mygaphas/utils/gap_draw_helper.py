@@ -310,6 +310,8 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
     c.set_line_width(port_height * .03)
     c.set_source_rgba(*label_color)
     label_extents = c.stroke_extents()
+    if label_extents[0] == 0:
+        label_extents = c.fill_extents()
 
     if only_extent_calculations:
         c.new_path()
