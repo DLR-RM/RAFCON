@@ -18,6 +18,18 @@ Next release
 Patch releases 0.12.\*
 ----------------------
 
+0.12.8
+""""""
+
+- Improvements:
+
+    - buttons to forcefully lock or unlock a global variable
+    
+- Bug Fixes:
+    - no deadlocks when locking a global variable two times
+    - :issue:`502` changing data ports not possible
+
+
 0.12.7
 """"""
 
