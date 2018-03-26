@@ -179,23 +179,33 @@ class GlobalVariableManager(Observable):
         :param key: the key of the global variable to be locked
         """
         if key in self.__variable_locks:
-            self.__variable_locks[key].acquire()
-            access_key = global_variable_id_generator()
-            self.__access_keys[key] = access_key
-            return access_key
+            if not self.is_locked(key):
+                self.__variable_locks[key].acquire()
+                access_key = global_variable_id_generator()
+                self.__access_keys[key] = access_key
+                return access_key
+            else:
+                logger.error("Global variable {} already locked".format(str(key)))
+                return False
 
     @Observable.observed
-    def unlock_variable(self, key, access_key):
+    def unlock_variable(self, key, access_key, force=False):
         """Unlocks a global variable
 
         :param key: the key of the global variable to be unlocked
         :param access_key: the access key to be able to unlock the global variable
+        :param force: if the variable should be unlocked forcefully
         :raises exceptions.AttributeError: if the global variable does not exist
         :raises exceptions.RuntimeError: if the wrong access key is passed
         """
-        if self.__access_keys[key] == access_key:
+        if self.__access_keys[key] == access_key or force:
             if key in self.__variable_locks:
-                self.__variable_locks[key].release()
+                if self.is_locked(key):
+                    self.__variable_locks[key].release()
+                    return True
+                else:
+                    logger.error("Global variable {} is not locked, thus cannot unlock it".format(str(key)))
+                    return False
             else:
                 raise AttributeError("Global variable %s does not exist!" % str(key))
         else:
