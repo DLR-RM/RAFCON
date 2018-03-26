@@ -17,7 +17,7 @@
    :synopsis: A module to represent a library state in the state machine
 
 """
-from copy import copy
+from copy import copy, deepcopy
 
 from gtkmvc import Observable
 from rafcon.core.states.state import StateExecutionStatus
@@ -154,6 +154,7 @@ class LibraryState(State):
         # overwrite may by default set True flags by False
         state.use_runtime_value_input_data_ports = copy(self.use_runtime_value_input_data_ports)
         state.use_runtime_value_output_data_ports = copy(self.use_runtime_value_output_data_ports)
+        state.semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
         return state
 
@@ -163,7 +164,10 @@ class LibraryState(State):
     def destroy(self, recursive=True):
         super(LibraryState, self).destroy(recursive)
         if recursive:
-            self.state_copy.destroy(recursive)
+            if self.state_copy:
+                self.state_copy.destroy(recursive)
+            else:
+                logger.verbose("Multiple calls of destroy {0}".format(self))
             self._state_copy = None
 
     def run(self):

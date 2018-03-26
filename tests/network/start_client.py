@@ -31,7 +31,7 @@ def setup_logger():
 def start_client(interacting_function, queue_dict):
     from rafcon.gui.config import global_gui_config
     import os
-
+    
     from rafcon.gui.controllers.main_window import MainWindowController
     from rafcon.gui.views.main_window import MainWindowView
     import rafcon.gui.singleton as gui_singletons
@@ -90,7 +90,8 @@ def start_client(interacting_function, queue_dict):
     state_machine = global_storage.load_state_machine_from_path(
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "99_bottles_of_beer_monitoring")))
 
-    core_singletons.state_machine_manager.add_state_machine(state_machine)
+    sm_id = rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm_id
 
     sm_manager_model = gui_singletons.state_machine_manager_model
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
@@ -110,7 +111,7 @@ def start_client(interacting_function, queue_dict):
     if "twisted" in sys.modules.keys():
         reactor.run()
     else:
-        logger.error("Something went seriously wrong!")
+        logger.error("Client: Twisted is not in sys.modules or twisted is not working! Exiting program ... !")
         os._exit(0)
 
     logger.info("Joined root state")

@@ -44,6 +44,7 @@ class Clipboard(Observable):
         self.port_id_mapping_dict = {}
         # TODO check if it is secure that new state ids don't interfere with old state ids
         self.state_id_mapping_dict = {}
+        self.semantic_data_list_tuple = []
 
     def __str__(self):
         return "Clipboard: parent of copy is state with state_id {0} and copies in are {1}" \
@@ -64,6 +65,12 @@ class Clipboard(Observable):
         port_attrs = ['input_data_ports', 'output_data_ports', 'scoped_variables', 'outcomes']
         port_is_pasted = any([key in non_empty_lists_dict for key in port_attrs])
         return non_empty_lists_dict, target_state_m.parent if target_state_m.parent and port_is_pasted else target_state_m
+
+    def set_semantic_dictionary_list(self, semantic_data):
+        self.semantic_data_list_tuple = deepcopy(semantic_data)
+
+    def get_semantic_dictionary_list(self):
+        return deepcopy(self.semantic_data_list_tuple)
 
     def copy(self, selection, smart_selection_adaption=True):
         """ Copy all selected items to the clipboard using smart selection adaptation by default

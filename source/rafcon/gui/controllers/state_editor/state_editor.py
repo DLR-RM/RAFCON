@@ -56,6 +56,10 @@ class StateEditorController(ExtendedController):
         assert isinstance(view, StateEditorView)
         ExtendedController.__init__(self, model, view)
 
+        if isinstance(model, LibraryStateModel) and not model.state_copy_initialized:
+            model.enforce_generation_of_state_copy_model()
+            logger.info("Respective state editor's state is most likely not drawn in the graphical editor. -> {0}"
+                        "".format(model))
         sv_and_source_script_state_m = model.state_copy if isinstance(model, LibraryStateModel) else model
 
         self.add_controller('properties_ctrl', StateOverviewController(model, view.properties_view))

@@ -11,6 +11,11 @@ def search_for_print_statements_in_python_files(path):
     output = os.popen(command).read()
     # print output
     single_lines = output.split("\n")
+
+    # remove empty line
+    if '' in single_lines:
+        single_lines.remove('')
+
     return single_lines
 
 
@@ -20,13 +25,13 @@ def test_number_of_whitespaces():
     utils_print_lines = search_for_print_statements_in_python_files("utils")
     print "\n".join([str(line) for line in gui_print_lines])
     print len(gui_print_lines)
-    assert len(gui_print_lines) == 37
+    assert len(gui_print_lines) == 5
     print "\n".join([str(line) for line in core_print_lines])
     print len(core_print_lines)
-    assert len(core_print_lines) == 10
+    assert len(core_print_lines) == 0
     print "\n".join([str(line) for line in utils_print_lines])
     print len(utils_print_lines)
-    assert len(utils_print_lines) == 2
+    assert len(utils_print_lines) == 1
 
 
 if __name__ == '__main__':

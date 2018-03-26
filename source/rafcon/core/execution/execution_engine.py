@@ -269,9 +269,9 @@ class ExecutionEngine(Observable):
             self.set_execution_mode(StateMachineExecutionStatus.RUN_TO_SELECTED_STATE)
         else:
             logger.debug("Start execution engine and run to selected state!")
-            self.set_execution_mode(StateMachineExecutionStatus.RUN_TO_SELECTED_STATE)
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
+            self.set_execution_mode(StateMachineExecutionStatus.RUN_TO_SELECTED_STATE)
             self.run_to_states = []
             self.run_to_states.append(path)
             self._run_active_state_machine()

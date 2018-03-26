@@ -181,7 +181,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self.state_to_dict(self)
 
     def update_hash(self, obj_hash):
-        return Hashable.update_hash_from_dict(obj_hash, self.to_dict())
+        Hashable.update_hash_from_dict(obj_hash, self.to_dict())
+        Hashable.update_hash_from_dict(obj_hash, self.semantic_data)
+        return obj_hash
 
     @classmethod
     def from_dict(cls, dictionary):

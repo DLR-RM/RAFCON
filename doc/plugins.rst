@@ -76,14 +76,12 @@ program ends.
 Available plugins
 -----------------
 
-Please add your own plugins here, too.
-
 Monitoring Plugin
 """""""""""""""""
 
 This RAFCON plugin enables monitoring RAFCON instances via unsecure
-UDP/IP. The RMPM package name is ``rafcon_monitoring_plugin``. See also:
-"Using the monitoring plugin" at the :ref:`Tutorials` page.
+UDP/IP. The RMPM package name is ``rafcon_monitoring_plugin``.
+See also: :ref:`Using the monitoring plugin`
 
 DDS Monitoring Plugin
 """""""""""""""""""""

@@ -1702,32 +1702,22 @@ class GraphicalEditorController(ExtendedController):
 
         elif isinstance(state_m, LibraryStateModel):
 
-            show_content = state_m.show_content() is True
-            is_first_draw_of_lib_state = not contains_geometric_info(state_m.state_copy.temp['gui']['editor']['pos'])
-
-            if show_content or is_child_of_library:
+            if state_m.show_content() or is_child_of_library:
                 # Start calculation hierarchy level within a library
                 if not is_child_of_library:
                     state_temp['library_level'] = 1
 
                 # First draw inner states to generate meta data
-                self.draw_state(state_m.state_copy, (0, 0), size, depth)
-
-                # Resize inner states of library states if not done before
-                if is_first_draw_of_lib_state:
-                    new_corner_pos = add_pos(state_temp['pos'], state_meta['size'])
-                    if isinstance(state_m.state_copy, ContainerStateModel):
-                        import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+                if state_m.state_copy:
+                    import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+                    # logger.verbose("Scale meta data {0} {1}".format(not state_m.meta_data_was_scaled, state_m))
+                    if not state_m.meta_data_was_scaled:
                         gui_helper_meta_data.scale_library_content(state_m, gaphas_editor=False)
-                    else:
-                        self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
-                                           redraw=False)
-                        state_m.state_copy.set_meta_data_editor('size',
-                                                                state_m.get_meta_data_editor(for_gaphas=False)['size'],
-                                                                from_gaphas=False)
-                        state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=False)
-
-                    redraw = True
+                        state_m.meta_data_was_scaled = True
+                    if isinstance(state_m.state_copy, ContainerStateModel):
+                        self.draw_state(state_m.state_copy, (0, 0), size, depth)
+                else:
+                    redraw = False
 
         self._handle_new_transition(state_m, depth)
 

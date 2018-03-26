@@ -25,7 +25,7 @@ logger = log.get_logger(__name__)
 try:
     import gtksourceview2
 except ImportError:
-    print "Python module 'gtksourceview2' not found!"
+    logger.warning("Python module 'gtksourceview2' not found!")
 
 
 class EditorView(View):

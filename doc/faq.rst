@@ -264,16 +264,6 @@ done if the type of the string matters.
 
 :: _faq_filesystem_names:
 
-Why do the folders on the file system of a state machine have cryptic names?
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-The name of a folder within a state machine folder or child state folder
-agrees with the id of the state it represents. We agree that this is not
-very human readable, but the name of a state is not unique, so this
-cannot be used. **Tipp:** If you want to navigate within the file
-system, open the `state machine tree <gui_guide.rst#state-machine-tree>`__ of the according state
-machine in the GUI. There you will find the ids of the states.
-
 API
 ---
 

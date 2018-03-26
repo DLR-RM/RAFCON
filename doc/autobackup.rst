@@ -52,11 +52,11 @@ way (dialog window) if the parameters ``AUTO_RECOVERY_LOCK_ENABLED`` and
 ``AUTO_RECOVERY_CHECK`` are set to ``True``. The feature is new so by
 default those parameters are set ``False``. In more detail
 ``AUTO_RECOVERY_LOCK_ENABLED`` result in creation of lock files and
-``AUTO_RECOVERY_CHECK=True`` triggers a check on lock files for the hole
+``AUTO_RECOVERY_CHECK=True`` triggers a check on lock files for the whole
 ``/tmp/rafcon-$USER`` folder and will offer optional recovery of
-respective state machines by re-open those. So it is possible to general
-enable lock file generation and only enable the check on lock files if
+respective state machines by re-open those. So it is possible to enable
+lock file generation and only enable the check on lock files if
 explicitly needed.
 
-A auto recovery of crashed sessions and there open state machines and
-there tabs situation is not supported, for now.
+An auto recovery of whole crashed sessions including their open state machines
+and tab states is currently not supported.

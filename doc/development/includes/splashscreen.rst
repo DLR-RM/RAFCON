@@ -2,8 +2,8 @@
 This is a guide on creating a splash screen picture using the GIMP template.
 
 **Location**
-The template file is located in `/rafcon/source/gui/themes/templates`. The standard place for
-images to be loaded into the startup splashscreen is `/rafcon/source/gui/themes/splashscreens`.
+The template file is located in `source/rafcon/gui/assets/themes/templates`. The standard place for
+images to be loaded into the startup splashscreen is `source/rafcon/gui/assets/splashscreens`.
 
 **File**
 The template is a `.xcf` which is the native image format of GIMP. This guide is also using GIMP.

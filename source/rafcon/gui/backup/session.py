@@ -1,6 +1,7 @@
 """ Module collects methods and function to be integrated into a respective class if that is of advantage, in future.
 """
 import os
+import time
 
 from rafcon.core.storage import storage
 from rafcon.gui.utils import wait_for_gui
@@ -82,6 +83,7 @@ def restore_session_from_runtime_config():
     # load and restore state machines like they were opened before
     open_sm = []
     for idx, tab_meta_dict in enumerate(open_tabs):
+        start_time = time.time()
         backup_meta_dict = tab_meta_dict['backup_meta']
         from_backup_path = None
         open_sm.append(None)
@@ -130,6 +132,10 @@ def restore_session_from_runtime_config():
             state_machine_manager_model.state_machine_manager.add_state_machine(state_machine)
             wait_for_gui()
             state_machine_m = state_machine_manager_model.state_machines[state_machine.state_machine_id]
+
+        duration = time.time() - start_time
+        stat = state_machine_m.state_machine.root_state.get_states_statistics(0)
+        logger.info("It took {0} seconds to restore {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
 
         open_sm[idx] = state_machine_m
 

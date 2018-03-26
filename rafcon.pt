@@ -44,6 +44,7 @@ python -m compileall -fq ./source/libraries
 
 [install]
 source/rafcon => source/rafcon
+tests => tests
 share | !*.pyc | !.gitignore => share
 doc => doc
 ./VERSION => ./VERSION

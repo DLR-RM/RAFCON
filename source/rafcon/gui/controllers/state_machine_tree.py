@@ -290,7 +290,11 @@ class StateMachineTreeController(TreeViewController):
             if changed_state_model.state.is_root_state:
                 parent_row_iter = self.state_row_iter_dict_by_state_path[changed_state_model.state.get_path()]
             else:
-                parent_row_iter = self.state_row_iter_dict_by_state_path[changed_state_model.parent.state.get_path()]
+                if changed_state_model.state.is_root_state_of_library:
+                    # because either lib-state or lib-state-root is in tree the next higher hierarchy state is updated
+                    parent_row_iter = self.state_row_iter_dict_by_state_path[changed_state_model.parent.parent.state.get_path()]
+                else:
+                    parent_row_iter = self.state_row_iter_dict_by_state_path[changed_state_model.parent.state.get_path()]
 
         # do recursive update
         self.insert_and_update_recursively(parent_row_iter, changed_state_model, with_expand)

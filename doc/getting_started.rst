@@ -1,7 +1,7 @@
 Getting started
 ===============
 
-This guide will help you getting started with :ref:`RAFCON`.
+This guide will help you getting started with :ref:`RAFCON`. The following information only applies, if you use :ref:`RAFCON` inside the RMC institute.
 
 Start RAFCON with GUI
 ---------------------

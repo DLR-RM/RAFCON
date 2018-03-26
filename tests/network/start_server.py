@@ -73,7 +73,8 @@ def start_server(interacting_function, queue_dict):
     import testing_utils
     state_machine = global_storage.load_state_machine_from_path(
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "99_bottles_of_beer_monitoring")))
-    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    sm_id = rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm_id
 
     sm_thread = threading.Thread(target=check_for_sm_finished, args=[state_machine, ])
     sm_thread.start()
@@ -85,13 +86,14 @@ def start_server(interacting_function, queue_dict):
     plugins.run_post_inits(setup_config)
 
     if "twisted" in sys.modules.keys():
+        print "################# twisted found #######################"
         interacting_thread = threading.Thread(target=interacting_function,
                                               args=[queue_dict, ])
         interacting_thread.start()
         from twisted.internet import reactor
         reactor.run()
     else:
-        logger.error("Something went seriously wrong!")
+        logger.error("Server: Twisted is not in sys.modules or twisted is not working! Exiting program ... !")
         import os
         os._exit(0)
 
