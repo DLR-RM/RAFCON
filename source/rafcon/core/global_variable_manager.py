@@ -186,6 +186,7 @@ class GlobalVariableManager(Observable):
                 return access_key
             else:
                 logger.error("Global variable {} already locked".format(str(key)))
+                return False
 
     @Observable.observed
     def unlock_variable(self, key, access_key, force=False):
@@ -201,8 +202,10 @@ class GlobalVariableManager(Observable):
             if key in self.__variable_locks:
                 if self.is_locked(key):
                     self.__variable_locks[key].release()
+                    return True
                 else:
                     logger.error("Global variable {} is not locked, thus cannot unlock it".format(str(key)))
+                    return False
             else:
                 raise AttributeError("Global variable %s does not exist!" % str(key))
         else:
