@@ -24,7 +24,6 @@ from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.singleton import library_manager
 from rafcon.core.states.state import State, PATH_SEPARATOR
 from rafcon.core.decorators import lock_state_machine
-from rafcon.core.storage import storage
 from rafcon.utils import log
 from rafcon.utils import type_helpers
 from rafcon.utils.hashable import Hashable
@@ -92,15 +91,16 @@ class LibraryState(State):
             logger.info("Old library name '{0}' was located at {1}".format(library_name, library_path))
             logger.info("New library name '{0}' is located at {1}".format(new_library_name, new_library_path))
 
-        state_machine = storage.load_state_machine_from_path(self.lib_os_path)
-        lib_version = state_machine.version
-        self.state_copy = state_machine.root_state
+        # key = load_library_root_state_timer.start()
+        lib_version, state_copy = library_manager.get_library_state_copy_instance(self.lib_os_path)
+        self.state_copy = state_copy
+        # load_library_root_state_timer.stop(key)
         self.state_copy.parent = self
         if not str(lib_version) == version and not str(lib_version) == "None":
             raise AttributeError("Library does not have the correct version!")
 
         if name is None:
-            self.name = state_machine.root_state.name
+            self.name = self.state_copy.name
 
         # copy all ports and outcomes of self.state_copy to let the library state appear like the container state
         # this will also set the parent of all outcomes and data ports to self

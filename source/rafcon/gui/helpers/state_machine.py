@@ -568,6 +568,7 @@ def refresh_all(force=False):
                 logger.debug("Refresh canceled")
                 return
 
+    library_manager.clean_loaded_libraries()
     refresh_libraries()
     states_editor_ctrl.close_all_pages()
     state_machines_editor_ctrl.refresh_all_state_machines()
