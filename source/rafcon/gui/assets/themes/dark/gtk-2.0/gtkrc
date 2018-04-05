@@ -375,6 +375,7 @@ widget "*.data_flows_title_wrapper" style : highest "widget-title"
 widget "*.data_linkage_title_wrapper" style : highest "widget-title"
 widget "*.logical_linkage_title_wrapper" style : highest "widget-title"
 widget "*.description_title_wrapper" style : highest "widget-title"
+widget "*.semantic_data_title_wrapper" style : highest "widget-title"
 
 
 style "rafcon-trees" {
