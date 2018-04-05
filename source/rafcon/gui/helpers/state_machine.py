@@ -610,7 +610,7 @@ def delete_core_element_of_model(model, raise_exceptions=False, recursive=True, 
         return False
 
 
-def delete_core_elements_of_models(models, raise_exceptions=False, recursive=True, destroy=True, force=True):
+def delete_core_elements_of_models(models, raise_exceptions=True, recursive=True, destroy=True, force=True):
     """Deletes all respective core elements for the given models
 
     Calls the :func:`delete_core_element_of_model` for all given models.

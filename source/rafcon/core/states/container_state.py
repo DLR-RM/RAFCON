@@ -1325,8 +1325,10 @@ class ContainerState(State):
                             output data port id
 
         """
-        # delete all data flows in parent related to data_port_id and self.state_id
-        if not self.is_root_state:
+        # delete all data flows in parent related to data_port_id and self.state_id = external data flows
+        # checking is_root_state_of_library is only necessary in case of scoped variables, as the scoped variables
+        # they are not destroyed by the library state, as the library state does not have a reference to the scoped vars
+        if not self.is_root_state and not self.is_root_state_of_library:
             data_flow_ids_to_remove = []
             for data_flow_id, data_flow in self.parent.data_flows.iteritems():
                 if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
@@ -1336,7 +1338,7 @@ class ContainerState(State):
             for data_flow_id in data_flow_ids_to_remove:
                 self.parent.remove_data_flow(data_flow_id)
 
-        # delete all data flows in self related to data_port_id and self.state_id
+        # delete all data flows in self related to data_port_id and self.state_id = internal data flows
         data_flow_ids_to_remove = []
         for data_flow_id, data_flow in self.data_flows.iteritems():
             if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
