@@ -317,6 +317,10 @@ class ExecutionEngine(Observable):
 
             wait = True
             for state_path in copy.deepcopy(self.run_to_states):
+                next_child_state_path = None
+                # can be None in case of no transition given
+                if next_child_state_to_execute:
+                    next_child_state_path = next_child_state_to_execute.get_path()
                 if state_path == state.get_path():
                     # the execution did a whole step_over for the hierarchy state "state"
                     # or a whole step_out for the hierarchy state "state"
@@ -325,8 +329,8 @@ class ExecutionEngine(Observable):
                     wait = True
                     self.run_to_states.remove(state_path)
                     break
-                elif state_path == next_child_state_to_execute.get_path():
-                    # this is the case that execution has reached a specifc state explicitely marked via
+                elif state_path == next_child_state_path:
+                    # this is the case that execution has reached a specific state explicitly marked via
                     # run_to_selected_state(); if this is the case run_to_selected_state() is finished and the execution
                     # has to wait for new execution commands
                     wait = True
