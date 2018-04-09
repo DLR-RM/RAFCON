@@ -12,6 +12,7 @@ Next release
 - Improvements:
 
 - Bug Fixes:
+    - :issue:`503` scoped variable looks weird
 
 
 
