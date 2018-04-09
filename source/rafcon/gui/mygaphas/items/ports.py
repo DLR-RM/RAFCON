@@ -245,7 +245,7 @@ class PortView(object):
         # Do not draw ports below a certain threshold size
         matrix_i2v = view.get_matrix_i2v(self.parent)
         view_length, _ = matrix_i2v.transform_distance(side_length, 0)
-        if view_length < constants.MINIMUM_PORT_SIZE_FOR_DISPLAY:
+        if view_length < constants.MINIMUM_PORT_SIZE_FOR_DISPLAY and not context.draw_all:
             return
         # Do not draw port outside of the view
         center = (position.x.value, position.y.value)
@@ -254,7 +254,8 @@ class PortView(object):
                 view_center[0] - view_length / 2. > view.allocation[2] or \
                 view_center[1] + view_length / 2. < 0 or \
                 view_center[1] - view_length / 2. > view.allocation[3]:
-            return
+            if not context.draw_all:
+                return
 
         parent_state_m = self.parent.model
         is_library_state_with_content_shown = self.parent.show_content()
