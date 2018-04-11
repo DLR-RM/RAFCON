@@ -51,7 +51,6 @@ from rafcon.core.config import global_config
 # utils
 from rafcon.gui.utils import wait_for_gui
 import rafcon.utils.filesystem as filesystem
-from rafcon.utils import profiler
 from rafcon.utils import plugins
 from rafcon.utils.i18n import _, setup_l10n, setup_l10n_gtk
 from rafcon.utils import log
@@ -199,11 +198,6 @@ def stop_gtk():
 def post_gui_destruction():
     plugins.run_hook("post_destruction")
 
-    if global_config.get_config_value("PROFILER_RUN", False):
-        result_path = global_config.get_config_value("PROFILER_RESULT_PATH")
-        view = global_config.get_config_value("PROFILER_VIEWER")
-        profiler.stop("global", result_path, view)
-
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
         rafcon.gui.models.auto_backup.remove_rafcon_instance_lock_file()
 
@@ -313,9 +307,6 @@ def main():
     if not user_input.new and not user_input.state_machine_paths \
             and rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
         glib.idle_add(backup_session.restore_session_from_runtime_config, priority=glib.PRIORITY_LOW)
-
-    if global_config.get_config_value("PROFILER_RUN", False):
-        profiler.start("global")
 
     if state_machine and (user_input.start_state_machine_flag or state_machine.get_state_by_path(user_input.start_state_path)):
         start_state_machine(state_machine, user_input.start_state_path, user_input.quit_flag)

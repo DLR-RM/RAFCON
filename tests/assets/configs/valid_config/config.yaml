@@ -7,7 +7,3 @@ LIBRARY_PATHS:
     unit_test_state_machines: ../../../assets/unit_test_state_machines
 
 LIBRARY_RECOVERY_MODE: False
-
-PROFILER_RUN: False
-PROFILER_VIEWER: True
-PROFILER_RESULT_PATH: "/tmp/"

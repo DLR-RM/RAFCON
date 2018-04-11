@@ -65,7 +65,7 @@ class Config(ObservableConfig):
 
     """
 
-    keys_requiring_restart = ('PROFILER_RUN',)
+    keys_requiring_restart = ()
 
     def __init__(self, logger_object=None):
         """Default constructor

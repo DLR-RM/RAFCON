@@ -11,7 +11,8 @@
 
 import os
 from rafcon.utils import log
-logger = log.get_logger("start core")
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
+logger = log.get_logger("profiler")
 
 _profilers = {}
 
@@ -29,7 +30,7 @@ def start(name):
         logger.error("Cannot run profiler due to missing Python package 'profiling'")
 
 
-def stop(name, result_path="/tmp", view=False):
+def stop(name, result_path=RAFCON_TEMP_PATH_BASE, view=False):
     if name not in _profilers:
         return
     _profilers[name].stop()
