@@ -397,7 +397,8 @@ class StateView(Element):
         height = self.height
         border_width = self.border_width
         view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
-        if min(view_width, view_height) < constants.MINIMUM_STATE_SIZE_FOR_DISPLAY and self.parent:
+        if min(view_width, view_height) < constants.MINIMUM_STATE_SIZE_FOR_DISPLAY and self.parent and not \
+                context.draw_all:
             return
 
         c = context.cairo
@@ -407,7 +408,8 @@ class StateView(Element):
             'selected': self.selected,
             'moving': self.moving,
             'border_width': border_width,
-            'transparency': self.transparency
+            'transparency': self.transparency,
+            'draw_all': context.draw_all
         }
 
         upper_left_corner = (nw.x.value, nw.y.value)
@@ -950,7 +952,7 @@ class NameView(Element):
         width = self.width
         height = self.height
         view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
-        if min(view_width, view_height) < constants.MINIMUM_NAME_SIZE_FOR_DISPLAY:
+        if min(view_width, view_height) < constants.MINIMUM_NAME_SIZE_FOR_DISPLAY and not context.draw_all:
             return
         font_transparency = self.transparency
 
