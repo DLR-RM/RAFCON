@@ -28,10 +28,6 @@ A typical config file looks like this:
         my_home_libs: ~/my_rafcon_libs
         project_libs: ./libs_relative_to_config
 
-    PROFILER_RUN: False
-    PROFILER_VIEWER: True
-    PROFILER_RESULT_PATH: "/tmp/rafcon_profiler_result.prf"
-
 .. _core_config_docs:
 
 Documentation
@@ -56,25 +52,6 @@ LIBRARY\_PATHS
     is a relative or absolute path on the file system that is searched
     for libraries. Relative paths are assumed to be relative to the
     config file. Environment variables are also allowed.
-
-PROFILER\_RUN
-  | Type: boolean
-  | Default: ``False``
-  | If this flag is activated, a profiler will be run with the execution
-    of RACON
-
-PROFILER\_VIEWER
-  | Type: boolean
-  | Default: ``True``
-  | If this flag is True and the profiler was activated, an interactive
-    shell interface is opened showing the results of the profiler, when
-    RAFCON is exited.
-
-PROFILER\_RESULT\_PATH
-  | Type: String
-  | Default: ``"/tmp/"``
-  | Path pointing to where the profiler will dump its results. The files
-    in the path can be used for later evaluation.
 
 LIBRARY\_RECOVERY\_MODE
   | Type: boolean
