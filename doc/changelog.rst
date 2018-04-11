@@ -13,6 +13,7 @@ Next release
 
 - Bug Fixes:
     - :issue:`503` scoped variable looks weird
+    - :issue:`505` clean up profiler flag in config
     - :issue:`506` root state input ports leave ugly stripes behind
 
 
