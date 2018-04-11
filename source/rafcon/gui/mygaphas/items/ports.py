@@ -466,9 +466,7 @@ class PortView(object):
 
         # Save/restore context, as we move and rotate the connector to the desired pose
         c.save()
-        # c.rel_move_to(port_size / 2., port_size / 2.)
-        if not isinstance(self, ScopedVariablePortView):
-            PortView._rotate_context(c, direction)
+        PortView._rotate_context(c, direction)
         PortView._draw_rectangle(c, width + margin, height + margin)
         c.restore()
 
@@ -684,7 +682,9 @@ class ScopedVariablePortView(PortView):
 
     @PortView.port_size.getter
     def port_size(self):
-        return self._last_label_size
+        if self.side in [SnappedSide.TOP, SnappedSide.BOTTOM]:
+            return self._last_label_size
+        return self._last_label_size[1], self._last_label_size[0]
 
     def draw(self, context, state):
         # Do not draw if the core element has already been destroyed

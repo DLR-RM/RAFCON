@@ -12,6 +12,7 @@ Next release
 - Improvements:
 
 - Bug Fixes:
+    - :issue:`503` scoped variable looks weird
     - :issue:`506` root state input ports leave ugly stripes behind
 
 
