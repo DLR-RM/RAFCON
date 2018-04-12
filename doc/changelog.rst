@@ -21,6 +21,11 @@ Patch releases 0.12.\*
 0.12.8
 """"""
 
+- Feature:
+
+    - start RAFCON with `rafcon` instead of `rafcon_start_gui` or `rafcon_core` instead of `rafcon_start` (old
+      commands are still working)
+
 - Improvements:
 
     - buttons to forcefully lock or unlock a global variable
