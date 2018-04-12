@@ -11,21 +11,20 @@ shell:
 
 .. code:: bash
 
-    $ eval `rmpm_do env --env-format embed_sh rafcon`
-    $ rafcon_start_gui
+    $ eval `rmpm_do env --env-format embed_sh sw.common.rafcon`
+    $ rafcon
 
 The script supports various parameters, for more information, call
 
 .. code:: bash
 
-    $ rafcon_start_gui --help
+    $ rafcon --help
 
 The output is:
 
 .. code:: text
 
-    usage: rafcon_start_gui [-h] [-n] [-o [path [path ...]]] [-c [path]]
-                            [-g [path]]
+    usage: rafcon [-h] [-n] [-o [path [path ...]]] [-c [path]] [-g [path]]
 
     Start RAFCON
 
@@ -44,6 +43,13 @@ The output is:
                             'None' to prevent the generation of a config file and
                             use the default configuration. Default: None
 
+Alternatively, just call
+
+.. code:: bash
+
+    $ rmpm_do start rafcon sw.common.rafcon
+
+
 Run RAFCON state machine without GUI
 ------------------------------------
 
@@ -52,20 +58,20 @@ following commands:
 
 .. code:: bash
 
-    $ eval `rmpm_do env --env-format embed_sh rafcon`
-    $ rafcon_start -o /path/to/state_machine
+    $ eval `rmpm_do env --env-format embed_sh sw.common.rafcon`
+    $ rafcon_core -o /path/to/state_machine
 
 For more information about the supported parameters, call
 
 .. code:: bash
 
-    $ rafcon_start --help
+    $ rafcon_core --help
 
 The output is:
 
 .. code:: text
 
-    usage: rafcon_start [-h] [-o path] [-c [path]] [-s [path]]
+    usage: rafcon_core [-h] [-o path] [-c [path]] [-s [path]]
 
     Start RAFCON
 
@@ -80,6 +86,13 @@ The output is:
                             default configuration. Default: None
       -s [path], --start_state_path [path]
                             path of to the state that should be launched
+
+Alternatively, just call
+
+.. code:: bash
+
+    $ rmpm_do start rafcon_core sw.common.rafcon
+
 
 Get the latest version
 ----------------------
@@ -119,15 +132,15 @@ environment:
 
 .. code:: bash
 
-    $ eval `rmpm_do env --env-format embed_sh rafcon`
+    $ eval `rmpm_do env --env-format embed_sh sw.common.rafcon`
     $ export PYTHONPATH=~/any/existing/path/rafcon/source:$PYTHONPATH
     $ export PATH=~/any/existing/path/rafcon/bin:$PATH
 
-Now you can run ``rafcon_start`` or ``rafcon_start_gui`` as mentioned
-above. Hereby, ``rafcon_start`` just links to the file
-``~/any/existing/path/rafcon/source/rafcon/statemachine/start.py`` and
-``rafcon_start_gui`` points to
-``~/any/existing/path/rafcon/source/rafco/nmvc/start.py``, so you could
+Now you can run ``rafcon_core`` or ``rafcon`` as mentioned
+above. Hereby, ``rafcon_core`` just links to the file
+``~/any/existing/path/rafcon/source/rafcon/core/start.py`` and
+``rafcon`` points to
+``~/any/existing/path/rafcon/source/rafcon/gui/start.py``, so you could
 also call these files directly.
 
 Using the LN-Manager

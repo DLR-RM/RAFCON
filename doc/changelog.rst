@@ -893,7 +893,7 @@ Patch releases 0.4.\*
 """""
 
 - Add start scripts in bin folder
-- When using RAFCON with RMPM, you can run RAFCON just with the commands ``rafco_start`` or ``rafcon_start_gui``
+- When using RAFCON with RMPM, you can run RAFCON just with the commands ``rafcon_start`` or ``rafcon_start_gui``
 - Bug fixes for state type changes
 
 0.4.5

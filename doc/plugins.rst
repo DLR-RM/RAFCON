@@ -99,16 +99,16 @@ You can start RAFCON in server mode with or without GUI:
 .. code:: bash
 
     # Start server with GUI
-    rafcon_start_gui --server
+    rafcon --server
     # Start server without GUI
-    rafcon_start --remote --server -o <path_to_state_machine> [<path_to_state_machine> ...]
+    rafcon_core --remote --server -o <path_to_state_machine> [<path_to_state_machine> ...]
 
 In order to start RAFCON in client mode simply pass the ``--client``
 parameter:
 
 .. code:: bash
 
-    rafcon_start_gui --client
+    rafcon --client
 
 There are no restrictions on the number of clients per domain, so you
 can connect as many clients as you wish.
