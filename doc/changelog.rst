@@ -28,6 +28,7 @@ Patch releases 0.12.\*
     
 - Bug Fixes:
 
+    - fix state machine tree remove library state
     - :issue:`503` scoped variable looks weird
     - :issue:`506` root state input ports leave ugly stripes behind
     - no deadlocks when locking a global variable two times

@@ -149,7 +149,8 @@ class StateMachineTreeController(TreeViewController):
         if overview['prop_name'][-1] == 'state' and \
                 overview['method_name'][-1] in ["name"]:  # , "add_state", "remove_state"]:
             self.update_tree_store_row(overview['model'][-1])
-        elif overview['prop_name'][-1] == 'state' and \
+        # TODO check the work around for get_library_root_state -> maybe the notifications can be avoided if upper lib
+        elif overview['prop_name'][-1] == 'state' and not overview['model'][-1].state.get_library_root_state() and \
                 overview['method_name'][-1] in ["add_state", "remove_state"]:
             self.update(overview['model'][-1])
 
@@ -292,9 +293,15 @@ class StateMachineTreeController(TreeViewController):
             else:
                 if changed_state_model.state.is_root_state_of_library:
                     # because either lib-state or lib-state-root is in tree the next higher hierarchy state is updated
-                    parent_row_iter = self.state_row_iter_dict_by_state_path[changed_state_model.parent.parent.state.get_path()]
+                    changed_upper_state_m = changed_state_model.parent.parent
                 else:
-                    parent_row_iter = self.state_row_iter_dict_by_state_path[changed_state_model.parent.state.get_path()]
+                    changed_upper_state_m = changed_state_model.parent
+                # TODO check the work around of the next 2 lines while refactoring -> it is a check to be more robust
+                while changed_upper_state_m.state.get_path() not in self.state_row_iter_dict_by_state_path:
+                    # show Warning because because avoided method states_update
+                    logger.warning("Take a parent state because this is not in.")
+                    changed_upper_state_m = changed_upper_state_m.parent
+                parent_row_iter = self.state_row_iter_dict_by_state_path[changed_upper_state_m.state.get_path()]
 
         # do recursive update
         self.insert_and_update_recursively(parent_row_iter, changed_state_model, with_expand)
@@ -415,10 +422,11 @@ class StateMachineTreeController(TreeViewController):
                                 child_model.state_copy_initialized
             child_is_lib_with_show_content = isinstance(child_model, LibraryStateModel) and show_content_flag
             child_is_lib_without_show_content = isinstance(child_model, LibraryStateModel) and not show_content_flag
+
             if not isinstance(state_model, ContainerStateModel) or child_model is None or \
-                    child_id not in state_model.states and not child_is_lib_with_show_content and \
-                    child_id == child_model.state.state_copy.state_id or \
-                    child_is_lib_without_show_content and child_id == child_model.state.state_copy.state_id or \
+                    child_id not in state_model.states and not child_is_lib_with_show_content \
+                    and isinstance(child_model, LibraryStateModel) and child_id == child_model.state.state_copy.state_id \
+                    or child_is_lib_without_show_content and child_id == child_model.state.state_copy.state_id or \
                     isinstance(_state_model, LibraryStateModel) and not self.show_content(_state_model) or \
                     child_model.state.is_root_state_of_library and not self.show_content(child_model.parent):
 
