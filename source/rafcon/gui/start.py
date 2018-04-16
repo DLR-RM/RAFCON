@@ -186,7 +186,9 @@ def start_gtk():
     # check if twisted is imported
     if reactor_required():
         from twisted.internet import reactor
-        reactor.run()
+        import threading
+        is_main_thread = isinstance(threading.current_thread(), threading._MainThread)
+        reactor.run(installSignalHandlers=is_main_thread)
     else:
         gtk.main()
 
