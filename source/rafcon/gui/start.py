@@ -207,6 +207,10 @@ def stop_gtk():
         from twisted.internet import reactor
         if reactor.running:
             reactor.callFromThread(reactor.stop)
+        # Twisted can be imported without the reactor being used
+        # => check if GTK main loop is running
+        elif gtk.main_level() > 0:
+            glib.idle_add(gtk.main_quit)
     else:
         glib.idle_add(gtk.main_quit)
 
