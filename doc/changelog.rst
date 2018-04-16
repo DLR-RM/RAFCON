@@ -12,6 +12,7 @@ Next release
 - Improvements:
 
 - Bug Fixes:
+    - :issue:`501` transition is not selectable if it is drawn over state
 
 
 

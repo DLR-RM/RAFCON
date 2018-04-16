@@ -289,21 +289,35 @@ class HoverItemTool(gaphas.tool.HoverTool):
         top_most_item = items[0]
         second_top_most_item = items[1] if len(items) > 1 else None
 
-        # States/Names take precedence over connections if the connections are on the same hierarchy
+        # States/Names take precedence over connections if the connections are on the same hierarchy and if there is
+        # a port beneath the cursor
         first_state_v = filter(lambda item: isinstance(item, (NameView, StateView)), items)[0]
         first_state_v = first_state_v.parent if isinstance(first_state_v, NameView) else first_state_v
         if first_state_v:
+            # There can be several connections above the state/name skip those and find the first non-connection-item
             for item in items:
-                # There can be several connections above the state/name
-                # skip those and find the first non-connection-item
                 if isinstance(item, ConnectionView):
                     # connection is on the same hierarchy level as the state/name, thus we dismiss it
                     if self.view.canvas.get_parent(top_most_item) is not first_state_v:
                         continue
                 break
-            items = self.dismiss_upper_items(items, item)
-            top_most_item = items[0]
-            second_top_most_item = items[1] if len(items) > 1 else None
+
+            # Connections are only dismissed, if there is a port beneath the cursor. Search for ports here:
+            port_beneath_cursor = False
+            state_ports = first_state_v.get_all_ports()
+            position = self.view.get_matrix_v2i(first_state_v).transform_point(event.x, event.y)
+            i2v_matrix = self.view.get_matrix_i2v(first_state_v)
+            for port_v in state_ports:
+                item_distance = port_v.port.glue(position)[1]
+                view_distance = i2v_matrix.transform_distance(item_distance, 0)[0]
+                if view_distance == 0:
+                    port_beneath_cursor = True
+                    break
+
+            if port_beneath_cursor:
+                items = self.dismiss_upper_items(items, item)
+                top_most_item = items[0]
+                second_top_most_item = items[1] if len(items) > 1 else None
 
         # NameView can only be hovered if it or its parent state is selected
         if isinstance(top_most_item, NameView):
