@@ -136,10 +136,12 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'rafcon_start = rafcon.core.start:main'
+            'rafcon_start = rafcon.core.start:main',
+            'rafcon_core = rafcon.core.start:main'
         ],
         'gui_scripts': [
-            'rafcon_start_gui = rafcon.gui.start:main'
+            'rafcon_start_gui = rafcon.gui.start:main',
+            'rafcon = rafcon.gui.start:main'
         ]
     },
 
