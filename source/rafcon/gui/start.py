@@ -84,6 +84,16 @@ def setup_gtkmvc_logger():
     logging.getLogger('gtkmvc').addHandler(stdout)
 
 
+def install_reactor():
+    from twisted.internet import gtk2reactor
+    from twisted.internet.error import ReactorAlreadyInstalledError
+    try:
+        # needed for glib.idle_add, and signals
+        gtk2reactor.install()
+    except ReactorAlreadyInstalledError:
+        pass
+
+
 def pre_setup_plugins():
     """Loads plugins and calls the pre init hooks
 
@@ -94,9 +104,7 @@ def pre_setup_plugins():
 
     # check if twisted is imported and if so, install the required reactor
     if reactor_required():
-        from twisted.internet import gtk2reactor
-        # needed for glib.idle_add, and signals
-        gtk2reactor.install()
+        install_reactor()
 
     plugins.run_pre_inits()
 
