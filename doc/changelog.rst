@@ -13,8 +13,6 @@ Next release
 
 - Bug Fixes:
     - :issue:`501` transition is not selectable if it is drawn over state
-    - :issue:`503` scoped variable looks weird
-    - :issue:`506` root state input ports leave ugly stripes behind
 
 
 
@@ -27,10 +25,16 @@ Patch releases 0.12.\*
 - Improvements:
 
     - buttons to forcefully lock or unlock a global variable
+    - copy/paste for semantic data elements
     
 - Bug Fixes:
+
+    - fix state machine tree remove library state
+    - :issue:`503` scoped variable looks weird
+    - :issue:`506` root state input ports leave ugly stripes behind
     - no deadlocks when locking a global variable two times
     - :issue:`502` changing data ports not possible
+    - fix state element weakref parent assigenment in case of tolerating a invalid data flow
 
 
 0.12.7
