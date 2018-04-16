@@ -39,7 +39,6 @@ import rafcon.core.singleton as core_singletons
 from rafcon.core.storage import storage
 from rafcon.core.states.state import StateExecutionStatus
 
-from rafcon.utils import profiler
 from rafcon.utils import plugins
 from rafcon.utils import log
 
@@ -261,39 +260,29 @@ def main():
 
     post_setup_plugins(user_input)
 
-    if global_config.get_config_value("PROFILER_RUN", False):
-        profiler.start("global")
+    first_sm = None
+    for sm_path in user_input.state_machine_path:
+        sm = open_state_machine(sm_path)
+        if first_sm is None:
+            first_sm = sm
 
-    try:
+    if not user_input.remote:
+        start_state_machine(first_sm, user_input.start_state_path)
 
-        first_sm = None
-        for sm_path in user_input.state_machine_path:
-            sm = open_state_machine(sm_path)
-            if first_sm is None:
-                first_sm = sm
+    if reactor_required():
+        from twisted.internet import reactor
 
-        if not user_input.remote:
-            start_state_machine(first_sm, user_input.start_state_path)
+        # Blocking call, return when state machine execution finishes
+        reactor.run()
 
-        if reactor_required():
-            from twisted.internet import reactor
+    if not user_input.remote:
+        wait_for_state_machine_finished(first_sm)
+    else:
+        while not _user_abort:
+            time.sleep(1)
 
-            # Blocking call, return when state machine execution finishes
-            reactor.run()
-
-        if not user_input.remote:
-            wait_for_state_machine_finished(first_sm)
-        else:
-            while not _user_abort:
-                time.sleep(1)
-
-        logger.info("State machine execution finished!")
-        plugins.run_hook("post_destruction")
-    finally:
-        if global_config.get_config_value("PROFILER_RUN", False):
-            result_path = global_config.get_config_value("PROFILER_RESULT_PATH")
-            view = global_config.get_config_value("PROFILER_VIEWER")
-            profiler.stop("global", result_path, view)
+    logger.info("State machine execution finished!")
+    plugins.run_hook("post_destruction")
 
 
 if __name__ == '__main__':

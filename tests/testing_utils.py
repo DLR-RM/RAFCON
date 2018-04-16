@@ -326,11 +326,14 @@ def wait_for_gui():
 
 
 def run_gui_thread(gui_config=None, runtime_config=None):
+    import gobject
+    from rafcon.core.start import reactor_required
+    from rafcon.gui.start import start_gtk, install_reactor
     global gui_ready
     # see https://stackoverflow.com/questions/35700140/pygtk-run-gtk-main-loop-in-a-seperate-thread
-    import gobject
     gobject.threads_init()
-    import gtk
+    if reactor_required():
+        install_reactor()
     from rafcon.gui.controllers.main_window import MainWindowController
     from rafcon.gui.views.main_window import MainWindowView
 
@@ -343,8 +346,9 @@ def run_gui_thread(gui_config=None, runtime_config=None):
 
     # Wait for GUI to initialize
     wait_for_gui()
-    gtk.idle_add(gui_ready.set)
-    gtk.main()
+    # Set an event when the gtk loop is running
+    gobject.idle_add(gui_ready.set)
+    start_gtk()
 
 
 def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=None, timeout=5, patch_threading=True):
@@ -373,8 +377,8 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
     call_gui_callback(initialize_environment_core, core_config, libraries)
     if not gui_ready.wait(timeout):
-        import gtk
-        gtk.idle_add(gtk.main_quit)
+        from rafcon.gui.start import stop_gtk
+        stop_gtk()
         raise RuntimeError("Could not start GUI")
 
     # IMPORTANT signal handler and respective import of gui.start to avoid that singletons are created in this thread
