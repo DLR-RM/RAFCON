@@ -48,7 +48,7 @@ tests => tests
 share | !*.pyc | !.gitignore => share
 doc => doc
 ./VERSION => ./VERSION
-bin/ | !rafcon_start | !rafcon_start_gui | !resave_state_machines  | !*.pyc => bin # Symlinks are recreated in post_install step
+bin/ | !rafcon_core | !rafcon_start | !rafcon| !rafcon_start_gui | !resave_state_machines  | !*.pyc => bin # Symlinks are recreated in post_install step
 
 [post-install]
-cd ${RMPM_INSTALL_DIR}/bin && ln -s ../source/rafcon/core/start.py rafcon_start && ln -s ../source/rafcon/gui/start.py rafcon_start_gui && ln -s ../source/rafcon/gui/resave_state_machines.py resave_state_machines
+cd ${RMPM_INSTALL_DIR}/bin && ln -s ../source/rafcon/core/start.py rafcon_core && ln -s ../source/rafcon/core/start.py rafcon_start && ln -s ../source/rafcon/gui/start.py rafcon && ln -s ../source/rafcon/gui/start.py rafcon_start_gui && ln -s ../source/rafcon/gui/resave_state_machines.py resave_state_machines

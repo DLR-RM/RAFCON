@@ -73,6 +73,6 @@ if __name__ == '__main__':
     # test_gui(30, 10, True)  # around 57.5 seconds
     # test_gui(10, 20, True)  # around 19.6 seconds
     # test_gui(10, 30, True)  # around 40.6 seconds
-
+    
     if global_profiling:
         profiler.stop("global")

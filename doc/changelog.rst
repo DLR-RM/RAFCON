@@ -15,7 +15,7 @@ Next release
     - :issue:`503` scoped variable looks weird
     - :issue:`505` clean up profiler flag in config
     - :issue:`506` root state input ports leave ugly stripes behind
-
+    - :issue:`501` transition is not selectable if it is drawn over state
 
 
 Patch releases 0.12.\*
@@ -24,13 +24,24 @@ Patch releases 0.12.\*
 0.12.8
 """"""
 
+- Feature:
+
+    - start RAFCON with `rafcon` instead of `rafcon_start_gui` or `rafcon_core` instead of `rafcon_start` (old
+      commands are still working)
+
 - Improvements:
 
     - buttons to forcefully lock or unlock a global variable
+    - copy/paste for semantic data elements
     
 - Bug Fixes:
+
+    - fix state machine tree remove library state
+    - :issue:`503` scoped variable looks weird
+    - :issue:`506` root state input ports leave ugly stripes behind
     - no deadlocks when locking a global variable two times
     - :issue:`502` changing data ports not possible
+    - fix state element weakref parent assigenment in case of tolerating a invalid data flow
 
 
 0.12.7
@@ -891,7 +902,7 @@ Patch releases 0.4.\*
 """""
 
 - Add start scripts in bin folder
-- When using RAFCON with RMPM, you can run RAFCON just with the commands ``rafco_start`` or ``rafcon_start_gui``
+- When using RAFCON with RMPM, you can run RAFCON just with the commands ``rafcon_start`` or ``rafcon_start_gui``
 - Bug fixes for state type changes
 
 0.4.5
