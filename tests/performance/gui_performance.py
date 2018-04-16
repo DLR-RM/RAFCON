@@ -15,6 +15,7 @@ def add_state_machine_to_manager_model(state_machine, profiling=False):
         if profiling:
             profiler.start("add_state_machine")
         state_machine_manager.add_state_machine(state_machine)
+        testing_utils.wait_for_gui()
         if profiling:
             profiler.stop("add_state_machine")
     testing_utils.call_gui_callback(_add_state_machine_to_manager_model)
