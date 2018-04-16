@@ -182,6 +182,15 @@ def setup_gui():
     return main_window_controller
 
 
+def start_gtk():
+    # check if twisted is imported
+    if reactor_required():
+        from twisted.internet import reactor
+        reactor.run()
+    else:
+        gtk.main()
+
+
 def stop_gtk():
     # shutdown twisted correctly
     if reactor_required():
@@ -313,12 +322,7 @@ def main():
 
     splash_screen.destroy()
     try:
-        # check if twisted is imported
-        if reactor_required():
-            from twisted.internet import reactor
-            reactor.run()
-        else:
-            gtk.main()
+        start_gtk()
 
         logger.info(_("Main window was closed"))
 
