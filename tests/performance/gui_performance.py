@@ -108,5 +108,5 @@ if __name__ == '__main__':
     # test_gui(10, 30, True)  # around 40.6 seconds
 
     if enable_profiling:
-        result_path = "/home_local/brun_sb/log"
+        result_path = "/tmp"
         profiler.stop("global", result_path, True)
