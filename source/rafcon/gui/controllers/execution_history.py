@@ -35,6 +35,7 @@ from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.views.execution_history import ExecutionHistoryView
 from rafcon.gui.singleton import state_machine_execution_model
+from rafcon.gui.config import global_gui_config
 
 from rafcon.utils import log
 
@@ -345,9 +346,23 @@ class ExecutionHistoryTreeController(ExtendedController):
         :return: Inserted tree item
         :rtype: gtk.TreeItem
         """
+        if not history_item.state_reference:
+            logger.error("This must never happen! Current history_item is {}".format(history_item))
+            return None
+        content = None
+
+        if global_gui_config.get_config_value("SHOW_PATH_NAMES_IN_EXECUTION_HISTORY", False):
+            content = (history_item.state_reference.name + " - " +
+                           history_item.state_reference.get_path() + " - " +
+                           description, None if dummy else history_item,
+                           None if dummy else self.TOOL_TIP_TEXT)
+        else:
+            content = (history_item.state_reference.name + " - " +
+                           description, None if dummy else history_item,
+                           None if dummy else self.TOOL_TIP_TEXT)
+
         tree_item = self.history_tree_store.insert_before(
-            parent, None, (history_item.state_reference.name + " - " + description, None if dummy else history_item,
-                           None if dummy else self.TOOL_TIP_TEXT))
+            parent, None, content)
         return tree_item
 
     def insert_execution_history(self, parent, execution_history, is_root=False):
@@ -367,6 +382,8 @@ class ExecutionHistoryTreeController(ExtendedController):
 
             elif isinstance(history_item, CallItem):
                 tree_item = self.insert_history_item(current_parent, history_item, "Enter" if is_root else "Call")
+                if not tree_item:
+                    break
                 if history_item.call_type is CallType.EXECUTE:
                     # this is necessary that already the CallType.EXECUTE item opens a new hierarchy in the
                     # tree view and not the CallType.CONTAINER item
