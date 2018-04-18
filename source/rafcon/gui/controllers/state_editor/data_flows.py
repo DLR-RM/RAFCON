@@ -134,7 +134,7 @@ class StateDataFlowsListController(LinkageListController):
             view['to_key_combo'].connect("edited", self.on_combo_changed_to_key)
 
         self.tree_view.connect("grab-focus", self.on_focus)
-        self.update()
+        self.update(initiator='"register view"')
 
     def find_free_and_valid_data_flows(self, depend_to_state_id=None):
         # print "\n internal from %s \n\n internal to %s" % (self.free_to_port_internal, self.from_port_internal)
@@ -169,7 +169,7 @@ class StateDataFlowsListController(LinkageListController):
 
     def on_focus(self, widget, data=None):
         path = self.get_path()
-        self.update()
+        self.update(initiator='"focus"')
         if path:
             self.tree_view.set_cursor(path)
 
@@ -367,10 +367,14 @@ class StateDataFlowsListController(LinkageListController):
                                             '#f0E5C7', '#f0E5c7', data_flow, self.model.state, True,
                                             self.model.parent.get_data_flow_m(data_flow.data_flow_id)])
 
-    def update(self):
-        self._update_internal_data_base()
-        self._update_tree_store()
-        self.update_selection_sm_prior()
+    def update(self, initiator='Unknown'):
+        try:
+            self._update_internal_data_base()
+            self._update_tree_store()
+            self.update_selection_sm_prior()
+        except Exception as e:
+            logger.exception("Unexpected failure while update of data flows related to {0} with path {1} "
+                             "with initiator {2}".format(self.model.state, self.model.state.get_path(), initiator))
 
     @LinkageListController.observe("state", before=True)
     def before_notification_of_parent_or_state(self, model, prop_name, info):
@@ -396,7 +400,7 @@ class StateDataFlowsListController(LinkageListController):
                                                 "remove_input_data_port", "remove_output_data_port",
                                                 "remove_scoped_variable", "remove_data_flow"]:
             # logger.info("after_notification_of_parent_or_state: UPDATE")
-            self.update()
+            self.update(initiator=str(overview))
 
     @LinkageListController.observe("states", after=True)
     @LinkageListController.observe("input_data_ports", after=True)
@@ -437,7 +441,7 @@ class StateDataFlowsListController(LinkageListController):
 
         try:
             # logger.info("after_notification_of_parent_or_state_from_lists: UPDATE")
-            self.update()
+            self.update(initiator=str(overview))
         except Exception as e:
             if self.debug_log:
                 import traceback
