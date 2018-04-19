@@ -16,6 +16,7 @@ Next release
     - :issue:`505` clean up profiler flag in config
     - :issue:`506` root state input ports leave ugly stripes behind
     - :issue:`501` transition is not selectable if it is drawn over state
+    - :issue:`512` execution of second state machine cause freeze of stop on previous state machine was not successful
 
 
 Patch releases 0.12.\*
