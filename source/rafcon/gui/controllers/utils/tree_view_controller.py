@@ -239,6 +239,7 @@ class AbstractTreeViewController(ExtendedController):
             editable = renderer.get_data("editable")
             remove_handler(editable, "focus_out_handler_id")
             remove_handler(editable, "cursor_move_handler_id")
+            remove_handler(editable, "insert_at_cursor_handler_id")
             remove_handler(renderer, "editing_cancelled_handler_id")
 
         def on_focus_out(entry, event):
@@ -277,11 +278,13 @@ class AbstractTreeViewController(ExtendedController):
             editing_cancelled_handler_id = renderer.connect('editing-canceled', on_editing_canceled)
             focus_out_handler_id = editable.connect('focus-out-event', on_focus_out)
             cursor_move_handler_id = editable.connect('move-cursor', on_cursor_move_in_entry_widget)
+            insert_at_cursor_handler_id = editable.connect("insert-at-cursor", on_cursor_move_in_entry_widget)
             # Store reference to editable and signal handler ids for later access when removing the handlers
             renderer.set_data("editable", editable)
             renderer.set_data("editing_cancelled_handler_id", editing_cancelled_handler_id)
             editable.set_data("focus_out_handler_id", focus_out_handler_id)
             editable.set_data("cursor_move_handler_id", cursor_move_handler_id)
+            editable.set_data("insert_at_cursor_handler_id", insert_at_cursor_handler_id)
             ctrl.active_entry_widget = editable
 
         def on_edited(renderer, path, new_value_str):
