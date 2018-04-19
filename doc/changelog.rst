@@ -11,6 +11,8 @@ Next release
 
 - Improvements:
 
+    - new config value SHOW_PATH_NAMES_IN_EXECUTION_HISTORY
+
 - Bug Fixes:
     - :issue:`503` scoped variable looks weird
     - :issue:`505` clean up profiler flag in config
