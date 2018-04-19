@@ -72,8 +72,8 @@ class StateOutcomesListController(ListViewController):
         self.dict_to_other_outcome = {}
         # not used at the moment key-outcome_id -> label,  from_state_id,  transition_id
         self.dict_from_other_state = {}  # if widget gets extended
-
-        if not model.state.is_root_state:
+        # TODO check why the can happen should not be handed always the LibraryStateModel
+        if not (model.state.is_root_state or model.state.is_root_state_of_library):
             self.observe_model(model.parent)
 
         if self.model.get_state_machine_m() is not None:
@@ -97,7 +97,7 @@ class StateOutcomesListController(ListViewController):
 
         self._apply_value_on_edited_and_focus_out(view['name_cell'], self.apply_new_outcome_name)
 
-        self.update()
+        self.update(initiator='"register view"')
 
     def apply_new_outcome_name(self, path, new_name):
         """Apply the newly entered outcome name it is was changed
@@ -242,7 +242,7 @@ class StateOutcomesListController(ListViewController):
         self.dict_from_other_state.clear()
 
         # TODO check this work around -> it could be avoided by observation of remove-before-notifications
-        if not model.state.is_root_state and self.model.parent.state:  # if parent model is not already destroyed
+        if not (model.state.is_root_state or model.state.is_root_state_of_library) and self.model.parent.state:  # if parent model is not already destroyed
             # check for "to state combos" -> so all states in parent
             parent_id = model.parent.state.state_id
             for parent_child_state_m in model.parent.states.values():
@@ -312,15 +312,19 @@ class StateOutcomesListController(ListViewController):
                 cell_renderer.set_property("text-column", self.ID_STORAGE_ID)
                 cell_renderer.set_property("has-entry", False)
 
-    def update(self):
-        self.update_internal_data_base()
-        self.update_list_store()
+    def update(self, initiator='Unknown'):
+        try:
+            self.update_internal_data_base()
+            self.update_list_store()
+        except Exception as e:
+            logger.exception("Unexpected failure while update of outcomes of {0} with path {1} "
+                             "with initiator {2}".format(self.model.state, self.model.state.get_path(), initiator))
 
     @ListViewController.observe("parent", after=True)
     @ListViewController.observe("outcomes", after=True)
     @ListViewController.observe("transitions", after=True)
     def outcomes_changed(self, model, prop_name, info):
-        self.update()
+        self.update(initiator=str(info))
 
     # TODO D-Find out why the observation of the destruction_signal cause threading problems
     # @ExtendedController.observe("destruction_signal", signal=True)
