@@ -117,7 +117,6 @@ class StateOverviewController(ExtendedController):
             combo.set_sensitive(False)
 
             self.view['library_path'].set_text(self.model.state.library_path + "/" + self.model.state.library_name)
-            print dir(self.view['library_path'])
             self.view['library_path'].set_sensitive(True)
             self.view['library_path'].set_editable(False)
             view['show_content_checkbutton'].set_active(self.model.meta['gui']['show_content'] is True)
