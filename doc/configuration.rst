@@ -265,17 +265,30 @@ PORT\_SNAP\_DISTANCE
     snapped to a port (outcome, input, output, scoped variable). Only
     used in Gaphas editor.
 
+LOGGING\_SHOW\_VERBOSE
+  | Type: boolean
+  | Default: ``False``
+  | The flag decide to activate the VERBOSE log level in the logging console view.
+
 LOGGING\_SHOW\_DEBUG
-
+  | Type: boolean
+  | Default: ``True``
+  | The flag decide to activate the DEBUG log level in the logging console view.
+    
 LOGGING\_SHOW\_INFO
-
+  | Type: boolean
+  | Default: ``True``
+  | The flag decide to activate the INFO log level in the logging console view.
+    
 LOGGING\_SHOW\_WARNING
-
+  | Type: boolean
+  | Default: ``True``
+  | The flag decide to activate the WARNING log level in the logging console view.
+    
 LOGGING\_SHOW\_ERROR
   | Type: boolean
-  | Default: ``False`` for DEBUG, ``True`` for the rest
-  | The flags decide which message log levels to show in the logging
-    console view.
+  | Default: ``False``
+  | The flag decide to activate the ERROR log level in the logging console view.
 
 LIBRARY\_TREE\_PATH\_HUMAN\_READABLE
   | Type: boolean
@@ -422,6 +435,15 @@ PREFER_EXTERNAL_EDITOR
     locked the whole time and a 'Reload' buttons reloads the saved file into RAFCON.
     If False, it is recommended to close the externally opend script.py everytime you are
     done editing.
+
+SEMANTIC_DATA_MODE
+  | Default: ``False``
+  | If True, RAFCON gives the semantic data editor of each state more vertical space.
+    The vertical space is taken from the port/connection widget. This is especially useful, when working with semantic data.
+
+SHOW_PATH_NAMES_IN_EXECUTION_HISTORY
+  | Default: ``False``
+  | If True, RAFCON shows the state paths next to the state names in each execution history entry.
 
 SHORTCUTS
   | Type: dict
