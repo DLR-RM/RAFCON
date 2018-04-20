@@ -25,6 +25,7 @@ from gtkmvc import Observable
 from threading import Lock
 from rafcon.core.id_generator import *
 
+from rafcon.utils.type_helpers import type_inherits_of_type
 from rafcon.utils import log
 from rafcon.utils import type_helpers
 logger = log.get_logger(__name__)
@@ -297,5 +298,7 @@ class GlobalVariableManager(Observable):
         :return:
         """
         if value is not None and data_type is not type(None):
-            if not isinstance(value, data_type):
-                raise TypeError("Value: '{0}' is not of data type: '{1}', value type: {2}".format(value, data_type , type(value)))
+            # if not isinstance(value, data_type):
+            if not type_inherits_of_type(data_type, type(value)):
+                raise TypeError(
+                    "Value: '{0}' is not of data type: '{1}', value type: {2}".format(value, data_type, type(value)))
