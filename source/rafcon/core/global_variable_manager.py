@@ -261,6 +261,21 @@ class GlobalVariableManager(Observable):
             return self.__variable_locks[key].locked()
         return False
 
+    def get_all_keys_starting_with(self, start_key):
+        """ Returns all keys, which start with a certain pattern defined in :param start_key.
+
+        :param start_key: The start pattern to search all keys for.
+        :return:
+        """
+        output_list = []
+        if len(self.__global_variable_dictionary.keys()) == 0:
+            return output_list
+        for g_key in self.__global_variable_dictionary.keys():
+            # string comparison
+            if g_key and start_key in g_key:
+                output_list.append(g_key)
+        return output_list
+
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
 #########################################################################
