@@ -174,13 +174,15 @@ class GlobalVariableManager(Observable):
         logger.debug("Global variable %s was deleted!" % str(key))
 
     @Observable.observed
-    def lock_variable(self, key):
+    def lock_variable(self, key, block=False):
         """Locks a global variable
 
         :param key: the key of the global variable to be locked
+        :param block: a flag to specify if to wait for locking the variable in blocking mode
         """
         if key in self.__variable_locks:
-            if not self.is_locked(key):
+            if not self.is_locked(key) or block:
+                # acquire without arguments is blocking
                 self.__variable_locks[key].acquire()
                 access_key = global_variable_id_generator()
                 self.__access_keys[key] = access_key
@@ -188,6 +190,9 @@ class GlobalVariableManager(Observable):
             else:
                 logger.error("Global variable {} already locked".format(str(key)))
                 return False
+        else:
+            logger.error("Global variable key {} does not exist".format(str(key)))
+            return False
 
     @Observable.observed
     def unlock_variable(self, key, access_key, force=False):
