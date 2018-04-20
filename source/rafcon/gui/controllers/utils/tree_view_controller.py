@@ -346,7 +346,8 @@ class AbstractTreeViewController(ExtendedController):
             cell_rect_of_entry_widget = widget.get_allocation()
 
             horizontal_scroll_bar = self.view.scrollbar_widget.get_hscrollbar()
-            if horizontal_scroll_bar is not None:
+            # entry_widget_text_length must be greater than zero otherwise DevisionByZero Exception
+            if horizontal_scroll_bar is not None and float(entry_widget_text_length) > 0:
                 adjustment = horizontal_scroll_bar.get_adjustment()
                 layout_pixel_width = widget.get_layout().get_pixel_size()[0]
                 # print "rel_pos pices", cell_rect_of_entry_widget.x,
