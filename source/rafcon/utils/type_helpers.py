@@ -89,7 +89,7 @@ def convert_string_value_to_type_value(string_value, data_type):
         elif data_type == object:
             try:
                 converted_value = literal_eval(string_value)
-            except ValueError:
+            except (ValueError, SyntaxError):
                 converted_value = literal_eval('"' + string_value + '"')
         elif isinstance(data_type, type):  # Try native type conversion
             converted_value = data_type(string_value)
