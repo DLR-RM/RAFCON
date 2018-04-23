@@ -11,16 +11,7 @@ Next release
 
 - Improvements:
 
-    - new config value SHOW_PATH_NAMES_IN_EXECUTION_HISTORY
-    - make library path in state editor overview selectable
-
 - Bug Fixes:
-    - :issue:`503` scoped variable looks weird
-    - :issue:`505` clean up profiler flag in config
-    - :issue:`506` root state input ports leave ugly stripes behind
-    - :issue:`501` transition is not selectable if it is drawn over state
-    - :issue:`512` execution of second state machine cause freeze of stop on previous state machine was not successful
-    - :issue:`514` text in entry widget of port not visible during editing
 
 
 Patch releases 0.12.\*
@@ -37,13 +28,20 @@ Patch releases 0.12.\*
 - Improvements:
 
     - buttons to forcefully lock or unlock a global variable
+    - global variable manager logger messages got new failure warning messages
     - copy/paste for semantic data elements
+    - new config value SHOW_PATH_NAMES_IN_EXECUTION_HISTORY
+    - make library path in state editor overview selectable
     
 - Bug Fixes:
 
-    - fix state machine tree remove library state
     - :issue:`503` scoped variable looks weird
+    - :issue:`505` clean up profiler flag in config
     - :issue:`506` root state input ports leave ugly stripes behind
+    - :issue:`501` transition is not selectable if it is drawn over state
+    - :issue:`512` execution of second state machine cause freeze of stop on previous state machine was not successful
+    - :issue:`514` text in entry widget of port not visible during editing
+    - fix state machine tree remove library state
     - no deadlocks when locking a global variable two times
     - :issue:`502` changing data ports not possible
     - fix state element weakref parent assigenment in case of tolerating a invalid data flow
