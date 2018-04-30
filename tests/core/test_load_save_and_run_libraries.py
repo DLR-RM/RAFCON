@@ -59,23 +59,17 @@ def test_save_libraries(caplog):
                          output_state3)
 
     # save hierarchy state as state machine
-    s.save_state_machine_to_path(StateMachine(state3),
-                                 testing_utils.get_test_sm_path(join(TEST_LIBRARY_PATH, "hierarchy_library")), "0.1")
+    s.save_state_machine_to_path(StateMachine(state3), join(TEST_LIBRARY_PATH, "hierarchy_library"))
 
     # save execution state as state machine
-    s.save_state_machine_to_path(StateMachine(state1),
-                                 testing_utils.get_test_sm_path(join(TEST_LIBRARY_PATH, "execution_library")), "0.1")
+    s.save_state_machine_to_path(StateMachine(state1), join(TEST_LIBRARY_PATH, "execution_library"))
 
     # save hierarchy state as nested state machines
     state3.name = "library_nested1"
-    s.save_state_machine_to_path(StateMachine(state3),
-                                 testing_utils.get_test_sm_path(
-                                    join(TEST_LIBRARY_PATH, "library_container", "library_nested1")),
+    s.save_state_machine_to_path(StateMachine(state3), join(TEST_LIBRARY_PATH, "library_container", "library_nested1"),
                                  delete_old_state_machine=True)
     state3.name = "library_nested2"
-    s.save_state_machine_to_path(StateMachine(state3),
-                                 testing_utils.get_test_sm_path(
-                                     join(TEST_LIBRARY_PATH, "library_container", "library_nested2")),
+    s.save_state_machine_to_path(StateMachine(state3),  join(TEST_LIBRARY_PATH, "library_container", "library_nested2"),
                                  delete_old_state_machine=True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
@@ -168,8 +162,7 @@ def test_save_nested_library_state(caplog):
     library_with_nested_library_sm = create_hierarchy_state_library_state_machine()
 
     storage.save_state_machine_to_path(library_with_nested_library_sm,
-                                       testing_utils.get_test_sm_path(join(TEST_LIBRARY_PATH,
-                                                                           "library_with_nested_library")),
+                                       join(TEST_LIBRARY_PATH, "library_with_nested_library"),
                                        delete_old_state_machine=True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
