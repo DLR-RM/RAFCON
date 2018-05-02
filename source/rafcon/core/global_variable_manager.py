@@ -20,9 +20,10 @@
 
 """
 
+import time
 import copy
 from gtkmvc import Observable
-from threading import Lock
+from threading import Lock, currentThread
 from rafcon.core.id_generator import *
 
 from rafcon.utils.type_helpers import type_inherits_of_type
@@ -183,6 +184,14 @@ class GlobalVariableManager(Observable):
         if key in self.__variable_locks:
             if not self.is_locked(key) or block:
                 # acquire without arguments is blocking
+                duration = 0.
+                loop_time = 0.1
+                while self.__variable_locks[key].locked():  # while loops informs the user about long locked variables
+                    time.sleep(loop_time)
+                    duration += loop_time
+                    if int(duration*10) % 20 == 0:
+                        logger.warning("Variable '{2}' is locked and thread {0} waits already {1} seconds to access it."
+                                       "".format(currentThread(), duration, key))
                 self.__variable_locks[key].acquire()
                 access_key = global_variable_id_generator()
                 self.__access_keys[key] = access_key
