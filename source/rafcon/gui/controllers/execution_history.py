@@ -22,11 +22,12 @@
 
 import gtk
 import gobject
+from threading import RLock
 
 import rafcon
 
 from rafcon.core.state_machine_manager import StateMachineManager
-from rafcon.core.execution.execution_history import ConcurrencyItem, CallItem, ScopedDataItem
+from rafcon.core.execution.execution_history import ConcurrencyItem, CallItem, ScopedDataItem, HistoryItem
 from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.execution.execution_history import CallType, StateMachineStartItem
@@ -70,6 +71,7 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         self.observe_model(state_machine_execution_model)
         self._expansion_state = {}
+        self._update_lock = RLock()
 
         self.update()
 
@@ -304,6 +306,8 @@ class ExecutionHistoryTreeController(ExtendedController):
         rebuild the tree view of the history item tree store
         :return:
         """
+        # with self._update_lock:
+        self._update_lock.acquire()
         self._store_expansion_state()
         self.history_tree_store.clear()
         selected_sm_m = self.model.get_selected_state_machine_model()
@@ -335,6 +339,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                     self.insert_execution_history(tree_item, execution_history, is_root=True)
 
         self._restore_expansion_state()
+        self._update_lock.release()
 
     def insert_history_item(self, parent, history_item, description, dummy=False):
         """Enters a single history item into the tree store
@@ -383,7 +388,7 @@ class ExecutionHistoryTreeController(ExtendedController):
             elif isinstance(history_item, CallItem):
                 tree_item = self.insert_history_item(current_parent, history_item, "Enter" if is_root else "Call")
                 if not tree_item:
-                    break
+                    return
                 if history_item.call_type is CallType.EXECUTE:
                     # this is necessary that already the CallType.EXECUTE item opens a new hierarchy in the
                     # tree view and not the CallType.CONTAINER item
@@ -394,6 +399,11 @@ class ExecutionHistoryTreeController(ExtendedController):
                         next(execution_history_iterator)  # skips the next history item in the iterator
 
             else:  # history_item is ReturnItem
+                if current_parent is None:
+                    # The reasons here can be: missing history items, items in the wrong order etc.
+                    # Does not happen when using RAFCON without plugins
+                    logger.error("Invalid execution history: current_parent is None")
+                    return
                 if history_item.call_type is CallType.EXECUTE:
                     self.insert_history_item(current_parent, history_item, "Return")
                 else:  # CONTAINER
