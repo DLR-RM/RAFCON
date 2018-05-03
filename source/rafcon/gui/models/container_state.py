@@ -166,8 +166,19 @@ class ContainerStateModel(StateModel):
 
         # If this model has been changed (and not one of its child states), then we have to update all child models
         # This must be done before notifying anybody else, because other may relay on the updated models
-        if 'after' in info and self.state == info['instance']:
-            self.update_child_models(model, prop_name, info)
+        if self.state == info['instance']:
+            if 'after' in info:
+                self.update_child_models(model, prop_name, info)
+                # if there is and exception set is_about_to_be_destroyed_recursively flag to False again
+                if info.method_name in ["remove_state"] and isinstance(info.result, Exception):
+                    state_id = info.kwargs['state_id'] if 'state_id' in info.kwargs else info.args[1]
+                    self.states[state_id].is_about_to_be_destroyed_recursively = False
+            else:
+                # while before notification mark all states which get destroyed recursively
+                if info.method_name in ["remove_state"] and \
+                        info.kwargs.get('destroy', True) and info.kwargs.get('recursive', True):
+                    state_id = info.kwargs['state_id'] if 'state_id' in info.kwargs else info.args[1]
+                    self.states[state_id].is_about_to_be_destroyed_recursively = True
 
         changed_list = None
         cause = None

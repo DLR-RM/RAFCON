@@ -109,6 +109,7 @@ class AbstractStateModel(MetaModel, Hashable):
         self._load_input_data_port_models()
         self._load_output_data_port_models()
         self._load_outcome_models()
+        self.is_about_to_be_destroyed_recursively = False
 
     def __str__(self):
         return "Model of state: {0}".format(self.state)
