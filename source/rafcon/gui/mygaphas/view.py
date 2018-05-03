@@ -219,7 +219,7 @@ class ExtendedGtkView(GtkView, Observer):
         with self._suppress_selection_events():
             for item in items:
                 self.queue_draw_item(item)
-                if item.model not in self._selection:
+                if item is not None and item.model not in self._selection:
                     self._selection.add(item.model)
                     selection_changed = True
         if selection_changed:
