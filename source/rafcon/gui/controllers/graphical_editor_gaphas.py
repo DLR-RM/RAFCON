@@ -451,6 +451,15 @@ class GraphicalEditorController(ExtendedController):
             if (isinstance(result, str) and "CRASH" in result) or isinstance(result, Exception):
                 return
 
+            # avoid to remove views of elements of states which parent state is destroyed recursively
+            if 'remove' in method_name:
+                # for remove the model is always a state and in case of remove_state it is the container_state
+                # that performs the operation therefore if is_about_to_be_destroyed_recursively is False
+                # the child state can be removed
+                if model.is_about_to_be_destroyed_recursively \
+                        or model.state.is_root_state_of_library and model.parent.is_about_to_be_destroyed_recursively:
+                    return
+
             if method_name == 'state_execution_status':
                 state_v = self.canvas.get_view_for_model(model)
                 if state_v:  # Children of LibraryStates are not modeled, yet
