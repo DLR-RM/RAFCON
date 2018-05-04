@@ -17,6 +17,20 @@ Next release
 Patch releases 0.12.\*
 ----------------------
 
+0.12.9
+""""""
+
+- Improvements:
+
+    - container state API can adjust output_data by new method write_output_data
+    - more robust execution history tree
+    - performance improvement by deleting gaphas views at once for recursive state destruction's
+
+- Bug Fixes:
+
+    - :issue:`521` Strange gaphas logs during deletion of a state
+    - fix gaphas exceptions if state machine selection holds elements which gaphas has not drawn
+
 0.12.8
 """"""
 
