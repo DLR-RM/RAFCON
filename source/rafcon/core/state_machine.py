@@ -164,7 +164,7 @@ class StateMachine(Observable, JSONObject, Hashable):
         finally:
             self.release_modification_lock()
 
-    @Observable.observed
+    # @Observable.observed
     def acquire_modification_lock(self, blocking=True):
         """Acquires the modification lock of the state machine
 
@@ -176,7 +176,7 @@ class StateMachine(Observable, JSONObject, Hashable):
         """
         return self._modification_lock.acquire(blocking)
 
-    @Observable.observed
+    # @Observable.observed
     def release_modification_lock(self):
         """Releases the acquired state machine modification lock.
         """
