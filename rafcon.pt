@@ -14,7 +14,7 @@ DESCRIPTION         = Develop your robotic tasks using an intuitive graphical us
   creation of state machines and contains IDE like debugging mechanisms. Alternatively, state machines can
   programmatically be generated using RAFCON's API.
 
-DOCUMENTATION       = https://rmintra01.robotic.dlr.de/wiki/RAFCON
+DOCUMENTATION       = https://wiki.robotic.dlr.de/wiki/RAFCON
 MANTIS_PROJECT      = DLR Flow-Control
 SUPPORTED_LANGUAGES = python
 
