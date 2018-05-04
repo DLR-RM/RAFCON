@@ -455,9 +455,8 @@ class GraphicalEditorController(ExtendedController):
             if 'remove' in method_name:
                 # for remove the model is always a state and in case of remove_state it is the container_state
                 # that performs the operation therefore if is_about_to_be_destroyed_recursively is False
-                # the child state can be removed
-                if model.is_about_to_be_destroyed_recursively \
-                        or model.state.is_root_state_of_library and model.parent.is_about_to_be_destroyed_recursively:
+                # the child state can be removed and for True ignored because its parent will create a notification
+                if model.is_about_to_be_destroyed_recursively:
                     return
 
             if method_name == 'state_execution_status':
