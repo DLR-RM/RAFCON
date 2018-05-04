@@ -20,9 +20,10 @@
 
 """
 
+import time
 import copy
 from gtkmvc import Observable
-from threading import Lock
+from threading import Lock, currentThread
 from rafcon.core.id_generator import *
 
 from rafcon.utils.type_helpers import type_inherits_of_type
@@ -78,10 +79,10 @@ class GlobalVariableManager(Observable):
             elif self.is_locked(key):
                 unlock = False
             else:
-                access_key = self.lock_variable(key)
+                access_key = self.lock_variable(key, block=True)
         else:
             self.__variable_locks[key] = Lock()
-            access_key = self.lock_variable(key)
+            access_key = self.lock_variable(key, block=True)
 
         # --- variable locked
         if per_reference:
@@ -107,7 +108,7 @@ class GlobalVariableManager(Observable):
         :param access_key: if the variable was explicitly locked with the  rafcon.state lock_variable
         :param default: a value to be returned if the key does not exist
         :return: The value stored at in the global variable key
-        :raises exceptions.RuntimeError: if a wrong access key is passed or the variable cannot be accessd by reference
+        :raises exceptions.RuntimeError: if a wrong access key is passed or the variable cannot be accessed by reference
         """
         if self.variable_exist(key):
             unlock = True
@@ -116,11 +117,11 @@ class GlobalVariableManager(Observable):
                     unlock = False
                 else:
                     if not access_key:
-                        access_key = self.lock_variable(key)
+                        access_key = self.lock_variable(key, block=True)
                     else:
                         raise RuntimeError("Wrong access key for accessing global variable")
             else:
-                access_key = self.lock_variable(key)
+                access_key = self.lock_variable(key, block=True)
 
             # --- variable locked
             if self.variable_can_be_referenced(key):
@@ -163,7 +164,7 @@ class GlobalVariableManager(Observable):
 
         self.__dictionary_lock.acquire()
         if key in self.__global_variable_dictionary:
-            access_key = self.lock_variable(key)
+            access_key = self.lock_variable(key, block=True)
             del self.__global_variable_dictionary[key]
             self.unlock_variable(key, access_key)
             del self.__variable_locks[key]
@@ -183,6 +184,14 @@ class GlobalVariableManager(Observable):
         if key in self.__variable_locks:
             if not self.is_locked(key) or block:
                 # acquire without arguments is blocking
+                duration = 0.
+                loop_time = 0.1
+                while self.__variable_locks[key].locked():  # while loops informs the user about long locked variables
+                    time.sleep(loop_time)
+                    duration += loop_time
+                    if int(duration*10) % 20 == 0:
+                        logger.warning("Variable '{2}' is locked and thread {0} waits already {1} seconds to access it."
+                                       "".format(currentThread(), duration, key))
                 self.__variable_locks[key].acquire()
                 access_key = global_variable_id_generator()
                 self.__access_keys[key] = access_key

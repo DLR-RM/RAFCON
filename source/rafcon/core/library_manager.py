@@ -81,11 +81,12 @@ class LibraryManager(Observable):
         for library_root_key, library_root_path in config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
             library_root_path = self._clean_path(library_root_path)
             if os.path.exists(library_root_path):
-                logger.debug("Adding library '{1}' from {0}".format(library_root_path, library_root_key))
-                self._load_library_from_root_path(library_root_key, library_root_path)
+                logger.debug("Adding library root key '{0}' from path '{1}'".format(
+                    library_root_key, library_root_path))
+                self._load_libraries_from_root_path(library_root_key, library_root_path)
             else:
-                logger.warn("Configured path for library '{}' does not exist: {}".format(library_root_key,
-                                                                                         library_root_path))
+                logger.warn("Configured path for library root key '{}' does not exist: {}".format(
+                    library_root_key, library_root_path))
 
         # 2. Load libraries from RAFCON_LIBRARY_PATH
         library_path_env = os.environ.get('RAFCON_LIBRARY_PATH', '')
@@ -101,7 +102,7 @@ class LibraryManager(Observable):
             if library_root_key in self._libraries:
                 logger.warn("The library '{}' is already existing and will be overridden with '{}'".format(
                     library_root_key, library_root_path))
-            self._load_library_from_root_path(library_root_key, library_root_path)
+            self._load_libraries_from_root_path(library_root_key, library_root_path)
             logger.debug("Adding library '{1}' from {0}".format(library_root_path, library_root_key))
 
         self._libraries = OrderedDict(sorted(self._libraries.items()))
@@ -125,7 +126,7 @@ class LibraryManager(Observable):
         path = os.path.realpath(path)
         return path
 
-    def _load_library_from_root_path(self, library_root_key, library_root_path):
+    def _load_libraries_from_root_path(self, library_root_key, library_root_path):
         self._library_root_paths[library_root_key] = library_root_path
         self._libraries[library_root_key] = {}
         self._load_nested_libraries(library_root_path, self._libraries[library_root_key])

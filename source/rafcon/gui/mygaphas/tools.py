@@ -144,7 +144,7 @@ class MoveItemTool(gaphas.tool.ItemTool):
 
         if not self._move_name_v:
             self._old_selection = self.view.selected_items
-            if not self._item in self.view.selected_items:
+            if self._item not in self.view.selected_items:
                 # When items are to be moved, a button-press should not cause any deselection.
                 # However, the selection is stored, in case no move operation is performed.
                 self.view.handle_new_selection(self._item)

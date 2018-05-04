@@ -1623,13 +1623,21 @@ class ContainerState(State):
         else:
             return self.states[transition.to_state]
 
-    def write_output_data(self):
+    def write_output_data(self, specific_output_dictionary=None):
         """ Write the scoped data to output of the state. Called before exiting the container state.
 
+        :param specific_output_dictionary: an optional dictionary to write the output data in
+        :return:
         """
+        if isinstance(specific_output_dictionary, dict):
+            output_dict = specific_output_dictionary
+        else:
+            output_dict = self.output_data
+
         for output_name, value in self.output_data.iteritems():
             output_port_id = self.get_io_data_port_id_from_name_and_type(output_name, OutputDataPort)
             actual_value = None
+            actual_value_was_written = False
             actual_value_time = 0
             for data_flow_id, data_flow in self.data_flows.iteritems():
                 if data_flow.to_state == self.state_id:
@@ -1641,6 +1649,7 @@ class ContainerState(State):
                             if actual_value is None or self.scoped_data[scoped_data_key].timestamp > actual_value_time:
                                 actual_value = deepcopy(self.scoped_data[scoped_data_key].value)
                                 actual_value_time = self.scoped_data[scoped_data_key].timestamp
+                                actual_value_was_written = True
                         else:
                             if not self.backward_execution:
                                 logger.debug(
@@ -1649,8 +1658,8 @@ class ContainerState(State):
                                     "This can mean a state machine design error.".format(
                                         str(output_name), str(self.states[data_flow.from_state].get_path()),
                                         self.get_path()))
-            if actual_value is not None:
-                self.output_data[output_name] = actual_value
+            if actual_value_was_written:
+                output_dict[output_name] = actual_value
 
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- check methods ---------------------------------------

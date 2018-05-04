@@ -73,6 +73,7 @@ class AbstractStateModel(MetaModel, Hashable):
      """
 
     _parent = None
+    _is_about_to_be_destroyed_recursively = False
     is_start = None
     state = None
     outcomes = []
@@ -228,6 +229,16 @@ class AbstractStateModel(MetaModel, Hashable):
         else:
             self._parent = None
         self.update_is_start()
+
+    @property
+    def is_about_to_be_destroyed_recursively(self):
+        return self._is_about_to_be_destroyed_recursively
+
+    @is_about_to_be_destroyed_recursively.setter
+    def is_about_to_be_destroyed_recursively(self, value):
+        if not isinstance(value, bool):
+            raise TypeError("The is_about_to_be_destroyed_recursively property has to be boolean.")
+        self._is_about_to_be_destroyed_recursively = value
 
     def get_state_machine_m(self, two_factor_check=True):
         """ Get respective state machine model
@@ -405,6 +416,9 @@ class AbstractStateModel(MetaModel, Hashable):
             if state_machine_id is not None and state_machine_id in state_machine_manager.state_machines:
                 state_machine_manager.state_machines[state_machine_id].marked_dirty = True
         if self.state.get_library_root_state():
+            lib_state_path = self.state.get_library_root_state().parent.get_path()
+            if self.get_state_machine_m().get_state_model_by_path(lib_state_path).is_about_to_be_destroyed_recursively:
+                return
             logger.warning("You have modified core property of an inner state of a library state.")
 
     # ---------------------------------------- meta data methods ---------------------------------------------

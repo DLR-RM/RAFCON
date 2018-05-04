@@ -191,3 +191,15 @@ class LibraryStateModel(AbstractStateModel):
         assert isinstance(source_state_m, LibraryStateModel)
         super(LibraryStateModel, self).copy_meta_data_from_state_m(source_state_m)
         self.meta_data_was_scaled = source_state_m.meta_data_was_scaled
+
+    @property
+    def is_about_to_be_destroyed_recursively(self):
+        return self._is_about_to_be_destroyed_recursively
+
+    @is_about_to_be_destroyed_recursively.setter
+    def is_about_to_be_destroyed_recursively(self, value):
+        if not isinstance(value, bool):
+            raise TypeError("The is_about_to_be_destroyed_recursively property has to be boolean.")
+        self._is_about_to_be_destroyed_recursively = value
+        if self.state_copy:
+            self.state_copy.is_about_to_be_destroyed_recursively = value
