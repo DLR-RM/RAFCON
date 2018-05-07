@@ -277,6 +277,8 @@ class MainWindowController(ExtendedController):
         for level in ["verbose", "debug", "info", "warning", "error"]:
             self.connect_button_to_function("button_show_{}".format(level), "toggled", self.on_log_button_toggled,
                                             "LOGGING_SHOW_{}".format(level.upper()))
+        self.connect_button_to_function("button_follow_logging", "toggled", self.on_log_button_toggled,
+                                        "CONSOLE_FOLLOW_LOGGING")
         self.update_log_button_state()
 
         view['upper_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['upper_notebook_title'],

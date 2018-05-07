@@ -240,6 +240,7 @@ class MainWindowView(View):
 
         self['debug_eventbox'].set_border_width(0)
 
+        self['button_follow_logging'].set_active(global_gui_config.get_config_value('CONSOLE_FOLLOW_LOGGING', True))
         self['button_show_verbose'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_VERBOSE', True))
         self['button_show_debug'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True))
         self['button_show_info'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_INFO', True))

@@ -35,6 +35,7 @@ class LoggingConsoleView(View):
         self.text_view.set_border_width(10)
 
         self._enables = {}
+        self._auto_scroll_handler_id = None
 
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -121,3 +122,19 @@ class LoggingConsoleView(View):
 
     def set_enables(self, enables):
         self._enables = enables
+        self.update_auto_scroll_mode()
+
+    def update_auto_scroll_mode(self):
+        """ Register or un-register signals for follow mode """
+        if self._enables['CONSOLE_FOLLOW_LOGGING']:
+            if self._auto_scroll_handler_id is None:
+                self._auto_scroll_handler_id = self.text_view.connect("size-allocate", self._auto_scroll)
+        else:
+            if self._auto_scroll_handler_id is not None:
+                self.text_view.disconnect(self._auto_scroll_handler_id)
+                self._auto_scroll_handler_id = None
+
+    def _auto_scroll(self, *args):
+        """ Scroll to the end of the text view """
+        adj = self['scrollable'].get_vadjustment()
+        adj.set_value(adj.get_upper() - adj.get_page_size())

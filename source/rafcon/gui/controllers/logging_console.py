@@ -89,7 +89,9 @@ class LoggingConsoleController(ExtendedController):
 
     def _get_config_enables(self):
         keys = ['VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR']
-        return {key: self.model.config.get_config_value('LOGGING_SHOW_' + key, True) for key in keys}
+        result = {key: self.model.config.get_config_value('LOGGING_SHOW_' + key, True) for key in keys}
+        result['CONSOLE_FOLLOW_LOGGING'] = self.model.config.get_config_value('CONSOLE_FOLLOW_LOGGING', True)
+        return result
 
     @ExtendedController.observe("config", after=True)
     def model_changed(self, model, prop_name, info):
