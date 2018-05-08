@@ -12,9 +12,6 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
-import threading
-
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.models.config_model import ConfigModel
@@ -26,10 +23,10 @@ logger = log.get_logger(__name__)
 
 
 class DebugConsoleController(ExtendedController):
-    """Controller handling the updates and modifications of the logging console.
+    """Controller handling the updates and modifications of the debug console widget.
 
     :param rafcon.gui.models.config_model.ConfigModel: Gui config model holding and observing the global gui config.
-    :param rafcon.gui.views.logging_console.LoggingConsoleView view: The GTK view showing the logging messages.
+    :param rafcon.gui.views.logging_console.DebugConsoleView view: The GTK view showing the logging messages.
     """
 
     def __init__(self, model, view):
@@ -50,6 +47,7 @@ class DebugConsoleController(ExtendedController):
         view['debug_console_button_hbox'].reorder_child(view['button_show_warning'], 1)
         view['debug_console_button_hbox'].reorder_child(view['button_show_info'], 2)
         view['debug_console_button_hbox'].reorder_child(view['button_show_debug'], 3)
+        view['debug_console_button_hbox'].reorder_child(view['button_show_verbose'], 4)
 
     def register_view(self, view):
         super(DebugConsoleController, self).register_view(view)
