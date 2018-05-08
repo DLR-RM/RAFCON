@@ -11,6 +11,8 @@ Next release
 
 - Improvements:
 
+    - :issue:`516` source editor does not show line of cursor after apply if the script is big
+
 - Bug Fixes:
 
 
