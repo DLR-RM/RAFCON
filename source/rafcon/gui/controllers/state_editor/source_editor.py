@@ -200,6 +200,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
                 start_iter.set_line(int(line)-1)
                 tbuffer.place_cursor(start_iter)
                 message_string += "\n\nThe line was focused in the source editor."
+                self.view.scroll_to_cursor_onscreen()
 
             # select state to show source editor
             sm_m = state_machine_manager_model.get_state_machine_model(self.model)
