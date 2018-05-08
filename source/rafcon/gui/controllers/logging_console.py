@@ -15,6 +15,7 @@
 import gtk
 import threading
 
+from rafcon.gui.utils import wait_for_gui
 from rafcon.gui.models.config_model import ConfigModel
 from rafcon.gui.views.logging_console import LoggingConsoleView
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -61,6 +62,11 @@ class LoggingConsoleController(ExtendedController):
         self.view.print_message(message, log_level)
 
     def print_filtered_buffer(self):
+        # TODO later take also the string of cursor line and try to find and select it again
+        # remember cursor position
+        line_number, line_offset = self.view.get_cursor_position()
+
+        # update text buffer
         self.view.clean_buffer()
 
         for entry in self._log_entries:
@@ -68,17 +74,19 @@ class LoggingConsoleController(ExtendedController):
             message = entry[1]
             self.print_message(message, level, new=False)
 
+        # restore cursor position
+        wait_for_gui()
+        self.view.set_cursor_position(line_number, line_offset)
+        self.view.scroll_to_cursor_onscreen()
+
     def update_filtered_buffer(self):
         if self.view is None:
             return
         self.print_filtered_buffer()
 
-        self.view.text_view.scroll_mark_onscreen(self.view.text_view.get_buffer().get_insert())
-
     def _clear_buffer(self, widget, data=None):
         self._log_entries = []
         self.print_filtered_buffer()
-        self.view.text_view.scroll_mark_onscreen(self.view.text_view.get_buffer().get_insert())
 
     def add_clear_menu_item(self, widget, menu):
         clear_item = gtk.MenuItem("Clear Logging View")

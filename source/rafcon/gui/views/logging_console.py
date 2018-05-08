@@ -16,6 +16,7 @@ import threading
 from gtkmvc import View
 import glib
 from rafcon.utils import log
+logger = log.get_logger(__name__)
 
 
 class LoggingConsoleView(View):
@@ -87,8 +88,8 @@ class LoggingConsoleView(View):
         else:
             text_buf.insert(text_buf.get_end_iter(), message + "\n")
 
-        if not self.quit_flag:
-            self.text_view.scroll_mark_onscreen(self.text_view.get_buffer().get_insert())
+        if not self.quit_flag and self._enables['CONSOLE_FOLLOW_LOGGING']:
+            self.scroll_to_cursor_onscreen()
 
     @staticmethod
     def split_text(text_to_split):
@@ -138,3 +139,29 @@ class LoggingConsoleView(View):
         """ Scroll to the end of the text view """
         adj = self['scrollable'].get_vadjustment()
         adj.set_value(adj.get_upper() - adj.get_page_size())
+
+    def scroll_to_cursor_onscreen(self):
+        self.text_view.scroll_mark_onscreen(self.text_view.get_buffer().get_insert())
+
+    def get_cursor_position(self):
+        text_buffer = self.text_view.get_buffer()
+        p_iter = text_buffer.get_iter_at_offset(text_buffer.props.cursor_position)
+        return p_iter.get_line(), p_iter.get_line_offset()
+
+    def set_cursor_position(self, line_number, line_offset):
+        text_buffer = self.text_view.get_buffer()
+        new_p_iter = text_buffer.get_iter_at_line(line_number)
+        if new_p_iter.get_chars_in_line() >= line_offset:
+            new_p_iter = text_buffer.get_iter_at_line_offset(line_number, line_offset)
+        else:
+            logger.debug("Line has not enough chars {0} {1}".format((line_number, line_offset), new_p_iter.get_chars_in_line()))
+        if new_p_iter.is_cursor_position():
+            result = text_buffer.place_cursor(new_p_iter)
+        else:
+            if not (line_offset == 0 and new_p_iter.get_chars_in_line() == 0):
+                logger.debug("Line and offset is no cursor position line: {0} offset: {1} line length: {2}"
+                             "".format(line_number, line_offset, new_p_iter.get_chars_in_line()))
+            result = False
+
+        self.text_view.scroll_mark_onscreen(self.text_view.get_buffer().get_insert())
+        return result
