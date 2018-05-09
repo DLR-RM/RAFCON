@@ -77,8 +77,6 @@ class ExecutionHistoryTreeController(ExtendedController):
 
     def destroy(self):
         self.clean_history(None, None)
-        for sm in self.model.state_machines.itervalues():
-            sm.clear_execution_histories()
         super(ExecutionHistoryTreeController, self).destroy()
 
     def register_view(self, view):

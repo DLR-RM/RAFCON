@@ -111,6 +111,13 @@ class ExecutionHistory(Observable, Iterable, Sized):
         self.initial_prev = initial_prev
         self.execution_history_storage = None        
 
+    def destroy(self):
+        self.execution_history_storage.close()
+        self.execution_history_storage = None
+        self._history_items[0].destroy()
+        self._history_items = None
+        self.initial_prev = None
+
     def __iter__(self):
         return iter(self._history_items)                        
 
@@ -247,6 +254,18 @@ class HistoryItem(object):
         self.next = None
         self.history_item_id = history_item_id_generator()
         self.state_type = str(type(state).__name__)
+
+    def destroy(self):
+        self._state_reference = None
+        self.path = None
+        self.timestamp = None
+        self.run_id = None
+        self.prev = None
+        if self.next:
+            self.next.destroy()
+        self.next = None
+        self.history_item_id = None
+        self.state_type = None
 
     @property
     def state_reference(self):
@@ -438,6 +457,11 @@ class ConcurrencyItem(HistoryItem):
         record = HistoryItem.to_dict(self)
         record['call_type'] = 'CONTAINER'
         return record
+
+    def destroy(self):
+        for execution_history in self.execution_histories:
+            execution_history.destroy()
+        super(ConcurrencyItem, self).destroy()
 
 
 CallType = Enum('METHOD_NAME', 'EXECUTE CONTAINER')
