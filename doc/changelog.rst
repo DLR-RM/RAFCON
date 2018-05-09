@@ -12,6 +12,7 @@ Next release
 - Improvements:
 
     - :issue:`516` source editor does not show line of cursor after apply if the script is big
+    - :issue:`524` history elements hold direct state reference
 
 - Bug Fixes:
 
