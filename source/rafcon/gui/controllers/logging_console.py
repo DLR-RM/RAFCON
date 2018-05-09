@@ -103,7 +103,9 @@ class LoggingConsoleController(ExtendedController):
 
     @ExtendedController.observe("config", after=True)
     def model_changed(self, model, prop_name, info):
-        """ React to configuration changes """
+        """ React to configuration changes
+
+        Update internal hold enable state, propagates it to view and refresh the text buffer."""
         current_enables = self._get_config_enables()
         if not self._enables == current_enables:
             self._enables = current_enables

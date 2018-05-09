@@ -78,9 +78,7 @@ class DebugConsoleController(ExtendedController):
         :param dict info: Information e.g. about the changed config key
         """
         config_key = info['args'][1]
-        # config_value = info['args'][2]
-
-        if "LOGGING_SHOW_" in config_key:
+        if "LOGGING" in config_key:
             self.update_log_button_state()
 
     def on_log_button_toggled(self, log_button, config_key):
@@ -91,3 +89,5 @@ class DebugConsoleController(ExtendedController):
         for level in ["verbose", "debug", "info", "warning", "error"]:
             active = gui_config.get_config_value("LOGGING_SHOW_{}".format(level.upper()))
             self.view["button_show_{}".format(level)].set_active(active)
+        active = gui_config.get_config_value("CONSOLE_FOLLOW_LOGGING")
+        self.view["button_follow_logging"].set_active(active)
