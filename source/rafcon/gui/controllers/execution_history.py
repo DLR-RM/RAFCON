@@ -75,6 +75,12 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         self.update()
 
+    def destroy(self):
+        self.clean_history(None, None)
+        for sm in self.model.state_machines.itervalues():
+            sm.clear_execution_histories()
+        super(ExecutionHistoryTreeController, self).destroy()
+
     def register_view(self, view):
         super(ExecutionHistoryTreeController, self).register_view(view)
         self.history_tree.connect('button_press_event', self.mouse_click)

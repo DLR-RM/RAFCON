@@ -239,7 +239,7 @@ class HistoryItem(object):
     """
 
     def __init__(self, state, prev, run_id):
-        self._state_reference = ref(state)
+        self._state_reference = state
         self.path = copy.deepcopy(state.get_path())
         self.timestamp = time.time()
         self.run_id = run_id
@@ -252,7 +252,7 @@ class HistoryItem(object):
     def state_reference(self):
         """Property for the state_reference field
         """
-        return self._state_reference()
+        return self._state_reference
 
     def __str__(self):
         return "HistoryItem with reference state name %s (time: %s)" % (self.state_reference.name, self.timestamp)
