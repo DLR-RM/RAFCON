@@ -115,8 +115,9 @@ class ExecutionHistory(Observable, Iterable, Sized):
         if self.execution_history_storage:
             self.execution_history_storage.close()
         self.execution_history_storage = None
-        if self._history_items[0]:
-            self._history_items[0].destroy()
+        if len(self._history_items) > 0:
+            if self._history_items[0]:
+                self._history_items[0].destroy()
         self._history_items = None
         self.initial_prev = None
 
