@@ -75,6 +75,10 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         self.update()
 
+    def destroy(self):
+        self.clean_history(None, None)
+        super(ExecutionHistoryTreeController, self).destroy()
+
     def register_view(self, view):
         super(ExecutionHistoryTreeController, self).register_view(view)
         self.history_tree.connect('button_press_event', self.mouse_click)
@@ -220,6 +224,9 @@ class ExecutionHistoryTreeController(ExtendedController):
         if not root_iter:
             return
         current_expansion_state = {}
+        # this can be the case when the execution history tree is currently being deleted
+        if not self.get_history_item_for_tree_iter(root_iter).state_reference:
+            return
         state_machine = self.get_history_item_for_tree_iter(root_iter).state_reference.get_state_machine()
         self._expansion_state[state_machine.state_machine_id] = current_expansion_state
         while root_iter:
