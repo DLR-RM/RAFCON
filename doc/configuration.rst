@@ -98,6 +98,7 @@ A typical config file looks like this:
     LOGGING_SHOW_INFO: True
     LOGGING_SHOW_WARNING: True
     LOGGING_SHOW_ERROR: True
+    CONSOLE_FOLLOW_LOGGING: True
 
     LIBRARY_TREE_PATH_HUMAN_READABLE: False
     SUBSTITUTE_STATE_KEEPS_STATE_NAME: True
@@ -272,7 +273,7 @@ LOGGING\_SHOW\_VERBOSE
 
 LOGGING\_SHOW\_DEBUG
   | Type: boolean
-  | Default: ``True``
+  | Default: ``False``
   | The flag decide to activate the DEBUG log level in the logging console view.
     
 LOGGING\_SHOW\_INFO
@@ -287,8 +288,13 @@ LOGGING\_SHOW\_WARNING
     
 LOGGING\_SHOW\_ERROR
   | Type: boolean
-  | Default: ``False``
+  | Default: ``True``
   | The flag decide to activate the ERROR log level in the logging console view.
+
+CONSOLE\_FOLLOW\_LOGGING
+  | Type: boolean
+  | Default: ``True``
+  | The flag decide to activate the follow mode in the logging console view and to stay on the last printed logger message.
 
 LIBRARY\_TREE\_PATH\_HUMAN\_READABLE
   | Type: boolean
