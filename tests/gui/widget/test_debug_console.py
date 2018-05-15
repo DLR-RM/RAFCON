@@ -9,8 +9,6 @@ import pytest
 
 logger = log.get_logger(__name__)
 
-def put_cursor_on_line_with_string(text_buffer, s):
-    pass
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(with_refresh=True):
@@ -28,18 +26,12 @@ def trigger_gui_signals(with_refresh=True):
     - Stop State Machine
     - Quit GUI
     """
-    from os.path import join
-    from rafcon.core.states.library_state import LibraryState
     import rafcon.core.singleton
     import rafcon.gui.singleton
     from rafcon.gui.config import global_gui_config
-    import rafcon.gui.helpers.state as gui_helper_state
-    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     from test_menu_bar import create_state_machine
-    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_controller = rafcon.gui.singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    call_gui_callback(global_gui_config.set_config_value, 'CONSOLE_FOLLOW_LOGGING', False)
 
     # take the cursor on the first debug line
     debug_console_ctrl = main_window_controller.get_controller('debug_console_controller')
@@ -62,7 +54,9 @@ def trigger_gui_signals(with_refresh=True):
     current_line_number, current_line_offset = call_gui_callback(logging_console_ctrl.view.get_cursor_position)
     current_lenght = call_gui_callback(logging_console_ctrl.view.len)
     assert line_number == current_line_number
-    # TODO check if scrollbar is on max position
+    # 1.1 test check if scrollbar is on max position"
+    adj = logging_console_ctrl.view['scrollable'].get_vadjustment()
+    assert int(adj.get_value()) == int(adj.get_upper() - adj.get_page_size())
 
     logger.debug("2 test if cursor line is constant for change to 'CONSOLE_FOLLOW_LOGGING' False")
     call_gui_callback(global_gui_config.set_config_value, 'CONSOLE_FOLLOW_LOGGING', False)
@@ -84,7 +78,9 @@ def trigger_gui_signals(with_refresh=True):
 
     current_line_number, current_line_offset = call_gui_callback(logging_console_ctrl.view.get_cursor_position)
     assert line_number == current_line_number
-    # TODO check if scrollbar is on max position
+    # 3.1 test check if scrollbar is on max position"
+    adj = logging_console_ctrl.view['scrollable'].get_vadjustment()
+    assert int(adj.get_value()) == int(adj.get_upper() - adj.get_page_size())
 
     # TODO check for recovery onto close by logger messages if current line type is disabled
 
@@ -92,11 +88,15 @@ def trigger_gui_signals(with_refresh=True):
 def test_gui(caplog):
     from os.path import join
 
-    change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False}
+    change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False,
+                            "CONSOLE_FOLLOW_LOGGING": False,
+                            "LOGGING_SHOW_VERBOSE": True, "LOGGING_SHOW_DEBUG": True,
+                            "LOGGING_SHOW_WARNING": True, "LOGGING_SHOW_ERROR": True}
 
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
                  "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
+
     testing_utils.run_gui(gui_config=change_in_gui_config, libraries=libraries)
 
     try:
