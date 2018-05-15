@@ -212,6 +212,11 @@ class StateMachine(Observable, JSONObject, Hashable):
     def clear_execution_histories(self):
         del self._execution_histories[:]
 
+    def destroy_execution_histories(self):
+        for execution_history in self._execution_histories:
+            execution_history.destroy()
+        self.clear_execution_histories()
+
     @Observable.observed
     def _add_new_execution_history(self):
         new_execution_history = ExecutionHistory()

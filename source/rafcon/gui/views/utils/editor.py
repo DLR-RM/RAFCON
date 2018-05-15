@@ -156,6 +156,9 @@ class EditorView(View):
         self.textview.set_editable(on)
         self.while_in_set_enabled = False
 
+    def scroll_to_cursor_onscreen(self):
+        self.textview.scroll_mark_onscreen(self.get_buffer().get_insert())
+
     def get_cursor_position(self):
         text_buffer = self.get_buffer()
         p_iter = text_buffer.get_iter_at_offset(text_buffer.props.cursor_position)
@@ -169,9 +172,12 @@ class EditorView(View):
         else:
             logger.debug("Line has not enough chars {0} {1}".format((line_number, line_offset), new_p_iter.get_chars_in_line()))
         if new_p_iter.is_cursor_position():
-            return text_buffer.place_cursor(new_p_iter)
+            result = text_buffer.place_cursor(new_p_iter)
         else:
             if not (line_offset == 0 and new_p_iter.get_chars_in_line() == 0):
                 logger.debug("Line and offset is no cursor position line: {0} offset: {1} line length: {2}"
-                               "".format(line_number, line_offset, new_p_iter.get_chars_in_line()))
-            return False
+                             "".format(line_number, line_offset, new_p_iter.get_chars_in_line()))
+            result = False
+
+        self.scroll_to_cursor_onscreen()
+        return result

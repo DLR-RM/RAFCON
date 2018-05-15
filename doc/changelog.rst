@@ -17,6 +17,27 @@ Next release
 Patch releases 0.12.\*
 ----------------------
 
+
+0.12.10
+"""""""
+
+- Features:
+
+    - :issue:`520` Debug Console keeps track of last logger message if the follow mode is enabled
+
+- Improvements:
+
+    - in pull request :issue:`523` refactoring of debug console  for more intuitive and robust behavior
+      e.g. persistent cursor position
+    - :issue:`516` source editor does not show line of cursor after apply if the script is big
+
+- Bug Fixes:
+
+    - :issue:`519` rafcon freezes while opening a state machine
+        - solved in pull request :issue:`524` history elements hold direct state reference
+    - :issue:`514` text in entry widget of port not visible during editing (arrow key press left-right helps)
+        - the issue was not fully resolved but improved
+
 0.12.9
 """"""
 

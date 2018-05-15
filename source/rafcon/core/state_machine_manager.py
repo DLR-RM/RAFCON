@@ -127,6 +127,8 @@ class StateMachineManager(Observable):
                 self.active_state_machine_id = self._state_machines[self._state_machines.keys()[0]].state_machine_id
             else:
                 self.active_state_machine_id = None
+        # destroy execution history
+        removed_state_machine.destroy_execution_histories()
         return removed_state_machine
 
     def get_active_state_machine(self):

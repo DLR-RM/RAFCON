@@ -64,7 +64,7 @@ class MenuBarController(ExtendedController):
         assert isinstance(view, MainWindowView)
         ExtendedController.__init__(self, state_machine_manager_model, view.menu_bar)
         self.shortcut_manager = shortcut_manager
-        self.logging_console_view = view.logging_console_view
+        self.logging_console_view = view.debug_console_view.logging_console_view
         self.main_window_view = view
         self.observe_model(gui_singletons.core_config_model)
         self.observe_model(gui_singletons.gui_config_model)
