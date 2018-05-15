@@ -15,6 +15,7 @@
 import gtk
 import threading
 
+from rafcon.gui.utils import wait_for_gui
 from rafcon.gui.models.config_model import ConfigModel
 from rafcon.gui.views.logging_console import LoggingConsoleView
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -61,6 +62,10 @@ class LoggingConsoleController(ExtendedController):
         self.view.print_message(message, log_level)
 
     def print_filtered_buffer(self):
+        # remember cursor position
+        self.view.store_cursor_position()
+
+        # update text buffer
         self.view.clean_buffer()
 
         for entry in self._log_entries:
@@ -68,17 +73,20 @@ class LoggingConsoleController(ExtendedController):
             message = entry[1]
             self.print_message(message, level, new=False)
 
+        # restore cursor position
+        wait_for_gui()
+        self.view.restore_cursor_position()
+
+        self.view.scroll_to_cursor_onscreen()
+
     def update_filtered_buffer(self):
         if self.view is None:
             return
         self.print_filtered_buffer()
 
-        self.view.text_view.scroll_mark_onscreen(self.view.text_view.get_buffer().get_insert())
-
     def _clear_buffer(self, widget, data=None):
         self._log_entries = []
         self.print_filtered_buffer()
-        self.view.text_view.scroll_mark_onscreen(self.view.text_view.get_buffer().get_insert())
 
     def add_clear_menu_item(self, widget, menu):
         clear_item = gtk.MenuItem("Clear Logging View")
@@ -89,11 +97,15 @@ class LoggingConsoleController(ExtendedController):
 
     def _get_config_enables(self):
         keys = ['VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR']
-        return {key: self.model.config.get_config_value('LOGGING_SHOW_' + key, True) for key in keys}
+        result = {key: self.model.config.get_config_value('LOGGING_SHOW_' + key, True) for key in keys}
+        result['CONSOLE_FOLLOW_LOGGING'] = self.model.config.get_config_value('CONSOLE_FOLLOW_LOGGING', True)
+        return result
 
     @ExtendedController.observe("config", after=True)
     def model_changed(self, model, prop_name, info):
-        """ React to configuration changes """
+        """ React to configuration changes
+
+        Update internal hold enable state, propagates it to view and refresh the text buffer."""
         current_enables = self._get_config_enables()
         if not self._enables == current_enables:
             self._enables = current_enables

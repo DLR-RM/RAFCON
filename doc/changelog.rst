@@ -9,8 +9,11 @@ Next release
 
 - Features:
 
+    - :issue:`520` Debug Console keeps track of last logger message if the follow mode is enabled
+
 - Improvements:
 
+    - refactoring of debug console for more intuitive and robust behavior, e.g. persistent cursor position
     - :issue:`516` source editor does not show line of cursor after apply if the script is big
     - :issue:`524` history elements hold direct state reference
 
