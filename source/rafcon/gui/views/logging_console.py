@@ -10,6 +10,7 @@
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
 
 import gtk
 import threading
@@ -200,6 +201,7 @@ class LoggingConsoleView(View):
         return self.set_cursor_position(line_iter.get_line(), line_offset)
 
     def get_line_number_next_to_cursor_with_string_within(self, s):
+        """ Find the closest occurrence of a string with respect to the cursor position in the text view """
         line_number, _ = self.get_cursor_position()
         text_buffer = self.text_view.get_buffer()
         line_iter = text_buffer.get_iter_at_line(line_number)

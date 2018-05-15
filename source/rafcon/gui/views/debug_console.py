@@ -10,6 +10,7 @@
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
 
 import threading
 from gtkmvc import View
