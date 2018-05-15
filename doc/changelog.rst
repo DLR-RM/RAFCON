@@ -13,7 +13,7 @@ Next release
 
 - Improvements:
 
-    - refactoring of debug console for more intuitive and robust behavior
+    - refactoring of debug console for more intuitive and robust behavior, e.g. persistent cursor position
     - :issue:`516` source editor does not show line of cursor after apply if the script is big
 
 - Bug Fixes:
