@@ -62,9 +62,8 @@ class LoggingConsoleController(ExtendedController):
         self.view.print_message(message, log_level)
 
     def print_filtered_buffer(self):
-        # TODO later take also the string of cursor line and try to find and select it again
         # remember cursor position
-        line_number, line_offset = self.view.get_cursor_position()
+        self.view.store_cursor_position()
 
         # update text buffer
         self.view.clean_buffer()
@@ -76,7 +75,8 @@ class LoggingConsoleController(ExtendedController):
 
         # restore cursor position
         wait_for_gui()
-        self.view.set_cursor_position(line_number, line_offset)
+        self.view.restore_cursor_position()
+
         self.view.scroll_to_cursor_onscreen()
 
     def update_filtered_buffer(self):

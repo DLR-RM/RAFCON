@@ -51,6 +51,11 @@ class LoggingConsoleView(View):
         from rafcon.gui.config import global_gui_config
         self.logging_priority = global_gui_config.get_config_value("LOGGING_CONSOLE_GTK_PRIORITY", glib.PRIORITY_LOW)
 
+        self._stored_line_number = None
+        self._stored_line_offset = None
+        self._stored_text_of_line = None
+        self._stored_relative_lines = None
+
     def clean_buffer(self):
         self.text_view.set_buffer(self.filtered_buffer)
 
@@ -165,3 +170,87 @@ class LoggingConsoleView(View):
 
         self.text_view.scroll_mark_onscreen(self.text_view.get_buffer().get_insert())
         return result
+
+    def len(self):
+        text_buffer = self.text_view.get_buffer()
+        return text_buffer.get_line_count()
+
+    def get_text_of_line(self, line_number_or_iter):
+        text_buffer = self.text_view.get_buffer()
+        if isinstance(line_number_or_iter, gtk.TextIter):
+            line_iter = line_number_or_iter
+            line_end_iter = text_buffer.get_iter_at_line(line_iter.get_line())
+        else:
+            line_number = line_number_or_iter
+            line_iter = text_buffer.get_iter_at_line(line_number)
+            line_end_iter = text_buffer.get_iter_at_line(line_number)
+        line_end_iter.forward_to_line_end()
+        text = text_buffer.get_text(line_iter, line_end_iter)
+        return text
+
+    def set_cursor_on_line_with_string(self, s, line_offset=0):
+        text_buffer = self.text_view.get_buffer()
+        line_iter = text_buffer.get_iter_at_line(0)
+        current_text_line = self.get_text_of_line(line_iter)
+        while not s == current_text_line:
+            if not line_iter.forward_line():
+                return False
+            current_text_line = self.get_text_of_line(line_iter)
+
+        return self.set_cursor_position(line_iter.get_line(), line_offset)
+
+    def get_line_number_next_to_cursor_with_string_within(self, s):
+        line_number, _ = self.get_cursor_position()
+        text_buffer = self.text_view.get_buffer()
+        line_iter = text_buffer.get_iter_at_line(line_number)
+
+        # find closest before line with string within
+        before_line_number = None
+        while line_iter.backward_line():
+            if s in self.get_text_of_line(line_iter):
+                before_line_number = line_iter.get_line()
+                break
+
+        # find closest after line with string within
+        after_line_number = None
+        while line_iter.forward_line():
+            if s in self.get_text_of_line(line_iter):
+                after_line_number = line_iter.get_line()
+                break
+
+        # take closest one to current position
+        if after_line_number is not None and before_line_number is None:
+            return after_line_number, after_line_number - line_number
+        elif before_line_number is not None and after_line_number is None:
+            return before_line_number, line_number - before_line_number
+        elif after_line_number is not None and before_line_number is not None:
+            after_distance = after_line_number - line_number
+            before_distance = line_number - before_line_number
+            if after_distance < before_distance:
+                return after_line_number, after_distance
+            else:
+                return before_line_number, before_distance
+        else:
+            return None, None
+
+    def store_cursor_position(self):
+        self._stored_line_number, self._stored_line_offset = self.get_cursor_position()
+        self._stored_text_of_line = self.get_text_of_line(self._stored_line_number)
+        self._stored_relative_lines = []
+        for key in self._enables.keys():
+            if self._enables[key]:
+                checked_line_number, distance = self.get_line_number_next_to_cursor_with_string_within(key)
+                if checked_line_number is not None:
+                    text_of_found_line = self.get_text_of_line(checked_line_number)
+                    self._stored_relative_lines.append((distance, text_of_found_line))
+
+    def restore_cursor_position(self):
+        if self.get_text_of_line(self._stored_line_number) == self._stored_text_of_line:
+            return self.set_cursor_position(self._stored_line_number, self._stored_line_offset)
+        else:
+            done = self.set_cursor_on_line_with_string(self._stored_text_of_line, self._stored_line_offset)
+            if not done and self._stored_relative_lines:
+                next_relative_lines = sorted(self._stored_relative_lines, key=lambda type_tuple: type_tuple[0])
+                text_of_line = next_relative_lines[0][1]
+                done = self.set_cursor_on_line_with_string(text_of_line, self._stored_line_offset)
+            return done
