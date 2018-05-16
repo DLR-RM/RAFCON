@@ -284,6 +284,7 @@ class StatesEditorController(ExtendedController):
             if state_editor_ctrl.get_controller('source_ctrl') and state_m.state.get_library_root_state() is None:
                 handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
                                                                                 state_m)
+                state_editor_view.source_view.get_buffer().connect('mark-set', self.pane_position_check)
             else:
                 handler_id = None
             source_code_view_is_dirty = False
@@ -322,7 +323,35 @@ class StatesEditorController(ExtendedController):
             self.close_page(state_identifier, delete=True)
         self.add_state_editor(self.current_state_machine_m.root_state)
 
-    def script_text_changed(self, source, state_m):
+    def pane_position_check(self, text_buffer, text_iter, text_mark):
+
+        # not needed if the right side bar is undocked
+        import rafcon.gui.runtime_config
+        if rafcon.gui.runtime_config.global_runtime_config.get_config_value('RIGHT_BAR_WINDOW_UNDOCKED'):
+            return
+
+        # if the cursor is to far right and the pane position less then 440 from max position set it to
+        button_container_width = 387.
+        line_numbers_width = 30
+        tab_width = 53
+        width_of_all = button_container_width + tab_width
+        text_view_width = button_container_width - line_numbers_width
+        min_line_string_length = 50.  # equivalent to button_container_width - line_numbers_width in char
+        current_pane_pos = self.parent.view['right_h_pane'].get_property('position')
+        max_position = self.parent.view['right_h_pane'].get_property('max_position')
+        pane_rel_pos = self.parent.view['right_h_pane'].get_property('max_position') - current_pane_pos
+        if pane_rel_pos >= width_of_all:
+            return
+        else:
+            cursor_line_offset = text_buffer.get_iter_at_offset(text_buffer.props.cursor_position).get_line_offset()
+            needed_rel_pos = text_view_width/min_line_string_length*cursor_line_offset + tab_width + line_numbers_width
+            print pane_rel_pos, needed_rel_pos, cursor_line_offset,  button_container_width
+            if pane_rel_pos >= needed_rel_pos:
+                return
+            else:
+                self.parent.view['right_h_pane'].set_property('position', max_position - needed_rel_pos)
+
+    def script_text_changed(self, text_buffer, state_m):
         state_identifier = self.get_state_identifier(state_m)
         if state_identifier in self.tabs:
             tab_list = self.tabs
