@@ -282,10 +282,13 @@ class StatesEditorController(ExtendedController):
             state_editor_ctrl = StateEditorController(state_m, state_editor_view)
             self.add_controller(state_identifier, state_editor_ctrl)
             if state_editor_ctrl.get_controller('source_ctrl') and state_m.state.get_library_root_state() is None:
+                # observe changed to set the mark dirty flag
                 handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
                                                                                 state_m)
-                state_editor_view.source_view.get_buffer().connect('mark-set', self.pane_position_check,
-                                                                   state_editor_ctrl.get_controller('source_ctrl'))
+                # observe key press events to adapt pane position
+                # Note: -> changed is not used because it is creating glib segfaults
+                state_editor_view.source_view.textview.connect("key-press-event", self.on_text_view_event,
+                                                               state_editor_ctrl.get_controller('source_ctrl'))
             else:
                 handler_id = None
             source_code_view_is_dirty = False
@@ -324,22 +327,23 @@ class StatesEditorController(ExtendedController):
             self.close_page(state_identifier, delete=True)
         self.add_state_editor(self.current_state_machine_m.root_state)
 
-    def pane_position_check(self, text_buffer, text_iter, text_mark, source_editor_ctrl):
+    def on_text_view_event(self, *args):
+        self.pane_position_check(args[-1])
+
+    def pane_position_check(self, source_editor_ctrl):
         """ Update right bar pane position if needed
 
         Checks calculates if the cursor is still visible and updates the pane position if it is close to not be seen.
         In case of an un-docked right-bar this method does nothing.
 
-        :param text_buffer: text buffer which is edited at the moment and where the cursor position is taken from
-        :param text_iter: respective text iter - not needed but handed from the signal call back
-        :param text_mark: respective text mark - not needed but handed from the signal call back
         :param source_editor_ctrl: the source editor controller of respective text buffer
         :return:
         """
+        text_buffer = source_editor_ctrl.view.get_buffer()
 
         # not needed if the right side bar is un-docked
-        import rafcon.gui.runtime_config
-        if rafcon.gui.runtime_config.global_runtime_config.get_config_value('RIGHT_BAR_WINDOW_UNDOCKED'):
+        from rafcon.gui.runtime_config import global_runtime_config
+        if global_runtime_config.get_config_value('RIGHT_BAR_WINDOW_UNDOCKED'):
             return
 
         # if the cursor is to far right and the pane position less then 440 from max position set it to
@@ -353,12 +357,12 @@ class StatesEditorController(ExtendedController):
         max_position = self.parent.view['right_h_pane'].get_property('max_position')
         pane_rel_pos = self.parent.view['right_h_pane'].get_property('max_position') - current_pane_pos
         if pane_rel_pos >= width_of_all:
-            return
+            pass
         else:
             cursor_line_offset = text_buffer.get_iter_at_offset(text_buffer.props.cursor_position).get_line_offset()
             needed_rel_pos = text_view_width/min_line_string_length*cursor_line_offset + tab_width + line_numbers_width
             if pane_rel_pos >= needed_rel_pos:
-                return
+                pass
             else:
                 self.parent.view['right_h_pane'].set_property('position', max_position - needed_rel_pos)
 
