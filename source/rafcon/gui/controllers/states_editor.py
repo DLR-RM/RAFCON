@@ -325,6 +325,17 @@ class StatesEditorController(ExtendedController):
         self.add_state_editor(self.current_state_machine_m.root_state)
 
     def pane_position_check(self, text_buffer, text_iter, text_mark, source_editor_ctrl):
+        """ Update right bar pane position if needed
+
+        Checks calculates if the cursor is still visible and updates the pane position if it is close to not be seen.
+        In case of an un-docked right-bar this method does nothing.
+
+        :param text_buffer: text buffer which is edited at the moment and where the cursor position is taken from
+        :param text_iter: respective text iter - not needed but handed from the signal call back
+        :param text_mark: respective text mark - not needed but handed from the signal call back
+        :param source_editor_ctrl: the source editor controller of respective text buffer
+        :return:
+        """
 
         # not needed if the right side bar is un-docked
         import rafcon.gui.runtime_config
@@ -335,7 +346,6 @@ class StatesEditorController(ExtendedController):
         button_container_min_width = source_editor_ctrl.view.button_container_min_width
         line_numbers_width = 30
         tab_width = 53
-        # print dir(source_editor_ctrl.view['editor_frame'])
         width_of_all = button_container_min_width + tab_width
         text_view_width = button_container_min_width - line_numbers_width
         min_line_string_length = button_container_min_width/8.
@@ -347,13 +357,21 @@ class StatesEditorController(ExtendedController):
         else:
             cursor_line_offset = text_buffer.get_iter_at_offset(text_buffer.props.cursor_position).get_line_offset()
             needed_rel_pos = text_view_width/min_line_string_length*cursor_line_offset + tab_width + line_numbers_width
-            print pane_rel_pos, needed_rel_pos, cursor_line_offset,  button_container_min_width
             if pane_rel_pos >= needed_rel_pos:
                 return
             else:
                 self.parent.view['right_h_pane'].set_property('position', max_position - needed_rel_pos)
 
     def script_text_changed(self, text_buffer, state_m):
+        """ Update gui elements according text buffer changes
+
+        Checks if the dirty flag needs to be set and the tab label to be updated.
+
+        :param TextBuffer text_buffer: Text buffer of the edited script
+        :param rafcon.gui.models.state.StateModel state_m: The state model related to the text buffer
+        :return:
+        """
+
         state_identifier = self.get_state_identifier(state_m)
         if state_identifier in self.tabs:
             tab_list = self.tabs
