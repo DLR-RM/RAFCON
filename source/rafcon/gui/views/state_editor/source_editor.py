@@ -65,3 +65,7 @@ class SourceEditorView(EditorView):
         self['open_external_button'] = open_external_button
         self['cancel_button'] = cancel_button
 
+    @property
+    def button_container_min_width(self):
+        return self['pylint_check_button'].get_allocation()[2] + self['apply_button'].get_size_request()[0] + \
+               self['open_external_button'].get_allocation()[2] + self['cancel_button'].get_size_request()[0]
