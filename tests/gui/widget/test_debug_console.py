@@ -11,20 +11,17 @@ logger = log.get_logger(__name__)
 
 
 @log.log_exceptions(None, gtk_quit=True)
-def trigger_gui_signals(with_refresh=True):
-    """The function triggers and test basic functions of the menu bar.
+def trigger_logging_view_gui_signals():
+    """The function triggers and test basic functions of the logging widget in the debug console.
 
     At the moment those functions are tested:
-    - New State Machine
-    - Open State Machine
-    - Copy State/HierarchyState -> via GraphicalEditor
-    - Cut State/HierarchyState -> via GraphicalEditor
-    - Paste State/HierarchyState -> via GraphicalEditor
-    - Refresh Libraries
-    - Refresh All
-    - Save as
-    - Stop State Machine
-    - Quit GUI
+    - in general:
+        - the cursor position is constant the logging view is updated no madder if the follow mode is enabled or not
+        - if the old cursor line disappears because of disabling of logging levels the cursor recovers on neighbour line
+          (TODO #1)
+    - for the follow mode:
+        - the scrollbar is positioned to see the last logs if follow mode is enabled
+        - if the follow mode is disabled the cursor is on it last position and the focus jumps back (TODO #2)
     """
     import rafcon.core.singleton
     import rafcon.gui.singleton
@@ -62,6 +59,7 @@ def trigger_gui_signals(with_refresh=True):
     call_gui_callback(global_gui_config.set_config_value, 'CONSOLE_FOLLOW_LOGGING', False)
     current_line_number, current_line_offset = call_gui_callback(logging_console_ctrl.view.get_cursor_position)
     assert line_number == current_line_number
+    # TODO #1 check that the scrollbar position allows to see the cursor
 
     logger.debug("3 test if cursor line is constant for active logging")
     state_machine = create_state_machine()
@@ -82,10 +80,10 @@ def trigger_gui_signals(with_refresh=True):
     adj = logging_console_ctrl.view['scrollable'].get_vadjustment()
     assert int(adj.get_value()) == int(adj.get_upper() - adj.get_page_size())
 
-    # TODO check for recovery onto close by logger messages if current line type is disabled
+    # TODO #1 check for recovery onto close by logger messages if current line type is disabled
 
 
-def test_gui(caplog):
+def test_logging_view_widget(caplog):
     from os.path import join
 
     change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False,
@@ -100,7 +98,7 @@ def test_gui(caplog):
     testing_utils.run_gui(gui_config=change_in_gui_config, libraries=libraries)
 
     try:
-        trigger_gui_signals()
+        trigger_logging_view_gui_signals()
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
