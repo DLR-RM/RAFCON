@@ -348,11 +348,13 @@ class StatesEditorController(ExtendedController):
 
         # if the cursor is to far right and the pane position less then 440 from max position set it to
         button_container_min_width = source_editor_ctrl.view.button_container_min_width
-        line_numbers_width = 30
-        tab_width = 53
+        # TODO find the properties to read it the next three values from
+        line_numbers_width = 30         # value is an assumption because property not found till now
+        tab_width = 53  # this value is from the main window glade file and respective right_bar_container width request
+        source_view_character_size = 8  # value is an assumption because property not found till now
         width_of_all = button_container_min_width + tab_width
         text_view_width = button_container_min_width - line_numbers_width
-        min_line_string_length = button_container_min_width/8.
+        min_line_string_length = float(button_container_min_width)/float(source_view_character_size)
         current_pane_pos = self.parent.view['right_h_pane'].get_property('position')
         max_position = self.parent.view['right_h_pane'].get_property('max_position')
         pane_rel_pos = self.parent.view['right_h_pane'].get_property('max_position') - current_pane_pos
