@@ -130,7 +130,7 @@ def trigger_source_editor_signals():
 
 
 def test_gui(caplog):
-    testing_utils.run_gui(gui_config={'GAPHAS_EDITOR': True,'AUTO_BACKUP_ENABLED': False,
+    testing_utils.run_gui(gui_config={'GAPHAS_EDITOR': True, 'AUTO_BACKUP_ENABLED': False,
                                       'CHECK_PYTHON_FILES_WITH_PYLINT': False, 'PREFER_EXTERNAL_EDITOR': False})
 
     # queue = Queue.Queue() # TODO think about to use this to get call_back methods return value by a generic scheme

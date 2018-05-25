@@ -13,6 +13,8 @@ Next release
 
 - Bug Fixes:
 
+    - :issue:`515` source editor does not show end of lines
+
 
 Patch releases 0.12.\*
 ----------------------
