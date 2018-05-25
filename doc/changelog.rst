@@ -11,6 +11,8 @@ Next release
 
 - Improvements:
 
+    - :issue:`529` accelerate the follow mode switch for many logger messages
+
 - Bug Fixes:
 
     - :issue:`515` source editor does not show end of lines
