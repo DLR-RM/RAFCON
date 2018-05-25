@@ -346,12 +346,12 @@ class StatesEditorController(ExtendedController):
         if global_runtime_config.get_config_value('RIGHT_BAR_WINDOW_UNDOCKED'):
             return
 
-        # if the cursor is to far right and the pane position less then 440 from max position set it to
+        # move the pane left if the cursor is to far right and the pane position is less then 440 from its max position
         button_container_min_width = source_editor_ctrl.view.button_container_min_width
-        # TODO find the properties to read it the next three values from
-        line_numbers_width = 30         # value is an assumption because property not found till now
+        # TODO find the properties where the the next three values can be read from
+        line_numbers_width = 30         # value is an assumption because its respective property is not found till now
         tab_width = 53  # this value is from the main window glade file and respective right_bar_container width request
-        source_view_character_size = 8  # value is an assumption because property not found till now
+        source_view_character_size = 8  # value is an assumption because its respective property is not found till now
         width_of_all = button_container_min_width + tab_width
         text_view_width = button_container_min_width - line_numbers_width
         min_line_string_length = float(button_container_min_width)/float(source_view_character_size)
