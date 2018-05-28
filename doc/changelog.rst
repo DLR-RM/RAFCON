@@ -12,6 +12,8 @@ Next release
 - Improvements:
 
     - :issue:`529` accelerate the follow mode switch for many logger messages
+    - :issue:`530` automatically focus and adapt position of root state for fresh initiated state machines
+                   issue title was "Root state out of focus and badly positioned"
 
 - Bug Fixes:
 
