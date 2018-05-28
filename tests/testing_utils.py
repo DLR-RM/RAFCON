@@ -327,6 +327,7 @@ def wait_for_gui():
 
 def run_gui_thread(gui_config=None, runtime_config=None):
     import gobject
+    import gtk
     from rafcon.core.start import reactor_required
     from rafcon.gui.start import start_gtk, install_reactor
     global gui_ready
@@ -338,8 +339,9 @@ def run_gui_thread(gui_config=None, runtime_config=None):
     from rafcon.gui.views.main_window import MainWindowView
 
     initialize_environment_gui(gui_config, runtime_config)
-
-    MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
+    main_window_view = MainWindowView()
+    main_window_view.get_top_widget().set_gravity(gtk.gdk.GRAVITY_STATIC)
+    MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
 
     print "run_gui thread: ", currentThread(), currentThread().ident, "gui.singleton thread ident:", \
         rafcon.gui.singleton.thread_identifier
