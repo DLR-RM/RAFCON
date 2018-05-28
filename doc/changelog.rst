@@ -12,6 +12,7 @@ Next release
 - Improvements:
 
     - :issue:`529` accelerate the follow mode switch for many logger messages
+    - dynamic insertion of states during state execution is working and tested
 
 - Bug Fixes:
 
