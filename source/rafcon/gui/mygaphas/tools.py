@@ -240,10 +240,13 @@ class HoverItemTool(gaphas.tool.HoverTool):
             return []
 
     def _filter_library_state(self, items):
-        """Filters our child elements of library state when they cannot be hovered
+        """Filters out child elements of library state when they cannot be hovered
 
-        Checks if hovered item is within a LibraryState and, if so, sets the hovered item to the LibraryState or
-        upper most LibraryState
+        Checks if hovered item is within a LibraryState
+        * if not, the list is returned unfiltered
+        * if so, STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED is checked
+            * if enabled, the library is selected (instead of the state copy)
+            * if not, the upper most library is selected
 
         :param list items: Sorted list of items beneath the cursor
         :return: filtered items
@@ -333,7 +336,7 @@ class HoverItemTool(gaphas.tool.HoverTool):
         from gaphas.aspect import ElementHandleSelection
 
         view = self.view
-        hovered_items = view.get_items_at_point((event.x, event.y), distance=1)
+        hovered_items = view.get_items_at_point((event.x, event.y), distance=3)
         hovered_items = self._filter_hovered_items(hovered_items, event)
 
         view.hovered_item = hovered_items[0] if hovered_items else None
