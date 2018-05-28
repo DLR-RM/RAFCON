@@ -3,12 +3,12 @@ from rafcon.gui.utils import wait_for_gui
 import time
 
 def execute(self, inputs, outputs, gvm):
-    self.logger.debug("Insert state")
+    self.logger.debug("Insert library state")
     #libary_path = "unit_test_state_machines/bake_libraries"
     #libary_name = "bake_library1"
     libary_path = "unit_test_state_machines/dynamic_library_insertion_libraries"
     libary_name = "test_library"
-    e = LibraryState(libary_path, libary_name, name="test_libary_state")
+    e = LibraryState(libary_path, libary_name, name="test_library_state")
     self.parent.add_state(e)
     self.parent.add_transition(self.state_id, 0, e.state_id, None)
     wait_for_gui()
