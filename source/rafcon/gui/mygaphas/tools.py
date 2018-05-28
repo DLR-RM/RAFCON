@@ -336,7 +336,7 @@ class HoverItemTool(gaphas.tool.HoverTool):
         from gaphas.aspect import ElementHandleSelection
 
         view = self.view
-        hovered_items = view.get_items_at_point((event.x, event.y), distance=1)
+        hovered_items = view.get_items_at_point((event.x, event.y), distance=3)
         hovered_items = self._filter_hovered_items(hovered_items, event)
 
         view.hovered_item = hovered_items[0] if hovered_items else None
