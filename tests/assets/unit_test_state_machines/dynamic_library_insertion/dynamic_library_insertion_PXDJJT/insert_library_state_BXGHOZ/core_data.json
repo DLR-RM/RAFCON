@@ -2,7 +2,7 @@
     "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
     "description": null, 
     "input_data_ports": {}, 
-    "name": "instert library state", 
+    "name": "insert library state", 
     "outcomes": {
         "-2": {
             "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
