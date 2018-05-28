@@ -169,12 +169,10 @@ class ExtendedGtkView(GtkView, Observer):
         super(ExtendedGtkView, self).queue_draw_item(*gaphas_items)
 
     def get_items_at_point(self, pos, selected=True, distance=0):
-        """
-        Return the items located at ``pos`` (x, y).
+        """ Return the items located at ``pos`` (x, y).
 
-        Parameters:
-         - selected: if False returns first non-selected item
-         - selected: Maximum distance to be considered as "at point"
+         :param bool selected: if False returns first non-selected item
+         :param float distance: Maximum distance to be considered as "at point" (in viewport pixel)
         """
         items = self._qtree.find_intersect((pos[0] - distance, pos[1] - distance, 2 * distance, 2 * distance))
         filtered_items = []
@@ -183,8 +181,11 @@ class ExtendedGtkView(GtkView, Observer):
                 continue  # skip selected items
 
             v2i = self.get_matrix_v2i(item)
+            i2v = self.get_matrix_i2v(item)
             ix, iy = v2i.transform_point(*pos)
-            if item.point((ix, iy)) <= distance:
+            distance_i = item.point((ix, iy))
+            distance_v = i2v.transform_distance(distance_i, 0)[0]
+            if distance_v <= distance:
                 filtered_items.append(item)
         return filtered_items
 
