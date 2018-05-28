@@ -16,6 +16,7 @@ Next release
 - Bug Fixes:
 
     - :issue:`515` source editor does not show end of lines
+    - :issue:`533` States inside library states cannot be selected
 
 
 Patch releases 0.12.\*
