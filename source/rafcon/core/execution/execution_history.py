@@ -112,12 +112,15 @@ class ExecutionHistory(Observable, Iterable, Sized):
         self.execution_history_storage = None        
 
     def destroy(self):
+        # logger.verbose("Destroy execution history!")
         if self.execution_history_storage:
             self.execution_history_storage.close()
         self.execution_history_storage = None
         if len(self._history_items) > 0:
             if self._history_items[0]:
-                self._history_items[0].destroy()
+                execution_history_iterator = iter(self)
+                for history_item in execution_history_iterator:
+                    history_item.destroy()
         self._history_items = None
         self.initial_prev = None
 
@@ -264,8 +267,6 @@ class HistoryItem(object):
         self.timestamp = None
         self.run_id = None
         self.prev = None
-        if self.next:
-            self.next.destroy()
         self.next = None
         self.history_item_id = None
         self.state_type = None
