@@ -1,9 +1,18 @@
 {
-    "__jsonqualname__": "rafcon.core.states.hierarchy_state.HierarchyState", 
-    "data_flows": {}, 
+    "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
     "description": null, 
-    "input_data_ports": {}, 
-    "name": "dynamic_library_insertion", 
+    "input_data_ports": {
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 1, 
+            "data_type": {
+                "__type__": "__builtin__.int"
+            }, 
+            "default_value": null, 
+            "name": "input_1"
+        }
+    }, 
+    "name": "execution_1", 
     "outcomes": {
         "-2": {
             "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
@@ -32,24 +41,5 @@
             "name": "output_0"
         }
     }, 
-    "scoped_variables": {}, 
-    "state_id": "PXDJJT", 
-    "transitions": {
-        "1": {
-            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
-            "from_outcome": null, 
-            "from_state": null, 
-            "to_outcome": null, 
-            "to_state": "FCTNZD", 
-            "transition_id": 1
-        }, 
-        "5": {
-            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
-            "from_outcome": 0, 
-            "from_state": "FCTNZD", 
-            "to_outcome": null, 
-            "to_state": "BXGHOZ", 
-            "transition_id": 5
-        }
-    }
+    "state_id": "YWYZLO"
 }
