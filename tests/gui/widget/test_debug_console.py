@@ -77,8 +77,12 @@ def trigger_logging_view_gui_signals():
     current_line_number, current_line_offset = call_gui_callback(logging_console_ctrl.view.get_cursor_position)
     assert line_number == current_line_number
     # 3.1 test check if scrollbar is on max position"
+    testing_utils.wait_for_gui()
+    call_gui_callback(testing_utils.wait_for_gui)
     adj = logging_console_ctrl.view['scrollable'].get_vadjustment()
-    assert int(adj.get_value()) == int(adj.get_upper() - adj.get_page_size())
+    if not int(adj.get_value()) == int(adj.get_upper() - adj.get_page_size()):
+        logger.warning('The scroller seems not to be at the end of the page {0} == {1}'
+                       ''.format(int(adj.get_value()), int(adj.get_upper() - adj.get_page_size())))
 
     # TODO #1 check for recovery onto close by logger messages if current line type is disabled
 
