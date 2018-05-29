@@ -65,7 +65,58 @@ class SourceEditorView(EditorView):
         self['open_external_button'] = open_external_button
         self['cancel_button'] = cancel_button
 
+        # observe key press events to adapt pane position
+        # Note: -> changed is not used because it is creating glib segfaults
+        self.textview.connect("key-press-event", self.on_text_view_event)
+
     @property
     def button_container_min_width(self):
         return self['pylint_check_button'].get_allocation()[2] + self['apply_button'].get_size_request()[0] + \
                self['open_external_button'].get_allocation()[2] + self['cancel_button'].get_size_request()[0]
+
+    def on_text_view_event(self, *args):
+        self.pane_position_check(args[-1])
+
+    def pane_position_check(self, source_editor_ctrl):
+        """ Update right bar pane position if needed
+
+        Checks calculates if the cursor is still visible and updates the pane position if it is close to not be seen.
+        In case of an un-docked right-bar this method does nothing.
+
+        :param source_editor_ctrl: the source editor controller of respective text buffer
+        :return:
+        """
+        text_buffer = self.get_buffer()
+
+        # not needed if the right side bar is un-docked
+        from rafcon.gui.singleton import main_window_controller
+
+        if main_window_controller is None or main_window_controller.view is None:
+            return
+        from rafcon.gui.runtime_config import global_runtime_config
+        if global_runtime_config.get_config_value('RIGHT_BAR_WINDOW_UNDOCKED'):
+            return
+
+        # move the pane left if the cursor is to far right and the pane position is less then 440 from its max position
+        button_container_min_width = self.button_container_min_width
+        # TODO find the properties where the the next three values can be read from
+        line_numbers_width = 30         # value is an assumption because its respective property is not found till now
+        tab_width = 53  # this value is from the main window glade file and respective right_bar_container width request
+        source_view_character_size = 8  # value is an assumption because its respective property is not found till now
+        width_of_all = button_container_min_width + tab_width
+        text_view_width = button_container_min_width - line_numbers_width
+        min_line_string_length = float(button_container_min_width)/float(source_view_character_size)
+
+        current_pane_pos = main_window_controller.view['right_h_pane'].get_property('position')
+        max_position = main_window_controller.view['right_h_pane'].get_property('max_position')
+        pane_rel_pos = main_window_controller.view['right_h_pane'].get_property('max_position') - current_pane_pos
+        if pane_rel_pos >= width_of_all:
+            pass
+        else:
+            cursor_line_offset = text_buffer.get_iter_at_offset(text_buffer.props.cursor_position).get_line_offset()
+            needed_rel_pos = text_view_width/min_line_string_length*cursor_line_offset + tab_width + line_numbers_width
+            needed_rel_pos = min(width_of_all, needed_rel_pos)
+            if pane_rel_pos >= needed_rel_pos:
+                pass
+            else:
+                main_window_controller.view['right_h_pane'].set_property('position', max_position - needed_rel_pos)
