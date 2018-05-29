@@ -13,6 +13,7 @@
 
 from rafcon.gui.mygaphas.items.connection import ConnectionView
 from rafcon.utils import log
+from rafcon.utils.dict_operations import check_if_dict_contains_object_reference_in_values
 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
 logger = log.get_logger(__name__)
 
@@ -167,10 +168,12 @@ def add_data_flow_to_state(from_port, to_port):
     responsible_parent_m = None
 
     # from parent to child
-    if isinstance(from_state_m, ContainerStateModel) and to_state_m.state in from_state_m.state.states.values():
+    if isinstance(from_state_m, ContainerStateModel) and \
+            check_if_dict_contains_object_reference_in_values(to_state_m.state, from_state_m.state.states):
         responsible_parent_m = from_state_m
     # from child to parent
-    elif isinstance(to_state_m, ContainerStateModel) and from_state_m.state in to_state_m.state.states.values():
+    elif isinstance(to_state_m, ContainerStateModel) and \
+            check_if_dict_contains_object_reference_in_values(from_state_m.state, to_state_m.state.states):
         responsible_parent_m = to_state_m
     # from parent to parent
     elif isinstance(from_state_m, ContainerStateModel) and from_state_m.state is to_state_m.state:
