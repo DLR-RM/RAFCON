@@ -38,7 +38,7 @@ from rafcon.gui.singleton import state_machine_manager_model
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel
-from rafcon.gui.views.utils.editor import EditorView
+from rafcon.gui.views.state_editor.source_editor import SourceEditorView
 from rafcon.gui.utils.external_editor import AbstractExternalEditor
 
 from rafcon.utils import filesystem
@@ -62,7 +62,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
 
     def __init__(self, model, view):
         assert isinstance(model, AbstractStateModel)
-        assert isinstance(view, EditorView)
+        assert isinstance(view, SourceEditorView)
         lib_with_show_content = isinstance(model, LibraryStateModel) and not model.show_content()
         model = model.state_copy if lib_with_show_content else model
 
