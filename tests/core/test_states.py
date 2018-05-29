@@ -71,6 +71,12 @@ def test_create_state(caplog):
 
     assert_logger_warnings_and_errors(caplog)
 
+    a = ExecutionState("test", state_id=10)
+    b = ExecutionState("test", state_id=10)
+    
+    assert a == b
+    assert a is not b
+
 
 def test_create_container_state(caplog):
 
