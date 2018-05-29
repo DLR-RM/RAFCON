@@ -285,10 +285,6 @@ class StatesEditorController(ExtendedController):
                 # observe changed to set the mark dirty flag
                 handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
                                                                                 state_m)
-                # observe key press events to adapt pane position
-                # Note: -> changed is not used because it is creating glib segfaults
-                state_editor_view.source_view.textview.connect("key-press-event", self.on_text_view_event,
-                                                               state_editor_ctrl.get_controller('source_ctrl'))
             else:
                 handler_id = None
             source_code_view_is_dirty = False
@@ -326,47 +322,6 @@ class StatesEditorController(ExtendedController):
         for state_identifier in tabs_to_delete:
             self.close_page(state_identifier, delete=True)
         self.add_state_editor(self.current_state_machine_m.root_state)
-
-    def on_text_view_event(self, *args):
-        self.pane_position_check(args[-1])
-
-    def pane_position_check(self, source_editor_ctrl):
-        """ Update right bar pane position if needed
-
-        Checks calculates if the cursor is still visible and updates the pane position if it is close to not be seen.
-        In case of an un-docked right-bar this method does nothing.
-
-        :param source_editor_ctrl: the source editor controller of respective text buffer
-        :return:
-        """
-        text_buffer = source_editor_ctrl.view.get_buffer()
-
-        # not needed if the right side bar is un-docked
-        from rafcon.gui.runtime_config import global_runtime_config
-        if global_runtime_config.get_config_value('RIGHT_BAR_WINDOW_UNDOCKED'):
-            return
-
-        # move the pane left if the cursor is to far right and the pane position is less then 440 from its max position
-        button_container_min_width = source_editor_ctrl.view.button_container_min_width
-        # TODO find the properties where the the next three values can be read from
-        line_numbers_width = 30         # value is an assumption because its respective property is not found till now
-        tab_width = 53  # this value is from the main window glade file and respective right_bar_container width request
-        source_view_character_size = 8  # value is an assumption because its respective property is not found till now
-        width_of_all = button_container_min_width + tab_width
-        text_view_width = button_container_min_width - line_numbers_width
-        min_line_string_length = float(button_container_min_width)/float(source_view_character_size)
-        current_pane_pos = self.parent.view['right_h_pane'].get_property('position')
-        max_position = self.parent.view['right_h_pane'].get_property('max_position')
-        pane_rel_pos = self.parent.view['right_h_pane'].get_property('max_position') - current_pane_pos
-        if pane_rel_pos >= width_of_all:
-            pass
-        else:
-            cursor_line_offset = text_buffer.get_iter_at_offset(text_buffer.props.cursor_position).get_line_offset()
-            needed_rel_pos = text_view_width/min_line_string_length*cursor_line_offset + tab_width + line_numbers_width
-            if pane_rel_pos >= needed_rel_pos:
-                pass
-            else:
-                self.parent.view['right_h_pane'].set_property('position', max_position - needed_rel_pos)
 
     def script_text_changed(self, text_buffer, state_m):
         """ Update gui elements according text buffer changes
