@@ -142,12 +142,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self._parent = None
 
     def __str__(self):
-        if self.parent and hasattr(self.parent, "name"):
-            return "{2} with name '{0}', id '{1}' and parent '{3}'".format(self.name, self.state_id,
-                                                                           type(self).__name__, str(self.parent.name))
-        else:
-            return "{2} with name '{0}', id '{1}' and parent '{3}'".format(self.name, self.state_id,
-                                                                           type(self).__name__, str(self.parent))
+        return "{2} with name '{0}' and id '{1}'".format(self.name, self.state_id, type(self).__name__)
 
     def id(self):
         return self
