@@ -167,17 +167,17 @@ def add_data_flow_to_state(from_port, to_port):
     responsible_parent_m = None
 
     # from parent to child
-    if isinstance(from_state_m, ContainerStateModel) and to_state_m.state.state_id in from_state_m.state.states:
+    if isinstance(from_state_m, ContainerStateModel) and to_state_m.state in from_state_m.state.states.values():
         responsible_parent_m = from_state_m
     # from child to parent
-    elif isinstance(to_state_m, ContainerStateModel) and from_state_m.state.state_id in to_state_m.state.states:
+    elif isinstance(to_state_m, ContainerStateModel) and from_state_m.state in to_state_m.state.states.values():
         responsible_parent_m = to_state_m
     # from parent to parent
-    elif isinstance(from_state_m, ContainerStateModel) and from_state_m.state.state_id == to_state_m.state.state_id:
+    elif isinstance(from_state_m, ContainerStateModel) and from_state_m.state is to_state_m.state:
         responsible_parent_m = from_state_m  # == to_state_m
     # from child to child
     elif (not from_state_m.state.is_root_state) and (not to_state_m.state.is_root_state) \
-            and from_state_m.state.state_id != to_state_m.state.state_id \
+            and from_state_m.state is not to_state_m.state \
             and from_state_m.parent.state.state_id and to_state_m.parent.state.state_id:
         responsible_parent_m = from_state_m.parent
 
