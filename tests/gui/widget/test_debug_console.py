@@ -86,6 +86,19 @@ def trigger_logging_view_gui_signals():
 
     # TODO #1 check for recovery onto close by logger messages if current line type is disabled
 
+    # check bug case -> config will not be written to file system if logging parameters are changed
+    with open(global_gui_config.config_file_path, 'r') as f:
+        config_file_start = f.read()
+
+    call_gui_callback(global_gui_config.set_config_value, 'CONSOLE_FOLLOW_LOGGING', False)
+
+    with open(global_gui_config.config_file_path, 'r') as f:
+        config_file_end = f.read()
+
+    assert config_file_end == config_file_start
+
+    print "finished debug console test"
+
 
 def test_logging_view_widget(caplog):
     from os.path import join

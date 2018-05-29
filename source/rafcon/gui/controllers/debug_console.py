@@ -83,7 +83,6 @@ class DebugConsoleController(ExtendedController):
 
     def on_log_button_toggled(self, log_button, config_key):
         gui_config.set_config_value(config_key, log_button.get_active())
-        gui_config.save_configuration()
 
     def update_log_button_state(self):
         for level in ["verbose", "debug", "info", "warning", "error"]:
