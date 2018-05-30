@@ -11,18 +11,29 @@ Next release
 
 - Improvements:
 
-    - :issue:`529` accelerate the follow mode switch for many logger messages
-    - dynamic insertion of states during state execution is working and tested
-
 - Bug Fixes:
 
-    - :issue:`515` source editor does not show end of lines
-    - :issue:`533` States inside library states cannot be selected
-    - :issue:`528` execution history destruction does not lead to max recursion depth
+    - :issue:`515` source editor does not show end of lines (finally)
 
 
 Patch releases 0.12.\*
 ----------------------
+
+0.12.11
+"""""""
+
+- Improvements:
+
+    - :issue:`529` accelerate the follow mode switch for many logger messages
+    - dynamic insertion of states during state execution is working and tested
+    - secure dynamic modification of state machines while runtime by test created in
+      pull request :issue:`535` Dynamic insertion of states during execution
+
+- Bug Fixes:
+
+    - :issue:`515` source editor does not show end of lines (partly)
+    - :issue:`533` States inside library states cannot be selected
+    - :issue:`528` execution history destruction does not lead to max recursion depth
 
 
 0.12.10
