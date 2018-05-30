@@ -18,6 +18,7 @@ Next release
 
     - :issue:`515` source editor does not show end of lines
     - :issue:`533` States inside library states cannot be selected
+    - :issue:`528` execution history destruction does not lead to max recursion depth
 
 
 Patch releases 0.12.\*
