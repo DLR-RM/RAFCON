@@ -461,11 +461,12 @@ class GraphicalEditorController(ExtendedController):
 
             # only react to the notification if the model is a model, which has to be drawn
             # if it is a model inside a library state, this is eventually not the case
-            library_root_state = model.state.get_library_root_state()
-            if library_root_state:
-                parent_library_root_state_m = self.model.get_state_model_by_path(library_root_state.get_path())
-                if not parent_library_root_state_m.parent.show_content():
-                    return
+            if isinstance(model, AbstractStateModel):
+                library_root_state = model.state.get_library_root_state()
+                if library_root_state:
+                    parent_library_root_state_m = self.model.get_state_model_by_path(library_root_state.get_path())
+                    if not parent_library_root_state_m.parent.show_content():
+                        return
 
             if method_name == 'state_execution_status':
                 state_v = self.canvas.get_view_for_model(model)
