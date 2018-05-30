@@ -20,6 +20,8 @@ def execute(self, inputs, outputs, gvm):
             parent_id = d_id
     self.parent.add_data_flow(self.parent.state_id, parent_id, s.state_id, 0)
     outputs["generated_state_id"] = s.state_id
+    wait_for_gui()
+    time.sleep(1.0)
     return 0
 
 def execute_old(self, inputs, outputs, gvm):
@@ -29,24 +31,20 @@ def execute_old(self, inputs, outputs, gvm):
     libary_path = inputs["library_path"]
     libary_name = inputs["library_name"]
     s = LibraryState(libary_path, libary_name, name=libary_name)
-    #self.parent.add_state(s)
     glib.idle_add(self.parent.add_state, s)
     wait_for_gui()
-    #self.parent.add_transition(self.state_id, 0, s.state_id, None)
     glib.idle_add(self.parent.add_transition, self.state_id, 0, s.state_id, None)
     wait_for_gui()
-    #self.parent.add_transition(s.state_id, 0, "BDIKEE", None)
     glib.idle_add(self.parent.add_transition, s.state_id, 0, "BDIKEE", None)
     wait_for_gui()
-    #self.parent.add_transition(s.state_id, 1, "QLRVDQ", None)
     glib.idle_add(self.parent.add_transition, s.state_id, 1, "QLRVDQ", None)
     wait_for_gui()
     parent_id = None
     for d_id, d in self.parent.input_data_ports.iteritems():
         if d.name == "grasp_width":
             parent_id = d_id
-    #self.parent.add_data_flow(self.parent.state_id, parent_id, s.state_id, 0)
     glib.idle_add(self.parent.add_data_flow, self.parent.state_id, parent_id, s.state_id, 0)
     wait_for_gui()
     outputs["generated_state_id"] = s.state_id
+    time.sleep(3.0)
     return 0
