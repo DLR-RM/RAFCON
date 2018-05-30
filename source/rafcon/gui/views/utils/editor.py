@@ -30,11 +30,12 @@ except ImportError:
 
 class EditorView(View):
 
-    def __init__(self, name='SOURCE EDITOR', language='idl', editor_style="SOURCE_EDITOR_STYLE"):
+    def __init__(self, name='SOURCE EDITOR', language='idl', editor_style="SOURCE_EDITOR_STYLE", run_with_spacer=False):
         View.__init__(self)
 
         vbox = gtk.VBox()
 
+        # create title view port widget
         source_label = gui_helper_label.create_label_with_text_and_spacing(name,
                                                                            letter_spacing=constants.LETTER_SPACING_1PT)
         source_label.set_alignment(0.0, 0.5)
@@ -49,11 +50,10 @@ class EditorView(View):
         title_viewport.add(source_box)
         title_viewport.show_all()
 
+        # prepare frame for the text editor
         editor_frame = gtk.Frame()
-        vbox.pack_start(title_viewport, False, True, 0)
-        vbox.pack_start(editor_frame, expand=True, fill=True)
 
-        # create textview
+        # create textview/sourceview2
         self.textview = None
         self.style_scheme = None
         self.language = language
@@ -78,11 +78,27 @@ class EditorView(View):
         self.while_in_set_enabled = False
         self.register()
 
+        # wrap text view with scroller window
         scrollable = gtk.ScrolledWindow()
         scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrollable.add(self.textview)
-        editor_frame.add(scrollable)
         self.scrollable = scrollable
+
+        # wrap scroller window with gtk.Frame for proper viewing
+        editor_frame.add(scrollable)
+
+        # fill top widget vbox with title view port, source view and text view within
+        vbox.pack_start(title_viewport, False, True, 0)
+        self.spacer_frame = None
+        if run_with_spacer:
+            # with spacer a gtk.Frame object is used as spacer and its is with the source view in one hbox
+            hbox_frame = gtk.HBox()
+            self.spacer_frame = gtk.Frame()
+            hbox_frame.pack_end(self.spacer_frame, expand=False, fill=False)
+            hbox_frame.pack_start(editor_frame, expand=True, fill=True)
+            vbox.pack_start(hbox_frame, expand=True, fill=True)
+        else:
+            vbox.pack_start(editor_frame, expand=True, fill=True)
 
         self['editor_frame'] = vbox
         self.top = 'editor_frame'

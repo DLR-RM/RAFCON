@@ -285,6 +285,7 @@ class StatesEditorController(ExtendedController):
                 # observe changed to set the mark dirty flag
                 handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
                                                                                 state_m)
+                self.view.get_top_widget().connect('expose_event', state_editor_view.source_view.on_expose_event)
             else:
                 handler_id = None
             source_code_view_is_dirty = False
