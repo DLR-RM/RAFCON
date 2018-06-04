@@ -23,7 +23,8 @@ class PyTest(TestCommand):
         TestCommand.initialize_options(self)
         # Add further test folder with 'or my_test_folder'
         # self.pytest_args = '-vx -s -k "core or gui or share_elements or user_input"'
-        self.pytest_args = '-vx -s -k "core or gui or share_elements"'
+        # self.pytest_args = '-vx -s -k "core or gui or share_elements"'
+        self.pytest_args = '-vx -s -k "user_input"'
 
     def run_tests(self):
         import shlex
