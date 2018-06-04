@@ -279,6 +279,12 @@ def signal_handler(signal, frame):
 
 
 def main():
+
+    # check if all env variables are set
+    if not os.environ.get("HOME", False):
+        logger.error("For starting RAFCON in GUI mode, the HOME environment variable has to be set!")
+        return
+
     register_signal_handlers(signal_handler)
 
     splash_screen = SplashScreen(contains_image=True, width=530, height=350)
