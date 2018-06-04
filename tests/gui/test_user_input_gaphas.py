@@ -102,9 +102,15 @@ def create_and_resize_state():
     # graphical_editor_controller.canvas.update()
 
     new_x, new_y = south_east_coordinates_of_model(state_view_for_root_state)
+    sleep_time = 0.01
+    max_counter = 10.0 / 0.01
+    counter = 0
     while new_x == x and new_y == y:
         new_x, new_y = south_east_coordinates_of_model(state_view_for_root_state)
-        time.sleep(0.01)
+        counter += 1
+        if counter > max_counter:
+            break
+        time.sleep(sleep_time)
 
     # print new_x, new_y
 
