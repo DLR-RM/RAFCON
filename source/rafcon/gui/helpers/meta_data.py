@@ -14,6 +14,7 @@ from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
+ROOT_STATE_DEFAULT_REL_POS = (0, 0)
 STATE_DEFAULT_REL_POS = (10, 10)
 
 

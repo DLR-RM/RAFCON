@@ -754,8 +754,9 @@ class GraphicalEditorController(ExtendedController):
         start_time_view_generation = time.time()
         with self.model.state_machine.modification_lock():
             hash_before = self.model.mutable_hash()
-            # there is no more root state position it will be set always to the default relative position for states
-            self.root_state_m.set_meta_data_editor('rel_pos', gui_helper_meta_data.STATE_DEFAULT_REL_POS)
+            # there is no more root state position it will be set always to the root state default relative position
+            if not self.root_state_m.get_meta_data_editor()['rel_pos'] == gui_helper_meta_data.ROOT_STATE_DEFAULT_REL_POS:
+                self.root_state_m.set_meta_data_editor('rel_pos', gui_helper_meta_data.ROOT_STATE_DEFAULT_REL_POS)
             self.add_state_view_for_model(self.root_state_m, rel_pos=gui_helper_meta_data.STATE_DEFAULT_REL_POS)
             hash_after = self.model.mutable_hash()
             if hash_before.digest() != hash_after.digest():
