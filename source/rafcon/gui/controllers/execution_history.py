@@ -86,7 +86,10 @@ class ExecutionHistoryTreeController(ExtendedController):
         view['clean_button'].connect('clicked', self.clean_history)
 
     def append_string_to_menu(self, popup_menu, menu_item_string):
-        menu_item = gtk.MenuItem(menu_item_string)
+        final_string = menu_item_string
+        if len(menu_item_string) > 400:
+            final_string = menu_item_string[:200] + "\n...\n" + menu_item_string[-200:]
+        menu_item = gtk.MenuItem(final_string)
         menu_item.set_sensitive(False)
         menu_item.show()
         popup_menu.append(menu_item)
