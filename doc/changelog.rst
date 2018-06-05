@@ -13,6 +13,11 @@ Next release
 
     - :issue:`530` automatically focus and adapt position of root state for fresh initiated state machines
                    issue title was "Root state out of focus and badly positioned"
+    - :issue:`543` Changing default option for library name while saving
+                   -> for the default folder name white space are replaced with underscores and all is lower case
+    - also default library state name is now the folder name with replaced underscores with white spaces
+
+
 - Bug Fixes:
 
     - :issue:`539` grouping of states outcome transitions are not fully recovers (now bug is covered by test)
