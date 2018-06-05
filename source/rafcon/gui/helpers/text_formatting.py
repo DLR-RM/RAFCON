@@ -24,3 +24,7 @@ def limit_string(text, max_length, separator="&#x2026;"):
 def format_default_folder_name(folder_name):
     folder_name = folder_name.replace(' ', '_')
     return folder_name.lower()
+
+
+def format_folder_name_human_readable(folder_name):
+    return folder_name.replace('_', ' ')

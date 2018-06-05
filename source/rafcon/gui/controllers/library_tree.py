@@ -31,6 +31,7 @@ from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.library_manager import LibraryManagerModel
 from rafcon.gui.helpers.label import create_image_menu_item, append_sub_menu_to_parent_menu
+from rafcon.gui.helpers.text_formatting import format_folder_name_human_readable
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
@@ -195,7 +196,8 @@ class LibraryTreeController(ExtendedController):
     @staticmethod
     def convert_if_human_readable(s):
         """Converts a string to format which is more human readable"""
-        return s.replace('_', ' ') if global_gui_config.get_config_value('LIBRARY_TREE_PATH_HUMAN_READABLE', False) else s
+        return format_folder_name_human_readable(s) \
+            if global_gui_config.get_config_value('LIBRARY_TREE_PATH_HUMAN_READABLE', False) else s
 
     def insert_rec(self, parent, library_key, library_item, library_path, library_root_path=None):
         """
@@ -394,4 +396,4 @@ class LibraryTreeController(ExtendedController):
                      "machine.".format(str(library_item_key), library_file_system_path,
                                        self.convert_if_human_readable(str(library_path)) + "/" + str(library_item_key)))
         library_name = library_file_system_path.split(os.path.sep)[-1]
-        return LibraryState(library_path, library_name, "0.1", library_name)
+        return LibraryState(library_path, library_name, "0.1", format_folder_name_human_readable(library_name))
