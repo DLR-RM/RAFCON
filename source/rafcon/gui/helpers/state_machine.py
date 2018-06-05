@@ -33,6 +33,7 @@ from rafcon.core.states.state import State, StateType
 from rafcon.core.storage import storage
 import rafcon.core.config
 
+from rafcon.gui.helpers.text_formatting import format_default_folder_name
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
@@ -226,7 +227,7 @@ def save_state_machine_as(path=None, recent_opened_notification=False, as_copy=F
         folder_name = selected_state_machine_model.state_machine.root_state.name
         path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
                                             "The default folder name is the name of the root state.",
-                                            folder_name)
+                                            format_default_folder_name(folder_name))
         if path is None:
             logger.warning("No valid path specified")
             return False
@@ -259,7 +260,7 @@ def save_selected_state_as():
         sm_m.root_state = state_m
         path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine your "
                                             "state is saved in. The default folder name is the name of state.",
-                                            selected_state.state.name)
+                                            format_default_folder_name(selected_state.state.name))
         if path:
             storage.save_state_machine_to_path(sm_m.state_machine, base_path=path)
             sm_m.store_meta_data()
@@ -463,7 +464,7 @@ def bake_selected_state_machine(path=None):
 
     # generate path
     selected_state_machine_model = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
-    folder_name = selected_state_machine_model.state_machine.root_state.name
+    folder_name = format_default_folder_name(selected_state_machine_model.state_machine.root_state.name)
     if path is None:
         path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
                                             "The default folder name is the name of the root state.", folder_name)

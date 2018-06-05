@@ -545,17 +545,19 @@ class ContainerState(State):
 
         ################## DO OUTGOING TRANSITIONS ###################
         # external outgoing transitions
+        # print "external transitions to create", outcomes_outgoing_transitions
         for goal, name in outcomes_outgoing_transitions.iteritems():
             try:
                 # avoid to use a outcome twice
-                if not any(t for t in s.transitions.itervalues()
-                           if t.from_state == s.state_id and t.from_outcome == new_outcome_ids[name]):
+                if any([t for t in s.parent.transitions.itervalues()
+                        if t.from_state == s.state_id and t.from_outcome == new_outcome_ids[name]]):
                     continue
                 # add the transition for the outcome
                 self.add_transition(s.state_id, new_outcome_ids[name], goal[0], goal[1])
             except ValueError:
                 logger.exception("Error while recreation of logical linkage.")
         # internal outgoing transitions
+        # print "internal transitions to create", transitions_outgoing
         for t_id, t in transitions_outgoing.iteritems():
             name = outcomes_outgoing_transitions[(t.to_state, t.to_outcome)]
             s.add_transition(t.from_state, t.from_outcome, s.state_id, new_outcome_ids[name], t_id)

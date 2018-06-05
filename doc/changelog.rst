@@ -11,18 +11,48 @@ Next release
 
 - Improvements:
 
-    - :issue:`529` accelerate the follow mode switch for many logger messages
-    - dynamic insertion of states during state execution is working and tested
-
 - Bug Fixes:
-
-    - :issue:`515` source editor does not show end of lines
-    - :issue:`533` States inside library states cannot be selected
-    - :issue:`528` execution history destruction does not lead to max recursion depth
 
 
 Patch releases 0.12.\*
 ----------------------
+
+
+0.12.12
+"""""""
+
+- Improvements:
+
+    - :issue:`530` automatically focus and adapt position of root state for fresh initiated state machines
+                   issue title was "Root state out of focus and badly positioned"
+    - :issue:`543` Changing default option for library name while saving
+                   -> for the default folder name white space are replaced with underscores and all is lower case
+    - also default library state name is now the folder name with replaced underscores with white spaces
+
+
+- Bug Fixes:
+
+    - :issue:`527` RAFCON GUI loops while startup if HOME environment variable is not defined
+                   -> a error message pointing on respective missing environment variable is added
+    - :issue:`539` grouping of states outcome transitions are not fully recovers (now bug is covered by test)
+    - :issue:`515` source editor does not show end of lines (finally)
+
+
+0.12.11
+"""""""
+
+- Improvements:
+
+    - :issue:`529` accelerate the follow mode switch for many logger messages
+    - dynamic insertion of states during state execution is working and tested
+    - secure dynamic modification of state machines while runtime by test created in
+      pull request :issue:`535` Dynamic insertion of states during execution
+
+- Bug Fixes:
+
+    - :issue:`515` source editor does not show end of lines (partly)
+    - :issue:`533` States inside library states cannot be selected
+    - :issue:`528` execution history destruction does not lead to max recursion depth
 
 
 0.12.10

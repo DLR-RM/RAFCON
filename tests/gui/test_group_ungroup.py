@@ -102,6 +102,108 @@ def test_ungroup(caplog):
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
+
+def trigger_issue_539_reproduction_sequence():
+    import rafcon.gui.singleton
+    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    main_window_controller = rafcon.gui.singleton.main_window_controller
+    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+
+    current_sm_length = len(sm_manager_model.state_machines)
+    assert current_sm_length == 0
+    call_gui_callback(menubar_ctrl.on_new_activate, None)
+    new_state_machine_m = sm_manager_model.state_machines.values()[0]
+
+    call_gui_callback(menubar_ctrl.on_add_state_activate, None)
+
+    new_state_m = new_state_machine_m.root_state.states.values()[0]
+    call_gui_callback(new_state_machine_m.selection.set, new_state_m)
+
+    call_gui_callback(menubar_ctrl.on_toggle_is_start_state_active, None)
+
+    call_gui_callback(new_state_machine_m.root_state.state.add_transition,
+                      new_state_m.state.state_id, 0,
+                      new_state_machine_m.root_state.state.state_id, 0)
+
+    # make the example bit more complex
+    call_gui_callback(new_state_machine_m.selection.set, new_state_machine_m.root_state)
+    call_gui_callback(menubar_ctrl.on_add_state_activate, None)
+    new_state_m_2 = new_state_machine_m.root_state.states.values()[0]
+    if new_state_m_2 == new_state_m:
+        new_state_m_2 = new_state_machine_m.root_state.states.values()[1]
+    # -> add two transitions to rebuild
+    call_gui_callback(new_state_machine_m.root_state.state.add_transition,
+                      new_state_m.state.state_id, -1,
+                      new_state_m_2.state.state_id, None)
+    call_gui_callback(new_state_machine_m.root_state.state.add_transition,
+                      new_state_m_2.state.state_id, 0,
+                      new_state_machine_m.root_state.state.state_id, 0)
+
+    # secure selection
+    call_gui_callback(new_state_machine_m.selection.set, [new_state_m, new_state_m_2])
+
+    call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
+
+    new_state_m_from_group_action = new_state_machine_m.root_state.states.values()[0]
+
+    # TODO substitute these checks by creation of transitions and an in list check on respective hierarchy level
+    # TODO (will be faster)
+    # check if transitions are there by negative check and trying to create them
+    print "check start transition in root state"
+    with pytest.raises(ValueError):
+        call_gui_callback(new_state_machine_m.root_state.state.add_transition,
+                          new_state_machine_m.root_state.state.state_id, None,
+                          new_state_m_from_group_action.state.state_id, None)
+
+    print "check start inside of grouped state"
+    with pytest.raises(ValueError):
+        call_gui_callback(new_state_m_from_group_action.state.add_transition,
+                          new_state_m_from_group_action.state.state_id, None,
+                          new_state_m.state.state_id, None)
+
+    print "check end inside of grouped state"
+    with pytest.raises(ValueError):
+        call_gui_callback(new_state_m_from_group_action.state.add_transition,
+                          new_state_m.state.state_id, 0,
+                          new_state_m_from_group_action.state.state_id, 0)
+
+    print "check end transition in root state - relevant transition for bug issue 539"
+    with pytest.raises(ValueError):
+        call_gui_callback(new_state_machine_m.root_state.state.add_transition,
+                          new_state_m_from_group_action.state.state_id, 0,
+                          new_state_machine_m.root_state.state.state_id, 0)
+
+    # the extra checks for more complex scenario
+    print "check income transition for second state"
+    with pytest.raises(ValueError):
+        call_gui_callback(new_state_m_from_group_action.state.add_transition,
+                          new_state_m.state.state_id, -1,
+                          new_state_m_2.state.state_id, 0)
+    print "check outcome transition for second state"
+    with pytest.raises(ValueError):
+        call_gui_callback(new_state_m_from_group_action.state.add_transition,
+                          new_state_m_2.state.state_id, 0,
+                          new_state_m_from_group_action.state.state_id, 0)
+
+    print "finished run of trigger_issue_539_reproduction_sequence"
+
+
+def test_bug_issue_539(caplog):
+    testing_utils.run_gui(
+        gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False},
+        libraries={"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
+                   "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
+                   "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
+    )
+
+    try:
+        trigger_issue_539_reproduction_sequence()
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog)
+
 if __name__ == '__main__':
-    test_ungroup(None)
+    # test_ungroup(None)
+    test_bug_issue_539(None)
     # pytest.main(['-s', __file__])

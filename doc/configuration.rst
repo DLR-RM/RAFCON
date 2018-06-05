@@ -86,6 +86,7 @@ A typical config file looks like this:
     SOURCE_EDITOR_STYLE: rafcon-dark
 
     GAPHAS_EDITOR: True
+    GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE: True
     ENABLE_CACHING: True    # Affects only Gaphas editor
 
     WAYPOINT_SNAP_ANGLE: 45
@@ -226,14 +227,21 @@ SOURCE\_EDITOR\_STYLE
 
 GAPHAS\_EDITOR
   | Type: boolean
-  | Default: ``False``
-  | RAFCON started with a graphical editor using OpenGL. Its development
+  | Default: ``True``
+  | RAFCON started with a graphical editor using Gaphas. The develment of OpenGL
     has been stopped (except bugfixes) in favor of a new editor using
     GTK cairo and the library Gaphas. The flag decides whether to use
     the old OpenGL editor (False) or the new Gaphas one (True).
 
+GAPHAS\_EDITOR\_AUTO\_FOCUS\_OF\_ROOT\_STATE
+  | Type: boolean
+  | Default: ``True``
+  | If RAFCON is started with Gaphas editor enabled this flag enables an
+    initial auto focus of the root state after opening the state machine.
+    If you do not like this feature simply disable it (False).
+
 ENABLE\_CACHING:
-  | Default: True
+  | Default: ``True``
   | Affects only Gaphas editor and enables a accelerating caching feature.
 
 WAYPOINT\_SNAP\_ANGLE

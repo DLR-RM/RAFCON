@@ -79,10 +79,14 @@ class GuidedStateMixin(GuideMixin):
 class GuidedStateInMotion(GuidedStateMixin, GuidedItemInMotion):
 
     def start_move(self, pos):
+        if self.item and self.item.model and self.item.model.state.is_root_state:
+            return
         super(GuidedStateInMotion, self).start_move(pos)
         self.item.moving = True
 
     def move(self, pos):
+        if not self.item.moving:
+            return
         super(GuidedStateInMotion, self).move(pos)
         parent_item = self.item.parent
         if parent_item:
