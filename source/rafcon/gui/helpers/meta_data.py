@@ -14,6 +14,9 @@ from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
+ROOT_STATE_DEFAULT_REL_POS = (0, 0)
+STATE_DEFAULT_REL_POS = (10, 10)
+
 
 def add_pos(pos1, pos2):
     return pos1[0] + pos2[0], pos1[1] + pos2[1]

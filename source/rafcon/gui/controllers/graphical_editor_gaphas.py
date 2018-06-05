@@ -748,12 +748,33 @@ class GraphicalEditorController(ExtendedController):
                 method_name = 'data_flow_change'
         return method_name, model, result, args, instance
 
+    def set_focus_to_state_model(self, state_m, ratio_requested=0.8):
+        """ Focus a state view of respective state model
+        :param rafcon.gui.model.state state_m: Respective state model of state view to be focused
+        :param ratio_requested: Minimum ratio of the screen which is requested, so can be more
+        :return:
+        """
+        state_machine_m = self.model
+        state_v = self.canvas.get_view_for_model(state_m)
+        if state_v is None:
+            logger.warning('There is no view for state model {0}'.format(state_m))
+        self.move_item_into_viewport(state_v)
+        # check_relative size in view and call it again if the state is still very small
+        state_v = self.canvas.get_view_for_model(state_machine_m.root_state)
+        state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
+        viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
+        if state_size[0] < ratio_requested*viewport_size[0] and state_size[1] < ratio_requested*viewport_size[1]:
+            self.set_focus_to_state_model(state_m)
+
     def setup_canvas(self):
         logger.verbose("start setup canvas")
         start_time_view_generation = time.time()
         with self.model.state_machine.modification_lock():
             hash_before = self.model.mutable_hash()
-            self.add_state_view_for_model(self.root_state_m, rel_pos=(10, 10))
+            # there is no more root state position it will be set always to the root state default relative position
+            if not self.root_state_m.get_meta_data_editor()['rel_pos'] == gui_helper_meta_data.ROOT_STATE_DEFAULT_REL_POS:
+                self.root_state_m.set_meta_data_editor('rel_pos', gui_helper_meta_data.ROOT_STATE_DEFAULT_REL_POS)
+            self.add_state_view_for_model(self.root_state_m, rel_pos=gui_helper_meta_data.STATE_DEFAULT_REL_POS)
             hash_after = self.model.mutable_hash()
             if hash_before.digest() != hash_after.digest():
                 logger.debug("Hash has changed from {0} to {1}".format(hash_before.hexdigest(), hash_after.hexdigest()))
@@ -762,6 +783,9 @@ class GraphicalEditorController(ExtendedController):
                             " when the state machine is being saved.")
         logger.verbose("Time spent in setup canvas {0} state machine {1}".format(time.time() - start_time_view_generation,
                                                                                  self.model.state_machine_id))
+
+        # finally set the focus to the root state (needs to be idle add to be executed after gaphas drawing is finished)
+        gtk.idle_add(self.set_focus_to_state_model, self.root_state_m)
 
     @lock_state_machine
     def add_state_view_for_model(self, state_m, parent_v=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
