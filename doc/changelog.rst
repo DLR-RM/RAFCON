@@ -11,6 +11,18 @@ Next release
 
 - Improvements:
 
+- Bug Fixes:
+
+
+Patch releases 0.12.\*
+----------------------
+
+
+0.12.12
+"""""""
+
+- Improvements:
+
     - :issue:`530` automatically focus and adapt position of root state for fresh initiated state machines
                    issue title was "Root state out of focus and badly positioned"
     - :issue:`543` Changing default option for library name while saving
@@ -25,9 +37,6 @@ Next release
     - :issue:`539` grouping of states outcome transitions are not fully recovers (now bug is covered by test)
     - :issue:`515` source editor does not show end of lines (finally)
 
-
-Patch releases 0.12.\*
-----------------------
 
 0.12.11
 """""""

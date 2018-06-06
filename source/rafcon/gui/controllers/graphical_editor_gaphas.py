@@ -785,7 +785,8 @@ class GraphicalEditorController(ExtendedController):
                                                                                  self.model.state_machine_id))
 
         # finally set the focus to the root state (needs to be idle add to be executed after gaphas drawing is finished)
-        gtk.idle_add(self.set_focus_to_state_model, self.root_state_m)
+        if rafcon.gui.singleton.global_gui_config.get_config_value('GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE', True):
+            gtk.idle_add(self.set_focus_to_state_model, self.root_state_m)
 
     @lock_state_machine
     def add_state_view_for_model(self, state_m, parent_v=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
