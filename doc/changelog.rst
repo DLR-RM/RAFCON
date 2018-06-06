@@ -11,6 +11,8 @@ Next release
 
 - Improvements:
 
+    - the column headers of state machine tree now can be used to sort the items according state name, ID or type
+
 - Bug Fixes:
 
 
