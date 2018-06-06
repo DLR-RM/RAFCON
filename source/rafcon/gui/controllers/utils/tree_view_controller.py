@@ -240,6 +240,7 @@ class AbstractTreeViewController(ExtendedController):
             remove_handler(editable, "focus_out_handler_id")
             remove_handler(editable, "cursor_move_handler_id")
             remove_handler(editable, "insert_at_cursor_handler_id")
+            remove_handler(editable, "entry_widget_expose_event_handler_id")
             remove_handler(renderer, "editing_cancelled_handler_id")
 
         def on_focus_out(entry, event):
@@ -249,7 +250,6 @@ class AbstractTreeViewController(ExtendedController):
             :param gtk.Event event: Event object with information about the event
             """
             renderer.remove_all_handler(renderer)
-
             if renderer.ctrl.get_path() is None:
                 return
             # We have to use idle_add to prevent core dumps:
@@ -279,12 +279,14 @@ class AbstractTreeViewController(ExtendedController):
             focus_out_handler_id = editable.connect('focus-out-event', on_focus_out)
             cursor_move_handler_id = editable.connect('move-cursor', on_cursor_move_in_entry_widget)
             insert_at_cursor_handler_id = editable.connect("insert-at-cursor", on_cursor_move_in_entry_widget)
+            entry_widget_expose_event_handler_id = editable.connect("expose-event", self.on_entry_widget_expose_event)
             # Store reference to editable and signal handler ids for later access when removing the handlers
             renderer.set_data("editable", editable)
             renderer.set_data("editing_cancelled_handler_id", editing_cancelled_handler_id)
             editable.set_data("focus_out_handler_id", focus_out_handler_id)
             editable.set_data("cursor_move_handler_id", cursor_move_handler_id)
             editable.set_data("insert_at_cursor_handler_id", insert_at_cursor_handler_id)
+            editable.set_data("entry_widget_expose_event_handler_id", entry_widget_expose_event_handler_id)
             ctrl.active_entry_widget = editable
 
         def on_edited(renderer, path, new_value_str):
@@ -358,6 +360,9 @@ class AbstractTreeViewController(ExtendedController):
                 value = int(float(adjustment.upper - adjustment.page_size)*rel_pos/float(adjustment.upper))
                 adjustment.set_value(value)
                 # print "new value", adjustment.value, 'of', float(adjustment.upper - adjustment.page_size)
+
+    def on_entry_widget_expose_event(self, widget, event):
+        AbstractTreeViewController.tree_view_keypress_callback(self, widget, event)
 
 
 class ListViewController(AbstractTreeViewController):
@@ -582,8 +587,8 @@ class ListViewController(AbstractTreeViewController):
         :return:
         """
         # self._logger.info("key_value: " + str(event.keyval if event is not None else ''))
-
-        if event and (event.keyval == Key_Tab or event.keyval == ISO_Left_Tab):
+        if event and "GDK_KEY_PRESS" == event.type.value_name \
+                and (event.keyval == Key_Tab or event.keyval == ISO_Left_Tab):
             [path, focus_column] = self.tree_view.get_cursor()
             if not path:
                 return False
@@ -798,7 +803,8 @@ class TreeViewController(AbstractTreeViewController):
         """
         # self._logger.info("key_value: " + str(event.keyval if event is not None else ''))
         # TODO works for root level or other single level of tree view but not for switching in between levels
-        if event and (event.keyval == Key_Tab or event.keyval == ISO_Left_Tab):
+        if event and "GDK_KEY_PRESS" == event.type.value_name \
+                and (event.keyval == Key_Tab or event.keyval == ISO_Left_Tab):
             [path, focus_column] = self.tree_view.get_cursor()
             # print "cursor ", path, focus_column
             model, paths = self.tree_view.get_selection().get_selected_rows()
