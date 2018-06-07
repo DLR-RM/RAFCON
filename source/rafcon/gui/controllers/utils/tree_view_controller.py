@@ -83,6 +83,9 @@ class AbstractTreeViewController(ExtendedController):
                                      self._tree_selection.connect('changed', self.selection_changed)))
         # self.handler_ids.append((self.tree_view,
         #                          self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)))
+        self.tree_view.connect('key-release-event', self.tree_view_keypress_callback)
+        self.tree_view.connect('button-release-event', self.tree_view_keypress_callback)
+        # key press is needed for tab motion but needs to be registered already here TODO why?
         self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
         self.update_selection_sm_prior()
@@ -323,7 +326,8 @@ class AbstractTreeViewController(ExtendedController):
         raise NotImplementedError
 
     def tree_view_keypress_callback(self, widget, event):
-        """General method to adapt widget view and controller behavior according the key press events
+        """General method to adapt widget view and controller behavior according the key press/release and
+        button release events
 
             Here the scrollbar motion to follow key cursor motions in editable is already in.
 
@@ -334,8 +338,9 @@ class AbstractTreeViewController(ExtendedController):
         current_row_path, current_focused_column = self.tree_view.get_cursor()
         # print current_row_path, current_focused_column
         if isinstance(widget, gtk.TreeView):
+            # cursor motion/selection changes (e.g. also by button release event)
             if current_row_path is not None and len(current_row_path) == 1 and isinstance(current_row_path[0], int):
-                self.tree_view.scroll_to_cell(current_row_path[0], current_focused_column, use_align=False)
+                self.tree_view.scroll_to_cell(current_row_path[0], current_focused_column, use_align=True)
             # else:
             #     self._logger.debug("A ListViewController aspects a current_row_path of dimension 1 with integer but"
             #                        " it is {0} and column is {1}".format(current_row_path, current_focused_column))
