@@ -59,6 +59,7 @@ class AbstractTreeViewController(ExtendedController):
         self.active_entry_widget = None
         self.widget_columns = self.tree_view.get_columns()
         self.signal_handlers = []
+        self.expose_event_count_after_key_release = 0
 
     def destroy(self):
         super(AbstractTreeViewController, self).destroy()
@@ -83,7 +84,7 @@ class AbstractTreeViewController(ExtendedController):
                                      self._tree_selection.connect('changed', self.selection_changed)))
         # self.handler_ids.append((self.tree_view,
         #                          self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)))
-        self.tree_view.connect('key-release-event', self.tree_view_keypress_callback)
+        self.tree_view.connect('key-release-event', self.on_key_release_event)
         self.tree_view.connect('button-release-event', self.tree_view_keypress_callback)
         # key press is needed for tab motion but needs to be registered already here TODO why?
         self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
@@ -366,8 +367,15 @@ class AbstractTreeViewController(ExtendedController):
                 adjustment.set_value(value)
                 # print "new value", adjustment.value, 'of', float(adjustment.upper - adjustment.page_size)
 
+    def on_key_release_event(self, widget, event):
+        self.expose_event_count_after_key_release = 0
+        self.tree_view_keypress_callback(widget, event)
+
     def on_entry_widget_expose_event(self, widget, event):
-        AbstractTreeViewController.tree_view_keypress_callback(self, widget, event)
+        # take three signals because sometimes expose events come before cursor is set
+        if self.expose_event_count_after_key_release < 3:
+            AbstractTreeViewController.tree_view_keypress_callback(self, widget, event)
+        self.expose_event_count_after_key_release += 1
 
 
 class ListViewController(AbstractTreeViewController):
