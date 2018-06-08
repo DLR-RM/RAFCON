@@ -637,7 +637,7 @@ class ListViewController(AbstractTreeViewController):
             # get next row_id for focus
             if direction < 0 and focus_column is self.widget_columns[0] \
                     or direction > 0 and focus_column is self.widget_columns[-1]:
-                if direction < 0 < path[0] or direction > 0 and not path[0] + 1 > len(self.widget_columns):
+                if direction < 0 < path[0] or direction > 0 and not path[0] + 1 > len(self.store):
                     next_row = path[0] + direction
                 else:
                     return False
@@ -859,11 +859,14 @@ class TreeViewController(AbstractTreeViewController):
                 # logger.info("move left")
                 direction = -1
 
-            # print "old_path", path
-            # get next row_id for focus
+            if len(path) > 1:
+                n_elements_in_hierarchy = self.tree_store.iter_n_children(self.tree_store.get_iter(path[:-1]))
+            else:
+                n_elements_in_hierarchy = self.tree_store.iter_n_children(None)  # root
+
             if direction < 0 and focus_column is self.widget_columns[0] \
                     or direction > 0 and focus_column is self.widget_columns[-1]:
-                if direction < 0 < path[-1] or direction > 0 and not path[-1] + 1 > len(self.widget_columns):
+                if direction < 0 < path[-1] or direction > 0 and not path[-1] + 1 > n_elements_in_hierarchy:
                     next_row = path[-1] + direction
                 else:
                     return False
