@@ -91,6 +91,7 @@ class DataPortListController(ListViewController):
         if isinstance(self.model.state, LibraryState):
             view['use_runtime_value_toggle'] = CellRendererToggle()
             view['use_runtime_value_col'] = TreeViewColumn("Use Runtime Value")
+            view['use_runtime_value_col'].set_property("sizing", "autosize")
             view.get_top_widget().append_column(view['use_runtime_value_col'])
             view['use_runtime_value_col'].pack_start(view['use_runtime_value_toggle'], True)
             view['use_runtime_value_col'].add_attribute(view['use_runtime_value_toggle'], 'active',

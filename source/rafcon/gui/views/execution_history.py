@@ -24,6 +24,7 @@ class ExecutionHistoryTreeView(View, gtk.TreeView):
         self.set_name("history_tree")
 
         tvcolumn = gtk.TreeViewColumn('History', gtk.CellRendererText(), text=0)
+        tvcolumn.set_property("sizing", "autosize")
         self.append_column(tvcolumn)
 
         self['history_treeview'] = self

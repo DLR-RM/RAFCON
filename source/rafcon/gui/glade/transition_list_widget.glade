@@ -10,6 +10,7 @@
       <object class="GtkTreeViewColumn" id="from_state_col">
         <property name="title">Source State</property>
         <property name="expand">True</property>
+        <property name="sizing">autosize</property>
         <child>
           <object class="GtkCellRendererCombo" id="from_state_combo">
             <property name="editable">True</property>
@@ -25,6 +26,7 @@
       <object class="GtkTreeViewColumn" id="from_outcome_col">
         <property name="title">Source Outcome</property>
         <property name="expand">True</property>
+        <property name="sizing">autosize</property>
         <child>
           <object class="GtkCellRendererCombo" id="from_outcome_combo">
             <property name="editable">True</property>
@@ -40,6 +42,7 @@
       <object class="GtkTreeViewColumn" id="to_state_col">
         <property name="title">Target State</property>
         <property name="expand">True</property>
+        <property name="sizing">autosize</property>
         <child>
           <object class="GtkCellRendererCombo" id="to_state_combo">
             <property name="editable">True</property>
@@ -55,6 +58,7 @@
       <object class="GtkTreeViewColumn" id="to_outcome_col">
         <property name="title">Target Outcome</property>
         <property name="expand">True</property>
+        <property name="sizing">autosize</property>
         <child>
           <object class="GtkCellRendererCombo" id="to_outcome_combo">
             <property name="editable">True</property>
@@ -70,6 +74,7 @@
       <object class="GtkTreeViewColumn" id="external_col">
         <property name="title">External</property>
         <property name="expand">True</property>
+        <property name="sizing">autosize</property>
         <child>
           <object class="GtkCellRendererToggle" id="external_toggle"/>
           <attributes>
