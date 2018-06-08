@@ -338,7 +338,7 @@ class AbstractTreeViewController(ExtendedController):
         """
         current_row_path, current_focused_column = self.tree_view.get_cursor()
         # print current_row_path, current_focused_column
-        if isinstance(widget, gtk.TreeView):
+        if isinstance(widget, gtk.TreeView) and not self.active_entry_widget:  # avoid jumps for active entry widget
             # cursor motion/selection changes (e.g. also by button release event)
             if current_row_path is not None and len(current_row_path) == 1 and isinstance(current_row_path[0], int):
                 self.tree_view.scroll_to_cell(current_row_path[0], current_focused_column, use_align=True)
@@ -362,10 +362,22 @@ class AbstractTreeViewController(ExtendedController):
                 #     int(layout_pixel_width*float(entry_widget_cursor_position)/float(entry_widget_text_length))
                 rel_pos = cell_rect_of_entry_widget.x - entry_widget_scroll_offset + \
                     int(layout_pixel_width*float(entry_widget_cursor_position)/float(entry_widget_text_length))
-                # print adjustment.lower, adjustment.upper, adjustment.value, adjustment.page_size, rel_pos
+
+                # optimize rel_pos for better user support
+                rel_space = adjustment.page_size - cell_rect_of_entry_widget.x
+                # try to stay long at the beginning of the columns if the columns fully fit in
+                if cell_rect_of_entry_widget.x + widget.get_layout().get_pixel_size()[0] < adjustment.page_size:
+                    rel_pos = 0.
+                elif rel_space and rel_pos <= rel_space:
+                    # accelerate the showing of the first columns
+                    rel_pos = rel_pos + rel_pos*3.*(rel_pos - rel_space)/adjustment.page_size
+                    rel_pos = 0. if rel_pos <= 0 else rel_pos
+                else:
+                    # and jump to the end of the scroller space if close to the upper limit
+                    rel_pos = adjustment.upper if rel_pos + 2*entry_widget_scroll_offset > adjustment.upper else rel_pos
+
                 value = int(float(adjustment.upper - adjustment.page_size)*rel_pos/float(adjustment.upper))
                 adjustment.set_value(value)
-                # print "new value", adjustment.value, 'of', float(adjustment.upper - adjustment.page_size)
 
     def on_key_release_event(self, widget, event):
         self.expose_event_count_after_key_release = 0
