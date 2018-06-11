@@ -64,6 +64,8 @@ class DataFlow(StateElement):
         self.parent = parent
 
     def __str__(self):
+        default_string = "Data flow - from_state: %s, from_key: %s, to_state: %s, to_key: %s, id: %s" % \
+               (self._from_state, self._from_key, self._to_state, self._to_key, self._data_flow_id)
         if self.parent:
             from_port = None
             if self.from_state == self.parent.state_id:
@@ -77,13 +79,15 @@ class DataFlow(StateElement):
             else:
                 to_port = self.parent.states[self.to_state].get_data_port_by_id(self.to_key)
 
-            return "Data flow - from_state: %s, from_port_key: %s, from_port_name: %s, " \
-                   "to_state: %s, to_port_key: %s, to_port_name: %s, data_flow_id: %s" % \
-                   (self._from_state, self._from_key, from_port.name,
-                    self._to_state, self._to_key, to_port.name, self._data_flow_id)
+            if from_port and to_port:
+                return "Data flow - from_state: %s, from_port_key: %s, from_port_name: %s, " \
+                       "to_state: %s, to_port_key: %s, to_port_name: %s, data_flow_id: %s" % \
+                       (self._from_state, self._from_key, from_port.name,
+                        self._to_state, self._to_key, to_port.name, self._data_flow_id)
+            else:
+                return default_string
         else:
-            return "Data flow - from_state: %s, from_key: %s, to_state: %s, to_key: %s, id: %s" % \
-                   (self._from_state, self._from_key, self._to_state, self._to_key, self._data_flow_id)
+            return default_string
 
     def __copy__(self):
         return self.__class__(self._from_state, self._from_key, self._to_state, self._to_key, self._data_flow_id, None)
