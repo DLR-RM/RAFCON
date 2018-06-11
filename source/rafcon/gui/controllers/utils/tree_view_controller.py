@@ -339,12 +339,13 @@ class AbstractTreeViewController(ExtendedController):
         current_row_path, current_focused_column = self.tree_view.get_cursor()
         # print current_row_path, current_focused_column
         if isinstance(widget, gtk.TreeView) and not self.active_entry_widget:  # avoid jumps for active entry widget
+            pass
             # cursor motion/selection changes (e.g. also by button release event)
-            if current_row_path is not None and len(current_row_path) == 1 and isinstance(current_row_path[0], int):
-                self.tree_view.scroll_to_cell(current_row_path[0], current_focused_column, use_align=True)
-            # else:
-            #     self._logger.debug("A ListViewController aspects a current_row_path of dimension 1 with integer but"
-            #                        " it is {0} and column is {1}".format(current_row_path, current_focused_column))
+            # if current_row_path is not None and len(current_row_path) == 1 and isinstance(current_row_path[0], int):
+            #     self.tree_view.scroll_to_cell(current_row_path[0], current_focused_column, use_align=True)
+            # # else:
+            # #     self._logger.debug("A ListViewController aspects a current_row_path of dimension 1 with integer but"
+            # #                        " it is {0} and column is {1}".format(current_row_path, current_focused_column))
         elif isinstance(widget, gtk.Entry) and self.view.scrollbar_widget is not None:
             # calculate the position of the scrollbar to be always centered with the entry widget cursor
             # TODO check how to get sufficient the scroll-offset in the entry widget -> some times zero when not
@@ -376,12 +377,17 @@ class AbstractTreeViewController(ExtendedController):
                     # and jump to the end of the scroller space if close to the upper limit
                     rel_pos = adjustment.upper if rel_pos + 2*entry_widget_scroll_offset > adjustment.upper else rel_pos
 
-                value = int(float(adjustment.upper - adjustment.page_size)*rel_pos/float(adjustment.upper))
-                adjustment.set_value(value)
+                self._put_horizontal_scrollbar_onto_rel_pos(rel_pos)
+
+    def _put_horizontal_scrollbar_onto_rel_pos(self, rel_pos):
+        horizontal_scroll_bar = self.view.scrollbar_widget.get_hscrollbar()
+        adjustment = horizontal_scroll_bar.get_adjustment()
+        value = int(float(adjustment.upper - adjustment.page_size)*rel_pos/float(adjustment.upper))
+        glib.idle_add(adjustment.set_value, value)
 
     def on_key_release_event(self, widget, event):
         self.expose_event_count_after_key_release = 0
-        self.tree_view_keypress_callback(widget, event)
+        # self.tree_view_keypress_callback(widget, event)
 
     def on_entry_widget_expose_event(self, widget, event):
         # take three signals because sometimes expose events come before cursor is set
@@ -664,7 +670,7 @@ class ListViewController(AbstractTreeViewController):
             del self.tree_view_keypress_callback.__func__.core_element_id
             # self._logger.info("self.tree_view.scroll_to_cell(next_row={0}, self.widget_columns[{1}] , use_align={2})"
             #              "".format(next_row, next_focus_column_id, False))
-            self.tree_view.scroll_to_cell(next_row, self.widget_columns[next_focus_column_id], use_align=False)
+            # self.tree_view.scroll_to_cell(next_row, self.widget_columns[next_focus_column_id], use_align=False)
             self.tree_view.set_cursor_on_cell(next_row, self.widget_columns[next_focus_column_id], start_editing=True)
             return True
         else:
@@ -896,7 +902,7 @@ class TreeViewController(AbstractTreeViewController):
             del self.tree_view_keypress_callback.__func__.core_element_id
             # self._logger.info("self.tree_view.scroll_to_cell(next_row={0}, self.widget_columns[{1}] , use_align={2})"
             #              "".format(next_row, next_focus_column_id, False))
-            self.tree_view.scroll_to_cell(new_path, self.widget_columns[next_focus_column_id], use_align=False)
+            # self.tree_view.scroll_to_cell(new_path, self.widget_columns[next_focus_column_id], use_align=False)
             self.tree_view.set_cursor_on_cell(new_path, self.widget_columns[next_focus_column_id], start_editing=True)
             return True
         else:
