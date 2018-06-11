@@ -365,18 +365,24 @@ class AbstractTreeViewController(ExtendedController):
                     int(layout_pixel_width*float(entry_widget_cursor_position)/float(entry_widget_text_length))
 
                 # optimize rel_pos for better user support
-                rel_space = adjustment.page_size - cell_rect_of_entry_widget.x
-                # try to stay long at the beginning of the columns if the columns fully fit in
-                if cell_rect_of_entry_widget.x + widget.get_layout().get_pixel_size()[0] < adjustment.page_size:
-                    rel_pos = 0.
-                elif rel_space and rel_pos <= rel_space:
-                    # accelerate the showing of the first columns
-                    rel_pos = rel_pos + rel_pos*3.*(rel_pos - rel_space)/adjustment.page_size
-                    rel_pos = 0. if rel_pos <= 0 else rel_pos
+                bounds = widget.get_selection_bounds()
+                if bounds and bounds[1] - bounds[0] == len(widget.get_text()):
+                    # if text is fully selected stay in front as far as possible
+                    rel_pos = cell_rect_of_entry_widget.x
+                    if self._horizontal_scrollbar_stay_in_front_if_possible():
+                        return True
                 else:
-                    # and jump to the end of the scroller space if close to the upper limit
-                    rel_pos = adjustment.upper if rel_pos + 2*entry_widget_scroll_offset > adjustment.upper else rel_pos
-
+                    # try to stay long at the beginning of the columns if the columns fully fit in
+                    rel_space = adjustment.page_size - cell_rect_of_entry_widget.x
+                    if cell_rect_of_entry_widget.x + widget.get_layout().get_pixel_size()[0] < adjustment.page_size:
+                        rel_pos = 0.
+                    elif rel_space and rel_pos <= rel_space:
+                        # accelerate the showing of the first columns
+                        rel_pos = rel_pos + rel_pos*3.*(rel_pos - rel_space)/adjustment.page_size
+                        rel_pos = 0. if rel_pos <= 0 else rel_pos
+                    else:
+                        # and jump to the end of the scroller space if close to the upper limit
+                        rel_pos = adjustment.upper if rel_pos + 2*entry_widget_scroll_offset > adjustment.upper else rel_pos
                 self._put_horizontal_scrollbar_onto_rel_pos(rel_pos)
 
     def _put_horizontal_scrollbar_onto_rel_pos(self, rel_pos):
@@ -384,6 +390,16 @@ class AbstractTreeViewController(ExtendedController):
         adjustment = horizontal_scroll_bar.get_adjustment()
         value = int(float(adjustment.upper - adjustment.page_size)*rel_pos/float(adjustment.upper))
         glib.idle_add(adjustment.set_value, value)
+
+    def _horizontal_scrollbar_stay_in_front_if_possible(self):
+        if self.active_entry_widget:
+            horizontal_scroll_bar = self.view.scrollbar_widget.get_hscrollbar()
+            adjustment = horizontal_scroll_bar.get_adjustment()
+            cell_rect_of_entry_widget = self.active_entry_widget.get_allocation()
+            rel_space = adjustment.page_size - cell_rect_of_entry_widget.x
+            if rel_space > 20:
+                self._put_horizontal_scrollbar_onto_rel_pos(0.)
+                return True
 
     def on_key_release_event(self, widget, event):
         self.expose_event_count_after_key_release = 0
