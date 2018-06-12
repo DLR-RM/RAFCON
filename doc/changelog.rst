@@ -18,6 +18,18 @@ Patch releases 0.12.\*
 ----------------------
 
 
+0.12.13
+"""""""
+
+- Improvements:
+
+    - the column headers of state machine tree now can be used to sort the items according state name, ID or type
+    - more user friendly interface for tree and list view widgets e.g. data ports, outcomes and semantic data
+      -> scrollbar adjustment and selections are moving much less and try to stay in the front of respective widget
+    - correct tab motion to be more accurate
+    - execution_history widget shows more visible chars per data port
+
+
 0.12.12
 """""""
 

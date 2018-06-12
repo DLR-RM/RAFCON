@@ -24,15 +24,19 @@ class HistoryTreeView(View, gtk.TreeView):
         foreground = 5
 
         tvcolumn = gtk.TreeViewColumn('Nr', gtk.CellRendererText(), text=1, foreground=foreground)
+        tvcolumn.set_property("sizing", "autosize")
         self.append_column(tvcolumn)
 
         tvcolumn = gtk.TreeViewColumn('Action', gtk.CellRendererText(), text=2, foreground=foreground)
+        tvcolumn.set_property("sizing", "autosize")
         self.append_column(tvcolumn)
 
         tvcolumn = gtk.TreeViewColumn('Parameters', gtk.CellRendererText(), text=7, foreground=foreground)
+        tvcolumn.set_property("sizing", "autosize")
         self.append_column(tvcolumn)
 
         tvcolumn = gtk.TreeViewColumn('Affects', gtk.CellRendererText(), text=3, foreground=foreground)
+        tvcolumn.set_property("sizing", "autosize")
         # tvcolumn.set_min_width(150)
         self.append_column(tvcolumn)
 

@@ -42,6 +42,7 @@
                                 <property name="spacing">1</property>
                                 <property name="title">Configuration</property>
                                 <property name="expand">True</property>
+                                <property name="sizing">autosize</property>
                                 <child>
                                   <object class="GtkCellRendererText" id="core_config_key_renderer"/>
                                   <attributes>
@@ -54,6 +55,7 @@
                               <object class="GtkTreeViewColumn" id="value_col">
                                 <property name="title">Value</property>
                                 <property name="expand">True</property>
+                                <property name="sizing">autosize</property>
                                 <child>
                                   <object class="GtkCellRendererToggle" id="core_config_toggle_renderer"/>
                                   <attributes>
@@ -121,6 +123,7 @@
                                     <property name="spacing">1</property>
                                     <property name="title">Library</property>
                                     <property name="expand">True</property>
+                                    <property name="sizing">autosize</property>
                                     <child>
                                       <object class="GtkCellRendererText" id="library_config_key_renderer"/>
                                       <attributes>
@@ -133,6 +136,7 @@
                                   <object class="GtkTreeViewColumn" id="lib_path_col">
                                     <property name="title">Path</property>
                                     <property name="expand">True</property>
+                                    <property name="sizing">autosize</property>
                                     <child>
                                       <object class="GtkCellRendererText" id="library_config_value_renderer"/>
                                       <attributes>
@@ -242,6 +246,7 @@
                                 <property name="spacing">1</property>
                                 <property name="title">Configuration</property>
                                 <property name="expand">True</property>
+                                <property name="sizing">autosize</property>
                                 <child>
                                   <object class="GtkCellRendererText" id="gui_config_key_renderer"/>
                                   <attributes>
@@ -254,6 +259,7 @@
                               <object class="GtkTreeViewColumn" id="value_col1">
                                 <property name="title">Value</property>
                                 <property name="expand">True</property>
+                                <property name="sizing">autosize</property>
                                 <child>
                                   <object class="GtkCellRendererToggle" id="gui_config_toggle_renderer"/>
                                   <attributes>
@@ -321,6 +327,7 @@
                                 <property name="spacing">1</property>
                                 <property name="title">Action</property>
                                 <property name="expand">True</property>
+                                <property name="sizing">autosize</property>
                                 <child>
                                   <object class="GtkCellRendererText" id="shortcut_config_key_renderer"/>
                                   <attributes>
@@ -333,6 +340,7 @@
                               <object class="GtkTreeViewColumn" id="shortcut">
                                 <property name="title">Shortcut</property>
                                 <property name="expand">True</property>
+                                <property name="sizing">autosize</property>
                                 <child>
                                   <object class="GtkCellRendererText" id="shortcut_config_value_renderer"/>
                                   <attributes>

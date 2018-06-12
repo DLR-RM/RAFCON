@@ -20,6 +20,7 @@
               <object class="GtkTreeViewColumn" id="name_col">
                 <property name="title">Name</property>
                 <property name="expand">True</property>
+                <property name="sizing">autosize</property>
                 <child>
                   <object class="GtkCellRendererText" id="name_text"/>
                   <attributes>
@@ -32,6 +33,7 @@
               <object class="GtkTreeViewColumn" id="type_col1">
                 <property name="title">Data Type</property>
                 <property name="expand">True</property>
+                <property name="sizing">autosize</property>
                 <child>
                   <object class="GtkCellRendererText" id="type_text"/>
                   <attributes>
@@ -44,6 +46,7 @@
               <object class="GtkTreeViewColumn" id="value_col">
                 <property name="title">Value</property>
                 <property name="expand">True</property>
+                <property name="sizing">autosize</property>
                 <child>
                   <object class="GtkCellRendererText" id="value_text"/>
                   <attributes>
@@ -56,6 +59,7 @@
               <object class="GtkTreeViewColumn" id="locked_col">
                 <property name="title">Locked</property>
                 <property name="expand">True</property>
+                <property name="sizing">autosize</property>
                 <child>
                   <object class="GtkCellRendererText" id="locked_text"/>
                   <attributes>

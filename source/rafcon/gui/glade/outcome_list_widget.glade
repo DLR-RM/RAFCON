@@ -10,6 +10,7 @@
       <object class="GtkTreeViewColumn" id="id_col">
         <property name="title">ID</property>
         <property name="expand">True</property>
+        <property name="sizing">autosize</property>
         <child>
           <object class="GtkCellRendererText" id="id_cell">
             <property name="editable">True</property>
@@ -25,6 +26,7 @@
       <object class="GtkTreeViewColumn" id="name_col">
         <property name="title">Name</property>
         <property name="expand">True</property>
+        <property name="sizing">autosize</property>
         <child>
           <object class="GtkCellRendererText" id="name_cell">
             <property name="editable">True</property>
@@ -39,6 +41,7 @@
       <object class="GtkTreeViewColumn" id="to_state_col">
         <property name="title">To-State</property>
         <property name="expand">True</property>
+        <property name="sizing">autosize</property>
         <child>
           <object class="GtkCellRendererCombo" id="to_state_combo">
             <property name="text_column">0</property>
@@ -53,6 +56,7 @@
       <object class="GtkTreeViewColumn" id="to_outcome_col">
         <property name="title">To-Outcome</property>
         <property name="expand">True</property>
+        <property name="sizing">autosize</property>
         <child>
           <object class="GtkCellRendererCombo" id="to_outcome_combo">
             <property name="text_column">0</property>

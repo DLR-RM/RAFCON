@@ -764,7 +764,7 @@ class GraphicalEditorController(ExtendedController):
         state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
         viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
         if state_size[0] < ratio_requested*viewport_size[0] and state_size[1] < ratio_requested*viewport_size[1]:
-            self.set_focus_to_state_model(state_m)
+            self.set_focus_to_state_model(state_m, ratio_requested)
 
     def setup_canvas(self):
         logger.verbose("start setup canvas")

@@ -8,6 +8,7 @@
     <child>
       <object class="GtkTreeViewColumn" id="name_col">
         <property name="title">Name</property>
+        <property name="sizing">autosize</property>
         <child>
           <object class="GtkCellRendererText" id="name_text"/>
         </child>
@@ -16,6 +17,7 @@
     <child>
       <object class="GtkTreeViewColumn" id="data_type_col">
         <property name="title">Data Type</property>
+        <property name="sizing">autosize</property>
         <child>
           <object class="GtkCellRendererText" id="data_type_text"/>
         </child>
