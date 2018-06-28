@@ -9,6 +9,7 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+# Sebastian Riedel <sebastian.riedel@dlr.de>
 
 """
 .. module:: id_generator

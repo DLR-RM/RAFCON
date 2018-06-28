@@ -7,6 +7,7 @@
 #
 # Contributors:
 # Franz Steinmetz <franz.steinmetz@dlr.de>
+# Sebastian Brunner <sebastian.brunner@dlr.de>
 
 
 from rafcon.utils.resources import resource_filename
