@@ -1,3 +1,5 @@
+# Copyright
+
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController
 from rafcon.gui.utils.notification_overview import NotificationOverview, \
     is_execution_status_update_notification_from_state_machine_model, \

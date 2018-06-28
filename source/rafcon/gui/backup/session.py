@@ -1,3 +1,5 @@
+# Copyright
+
 """ Module collects methods and function to be integrated into a respective class if that is of advantage, in future.
 """
 import os

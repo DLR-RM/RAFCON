@@ -1,3 +1,5 @@
+# Copyright
+
 from gtkmvc import View
 
 

@@ -1,3 +1,5 @@
+# Copyright
+
 import logging
 import sys
 

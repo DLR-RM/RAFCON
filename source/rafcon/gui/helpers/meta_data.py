@@ -1,3 +1,5 @@
+# Copyright
+
 from copy import deepcopy
 
 import json

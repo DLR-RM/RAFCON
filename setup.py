@@ -1,5 +1,7 @@
 #!/usr/bin/env python2.7
 
+# Copyright
+
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 from setuptools.command.develop import develop as DevelopCommand
