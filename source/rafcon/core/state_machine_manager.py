@@ -119,6 +119,7 @@ class StateMachineManager(Observable):
             removed_state_machine = self._state_machines.pop(state_machine_id)
         else:
             logger.error("There is no state_machine with state_machine_id: %s" % state_machine_id)
+            return removed_state_machine
 
         # a not stopped or finished state machine will stay the active state machine TODO test this and rethink it
         if state_machine_id is self.active_state_machine_id and \

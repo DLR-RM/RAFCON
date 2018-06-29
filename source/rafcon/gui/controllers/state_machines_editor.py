@@ -369,7 +369,8 @@ class StateMachinesEditorController(ExtendedController):
 
         def remove_state_machine_m():
             state_machine_id = state_machine_m.state_machine.state_machine_id
-            self.model.state_machine_manager.remove_state_machine(state_machine_id)
+            if state_machine_id in self.model.state_machine_manager.state_machines:
+                self.model.state_machine_manager.remove_state_machine(state_machine_id)
 
         def push_sm_running_dialog():
 
