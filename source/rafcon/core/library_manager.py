@@ -369,6 +369,16 @@ class LibraryManager(Observable):
             logger.warning("Library manager will not create a library instance which is not in the mounted libraries.")
 
     def get_library_state_copy_instance(self, lib_os_path):
+        """ A method to get a state copy of the library specified via the lib_os_path.
+
+        :param lib_os_path: the location of the library to get a copy for
+        :return:
+        """
+
+        # originally liraries were called like this; DO NOT DELTE; interesting for performance tests
+        # state_machine = storage.load_state_machine_from_path(lib_os_path)
+        # return state_machine.version, state_machine.root_state
+
         # TODO observe changes on file system and update data
         if lib_os_path in self._loaded_libraries:
             # this list can also be taken to open library state machines TODO -> implement it -> because faster
