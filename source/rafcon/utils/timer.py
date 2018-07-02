@@ -1,13 +1,16 @@
 import time
 from timeit import default_timer as timer
 
+from rafcon.utils import log
+logger = log.get_logger(__name__)
+
 
 def measure_time(func):
     def func_wrapper(*args, **kwargs):
         start = timer()
         return_value = func(*args, **kwargs)
         end = timer()
-        print "Measure time: {0} (args: {1}; kwargs: {2}): {3}".format(func.__name__, str(args), str(kwargs), str((end - start)))
+        logger.verbose("Method to profile: {0} (args: {1}; kwargs: {2}); Consumed time: {3}".format(func.__name__, str(args), str(kwargs), str((end - start))))
         return return_value
     return func_wrapper
 
