@@ -7,7 +7,7 @@ def measure_time(func):
         start = timer()
         return_value = func(*args, **kwargs)
         end = timer()
-        print "{0} (args: {1}; kwargs: {2}): {3}".format(func.__name__, str(args), str(kwargs), str((end - start)))
+        print "Measure time: {0} (args: {1}; kwargs: {2}): {3}".format(func.__name__, str(args), str(kwargs), str((end - start)))
         return return_value
     return func_wrapper
 

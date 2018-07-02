@@ -1,5 +1,5 @@
 # local
-from performance.timer import measure_time
+from rafcon.utils.timer import measure_time
 import testing_utils
 
 # general tool elements

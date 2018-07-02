@@ -8,7 +8,7 @@ from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.state_machine import StateMachine
 
-from performance.timer import measure_time
+from rafcon.utils.timer import measure_time
 
 import testing_utils
 
