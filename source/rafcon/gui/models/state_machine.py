@@ -25,6 +25,7 @@ from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
 from rafcon.gui.config import global_gui_config
+from rafcon.gui.models.meta import MetaModel
 from rafcon.gui.models import ContainerStateModel, StateModel, LibraryStateModel
 from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.signals import MetaSignalMsg
@@ -36,7 +37,7 @@ from rafcon.utils.vividict import Vividict
 logger = log.get_logger(__name__)
 
 
-class StateMachineModel(ModelMT, Hashable):
+class StateMachineModel(MetaModel, Hashable):
     """This model class manages a :class:`rafcon.core.state_machine.StateMachine`
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state machine).
@@ -63,7 +64,7 @@ class StateMachineModel(ModelMT, Hashable):
     def __init__(self, state_machine, meta=None, load_meta_data=True):
         """Constructor
         """
-        ModelMT.__init__(self)  # pass columns as separate parameters
+        MetaModel.__init__(self)  # pass columns as separate parameters
 
         assert isinstance(state_machine, StateMachine)
 
