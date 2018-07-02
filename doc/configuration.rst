@@ -68,7 +68,12 @@ EXECUTION_LOG_PATH:
   | Type: String
   | Default: ``"/tmp/"``
   | Sets the target path of the execution logs
-
+  
+NO_PROGRAMMATIC_CHANGE_OF_LIBRARY_STATES_PERFORMED
+  | Type: boolean
+  | Default: ``False``
+  | Set this to True if you can make sure that the interface of library states is not programmatically changed anywhere inside your state machines. This will speed up loading of libraries.
+  
 GUI configuration
 -----------------
 
