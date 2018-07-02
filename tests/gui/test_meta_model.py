@@ -78,3 +78,24 @@ def test_meta_list_modification():
     assert meta_data["list"] == [1, 2, 3]
     meta_data = meta_m.set_meta_data_editor("list.0", 4)
     assert meta_data["list"] == [4, 2, 3]
+
+
+def test_meta_data_hash():
+    testing_utils.dummy_gui(None)
+    from rafcon.gui.models.meta import MetaModel
+
+    meta1_m = MetaModel()
+    meta1_m.meta["test"] = 1
+    meta1_m.meta["nested"]["dict"] = 2
+
+    meta2_m = MetaModel()
+    meta2_m.meta["test"] = 1
+    meta2_m.meta["nested"]["dict"] = 2
+
+    meta3_m = MetaModel()
+    meta3_m.meta["test"] = 1
+    meta3_m.meta["nested"]["dict"] = 3
+
+    assert meta1_m.meta_data_hash().digest() == meta2_m.meta_data_hash().digest()
+    assert meta1_m.meta_data_hash().digest() != meta3_m.meta_data_hash().digest()
+
