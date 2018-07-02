@@ -166,6 +166,10 @@ class StateMachineModel(MetaModel, Hashable):
         self.update_hash_from_dict(obj_hash, self.root_state)
         self.update_hash_from_dict(obj_hash, self.meta)
 
+    def update_meta_data_hash(self, obj_hash):
+        super(StateMachineModel, self).update_meta_data_hash(obj_hash)
+        self.root_state.update_meta_data_hash(obj_hash)
+
     @ModelMT.observe("state", before=True)
     @ModelMT.observe("outcomes", before=True)
     @ModelMT.observe("is_start", before=True)
