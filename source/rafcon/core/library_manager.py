@@ -375,22 +375,21 @@ class LibraryManager(Observable):
         :return:
         """
 
-        # originally liraries were called like this; DO NOT DELTE; interesting for performance tests
+        # originally liraries were called like this; DO NOT DELETE; interesting for performance tests
         # state_machine = storage.load_state_machine_from_path(lib_os_path)
         # return state_machine.version, state_machine.root_state
 
         # TODO observe changes on file system and update data
-        if lib_os_path in self._loaded_libraries:
-            # this list can also be taken to open library state machines TODO -> implement it -> because faster
-            state_machine = self._loaded_libraries[lib_os_path]
-            # logger.info("Take copy of {0}".format(lib_os_path))
-            # as long as the a library state root state is never edited so the state first has to be copied here
-            state_copy = copy.copy(state_machine.root_state)
-            return state_machine.version, state_copy
-        else:
+        if lib_os_path not in self._loaded_libraries:
             state_machine = storage.load_state_machine_from_path(lib_os_path)
             self._loaded_libraries[lib_os_path] = state_machine
-            return state_machine.version, state_machine.root_state
+
+        # this list can also be taken to open library state machines TODO -> implement it -> because faster
+        state_machine = self._loaded_libraries[lib_os_path]
+        # logger.info("Take copy of {0}".format(lib_os_path))
+        # as long as the a library state root state is never edited so the state first has to be copied here
+        state_copy = copy.deepcopy(state_machine.root_state)
+        return state_machine.version, state_copy
 
     def remove_library_from_file_system(self, library_path, library_name):
         """Remove library from hard disk."""
