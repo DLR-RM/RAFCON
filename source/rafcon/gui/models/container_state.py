@@ -141,6 +141,12 @@ class ContainerStateModel(StateModel):
                                                                    self.scoped_variables[:]):
             self.update_hash_from_dict(obj_hash, state_element)
 
+    def update_meta_data_hash(self, obj_hash):
+        super(ContainerStateModel, self).update_meta_data_hash(obj_hash)
+        for state_element in sorted(self.states.values()) + sorted(self.transitions[:] + self.data_flows[:] + \
+                                                                   self.scoped_variables[:]):
+            state_element.update_meta_data_hash(obj_hash)
+
     @ModelMT.observe("state", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         """This method notifies the model lists and the parent state about changes
