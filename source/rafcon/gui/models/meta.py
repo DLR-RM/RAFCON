@@ -12,6 +12,7 @@
 import hashlib
 from gtkmvc import ModelMT, Signal
 
+from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
 
 
@@ -127,4 +128,4 @@ class MetaModel(ModelMT):
 
         :param obj_hash: The hash object (see Python hashlib)
         """
-        self.update_hash_from_dict(obj_hash, self.meta)
+        Hashable.update_hash_from_dict(obj_hash, self.meta)
