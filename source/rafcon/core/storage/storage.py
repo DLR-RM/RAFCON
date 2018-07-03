@@ -30,6 +30,7 @@ import rafcon
 from rafcon.utils.filesystem import read_file, write_file
 from rafcon.utils import storage_utils
 from rafcon.utils import log
+from rafcon.utils.timer import measure_time
 
 from rafcon.core.custom_exceptions import LibraryNotFoundException
 from rafcon.core.constants import DEFAULT_SCRIPT_PATH
@@ -270,6 +271,7 @@ def save_state_recursively(state, base_path, parent_path, as_copy=False):
             save_state_recursively(state, base_path, state_path, as_copy)
 
 
+@measure_time
 def load_state_machine_from_path(base_path, state_machine_id=None):
     """Loads a state machine from the given path
 

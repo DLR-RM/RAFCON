@@ -1,6 +1,6 @@
 # local
+from rafcon.utils.timer import measure_time
 import testing_utils
-from core_performance import measure_time
 
 # general tool elements
 from rafcon.utils import profiler

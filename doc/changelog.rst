@@ -9,6 +9,8 @@ Next release
 
 - Features:
 
+    - library_manager: increase performance of loading libraries by caching a list of all loaded libraries
+
 - Improvements:
 
 - Bug Fixes:
