@@ -6,11 +6,11 @@
 RAFCON
 ======
 
-.. image:: blob/master/documents/assets/Screenshot_Drill_Skill.png?raw=true
+.. image:: documents/assets/Screenshot_Drill_Skill.png?raw=true
    :width: 200px
    :align: left
    :alt: Screenshot showing RAFCON with a big state machine
-   :target: blob/master/documents/assets/Screenshot_Drill_Skill.png?raw=true
+   :target: documents/assets/Screenshot_Drill_Skill.png?raw=true
 
 Develop your robotic tasks using an intuitive graphical user interface
 ----------------------------------------------------------------------
