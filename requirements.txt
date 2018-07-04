@@ -12,3 +12,4 @@ pytest
 pytest-catchlog
 graphviz
 pymouse
+python-gtkmvc-dlr==1.99.2
