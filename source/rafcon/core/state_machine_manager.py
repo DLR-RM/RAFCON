@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -119,6 +119,7 @@ class StateMachineManager(Observable):
             removed_state_machine = self._state_machines.pop(state_machine_id)
         else:
             logger.error("There is no state_machine with state_machine_id: %s" % state_machine_id)
+            return removed_state_machine
 
         # a not stopped or finished state machine will stay the active state machine TODO test this and rethink it
         if state_machine_id is self.active_state_machine_id and \

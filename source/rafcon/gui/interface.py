@@ -7,7 +7,9 @@
 #
 # Contributors:
 # Franz Steinmetz <franz.steinmetz@dlr.de>
+# Lukas Becker <lukas.becker@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
+# Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import os
 import gtk

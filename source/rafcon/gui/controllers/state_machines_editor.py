@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -369,7 +369,8 @@ class StateMachinesEditorController(ExtendedController):
 
         def remove_state_machine_m():
             state_machine_id = state_machine_m.state_machine.state_machine_id
-            self.model.state_machine_manager.remove_state_machine(state_machine_id)
+            if state_machine_id in self.model.state_machine_manager.state_machines:
+                self.model.state_machine_manager.remove_state_machine(state_machine_id)
 
         def push_sm_running_dialog():
 

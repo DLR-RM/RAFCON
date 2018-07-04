@@ -11,7 +11,7 @@ def pre_init():
     :return:
     """
 
-    logger.info("Run post-initiation hook of {} plugin.".format(__file__.split(os.path.sep)[-2]))
+    logger.info("Run pre-initiation hook of {} plugin.".format(__file__.split(os.path.sep)[-2]))
 
     # Example: Monkey-Path rafcon.core.script.Script class to print additional log-message while execution
     from rafcon.core.script import Script

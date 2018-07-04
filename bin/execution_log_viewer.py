@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# Copyright
+
 # example basictreeview.py
 
 import pygtk

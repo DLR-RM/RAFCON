@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -215,6 +215,11 @@ class AbstractStateModel(MetaModel, Hashable):
             self.update_hash_from_dict(obj_hash, state_element)
         if not self.state.get_library_root_state():
             self.update_hash_from_dict(obj_hash, self.meta)
+
+    def update_meta_data_hash(self, obj_hash):
+        super(AbstractStateModel, self).update_meta_data_hash(obj_hash)
+        for state_element in sorted(self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
+            state_element.update_meta_data_hash(obj_hash)
 
     @property
     def parent(self):

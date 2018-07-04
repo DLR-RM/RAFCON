@@ -1,4 +1,4 @@
-# Copyright (C) 2017 DLR
+# Copyright (C) 2017-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -6,6 +6,7 @@
 # http://www.eclipse.org/legal/epl-v10.html
 #
 # Contributors:
+# Franz Steinmetz <franz.steinmetz@dlr.de>
 # Lukas Becker <lukas.becker@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
@@ -521,6 +522,8 @@ def refresh_selected_state_machine():
             logger.debug("Refresh of selected state machine canceled")
             return
 
+    library_manager.clean_loaded_libraries()
+    refresh_libraries()
     states_editor_ctrl.close_pages_for_specific_sm_id(selected_sm_id)
     state_machines_editor_ctrl.refresh_state_machine_by_id(selected_sm_id)
 
@@ -568,6 +571,7 @@ def refresh_all(force=False):
                 logger.debug("Refresh canceled")
                 return
 
+    library_manager.clean_loaded_libraries()
     refresh_libraries()
     states_editor_ctrl.close_all_pages()
     state_machines_editor_ctrl.refresh_all_state_machines()

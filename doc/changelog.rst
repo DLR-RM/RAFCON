@@ -17,6 +17,13 @@ Next release
 Patch releases 0.12.\*
 ----------------------
 
+0.12.14
+"""""""
+
+- Improvements:
+
+    - library_manager: increase performance of loading libraries by caching a list of all loaded libraries
+    - gaphas editor: use new meta data hash method to speed up loading time
 
 0.12.13
 """""""

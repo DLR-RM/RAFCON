@@ -1,5 +1,7 @@
 #!/usr/bin/env python2.7
 
+# Copyright
+
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 from setuptools.command.develop import develop as DevelopCommand
@@ -81,7 +83,7 @@ def get_data_files_tuple(*path, **kwargs):
     return target_path, source_files
 
 
-global_requirements = ['astroid', 'pylint', 'pyyaml', 'psutil', 'jsonconversion~=0.2', 'yaml_configuration~=0.0',
+global_requirements = ['astroid~=1.6', 'pylint', 'pyyaml', 'psutil', 'jsonconversion~=0.2', 'yaml_configuration~=0.0',
                        'python-gtkmvc-dlr==1.99.2', 'gaphas>=0.7', 'pandas']
 
 script_path = path.realpath(__file__)

@@ -59,16 +59,21 @@ LIBRARY\_RECOVERY\_MODE
   | If this flag is activated, state machine with consistency erros concerning their data ports can be loaded.
     Erros are just printed out as warnings. This can be used to fix erroneous state machines.
 
-EXECUTION_LOG_ENABLE
+EXECUTION\_LOG\_ENABLE
   | Type: boolean
   | Default: ``True``
   | Enables the logging of rafcon exeuction histories to the file system. Every time a statemachine is executed, a python shelve is created in the execution log directory, e.g. ``/tmp/rafcon_execution_logs/rafcon_execution_log_99-Bottles-of-Beer_2017-08-31-16-07-17.shelve``. Some helpful utility functions for working with log files through python are in: ``import rafcon.utils.execution_log``. A tiny tiny code snippet which shows how to use the pandas.DataFrame representation to query the outcomes of a state named ‘CheckFinished’ is here: ``https://rmc-github.robotic.dlr.de/common/rafcon/pull/324#issuecomment-2520``
 
-EXECUTION_LOG_PATH:
+EXECUTION\_LOG\_PATH:
   | Type: String
   | Default: ``"/tmp/"``
   | Sets the target path of the execution logs
-
+  
+NO\_PROGRAMMATIC\_CHANGE\_OF\_LIBRARY\_STATES\_PERFORMED
+  | Type: boolean
+  | Default: ``False``
+  | Set this to True if you can make sure that the interface of library states is not programmatically changed anywhere inside your state machines. This will speed up loading of libraries.
+  
 GUI configuration
 -----------------
 
@@ -331,9 +336,13 @@ MINIMUM\_SIZE\_FOR\_CONTENT
 MAX\_VISIBLE\_LIBRARY\_HIERARCHY
   | Default: ``2``
   | Number of hierarchy levels to be shown within a library state. High
-    values cause the GUI to lag. Currently only used in the old editor
-    (OpenGL).
+    values cause the GUI to lag.
 
+NO\_FULLY\_RECURSIVE\_LIBRARY\_MODEL
+  | Type: boolean
+  | Default: ``True``
+  | If True, GUI models are only loaded up to the MAX\_VISIBLE\_LIBRARY\_HIERARCHY. Setting this to False will drastically increase the time for loading a state machine.
+    
 USE\_ICONS\_AS\_TAB\_LABELS
   | Type: boolean
   | Default: ``True``

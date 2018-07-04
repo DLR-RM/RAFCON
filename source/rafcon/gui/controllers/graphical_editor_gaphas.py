@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -770,12 +770,12 @@ class GraphicalEditorController(ExtendedController):
         logger.verbose("start setup canvas")
         start_time_view_generation = time.time()
         with self.model.state_machine.modification_lock():
-            hash_before = self.model.mutable_hash()
+            hash_before = self.model.meta_data_hash()
             # there is no more root state position it will be set always to the root state default relative position
             if not self.root_state_m.get_meta_data_editor()['rel_pos'] == gui_helper_meta_data.ROOT_STATE_DEFAULT_REL_POS:
                 self.root_state_m.set_meta_data_editor('rel_pos', gui_helper_meta_data.ROOT_STATE_DEFAULT_REL_POS)
             self.add_state_view_for_model(self.root_state_m, rel_pos=gui_helper_meta_data.STATE_DEFAULT_REL_POS)
-            hash_after = self.model.mutable_hash()
+            hash_after = self.model.meta_data_hash()
             if hash_before.digest() != hash_after.digest():
                 logger.debug("Hash has changed from {0} to {1}".format(hash_before.hexdigest(), hash_after.hexdigest()))
                 self._meta_data_changed(None, self.root_state_m, 'append_initial_change', True)
