@@ -18,9 +18,9 @@
 
 - name: "Saphari"
   description: "Recent progress in physical Human‐Robot Interaction (pHRI) research showed in principle that human and robots can actively and safely share a common workspace. The fundamental breakthrough that enabled these results was the human-centered design of robot mechanics and control. This made it possible to limit potential injuries due to unintentional contacts."
-  image: "images/projects/saphari.jpg"
+  image: "images/projects/saphari.png"
   url: "http://www.dlr.de/rmc/rm/desktopdefault.aspx/tabid-4845/20104_read-47199/"
-  note: "Date: Nov 2015 - present"
+  note: "Date: Nov 2011 - Oct 2015"
 
 - name: "RACE"
   description: "With their RACE-LAB project, Christoph Borst and his team at the German Aerospace Center are endeavouring to simplify the industrial use of robots and to achieve greater automation. The project is aimed in particular at industries that are working with the latest robot generation characterised by a lightweight design, good interactional skills and high sensitivity."
