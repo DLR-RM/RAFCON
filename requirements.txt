@@ -4,7 +4,6 @@ pyyaml
 psutil
 jsonconversion~=0.2
 yaml_configuration~=0.0
-pygtk
 gaphas>=0.7
 pandas
 Sphinx>=1.4
@@ -13,4 +12,3 @@ pytest
 pytest-catchlog
 graphviz
 pymouse
-python-gtkmvc-dlr==1.99.2
