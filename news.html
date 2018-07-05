@@ -6,41 +6,43 @@ layout: page
 <div class="row">
     <div class="col-md-2"></div>
     <div class="col-md-12 mobile-positioning">
-        <ul id="post-list" class="mobile-list">
+        <div id="post-list" class="mobile-list">
             {% for post in site.posts %}
+            <div class="row">
 
-            <li class="col-md-1"></li>
-            <li class="col-md-3 mobile-picture" style="float: left; margin-top: 7px;">
-                {% assign foundImage = 0 %}
-                {% assign images = post.content | split:"<img " %}
-                {% for image in images %}
-                {% if image contains 'src' %}
+                <div class="col-md-1"></div>
+                <div class="col-md-3 mobile-picture" style="float: left; margin-top: 7px;">
+                    {% assign foundImage = 0 %}
+                    {% assign images = post.content | split:"<img " %}
+                    {% for image in images %}
+                    {% if image contains 'src' %}
 
-                {% if foundImage == 0 %}
-                {% assign html = image | split:"/>" | first %}
-                <a href="{{ post.url }}"><img {{ html }} /></a>
-                {% assign foundImage = 1 %}
+                    {% if foundImage == 0 %}
+                    {% assign html = image | split:"/>" | first %}
+                    <a href="{{ post.url }}"><img {{ html }} /></a>
+                    {% assign foundImage = 1 %}
 
 
-                {% endif %}
-                {% endif %}
-                {% endfor %}
-            </li>
-            <li class="post-content col-md-7" >
+                    {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="post-content col-md-7" >
 
-                <a class="title-link" href="{{ post.url }}">{{ post.title }}</a><br>
-                <p></p>
-                <i class="fa fa-calendar" style="color:#646464; float: left; font-size: 17px; opacity:0.6;" aria-hidden="true"></i><time class="show-date">{{ post.date | date: "%b %-d, %Y" }}</time>
-                <div class="author-mobile"><p class="show-author">by {{ post.author }}</p></div>
-                <div class="mobile-excerpt">{{ post.excerpt }}</div>
+                    <a class="title-link" href="{{ post.url }}">{{ post.title }}</a><br>
+                    <p></p>
+                    <i class="fa fa-calendar" style="color:#646464; float: left; font-size: 17px; opacity:0.6;" aria-hidden="true"></i><time class="show-date">{{ post.date | date: "%b %-d, %Y" }}</time>
+                    <div class="author-mobile"><p class="show-author">by {{ post.author }}</p></div>
+                    <div class="mobile-excerpt">{{ post.excerpt }}</div>
 
-                <div class="read-mobile"><a id="read-more" href="{{ post.url }}">Read more.</a><br><br></div>
+                    <div class="read-mobile"><a id="read-more" href="{{ post.url }}">Read more.</a><br><br></div>
 
-            </li>
-
+                </div>
+                <div class="col-md-1"></div>
+            </div>
 
             {% endfor %}
 
-        </ul>
+        </div>
     </div>
 </div>
