@@ -1,14 +1,20 @@
+- name: "Automatica 2018"
+  description: "During Automatica 2018 our Autonomous Industrial Mobile Manipulator (AIMM) delivered workpieces to different workstations on our 'Factory of the Future' booth."
+  image: "images/projects/automatica_aimm.jpg"
+  url: "https://automatica-munich.com/index.html"
+  note: "Date: June 2018"
+
 - name: "SpacebotCamp"
   description: "The Robotics and Mechatronics Center (RMC) of the German Aerospace Center (DLR) participated as team RMexplores! in the SpaceBot Camp presentation in November 2015 with great success. The SpaceBot Camp, organized by the DLR Space Administration, set out as a national robotics challenge inspired by the DARPA robotics challenges in the US."
   image: "images/projects/spacebotcamp.jpg"
   url: "https://www.dlr.de/rm/desktopdefault.aspx/tabid-10781/18794_read-43643/"
-  note: "Date: 2015"
+  note: "Date: Sept 2015"
 
 - name: "ROBEX"
-  description: "The Helmholtz Alliance „Robotic Exploration of Extreme Environments – ROBEX“ brings together space and deep-sea research. From 16 institutes involved in space and marine research, the project partners are jointly developing technologies for the exploration of highly inaccessible terrain, such as the deep sea and Polar Regions, as well as the Moon and other plantes."
+  description: "A moon analogue demonstration mission was conducted with the Lightweight Rover Unit (LRU) in the context of the Robotic Exploration of Extreme Environments (ROBEX) project. The goal of the mission was to perform seismic measurements with the deployed network in order to infer the geological composition and detailed information about the crust layers of the volcanic target region."
   image: "images/projects/robex.jpg"
   url: "http://www.robex-allianz.de/"
-  note: "Date: Nov 2015 - present"
+  note: "Date: Nov 2012 - Nov 2017"
 
 - name: "SMErobotics"
   description: "The SMErobotics project aims at significantly simplifying the deployment of robotic applications for production in the context of small and medium size manufacturing. Our mission is to enable industrial end users such as SMEs to benefit from the advantages of automation, e.g. high efficiency, constant high quality and streamlined processes."
