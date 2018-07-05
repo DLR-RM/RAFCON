@@ -12,13 +12,19 @@ intro: "Getting started with RAFCON is easy. It can be used out of the box."
         <h2 class="docs-head">Requirements</h2>
 
         <p class="docs-text">
-            The requirements to install and run RAFCON are low:
+            These are the requirements to your system that net to be fulfilled before installing RAFCON (use for example <code>apt-get</code> to install those packages):
         </p>
 
         <ul class="docs-text">
             <li>Linux (tested on Ubuntu, SLED and OpenSuse)</li>
-            <li>Python 2.6 or 2.7 (2.7 is recommended)</li>
-            <li><code>pygtk</code> must be pre-installed (e.g. using <code>apt-get</code>)</li>
+            <li>Python 2.7</li>
+            <li><code>pygtk</code></li>
+            <li><code>python-setuptools</code></li>
+            <li><code>pip</code></li>
+            <li><code>python-opengl</code></li>
+            <li><code>python-gtkglext1</code></li>
+            <li><code>python-gtksourceview2</code></li>
+            <li><code>pylint</code></li>
         </ul>
 
         <h2 class="docs-head">Install using Python pip</h2>
@@ -27,34 +33,30 @@ intro: "Getting started with RAFCON is easy. It can be used out of the box."
             The easiest way to install RAFCON is using <code>pip</code>. Just enter the following to lines into your favorite shell:
         </p>
 
-        <ul class="docs-text">
-            <li><code>pip install rafcon</code></li>
-            <li><code>rafcon_start_gui</code></li>
-        </ul>
-
-        <h2 class="docs-head">Install from repository</h2>
-
         <p class="docs-text">
-            If you cannot wait for the next release and want to use the latest commits, you can also clone the repository and start RAFCON from there:
+            <code>pip install rafcon</code>
         </p>
 
-        <ul class="docs-text">
-            <li><code>cd ~/opt_or_so/</code></li>
-            <li><code>git clone https://github.com/DLR-RM/RAFCON.git</code></li>
-            <li>or if you prefer SSH: <code>git clone git@github.com:DLR-RM/RAFCON.git</code></li>
-            <li><code>cd RAFCON</code></li>
-            <li><code>python setup.py install</code></li>
-            <li><code>rafcon_start_gui</code></li>
-        </ul>
+        <h2 class="docs-head">Start RAFCON</h2>
 
         <p class="docs-text">
-            This also allows you to run the tests: <code>python setup.py test</code>
+            Next, all you have to do for starting RAFCON is calling <code>rafcon</code> from the shell:
+        </p>
+
+        <p class="docs-text">
+            <code>rafcon</code>
+        </p>
+
+        <h2 class="docs-head">Detailed instructions</h2>
+
+        <p class="docs-text">
+            More details about how to install RAFCON can be found in the <a href="https://github.com/DLR-RM/RAFCON/blob/master/README.rst" title="Installation instructions in README">README</a>.
         </p>
 
         <h2 class="docs-head">How to continue</h2>
 
         <p class="docs-text">
-            In the <a href="documentation.html" title="RAFCON documentation">documentation</a> you can read about the basic concepts of RAFCON, explaining
+            In the <a href="http://rafcon.readthedocs.io/en/latest/" title="RAFCON documentation">documentation</a>, you can read about the basic concepts of RAFCON, explaining
             states, outcomes, transitions, data ports, data flows and more. There is also a number of step-by-step tutorials, which we recommend to read.
         </p>
 
