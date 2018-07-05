@@ -6,7 +6,7 @@
 RAFCON
 ======
 
-.. image:: documents/assets/Screenshot_Drill_Skill.png?raw=true
+.. image:: https://raw.githubusercontent.com/DLR-RM/RAFCON/master/documents/assets/Screenshot_Drill_Skill.png
    :width: 200px
    :align: left
    :alt: Screenshot showing RAFCON with a big state machine
