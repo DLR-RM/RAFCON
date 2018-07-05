@@ -17,6 +17,13 @@ Next release
 Patch releases 0.12.\*
 ----------------------
 
+0.12.15
+"""""""
+
+- Improvements:
+
+    - PYTHONUSERBASE added to search path list for gtk style files
+
 0.12.14
 """""""
 
