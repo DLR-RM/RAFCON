@@ -4,12 +4,6 @@
   url: "https://automatica-munich.com/index.html"
   note: "Date: June 2018"
 
-- name: "SpacebotCamp"
-  description: "The Robotics and Mechatronics Center (RMC) of the German Aerospace Center (DLR) participated as team RMexplores! in the SpaceBot Camp presentation in November 2015 with great success. The SpaceBot Camp, organized by the DLR Space Administration, set out as a national robotics challenge inspired by the DARPA robotics challenges in the US."
-  image: "images/projects/spacebotcamp.jpg"
-  url: "https://www.dlr.de/rm/desktopdefault.aspx/tabid-10781/18794_read-43643/"
-  note: "Date: Sept 2015"
-
 - name: "ROBEX"
   description: "A moon analogue demonstration mission was conducted with the Lightweight Rover Unit (LRU) in the context of the Robotic Exploration of Extreme Environments (ROBEX) project. The goal of the mission was to perform seismic measurements with the deployed network in order to infer the geological composition and detailed information about the crust layers of the volcanic target region."
   image: "images/projects/robex.jpg"
@@ -22,12 +16,6 @@
   url: "http://www.smerobotics.org/"
   note: "Date: 2012 - present"
 
-- name: "Saphari"
-  description: "Recent progress in physical Human‐Robot Interaction (pHRI) research showed in principle that human and robots can actively and safely share a common workspace. The fundamental breakthrough that enabled these results was the human-centered design of robot mechanics and control. This made it possible to limit potential injuries due to unintentional contacts."
-  image: "images/projects/saphari.png"
-  url: "http://www.saphari.eu"
-  note: "Date: Nov 2011 - Oct 2015"
-
 - name: "RACELab"
   description: "With their RACELab project, Christoph Borst and his team at the German Aerospace Center are endeavouring to simplify the industrial use of robots and to achieve greater automation. The project is aimed in particular at industries that are working with the latest robot generation characterised by a lightweight design, good interactional skills and high sensitivity."
   image: "images/projects/race.jpg"
@@ -38,4 +26,16 @@
   description: "The key research area Flying Robots covers several domains of the DLR Robotics and Mechatronics Center – Aeronautics, Space, Robotics, and Optical Information Systems – in order to exploit synergies in the development of robotics technologies for autonomous flying platforms. The spectrum of our work ranges from low-level control to mission planning and execution."
   image: "images/projects/flying-robots.jpg"
   url: "http://www.dlr.de/rmc/rm/desktopdefault.aspx/tabid-4845/20104_read-47199/"
-  note: "Date: 2016 - present"
+  note: "Date: 2015 - 2017"
+
+- name: "SpacebotCamp"
+  description: "The Robotics and Mechatronics Center (RMC) of the German Aerospace Center (DLR) participated as team RMexplores! in the SpaceBot Camp presentation in November 2015 with great success. The SpaceBot Camp, organized by the DLR Space Administration, set out as a national robotics challenge inspired by the DARPA robotics challenges in the US."
+  image: "images/projects/spacebotcamp.jpg"
+  url: "https://www.dlr.de/rm/desktopdefault.aspx/tabid-10781/18794_read-43643/"
+  note: "Date: Sept 2015"
+
+- name: "Saphari"
+  description: "Recent progress in physical Human‐Robot Interaction (pHRI) research showed in principle that human and robots can actively and safely share a common workspace. The fundamental breakthrough that enabled these results was the human-centered design of robot mechanics and control. This made it possible to limit potential injuries due to unintentional contacts."
+  image: "images/projects/saphari.png"
+  url: "http://www.saphari.eu"
+  note: "Date: Nov 2011 - Oct 2015"
