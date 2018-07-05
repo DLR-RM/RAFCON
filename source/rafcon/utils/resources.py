@@ -7,6 +7,7 @@
 #
 # Contributors:
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+# Franz Steinmetz <franz.steinmetz@dlr.de>
 
 """
 .. module:: resources
@@ -20,11 +21,18 @@ from os.path import expanduser, isfile, join
 import pkg_resources
 
 
-paths_to_search_for_resource = (
-    os.path.join(expanduser("~"), ".local", "share"),
-    os.path.join('usr', 'local', 'share'),
-    os.path.join('usr', 'share'),
-)
+paths_to_search_for_resource = [
+    join(expanduser("~"), ".local", "share"),
+    join('usr', 'local', 'share'),
+    join('usr', 'share'),
+]
+
+# Check for non-default PYTHONUSERBASE and add it to the seach path list
+pythonuserbase = os.getenv("PYTHONUSERBASE")
+if pythonuserbase:
+    pythonuserbase = join(pythonuserbase, "share")
+    if pythonuserbase not in paths_to_search_for_resource:
+        paths_to_search_for_resource.append(pythonuserbase)
 
 
 def resource_filename(package_or_requirement, resource_name):
