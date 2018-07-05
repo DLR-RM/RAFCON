@@ -625,7 +625,7 @@ h5{
     color: #646464;
 }
 
-.docs-text, .page-content p {
+.docs-text, .page-content p, .page-content li {
     font-size:17px;
     color: #646464;
     opacity: 0.7;
@@ -748,7 +748,7 @@ b{
 }
 
 
-.post-content p{
+.post-content p, .post-content li{
     font-size:17px;
     color: #959595;
 }
