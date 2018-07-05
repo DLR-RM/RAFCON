@@ -36,7 +36,8 @@ Collaborative working
 Installation preparations
 -------------------------
 
-Before installing RAFCON, python and setuptools is required on your system. Most of the other dependencies are automatically resolved by pip/setuptools, but not all of them. Those need be be installed manually, too:
+Before installing RAFCON, Python 2.7, pip and setuptools are required on your system. Most of the other dependencies
+are automatically resolved by pip/setuptools, but not all of them. Those need be be installed manually, too:
 
 Installation requirements for Ubuntu 16.04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -69,6 +70,16 @@ If you are not using Ubuntu 16.04 or 18.04, please make sure that the following 
 * pylint
 
 
+Installing RAFCON (from PyPi)
+-----------------------------
+
+.. code-block:: bash
+
+   pip2.7 install rafcon --user
+
+The ``--user`` flag is optional. If not set, RAFCON is installed globally.
+
+
 Download RAFCON sources
 -----------------------
 
@@ -86,8 +97,6 @@ If you don't want to edit the source code of RAFCON, it can be installed directl
 .. code-block:: bash
 
    pip2.7 install /install/directory/rafcon/ --user
-
-The ``--user`` flag is optional. If not set, RAFCON is installed globally.
 
 
 Installing RAFCON (editable from source)
