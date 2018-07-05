@@ -93,10 +93,15 @@ themes_folder = path.join(assets_folder, 'themes')
 
 # read version from VERSION file
 # this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon
-version_file_path = os.path.join(os.path.dirname(__file__), "VERSION")
+setup_dir = os.path.dirname(__file__)
+version_file_path = os.path.join(setup_dir, "VERSION")
 with open(version_file_path, "r") as f:
     content = f.read().splitlines()
     version = content[0]
+
+readme_file_path = os.path.join(setup_dir, "README.rst")
+with open(readme_file_path, "r") as f:
+    long_description = f.read()
 
 setup(
     name='rafcon',
@@ -107,6 +112,7 @@ setup(
     author_email='sebastian.brunner@dlr.de, rico.belder@dlr.de, franz.steinmetz@dlr.de',
     description='Develop your robotic tasks with hierarchical state machines using an intuitive graphical user '
                 'interface',
+    long_description=long_description,
 
     packages=find_packages('source'),
     package_dir={'': 'source'},  # tell distutils packages are under src
