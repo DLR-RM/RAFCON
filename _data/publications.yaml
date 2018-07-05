@@ -1,8 +1,38 @@
+- type: Article
+  bibkey: brunner2018ral
+  author: "Brunner, Sebastian Georg and Lehner, Peter and Schuster, Martin Johannes and Riedel, Sebastian and Belder, Rico and Wedler, Armin and Leidner, Daniel and Beetz, Michael and Stulp, Freek"
+  title: "Design, Execution, and Postmortem Analysis of Prolonged Autonomous Robot Operations"
+  booktitle: "IEEE Robotics and Automation Letters"
+  year: 2018
+  pages: "1056-1063"
+  month: may
+  doi: "10.1109/LRA.2018.2794580"
+- type: InProceedings
+  bibkey: lehner2018mobile
+  author: "Lehner, Peter and Brunner, Sebastian and Dömel, Andreas and Gmeiner, Heinrich and Riedel, Sebastian and Vodermayer, Bernhard and Wedler, Armin"
+  title: "Mobile Manipulation for Planetary Exploration"
+  booktitle: "Aerospace Conference"
+  year: 2018
+  month: mar
+- type: video
+  bibkey: youtube1
+  author: DLRRMC Youtube Channel
+  title: <a href="https://www.youtube.com/watch?v=MVtToA8TlLc">ROBEX - the robotic part</a>
+  year: 2018
+- type: Article
+  bibkey: schuster2017lru
+  author: "Schuster, Martin J. and Brunner, Sebastian G. and Bussmann, Kristin and Büttner, Stefan and Dömel, Andreas and Hellerer, Matthias and Lehner, Hannah and Lehner, Peter and Porges, Oliver and Reill, Josef and Riedel, Sebastian and Vayugundla, Mallikarjuna and Vodermayer, Bernhard and Bodenmüller, Tim and Brand, Christoph and Friedl, Werner and Grixa, Iris and Hirschmüller, Heiko and Kaßecker, Michael and M{\'a}rton, Zolt{\'a}n-Csaba and Nissler, Christian and Ruess, Felix and Suppa, Michael and Wedler, Armi"
+  title: "Towards Autonomous Planetary Exploration: The Lightweight Rover Unit (LRU), its Success in the SpaceBotCamp Challenge, and Beyond"
+  booktitle: "Journal of Intelligent & Robotic Systems (JINT)"
+  year: 2017
+  issn: "1573-0409"
+  month: nov
+  doi: "10.1007/s10846-017-0680-9"
 - type: InProceedings
   bibkey: brunner2016rafcon
-  author: "Brunner, Sebastian Georg and Steinmetz, Franz and Belder, Rico and Dömel, Andreas"
+  author: "Steinmetz, Franz and Brunner, Sebastian Georg and Belder, Rico and Dömel, Andreas"
   title: "RAFCON: A Graphical Tool for Engineering Complex, Robotic Tasks"
-  booktitle: "IEEE/RSJ Int. Conf. Intelligent Robots and Systems"
+  booktitle: "IEEE/RSJ Int. Conf. Intelligent Robots and Systems (IROS)"
   year: 2016
   pages: "3283--3290"
   month: oct

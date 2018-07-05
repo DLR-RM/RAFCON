@@ -9,7 +9,7 @@ intro: "This page gives an overview of all publications (conference papers, symp
 <div class="row">
     <div class="col-md-2"></div>
     <div class="col-md-7">
-        {% assign publications = (site.data.publications | sort: 'year') %}
+        {% assign publications = (site.data.publications | sort: 'year' | reverse %}
         {% assign last_year = 0 %}
         {% for publication in publications %}
             {% if last_year != publication.year %}
