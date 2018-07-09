@@ -15,7 +15,7 @@
   url:
 - name: "ROS Plugin"
   intro: "A plugin to show relevant information if RAFCON is used in a ROS ecosystem (currently not maintained)"
-  description: "The plugin allows to show all relevant information about ros topics, services and message definitions inside RAFCON. This helps a developer to write library states calling ros services."
+  description: "The plugin allows to show all relevant information about ros topics, services and message definitions inside RAFCON. This plugin speeds up the development of library states calling ros services or listening to ros topics."
   image: "images/plugins/ros.png"
   url:
 - name: "DDS plugin"
