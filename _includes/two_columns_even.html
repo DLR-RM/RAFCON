@@ -1,8 +1,12 @@
 {% include horizontal_line.html %}
 
-<div class="row">
+<div class="row vertical-align">
     <div class="col-md-2"></div>
-    <div class="col-md-4"><img alt="dlr-Logo" src="{{ include.content.image }}" style="margin-top:22px;"></div>
+    <!-- <div class="col-md-3"><img alt="dlr-Logo" src="{{ include.content.image }}" style="margin-top:22px;"></div> -->
+    <div class="col-md-3">
+            <img alt="dlr-Logo" src="{{ include.content.image }}" style="margin-top:0px;">
+    </div>
+    <div class="col-md-1"></div>
     <div class="col-md-4 contact">
         <h2 class="docs-head">{{ include.content.name }}</h2>
         {% if include.content.intro %}

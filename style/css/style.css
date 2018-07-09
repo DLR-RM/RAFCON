@@ -1526,3 +1526,8 @@ p.nonactive-side{
 .navbar-nav .open .dropdown-menu{
     margin-left: 16px;
 }
+
+.vertical-align {
+    display: flex;
+    align-items: center;
+}
