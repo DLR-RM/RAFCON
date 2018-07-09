@@ -4,5 +4,5 @@
   image: "images/banner/Screenshot_Drill_Skill.png"
 - subtext: "The RAFCON GUI showing the first layer of the state machine we used for the SpacebotCamp (see News/Projects)"
   image: "images/banner/rafcon_sbc.png"
-- subtext: "The RAFCON GUI showing the first layer of the state machine we used for the Robex Project on Mt. Etna (see News/Projects)"
+- subtext: "A screenshot of the RAFCON GUI taken on Mt. Etna during a mission run of the Robex project (see News/Projects)"
   image: "images/banner/rafcon_asm.png"
