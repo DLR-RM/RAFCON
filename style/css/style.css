@@ -738,6 +738,18 @@ b{
     opacity:1;
 }
 
+/* Make menu dropdown on hover, not only click, see https://stackoverflow.com/a/8878666 */
+
+ul.nav li.dropdown:hover > ul.dropdown-menu {
+    display: block;
+}
+
+@media (min-width: 979px) {
+    ul.nav li.dropdown:hover > ul.dropdown-menu {
+        display: block;
+    }
+}
+
 .navbar-default .navbar-nav>.active>a{
     color:#008CFF;
 }
