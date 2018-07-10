@@ -8,6 +8,11 @@ RAFCON
    :alt: Screenshot showing RAFCON with a big state machine
    :target: documents/assets/Screenshot_Drill_Skill.png?raw=true
 
+
+* Documentation: Hosted on `Read the Docs <http://rafcon.readthedocs.io/en/latest/>`_
+* Homepage: `DLR-RM.github.io/RAFCON/ <https://dlr-rm.github.io/RAFCON/>`_
+* License: `EPL <https://github.com/DLR-RM/RAFCON/blob/master/LICENSE>`_
+
 Develop your robotic tasks using an intuitive graphical user interface
 ----------------------------------------------------------------------
 
