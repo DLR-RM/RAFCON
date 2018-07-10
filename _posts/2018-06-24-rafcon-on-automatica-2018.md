@@ -16,7 +16,7 @@ The Automatica fair takes place every two years and the DLR booth is always a hi
 
 As it can be seen, more and more groups at the DLR robotics and mechatronics institute, use RAFCON for a broad spectrum of use cases.
 
-![The Factory of the Future at the DLR booth of the Automatica fair 2018]({{ site.url }}/images/news/Automatica2018FoF.jpg){:class="img-responsive"}
+![The Factory of the Future at the DLR booth of the Automatica fair 2018](images/news/Automatica2018FoF.jpg){:class="img-responsive"}
 
 More information about the DLR booth on the Automatica can be found on the [DLR website][dlr-report].
 
