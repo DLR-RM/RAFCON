@@ -7,6 +7,15 @@
   pages: "1056-1063"
   month: may
   doi: "10.1109/LRA.2018.2794580"
+- type: Article
+  bibkey: steinmetz2018razer
+  author: "Steinmetz, Franz and Wollschläger, Annika and Weitschat, Roman"
+  title: "RAZER—A Human-Robot Interface for Visual Task-Level Programming and Intuitive Skill Parametrization"
+  booktitle: "IEEE Robotics and Automation Letters"
+  year: 2018
+  pages: "1362--1369"
+  month: jul
+  doi: "10.1109/LRA.2018.2798300"
 - type: InProceedings
   bibkey: lehner2018mobile
   author: "Lehner, Peter and Brunner, Sebastian and Dömel, Andreas and Gmeiner, Heinrich and Riedel, Sebastian and Vodermayer, Bernhard and Wedler, Armin"
@@ -21,11 +30,11 @@
   year: 2018
 - type: Article
   bibkey: schuster2017lru
-  author: "Schuster, Martin J. and Brunner, Sebastian G. and Bussmann, Kristin and Büttner, Stefan and Dömel, Andreas and Hellerer, Matthias and Lehner, Hannah and Lehner, Peter and Porges, Oliver and Reill, Josef and Riedel, Sebastian and Vayugundla, Mallikarjuna and Vodermayer, Bernhard and Bodenmüller, Tim and Brand, Christoph and Friedl, Werner and Grixa, Iris and Hirschmüller, Heiko and Kaßecker, Michael and M{\'a}rton, Zolt{\'a}n-Csaba and Nissler, Christian and Ruess, Felix and Suppa, Michael and Wedler, Armi"
+  author: "Schuster, Martin J. and Brunner, Sebastian G. and Bussmann, Kristin and Büttner, Stefan and Dömel, Andreas and Hellerer, Matthias and Lehner, Hannah and Lehner, Peter and Porges, Oliver and Reill, Josef and Riedel, Sebastian and Vayugundla, Mallikarjuna and Vodermayer, Bernhard and Bodenmüller, Tim and Brand, Christoph and Friedl, Werner and Grixa, Iris and Hirschmüller, Heiko and Kaßecker, Michael and Márton, Zoltán-Csaba and Nissler, Christian and Ruess, Felix and Suppa, Michael and Wedler, Armi"
   title: "Towards Autonomous Planetary Exploration: The Lightweight Rover Unit (LRU), its Success in the SpaceBotCamp Challenge, and Beyond"
   booktitle: "Journal of Intelligent & Robotic Systems (JINT)"
   year: 2017
-  issn: "1573-0409"
+  issn: "1573--0409"
   month: nov
   doi: "10.1007/s10846-017-0680-9"
 - type: InProceedings
