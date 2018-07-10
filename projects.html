@@ -12,8 +12,7 @@ intro: "RAFCON is used by a variety of institutes which are working on collabora
 
 {% for project in site.data.projects %}
 
-    {% capture modulo %}{{ forloop.index0 | mod:2 }}{% endcapture %}
-
+    {% capture modulo %}{{ forloop.index0 | modulo:2 }}{% endcapture %}
     {% if modulo == '0' or forloop.first %}
     <div class="row">
         <div class="col-md-2"></div>
