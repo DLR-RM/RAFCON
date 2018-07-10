@@ -19,7 +19,7 @@ layout: page
 
                     {% if foundImage == 0 %}
                     {% assign html = image | split:"/>" | first %}
-                    <a href="{{ post.url }}"><img {{ html }} /></a>
+                    <a href="{{ post.url | remove_first: '/' }}"><img {{ html }} /></a>
                     {% assign foundImage = 1 %}
 
 
