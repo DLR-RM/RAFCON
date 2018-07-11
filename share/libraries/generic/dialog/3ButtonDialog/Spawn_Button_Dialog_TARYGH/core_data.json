@@ -28,12 +28,13 @@
             }, 
             "default_value": [
                 "Ok", 
-                "Cancel"
+                "Cancel", 
+                "Do nothing"
             ], 
             "name": "buttons"
         }
     }, 
-    "name": "SpawnButtonDialog", 
+    "name": "Spawn Button Dialog", 
     "outcomes": {
         "-2": {
             "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
@@ -54,6 +55,11 @@
             "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "button_2", 
             "outcome_id": 1
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "button_3", 
+            "outcome_id": 2
         }
     }, 
     "output_data_ports": {}, 

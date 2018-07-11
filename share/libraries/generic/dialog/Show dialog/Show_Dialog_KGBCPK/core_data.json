@@ -56,7 +56,7 @@
             "name": "key_mapping"
         }
     }, 
-    "name": "Show dialog", 
+    "name": "Show Dialog", 
     "outcomes": {
         "-2": {
             "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 

@@ -1,7 +1,7 @@
 {
     "creation_time": "2015-06-08 07:17:48", 
-    "last_update": "2017-09-21 16:25:27", 
+    "last_update": "2018-07-11 12:13:05", 
     "root_state_storage_id": "Dialog_2_options_AQRXOD", 
     "state_machine_version": "None", 
-    "used_rafcon_version": "0.11.1"
+    "used_rafcon_version": "0.12.15a1"
 }

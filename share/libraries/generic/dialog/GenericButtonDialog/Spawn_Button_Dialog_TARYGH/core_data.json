@@ -32,7 +32,7 @@
             "name": "buttons"
         }
     }, 
-    "name": "SpawnButtonDialog", 
+    "name": "Spawn Button Dialog", 
     "outcomes": {
         "-2": {
             "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
