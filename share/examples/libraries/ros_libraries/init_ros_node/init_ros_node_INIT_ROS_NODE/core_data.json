@@ -1,12 +1,12 @@
 {
-    "__jsonqualname__": "rafcon.statemachine.states.execution_state.ExecutionState", 
+    "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
     "description": null, 
     "input_data_ports": {
         "1": {
-            "__jsonqualname__": "rafcon.statemachine.data_port.InputDataPort", 
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
             "data_port_id": 1, 
             "data_type": {
-                "__type__": "str"
+                "__type__": "__builtin__.str"
             }, 
             "default_value": "new_ros_node", 
             "name": "node_name"
@@ -15,17 +15,17 @@
     "name": "init_ros_node", 
     "outcomes": {
         "-2": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "preempted", 
             "outcome_id": -2
         }, 
         "-1": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "aborted", 
             "outcome_id": -1
         }, 
         "0": {
-            "__jsonqualname__": "rafcon.statemachine.outcome.Outcome", 
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
             "name": "success", 
             "outcome_id": 0
         }
