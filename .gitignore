@@ -3,6 +3,11 @@
 # Source: https://github.com/github/gitignore/blob/master/Python.gitignore
 #
 
+# Jekyll generated
+*.sass-cache
+*.bundle
+*_site
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
