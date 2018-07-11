@@ -1,0 +1,53 @@
+{
+    "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
+    "description": null, 
+    "input_data_ports": {
+        "10": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 10, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "new_turtle", 
+            "name": "turtle_name"
+        }, 
+        "11": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 11, 
+            "data_type": {
+                "__type__": "__builtin__.float"
+            }, 
+            "default_value": 1.0, 
+            "name": "x_vel"
+        }, 
+        "12": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 12, 
+            "data_type": {
+                "__type__": "__builtin__.float"
+            }, 
+            "default_value": 0.3, 
+            "name": "phi_vel"
+        }
+    }, 
+    "name": "move turtle", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {}, 
+    "state_id": "SET_VELOCITY"
+}

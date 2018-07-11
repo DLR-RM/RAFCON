@@ -1,0 +1,72 @@
+{
+    "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
+    "description": null, 
+    "input_data_ports": {
+        "14": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 14, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "new_turtle", 
+            "name": "turtle_name"
+        }, 
+        "15": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 15, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "new_turtle", 
+            "name": "global_storage_id_of_turtle_pos"
+        }
+    }, 
+    "name": "turtle position subscriber", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {
+        "16": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.OutputDataPort", 
+            "data_port_id": 16, 
+            "data_type": {
+                "__type__": "__builtin__.float"
+            }, 
+            "default_value": null, 
+            "name": "x_pos"
+        }, 
+        "17": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.OutputDataPort", 
+            "data_port_id": 17, 
+            "data_type": {
+                "__type__": "__builtin__.float"
+            }, 
+            "default_value": null, 
+            "name": "y_pos"
+        }, 
+        "18": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.OutputDataPort", 
+            "data_port_id": 18, 
+            "data_type": {
+                "__type__": "__builtin__.float"
+            }, 
+            "default_value": null, 
+            "name": "phi"
+        }
+    }, 
+    "state_id": "TURTLE_POSITION_SUBSCRIBER"
+}
