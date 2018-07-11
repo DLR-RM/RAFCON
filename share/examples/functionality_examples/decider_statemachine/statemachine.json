@@ -1,6 +1,7 @@
 {
     "creation_time": "2015-05-29 12:58:47", 
-    "last_update": "2016-05-11 06:00:39", 
-    "root_state_id": "VFNVDL", 
-    "version": "None"
+    "last_update": "2018-07-11 12:04:53", 
+    "root_state_storage_id": "Root_State_VFNVDL", 
+    "state_machine_version": "None", 
+    "used_rafcon_version": "0.12.15a1"
 }

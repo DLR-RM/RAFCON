@@ -78,7 +78,7 @@
             "name": "bottles_input"
         }
     }, 
-    "name": "backward_hierarchy_test", 
+    "name": "backward hierarchy test", 
     "outcomes": {
         "-2": {
             "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
