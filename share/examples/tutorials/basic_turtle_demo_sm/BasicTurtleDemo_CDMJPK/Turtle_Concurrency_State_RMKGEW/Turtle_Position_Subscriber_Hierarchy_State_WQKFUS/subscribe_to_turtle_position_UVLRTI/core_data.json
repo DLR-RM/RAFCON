@@ -1,0 +1,43 @@
+{
+    "__jsonqualname__": "rafcon.core.states.library_state.LibraryState", 
+    "input_data_port_runtime_values": {
+        "14": "new_turtle", 
+        "15": "new_turtle"
+    }, 
+    "library_name": "turtle_position_subscriber", 
+    "library_path": "turtle_libraries", 
+    "name": "subscribe to turtle position", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_port_runtime_values": {
+        "16": null, 
+        "17": null, 
+        "18": null
+    }, 
+    "state_id": "UVLRTI", 
+    "use_runtime_value_input_data_ports": {
+        "14": true, 
+        "15": true
+    }, 
+    "use_runtime_value_output_data_ports": {
+        "16": true, 
+        "17": true, 
+        "18": true
+    }, 
+    "version": "0.1"
+}
