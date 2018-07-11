@@ -12,7 +12,7 @@
             "name": "generated_state_id"
         }
     }, 
-    "name": "delete_state", 
+    "name": "delete state", 
     "outcomes": {
         "-2": {
             "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
