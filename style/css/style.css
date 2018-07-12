@@ -974,17 +974,8 @@ p.nonactive-side{
     }
 }
 
-.slick-dots {
-    top: 550px;
-    left:auto;
-    right:auto;
-    bottom: -25px;
-    display: block;
-    width: 100%;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-    text-align: center;
+.slick-prev:before, .slick-next:before {
+    color: #008CFF;
 }
 
 .navbar-toggle:hover .icon-bar{
