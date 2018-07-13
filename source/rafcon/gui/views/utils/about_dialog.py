@@ -28,4 +28,4 @@ class AboutDialogView(gtk.AboutDialog):
         # TODO: set copyright/license
         # self.set_copyright("Copyright: DLR")
         # self.set_license("Copyright: DLR")
-        self.set_website("https://rmintra01.robotic.dlr.de/wiki/RAFCON")
+        self.set_website("https://github.com/DLR-RM/RAFCON")
