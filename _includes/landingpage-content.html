@@ -1,8 +1,6 @@
 <div class="container-fluid content" style="overflow-x:hidden; z-index:2;">
 
-    <div class="row mobile-hide">
-        <div class="col-md-12 placeholder placeholder-mobile-head"></div>
-    </div>
+    {% include placeholder.html size="mobile-head"%}
 
 
 
@@ -64,9 +62,7 @@
 
 <div class="container-fluid white mobile-large">
 
-    <div class="row">
-        <div class="col-md-12 placeholder-large mobile-space-small" ></div>
-    </div>
+    {% include placeholder.html size="large mobile-space-small "%}
 
     <div class="row mobile-only">
         <div class="col-md-3"></div>
@@ -107,12 +103,7 @@
 <div class="container-fluid bright">
 
 
-
-    <div class="row">
-        <div class="col-md-12 placeholder-key-features"></div>
-    </div>
-
-
+    {% include placeholder.html size="key-features"%}
 
 
     <div class="container">
@@ -125,11 +116,7 @@
             <div class="col-md-3"></div>
         </div>
 
-        <div class="row">
-            <div class="col-md-12 placeholder-medium"></div>
-        </div>
-
-
+        {% include placeholder.html size="medium"%}
 
         <div class="row mobile-hide">
             <div class="col-md-1"></div>
