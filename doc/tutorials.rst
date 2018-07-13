@@ -238,7 +238,7 @@ Option 1
 This can be done in the `configuration of the
 core <https://rmintra01.robotic.dlr.de/wiki/RAFCON/Configuration#Core_configuration>`__.
 
-.. figure:: _static/EmptyLibraryPath_and_NewLibrary.jpg
+.. figure:: _static/WaitLibrary.png
    :alt: Screenshot of a empty library path and created 'Wait' state machine.
    :width: 90 %
    :align: center
@@ -283,8 +283,8 @@ First:
     import time
 
     def execute(self, inputs, outputs, gvm):
-        duration = inputs['duration']
-        if self.preemptive_wait(duration):
+        time = inputs['time']
+        if self.preemptive_wait(time):
             return 'preempted'
         return 0  # same as return "success"
 
@@ -299,7 +299,7 @@ Second:
         return 0
 
 Don't forget to create the input data ports used in the scripts
-('info\_message' as string and 'duration' as float) and run them finally
+('info\_message' as string and 'time' as float) and run them finally
 to test there functionality.
 
 .. figure:: _static/ReCombinedLibraries.jpg
@@ -361,7 +361,7 @@ state. The state called decider is the state that is automatically
 created when a new barrier concurrency state is added. The decider state
 gets the information of all concurrent child states about the chosen
 outcome and eventually occurred errors. Of course data flows can also
-arbitrarily connected to the decider state from each concurrent child
+arbitrarily be connected to the decider state from each concurrent child
 state. With this information it can decide via which outcome the barrier
 concurrency state is left.
 
