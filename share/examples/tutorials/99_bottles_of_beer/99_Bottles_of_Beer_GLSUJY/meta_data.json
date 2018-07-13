@@ -33,8 +33,8 @@
             "rel_pos": {
                 "__jsonqualname__": "__builtin__.tuple", 
                 "items": [
-                    0.0, 
-                    0.0
+                    0, 
+                    0
                 ]
             }, 
             "size": {

@@ -17,6 +17,13 @@ Next release
 Patch releases 0.12.\*
 ----------------------
 
+0.12.16
+"""""""
+
+- Improvements:
+
+    - default config file extended
+
 0.12.15
 """""""
 
