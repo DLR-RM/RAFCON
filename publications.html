@@ -14,7 +14,7 @@ intro: "This page gives an overview of all publications (conference papers, symp
         {% for publication in publications %}
             {% if last_year != publication.year %}
                 {% assign last_year = publication.year %}
-                <h2 class="docs-head">{{ publication.year }}</h2>
+                <h2>{{ publication.year }}</h2>
             {% endif %}
 
             {% assign authors = publication.author | split: " and " %}
