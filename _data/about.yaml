@@ -1,10 +1,10 @@
 - name: "The RAFCON team"
   description: "The core RAFCON team consists of (from left to right) Franz Steinmetz, Rico Belder and Sebastian Brunner. They have been developing RAFCON since 2014 and constantly improve the tool besides their project and PhD work at DLR RMC. They are happy that RAFCON is now open source and thus shared with the whole robotics community."
-  image: "images/about/Team_with_LRU.jpg"
+  image: "images/about/Team_with_LRU_small.jpg"
   url:
 - name: "RMC &mdash; Robotics & Mechatronic Center"
   description: "The Robotics and Mechatronics Center (RMC) is a cluster and DLR’s competence center for research and development in the areas of robotics, mechatronics, and optical systems. Mechatronics is the closest integration of mechanics, electronics and information technology for the realization of “intelligent mechanisms” which interact with their environment. The core competence of RMC is the interdisciplinary (virtual) design, computer-aided optimization and simulation, as well as implementation of complex mechatronic systems and human-machine interfaces. In the robotics community, the center is considered as one of the world leading institutions."
-  image: "images/about/rmc-building.jpg"
+  image: "images/about/rmc-building_small.jpg"
   url: "http://www.dlr.de/rmc/rm/en/"
 - name: "DLR &mdash; German Aerospace Center"
   description: "The German Aerospace Center (DLR) is the national aeronautics and space research centre of the Federal Republic of Germany. Its extensive research and development work in aeronautics, space, energy, transport and security is integrated into national and international cooperative ventures. In addition to its own research, as Germany’s space agency, DLR has been given responsibility by the federal government for the planning and implementation of the German space programme. DLR is also the umbrella organisation for the nation’s largest project management agency."
