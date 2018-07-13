@@ -103,7 +103,7 @@ footer > a:hover {
     background-size: cover;
     background-repeat: no-repeat;
     background-color: #2f3241;
-    height: 375px;
+    height: 450px;
 
 }
 
@@ -159,11 +159,11 @@ img{
 
 
 .placeholder-mobile-head{
-    height: 109px;
+    height: 120px;
 }
 @media (min-width: $screen-sm-min){
     .placeholder-mobile-head{
-        height: 70px;
+        height: 28px;
     }
 }
 
