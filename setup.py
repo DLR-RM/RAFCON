@@ -83,13 +83,67 @@ def get_data_files_tuple(*path, **kwargs):
     return target_path, source_files
 
 
+def get_all_files_recursivly(*path):
+    """ Adds all files of the specified path to a data_files compatible list
+
+    :param tuple path: List of path elements pointing to a directory of files
+    :return: list of tuples of install directory and list of source files
+    :rtype: list(tuple(str, [str]))
+    """
+    result_list = list()
+    root_dir = os.path.join(*path)
+    print "retrieving all files from foler '{}' recursivly and adding to data_files ... ".format(root_dir)
+
+    # remove share/ (package_dir) => e.g. target_dir_sub_path will be just "libraries"
+    target_dir_sub_path = os.path.join(*root_dir.split(os.sep)[1:])
+
+    for dir_, _, files in os.walk(root_dir):
+        relative_directory = os.path.relpath(dir_, root_dir)
+        file_list = list()
+        for fileName in files:
+            relative_file = os.path.join(relative_directory, fileName)
+            file_list.append(os.path.join(root_dir, relative_file))  # this is now a path relative to rafcon root folder
+            # print relative_file
+        if len(file_list) > 0:
+            # this is valid path in ~/.local folder: e.g. share/rafcon/libraries/generic/wait
+            target_path = os.path.join("share", "rafcon", target_dir_sub_path, relative_directory)
+            result_list.append((target_path, file_list))
+    return result_list
+
+
+def generate_data_files():
+    """ Generate the data_files list used in the setup function
+
+    :return: list of tuples of install directory and list of source files
+    :rtype: list(tuple(str, [str]))
+    """
+    assets_folder = path.join('source', 'rafcon', 'gui', 'assets')
+    themes_folder = path.join(assets_folder, 'themes')
+    examples_folder = path.join('share', 'examples')
+    libraries_folder = path.join('share', 'libraries')
+
+    gui_data_files = [
+        get_data_files_tuple(assets_folder, 'icons'),
+        get_data_files_tuple(assets_folder, 'splashscreens'),
+        get_data_files_tuple(themes_folder, 'dark', 'gtk-2.0', 'gtkrc', path_to_file=True),
+        get_data_files_tuple(themes_folder, 'dark', 'colors.json', path_to_file=True),
+        get_data_files_tuple(themes_folder, 'dark', 'gtk-sourceview'),
+    ]
+
+    examples_data_files = get_all_files_recursivly(examples_folder)
+    # print examples_data_files
+    libraries_data_files = get_all_files_recursivly(libraries_folder)
+    generated_data_files = gui_data_files + examples_data_files + libraries_data_files
+    # for elem in generated_data_files:
+    #     print elem
+    return generated_data_files
+
+
 global_requirements = ['astroid~=1.6', 'pylint', 'pyyaml', 'psutil', 'jsonconversion~=0.2', 'yaml_configuration~=0.0',
                        'python-gtkmvc-dlr==1.99.2', 'gaphas>=0.7', 'pandas']
 
 script_path = path.realpath(__file__)
 install_helper = path.join(path.dirname(script_path), "source", "rafcon", "gui", "helpers", "installation.py")
-assets_folder = path.join('source', 'rafcon', 'gui', 'assets')
-themes_folder = path.join(assets_folder, 'themes')
 
 # read version from VERSION file
 # this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon
@@ -127,13 +181,7 @@ setup(
         'rafcon.gui.glade': ['*.glade']
     },
 
-    data_files=[
-        get_data_files_tuple(assets_folder, 'icons'),
-        get_data_files_tuple(assets_folder, 'splashscreens'),
-        get_data_files_tuple(themes_folder, 'dark', 'gtk-2.0', 'gtkrc', path_to_file=True),
-        get_data_files_tuple(themes_folder, 'dark', 'colors.json', path_to_file=True),
-        get_data_files_tuple(themes_folder, 'dark', 'gtk-sourceview'),
-    ],
+    data_files=generate_data_files(),
 
     setup_requires=['Sphinx>=1.4', 'Pygments>=2.0'] + global_requirements,
     tests_require=['pytest', 'pytest-catchlog', 'graphviz', 'pymouse'] + global_requirements,
