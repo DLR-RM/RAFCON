@@ -17,6 +17,14 @@ Next release
 Patch releases 0.12.\*
 ----------------------
 
+0.12.17
+"""""""
+
+- Improvements:
+
+    - example statemachines and generic libraries get now installed via pypi
+
+
 0.12.16
 """""""
 
