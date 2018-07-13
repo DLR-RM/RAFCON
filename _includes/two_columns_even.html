@@ -1,26 +1,27 @@
 {% include horizontal_line.html %}
 
-<div class="row vertical-align">
+<div class="row">
     <div class="col-md-2"></div>
-    <!-- <div class="col-md-3"><img alt="dlr-Logo" src="{{ include.content.image }}" style="margin-top:22px;"></div> -->
-    <div class="col-md-3">
+    <div class="col-md-8">
+        <div class="col-md-5 col-xs-6">
             <img alt="dlr-Logo" src="{{ include.content.image }}" style="margin-top:0px;">
+        </div>
+        <div class="col-md-7 col-xs-12 contact">
+            <h2 class="docs-head">{{ include.content.name }}</h2>
+            {% if include.content.intro %}
+            <p class="docs-head">
+                {{include.content.intro}}
+            </p>
+            {% endif %}
+            <p class="docs-text">
+                {{include.content.description}}
+            </p>
+            {% if include.content.url %}
+            <a href="{{ include.content.url }}">
+                <i class="fa fa-globe" style="color:#646464; float: left; font-size: 17px; color:#008CFF;" aria-hidden="true"></i><p class="mail">Webpage</p>
+            </a>
+            {% endif %}
+        </div>
     </div>
-    <div class="col-md-1"></div>
-    <div class="col-md-4 contact">
-        <h2 class="docs-head">{{ include.content.name }}</h2>
-        {% if include.content.intro %}
-        <p class="docs-head">
-            {{include.content.intro}}
-        </p>
-        {% endif %}
-        <p class="docs-text">
-            {{include.content.description}}
-        </p>
-        {% if include.content.url %}
-        <a href="{{ include.content.url }}">
-            <i class="fa fa-globe" style="color:#646464; float: left; font-size: 17px; color:#008CFF;" aria-hidden="true"></i><p class="mail">Webpage</p>
-        </a>
-        {% endif %}
-    </div>
+    <div class="col-md-2"></div>
 </div>
