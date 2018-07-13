@@ -38,20 +38,9 @@
 
 
 <script>
-    var active = window.location.pathname;
-    $(".nav a[href|='" + active + "']").parent().addClass("active");
-
-
-    $(".nav a").on("click", function(){
-        $(".nav").find(".active").removeClass("active");
-        $(this).parent().addClass("active");
-    });
-
-
-    $(function() {
-        $('#changetoggle').click(function() {
-            $('#navbar-hamburger').toggleClass('hidden');
-            $('#navbar-close').toggleClass('hidden');
-        });
+    $(document).ready(function() {
+        $('li.active').removeClass('active');
+        var current_path = location.pathname.substring(1)
+        $('a[href="' + current_path + '"]').closest('li').addClass('active');
     });
 </script>
