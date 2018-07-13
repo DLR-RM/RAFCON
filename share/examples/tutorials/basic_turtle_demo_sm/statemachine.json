@@ -1,7 +1,7 @@
 {
     "creation_time": "2015-06-03 16:11:18", 
-    "last_update": "2018-07-11 11:56:45", 
+    "last_update": "2018-07-13 06:54:03", 
     "root_state_storage_id": "BasicTurtleDemo_CDMJPK", 
     "state_machine_version": "None", 
-    "used_rafcon_version": "0.12.15a1"
+    "used_rafcon_version": "0.12.16"
 }

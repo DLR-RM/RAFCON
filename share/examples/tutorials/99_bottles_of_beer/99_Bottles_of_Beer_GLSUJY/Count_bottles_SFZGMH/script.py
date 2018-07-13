@@ -6,5 +6,4 @@ def execute(self, inputs, outputs, gvm):
     if inputs['bottles'] > 0:
         return 1
     return 0
-    return 0
 
