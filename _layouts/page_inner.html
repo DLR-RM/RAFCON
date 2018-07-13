@@ -8,9 +8,7 @@
 
     <div class="container-fluid bright-max container-mobile container-nav mobile-overflow">
 
-        <div class="row">
-            <div class="col-md-12 placeholder-mobile"></div>
-        </div>
+        {% include placeholder.html size="mobile"%}
 
         <div class="container container-mobile">
 
@@ -22,17 +20,13 @@
                 <div class="col-md-3"></div>
             </div>
 
-            <div class="row">
-                <div class="col-md-12 placeholder-medium"></div>
-            </div>
+            {% include placeholder.html size="medium"%}
 
             <div class="row ">
                 <div class="col-md-12">
                     <div class="card-max">
 
-                        <div class="row">
-                            <div class="col-md-12 placeholder-key-features"></div>
-                        </div>
+                        {% include placeholder.html size="key-features"%}
 
                         {% if page.intro %}
                         <div class="row">
@@ -53,9 +47,7 @@
                             <div class="col-md-2"></div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-12 placeholder-key-features"></div>
-                        </div>
+                        {% include placeholder.html size="key-features"%}
 
                     </div>
                 </div>
