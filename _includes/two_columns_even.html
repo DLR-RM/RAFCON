@@ -6,7 +6,7 @@
     <div class="col-md-7 col-xs-12 contact">
         <h2 class="docs-head">{{ include.content.name }}</h2>
         {% if include.content.intro %}
-        <p class="docs-head">
+        <p class="teaser">
             {{include.content.intro}}
         </p>
         {% endif %}
@@ -15,7 +15,7 @@
         </p>
         {% if include.content.url %}
         <a href="{{ include.content.url }}">
-            <i class="fa fa-globe" style="color:#646464; float: left; font-size: 17px; color:#008CFF;" aria-hidden="true"></i><p class="mail">Webpage</p>
+            <i class="fa fa-globe" style="color:#646464; float: left; font-size: 17px; color:#008CFF;" aria-hidden="true"></i>&nbsp;Webpage
         </a>
         {% endif %}
     </div>

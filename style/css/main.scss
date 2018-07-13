@@ -1,0 +1,26 @@
+---
+---
+@charset "utf-8";
+
+// Variables to modify font folders
+//$icon-font-path:      "../fonts/bootstrap";
+//$fa-font-path:        "../fonts/font-awesome";
+
+$brand-primary: #008CFF;
+
+$navbar-height: 91px;
+
+$navbar-default-bg: #2f3241;
+$navbar-default-link-color: #FFF;
+$navbar-default-link-hover-color: $brand-primary;
+$navbar-default-link-active-color: $brand-primary;
+
+$navbar-default-toggle-hover-bg: $brand-primary;
+$navbar-default-toggle-icon-bar-bg: #FFF;
+$navbar-default-toggle-border-color: #FFF;
+
+
+// Import partials from `sass_dir` (defaults to `_sass`)
+//@import "font-awesome/font-awesome";
+@import "bootstrap/bootstrap";
+@import "style";

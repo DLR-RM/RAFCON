@@ -32,3 +32,6 @@ exclude:
 
 # permalink: /:year/:month/:title.html
 permalink: :year-:month-:title.html
+sass:
+    sass_dir: _sass
+#    style: :compressed
