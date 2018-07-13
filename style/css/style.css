@@ -282,6 +282,17 @@ h5{
     text-align: center;
 }
 
+hr {
+    border-bottom:1px solid #008CFF;
+    margin-top:20px;
+}
+
+@media (min-width: 768px){
+    hr {
+        margin-top: 50px;
+    }
+}
+
 .btn-default{
     color: white;
     background-color: #2b2e3b;
