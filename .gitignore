@@ -68,7 +68,7 @@ coverage.xml
 #
 
 **/.idea/*
-!**/.idea/runConfigurations
+#!**/.idea/runConfigurations
 
 #
 # Do not commit gui files or files with an deprecated format
