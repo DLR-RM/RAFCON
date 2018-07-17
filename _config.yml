@@ -20,12 +20,15 @@ baseurl: "" #"/pages/common/rafcon" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 #twitter_username: jekyllrb
 github_username:  DLR-RM
+repository: DLR-RM/RAFCON
+
 
 # Build settings
 markdown: kramdown
 theme: minima
 plugins:
   - jekyll-feed
+  - "jekyll-github-metadata"
 exclude:
   - Gemfile
   - Gemfile.lock
