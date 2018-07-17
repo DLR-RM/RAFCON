@@ -3,46 +3,38 @@ title: News about RAFCON
 layout: page
 ---
 
+{% for post in site.posts %}
 <div class="row">
-    <div class="col-md-2"></div>
-    <div class="col-md-12">
-        <div id="post-list">
-            {% for post in site.posts %}
-            <div class="row">
 
-                <div class="col-md-1"></div>
-                <div class="col-md-3 col-xs-6 mobile-picture">
-                    {% assign foundImage = 0 %}
-                    {% assign images = post.content | split:"<img " %}
-                    {% for image in images %}
-                    {% if image contains 'src' %}
+    <div class="col-md-1"></div>
+    <div class="col-md-3 col-xs-6 mobile-picture">
+        {% assign foundImage = 0 %}
+        {% assign images = post.content | split:"<img " %}
+        {% for image in images %}
+        {% if image contains 'src' %}
 
-                    {% if foundImage == 0 %}
-                    {% assign html = image | split:"/>" | first %}
-                    <a href="{{ post.url | remove_first: '/' }}"><img {{ html }} /></a>
-                    {% assign foundImage = 1 %}
+        {% if foundImage == 0 %}
+        {% assign html = image | split:"/>" | first %}
+        <a href="{{ post.url | remove_first: '/' }}"><img {{ html }} /></a>
+        {% assign foundImage = 1 %}
 
 
-                    {% endif %}
-                    {% endif %}
-                    {% endfor %}
-                </div>
-                <div class="post-content col-md-7 col-xs-12" >
-
-                    <a class="title-link" href="{{ post.url | remove_first: '/' }}">{{ post.title }}</a><br>
-                    <p></p>
-                    <i class="fa fa-calendar" style="color:#646464; float: left; font-size: 17px; opacity:0.6;" aria-hidden="true"></i><time class="show-date">{{ post.date | date: "%b %-d, %Y" }}</time>
-                    <div class="author-mobile"><p class="show-author">by {{ post.author }}</p></div>
-                    <div class="hidden-xs">{{ post.excerpt }}</div>
-
-                    <div class="read-mobile"><a id="read-more" href="{{ post.url | remove_first: '/' }}">Read more.</a><br><br></div>
-
-                </div>
-                <div class="col-md-1"></div>
-            </div>
-
-            {% endfor %}
-
-        </div>
+        {% endif %}
+        {% endif %}
+        {% endfor %}
     </div>
+    <div class="post-content col-md-7 col-xs-12" >
+
+        <a class="title-link" href="{{ post.url | remove_first: '/' }}">{{ post.title }}</a><br>
+        <p></p>
+        <i class="fa fa-calendar" style="color:#646464; float: left; font-size: 17px; opacity:0.6;" aria-hidden="true"></i><time class="show-date">{{ post.date | date: "%b %-d, %Y" }}</time>
+        <div class="author-mobile"><p class="show-author">by {{ post.author }}</p></div>
+        <div class="hidden-xs">{{ post.excerpt }}</div>
+
+        <div class="read-mobile"><a id="read-more" href="{{ post.url | remove_first: '/' }}">Read more.</a><br><br></div>
+
+    </div>
+    <div class="col-md-1"></div>
 </div>
+
+{% endfor %}
