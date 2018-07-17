@@ -5,6 +5,8 @@
 // Variables to modify font folders
 $icon-font-path:      "../../fonts/bootstrap";
 $fa-font-path:        "../../fonts/font-awesome";
+$slick-font-path:        "../../fonts/slick/";
+$slick-loader-path:        "../../style/slick/";
 
 $brand-primary: #008CFF;
 
@@ -19,8 +21,12 @@ $navbar-default-toggle-hover-bg: $brand-primary;
 $navbar-default-toggle-icon-bar-bg: #FFF;
 $navbar-default-toggle-border-color: #FFF;
 
+$slick-arrow-color: $brand-primary;
+
 
 // Import partials from `sass_dir` (defaults to `_sass`)
 @import "font-awesome/font-awesome";
 @import "bootstrap/bootstrap";
+@import "slick/slick-theme";
+@import "slick/slick";
 @import "style";
