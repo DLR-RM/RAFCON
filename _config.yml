@@ -17,7 +17,7 @@ title: RAFCON
 email: rafcon@dlr.de
 description: "Develop your robotic tasks using an intuitive graphical user interface"
 baseurl: "" #"/pages/common/rafcon" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+url: https://dlr-rm.github.io/RAFCON # the base hostname & protocol for your site, e.g. http://example.com
 #twitter_username: jekyllrb
 github_username:  DLR-RM
 repository: DLR-RM/RAFCON
@@ -42,4 +42,3 @@ sass:
 
 logo: images/logos/rafcon-logo-standalone.png
 google_site_verification: If_sNTkDtU-3NIeoc9M8Oaae6-uke5CtWlV-kHVmnhM
-url: https://dlr-rm.github.io/RAFCON/
