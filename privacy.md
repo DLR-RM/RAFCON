@@ -1,7 +1,7 @@
 ---
 title: Privacy
 layout: page_inner
-#intro: 
+#description: 
 ---
 
 {% include horizontal_line.html %}

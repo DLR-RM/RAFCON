@@ -1,7 +1,7 @@
 ---
 title: Imprint
 layout: page_inner
-#intro: Legal notice for this website.
+#description: Legal notice for this website.
 ---
 
 {% include horizontal_line.html %}
