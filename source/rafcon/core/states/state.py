@@ -101,7 +101,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self._final_outcome = None
         self._description = None
         # detailed execution status of the state
-        self._state_execution_status = None
+        self._state_execution_status = StateExecutionStatus.INACTIVE
 
         # before storing a state the file_system_path cannot return the file system path
         # therefore this variable is None till the state was stored
