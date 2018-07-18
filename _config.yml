@@ -28,7 +28,8 @@ markdown: kramdown
 theme: minima
 plugins:
   - jekyll-feed
-  - "jekyll-github-metadata"
+  - jekyll-github-metadata
+  - jekyll-seo-tag
 exclude:
   - Gemfile
   - Gemfile.lock
@@ -38,3 +39,6 @@ permalink: :year-:month-:title.html
 sass:
     sass_dir: _sass
 #    style: :compressed
+
+logo: images/logos/rafcon-logo-standalone.png
+google_site_verification: If_sNTkDtU-3NIeoc9M8Oaae6-uke5CtWlV-kHVmnhM
