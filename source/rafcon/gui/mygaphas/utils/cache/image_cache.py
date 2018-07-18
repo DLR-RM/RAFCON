@@ -9,7 +9,7 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from cairo import ImageSurface, FORMAT_ARGB32, Context
+from cairo import ImageSurface, FORMAT_ARGB32, Context, Error
 from gtk.gdk import CairoContext
 
 from math import ceil, sqrt
@@ -18,6 +18,7 @@ from rafcon.gui.config import global_gui_config
 
 
 MAX_ALLOWED_AREA = 5000. * 5000.
+
 
 class ImageCache(object):
     def __init__(self, multiplicator=2):
@@ -54,6 +55,7 @@ class ImageCache(object):
           surface or a blank one with the desired size; The zoom parameter when the image was stored
         :rtype: bool, ImageSurface, float
         """
+        global MAX_ALLOWED_AREA
         if not parameters:
             parameters = {}
 
@@ -61,13 +63,18 @@ class ImageCache(object):
             return True, self.__image, self.__zoom
 
         # Restrict image surface size to prevent excessive use of memory
-        self.__limiting_multiplicator = 1
-        area = width * zoom * self.__zoom_multiplicator * height * zoom * self.__zoom_multiplicator
-        if area > MAX_ALLOWED_AREA:
-            self.__limiting_multiplicator = sqrt(MAX_ALLOWED_AREA / area)
+        while True:
+            try:
+                self.__limiting_multiplicator = 1
+                area = width * zoom * self.__zoom_multiplicator * height * zoom * self.__zoom_multiplicator
+                if area > MAX_ALLOWED_AREA:
+                    self.__limiting_multiplicator = sqrt(MAX_ALLOWED_AREA / area)
 
-        image = ImageSurface(self.__format, int(ceil(width * zoom * self.multiplicator)),
-                             int(ceil(height * zoom * self.multiplicator)))
+                image = ImageSurface(self.__format, int(ceil(width * zoom * self.multiplicator)),
+                                     int(ceil(height * zoom * self.multiplicator)))
+                break  # If we reach this point, the area was successfully allocated and we can break the loop
+            except Error:
+                MAX_ALLOWED_AREA *= 0.8
 
         self.__set_cached_image(image, width, height, zoom, parameters)
         return False, self.__image, zoom
