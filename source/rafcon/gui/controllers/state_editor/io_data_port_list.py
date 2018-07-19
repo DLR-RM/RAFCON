@@ -78,12 +78,12 @@ class DataPortListController(ListViewController):
         if isinstance(view, InputPortsListView) or isinstance(view, OutputPortsListView):
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', self.DEFAULT_VALUE_STORAGE_ID)
             self._apply_value_on_edited_and_focus_out(view['default_value_text'], self._apply_new_data_port_default_value)
+            view['default_value_col'].set_cell_data_func(view['default_value_text'],
+                                                         self._default_value_cell_data_func)
             if isinstance(self.model.state, LibraryState):
                 view['default_value_col'].set_title("Used value")
             if self.model.state.get_next_upper_library_root_state() is None:  # never enabled means it is disabled
                 view['default_value_text'].set_property("editable", True)
-                view['default_value_col'].set_cell_data_func(view['default_value_text'],
-                                                             self._default_value_cell_data_func)
 
         self._apply_value_on_edited_and_focus_out(view['name_text'], self._apply_new_data_port_name)
         self._apply_value_on_edited_and_focus_out(view['data_type_text'], self._apply_new_data_port_type)
