@@ -13,6 +13,8 @@ Next release
 
 - Bug Fixes:
 
+    - :issue:`550` Gaphas cairo.Error: invalid value (typically too big) for the size of the input (surface, pattern, etc.)
+
 
 Patch releases 0.12.\*
 ----------------------
