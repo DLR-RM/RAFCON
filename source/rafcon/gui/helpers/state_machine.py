@@ -44,7 +44,7 @@ from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateMode
 from rafcon.gui.singleton import library_manager_model
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
 from rafcon.utils.filesystem import make_tarfile, copy_file_or_folder, create_path, make_file_executable
-from rafcon.utils import log
+from rafcon.utils import log, storage_utils
 import rafcon.gui.utils
 
 logger = log.get_logger(__name__)
@@ -1006,7 +1006,6 @@ def ungroup_selected_state():
 
 
 def get_root_state_name_of_sm_file_system_path(file_system_path):
-    import os
     if os.path.isdir(file_system_path) and os.path.exists(os.path.join(file_system_path, storage.STATEMACHINE_FILE)):
         try:
             sm_dict = storage.load_data_file(os.path.join(file_system_path, storage.STATEMACHINE_FILE))
@@ -1016,9 +1015,7 @@ def get_root_state_name_of_sm_file_system_path(file_system_path):
             return
         root_state_folder = sm_dict['root_state_id'] if 'root_state_id' in sm_dict else sm_dict['root_state_storage_id']
         root_state_file = os.path.join(file_system_path, root_state_folder, storage.FILE_NAME_CORE_DATA)
-        root_state = storage.load_data_file(root_state_file)
-        if isinstance(root_state, tuple):
-            root_state = root_state[0]
-        if isinstance(root_state, State):
-            return root_state.name
+        state_dict = storage_utils.load_objects_from_json(root_state_file, as_dict=True)
+        if 'name' in state_dict:
+            return state_dict['name']
         return
