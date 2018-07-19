@@ -281,7 +281,7 @@ class StatesEditorController(ExtendedController):
                     state_editor_view['main_notebook_1'].page_num(state_editor_view.page_dict["Data Linkage"]))
             state_editor_ctrl = StateEditorController(state_m, state_editor_view)
             self.add_controller(state_identifier, state_editor_ctrl)
-            if state_editor_ctrl.get_controller('source_ctrl') and state_m.state.get_library_root_state() is None:
+            if state_editor_ctrl.get_controller('source_ctrl') and state_m.state.get_next_upper_library_root_state() is None:
                 # observe changed to set the mark dirty flag
                 handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
                                                                                 state_m)
@@ -349,7 +349,7 @@ class StatesEditorController(ExtendedController):
         old_is_dirty = tab_list[state_identifier]['source_code_view_is_dirty']
         source_script_state_m = state_m.state_copy if isinstance(state_m, LibraryStateModel) else state_m
         # remove next two lines and tab is also set dirty for source scripts inside of a LibraryState (maybe in future)
-        if isinstance(state_m, LibraryStateModel) or state_m.state.get_library_root_state() is not None:
+        if isinstance(state_m, LibraryStateModel) or state_m.state.get_next_upper_library_root_state() is not None:
             return
         if source_script_state_m.state.script_text == current_text:
             tab_list[state_identifier]['source_code_view_is_dirty'] = False

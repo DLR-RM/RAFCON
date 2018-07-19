@@ -91,7 +91,7 @@ class StateOutcomesListController(ListViewController):
             view['to_state_combo'].connect("edited", self.on_to_state_edited)
             view['to_outcome_combo'].connect("edited", self.on_to_outcome_edited)
 
-        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
+        if isinstance(self.model.state, LibraryState) or self.model.state.get_next_upper_library_root_state():
             view['id_cell'].set_property('editable', False)
             view['name_cell'].set_property('editable', False)
 
@@ -299,14 +299,14 @@ class StateOutcomesListController(ListViewController):
 
         if isinstance(self.view, StateOutcomesTreeView):
             for cell_renderer in self.view['to_state_col'].get_cell_renderers():
-                if self.model.state.get_library_root_state() is None:
+                if self.model.state.get_next_upper_library_root_state() is None:
                     cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_state_combo_list)
                 cell_renderer.set_property("text-column", self.ID_STORAGE_ID)
                 cell_renderer.set_property("has-entry", False)
         if self.view and isinstance(self.view, StateOutcomesTreeView):
             for cell_renderer in self.view['to_outcome_col'].get_cell_renderers():
-                if self.model.state.get_library_root_state() is None:
+                if self.model.state.get_next_upper_library_root_state() is None:
                     cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_outcome_combo_list)
                 cell_renderer.set_property("text-column", self.ID_STORAGE_ID)
@@ -356,7 +356,7 @@ class StateOutcomesEditorController(ExtendedController):
             view['add_button'].connect("clicked", self.oc_list_ctrl.on_add)
             view['remove_button'].connect("clicked", self.oc_list_ctrl.on_remove)
 
-            if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
+            if isinstance(self.model.state, LibraryState) or self.model.state.get_next_upper_library_root_state():
                 view['add_button'].set_sensitive(False)
                 view['remove_button'].set_sensitive(False)
 

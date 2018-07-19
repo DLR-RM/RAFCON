@@ -122,7 +122,7 @@ class StateDataFlowsListController(LinkageListController):
         view['from_key_col'].set_cell_data_func(view['from_key_combo'], cell_text, self.model)
         view['to_key_col'].set_cell_data_func(view['to_key_combo'], cell_text, self.model)
 
-        if self.model.state.get_library_root_state():
+        if self.model.state.get_next_upper_library_root_state():
             view['from_state_combo'].set_property("editable", False)
             view['from_key_combo'].set_property("editable", False)
             view['to_state_combo'].set_property("editable", False)
@@ -825,7 +825,7 @@ class StateDataFlowsEditorController(ExtendedController):
             view['internal_d_checkbutton'].set_active(False)
 
         if self.model.parent is not None and isinstance(self.model.parent.state, LibraryState) or \
-                self.model.state.get_library_root_state():
+                self.model.state.get_next_upper_library_root_state():
             view['add_d_button'].set_sensitive(False)
             view['remove_d_button'].set_sensitive(False)
 

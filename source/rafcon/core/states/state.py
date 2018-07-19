@@ -1337,7 +1337,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         from rafcon.core.states.library_state import LibraryState
         return isinstance(self.parent, LibraryState)
 
-    def get_library_root_state(self):
+    def get_next_upper_library_root_state(self):
         """ Get next upper library root state
 
         The method recursively checks state parent states till finding a StateMachine as parent or a library root state.
@@ -1366,13 +1366,13 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         there is no further parent library root state.
         """
 
-        library_root_state = self.get_library_root_state()
+        library_root_state = self.get_next_upper_library_root_state()
         parent_library_root_state = library_root_state
         # initial a library root state has to be found and if there is no further parent root state
         # parent_library_root_state and library_root_state are no more identical
         while parent_library_root_state and library_root_state is parent_library_root_state:
             if library_root_state:
-                parent_library_root_state = library_root_state.parent.get_library_root_state()
+                parent_library_root_state = library_root_state.parent.get_next_upper_library_root_state()
 
             if parent_library_root_state:
                 library_root_state = parent_library_root_state

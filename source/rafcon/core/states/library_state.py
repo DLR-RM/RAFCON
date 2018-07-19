@@ -566,8 +566,8 @@ class LibraryState(State):
         :rtype: int
         """
         current_library_hierarchy_depth = 1
-        library_root_state = self.get_library_root_state()
+        library_root_state = self.get_next_upper_library_root_state()
         while library_root_state is not None:
             current_library_hierarchy_depth += 1
-            library_root_state = library_root_state.parent.get_library_root_state()
+            library_root_state = library_root_state.parent.get_next_upper_library_root_state()
         return current_library_hierarchy_depth

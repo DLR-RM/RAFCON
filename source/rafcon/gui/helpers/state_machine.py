@@ -651,7 +651,7 @@ def is_selection_inside_of_library_state(state_machine_m=None, selected_elements
     for model in selected_elements:
         # check if model is element of child state or the root state (or its scoped variables) of a LibraryState
         state_m = model if isinstance(model.core_element, State) else model.parent
-        selection_in_lib.append(state_m.state.get_library_root_state() is not None)
+        selection_in_lib.append(state_m.state.get_next_upper_library_root_state() is not None)
         # check if model is part of the shell (io-port or outcome) of a LibraryState
         if not isinstance(model.core_element, State) and isinstance(state_m, LibraryStateModel):
             selection_in_lib.append(True)
@@ -690,7 +690,7 @@ def selected_state_toggle_is_start_state():
     selection = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection
     selected_state_m = selection.get_selected_state()
     if len(selection.states) == 1 and not selected_state_m.state.is_root_state:
-        if selected_state_m.state.get_library_root_state() is not None:
+        if selected_state_m.state.get_next_upper_library_root_state() is not None:
             logger.warn("Toggle is start state is not performed because selected target state is inside of a "
                         "library state.")
             return False

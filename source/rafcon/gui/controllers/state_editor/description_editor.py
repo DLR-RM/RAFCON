@@ -43,7 +43,7 @@ class DescriptionEditorController(EditorController):
 
         view.textview.connect('size-allocate', self.scroll_to_bottom)
 
-        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
+        if isinstance(self.model.state, LibraryState) or self.model.state.get_next_upper_library_root_state():
             view.textview.set_sensitive(True)
             state_copy = self.model.state.state_copy if isinstance(self.model.state, LibraryState) else self.model.state
             description = state_copy.description if state_copy.description is not None else ''
