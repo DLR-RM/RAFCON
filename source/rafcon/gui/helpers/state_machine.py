@@ -146,7 +146,6 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
     if state_machine_m is None:
         logger.warning("Can not 'save state machine' because no state machine is selected.")
         return False
-    old_file_system_path = state_machine_m.state_machine.file_system_path
 
     previous_path = state_machine_m.state_machine.file_system_path
     previous_marked_dirty = state_machine_m.state_machine.marked_dirty
@@ -193,12 +192,11 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
 
     storage.save_state_machine_to_path(state_machine_m.state_machine, copy_path if as_copy else sm_path,
                                        delete_old_state_machine=delete_old_state_machine, as_copy=as_copy)
-    if recent_opened_notification and \
-            (not previous_path == save_path or previous_path == save_path and previous_marked_dirty):
+    if recent_opened_notification:
         global_runtime_config.update_recently_opened_state_machines_with(state_machine_m.state_machine)
     state_machine_m.store_meta_data(copy_path=copy_path if as_copy else None)
     logger.debug("Saved state machine and its meta data.")
-    library_manager_model.state_machine_was_stored(state_machine_m, old_file_system_path)
+    library_manager_model.state_machine_was_stored(state_machine_m, previous_path)
     return True
 
 
@@ -233,13 +231,16 @@ def save_state_machine_as(path=None, recent_opened_notification=False, as_copy=F
             logger.warning("No valid path specified")
             return False
 
-    old_file_system_path = selected_state_machine_model.state_machine.file_system_path
+    previous_path = selected_state_machine_model.state_machine.file_system_path
     if not as_copy:
+        marked_dirty = selected_state_machine_model.state_machine.marked_dirty
+        recent_opened_notification = recent_opened_notification and (not previous_path == path or marked_dirty)
         selected_state_machine_model.state_machine.file_system_path = path
+
     result = save_state_machine(delete_old_state_machine=True,
                                 recent_opened_notification=recent_opened_notification,
                                 as_copy=as_copy, copy_path=path)
-    library_manager_model.state_machine_was_stored(selected_state_machine_model, old_file_system_path)
+    library_manager_model.state_machine_was_stored(selected_state_machine_model, previous_path)
     return result
 
 
