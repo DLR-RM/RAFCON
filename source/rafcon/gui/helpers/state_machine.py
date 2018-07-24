@@ -127,9 +127,11 @@ def open_library_state_separately():
     state_models = state_machine_manager_model.get_selected_state_machine_model().selection.states
     if not state_models:
         logger.info("Please select at least one library state to 'open library state separately'")
-    if all([isinstance(state_m, LibraryStateModel) for state_m in state_models]):
+        return
+    if not all([isinstance(state_m, LibraryStateModel) for state_m in state_models]):
         logger.warning("Please select only library states. "
                        "'Open library state separately' works only for library states.")
+        return
 
     for state_m in state_models:
         try:
