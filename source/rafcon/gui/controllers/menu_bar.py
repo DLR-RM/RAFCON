@@ -115,7 +115,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('save', 'activate', self.on_save_activate)
         self.connect_button_to_function('save_as', 'activate', self.on_save_as_activate)
         self.connect_button_to_function('save_as_copy', 'activate', self.on_save_as_copy_activate)
-        self.connect_button_to_function('menu_properties', 'activate', self.on_menu_properties_activate)
+        self.connect_button_to_function('menu_preferences', 'activate', self.on_menu_preferences_activate)
         self.connect_button_to_function('refresh_all', 'activate', self.on_refresh_all_activate)
         self.connect_button_to_function('refresh_libraries', 'activate', self.on_refresh_libraries_activate)
         self.connect_button_to_function('bake_state_machine', 'activate', self.on_bake_state_machine_activate)
@@ -415,7 +415,7 @@ class MenuBarController(ExtendedController):
         return gui_helper_state_machine.save_selected_state_as()
 
     @staticmethod
-    def on_menu_properties_activate(widget, data=None):
+    def on_menu_preferences_activate(widget, data=None):
         config_window_view = ConfigWindowView()
         config_window_ctrl = ConfigWindowController(gui_singletons.core_config_model, config_window_view,
                                                     gui_singletons.gui_config_model)

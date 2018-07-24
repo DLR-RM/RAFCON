@@ -81,8 +81,8 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="menu_properties">
-                <property name="label">gtk-properties</property>
+              <object class="GtkImageMenuItem" id="menu_preferences">
+                <property name="label">gtk-preferences</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_underline">True</property>
@@ -368,6 +368,7 @@
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Full Screen Mode</property>
                 <property name="use_underline">True</property>
+                <property name="use_stock">True</property>
               </object>
             </child>
           </object>
