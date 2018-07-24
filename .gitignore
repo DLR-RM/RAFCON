@@ -83,6 +83,11 @@ coverage.xml
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
 
+# Markdown plugin
+
+.idea/**/markdown-navigator/
+.idea/**/markdown-exported-files.xml
+.idea/**/markdown-navigator.xml
 
 #
 # Do not commit gui files or files with an deprecated format
