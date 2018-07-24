@@ -300,6 +300,8 @@ class MenuBarController(ExtendedController):
                                               partial(self.call_action_callback,
                                                       "on_substitute_library_with_template_activate"))
         self.add_callback_to_shortcut_manager('open', partial(self.call_action_callback, "on_open_activate"))
+        self.add_callback_to_shortcut_manager('open_library_state_separately',
+                                              self.on_open_library_state_separately_activate)
         self.add_callback_to_shortcut_manager('new', partial(self.call_action_callback, "on_new_activate"))
         self.add_callback_to_shortcut_manager('quit', partial(self.call_action_callback, "on_quit_activate"))
 
@@ -377,6 +379,10 @@ class MenuBarController(ExtendedController):
     @staticmethod
     def on_open_activate(widget=None, data=None, path=None):
         gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
+
+    @staticmethod
+    def on_open_library_state_separately_activate(widget, data=None):
+        gui_helper_state_machine.open_library_state_separately()
 
     def on_save_activate(self, widget, data=None, delete_old_state_machine=False):
         return gui_helper_state_machine.save_state_machine(delete_old_state_machine=delete_old_state_machine,

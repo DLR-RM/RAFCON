@@ -122,6 +122,14 @@ def open_state_machine(path=None, recent_opened_notification=False):
     return state_machine
 
 
+def open_library_state_separately():
+    state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    state_m = state_machine_manager_model.get_selected_state_machine_model().selection.get_selected_state()
+    path, _, _ = rafcon.gui.singleton.library_manager.get_os_path_to_library(state_m.state.library_path,
+                                                                             state_m.state.library_name)
+    open_state_machine(path)
+
+
 def save_state_machine(delete_old_state_machine=False, recent_opened_notification=False, as_copy=False, copy_path=None):
     """ Save selected state machine
 
