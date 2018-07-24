@@ -2,9 +2,6 @@
   <configuration default="false" name="Core  tests" type="tests" factoryName="py.test" singleton="true">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
-    <envs>
-      <env name="LD_LIBRARY_PATH" value="/volume/software/common/foreign_packages/pango/1.40.3/osl42-x86_64/lib64:$LD_LIBRARY_PATH" />
-    </envs>
     <option name="SDK_HOME" value="/usr/bin/python" />
     <option name="WORKING_DIRECTORY" value="" />
     <option name="IS_MODULE_SDK" value="false" />
