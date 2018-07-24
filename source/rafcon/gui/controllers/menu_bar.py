@@ -189,7 +189,7 @@ class MenuBarController(ExtendedController):
         for item in self.view.sub_menu_open_recently.get_children():
             self.view.sub_menu_open_recently.remove(item)
 
-        menu_item = gui_helper_label.create_image_menu_item("cleanup onto feasible paths", constants.ICON_ERASE,
+        menu_item = gui_helper_label.create_image_menu_item("remove invalid paths", constants.ICON_ERASE,
                                                             global_runtime_config.clean_recently_opened_state_machines)
         self.view.sub_menu_open_recently.append(menu_item)
         self.view.sub_menu_open_recently.append(gtk.SeparatorMenuItem())
