@@ -8,7 +8,7 @@ Next release
 ------------
 
 - Features:
-    - new shortcut open library state separately as state machine by default on 'Shift+Ctrl+Space'
+    - new shortcut open library state separately as state machine by default on 'Shift+Ctrl+Space' (shortcut works for multiple states, too)
 
 - Improvements:
 

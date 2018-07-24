@@ -124,10 +124,22 @@ def open_state_machine(path=None, recent_opened_notification=False):
 
 def open_library_state_separately():
     state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
-    state_m = state_machine_manager_model.get_selected_state_machine_model().selection.get_selected_state()
-    path, _, _ = rafcon.gui.singleton.library_manager.get_os_path_to_library(state_m.state.library_path,
-                                                                             state_m.state.library_name)
-    open_state_machine(path)
+    state_models = state_machine_manager_model.get_selected_state_machine_model().selection.states
+    if not state_models:
+        logger.info("Please select at least one library state to 'open library state separately'")
+    if all([isinstance(state_m, LibraryStateModel) for state_m in state_models]):
+        logger.warning("Please select only library states. "
+                       "'Open library state separately' works only for library states.")
+
+    for state_m in state_models:
+        try:
+            path, _, _ = rafcon.gui.singleton.library_manager.get_os_path_to_library(state_m.state.library_path,
+                                                                                     state_m.state.library_name)
+            state_machine = open_state_machine(path)
+            if state_machine is None:
+                logger.warning('Library state {0} could not be open separately'.format(state_m.state))
+        except Exception:
+            logger.exception('Library state {0} could not be open separately'.format(state_m.state))
 
 
 def save_state_machine(delete_old_state_machine=False, recent_opened_notification=False, as_copy=False, copy_path=None):
