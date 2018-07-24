@@ -173,6 +173,7 @@ A typical config file looks like this:
         new: <Control>N
         open: <Control>O
         open_external_editor: <Control><Shift>Q
+        open_library_state_separately: <Control><Shift>space
         paste: <Control>V
         pause: F7
         quit: <Control>Q

@@ -8,11 +8,13 @@ Next release
 ------------
 
 - Features:
+    - new shortcut open library state separately as state machine by default on 'Shift+Ctrl+Space'
 
 - Improvements:
 
 - Bug Fixes:
 
+    - recent opened state machine list no more miss paths
     - :issue:`550` Gaphas cairo.Error: invalid value (typically too big) for the size of the input (surface, pattern, etc.)
 
 
