@@ -87,6 +87,7 @@ class ZoomTool(gaphas.tool.ZoomTool):
     def on_scroll(self, event):
         if event.state & gtk.gdk.CONTROL_MASK or not self.zoom_with_control:
             event.state |= gtk.gdk.CONTROL_MASK  # Set CONTROL_MASK
+            event.y += 99.04
             return super(ZoomTool, self).on_scroll(event)
 
 
