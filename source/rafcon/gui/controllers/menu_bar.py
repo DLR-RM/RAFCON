@@ -33,14 +33,14 @@ from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrenc
 from rafcon.gui import singleton as gui_singletons
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.controllers.config_window import ConfigWindowController
+from rafcon.gui.controllers.preferences_window import PreferencesWindowController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
-from rafcon.gui.views.config_window import ConfigWindowView
+from rafcon.gui.views.preferences_window import PreferencesWindowView
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.views.utils.about_dialog import AboutDialogView
 import rafcon.gui.backup.session as backup_session
@@ -416,12 +416,12 @@ class MenuBarController(ExtendedController):
 
     @staticmethod
     def on_menu_preferences_activate(widget, data=None):
-        config_window_view = ConfigWindowView()
-        config_window_ctrl = ConfigWindowController(gui_singletons.core_config_model, config_window_view,
-                                                    gui_singletons.gui_config_model)
-        gui_singletons.main_window_controller.add_controller('config_window_ctrl', config_window_ctrl)
-        config_window_view.show()
-        config_window_view.get_top_widget().present()
+        preferences_window_view = PreferencesWindowView()
+        preferences_window_ctrl = PreferencesWindowController(gui_singletons.core_config_model, preferences_window_view,
+                                                              gui_singletons.gui_config_model)
+        gui_singletons.main_window_controller.add_controller('preferences_window_ctrl', preferences_window_ctrl)
+        preferences_window_view.show()
+        preferences_window_view.get_top_widget().present()
 
     def on_quit_activate(self, widget, data=None, force=False):
         global_runtime_config.prepare_recently_opened_state_machines_list_for_storage()

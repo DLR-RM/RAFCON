@@ -171,47 +171,47 @@ msgstr "Verbunden:"
 msgid "NO"
 msgstr "NEIN"
 
-#: tmp/settings_window.glade.h:1
-msgid "Settings"
+#: glade/preferences_window.glade
+msgid "Preferences"
 msgstr "Einstellungen"
 
-#: tmp/settings_window.glade.h:2
+#: tmp/preferences_window.glade.h:2
 msgid "Core Config"
 msgstr "Basiskonfiguration"
 
-#: tmp/settings_window.glade.h:3
+#: tmp/preferences_window.glade.h:3
 msgid "Libraries"
 msgstr "Bibliotheken"
 
-#: tmp/settings_window.glade.h:4
+#: tmp/preferences_window.glade.h:4
 msgid "GUI Config"
 msgstr "GUI Einstellungen"
 
-#: tmp/settings_window.glade.h:5
+#: tmp/preferences_window.glade.h:5
 msgid "Shortcuts"
 msgstr "Tastenkürzel"
 
-#: tmp/settings_window.glade.h:6
+#: tmp/preferences_window.glade.h:6
 msgid "Core Config Path: "
 msgstr "Pfad zur Basiskonfiguration: "
 
-#: tmp/settings_window.glade.h:7
+#: tmp/preferences_window.glade.h:7
 msgid "GUI Config Path: "
 msgstr "GUI Einstellungen"
 
-#: tmp/settings_window.glade.h:8
+#: tmp/preferences_window.glade.h:8
 msgid "Export"
 msgstr "Exportieren"
 
-#: tmp/settings_window.glade.h:9
+#: tmp/preferences_window.glade.h:9
 msgid "Import"
 msgstr "Importieren"
 
-#: tmp/settings_window.glade.h:10
+#: tmp/preferences_window.glade.h:10
 msgid "Apply"
 msgstr "Anwenden"
 
-#: tmp/settings_window.glade.h:11
+#: tmp/preferences_window.glade.h:11
 msgid "Cancel"
 msgstr "Abbrechen"
 
