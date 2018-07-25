@@ -72,10 +72,10 @@ class PanTool(gaphas.tool.PanTool):
         self.zoom_with_control = global_gui_config.get_config_value("ZOOM_WITH_CTRL", False)
 
     def on_scroll(self, event):
-        if self.zoom_with_control:
+        ctrl_key_pressed = bool(event.state & gtk.gdk.CONTROL_MASK)
+        if (self.zoom_with_control and ctrl_key_pressed) or (not self.zoom_with_control and not ctrl_key_pressed):
             return False
-        else:
-            super(PanTool, self).on_scroll(event)
+        return super(PanTool, self).on_scroll(event)
 
 
 class ZoomTool(gaphas.tool.ZoomTool):
@@ -85,9 +85,9 @@ class ZoomTool(gaphas.tool.ZoomTool):
         self.zoom_with_control = global_gui_config.get_config_value("ZOOM_WITH_CTRL", False)
 
     def on_scroll(self, event):
-        if event.state & gtk.gdk.CONTROL_MASK or not self.zoom_with_control:
+        ctrl_key_pressed = bool(event.state & gtk.gdk.CONTROL_MASK)
+        if (self.zoom_with_control and ctrl_key_pressed) or (not self.zoom_with_control and not ctrl_key_pressed):
             event.state |= gtk.gdk.CONTROL_MASK  # Set CONTROL_MASK
-            event.y += 99.04
             return super(ZoomTool, self).on_scroll(event)
 
 
