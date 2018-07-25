@@ -12,6 +12,8 @@ Next release
 
 - Improvements:
 
+    - Provides proper PyCharm config files (in the `.idea` folder)
+
 - Bug Fixes:
 
     - recent opened state machine list no more miss paths
