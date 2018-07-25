@@ -98,6 +98,9 @@ coverage.xml
 # $ git ls-files -v | grep ^[sS]
 # Read more about this here: http://blog.stephan-partzsch.de/how-to-ignore-changes-in-tracked-files-with-git/
 
+# tests folder
+tests/.idea
+
 #
 # Do not commit gui files or files with an deprecated format
 #
