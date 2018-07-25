@@ -89,6 +89,15 @@ coverage.xml
 .idea/**/markdown-exported-files.xml
 .idea/**/markdown-navigator.xml
 
+# If you change .idea files and don't want those changes to be tracked by git, run e.g.
+# $ git update-index --skip-worktree .idea/vcs.xml
+# Later, use
+# $ git update-index --no-skip-worktree .idea/vcs.xml
+# to track your changes again.
+# To see whcih files are currently not being tracked (due to skip-worktree), run
+# $ git ls-files -v | grep ^[sS]
+# Read more about this here: http://blog.stephan-partzsch.de/how-to-ignore-changes-in-tracked-files-with-git/
+
 #
 # Do not commit gui files or files with an deprecated format
 #
