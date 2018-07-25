@@ -13,6 +13,7 @@ Next release
 - Improvements:
 
     - Provides proper PyCharm config files (in the `.idea` folder)
+    - update menu item labels
 
 - Bug Fixes:
 

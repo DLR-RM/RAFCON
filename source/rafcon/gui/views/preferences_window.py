@@ -14,9 +14,9 @@ from gtkmvc import View
 from rafcon.gui import glade
 
 
-class ConfigWindowView(View):
-    builder = glade.get_glade_path("config_window.glade")
-    top = 'properties_window'
+class PreferencesWindowView(View):
+    builder = glade.get_glade_path("preferences_window.glade")
+    top = 'preferences_window'
 
     def __init__(self):
         View.__init__(self)
