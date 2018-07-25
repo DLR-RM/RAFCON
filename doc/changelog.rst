@@ -16,6 +16,8 @@ Next release
 
     - recent opened state machine list no more miss paths
     - :issue:`550` Gaphas cairo.Error: invalid value (typically too big) for the size of the input (surface, pattern, etc.)
+    - :issue:`564` Zoom onto mouse position
+    - handle config option `ZOOM_WITH_CTRL` properly
 
 
 Patch releases 0.12.\*
