@@ -4,7 +4,7 @@ Tutorials
 .. _tutorial_bottles_of_beer:
 
 99 Bottles of Beer - Or: How to create a simple state machine containing a loop
-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 .. figure:: _static/Tutorial_99_Bottles_of_Beer.png
    :alt: Screenshot of the finished tutorial
@@ -178,15 +178,14 @@ of achieving things in RAFCON.
 .. _tutorial_ros_turtle:
 
 Starting the basic turtle demo state machine using ROS
------------------------------------------------------
+------------------------------------------------------
 
 The basic turtle demo is a demo to demonstrate the use of libraries and
 to show the easy integration of `ROS <ROS>`__ into the RAFCON. To start
-the turtle demo just change into the RAFCON directory and open the
-basic\_turtle\_state\_machine (the following code blocks include code lines
-to generate the correct environment in the shell before executing the commands
-themselves; in an e.g. Ubuntu setup, where the environment is statically specified
-in the ~/.bashrc these environment generating commands can be omitted):
+the turtle demo just open the basic\_turtle\_state\_machine in the tutorials library folder and click on start.
+The following code blocks include code lines to generate the correct environment for our institute PCs;
+in an e.g. Ubuntu setup, where the environment is statically specified
+in the ~/.bashrc these environment generating commands can be omitted:
 
 .. code:: python
 
@@ -197,7 +196,7 @@ in the ~/.bashrc these environment generating commands can be omitted):
     cd $RAFCON_GIT_HUB_REPO_OR_RMPM_PATH/share/examples/api/generate_state_machine
     python basic_turtle_state_machine.py
 
-A screenshot of how the state machine how it looks like is shown here.
+A screenshot of how the state machine looks like is shown here.
 
 .. figure:: _static/BasicTurtleDemoScreenshot.png
    :alt: Screenshot of RAFCON with an example state machine
@@ -221,8 +220,7 @@ And the turtlesim node in yet another console:
     rosrun turtlesim turtlesim_node
 
 After that start the state machine. The state machine will then start
-some basic services of the turtlesim in a sequence. As this sequence
-will change in the future they are not listed yet.
+some basic services of the turtlesim in a sequence.
 
 .. _tutorial_libraries:
 
@@ -266,16 +264,16 @@ We edit the ``LIBRARY_PATH`` to take into account the library with name
     USE_JSON: true
 
 RAFCON assumes the path to be existing, so make sure it is.
+Otherwise RAFCON will print a warning message.
 
-Now, we can :ref:`Getting started`. On the left side
-in the Library Tree, you can now see the new entry ``lib_tutorial``,
-which is currently empty (see Figure above).
+On the left side in the Library Tree, you can now see the new entry ``lib_tutorial``,
+which is currently empty.
 
 Next, we generate two state machines, one is waiting and another is
 printing a message to the logger console (info level). Generate two
 state machines by clicking the button "New state machine" and turn the
 root\_state to a ExecutionState (by using StateEditorWidget on the center
-site) and insert the following scripts.
+site and select "Execution" as type instead of "Hierarchy") and insert the following scripts.
 
 First:
 
@@ -300,7 +298,7 @@ Second:
         return 0
 
 Don't forget to create the input data ports used in the scripts
-('info\_message' as string and 'time' as float) and run them finally
+('time' as float and 'info\_message' as string) and run them finally
 to test there functionality.
 
 .. figure:: _static/ReCombinedLibraries.jpg
@@ -308,7 +306,7 @@ to test there functionality.
    :width: 90 %
    :align: center
 
-   Screenshot of the finished tutorial
+   Screenshot of the finished library tutorial
 
 Give the state machines useful names like "Wait" for the first and
 "Print Info" for the second state machine.
@@ -316,16 +314,16 @@ Give the state machines useful names like "Wait" for the first and
 Store both state machines (by pressing button "Save state machine" or
 Ctrl+s) to sub-folders of ``~/Desktop/rafcon_tutorial_library`` by
 entering a the library folder and assigning a name in the dialog window.
-The name is used to generate a the new library state machine path.
+The name is used to generate the new library state machine path.
 
 Now press the button "Refresh Libraries". The new libraries will be now
 available in the library tree. They can be used to create more complex
 state machines.
 
 Using Drag&Drop, the created library state machines can be re-combined
-as in the "Screenshot of the finished tutorial" and the input port
-values can be modified to generate the same console info prints while a
-run of the state machine.
+as in the "Screenshot of the finished library tutorial" and the input port
+values can be modified to generate similar console info prints while
+running the state machine.
 
 .. _tutorial_rafcon_library_path:
 
@@ -361,7 +359,7 @@ image. The State called "Barrier Concurrency" is a barrier concurrency
 state. The state called decider is the state that is automatically
 created when a new barrier concurrency state is added. The decider state
 gets the information of all concurrent child states about the chosen
-outcome and eventually occurred errors. Of course data flows can also
+outcome, the output data and even every eventually occurred error. Of course data flows can also
 arbitrarily be connected to the decider state from each concurrent child
 state. With this information it can decide via which outcome the barrier
 concurrency state is left.
@@ -418,8 +416,10 @@ Decider:
 Using the monitoring plugin
 ---------------------------
 
-This tutorial will show us how to use the monitoring plugin, to connect
-and monitor two systems running RAFCON. First, we need to setup our
+The tutorial is only for internal use inside the institute.
+
+This tutorial will show how to use the monitoring plugin i.e. how to monitor one system from another one if both
+are using RAFCON as their flow control solution. First, we need to setup our
 environment:
 
 .. code:: python
@@ -434,7 +434,7 @@ all settings for the communication. More details can be found at the
 :ref:`Configuration`. The path of the
 ``network_config.yaml`` can be changed by running the ``start.py``
 script with argument "-nc", which will be necessary when we want to
-connect server and client running on a single system as like in this
+connect server and client running on a single system like in this
 tutorial. Therefore we create the subdirectories ``/client`` and
 ``/server`` within the ``~.config/rafcon/`` path and copy/paste the
 ``network_config.yaml`` into both. Since the file is created for servers
@@ -463,9 +463,9 @@ of the client:
     11:23:40 INFO - monitoring.client: sending protocol 34ce956f:72f0dc:2:4:Registering
     11:23:40 INFO - monitoring.client: Connected to server!
 
-After the connection we open the same state machine on server and client.
-Now we are able to remote control the server by the client as like
-reverse. To connect two separated systems, the ``<SERVER_IP:>`` has to
+After the connection was established, we open the same state machine on server and client.
+Now we are able to remote control the server by the client.
+To connect two systems distributed across a network, the ``<SERVER_IP:>`` has to
 be adjusted within the ``network_config.yaml`` files.
 
 .. _tutorial_dialogs:
@@ -482,37 +482,37 @@ MessageDialog
 """""""""""""
 
 This dialog prompts the user with a text which is defined by the string type input dataport 'message\_text'.
-The boolean type input dataport 'abort\_on\_quit' defines the states behaviour on force closing the dialog.
-If True, the state and if not defines otherwise the state machine execution will abort.
+The boolean type input dataport 'abort\_on\_quit' defines the states behaviour on canceling the dialog.
+If True, the state will return with the 'abortion' outcome, otherwise it just will return with 'success'.
 
 2ButtonDialog
 """""""""""""
 
-This dialog is features the same text option as the above one, but lets you define two buttons as a string list
-through its 'buttons' input dataport. Clicking the first button results in exiting with outcome 'button\_1', hitting
-the second with 'button\_1'.
+This dialog features the same text option as the one above, but lets you define two buttons via the input ports
+'option 1' and 'option 2'. Clicking the first button results in exiting with outcome 'option\_1', hitting
+the second one returns the outcome 'option\_2'.
 
 GenericButtonDialog
 """""""""""""""""""
 
-This dialog equals the 2ButtonDialog in any way, except that it lets you define more than two buttons. On clicking a button,
+This dialog equals the 2ButtonDialog state, except that it lets you define more than two buttons. On clicking a button,
 the dialog will always exit with outcome 'responded' but puts the index of the clicked button in the output dataport
-'response\_id'
+'response\_id'.
 
 InputDialog
 """""""""""
 
-This dialog contains buttons like the 2ButtonDialog but also features a text entry field and an optional checkbox 
-which could be used for a 'remember' option or something similar. The checkbox is only placed if a string is present
-at the 'checkbox\_text' input dataport. 
+This dialog contains two buttons like the 2ButtonDialog but also features a 'message\_text' entry field and an optional
+'checkbox\_text' entry field, which could be used for a 'remember' option or something similar. The checkbox is only
+placed if a string is present for the 'checkbox\_text' input dataport.
 The checkbox state is written to the boolean output dataport 'checkbox\_state', the entered text to 'entered\_text'.
 
 ColumnCheckboxDialog
 """"""""""""""""""""
 
-This dialog contains buttons like the 2ButtonDialog but also features a single columns of checkboxes 
-with labels attached to them. These labels are defined via the 'checkbox\_texts' input dataport as a list 
+This dialog contains buttons like the 2ButtonDialog but also features a single column of checkboxes
+with labels attached to them. These labels are defined via the 'checkbox\_texts' input dataport as a list
 of strings. The states of those checkboxes are emitted as a bool list via the 'checkbox\_states' output
-data port. A checked checkbox returns 'True'
+data port. A checked checkbox returns 'True'.
 
 
