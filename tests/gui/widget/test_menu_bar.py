@@ -296,8 +296,6 @@ def trigger_gui_signals(with_refresh=True):
 
     ##########################################################
     # open separately
-    import time
-    print time.time()
     call_gui_callback(sm_m.selection.set, [sm_m.get_state_model_by_path('CDMJPK'), ])
     lib_state = LibraryState(join("generic", "dialog"), "Dialog [3 options]", "0.1", "Dialog [3 options]")
     call_gui_callback(gui_helper_state_machine.insert_state_into_selected_state, lib_state, False)
@@ -305,9 +303,6 @@ def trigger_gui_signals(with_refresh=True):
     lib_hash = lib_state.state_copy.mutable_hash()
     # assert lib_state.mutable_hash().hexdigest() == lib_hash.hexdigest()
     sm_m = sm_manager_model.state_machines[lib_state.get_state_machine().state_machine_id]
-    print lib_state, sm_m.get_state_model_by_path(lib_state.get_path())
-    print sm_m.selection.states
-    time.sleep(1)
     call_gui_callback(sm_m.selection.set, [sm_m.get_state_model_by_path(lib_state.get_path())])
     call_gui_callback(gui_helper_state_machine.open_library_state_separately)
     sm_m = sm_manager_model.get_selected_state_machine_model()
