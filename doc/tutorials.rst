@@ -3,7 +3,7 @@ Tutorials
 
 .. _tutorial_bottles_of_beer:
 
-99 Bottles of Beer. Or: How to create a simple state machine containing a loop
+99 Bottles of Beer - Or: How to create a simple state machine containing a loop
 ------------------------------------------------------------------------------
 
 .. figure:: _static/Tutorial_99_Bottles_of_Beer.png
@@ -176,7 +176,7 @@ of achieving things in RAFCON.
 
 .. _tutorial_ros_turtle:
 
-Starting the basic turtle demo statemachine using ROS
+Starting the basic turtle demo state machine using ROS
 -----------------------------------------------------
 
 The basic turtle demo is a demo to demonstrate the use of libraries and
@@ -272,7 +272,7 @@ which is currently empty (see Figure above).
 
 Next, we generate two state machines, one is waiting and another is
 printing a message to the logger console (info level). Generate two
-state machines by clicking the button "New Statemachine" and turn the
+state machines by clicking the button "New state machine" and turn the
 root\_state to a ExecutionState (by using StateEditorWidget on the center
 site) and insert the following scripts.
 
@@ -312,7 +312,7 @@ to test there functionality.
 Give the state machines useful names like "Wait" for the first and
 "Print Info" for the second state machine.
 
-Store both state machines (by pressing button "Save Statemachine" or
+Store both state machines (by pressing button "Save state machine" or
 Ctrl+s) to sub-folders of ``~/Desktop/rafcon_tutorial_library`` by
 entering a the library folder and assigning a name in the dialog window.
 The name is used to generate a the new library state machine path.
@@ -432,7 +432,7 @@ By running RAFCON after sourcing the environment, the
 all settings for the communication. More details can be found at the
 :ref:`Configuration`. The path of the
 ``network_config.yaml`` can be changed by running the ``start.py``
-script with argument "-nc", which will be neccessary when we want to
+script with argument "-nc", which will be necessary when we want to
 connect server and client running on a single system as like in this
 tutorial. Therefore we create the subdirectories ``/client`` and
 ``/server`` within the ``~.config/rafcon/`` path and copy/paste the
@@ -452,7 +452,7 @@ and the client:
 
     /volume/software/common/packages/rafcon/latest/lib/python2.7/rafcon/mvc/start.py -nc ~/.config/rafcon/client
 
-If everything went fine, we sould see below output in the debug console
+If everything went fine, we should see below output in the debug console
 of the client:
 
 .. code:: python
@@ -462,9 +462,9 @@ of the client:
     11:23:40 INFO - monitoring.client: sending protocol 34ce956f:72f0dc:2:4:Registering
     11:23:40 INFO - monitoring.client: Connected to server!
 
-After the connection we open the same statemachine on server and client.
+After the connection we open the same state machine on server and client.
 Now we are able to remote control the server by the client as like
-reverse. To connect two seperated systems, the ``<SERVER_IP:>`` has to
+reverse. To connect two separated systems, the ``<SERVER_IP:>`` has to
 be adjusted within the ``network_config.yaml`` files.
 
 .. _tutorial_dialogs:
@@ -473,8 +473,8 @@ How to use dialog states from the generic library
 -------------------------------------------------
 
 Sometimes it can be useful to await user confirmation before jumping into a state or
-request a textinput from the user. That is why RAFCON contains serveral dialog states 
-in its 'generic' library. This tutorial goes through serval of them and explains their
+request a text input from the user. That is why RAFCON contains several dialog states
+in its 'generic' library. This tutorial goes through several of them and explains their
 characteristics.
 
 MessageDialog
@@ -495,7 +495,8 @@ GenericButtonDialog
 """""""""""""""""""
 
 This dialog equals the 2ButtonDialog in any way, except that it lets you define more than two buttons. On clicking a button,
-the dialog will always exit with outcome 'reponded' but puts the index of the clicked button in the output dataport 'response\_id'
+the dialog will always exit with outcome 'responded' but puts the index of the clicked button in the output dataport
+'response\_id'
 
 InputDialog
 """""""""""
@@ -510,7 +511,7 @@ ColumnCheckboxDialog
 
 This dialog contains buttons like the 2ButtonDialog but also features a single columns of checkboxes 
 with labels attached to them. These labels are defined via the 'checkbox\_texts' input dataport as a list 
-of strings. The states of those checkboxes are emmitted as a bool list via the 'checkbox\_states' output
-data port. A checked chechbox returns 'True'
+of strings. The states of those checkboxes are emitted as a bool list via the 'checkbox\_states' output
+data port. A checked checkbox returns 'True'
 
 
