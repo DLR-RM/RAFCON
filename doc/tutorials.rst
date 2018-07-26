@@ -27,17 +27,17 @@ of achieving things in RAFCON.
    and clicking on the state here.
 #. Now we change the name of the root state to "99 Bottles of Beer" by
    entering that text in the input field next to "State Name" in the
-   State Editor on the center site. Here you can also see all other
+   State Editor on the right bar. Here you can also see all other
    properties of our container state.
 #. Now we are going to create three execution states named "Sing",
    "Decimate bottles" and "Count bottles". Do so by selecting the
-   container state first and then either use +A or Edit > Add state in
+   container state first and then either use Alt+E or Edit > Add state in
    the menu bar. Rename each new state as described in the previous
    step.
 #. You can use drag and drop for the three child states to place them
    next to each other. Using the lower center corner of all states, you
-   can resize them. When holding during the resize, the state keeps its
-   width to height ratio. When holding during the resize (of container
+   can resize them. When holding Ctrl during the resize, the state keeps its
+   width to height ratio. When holding Ctrl during the resize (of container
    states), all content is resized with the state.
 #. Next, we are going to add the logical flow, that is the outcomes and
    transitions. "Sing" and "Decimate bottles" each need one outcome,
@@ -46,7 +46,7 @@ of achieving things in RAFCON.
    ">0". Click on the state to open it in the State Editor and open the
    "Logical Linkage" widget on the bottom. In the upper half of this
    widget, you can edit the state's outcomes. Create an additional
-   outcome by clicking on "Add" or using +A if the outcomes list has the
+   outcome by clicking on "Add" or using Ctrl+A if the outcomes list has the
    focus. Then name the new outcomes (by clicking on the name in the
    name column). Also the container state needs an outcome, name it "the
    end".
@@ -55,19 +55,23 @@ of achieving things in RAFCON.
    Thus click on it and check "is start state" in the top of the State
    Editor. This creates a transition from the entry point of the root to
    the entry point of "Sing". The easiest way to create the remaining
-   transitions is to first click on an outcome and then click on the
-   target state. This creates a transition starting from the outcome and
+   transitions is to first left click on an outcome and, while holding the left mouse pressed,
+   dragging the mouse over the income of the target state and release the mouse button there.
+   This creates a transition starting from the outcome and
    going to the entry point of the state. The starting transition can be
-   created in the same manner. You can set transition waypoints in
-   between by clicking on the desired position within the container
-   while creating the transition. Later, you can add/remove waypoints by
+   created in the same manner. Also waypoints for transitions can be created.
+   In the default GUI (gaphas) waypoints can only be created after the transition has been created.
+   Select any transition then click on the grey square and move it. Two new square emerge that can be modified
+   accordingly.
+   In the OpenGL GUI, you can set transition waypoints by clicking on the desired position
+   within the container state while creating the transition. Later, you can add/remove waypoints by
    clicking on the desired position of the transition. By this, you can
-   e. g. draw transitions around other states. Another possibility to
-   create transitions is the State Editor again. In the lower half of
+   e. g. draw transitions around other states.
+   Another possibility to create transitions is the State Editor again. In the lower half of
    the Logical Linkage widget, new transitions can be created by a click
-   on "Add" (or using +A if the focus is on the transition list). The
+   on "Add" (or using Ctrl+A if the focus is on the transition list). The
    widget tries to guess on which transition to create, but you can edit
-   the origin and target by clicking on the field in the appropriate
+   the origin and target with the dropdown list in the appropriate
    column. We need four transitions. One from "Sing" to "Decimate
    bottles", then one from "Decimate bottles" to "Count bottles", one
    from "Count bottles" outcome ">0" back to "Sing" and finally one from
@@ -92,7 +96,7 @@ of achieving things in RAFCON.
    Variables" tab. Name and type are again "bottles" and "int". Here we
    set the default value, which is also the initial value, to 99. Scoped
    variables can be moved in the graphical editor just like states with
-   drag and drop.
+   drag and drop. To move the scoped variable the corresponding state has to be selected and Ctrl pressed.
 #. The data flows are now created similar to the transitions. Either in
    the graphical editor by clicking on the origin port (from where to
    read) and then clicking on the target port (to where to write) or,
@@ -108,10 +112,6 @@ of achieving things in RAFCON.
    #. From the output of "Decimate bottles" to the input of "Count
       bottles": Here we directly pass the decimated number to "Count
       bottles". This could also have the scoped variable as origin.
-   #. Instead of reading the second data flow, one could also add an
-      output to "Sing", and write the read value from the input of
-      "Sing". This output could then be used as origin for the second
-      data flow.
 
 #. Finally, we have to add some source code to the three child states.
    The code executed for each state is shown in the source code widget
@@ -127,8 +127,9 @@ of achieving things in RAFCON.
    You can also rename these dictionaries if you prefer a different
    (shorter) name: ``def execute(self, in, out, gvm):``. The logger is a
    member of each state and can be used to write to the logger window.
-   You can use different logger levels (debug, info, warn, error).
-#. You can now test the state-machine. Click on Execution > Start and
+   You can use different logger levels (debug, info, warn, error, verbose).
+   Moreover, custom logger levels can be created in the logger config file (logging.conf in source/rafcon).
+#. You can now test the state machine. Click on Execution > Start and
    see what happens. The current state should be highlighted and the
    verses printed in the logger widget. You can stop the execution with
    Execution > Stop. Alternatively, use the buttons shown in the menu of
