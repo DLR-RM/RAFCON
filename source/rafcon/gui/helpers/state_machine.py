@@ -980,9 +980,11 @@ def substitute_selected_library_state_with_template(keep_name=True):
     selected_state_m = selection.get_selected_state()
     if len(selection.states) == 1 and isinstance(selected_state_m, LibraryStateModel):
         # print "start substitute library state with template"
-        lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_state_m.state))
+        # TODO optimize this to not generate one more library state and model
+        lib_state = copy.deepcopy(selected_state_m.state)
         # lib_state_m = copy.deepcopy(selected_states[0].state)
         substitute_selected_state(lib_state, as_template=True, keep_name=keep_name)
+        # TODO think about to use as return value the inserted state
         return True
     else:
         logger.warning("Substitute library state with template needs exact one library state to be selected.")
