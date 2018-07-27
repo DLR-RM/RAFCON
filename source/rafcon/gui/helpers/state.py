@@ -502,6 +502,7 @@ def substitute_state_as(target_state_m, state, as_template, keep_name=False):
     if as_template:
         assert isinstance(state_m, LibraryStateModel)
         state_m = state_m.state_copy
+        state_m.state.parent = None
 
     if keep_name:
         state_m.state.name = target_state_m.state.name

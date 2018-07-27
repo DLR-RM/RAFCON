@@ -484,8 +484,8 @@ def run_simple_modification_construction():
     print "do test menu bar"
     print "%" * 50
     import widget.test_menu_bar
-    # TODO D-get this test also running with refresh
-    widget.test_menu_bar.trigger_gui_signals(with_refresh=True)
+    # TODO D-get this test also running with substitute_library
+    widget.test_menu_bar.trigger_gui_signals(with_refresh=True, with_substitute_library=False)
     print "%" * 50
     print "do test complex actions, group & ungroup"
     print "%" * 50
