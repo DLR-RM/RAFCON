@@ -443,8 +443,8 @@ AUTO\_BACKUP\_ONLY\_FIX\_FORCED\_INTERVAL
     ``AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL``. This means that RAFCON tries to avoid user disturbances
      by waiting for the case that the user does not perform any changes to the state machine for
     ``AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL`` seconds. If this happens RAFCON will perform a backup.
-    If the user made modifications more often than ``AUTO_BACKUP_FORCED_STORAGE_INTERVAL`` times after
-    the last backup, the state machine is backed up as well.
+    Still ``AUTO_BACKUP_FORCED_STORAGE_INTERVAL`` is used as a hard storage interval.
+    More information about this can be found on :ref:`Auto Backup`
 
 AUTO\_BACKUP\_FORCED\_STORAGE\_INTERVAL
   | Default: 120
