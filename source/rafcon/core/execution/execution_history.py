@@ -312,7 +312,16 @@ class HistoryItem(object):
         record['timestamp'] = self.timestamp
         record['run_id'] = self.run_id  # library state and state copy have the same run_id
         record['history_item_id'] = self.history_item_id
-        record['semantic_data'] = target_state.semantic_data
+
+        # semantic data
+        semantic_data_dict = {}
+        for k, v in target_state.semantic_data.iteritems():
+            try:
+                semantic_data_dict[k] = pickle.dumps(v)
+            except Exception as e:
+                semantic_data_dict['!' + k] = (str(e), str(v))
+        record['semantic_data'] = semantic_data_dict
+
         record['description'] = target_state.description
 
         if self.prev is not None:
