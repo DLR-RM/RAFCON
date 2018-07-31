@@ -23,7 +23,7 @@
 import time
 import copy
 from gtkmvc import Observable
-from threading import Lock, currentThread
+from threading import Lock, currentThread, RLock
 from rafcon.core.id_generator import *
 
 from rafcon.utils.type_helpers import type_inherits_of_type
@@ -47,7 +47,7 @@ class GlobalVariableManager(Observable):
         self.__global_variable_dictionary = {}
         self.__global_variable_type_dictionary = {}
         self.__variable_locks = {}
-        self.__dictionary_lock = Lock()
+        self.__dictionary_lock = RLock()
         self.__access_keys = {}
         self.__variable_references = {}
 
@@ -181,25 +181,34 @@ class GlobalVariableManager(Observable):
         :param key: the key of the global variable to be locked
         :param block: a flag to specify if to wait for locking the variable in blocking mode
         """
+        # watch out for releasing the __dictionary_lock properly
+        self.__dictionary_lock.acquire()
         if key in self.__variable_locks:
-            if not self.is_locked(key) or block:
-                # acquire without arguments is blocking
-                duration = 0.
-                loop_time = 0.1
-                while self.__variable_locks[key].locked():  # while loops informs the user about long locked variables
-                    time.sleep(loop_time)
-                    duration += loop_time
-                    if int(duration*10) % 20 == 0:
-                        logger.warning("Variable '{2}' is locked and thread {0} waits already {1} seconds to access it."
-                                       "".format(currentThread(), duration, key))
-                self.__variable_locks[key].acquire()
+            # acquire without arguments is blocking
+            lock_successful = self.__variable_locks[key].acquire(False)
+            self.__dictionary_lock.release()
+            if lock_successful or block:
+                if not lock_successful:
+                    # initial lock was not successful but block=True
+                    duration = 0.
+                    loop_time = 0.1
+                    while self.__variable_locks[key].locked():  # while loops informs the user about long locked variables
+                        time.sleep(loop_time)
+                        duration += loop_time
+                        if int(duration*10) % 20 == 0:
+                            logger.verbose("Variable '{2}' is locked and thread {0} waits already {1} seconds to "
+                                           "access it.".format(currentThread(), duration, key))
+                    # in the worst case the variable was locked already again by another process,
+                    # and the user won't get feedback about long locking variable
+                    self.__variable_locks[key].acquire()
                 access_key = global_variable_id_generator()
                 self.__access_keys[key] = access_key
                 return access_key
             else:
-                logger.error("Global variable {} already locked".format(str(key)))
+                logger.warning("Global variable {} already locked".format(str(key)))
                 return False
         else:
+            self.__dictionary_lock.release()
             logger.error("Global variable key {} does not exist".format(str(key)))
             return False
 
