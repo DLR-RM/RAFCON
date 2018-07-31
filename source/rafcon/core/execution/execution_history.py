@@ -286,6 +286,11 @@ class HistoryItem(object):
     def to_dict(self):
         record = dict()
 
+        # here always the correct path is desired
+        record['path'] = self.state_reference.get_path()
+        record['path_by_name'] = self.state_reference.get_path(by_name=True)
+        record['state_type'] = str(type(self.state_reference).__name__)
+
         from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
         if isinstance(self.state_reference, LibraryState):
             # in case of a Library State, all the data of the library itself should be used
@@ -301,10 +306,9 @@ class HistoryItem(object):
             record['library_name'] = None
             record['library_path'] = None
 
+        # there are 3 names of interest:
+        # library_name (= library key), library_state_name (name of the user), state_name (name of the developer)
         record['state_name'] = target_state.name
-        record['state_type'] = str(type(target_state).__name__)
-        record['path'] = target_state.get_path()
-        record['path_by_name'] = target_state.get_path(by_name=True)
         record['timestamp'] = self.timestamp
         record['run_id'] = self.run_id  # library state and state copy have the same run_id
         record['history_item_id'] = self.history_item_id
