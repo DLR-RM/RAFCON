@@ -1410,7 +1410,7 @@ def test_state_property_modify_notification(caplog):
         - add_outcome, remove_outcome
         # ContainerState
         - add_state, remove_state
-        - add_transtion, remove_transition
+        - add_transition, remove_transition
         - add_data_flow, remove_data_flow
         - add_scoped_variable, remove_scoped_variable
     """
@@ -1690,5 +1690,5 @@ if __name__ == '__main__':
     # test_transition_add_remove_notification(None)
     # test_transition_modify_notification(None)
     # test_state_property_modify_notification(None)
-    pytest.main([__file__])
+    pytest.main(['-s', __file__])
 

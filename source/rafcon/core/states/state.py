@@ -1050,7 +1050,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             except ValueError:
                 self._input_data_ports = old_input_data_ports
                 raise
-        # TODO check if the parent of old_input_data_ports which are no more in the list has to be unset here
+
+        # check that all old_input_data_ports are no more referencing self as there parent
+        for old_input_data_port in old_input_data_ports.itervalues():
+            if old_input_data_port not in self._input_data_ports.itervalues() and old_input_data_port.parent is self:
+                old_input_data_port._parent = None
 
     @property
     def output_data_ports(self):
@@ -1105,7 +1109,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             except ValueError:
                 self._output_data_ports = old_output_data_ports
                 raise
-        # TODO check if the parent of old_output_data_ports which are no more in the list has to be unset here
+
+        # check that all old_output_data_ports are no more referencing self as there parent
+        for old_output_data_port in old_output_data_ports.itervalues():
+            if old_output_data_port not in self._output_data_ports.itervalues() and old_output_data_port.parent is self:
+                old_output_data_port._parent = None
 
     @property
     def outcomes(self):
@@ -1156,7 +1164,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self._outcomes[-1] = Outcome(outcome_id=-1, name="aborted", parent=self)
         if -2 not in outcomes:
             self._outcomes[-2] = Outcome(outcome_id=-2, name="preempted", parent=self)
-        # TODO check if the parent of old_outcomes which are no more in the list has to be unset here
+
+        # check that all old_outcomes are no more referencing self as there parent
+        for old_outcome in old_outcomes.itervalues():
+            if old_outcome not in self._outcomes.itervalues() and old_outcome.parent is self:
+                old_outcome._parent = None
 
     @property
     def input_data(self):

@@ -2085,6 +2085,11 @@ class ContainerState(State):
                 self._states = old_states
                 raise
 
+        # check that all old_states are no more referencing self as there parent
+        for old_state in old_states.itervalues():
+            if old_state not in self._states.itervalues() and old_state.parent is self:
+                old_state._parent = None
+
     @property
     def transitions(self):
         """Property for the _transitions field
@@ -2134,9 +2139,13 @@ class ContainerState(State):
                     self._transitions = old_transitions
                     raise
 
-        self._transitions = dict((transition_id, d) for (transition_id, d) in self._transitions.iteritems()
-                                  if not transition_id in transition_ids_to_delete)
-        # TODO check if the parent of old_transitions which are no more in the list has to be unset here
+        self._transitions = dict((transition_id, t) for (transition_id, t) in self._transitions.iteritems()
+                                 if transition_id not in transition_ids_to_delete)
+
+        # check that all old_transitions are no more referencing self as there parent
+        for old_transition in old_transitions.itervalues():
+            if old_transition not in self._transitions.itervalues() and old_transition.parent is self:
+                old_transition._parent = None
 
     @property
     def data_flows(self):
@@ -2188,8 +2197,12 @@ class ContainerState(State):
                     raise
 
         self._data_flows = dict((data_flow_id, d) for (data_flow_id, d) in self._data_flows.iteritems()
-                                 if not data_flow_id in data_flow_ids_to_delete)
-        # TODO check if the parent of old_data_flows which are no more in the list has to be unset here
+                                if data_flow_id not in data_flow_ids_to_delete)
+
+        # check that all old_data_flows are no more referencing self as there parent
+        for old_data_flow in old_data_flows.itervalues():
+            if old_data_flow not in self._data_flows.itervalues() and old_data_flow.parent is self:
+                old_data_flow._parent = None
 
     @property
     def start_state_id(self):
@@ -2284,7 +2297,11 @@ class ContainerState(State):
             except ValueError:
                 self._scoped_variables = old_scoped_variables
                 raise
-        # TODO check if the parent of old_scoped_variables which are no more in the list has to be unset here
+
+        # check that all old_scoped_variables are no more referencing self as there parent
+        for old_scoped_variable in old_scoped_variables.itervalues():
+            if old_scoped_variable not in self._scoped_variables.itervalues() and old_scoped_variable.parent is self:
+                old_scoped_variable._parent = None
 
     @property
     def scoped_data(self):
