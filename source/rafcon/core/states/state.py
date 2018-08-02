@@ -406,8 +406,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if data_port_id in self._input_data_ports:
             if destroy:
                 self.remove_data_flows_with_data_port_id(data_port_id)
-            # TODO make the tests work with next line in (type change has problems)
-            # self._input_data_ports[data_port_id]._parent = None
+            self._input_data_ports[data_port_id]._parent = None
             return self._input_data_ports.pop(data_port_id)
         else:
             raise AttributeError("input data port with name %s does not exit", data_port_id)
@@ -470,8 +469,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if data_port_id in self._output_data_ports:
             if destroy:
                 self.remove_data_flows_with_data_port_id(data_port_id)
-            # TODO make the tests work with next line in (type change has problems)
-            # self._output_data_ports[data_port_id]._parent = None
+            self._output_data_ports[data_port_id]._parent = None
             return self._output_data_ports.pop(data_port_id)
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)

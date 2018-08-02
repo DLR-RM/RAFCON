@@ -95,16 +95,31 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
             source_state.remove_state(UNIQUE_DECIDER_STATE_ID, force=True)
             assert UNIQUE_DECIDER_STATE_ID not in source_state.states
 
-        new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
-                                       input_data_ports=dict(source_state.input_data_ports),
-                                       output_data_ports=dict(source_state.output_data_ports),
-                                       scoped_variables=dict(source_state.scoped_variables),
-                                       outcomes=dict(source_state.outcomes),
-                                       transitions=state_transitions,
-                                       data_flows=dict(source_state.data_flows),
-                                       states=dict(source_state.states),
-                                       start_state_id=state_start_state_id)
+        # separate state-elements from source state
+        data_flows = dict(source_state.data_flows)
+        source_state.data_flows = {}
+        input_data_ports = dict(source_state.input_data_ports)
+        output_data_ports = dict(source_state.output_data_ports)
+        scoped_variables = dict(source_state.scoped_variables)
+        outcomes = dict(source_state.outcomes)
+        source_state.input_data_ports = {}
+        source_state.output_data_ports = {}
+        source_state.scoped_variables = {}
+        source_state.transitions = {}  # before remove of outcomes related transitions should be gone
+        source_state.outcomes = {}
+        states = dict(source_state.states)
+        # TODO check why next line can not be performed
+        # source_state.states = {}
 
+        new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
+                                       input_data_ports=input_data_ports,
+                                       output_data_ports=output_data_ports,
+                                       scoped_variables=scoped_variables,
+                                       outcomes=outcomes,
+                                       transitions=state_transitions,
+                                       data_flows=data_flows,
+                                       states=states,
+                                       start_state_id=state_start_state_id)
 
     else:  # TRANSFORM from EXECUTION- TO CONTAINER-STATE or FROM CONTAINER- TO EXECUTION-STATE
 
@@ -116,10 +131,18 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
             for state_id in source_state.states.keys():
                 source_state.remove_state(state_id)
 
+        # separate state-elements from source state
+        input_data_ports = dict(source_state.input_data_ports)
+        output_data_ports = dict(source_state.output_data_ports)
+        outcomes = dict(source_state.outcomes)
+        source_state.input_data_ports = {}
+        source_state.output_data_ports = {}
+        source_state.outcomes = {}
+
         new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
-                                       input_data_ports=dict(source_state.input_data_ports),
-                                       output_data_ports=dict(source_state.output_data_ports),
-                                       outcomes=dict(source_state.outcomes))
+                                       input_data_ports=input_data_ports,
+                                       output_data_ports=output_data_ports,
+                                       outcomes=outcomes)
 
     if source_state.description is not None and len(source_state.description) > 0:
         new_state.description = source_state.description
