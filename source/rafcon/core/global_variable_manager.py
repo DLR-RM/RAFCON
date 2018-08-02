@@ -211,7 +211,6 @@ class GlobalVariableManager(Observable):
                 return False
         except Exception, e:
             logger.error("Exception thrown: {}".format(str(e)))
-        finally:
             return False
 
     @Observable.observed
