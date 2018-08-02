@@ -68,32 +68,31 @@ coverage.xml
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 # User-specific stuff
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/**/usage.statistics.xml
-.idea/**/dictionaries
-.idea/**/shelf
+#.idea/**/workspace.xml
+#.idea/**/tasks.xml
+#.idea/**/usage.statistics.xml
+#.idea/**/dictionaries
+#.idea/**/shelf
 
 # Sensitive or high-churn files
-.idea/**/dataSources/
-.idea/**/dataSources.ids
-.idea/**/dataSources.local.xml
-.idea/**/sqlDataSources.xml
-.idea/**/dynamic.xml
-.idea/**/uiDesigner.xml
-.idea/**/dbnavigator.xml
+#.idea/**/dataSources/
+#.idea/**/dataSources.ids
+#.idea/**/dataSources.local.xml
+#.idea/**/sqlDataSources.xml
+#.idea/**/dynamic.xml
+#.idea/**/uiDesigner.xml
+#.idea/**/dbnavigator.xml
 
 # Markdown plugin
 
-.idea/**/markdown-navigator/
-.idea/**/markdown-exported-files.xml
-.idea/**/markdown-navigator.xml
+#.idea/**/markdown-navigator/
+#.idea/**/markdown-exported-files.xml
+#.idea/**/markdown-navigator.xml
 
 # as the jetbrains recommendation is not sufficient, custom files have to be added here as well
-.idea/misc.xml
-.idea/modules.xml
-.idea/rafcon.iml
-.idea/vcs.xml
+**/.idea/*
+# white list
+-#!**/.idea/runConfigurations
 
 # If you change .idea files and don't want those changes to be tracked by git, run e.g.
 # $ git update-index --skip-worktree .idea/vcs.xml
