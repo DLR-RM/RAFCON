@@ -37,7 +37,7 @@ class GlobalVariableManager(Observable):
 
     :ivar __global_variable_dictionary: the dictionary, where all global variables are stored
     :ivar __variable_locks: a dictionary that holds one mutex for each global variable
-    :ivar __dictionary_lock: a mutex to prevent that the dictionary is written by two threads simultaneously
+    :ivar __global_lock: a mutex to prevent that the dictionary is written by two threads simultaneously
     :ivar __access_keys: a dictionary that holds an access key to each locked global variable
     :ivar __variable_references: a dictionary that stores whether a variable can be returned by reference or not
     """
@@ -47,7 +47,7 @@ class GlobalVariableManager(Observable):
         self.__global_variable_dictionary = {}
         self.__global_variable_type_dictionary = {}
         self.__variable_locks = {}
-        self.__dictionary_lock = RLock()
+        self.__global_lock = RLock()
         self.__access_keys = {}
         self.__variable_references = {}
 
@@ -70,34 +70,33 @@ class GlobalVariableManager(Observable):
         assert isinstance(data_type, type)
         self.check_value_and_type(value, data_type)
 
-        self.__dictionary_lock.acquire()
-        unlock = True
-        if self.variable_exist(key):
-            if self.is_locked(key) and self.__access_keys[key] != access_key:
-                self.__dictionary_lock.release()
-                raise RuntimeError("Wrong access key for accessing global variable")
-            elif self.is_locked(key):
-                unlock = False
+        with self.__global_lock:
+            unlock = True
+            if self.variable_exist(key):
+                if self.is_locked(key) and self.__access_keys[key] != access_key:
+                    raise RuntimeError("Wrong access key for accessing global variable")
+                elif self.is_locked(key):
+                    unlock = False
+                else:
+                    access_key = self.lock_variable(key, block=True)
             else:
+                self.__variable_locks[key] = Lock()
                 access_key = self.lock_variable(key, block=True)
-        else:
-            self.__variable_locks[key] = Lock()
-            access_key = self.lock_variable(key, block=True)
 
-        # --- variable locked
-        if per_reference:
-            self.__global_variable_dictionary[key] = value
-            self.__global_variable_type_dictionary[key] = data_type
-            self.__variable_references[key] = True
-        else:
-            self.__global_variable_dictionary[key] = copy.deepcopy(value)
-            self.__global_variable_type_dictionary[key] = data_type
-            self.__variable_references[key] = False
-        # --- release variable
+            # --- variable locked
+            if per_reference:
+                self.__global_variable_dictionary[key] = value
+                self.__global_variable_type_dictionary[key] = data_type
+                self.__variable_references[key] = True
+            else:
+                self.__global_variable_dictionary[key] = copy.deepcopy(value)
+                self.__global_variable_type_dictionary[key] = data_type
+                self.__variable_references[key] = False
+            # --- release variable
 
-        if unlock:
-            self.unlock_variable(key, access_key)
-        self.__dictionary_lock.release()
+            if unlock:
+                self.unlock_variable(key, access_key)
+
         logger.debug("Global variable '{}' was set to value '{}' with type '{}'".format(key, value, data_type.__name__))
 
     def get_variable(self, key, per_reference=None, access_key=None, default=None):
@@ -162,16 +161,16 @@ class GlobalVariableManager(Observable):
         if self.is_locked(key):
             raise RuntimeError("Global variable is locked")
 
-        self.__dictionary_lock.acquire()
-        if key in self.__global_variable_dictionary:
-            access_key = self.lock_variable(key, block=True)
-            del self.__global_variable_dictionary[key]
-            self.unlock_variable(key, access_key)
-            del self.__variable_locks[key]
-            del self.__variable_references[key]
-        else:
-            raise AttributeError("Global variable %s does not exist!" % str(key))
-        self.__dictionary_lock.release()
+        with self.__global_lock:
+            if key in self.__global_variable_dictionary:
+                access_key = self.lock_variable(key, block=True)
+                del self.__global_variable_dictionary[key]
+                self.unlock_variable(key, access_key)
+                del self.__variable_locks[key]
+                del self.__variable_references[key]
+            else:
+                raise AttributeError("Global variable %s does not exist!" % str(key))
+
         logger.debug("Global variable %s was deleted!" % str(key))
 
     @Observable.observed
@@ -182,34 +181,37 @@ class GlobalVariableManager(Observable):
         :param block: a flag to specify if to wait for locking the variable in blocking mode
         """
         # watch out for releasing the __dictionary_lock properly
-        self.__dictionary_lock.acquire()
-        if key in self.__variable_locks:
-            # acquire without arguments is blocking
-            lock_successful = self.__variable_locks[key].acquire(False)
-            self.__dictionary_lock.release()
-            if lock_successful or block:
-                if not lock_successful:
-                    # initial lock was not successful but block=True
-                    duration = 0.
-                    loop_time = 0.1
-                    while self.__variable_locks[key].locked():  # while loops informs the user about long locked variables
-                        time.sleep(loop_time)
-                        duration += loop_time
-                        if int(duration*10) % 20 == 0:
-                            logger.verbose("Variable '{2}' is locked and thread {0} waits already {1} seconds to "
-                                           "access it.".format(currentThread(), duration, key))
-                    # in the worst case the variable was locked already again by another process,
-                    # and the user won't get feedback about long locking variable
-                    self.__variable_locks[key].acquire()
-                access_key = global_variable_id_generator()
-                self.__access_keys[key] = access_key
-                return access_key
+        try:
+            if key in self.__variable_locks:
+                # acquire without arguments is blocking
+                lock_successful = self.__variable_locks[key].acquire(False)
+                if lock_successful or block:
+                    if (not lock_successful) and block:  # case: lock could not be acquired => wait for it as block=True
+                        duration = 0.
+                        loop_time = 0.1
+                        # initial lock was not successful but block=True
+                        while not self.__variable_locks[key].acquire(False):  # while loops informs the user about long
+                            # locked
+                            #  variables
+                            time.sleep(loop_time)
+                            duration += loop_time
+                            if int(duration*10) % 20 == 0:
+                                logger.verbose("Variable '{2}' is locked and thread {0} waits already {1} seconds to "
+                                               "access it.".format(currentThread(), duration, key))
+                        # in the worst case the variable was locked already again by another process,
+                        # and the user won't get feedback about long locking variable
+                    access_key = global_variable_id_generator()
+                    self.__access_keys[key] = access_key
+                    return access_key
+                else:
+                    logger.warning("Global variable {} already locked".format(str(key)))
+                    return False
             else:
-                logger.warning("Global variable {} already locked".format(str(key)))
+                logger.error("Global variable key {} does not exist".format(str(key)))
                 return False
-        else:
-            self.__dictionary_lock.release()
-            logger.error("Global variable key {} does not exist".format(str(key)))
+        except Exception, e:
+            logger.error("Exception thrown: {}".format(str(e)))
+        finally:
             return False
 
     @Observable.observed
