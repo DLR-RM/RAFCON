@@ -207,4 +207,4 @@ description can be placed.
 Semantic Editor widget
 """"""""""""""""""""""
 
-In this widget the semantic data of a state is shown in a tree like data structure.
+In this widget the semantic data of a state is shown and can be edited in a tree like data structure.
