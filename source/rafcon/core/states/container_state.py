@@ -1254,7 +1254,9 @@ class ContainerState(State):
             raise AttributeError("The transition_id must not be -1 (Aborted) or -2 (Preempted)")
         if transition_id not in self._transitions:
             raise AttributeError("The transition_id %s does not exist" % str(transition_id))
-        return self._transitions.pop(transition_id)
+
+        self.transitions[transition_id]._parent = None
+        return self.transitions.pop(transition_id)
 
     @lock_state_machine
     def remove_outcome_hook(self, outcome_id):
@@ -1315,9 +1317,11 @@ class ContainerState(State):
         :param int data_flow_id: the id of the data_flow to remove
         :raises exceptions.AttributeError: if the data_flow_id does not exist
         """
-        if data_flow_id not in self.data_flows:
+        if data_flow_id not in self._data_flows:
             raise AttributeError("The data_flow_id %s does not exist" % str(data_flow_id))
-        return self.data_flows.pop(data_flow_id)
+
+        self._data_flows[data_flow_id]._parent = None
+        return self._data_flows.pop(data_flow_id)
 
     @lock_state_machine
     def remove_data_flows_with_data_port_id(self, data_port_id):
@@ -1387,6 +1391,7 @@ class ContainerState(State):
         # Check for name uniqueness
         valid, message = self._check_data_port_name(self._scoped_variables[scoped_variable_id])
         if not valid:
+            self._scoped_variables[scoped_variable_id]._parent = None
             del self._scoped_variables[scoped_variable_id]
             raise ValueError(message)
 
@@ -1408,6 +1413,7 @@ class ContainerState(State):
             self.remove_data_flows_with_data_port_id(scoped_variable_id)
 
         # delete scoped variable
+        self._scoped_variables[scoped_variable_id]._parent = None
         return self._scoped_variables.pop(scoped_variable_id)
 
     # ---------------------------------------------------------------------------------------------
@@ -1807,9 +1813,9 @@ class ContainerState(State):
             return False, "Data flow target not existing -> {0}".format(data_flow)
 
         # Data_ports without parents are not allowed to be connected twice
-        if not to_data_port.parent:
-            return False, "Source data port does not have a parent -> {0}".format(data_flow)
         if not from_data_port.parent:
+            return False, "Source data port does not have a parent -> {0}".format(data_flow)
+        if not to_data_port.parent:
             return False, "Target data port does not have a parent -> {0}".format(data_flow)
 
         # Check if data ports are identical
@@ -2129,7 +2135,8 @@ class ContainerState(State):
                     raise
 
         self._transitions = dict((transition_id, d) for (transition_id, d) in self._transitions.iteritems()
-                                if not transition_id in transition_ids_to_delete)
+                                  if not transition_id in transition_ids_to_delete)
+        # TODO check if the parent of old_transitions which are no more in the list has to be unset here
 
     @property
     def data_flows(self):
@@ -2180,8 +2187,9 @@ class ContainerState(State):
                     self._data_flows = old_data_flows
                     raise
 
-        self._data_flows= dict((data_flow_id, d) for (data_flow_id, d) in self._data_flows.iteritems()
-                               if not data_flow_id in data_flow_ids_to_delete)
+        self._data_flows = dict((data_flow_id, d) for (data_flow_id, d) in self._data_flows.iteritems()
+                                 if not data_flow_id in data_flow_ids_to_delete)
+        # TODO check if the parent of old_data_flows which are no more in the list has to be unset here
 
     @property
     def start_state_id(self):
@@ -2276,6 +2284,7 @@ class ContainerState(State):
             except ValueError:
                 self._scoped_variables = old_scoped_variables
                 raise
+        # TODO check if the parent of old_scoped_variables which are no more in the list has to be unset here
 
     @property
     def scoped_data(self):

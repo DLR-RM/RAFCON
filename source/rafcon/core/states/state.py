@@ -388,6 +388,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         # Check for name uniqueness
         valid, message = self._check_data_port_name(self._input_data_ports[data_port_id])
         if not valid:
+            self._input_data_ports[data_port_id]._parent = None
             del self._input_data_ports[data_port_id]
             raise ValueError(message)
 
@@ -405,6 +406,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if data_port_id in self._input_data_ports:
             if destroy:
                 self.remove_data_flows_with_data_port_id(data_port_id)
+            # TODO make the tests work with next line in (type change has problems)
+            # self._input_data_ports[data_port_id]._parent = None
             return self._input_data_ports.pop(data_port_id)
         else:
             raise AttributeError("input data port with name %s does not exit", data_port_id)
@@ -450,6 +453,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         # Check for name uniqueness
         valid, message = self._check_data_port_name(self._output_data_ports[data_port_id])
         if not valid:
+            self._output_data_ports[data_port_id]._parent = None
             del self._output_data_ports[data_port_id]
             raise ValueError(message)
 
@@ -466,6 +470,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if data_port_id in self._output_data_ports:
             if destroy:
                 self.remove_data_flows_with_data_port_id(data_port_id)
+            # TODO make the tests work with next line in (type change has problems)
+            # self._output_data_ports[data_port_id]._parent = None
             return self._output_data_ports.pop(data_port_id)
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
@@ -676,6 +682,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                     break  # found the one outgoing transition
 
         # delete outcome it self
+        self._outcomes[outcome_id]._parent = None
         return self._outcomes.pop(outcome_id)
 
     @lock_state_machine
@@ -1037,11 +1044,13 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         old_input_data_ports = self._input_data_ports
         self._input_data_ports = input_data_ports
         for port_id, port in input_data_ports.iteritems():
+            print "set parent", port_id, port, '... in ..', self, id(port)
             try:
                 port.parent = self
             except ValueError:
                 self._input_data_ports = old_input_data_ports
                 raise
+        # TODO check if the parent of old_input_data_ports which are no more in the list has to be unset here
 
     @property
     def output_data_ports(self):
@@ -1090,11 +1099,13 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         old_output_data_ports = self._output_data_ports
         self._output_data_ports = output_data_ports
         for port_id, port in output_data_ports.iteritems():
+            print "set parent", port_id, port, '... in ..', self, id(port)
             try:
                 port.parent = self
             except ValueError:
                 self._output_data_ports = old_output_data_ports
                 raise
+        # TODO check if the parent of old_output_data_ports which are no more in the list has to be unset here
 
     @property
     def outcomes(self):
@@ -1145,6 +1156,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self._outcomes[-1] = Outcome(outcome_id=-1, name="aborted", parent=self)
         if -2 not in outcomes:
             self._outcomes[-2] = Outcome(outcome_id=-2, name="preempted", parent=self)
+        # TODO check if the parent of old_outcomes which are no more in the list has to be unset here
 
     @property
     def input_data(self):
