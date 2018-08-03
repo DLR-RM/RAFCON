@@ -798,8 +798,7 @@ class ContainerState(State):
         if destroy:
             # Recursively delete all transitions, data flows and states within the state to be deleted
             self.states[state_id].destroy(recursive)
-        else:
-            self.states[state_id].parent = None
+        self.states[state_id]._parent = None
         # final delete the state it self
         return self.states.pop(state_id)
 
