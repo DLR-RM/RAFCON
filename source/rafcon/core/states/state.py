@@ -1042,7 +1042,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         old_input_data_ports = self._input_data_ports
         self._input_data_ports = input_data_ports
         for port_id, port in input_data_ports.iteritems():
-            print "set parent", port_id, port, '... in ..', self, id(port)
             try:
                 port.parent = self
             except ValueError:
@@ -1101,7 +1100,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         old_output_data_ports = self._output_data_ports
         self._output_data_ports = output_data_ports
         for port_id, port in output_data_ports.iteritems():
-            print "set parent", port_id, port, '... in ..', self, id(port)
             try:
                 port.parent = self
             except ValueError:
