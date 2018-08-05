@@ -94,6 +94,7 @@ coverage.xml
 .idea/modules.xml
 .idea/rafcon.iml
 .idea/vcs.xml
+.idea/inspectionProfiles/profiles_settings.xml
 
 # If you change .idea files and don't want those changes to be tracked by git, run e.g.
 # $ git update-index --skip-worktree .idea/vcs.xml
