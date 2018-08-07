@@ -76,7 +76,6 @@ class PostInstallCommand(InstallCommand):
         installation.install_libraries()
 
 
-
 def get_data_files_tuple(*path, **kwargs):
     """Return a tuple which can be used for setup.py's data_files
     
@@ -144,10 +143,15 @@ def generate_data_files():
         get_data_files_tuple(themes_folder, 'dark', 'gtk-sourceview'),
     ]
 
+    version_data_file = [("./", ["./VERSION"])]
+
+    # print gui_data_files
+    # print version_data_file
+
     examples_data_files = get_all_files_recursivly(examples_folder)
     # print examples_data_files
     libraries_data_files = get_all_files_recursivly(libraries_folder)
-    generated_data_files = gui_data_files + examples_data_files + libraries_data_files
+    generated_data_files = gui_data_files + examples_data_files + libraries_data_files + version_data_file
     # for elem in generated_data_files:
     #     print elem
     return generated_data_files
