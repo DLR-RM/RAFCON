@@ -20,6 +20,13 @@ Next release
 Patch releases 0.12.\*
 ----------------------
 
+0.12.19
+"""""""
+
+- Bug Fixes:
+    
+    - fix setup.py, sdist now working on pypi
+
 0.12.18
 """""""
 
