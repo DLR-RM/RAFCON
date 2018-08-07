@@ -125,6 +125,8 @@ def generate_data_files():
     gui_data_files = [
         get_data_files_tuple(assets_folder, 'icons'),
         get_data_files_tuple(assets_folder, 'splashscreens'),
+        get_data_files_tuple(assets_folder, path.join('fonts', 'FontAwesome')),
+        get_data_files_tuple(assets_folder, path.join('fonts', 'DIN Next LT Pro')),
         get_data_files_tuple(themes_folder, 'dark', 'gtk-2.0', 'gtkrc', path_to_file=True),
         get_data_files_tuple(themes_folder, 'dark', 'colors.json', path_to_file=True),
         get_data_files_tuple(themes_folder, 'dark', 'gtk-sourceview'),
