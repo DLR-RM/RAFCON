@@ -112,7 +112,7 @@ class StateTransitionsListController(LinkageListController):
         view['from_outcome_col'].set_cell_data_func(view['from_outcome_combo'], cell_text)
         view['to_outcome_col'].set_cell_data_func(view['to_outcome_combo'], cell_text)
 
-        if self.model.state.get_library_root_state():
+        if self.model.state.get_next_upper_library_root_state():
             view['from_state_combo'].set_property("editable", False)
             view['from_outcome_combo'].set_property("editable", False)
             view['to_state_combo'].set_property("editable", False)
@@ -688,7 +688,7 @@ class StateTransitionsEditorController(ExtendedController):
             view['internal_t_checkbutton'].set_active(False)
 
         if self.model.parent is not None and isinstance(self.model.parent.state, LibraryState) or \
-                self.model.state.get_library_root_state():
+                self.model.state.get_next_upper_library_root_state():
             view['add_t_button'].set_sensitive(False)
             view['remove_t_button'].set_sensitive(False)
 

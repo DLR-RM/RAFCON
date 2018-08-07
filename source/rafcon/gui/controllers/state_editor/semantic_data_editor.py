@@ -78,7 +78,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         """
         super(SemanticDataEditorController, self).register_view(view)
 
-        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
+        if isinstance(self.model.state, LibraryState) or self.model.state.get_next_upper_library_root_state():
             self.set_editor_lock(True)
 
         view['open_externally'].connect('clicked', self.open_externally_clicked)

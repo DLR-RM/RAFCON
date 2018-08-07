@@ -93,7 +93,7 @@ def copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menu_bar_ctrl)
 
 
 @log.log_exceptions(None, gtk_quit=True)
-def trigger_gui_signals(with_refresh=True):
+def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     """The function triggers and test basic functions of the menu bar.
 
     At the moment those functions are tested:
@@ -294,12 +294,40 @@ def trigger_gui_signals(with_refresh=True):
     assert len(data_flows_after['external']['ingoing']) == 1
     assert state_m_parent.state.states[new_state_id].input_data_ports.items()[0][1].default_value == 2.0
 
+    ##########################################################
+    # open separately
+    call_gui_callback(sm_m.selection.set, [sm_m.get_state_model_by_path('CDMJPK'), ])
+    lib_state = LibraryState(join("generic", "dialog"), "Dialog [3 options]", "0.1", "Dialog [3 options]")
+    call_gui_callback(gui_helper_state_machine.insert_state_into_selected_state, lib_state, False)
+
+    lib_hash = lib_state.state_copy.mutable_hash()
+    # assert lib_state.mutable_hash().hexdigest() == lib_hash.hexdigest()
+    sm_m = sm_manager_model.state_machines[lib_state.get_state_machine().state_machine_id]
+    call_gui_callback(sm_m.selection.set, [sm_m.get_state_model_by_path(lib_state.get_path())])
+    call_gui_callback(gui_helper_state_machine.open_library_state_separately)
+    sm_m = sm_manager_model.get_selected_state_machine_model()
+    assert sm_m.root_state.state.mutable_hash().hexdigest() == lib_hash.hexdigest()
+    ##########################################################
+
+    if with_substitute_library:
+        ##########################################################
+        # check substitute library state as template -> keep name
+        old_parent = lib_state.parent
+        state_ids = old_parent.states.keys()
+        call_gui_callback(lib_state.__setattr__, 'name', 'DIALOG_X')
+        call_gui_callback(sm_manager_model.__setattr__, 'selected_state_machine_id',
+                          lib_state.get_state_machine().state_machine_id)
+        call_gui_callback(gui_helper_state_machine.substitute_selected_library_state_with_template, True)  # keep_name=True
+        new_states = [state for state in old_parent.states.itervalues() if state.state_id not in state_ids]
+        assert new_states and len(new_states) == 1 and new_states[0].name == 'DIALOG_X'
+        ##########################################################
+
     if with_refresh:
         call_gui_callback(menubar_ctrl.on_refresh_libraries_activate)
         call_gui_callback(testing_utils.wait_for_gui)
         call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
         call_gui_callback(testing_utils.wait_for_gui)
-        assert len(sm_manager_model.state_machines) == 1
+        assert len(sm_manager_model.state_machines) == 2
 
 
 def test_gui(caplog):

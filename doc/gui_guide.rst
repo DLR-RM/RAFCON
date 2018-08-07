@@ -5,55 +5,51 @@ The following shows a common guide for the :ref:`RAFCON`-GUI.
 The page contains advises about how to use the widgets
 effectively.
 
-Left Bar
---------
+Left Pane
+---------
 
 Library Tree widget
 """""""""""""""""""
 
-The Library tree shows all library mounted by the LIBRARY\_PATH defined
-in your configuration file, see
-:ref:`Configuration`. Sub-library paths unfold
-and fold by double-click and a library directly is open by double-click
-it. A right-click on the row of a library element opens a menu with the
+The Library tree shows all libraries mounted via the LIBRARY\_PATH defined
+in your configuration file, see :ref:`Configuration`. Sub-library paths unfold
+and fold by double-click. Double-clicking on a library opens the library in the graphical editor.
+A right-click on the row of a library element opens a menu with the
 options "Add as Library", "Add as template", "Open" and "Open and run".
-"Add as template" paste a fully editable copy of respective library into
+"Add as template" pastes a fully editable copy of the respective library into the
 actual selected state (as long as selected state is a ContainerState).
 
-The Library Tree can be reloaded by pressing the "Refresh"- or the
-"Refresh Libraries"-Button in the Menu-Bar or Tool-Bar, above.
+The Library Tree can be reloaded by pressing the the "Refresh Libraries"-Button in the Menu-Bar or Tool-Bar.
 
 State Machine Tree widget
 """""""""""""""""""""""""
 
 The State Machine Tree (or "State Tree") shows all states that are in
 the actual selected state-machine, its state\_id and the type of the
-state. A state is selected if respective row becomes selected and the
+state. A state is selected if the respective row is selected and the
 row of a state becomes selected if the state becomes selected by another
-widget. A selected state can be removed by pressing the delete-shortcut
+widget e.g. the graphical editor.
+A selected state can be removed by pressing the delete-shortcut
 or a state can be added into a selected state/row by pressing the
-add-shortcut. See :ref:`Configuration` to
-define those shortcuts.
+add-shortcut. See :ref:`Configuration` to define those shortcuts.
 
 Global Variable Manager widget
 """"""""""""""""""""""""""""""
 
 The Global Variable Widget shows all existing global variables, their
 names, values and if they are locked. The name and value can be edited
-by clicking into those and "shift-tab", "tab", and the "arrow-keys" can
+by clicking into the respective fields and "shift-tab", "tab", and the "arrow-keys" can
 be used to move throw the editable columns and variables. Press Enter or
-move by using "shift-tab" or "tab" to confirm a change of a specific
+move by using "shift-tab" or "tab" to confirm the modification of a specific
 element. A selected global variable can be removed by pressing the
-delete-shortcut or a state can be added into a selected variable/row by
-pressing the add-shortcut. See
-:ref:`Configuration` to define those
-shortcuts.
+delete-shortcut or a variable can be added by pressing the add-shortcut. See
+:ref:`Configuration` to define those shortcuts.
 
 Modification History widget
 """""""""""""""""""""""""""
 
 .. figure:: _static/EditHistory.jpg
-   :width: 25 %
+   :width: 60 %
    :alt: Screenshot showing the branching modification history
    :align: right
 
@@ -72,7 +68,7 @@ view (trail-history-view becomes active) using the check-button labeled
 check-button "F".
 
 In the figure it can be seen that the trail history element with number
-16 is selected (blue/grey). Every number/id is one step of the state
+16 is selected (grey). Every number/id is one step of the state
 machine edit process that has been recorded. Action with the number 16
 used the method "add transition" and connects two states with the IDs
 ZRMXSG and EOSVJL. Elements 17-18 are undone and thereby are labeled
@@ -85,9 +81,6 @@ action is recovered. To jump to the initial situation of the state
 machine when the record of edit history started the user has to click
 element 0 which is labeled by action "None".
 
-''' Additional Upcoming Features '''
-
--  history that is stored to be used after re-opening a state machine
 
 Execution History widget
 """"""""""""""""""""""""
@@ -105,27 +98,23 @@ Graphical State Machine Editor widget
 """""""""""""""""""""""""""""""""""""
 
 There are two different graphical editors for editing a state machine.
-Originally, the editor used OpenGL and was rather ugly. This is still
-the default editor. It is currently being replaced by an editor using
-the Python library "Gaphas". The :ref:`Configuration` explains how
-to switch between the two editors.
+The current graphical editor uses the Python library "Gaphas".
+The alternative graphical editor uses OpenGL for hardware acceleration with the graphics card.
+The :ref:`Configuration` explains how to switch between the two editors.
 
-The Gaphas graphical editor is more advanced than the OpenGL one and
-also much more pleasant to look at. Only some minor issues currently
-prevent it from becoming the default editor. Most features should be
-intuitive to use, there are however some shortcuts, which one should be
-aware of:
+The Gaphas graphical editor is more advanced than the OpenGL one (and
+also much more pleasant to look at ;-) ).
+There are some shortcuts, which you should be aware of:
 
--  Zoom: Ctrl + Scroll wheel or Ctrl + Middle mouse button + Move cursor
-   up/down
+-  Zoom: Mouse scroll wheel
 -  Panning: Middle mouse button
--  Move ports (along border of state): Shift + click and move cursor
+-  Move ports (along border of state): Ctrl + click and move cursor (select the state of the port beforehand)
 -  Move name of state: Ctrl + click and move cursor
 -  Resize state with content: Ctrl + click on corner handles
 -  Operations on the selected state: Right mouse button (opens context
    menu)
--  Add new Execution State to selected state: Ctrl + A
--  Add new Hierarchy State to selected state: Ctrl + Shift + A
+-  Add new Execution State to selected state: Alt + E
+-  Add new Hierarchy State to selected state: Alt + H, Ctrl + Shift + A
 
 You can also drag'n'drop states into the editor. This is possible from
 the four "+ \*S" buttons below the editor and from the libraries widget.
@@ -133,87 +122,79 @@ the four "+ \*S" buttons below the editor and from the libraries widget.
 Debug Console widget
 """"""""""""""""""""
 
-The Debug Console can be found below the Grafical Editor. All messages
+The Debug Console can be found below the Graphical Editor. All messages
 will be displayed in it, whereas the type of the displayed messages can
-be selected with the checkboxes on top of the console. As like the other
-widgets, the Debug Console is can be unpinned by clicking the symbol in
+be filtered with the checkboxes on top of the console. As for the other
+widgets, the Debug Console can be unpinned by clicking the symbol in
 the upper right corner. A right-click into the console opens a menu
 providing the options to ``"Copy"`` selected output, ``"Select All"``
 output or ``"Clear Logging View"``.
 
-Right Bar (States Editor)
--------------------------
+Right Pane (States Editor)
+--------------------------
 
 The right sidebar shows the "States Editor". It can show several tabs,
-but by default, only the selected state is shown. However, you can
-*stick* or *pin* a state tab by clicking on the needle icon within the
-tab.
+but by default, only the selected state is shown. However, you can *pin* a state tab
+by clicking on the needle icon within the tab.
 
 The number within the tab shows the state machine id belonging to the
 state.
 
 Every "State Editor" consists of the three widgets described below: The
-State Overview, State content (with widgets for the Source Editor, Ports
-and Connection) and State Description/Summary.
+State Overview, State content (with widgets for the Source Editor, Logical Linkage and Data Linkage)
+and State Linkage Overview (with widgets for the Description and Semantic Data).
 
 State Overview widget
 """""""""""""""""""""
 
 The State Overview can be found directly under the "STATE EDITOR"
 headline. It provides the name of the selected state, which can be
-edited by clicking on it, as like the fixed ID of it. Additionally, the
+edited by clicking on it, and the fixed state ID. Additionally, the
 State Overview contains a dropdown menu, where the type of the state can
-be changed, and a checkbox which marks a state as start state. (There is
-the possibility to pin selected states at the state editor by clicking
-on the pin symbol next to the blue highlighted state name, which allows
-an userfriendly switching between states.)
+be changed, and a checkbox which marks a state as start state.
 
 Source Editor widget
 """"""""""""""""""""
 
 The Source Editor is the first tab of the notebook in the middle. It is
-a numbered editor with the buttons "Apply" to store and "Cancel" to
-discard changes.
+a editor with the three buttons "Apply" to save the file, "Cancel" to
+discard changes and "Open externally" to open the file in an external editor.
 
-Outcomes and Transitions widget
-"""""""""""""""""""""""""""""""
+Logical Linkage widget
+""""""""""""""""""""""
 
 By clicking the middle tab of the center notebook, the sub-widgets
-Outcomes and Transitions can be reached. In the Outcomes widget the
-outcomes of the selected state is listed. It consists the "ID" and the
-"Name" of the output, the "To-State" it leeds to and if the "To-State"
-is a hierachy state the "To-Outcome" of the "To-State". Next to the
-obligatory IDs "0", "-1" and "-2", it is possible to append owen
+Outcomes and Transitions, which represent the logical linkage of a state, can be reached.
+In the Outcomes widget the outcomes of the selected state are listed.
+It consists of the columns "ID", "Name" and "To-State".
+If the "To-State" is a hierarchy state the "To-Outcome" of the "To-State" is also shown.
+Next to the obligatory IDs "0", "-1" and "-2", it is possible to append own
 outcomes by clicking the "Add" button. A click on the "Remove" button
 will delete the selected outcome.
 
 The Transitions sub-widget lists the transitions between the selected
-state and the "Source State" with "Source Outcome" as like the "Target
-State" with "Target Outcome". Todo: Internal/External With the buttons
-"Add" and "Remove", additional transitions can be added and selected
-ones can be deleted.
+state and its siblings (or parent). There are the four columns: "Source State", "Source Outcome", "Target
+State" and "Target Outcome". With the buttons "Add" and "Remove",
+additional transitions can be added and selected ones can be deleted.
 
-Data Ports and Data Flows widget
-""""""""""""""""""""""""""""""""
+Data Linkage widget
+"""""""""""""""""""
 
-Data Ports and Data Flows sub-widgets can be shown by clicking the last
-tab of the middle notebook. Within the Data Ports sub-widget it is
-possible to change between "Input Ports" and "Output Ports". The
+The Data Ports and Data Flows sub-widgets, which represent the data linkage of a state,
+can be accessed by clicking oon the last tab of the middle notebook.
+Within the Data Ports sub-widget it is possible to change between "Input Ports" and "Output Ports". The
 currently selected one is highlighted in blue. Input and output ports
 works like function parameters. They consists of a "Name", a "Data Type"
-and a "Default Value" if desired. A click on the button "New" appends a
-new port which can be edited while the button "Delete" removes the
-selected port.
+and a "Default Value". A click on the button "New" appends a
+new port, the button "Delete" removes the selected port.
+If the selected state is a container state, then also a tab for "Scoped Variable" emerges.
 
-In "Source State" and "Source Port" column of Data Ports the sources of
-the input ports is shown, while "Target State" and "Target Port" shows
-the targets of the output ports. With the buttons "Add" and "Remove",
-additional rows can be inserted and edited as like selected ones removed
+Similar to the transitions, the data flows of a state are shown in the lower part.
 
 Data and Logical Linkage widget
 """""""""""""""""""""""""""""""
 
-A quick overview over all data ports and outcomes of the selected states.
+A quick overview of all data ports and outcomes of the selected state.
 
 
 State Description widget
@@ -226,4 +207,4 @@ description can be placed.
 Semantic Editor widget
 """"""""""""""""""""""
 
-Here semantic data of a state can be edited in a tree like data structure.
+In this widget the semantic data of a state is shown and can be edited in a tree like data structure.

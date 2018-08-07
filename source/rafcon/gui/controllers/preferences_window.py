@@ -13,8 +13,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 """
-.. module:: config_window
-   :synopsis: a module holding the controller for the configuration GUI
+.. module:: preferences_window
+   :synopsis: a module holding the controller for the configuration of GUI and Core
 
 """
 import gtk
@@ -24,19 +24,19 @@ from os.path import dirname
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models.config_model import ConfigModel
-from rafcon.gui.views.config_window import ConfigWindowView
+from rafcon.gui.views.preferences_window import PreferencesWindowView
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
 
-class ConfigWindowController(ExtendedController):
+class PreferencesWindowController(ExtendedController):
     """Controller handling the configuration GUI
     """
 
     def __init__(self, core_config_model, view, gui_config_model):
-        assert isinstance(view, ConfigWindowView)
+        assert isinstance(view, PreferencesWindowView)
         assert isinstance(core_config_model, ConfigModel)
         assert isinstance(gui_config_model, ConfigModel)
         ExtendedController.__init__(self, core_config_model, view)
@@ -64,7 +64,7 @@ class ConfigWindowController(ExtendedController):
 
     def register_view(self, view):
         """Called when the View was registered"""
-        super(ConfigWindowController, self).register_view(view)
+        super(PreferencesWindowController, self).register_view(view)
         self.view['add_library_button'].connect('clicked', self._on_add_library)
         self.view["remove_library_button"].connect('clicked', self._on_remove_library)
 
@@ -102,7 +102,7 @@ class ConfigWindowController(ExtendedController):
         self.view['import_button'].connect("clicked", self._on_import_config)
         self.view['export_button'].connect('clicked', self._on_export_config)
 
-        self.view['properties_window'].connect('delete_event', self._on_delete_event)
+        self.view['preferences_window'].connect('delete_event', self._on_delete_event)
 
         self.update_all()
 
@@ -445,7 +445,7 @@ class ConfigWindowController(ExtendedController):
         changes_str = ''
         if self.core_config_model.changed_keys_requiring_restart or \
                 self.gui_config_model.changed_keys_requiring_restart:
-            message = gtk.MessageDialog(parent=self.view["properties_window"], flags=gtk.DIALOG_MODAL,
+            message = gtk.MessageDialog(parent=self.view["preferences_window"], flags=gtk.DIALOG_MODAL,
                                         type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
             message_string = "You must restart RAFCON to apply following changes: \n"
             for key in (self.core_config_model.changed_keys_requiring_restart |
@@ -568,7 +568,7 @@ class ConfigWindowController(ExtendedController):
         :param title_text: Title text
         :param description: Description
         """
-        dialog = gtk.Dialog(title_text, self.view["properties_window"],
+        dialog = gtk.Dialog(title_text, self.view["preferences_window"],
                             flags=0, buttons=
                             (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                              gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))

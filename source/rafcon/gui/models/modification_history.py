@@ -501,7 +501,7 @@ class ModificationsHistoryModel(ModelMT):
             # TODO think about to remove this work around again
             # ignore meta data changes inside of library states
             changed_parent_state = self.state_machine_model.get_state_model_by_path(changed_parent_state_path).state
-            if changed_parent_state.get_library_root_state():
+            if changed_parent_state.get_next_upper_library_root_state():
                 return
 
             if self.count_before == 0:

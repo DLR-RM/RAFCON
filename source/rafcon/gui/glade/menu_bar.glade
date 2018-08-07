@@ -81,8 +81,8 @@
               </object>
             </child>
             <child>
-              <object class="GtkImageMenuItem" id="menu_properties">
-                <property name="label">gtk-properties</property>
+              <object class="GtkImageMenuItem" id="menu_preferences">
+                <property name="label">gtk-preferences</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_underline">True</property>
@@ -386,7 +386,7 @@
             <property name="can_focus">False</property>
             <child>
               <object class="GtkImageMenuItem" id="start">
-                <property name="label">start</property>
+                <property name="label">Start</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_underline">True</property>
@@ -396,7 +396,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="start_from_selected">
-                <property name="label">start from selected state</property>
+                <property name="label">Start from selected state</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_underline">True</property>
@@ -406,7 +406,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="run_to_selected">
-                <property name="label">run to selected state</property>
+                <property name="label">Run to selected state</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_underline">True</property>
@@ -416,7 +416,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="pause">
-                <property name="label">pause</property>
+                <property name="label">gtk-media-pause</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_underline">True</property>
@@ -426,7 +426,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="stop">
-                <property name="label">stop</property>
+                <property name="label">gtk-media-stop</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_underline">True</property>
@@ -442,7 +442,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="step_mode">
-                <property name="label">step mode</property>
+                <property name="label">Step mode</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_underline">True</property>
@@ -452,7 +452,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="step_into">
-                <property name="label">step into</property>
+                <property name="label">Step into</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_underline">True</property>
@@ -462,7 +462,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="step_over">
-                <property name="label">step over</property>
+                <property name="label">Step over</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_underline">True</property>
@@ -472,7 +472,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="step_out">
-                <property name="label">step out</property>
+                <property name="label">Step out</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_underline">True</property>
@@ -482,7 +482,7 @@
             </child>
             <child>
               <object class="GtkImageMenuItem" id="backward_step">
-                <property name="label">backward step</property>
+                <property name="label">Backward step</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_underline">True</property>
@@ -495,17 +495,18 @@
       </object>
     </child>
     <child>
-      <object class="GtkMenuItem" id="menu_help">
+      <object class="GtkImageMenuItem" id="menu_help">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Help</property>
+        <property name="label">gtk-help</property>
         <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
         <child type="submenu">
           <object class="GtkMenu" id="menuitem_help">
             <property name="can_focus">False</property>
             <child>
               <object class="GtkImageMenuItem" id="about">
-                <property name="label">About</property>
+                <property name="label">gtk-about</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="use_underline">True</property>

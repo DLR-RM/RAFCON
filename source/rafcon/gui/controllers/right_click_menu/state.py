@@ -212,8 +212,9 @@ class StateMachineRightClickMenu(object):
                                            accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
 
         menu.append(create_image_menu_item("Open separately", constants.BUTTON_OPEN,
-                                           self.on_open_activate,
-                                           accel_code=None, accel_group=accel_group))
+                                           self.on_open_library_state_separately_activate,
+                                           accel_code=shortcuts_dict['open_library_state_separately'][0],
+                                           accel_group=accel_group))
 
         menu.append(create_image_menu_item("Substitute state with library", constants.BUTTON_REFR,
                                            self.on_substitute_state_activate,
@@ -305,11 +306,8 @@ class StateMachineRightClickMenu(object):
             gui_singletons.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', old_last_path_open)
 
     @staticmethod
-    def on_open_activate(widget, data=None):
-        state_m = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_selected_state()
-        path, _, _ = gui_singletons.library_manager.get_os_path_to_library(state_m.state.library_path,
-                                                                           state_m.state.library_name)
-        gui_helper_state_machine.open_state_machine(path)
+    def on_open_library_state_separately_activate(widget, data=None):
+        gui_helper_state_machine.open_library_state_separately()
 
     def on_substitute_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('substitute_state', None, None)

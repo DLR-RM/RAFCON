@@ -63,12 +63,52 @@ coverage.xml
 # Django stuff:
 *.log
 
-#
-# This part is responsible for pycharm project files
-#
+# Source: https://github.com/github/gitignore/blob/master/Global/JetBrains.gitignore
+# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm
+# Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
-**/.idea/*
-!**/.idea/runConfigurations
+# User-specific stuff
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+
+# Sensitive or high-churn files
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
+
+# Markdown plugin
+
+.idea/**/markdown-navigator/
+.idea/**/markdown-exported-files.xml
+.idea/**/markdown-navigator.xml
+
+# as the jetbrains recommendation is not sufficient, custom files have to be added here as well
+.idea/misc.xml
+.idea/modules.xml
+.idea/rafcon.iml
+.idea/vcs.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/codeStyles/Project.xml
+
+# If you change .idea files and don't want those changes to be tracked by git, run e.g.
+# $ git update-index --skip-worktree .idea/vcs.xml
+# Later, use
+# $ git update-index --no-skip-worktree .idea/vcs.xml
+# to track your changes again.
+# To see whcih files are currently not being tracked (due to skip-worktree), run
+# $ git ls-files -v | grep ^[sS]
+# Read more about this here: http://blog.stephan-partzsch.de/how-to-ignore-changes-in-tracked-files-with-git/
+
+# tests folder
+tests/.idea
+.idea/runConfigurations
 
 #
 # Do not commit gui files or files with an deprecated format

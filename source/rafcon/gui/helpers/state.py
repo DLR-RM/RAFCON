@@ -502,6 +502,7 @@ def substitute_state_as(target_state_m, state, as_template, keep_name=False):
     if as_template:
         assert isinstance(state_m, LibraryStateModel)
         state_m = state_m.state_copy
+        state_m.state.parent = None
 
     if keep_name:
         state_m.state.name = target_state_m.state.name
@@ -689,7 +690,7 @@ def toggle_show_content_flag_of_library_state_model(state_m):
                        "{0}".format(state_m))
         return
 
-    if state_m.state.get_library_root_state() is not None:
+    if state_m.state.get_next_upper_library_root_state() is not None:
         logger.warning("Can not change show content of library state that is not uppermost library state.")
         return
 

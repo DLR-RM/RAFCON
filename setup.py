@@ -10,6 +10,7 @@ from os import path
 import os
 import sys
 from imp import load_source
+import subprocess
 
 
 class PyTest(TestCommand):
@@ -43,6 +44,14 @@ class PyTest(TestCommand):
         sys.exit(error_number)
 
 
+def discover_fonts():
+    ret = subprocess.call(['fc-cache', '-fv'])
+    if ret:
+        print 'Could not call command to discover new fonts: fc-cache -fv'
+    else:
+        print 'Called discover_fonts: fc-cache -fv'
+
+
 class PostDevelopCommand(DevelopCommand):
     """Post installation step for development mode
     """
@@ -50,6 +59,7 @@ class PostDevelopCommand(DevelopCommand):
         DevelopCommand.run(self)
         installation = load_source("installation", install_helper)
         installation.install_fonts()
+        discover_fonts()
         installation.install_gtk_source_view_styles()
         installation.install_libraries()
 
@@ -61,8 +71,10 @@ class PostInstallCommand(InstallCommand):
         InstallCommand.run(self)
         installation = load_source("installation", install_helper)
         installation.install_fonts()
+        discover_fonts()
         installation.install_gtk_source_view_styles()
         installation.install_libraries()
+
 
 
 def get_data_files_tuple(*path, **kwargs):
@@ -125,6 +137,8 @@ def generate_data_files():
     gui_data_files = [
         get_data_files_tuple(assets_folder, 'icons'),
         get_data_files_tuple(assets_folder, 'splashscreens'),
+        get_data_files_tuple(assets_folder, path.join('fonts', 'FontAwesome')),
+        get_data_files_tuple(assets_folder, path.join('fonts', 'DIN Next LT Pro')),
         get_data_files_tuple(themes_folder, 'dark', 'gtk-2.0', 'gtkrc', path_to_file=True),
         get_data_files_tuple(themes_folder, 'dark', 'colors.json', path_to_file=True),
         get_data_files_tuple(themes_folder, 'dark', 'gtk-sourceview'),

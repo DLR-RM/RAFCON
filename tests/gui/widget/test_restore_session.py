@@ -188,6 +188,9 @@ def trigger_gui_signals_first_run(*args):
     library_os_path = library_manager.get_os_path_to_library("turtle_libraries", "clear_field")[0]
     call_gui_callback(menubar_ctrl.on_open_activate, None, None, library_os_path)
     call_gui_callback(testing_utils.wait_for_gui)
+    # use artificial marked dirty to check for recovery of the flag
+    assert not sm_manager_model.get_selected_state_machine_model().state_machine.marked_dirty
+    sm_manager_model.get_selected_state_machine_model().state_machine._marked_dirty = True
     assert sm_manager_model.get_selected_state_machine_model().state_machine.marked_dirty
 
     # library with changes

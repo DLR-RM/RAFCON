@@ -44,7 +44,7 @@ from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateMode
 from rafcon.gui.singleton import library_manager_model
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
 from rafcon.utils.filesystem import make_tarfile, copy_file_or_folder, create_path, make_file_executable
-from rafcon.utils import log
+from rafcon.utils import log, storage_utils
 import rafcon.gui.utils
 
 logger = log.get_logger(__name__)
@@ -122,6 +122,28 @@ def open_state_machine(path=None, recent_opened_notification=False):
     return state_machine
 
 
+def open_library_state_separately():
+    state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    state_models = state_machine_manager_model.get_selected_state_machine_model().selection.states
+    if not state_models:
+        logger.info("Please select at least one library state to 'open library state separately'")
+        return
+    if not all([isinstance(state_m, LibraryStateModel) for state_m in state_models]):
+        logger.warning("Please select only library states. "
+                       "'Open library state separately' works only for library states.")
+        return
+
+    for state_m in state_models:
+        try:
+            path, _, _ = rafcon.gui.singleton.library_manager.get_os_path_to_library(state_m.state.library_path,
+                                                                                     state_m.state.library_name)
+            state_machine = open_state_machine(path)
+            if state_machine is None:
+                logger.warning('Library state {0} could not be open separately'.format(state_m.state))
+        except Exception:
+            logger.exception('Library state {0} could not be open separately'.format(state_m.state))
+
+
 def save_state_machine(delete_old_state_machine=False, recent_opened_notification=False, as_copy=False, copy_path=None):
     """ Save selected state machine
 
@@ -146,7 +168,6 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
     if state_machine_m is None:
         logger.warning("Can not 'save state machine' because no state machine is selected.")
         return False
-    old_file_system_path = state_machine_m.state_machine.file_system_path
 
     previous_path = state_machine_m.state_machine.file_system_path
     previous_marked_dirty = state_machine_m.state_machine.marked_dirty
@@ -193,12 +214,11 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
 
     storage.save_state_machine_to_path(state_machine_m.state_machine, copy_path if as_copy else sm_path,
                                        delete_old_state_machine=delete_old_state_machine, as_copy=as_copy)
-    if recent_opened_notification and \
-            (not previous_path == save_path or previous_path == save_path and previous_marked_dirty):
+    if recent_opened_notification:
         global_runtime_config.update_recently_opened_state_machines_with(state_machine_m.state_machine)
     state_machine_m.store_meta_data(copy_path=copy_path if as_copy else None)
     logger.debug("Saved state machine and its meta data.")
-    library_manager_model.state_machine_was_stored(state_machine_m, old_file_system_path)
+    library_manager_model.state_machine_was_stored(state_machine_m, previous_path)
     return True
 
 
@@ -233,13 +253,16 @@ def save_state_machine_as(path=None, recent_opened_notification=False, as_copy=F
             logger.warning("No valid path specified")
             return False
 
-    old_file_system_path = selected_state_machine_model.state_machine.file_system_path
+    previous_path = selected_state_machine_model.state_machine.file_system_path
     if not as_copy:
+        marked_dirty = selected_state_machine_model.state_machine.marked_dirty
+        recent_opened_notification = recent_opened_notification and (not previous_path == path or marked_dirty)
         selected_state_machine_model.state_machine.file_system_path = path
+
     result = save_state_machine(delete_old_state_machine=True,
                                 recent_opened_notification=recent_opened_notification,
                                 as_copy=as_copy, copy_path=path)
-    library_manager_model.state_machine_was_stored(selected_state_machine_model, old_file_system_path)
+    library_manager_model.state_machine_was_stored(selected_state_machine_model, previous_path)
     return result
 
 
@@ -651,7 +674,7 @@ def is_selection_inside_of_library_state(state_machine_m=None, selected_elements
     for model in selected_elements:
         # check if model is element of child state or the root state (or its scoped variables) of a LibraryState
         state_m = model if isinstance(model.core_element, State) else model.parent
-        selection_in_lib.append(state_m.state.get_library_root_state() is not None)
+        selection_in_lib.append(state_m.state.get_next_upper_library_root_state() is not None)
         # check if model is part of the shell (io-port or outcome) of a LibraryState
         if not isinstance(model.core_element, State) and isinstance(state_m, LibraryStateModel):
             selection_in_lib.append(True)
@@ -690,7 +713,7 @@ def selected_state_toggle_is_start_state():
     selection = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection
     selected_state_m = selection.get_selected_state()
     if len(selection.states) == 1 and not selected_state_m.state.is_root_state:
-        if selected_state_m.state.get_library_root_state() is not None:
+        if selected_state_m.state.get_next_upper_library_root_state() is not None:
             logger.warn("Toggle is start state is not performed because selected target state is inside of a "
                         "library state.")
             return False
@@ -957,9 +980,11 @@ def substitute_selected_library_state_with_template(keep_name=True):
     selected_state_m = selection.get_selected_state()
     if len(selection.states) == 1 and isinstance(selected_state_m, LibraryStateModel):
         # print "start substitute library state with template"
-        lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_state_m.state))
+        # TODO optimize this to not generate one more library state and model
+        lib_state = copy.deepcopy(selected_state_m.state)
         # lib_state_m = copy.deepcopy(selected_states[0].state)
         substitute_selected_state(lib_state, as_template=True, keep_name=keep_name)
+        # TODO think about to use as return value the inserted state
         return True
     else:
         logger.warning("Substitute library state with template needs exact one library state to be selected.")
@@ -1005,7 +1030,6 @@ def ungroup_selected_state():
 
 
 def get_root_state_name_of_sm_file_system_path(file_system_path):
-    import os
     if os.path.isdir(file_system_path) and os.path.exists(os.path.join(file_system_path, storage.STATEMACHINE_FILE)):
         try:
             sm_dict = storage.load_data_file(os.path.join(file_system_path, storage.STATEMACHINE_FILE))
@@ -1015,9 +1039,7 @@ def get_root_state_name_of_sm_file_system_path(file_system_path):
             return
         root_state_folder = sm_dict['root_state_id'] if 'root_state_id' in sm_dict else sm_dict['root_state_storage_id']
         root_state_file = os.path.join(file_system_path, root_state_folder, storage.FILE_NAME_CORE_DATA)
-        root_state = storage.load_data_file(root_state_file)
-        if isinstance(root_state, tuple):
-            root_state = root_state[0]
-        if isinstance(root_state, State):
-            return root_state.name
+        state_dict = storage_utils.load_objects_from_json(root_state_file, as_dict=True)
+        if 'name' in state_dict:
+            return state_dict['name']
         return

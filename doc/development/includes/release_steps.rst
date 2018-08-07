@@ -1,8 +1,9 @@
-Steps to perform, when releasing a new version of RAFCON:
+Steps to perform, when releasing a new version of RAFCON (this section is only for releasing the tool inside our
+institute):
 
 1. Decide about the new version number
 
-  Should the release be a patch or minor release? Or even a major release? Check the latest version number and adjust
+  Should the release be a patch or minor release? Or even a major release? Check the latest version number and adjust it
   appropriately.
 
 2. Create a release Branch
@@ -30,15 +31,9 @@ Steps to perform, when releasing a new version of RAFCON:
 
   For each minor release, a state machine must be created to ensure backwards compatibility using a special test.
 
-  Before creating the required state machine, RAFCON must be correctly installed so its version can be determined.
-  For this, navigate to the RAFCON root folder (where ``setup.py`` resides) and call
-
-  .. code:: bash
-
-     $ python setup.py develop --user
-
-  Then, open the state machine in ``[project directory]/tests/assets/unit_test_state_machines/[latest version
-  number]`` and save it to ``[project directory]/source/test_scripts/backwards_compatibility/[new version number]``.
+  Therefore, open the state machine in ``[project
+  directory]/tests/assets/unit_test_state_machines/backward_compatibility/[latest version
+  number]`` and save it to the same folder with the correct version as library name.
   Commit your changes.
 
 5. Check tests
@@ -48,7 +43,7 @@ Steps to perform, when releasing a new version of RAFCON:
 6. Check the changelog
 
   Open ``[project directory]/doc/Changelog.rst`` and verify that all changes are included within the correct version
-  number. Compare with :code:`git lg` and the latest closed issues on GitHub. Commit your changes.
+  number. Compare with :code:`git log` and the latest closed issues on GitHub. Commit your changes.
 
 7. Apply the version number
 

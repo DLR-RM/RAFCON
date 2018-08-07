@@ -142,7 +142,7 @@ class Clipboard(Observable):
             logger.warn("Paste is not performed because target state indication has to be a StateModel not {0}"
                         "".format(target_state_m.__class__.__name__))
             return
-        if target_state_m.state.get_library_root_state() is not None:
+        if target_state_m.state.get_next_upper_library_root_state() is not None:
             logger.warn("Paste is not performed because selected target state is inside of a library state.")
             return
 

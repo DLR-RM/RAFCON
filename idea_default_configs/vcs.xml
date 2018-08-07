@@ -7,16 +7,6 @@
       <inspection_tool class="SubjectLimit" enabled="true" level="WARNING" enabled_by_default="true" />
     </profile>
   </component>
-  <component name="IssueNavigationConfiguration">
-    <option name="links">
-      <list>
-        <IssueNavigationLink>
-          <option name="issueRegexp" value="#([0-9]+)" />
-          <option name="linkRegexp" value="https://rmc-github.robotic.dlr.de/common/rafcon/issues/$1" />
-        </IssueNavigationLink>
-      </list>
-    </option>
-  </component>
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
   </component>

@@ -38,7 +38,7 @@ class MenuBarView(View):
         'save_as':              constants.BUTTON_SAVE,
         'save_as_copy':         constants.BUTTON_SAVE,
         'save_state_as':        constants.BUTTON_SAVE,
-        'menu_properties':      constants.BUTTON_PROP,
+        'menu_preferences':     constants.BUTTON_PROP,
         'refresh_all':          constants.BUTTON_REFR,
         'refresh_libraries':    constants.BUTTON_REFR,
         'bake_state_machine':   constants.BUTTON_BAKE,

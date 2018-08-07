@@ -9,13 +9,36 @@ Next release
 
 - Features:
 
+    
 - Improvements:
+
 
 - Bug Fixes:
 
 
+
 Patch releases 0.12.\*
 ----------------------
+
+0.12.18
+"""""""
+
+- Features:
+    
+    - new shortcut open library state separately as state machine by default on 'Shift+Ctrl+Space' (shortcut works for multiple states, too)
+
+- Improvements:
+
+    - Provides proper PyCharm config files (in the `.idea` folder)
+    - update menu item labels
+    - updated rst documentation
+
+- Bug Fixes:
+
+    - recent opened state machine list no more miss paths
+    - :issue:`550` Gaphas cairo.Error: invalid value (typically too big) for the size of the input (surface, pattern, etc.)
+    - :issue:`564` Zoom onto mouse position
+    - handle config option `ZOOM_WITH_CTRL` properly
 
 0.12.17
 """""""

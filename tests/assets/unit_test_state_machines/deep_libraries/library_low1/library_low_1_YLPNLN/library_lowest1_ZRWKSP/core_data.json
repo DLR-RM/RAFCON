@@ -1,7 +1,7 @@
 {
     "__jsonqualname__": "rafcon.core.states.library_state.LibraryState", 
     "input_data_port_runtime_values": {
-        "1": null
+        "1": 3
     }, 
     "library_name": "library_lowest1", 
     "library_path": "unit_test_state_machines/deep_libraries", 

@@ -42,7 +42,7 @@
             "data_type": {
                 "__type__": "__builtin__.int"
             }, 
-            "default_value": null, 
+            "default_value": 1, 
             "name": "input_1"
         }
     }, 

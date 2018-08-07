@@ -213,7 +213,7 @@ class AbstractStateModel(MetaModel, Hashable):
         self.update_hash_from_dict(obj_hash, self.core_element)
         for state_element in sorted(self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
             self.update_hash_from_dict(obj_hash, state_element)
-        if not self.state.get_library_root_state():
+        if not self.state.get_next_upper_library_root_state():
             self.update_hash_from_dict(obj_hash, self.meta)
 
     def update_meta_data_hash(self, obj_hash):
@@ -420,8 +420,8 @@ class AbstractStateModel(MetaModel, Hashable):
             from rafcon.core.singleton import state_machine_manager
             if state_machine_id is not None and state_machine_id in state_machine_manager.state_machines:
                 state_machine_manager.state_machines[state_machine_id].marked_dirty = True
-        if self.state.get_library_root_state():
-            lib_state_path = self.state.get_library_root_state().parent.get_path()
+        if self.state.get_next_upper_library_root_state():
+            lib_state_path = self.state.get_next_upper_library_root_state().parent.get_path()
             if self.get_state_machine_m().get_state_model_by_path(lib_state_path).is_about_to_be_destroyed_recursively:
                 return
             logger.warning("You have modified core property of an inner state of a library state.")

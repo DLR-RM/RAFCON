@@ -103,10 +103,11 @@ def test_plugins_example(caplog):
 
     os.environ['RAFCON_PLUGIN_PATH'] = os.path.join(testing_utils.EXAMPLES_PATH, 'plugins', 'templates')
     print os.environ.get('RAFCON_PLUGIN_PATH')
+    path_of_sm_to_run = testing_utils.get_test_sm_path(join("unit_test_state_machines", "99_bottles_of_beer_monitoring"))
     # testing_utils.initialize_environment()
     testing_utils.test_multithreading_lock.acquire()
     try:
-        cmd = join(testing_utils.RAFCON_PATH, 'gui', 'start.py')
+        cmd = join(testing_utils.RAFCON_PATH, 'gui', 'start.py') + ' -o ' + path_of_sm_to_run + " -ss"
         start_time = time.time()
         rafcon_gui_process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # See https://stackoverflow.com/a/36477512 for details
@@ -125,12 +126,16 @@ def test_plugins_example(caplog):
                 if "rafcon.gui.controllers.main_window" in line and "Ready" in line:
                     print "=> ready"
                     assert plugin_loaded
-                    time.sleep(0.2)  # safety margin...
+                    time.sleep(0.5)  # safety margin...
                     print "=> RAFCON is now terminated"
                     rafcon_gui_process.terminate()
                     stdout, _ = rafcon_gui_process.communicate()
+                    exception_count = 0
                     for line in stdout.rstrip().split("\n"):
                         print "process:", line
+                        if "Exception" in line:
+                            exception_count += 1
+                    assert exception_count == 0
                     assert rafcon_gui_process.returncode == 0
                     break
             else:

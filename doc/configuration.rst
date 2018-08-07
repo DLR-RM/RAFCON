@@ -7,7 +7,7 @@ generated (if not existing) on the first run of RAFCON. It is stored in
 your home folder: ``~/.config/rafcon/`` with name ``config.yaml`` and
 ``gui_config.yaml``, respectively. The path can be changed when running
 the ``start.py`` script with argument "-c". The syntax used is
-`YAML <wp:YAML>`__.
+`YAML <https://en.wikipedia.org/wiki/YAML>`__.
 
 Core configuration
 ------------------
@@ -23,10 +23,22 @@ A typical config file looks like this:
 
     TYPE: SM_CONFIG
 
-    LIBRARY_PATHS:
-        generic: ${RAFCON_LIB_PATH}/generic
-        my_home_libs: ~/my_rafcon_libs
-        project_libs: ./libs_relative_to_config
+    LIBRARY_PATHS: {
+        "generic": "${RAFCON_LIB_PATH}/generic",
+        "tutorials": "${RAFCON_LIB_PATH}/../examples/tutorials",
+        "ros": "${RAFCON_LIB_PATH}/../examples/libraries/ros_libraries",
+        "turtle_libraries": "${RAFCON_LIB_PATH}/../examples/libraries/turtle_libraries",
+        "intermediate_level": "${RAFCON_LIB_PATH}/../examples/functionality_examples"
+    }
+    LIBRARY_RECOVERY_MODE: False
+
+    STORAGE_PATH_WITH_STATE_NAME: True
+    MAX_LENGTH_FOR_STATE_NAME_IN_STORAGE_PATH: None
+    NO_PROGRAMMATIC_CHANGE_OF_LIBRARY_STATES_PERFORMED: False
+
+    EXECUTION_LOG_ENABLE: False
+    EXECUTION_LOG_PATH: "%RAFCON_TEMP_PATH_BASE/execution_logs"
+    EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL: False
 
 .. _core_config_docs:
 
@@ -45,7 +57,7 @@ TYPE
 LIBRARY\_PATHS
   | Type: Dictionary with type(key) = String and type(value) = String
   | Default: ``{"generic": "${RAFCON_LIB_PATH}/generic"}``
-  | A dictionary holding all libraries with name and path. The key of
+  | A dictionary holding all libraries accessible in RAFCON. The key of
     the dictionary is a unique library identifier. This unique
     identifier will be used as library name, shown as root of the
     library hierarchy in the library tree. The value of the dictionary
@@ -59,6 +71,24 @@ LIBRARY\_RECOVERY\_MODE
   | If this flag is activated, state machine with consistency erros concerning their data ports can be loaded.
     Erros are just printed out as warnings. This can be used to fix erroneous state machines.
 
+STORAGE\_PATH\_WITH\_STATE\_NAME
+  | Type: boolean
+  | Default: ``True``
+  | If set to True the paths to save states will contain the state names.
+  If False only the state IDs will be used to create the storage path.
+
+MAX\_LENGTH\_FOR\_STATE\_NAME\_IN\_STORAGE\_PATH
+  | Default: ``None``
+  | Unit: number
+  | Specifies the maximum length of a state name in the storage path.
+  If the state name is longer than the specified value, the state name is truncated.
+  If the value is set to None the whole state name is used inside the path.
+
+NO\_PROGRAMMATIC\_CHANGE\_OF\_LIBRARY\_STATES\_PERFORMED
+  | Type: boolean
+  | Default: ``False``
+  | Set this to True if you can make sure that the interface of library states is not programmatically changed anywhere inside your state machines. This will speed up loading of libraries.
+
 EXECUTION\_LOG\_ENABLE
   | Type: boolean
   | Default: ``True``
@@ -68,11 +98,11 @@ EXECUTION\_LOG\_PATH:
   | Type: String
   | Default: ``"/tmp/"``
   | Sets the target path of the execution logs
-  
-NO\_PROGRAMMATIC\_CHANGE\_OF\_LIBRARY\_STATES\_PERFORMED
+
+EXECUTION\_LOG\_SET\_READ\_AND\_WRITABLE\_FOR\_ALL:
   | Type: boolean
   | Default: ``False``
-  | Set this to True if you can make sure that the interface of library states is not programmatically changed anywhere inside your state machines. This will speed up loading of libraries.
+  | If True, the file permissions of the log file are set such that all users have read access to this file.
   
 GUI configuration
 -----------------
@@ -93,6 +123,7 @@ A typical config file looks like this:
     GAPHAS_EDITOR: True
     GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE: True
     ENABLE_CACHING: True    # Affects only Gaphas editor
+    DRAG_N_DROP_WITH_FOCUS: False
 
     WAYPOINT_SNAP_ANGLE: 45
     WAYPOINT_SNAP_MAX_DIFF_ANGLE: 10
@@ -100,6 +131,7 @@ A typical config file looks like this:
 
     PORT_SNAP_DISTANCE: 5
 
+    LOGGING_SHOW_VERBOSE: False
     LOGGING_SHOW_DEBUG: False
     LOGGING_SHOW_INFO: True
     LOGGING_SHOW_WARNING: True
@@ -111,11 +143,14 @@ A typical config file looks like this:
 
     MINIMUM_SIZE_FOR_CONTENT: 30
     MAX_VISIBLE_LIBRARY_HIERARCHY: 2
+    NO_FULLY_RECURSIVE_LIBRARY_MODEL: True
 
     USE_ICONS_AS_TAB_LABELS: True
 
     SHOW_NAMES_ON_DATA_FLOWS: True
+    SHOW_CONTENT_LIBRARY_NAME_TRANSPARENCY: 0.5
     ROTATE_NAMES_ON_CONNECTIONS: False
+
     HISTORY_ENABLED: True
 
     KEEP_ONLY_STICKY_STATES_OPEN: True
@@ -127,7 +162,7 @@ A typical config file looks like this:
     AUTO_RECOVERY_CHECK: False
     AUTO_RECOVERY_LOCK_ENABLED: False
 
-    SESSION_RESTORE_ENABLED: False
+    SESSION_RESTORE_ENABLED: True
 
     NUMBER_OF_RECENT_OPENED_STATE_MACHINES_STORED: 20
 
@@ -135,10 +170,20 @@ A typical config file looks like this:
 
     CHECK_PYTHON_FILES_WITH_PYLINT: False
 
-    DEFAULT_EXTERNAL_EDITOR: gvim
+    DEFAULT_EXTERNAL_EDITOR:
     PREFER_EXTERNAL_EDITOR: False
 
-    RESTORE_UNDOCKED_SIDEBARS: False
+    RESTORE_UNDOCKED_SIDEBARS: True
+
+    STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED: True
+
+    ZOOM_WITH_CTRL: False
+
+    SEMANTIC_DATA_MODE: False
+    SHOW_PATH_NAMES_IN_EXECUTION_HISTORY: False
+
+    # 300 is equal to glib.PRIORITY_LOW which is is lower than the default gtk priority
+    LOGGING_CONSOLE_GTK_PRIORITY: 300
 
     SHORTCUTS:
         abort: Escape
@@ -173,6 +218,7 @@ A typical config file looks like this:
         new: <Control>N
         open: <Control>O
         open_external_editor: <Control><Shift>Q
+        open_library_state_separately: <Control><Shift>space
         paste: <Control>V
         pause: F7
         quit: <Control>Q
@@ -207,6 +253,7 @@ A typical config file looks like this:
         - <Control><Shift>Up
         fullscreen: F11
 
+
 .. _gui_config_docs:
 
 Documentation
@@ -220,20 +267,20 @@ TYPE
 
 SOURCE\_EDITOR\_STYLE
   | Type: string
-  | Default: ``awesome-style``
+  | Default: ``rafcon-dark``
   | The gtk source view style used in the script editor. Note: You can
     download different styles at
     `https://wiki.gnome.org/Projects/GtkSourceView/StyleSchemes GTK
     Source View
     Styles <https://wiki.gnome.org/Projects/GtkSourceView/StyleSchemes_GTK_Source_View_Styles>`__.
     The scripts have to be downloaded to
-    ~/.local/share/gtksourceview-2.0/styles. "awesome-style" is a style
+    ~/.local/share/gtksourceview-2.0/styles. "rafcon-dark" is a style
     created to fit to the design of RAFCON.
 
 GAPHAS\_EDITOR
   | Type: boolean
   | Default: ``True``
-  | RAFCON started with a graphical editor using Gaphas. The develment of OpenGL
+  | Determines if RAFCON is started with a graphical editor using Gaphas. The develment of OpenGL
     has been stopped (except bugfixes) in favor of a new editor using
     GTK cairo and the library Gaphas. The flag decides whether to use
     the old OpenGL editor (False) or the new Gaphas one (True).
@@ -241,7 +288,7 @@ GAPHAS\_EDITOR
 GAPHAS\_EDITOR\_AUTO\_FOCUS\_OF\_ROOT\_STATE
   | Type: boolean
   | Default: ``True``
-  | If RAFCON is started with Gaphas editor enabled this flag enables an
+  | If RAFCON is started with the Gaphas editor enabled this flag enables an
     initial auto focus of the root state after opening the state machine.
     If you do not like this feature simply disable it (False).
 
@@ -282,32 +329,32 @@ PORT\_SNAP\_DISTANCE
 LOGGING\_SHOW\_VERBOSE
   | Type: boolean
   | Default: ``False``
-  | The flag decide to activate the VERBOSE log level in the logging console view.
+  | The flag decides to activate the VERBOSE log level in the logging console view.
 
 LOGGING\_SHOW\_DEBUG
   | Type: boolean
   | Default: ``False``
-  | The flag decide to activate the DEBUG log level in the logging console view.
+  | The flag decides to activate the DEBUG log level in the logging console view.
     
 LOGGING\_SHOW\_INFO
   | Type: boolean
   | Default: ``True``
-  | The flag decide to activate the INFO log level in the logging console view.
+  | The flag decides to activate the INFO log level in the logging console view.
     
 LOGGING\_SHOW\_WARNING
   | Type: boolean
   | Default: ``True``
-  | The flag decide to activate the WARNING log level in the logging console view.
+  | The flag decides to activate the WARNING log level in the logging console view.
     
 LOGGING\_SHOW\_ERROR
   | Type: boolean
   | Default: ``True``
-  | The flag decide to activate the ERROR log level in the logging console view.
+  | The flag decides to activate the ERROR log level in the logging console view.
 
 CONSOLE\_FOLLOW\_LOGGING
   | Type: boolean
   | Default: ``True``
-  | The flag decide to activate the follow mode in the logging console view and to stay on the last printed logger message.
+  | The flag decides to activate the follow mode in the logging console view and to stay on the last printed logger message.
 
 LIBRARY\_TREE\_PATH\_HUMAN\_READABLE
   | Type: boolean
@@ -322,9 +369,9 @@ SUBSTITUTE\_STATE\_KEEPS\_STATE\_NAME
   | Default: ``True``
   | The flag describes the default behavior of the substitute state action
     concerning the previous state name and the state name after the substitution.
-    In the dialogs this can be set adapted for the single operation via a check box.
+    In the dialogs this can be adapted for each single operation via a check box.
     If the flag is True the name is taken from the original state.
-    If the flag is False the name is taken from the state machine that substitute the original state.
+    If the flag is False the name is taken from the state machine that substitutes the original state.
 
 MINIMUM\_SIZE\_FOR\_CONTENT
   | Default: ``30``
@@ -346,8 +393,7 @@ NO\_FULLY\_RECURSIVE\_LIBRARY\_MODEL
 USE\_ICONS\_AS\_TAB\_LABELS
   | Type: boolean
   | Default: ``True``
-  | If True, only icons will be shown in the tabs on the left and right
-    side. Otherwise also a title text is shown.
+  | If True, only icons will be shown in the tabs of the notebooks of the left and right pane. Otherwise the text of the notebook tab is shown as text.
 
 SHOW\_NAMES\_ON\_DATA\_FLOWS
   | Type: boolean
@@ -355,29 +401,29 @@ SHOW\_NAMES\_ON\_DATA\_FLOWS
   | If False, data flow labels will not be shown (helpful if there are
     many data flows)
 
-ROTATE\_NAMES\_ON\_CONNECTIONS
-  | Type: boolean
-  | Default: ``False``
-  | If True, connection labels will be parallel to the connection.
-    Otherwise, they are horizontally aligned.
-
 SHOW\_CONTENT\_LIBRARY\_NAME\_TRANSPARENCY
   | Type: float
   | Default: ``0.5``
   | Set to a value between 0 and 1. Defines the transparency of the name of a LibraryState in the graphical editor,
     of which the content is shown.
 
+ROTATE\_NAMES\_ON\_CONNECTIONS
+  | Type: boolean
+  | Default: ``False``
+  | If True, connection labels will be parallel to the connection.
+    Otherwise, they are horizontally aligned.
+
 HISTORY\_ENABLED
   | Type: boolean
   | Default: ``True``
   | If True, an edit history will be created, allowing for undo and redo
-    operation. Might still be buggy, therefore its optional.
+    operations.
 
 KEEP\_ONLY\_STICKY\_STATES\_OPEN
   | Type: boolean
   | Default: ``True``
   | If True, only the currently selected state and sticky states are
-    open in the states editor on the right side. Thus, a new selected
+    open in the "states editor" on the right side. Thus, a newly selected
     state closes the old one. If False, all states remain open, if they
     are not actively closed.
 
@@ -390,83 +436,95 @@ AUTO\_BACKUP\_ENABLED
 AUTO\_BACKUP\_ONLY\_FIX\_FORCED\_INTERVAL
   | Type: boolean
   | Default: ``False``
-  | If True, the auto backup is performed according a fixed time
+  | If True, the auto backup is performed according to a fixed time
     interval which is defined by
     ``AUTO_BACKUP_FORCED_STORAGE_INTERVAL``. If False, the auto-backup
-    is performed dynamically according
-    ``AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL`` and will be forced if a
-    modification is made more then ``*_FORCED_STORAGE_INTERVAL`` after
-    the last backup to the ``/tmp/``-folder. So in case of dynamic
-    backup it is tried to avoid user disturbances by waiting for a
-    time-interval ``*_DYNAMIC_STORAGE_INTERVAL`` while this the user has
-    not modified the state-machine to trigger the auto-backup while
-    still using ``*_FORCED_STORAGE_INTERVAL`` as a hard limit.
+    is performed dynamically according to
+    ``AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL``. This means that RAFCON tries to avoid user disturbances
+     by waiting for the case that the user does not perform any changes to the state machine for
+    ``AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL`` seconds. If this happens RAFCON will perform a backup.
+    Still ``AUTO_BACKUP_FORCED_STORAGE_INTERVAL`` is used as a hard storage interval.
+    More information about this can be found on :ref:`Auto Backup`
+
 AUTO\_BACKUP\_FORCED\_STORAGE\_INTERVAL
   | Default: 120
   | Unit: Seconds
-  | Time horizon for forced auto-backup if
-    ``AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL`` is False and otherwise the
-    it is the fix auto-backup time interval.
+  | Time horizon for a forced auto-backup if ``AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL`` is True.
 
 AUTO\_BACKUP\_DYNAMIC\_STORAGE\_INTERVAL
   | Default: 20
   | Unit: Seconds
-  | Time horizon after which the "dynamic" auto-backup
-    (``AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL`` is False) is triggered if
-    there was no modification to the state-machine while this interval.
+  | Time horizon after which the auto-backup is triggered if
+    there was no modification to the state-machine for an time interval of this size. (only if ``AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL`` is False)
 
 AUTO\_RECOVERY\_CHECK
   | Default: ``False``
-  | If True, the auto back module will check for backups of crashed instances or
-    badly closed state machines that left a lock file. This comfortable feature
-    only can be used if the crashed instances or state machines already were
-    created with ``AUTO_RECOVERY_LOCK_ENABLED`` and ``AUTO_BACKUP_ENABLED`` True
-    and thereby needed lock-files were set.
-
+  | If True, the auto back module will check for backups of crashed RAFCON instances. This comfortable feature
+    only can be used if the crashed instances or state machines were already
+    created with ``AUTO_RECOVERY_LOCK_ENABLED`` and ``AUTO_BACKUP_ENABLED`` set to True.
 
 AUTO\_RECOVERY\_LOCK\_ENABLED:
   | Default: ``False``
   | If True, the auto backup will put lock-files into the respective backup folder
     to label not correctly/cleanly closed state machines and instances.
-    The auto recovery check is searching for these locks.
+    The auto recovery check is searching for these lock-files.
 
 SESSION\_RESTORE\_ENABLED:
   | Default: ``True``
   | If True the current session is stored into the runtime configuration and restored
-    after restarting RAFCON with respective runtime configuration file.
+    after restarting RAFCON.
 
 NUMBER\_OF\_RECENT\_OPENED\_STATE\_MACHINES\_STORED:
   | default: 20
-  | Maximum number of stored recently opened state machine paths.
+  | Maximum number of state machines that can be restored in a session.
 
-RESTORE\_UNDOCKED\_SIDEBARS
+AUTO\_APPLY\_SOURCE\_CODE\_CHANGES
+  | Default: ``True``
+  | If True, RAFCON will apply source code changes on saving a state machine.
+
+CHECK\_PYTHON\_FILES\_WITH\_PYLINT
   | Default: ``False``
-  | If True, RAFCON will restore undocked windows from the last
-    RAFCON-instance run.
+  | If True, RAFCON checks the script file with pylint before saving it. In case of an error a message dialog will pop up to warn the user about the error.
 
 DEFAULT\_EXTERNAL\_EDITOR
   | Default: Empty
-  | Holds the command which is executed before the script.py file by clicking the
-    'Open externally' button in the source editor window. The command can be anything 
-    you wish and results in a shell command with the following pattern:
-    '<DEFAULT\_EXTERNAL\_EDITOR> script.py>'.
+  | Holds the command for the editor to open the script.py file with, if the user clicks the
+    'Open externally' button in the source editor window. The command can be anything
+    and results in a shell command with the following pattern: '<DEFAULT\_EXTERNAL\_EDITOR> script.py>'.
 
 PREFER_EXTERNAL_EDITOR
   | Default: ``False``
   | If True, RAFCON will assume that the user always wants to work with a different editor
-    than the internal one. If the 'Open externally' button is clicked, the source text is 
-    locked the whole time and a 'Reload' buttons reloads the saved file into RAFCON.
-    If False, it is recommended to close the externally opend script.py everytime you are
+    than the internal one. If the 'Open externally' button is clicked, the source text is
+    locked the whole time and a 'Reload' button reloads the saved file into RAFCON.
+    If False, it is recommended to close the externally opened script.py everytime you are
     done editing.
 
-SEMANTIC_DATA_MODE
+RESTORE\_UNDOCKED\_SIDEBARS
+  | Default: ``True``
+  | If True, RAFCON will restore undocked windows from the last RAFCON-instance run.
+
+STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED:
+  | Default: ``True``
+  | If set to True, states inside library states can be selected.
+
+ZOOM_WITH_CTRL:
+  | Default: ``False``
+  | If set to True the user has to press the CTRL button to zoom into a state machine.
+
+SEMANTIC\_DATA\_MODE
   | Default: ``False``
   | If True, RAFCON gives the semantic data editor of each state more vertical space.
-    The vertical space is taken from the port/connection widget. This is especially useful, when working with semantic data.
+    The vertical space is taken from the port/connection widget. This is especially useful, when working a lot with semantic data.
 
-SHOW_PATH_NAMES_IN_EXECUTION_HISTORY
+SHOW\_PATH\_NAMES\_IN\_EXECUTION\_HISTORY
   | Default: ``False``
   | If True, RAFCON shows the state paths next to the state names in each execution history entry.
+
+LOGGING\_CONSOLE\_GTK\_PRIORITY:
+  | Default: 300
+  | Unit: Priority
+  | Sets the priority of logging anything to the console widget. The lower the number, the higher the priority. If the priority is too high, than the GUI will lag during execution, as the console widget will than slow down the rendering of gaphas / OpenGL
 
 SHORTCUTS
   | Type: dict
@@ -475,7 +533,7 @@ SHORTCUTS
     triggered by the shortcut, the value defines the shortcut(s). There
     can be more than one shortcut registered for one action. See `GTK
     Documentation <https://people.gnome.org/~gcampagna/docs/Gtk-3.0/Gtk.accelerator_parse.html>`__
-    about for more information about the shortcut parser. Not all
+    about more information about the shortcut parser. Not all
     actions are implemented, yet. Some actions are global within the GUI
     (such as 'save'), some are widget dependent (such as 'add').
 
@@ -574,8 +632,7 @@ The default ``network_config.file`` looks like:
 
 .. code:: yaml
 
-    BURST_NUMBER: 1
-    CLIENT_UDP_PORT: 7777
+    TYPE: NETWORK_CONFIG
     ENABLED: true
     HASH_LENGTH: 8
     HISTORY_LENGTH: 1000
@@ -586,44 +643,42 @@ The default ``network_config.file`` looks like:
     SERVER_IP: 127.0.0.1
     SERVER_UDP_PORT: 9999
     TIME_BETWEEN_BURSTS: 0.01
-    TYPE: NETWORK_CONFIG
+    BURST_NUMBER: 1
+    CLIENT_UDP_PORT: 7777
 
 .. _monitoring_plugin_docs:
 
 Documentation
 """""""""""""
 
-BURST\_NUMBER
-  | Type: int
-  | Default: ``1``
-  | Amount of messages with the same content which shall be send to
-    ensure the communication.
-
-CLIENT\_UDP\_PORT
-  | Type: int
-  | Default: ``7777``
-  | Contains the UDP port of the client
+TYPE
+  | Type: string
+  | Default: ``NETWORK_CONFIG``
+  | Specifying the type of configuration. Must be NETWORK\_CONFIG for
+    the network config file.
 
 ENABLED
   | Type: boolean
   | Default: ``True``
+  | The monitoring plugin is only used if this value is set to True.
 
-HASH\_LENGHT
+HASH\_LENGTH
   | Type: int
   | Default: ``8``
+  | If you have many different message contents, increase this number.
 
-HISTORY\_LENGHT
+HISTORY\_LENGTH
   | Type: int
   | Default: ``1000``
 
-MAX\_TIME\_WAITING\_BETWEEN\_CONNECTION\_TRY OUTS
+MAX\_TIME\_WAITING\_BETWEEN\_CONNECTION\_TRY\_OUTS
   | Type: float
   | Default: ``3.0``
 
 MAX\_TIME\_WAITING\_FOR\_ACKNOWLEDGEMENTS
   | Type: float
   | Default: ``1.0``
-  | Maximum time waiting for an acknowledge after sending a message
+  | Maximum waiting time for an acknowledgement after sending a message
     which expects one.
 
 SALT\_LENGHT
@@ -633,13 +688,13 @@ SALT\_LENGHT
 SERVER
   | Type: boolean
   | Default: ``True``
-  | Defines if process should start as server or client. If ``False``
+  | Defines if the RAFCON instance should start as server or client. If ``False``
     process will start as client.
 
 SERVER\_IP
   | Type: string
   | Default: ``127.0.0.1``
-  | If process is client, SERVER\_IP contains the IP to connect to.
+  | If RAFCON is started as client, SERVER\_IP contains the IP to connect to.
 
 SERVER\_UDP\_PORT
   | Type: int
@@ -651,9 +706,14 @@ TIME\_BETWEEN\_BURSTS
   | Default: ``0.01``
   | Time between burst messages (refer to BURST\_NUMBER).
 
-TYPE
-  | Type: string
-  | Default: ``NETWORK_CONFIG``
-  | Specifying the type of configuration. Must be NETWORK\_CONFIG for
-    the network config file.
+BURST\_NUMBER
+  | Type: int
+  | Default: ``1``
+  | Amount of messages with the same content which shall be send to
+    ensure the communication.
+
+CLIENT\_UDP\_PORT
+  | Type: int
+  | Default: ``7777``
+  | Contains the UDP port of the client
 

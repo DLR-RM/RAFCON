@@ -1,15 +1,15 @@
 General Git commit conventions
 """"""""""""""""""""""""""""""
 
-Git is used as our version control system. Please keep in the following points in mind when committing to the
+Git is used as our version control system. Please keep the following points in mind when committing to the
 `repository <https://github.com/DLR-RM/RAFCON>`__:
 
--  if you are not a core developer, all changes must be bundles in pull requests
+-  if you are not a core developer, all changes must be bundled in pull requests
 -  therefore, a new branch is required for new features and bug fixes
--  try to keep pull requests small, this eases the review and will fasten the merge of the branch
--  before filing a pull request, make sure that all tests are passed
+-  try to keep pull requests small, this eases the review and will speed up the merge of the branch
+-  before submitting a pull request, make sure that all tests are passed
 -  new features require new unit tests
--  each functional/logical change gets its own commit (try to keep them small, too)
+-  each functional/logical change gets its own commit (try to keep them small)
 -  no excessive use of ``logger.debug`` outputs (in commits) and never commit ``print`` commands
 
 
@@ -22,7 +22,7 @@ important to have good commit messages.
 **What to do:**
 
 -  Use imperative (`Add file …`)
--  First line is the caption of the commit (should be less than 50 chars)
+-  First line is the caption of the commit (should be less than 72 chars)
 
    -  summarizes the commit
    -  mentions which code is affected (e.g. by stating the changes module/class)
@@ -47,17 +47,17 @@ important to have good commit messages.
 
 **Setting up your system**
 
-Add this line to your ``~/.vimrc`` to add spell checking and automatic wrapping at the recommended 72 columns to you commit messages.
+Add this line to your ``~/.vimrc`` to add spell checking and automatic wrapping to your commit messages.
 
 ``autocmd Filetype gitcommit setlocal spell textwidth=72``
 
 **Explaining examples**
 
-This is a good example for acommit message:
+This is a good example for a commit message:
 
 .. code-block:: none
 
-  Example: Capitalized, short (<50 chars) summary
+  Example: Capitalized, short (<72 chars) summary
 
   More detailed explanatory text. Wrap it to about 72 characters. Think
   of first line as the subject of an email and the rest of the text as
