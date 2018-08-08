@@ -20,6 +20,13 @@ Next release
 Patch releases 0.12.\*
 ----------------------
 
+0.12.20
+"""""""
+
+- Features:
+    
+    - maintenance release
+
 0.12.19
 """""""
 
