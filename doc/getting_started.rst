@@ -43,9 +43,16 @@ environment:
     $ export PYTHONPATH=/some/personal/path/rafcon/source:$PYTHONPATH
     $ export PATH=/some/personal/path/rafcon/bin:$PATH
 
-Now you can run ``rafcon_core`` or ``rafcon`` as mentioned
-above. Hereby, ``rafcon_core`` just links to the file
-``/some/personal/path/rafcon/source/rafcon/core/start.py`` and
-``rafcon`` points to
-``/some/personal/path/rafcon/source/rafcon/gui/start.py``, so you could
-also call these files directly.
+Now you can run ``rafcon`` to start the RAFCON-GUI or just run ``rafcon_core`` to only launch the core. Hereby,
+``rafcon`` just links to the file ``/some/personal/path/rafcon/source/rafcon/gui/start.py`` and ``rafcon_core``
+points to ``/some/personal/path/rafcon/source/rafcon/core/start.py``, so you could also call these files directly.
+
+.. _install_fonts:
+
+**IMPORTANT:** If you start rafcon for the first time start it this way:
+
+.. code:: bash
+
+    $ RAFCON_CHECK_INSTALLATION=True rafcon
+
+This will install all fonts and gtk-styles.
