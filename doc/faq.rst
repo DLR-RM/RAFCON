@@ -20,37 +20,6 @@ The core RAFCON configuration file is per default situated here in
 ``~/.config/rafcon/config.yaml``, but can also be passed to RAFCON using the
 command line parameter ``-c /path/to/your/core/config.yaml``. For further explanation see :ref:`Configuration`.
 
-
-.. _faq_collaboration:
-
-How to effectively collaborate on creating state machines?
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-The following guidelines will help you to collaboratively work on bigger state machines:
-
-* Use git for versioning your state machines!
-* Do not work at the same time on the same state machine as your colleague! You really have to know what your are doing if you merge state machine json files!
-* Clearly distribute your state machine in several modules, and create library states for these modules. Then, clearly define the interfaces of these libraries. Finally, your libraries can be developed in parallel.
-* If you nevertheless encounter a git conflict either throw away the smaller part of the changes, which are conflicting, and re-create them on a healthy git version. Or try to merge (recommended only for Pros!)
-
-
-.. _faq_library_interface_change:
-
-How to handle a library interface change of a library used in a (bigger) state machine ?
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-Even if you have a robust and clever modularization of your code, these kind of situations will occur! There are several cases.
-
-**The location of a library changed, but the library kept the same**:
-    No problem, RAFCON will help you to relocate your libraries. Don't forget to save the library after replacing the old libraries with the new ones.
-
-**The interface of a library changed:**
-    If you just added data ports or outcomes, you are fine! RAFCON can handle these cases easily. If you removed outcomes or data ports of a library your state machine, which includes this library can become invalid. Either data flows try to connect to no more existing data ports or transitions to no more existing outcomes. You won't be able to open the invalid state machine with the default setting. In this case use the LIBRARY_RECOVERY_MODE set to True (see Core :ref:`Configuration`). This will allow you to open invalid state machines. Currently, it simply removes all connections in a hierarchy if one port in the hierarchy is missing. (Removing only the erroneous connection would of course be much more convenient, and there is already an issue for that. Feel free to contribute :-) !)
-
-**The location and the interface of a library changed:**
-    Try to avoid this case! Otherwise it will mean a good portion of work for you! The library relocation feature won't help you, as it cannot handle interface changes yet. Basically you have to cancel the library relocation process. This means that you will end up with hierarchies without connections. All the modified library states are replaced by "Hello world" dummy states. Basically, this means that you have to rebuild all hierarchies that held a link to a library, whose location and interface changed.
-
-
 .. _faq_initialization_global_classes:
 
 Where can instances of global objects be hold?
@@ -336,6 +305,36 @@ by the parameter ``-g`` in the command line. For further explanation see
 :ref:`Configuration`.
 
 
+.. _faq_collaboration:
+
+How to effectively collaborate on creating state machines?
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+The following guidelines will help you to collaboratively work on bigger state machines:
+
+* Use git for versioning your state machines!
+* Do not work at the same time on the same state machine as your colleague! You really have to know what your are doing if you merge state machine json files!
+* Clearly distribute your state machine in several modules, and create library states for these modules. Then, clearly define the interfaces of these libraries. Finally, your libraries can be developed in parallel.
+* If you nevertheless encounter a git conflict either throw away the smaller part of the changes, which are conflicting, and re-create them on a healthy git version. Or try to merge (recommended only for Pros!)
+
+
+.. _faq_library_interface_change:
+
+How to handle a library interface change of a library used in a (bigger) state machine ?
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+Even if you have a robust and clever modularization of your code, these kind of situations will occur! There are several cases.
+
+**The location of a library changed, but the library kept the same**:
+    No problem, RAFCON will help you to relocate your libraries. Don't forget to save the library after replacing the old libraries with the new ones.
+
+**The interface of a library changed:**
+    If you just added data ports or outcomes, you are fine! RAFCON can handle these cases easily. If you removed outcomes or data ports of a library your state machine, which includes this library can become invalid. Either data flows try to connect to no more existing data ports or transitions to no more existing outcomes. You won't be able to open the invalid state machine with the default setting. In this case use the LIBRARY_RECOVERY_MODE set to True (see Core :ref:`Configuration`). This will allow you to open invalid state machines. Currently, it simply removes all connections in a hierarchy if one port in the hierarchy is missing. (Removing only the erroneous connection would of course be much more convenient, and there is already an issue for that. Feel free to contribute :-) !)
+
+**The location and the interface of a library changed:**
+    Try to avoid this case! Otherwise it will mean a good portion of work for you! The library relocation feature won't help you, as it cannot handle interface changes yet. Basically you have to cancel the library relocation process. This means that you will end up with hierarchies without connections. All the modified library states are replaced by "Hello world" dummy states. Basically, this means that you have to rebuild all hierarchies that held a link to a library, whose location and interface changed.
+
+
 .. _faq_change_hierarchy:
 
 How can the hierarchy level of a state be changed in the graphical editor after it was created?
@@ -355,6 +354,15 @@ HierarchyState and moves the currently selected states into the new state. To us
 states to be grouped (they have to be on one hierarchical level) and then use the group-shortcut
 (STRG-G per default) or the menu bar Edit->Group entry.
 
+
+The RAFCON GUI looks weird. Strange symbols are scattered all over the GUI. What can I do?
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+Probably RAFCON cannot find its fonts. If you installed RAFCON via pip, uninstall it and install it again.
+If you checked out RAFCON's git repo, reinstall the fonts. See the :ref:`Getting Started <install_fonts>` page for
+that.
+
+
 Known Issues
 """"""""""""
 
@@ -368,6 +376,7 @@ and can be caused by different screens sizes when using several monitors or simi
 The fastest way to solve this problem is to delete your runtime_config.yaml file which
 is commonly situated at ``~/.config/rafcon/runtime_config.yaml`` and which will be generated
 automatically and cleanly after removal.
+
 
 .. _faq_start_issue:
 
