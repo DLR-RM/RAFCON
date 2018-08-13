@@ -388,7 +388,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         # Check for name uniqueness
         valid, message = self._check_data_port_name(self._input_data_ports[data_port_id])
         if not valid:
-            self._input_data_ports[data_port_id]._parent = None
+            self._input_data_ports[data_port_id].parent = None
             del self._input_data_ports[data_port_id]
             raise ValueError(message)
 
@@ -406,7 +406,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if data_port_id in self._input_data_ports:
             if destroy:
                 self.remove_data_flows_with_data_port_id(data_port_id)
-            self._input_data_ports[data_port_id]._parent = None
+            self._input_data_ports[data_port_id].parent = None
             return self._input_data_ports.pop(data_port_id)
         else:
             raise AttributeError("input data port with name %s does not exit", data_port_id)
@@ -452,7 +452,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         # Check for name uniqueness
         valid, message = self._check_data_port_name(self._output_data_ports[data_port_id])
         if not valid:
-            self._output_data_ports[data_port_id]._parent = None
+            self._output_data_ports[data_port_id].parent = None
             del self._output_data_ports[data_port_id]
             raise ValueError(message)
 
@@ -469,7 +469,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if data_port_id in self._output_data_ports:
             if destroy:
                 self.remove_data_flows_with_data_port_id(data_port_id)
-            self._output_data_ports[data_port_id]._parent = None
+            self._output_data_ports[data_port_id].parent = None
             return self._output_data_ports.pop(data_port_id)
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
@@ -680,7 +680,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                     break  # found the one outgoing transition
 
         # delete outcome it self
-        self._outcomes[outcome_id]._parent = None
+        self._outcomes[outcome_id].parent = None
         return self._outcomes.pop(outcome_id)
 
     @lock_state_machine
@@ -1051,7 +1051,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         # check that all old_input_data_ports are no more referencing self as there parent
         for old_input_data_port in old_input_data_ports.itervalues():
             if old_input_data_port not in self._input_data_ports.itervalues() and old_input_data_port.parent is self:
-                old_input_data_port._parent = None
+                old_input_data_port.parent = None
 
     @property
     def output_data_ports(self):
@@ -1109,7 +1109,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         # check that all old_output_data_ports are no more referencing self as there parent
         for old_output_data_port in old_output_data_ports.itervalues():
             if old_output_data_port not in self._output_data_ports.itervalues() and old_output_data_port.parent is self:
-                old_output_data_port._parent = None
+                old_output_data_port.parent = None
 
     @property
     def outcomes(self):
@@ -1164,7 +1164,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         # check that all old_outcomes are no more referencing self as there parent
         for old_outcome in old_outcomes.itervalues():
             if old_outcome not in self._outcomes.itervalues() and old_outcome.parent is self:
-                old_outcome._parent = None
+                old_outcome.parent = None
 
     @property
     def input_data(self):
