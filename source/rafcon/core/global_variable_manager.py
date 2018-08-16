@@ -189,17 +189,13 @@ class GlobalVariableManager(Observable):
                     if (not lock_successful) and block:  # case: lock could not be acquired => wait for it as block=True
                         duration = 0.
                         loop_time = 0.1
-                        # initial lock was not successful but block=True
-                        while not self.__variable_locks[key].acquire(False):  # while loops informs the user about long
-                            # locked
-                            #  variables
+                        while not self.__variable_locks[key].acquire(False):
                             time.sleep(loop_time)
                             duration += loop_time
                             if int(duration*10) % 20 == 0:
+                                # while loops informs the user about long locked variables
                                 logger.verbose("Variable '{2}' is locked and thread {0} waits already {1} seconds to "
                                                "access it.".format(currentThread(), duration, key))
-                        # in the worst case the variable was locked already again by another process,
-                        # and the user won't get feedback about long locking variable
                     access_key = global_variable_id_generator()
                     self.__access_keys[key] = access_key
                     return access_key
