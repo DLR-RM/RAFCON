@@ -21,6 +21,7 @@ Next release
     - :issue:`550` Gaphas cairo.Error: invalid value (typically too big) for the size of the input (surface, pattern, etc.)
     - :issue:`564` Zoom onto mouse position
     - handle config option `ZOOM_WITH_CTRL` properly
+    - :issue:`574` Group fails if it includes data flows between the grouped states or scoped variables
 
 
 Patch releases 0.12.\*
@@ -31,7 +32,7 @@ Patch releases 0.12.\*
 
 - Improvements:
 
-    - example statemachines and generic libraries get now installed via pypi
+    - example state machines and generic libraries get now installed via pypi
 
 
 0.12.16
