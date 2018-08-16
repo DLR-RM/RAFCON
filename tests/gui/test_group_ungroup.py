@@ -219,6 +219,14 @@ def trigger_issue_574_reproduction_sequence():
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values())
     call_gui_callback(menubar_ctrl.on_group_states_activate, None, None)
 
+    # TODO add check for warning if a data-flow is connected to scoped variables which has ingoing and outgoing
+    # TODO data flows linked with selected states
+
+    call_gui_callback(sm_m.history.undo)
+
+    call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values() + list(sm_m.root_state.scoped_variables))
+    call_gui_callback(menubar_ctrl.on_group_states_activate, None, None)
+
 
 def test_bug_issue_574(caplog):
     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True}, libraries={})

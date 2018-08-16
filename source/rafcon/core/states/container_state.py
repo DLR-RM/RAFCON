@@ -469,6 +469,9 @@ class ContainerState(State):
         # all internal data flows
         data_flows_internal = {df.data_flow_id: self.remove_data_flow(df.data_flow_id, destroy=False)
                                for df in related_data_flows['enclosed']}
+        # TODO add warning if a data-flow is connected to scoped variables which has ingoing and outgoing data flows
+        # TODO linked with selected states -> group would change behavior and scoped would need to be selected or
+        # TODO                                local scoped variable need to be introduced in new hierarchy state
         # all internal scoped variables
         scoped_variables_to_group = {dp_id: self.remove_scoped_variable(dp_id, destroy=False)
                                      for dp_id in scoped_variable_ids}
@@ -482,6 +485,13 @@ class ContainerState(State):
         state_id = state_id_generator()
         while state_id in state_ids:
             state_id = state_id_generator()
+        # if scoped variables are used all data flows have to be checked if those link to those and correct the state_id
+        if scoped_variable_ids:
+            for data_flow in data_flows_internal.itervalues():
+                if data_flow.from_state == self.state_id:
+                    data_flow.from_state = state_id
+                if data_flow.to_state == self.state_id:
+                    data_flow.to_state = state_id
         s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
                            scoped_variables=scoped_variables_to_group, state_id=state_id)
         state_id = self.add_state(s)
