@@ -8,12 +8,46 @@ Next release
 ------------
 
 - Features:
+
+    
+- Improvements:
+
+
+- Bug Fixes:
+
+    - :issue:`574` Group fails if it includes data flows between the grouped states or scoped variables
+
+
+
+Patch releases 0.12.\*
+----------------------
+
+0.12.20
+"""""""
+
+- Features:
+    
+    - maintenance release
+
+0.12.19
+"""""""
+
+- Bug Fixes:
+    
+    - fix setup.py, sdist now working on pypi
+
+0.12.18
+"""""""
+
+- Features:
+    
     - new shortcut open library state separately as state machine by default on 'Shift+Ctrl+Space' (shortcut works for multiple states, too)
 
 - Improvements:
 
     - Provides proper PyCharm config files (in the `.idea` folder)
     - update menu item labels
+    - updated rst documentation
 
 - Bug Fixes:
 
@@ -21,11 +55,6 @@ Next release
     - :issue:`550` Gaphas cairo.Error: invalid value (typically too big) for the size of the input (surface, pattern, etc.)
     - :issue:`564` Zoom onto mouse position
     - handle config option `ZOOM_WITH_CTRL` properly
-    - :issue:`574` Group fails if it includes data flows between the grouped states or scoped variables
-
-
-Patch releases 0.12.\*
-----------------------
 
 0.12.17
 """""""

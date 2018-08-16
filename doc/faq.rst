@@ -4,34 +4,61 @@ FAQ
 On this page, we collect Frequently Ask Questions (FAQ) about
 :ref:`RAFCON`. At the moment, there are three categories of
 questions concerning `Core`_, `API`_ or
-`GUI`_. If you have a new question, please feel free to add
-those to the section `New Questions`_.
+`GUI`_. If you have a new question, please `create an issue <https://github.com/DLR-RM/RAFCON/issues/new>`__.
 
 Core
 ----
 
-Questions that concern the core functionality/execution.
+Questions that concern the core functionality and state machine execution.
 
 .. _faq_core_config:
 
 Where I can configure the RAFCON core?
 """"""""""""""""""""""""""""""""""""""
 
-The core RAFCON configuration file is generally situated here
-``~/.config/rafcon/config.yaml`` but also can be handed using a path as
-the config-folder parameter ``-c`` in the command line. For further
-explanation see :ref:`Configuration`.
+The core RAFCON configuration file is per default situated here in
+``~/.config/rafcon/config.yaml``, but can also be passed to RAFCON using the
+command line parameter ``-c /path/to/your/core/config.yaml``. For further explanation see :ref:`Configuration`.
+
+
+.. _faq_collaboration:
+
+How to effectively collaborate on creating state machines?
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+The following guidelines will help you to collaboratively work on bigger state machines:
+
+* Use git for versioning your state machines!
+* Do not work at the same time on the same state machine as your colleague! You really have to know what your are doing if you merge state machine json files!
+* Clearly distribute your state machine in several modules, and create library states for these modules. Then, clearly define the interfaces of these libraries. Finally, your libraries can be developed in parallel.
+* If you nevertheless encounter a git conflict either throw away the smaller part of the changes, which are conflicting, and re-create them on a healthy git version. Or try to merge (recommended only for Pros!)
+
+
+.. _faq_library_interface_change:
+
+How to handle a library interface change of a library used in a (bigger) state machine ?
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+Even if you have a robust and clever modularization of your code, these kind of situations will occur! There are several cases.
+
+**The location of a library changed, but the library kept the same**:
+    No problem, RAFCON will help you to relocate your libraries. Don't forget to save the library after replacing the old libraries with the new ones.
+
+**The interface of a library changed:**
+    If you just added data ports or outcomes, you are fine! RAFCON can handle these cases easily. If you removed outcomes or data ports of a library your state machine, which includes this library can become invalid. Either data flows try to connect to no more existing data ports or transitions to no more existing outcomes. You won't be able to open the invalid state machine with the default setting. In this case use the LIBRARY_RECOVERY_MODE set to True (see Core :ref:`Configuration`). This will allow you to open invalid state machines. Currently, it simply removes all connections in a hierarchy if one port in the hierarchy is missing. (Removing only the erroneous connection would of course be much more convenient, and there is already an issue for that. Feel free to contribute :-) !)
+
+**The location and the interface of a library changed:**
+    Try to avoid this case! Otherwise it will mean a good portion of work for you! The library relocation feature won't help you, as it cannot handle interface changes yet. Basically you have to cancel the library relocation process. This means that you will end up with hierarchies without connections. All the modified library states are replaced by "Hello world" dummy states. Basically, this means that you have to rebuild all hierarchies that held a link to a library, whose location and interface changed.
+
 
 .. _faq_initialization_global_classes:
 
-Where can instances of global classes be initialized (e.g. a LN-client)?
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Where can instances of global objects be hold?
+""""""""""""""""""""""""""""""""""""""""""""""
 
-Global classes can be initialized at any point. You can e. g. create a
-state at the beginning of the state machine with name "Init LN-client",
-which does the initialization within some Python module. If this module
-is imported in another state, it can use the initialized client, as the
-Python shell didn't change.
+Global objects can be initialized at any point using the global variable manager. Storing such variables in the
+global variable manager (most of the time) only makes sense, when storing them per reference. Keep in mind:
+Global variables are ugly and make your state machine less modular. Use them as little as possible!
 
 .. _faq_concurrency:
 
@@ -40,14 +67,30 @@ How does concurrency work?
 
 A concurrency state executes all child states concurrently. A barrier
 concurrency state waits for all its children to finish their execution.
-A preemptive concurrency state only waits for the first and preempts the
+A preemptive concurrency state only waits for the first state to finsih and preempts the
 others. Each state gets its own thread when it is called, so they run
 completely independently. Also each state gets its own memory space,
 i.e. all input data of the a state is copied at first and then passed to
-the state. Interaction between two concurrent branches inside a
+the state.
+
+Direct interaction between two concurrent branches inside a
 concurrency state is not possible in RAFCON, except by using global
-variables (please use them with care, as heavily using them quickly
-leads to a bad state machine design).
+variables (please use them with care, as heavily using them make your state machine less modular).
+The reasoning for this is that synchronization of many processes is a hot topic and very error prone.
+Our recommendation is:
+
+1. Distribute your data to parallel branches
+2. Do stuff in parallel
+3. After concurrent branches finished: Collect data of branches and process it
+4. Distribute data it again
+5. Do stuff in parallel etc.
+
+Monitoring of different system states works via preemption and by using global variables as e.g. global signals.
+A separate resource manager and world model to hold the information about the system is definitely needed for more
+complex use cases. RAFCON is not a tool for holding complex data, so don't try to use it for this.
+
+.. (please always keep in mind the difference between the state of a task and
+    the state of a part a system; RAFCON was only created to manager the former)
 
 See also :ref:`How does preemption work? How do I implement preemptable states correctly? <faq_preemption>`
 
@@ -72,22 +115,22 @@ a step mode can be activated.
    :width: 90 %
    :align: center
 
-In the step mode, the use now can trigger four kinds of step: "Step
-Into", "Step Over", "Step Out", "Backward Step".
+In the step mode, the useer can trigger four kinds of step: "Step
+Into", "Step Over", "Step Out" and "Backward Step".
 
 The "Step Into" simply executes the next state in the state machine. So
 the execution goes down and up the hierarchy.
 
 The "Step Over" makes a step on the same hierarchy level, independent on
-how many substates the next state will trigger. If the execution reaches
-the end of the hierarchy, it steps out to the next higher hierarchy.
+how many sub-states the next state will trigger. If the execution reaches
+the end of the hierarchy it steps out to the hierarchy.
 
 The "Step Out" executes all states in the current hierarchy until the
 execution reaches an outcome of the current hierarchy.
 
-The "Backward Step" triggers a backward step with respect to the current
-execution history. Before and after the execution of each state, the
-scoped data is stored. The scoped data includes all the data that was
+The "Backward Step" triggers a backward step with respect to the current execution history.
+Before and after the execution of each state all the context data (i.e. the scoped data) of the current hierarchy is
+stored. The scoped data includes all the date that was
 given to the current container state as input and that was created by
 the child states with their outputs. A backward step now loads all the
 scoped data which was valid after the execution of the state, executes
@@ -98,7 +141,7 @@ means executing an optional
 inputs and outputs of the function are the input data of the state
 (defined by its data flows) loaded from the current scoped data. If the
 ``backward_execute`` function is not defined, nothing is executed at
-all. For example backward-stepping state machines, have a look at the
+all. For an example backward-stepping state machine, have a look at the
 "functionality\_examples" in the RAFCON Git repository:
 ``[path_to_git_repo]/share/examples/functionality_examples``.
 
@@ -108,18 +151,18 @@ What does pause and stop do?
 """"""""""""""""""""""""""""
 
 Pausing a state machine prevents the current state to "take" the next
-transition. Furthermore a paused-event of each state is triggered.
+transition. Furthermore a paused-event is triggered for each state.
 
 Stopping a state state machine also prevents the current state to "take"
-the next transition. Instead of taking the transition selected by the
+the next transition. Instead of taking the transition selected by the stopped
 state, the execution runs the state connected to the "preempted" outcome
-of the state. If no state is connected to the "preempted" outcome, the
+of the stopped state. If no state is connected to the "preempted" outcome, the
 current state hierarchy is left with the "preempted" outcome. Stopping a
 state does not stop the thread of the state itself. It only triggers a
-preempted-event of each state.
+preempted-event for each state.
 
 For information on how to correctly listen to pause or preempted events
-inside a state, see `What happens if the state machine is paused? How can I pause running services, e. g. the robot?`_.
+inside a state, see :ref:`What happens if the state machine is paused? How can I pause running services, e. g. the robot? <faq_pause>`.
 
 .. _faq_preemption:
 
@@ -128,9 +171,9 @@ How does preemption work? How do I implement preemptable states correctly?
 
 Preemption is achieved in *preemptive concurrency states*. All direct
 children of these states are executed in parallel in separate threads.
-These direct children can be all kinds of states: execution states,
-libraries or any container. The direct child finishing execution first
-(by returning an outcome) causes all sibling states to stop (preempt).
+These direct children can be of all kinds of states: execution states,
+libraries or any type of container. The direct child, which finishes its execution first
+(by returning an outcome), causes all sibling states to stop (preempt).
 If all siblings have been preempted, the execution of the preemptive
 concurrency state is finished.
 
@@ -169,14 +212,12 @@ stopped (by the user clicking "Stop").
 
 This should also be kept in mind when developing libraries. As a user
 could use libraries in Preemptive Concurrency States, libraries should
-be designed in this way. For further comprehension consider the state
-machine example in share/examples/tutorials/simple\_preemption\_example in the
-project folder.
+be designed in this way.
 
 .. _faq_pause:
 
-What happens if the state machine is paused? How can I pause running services, e. g. the robot?
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+What happens if a state machine is paused? How can I pause running services, e. g. the robot?
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 The basic behavior is simple: If a state machine is paused, no more
 transition is being followed. I. e., if a state returns an outcome, the
@@ -217,22 +258,21 @@ An example implementation can be seen in the following:
 An execution state with this code snippet would print "pulse" once per
 second (``self.wait_for_interruption(1)``). The wait command is
 interrupted, if either the user clicks "pause" or the state is preempted
-(state machine is stopped or a state running in parallel finishes).
+(state machine is stopped or a child state running in parallel in a preemptive concurrency state finishes).
 Therefore, the two event types are checked. If the state is to be
 preempted, the state follows that request
 (``if self.preempted: return "preempted"``). If the execution was
 paused, the state waits for a resume (``self.wait_for_unpause()``). The
 wait command is interrupted either by the continuation of the execution
 or by a complete stop of the execution. The former manifests in the
-``self.preempted`` flag to be set, the latter by the set of the
-``self.started`` flag.
+``self.started`` flag to be set, the latter by the set of the
+``self.preempted`` flag.
 
 If an external service is involved, e. g. for commanding a robot, that
-service might also be paused. For this, one can pass the one or more
-events to that service. This requires the external service to be written
-in Python.
+service might also be paused. For this, one can pass the respective services to the robot.
+This requires the external service to be written in Python.
 
-:: _faq_state_abortion:
+.. _faq_state_abortion:
 
 How to handle a state abortion correctly?
 """""""""""""""""""""""""""""""""""""""""
@@ -247,13 +287,13 @@ of the aborted state, the error is propagated upwards in the hierarchy
 until a state is handling the abortion or the state machine is left. An
 example state machine on how to use such a error handling can look like
 is given in
-``$RAFCON_GIT_REPO_PATH/tests/asserts/unit_test_state_machines/error_propagation_test``.
+``$RAFCON_GIT_REPO_PATH/tests/assets/unit_test_state_machines/error_propagation_test``.
 If the error handling state is a hierarchy state the "error" input data
 port must be manually forwarded to the first child state i.e. a
 input\_data port for the hierarchy and the child state has to created
 and connected.
 
-:: _faq_jsonconversion:
+.. _faq_jsonconversion:
 
 How does python-jsonconversion handle string types?
 """""""""""""""""""""""""""""""""""""""""""""""""""
@@ -262,14 +302,14 @@ Serialized strings are stored in a file in ASCII encoding, but they are
 read from a file as unicode. Thus explicit conversions to ASCII has to
 done if the type of the string matters.
 
-:: _faq_filesystem_names:
+.. _faq_filesystem_names:
 
 API
 ---
 
 Questions that concern the core programming interface.
 
-:: _faq_api_examples:
+.. _faq_api_examples:
 
 Are there examples how to use the API?
 """"""""""""""""""""""""""""""""""""""
@@ -285,17 +325,18 @@ GUI
 
 Questions that concern the graphical user interface.
 
-:: _faq_gui_configuration:
+.. _faq_gui_configuration:
 
 Where can I configure the RAFCON GUI?
 """""""""""""""""""""""""""""""""""""
 
 You can either use File => Settings or manually edit
 ``~/.config/rafcon/gui_config.yaml``. This location can also be specified
-by the parameter ``-c`` in the command line. For further explanation see
+by the parameter ``-g`` in the command line. For further explanation see
 :ref:`Configuration`.
 
-:: _faq_change_hierarchy
+
+.. _faq_change_hierarchy:
 
 How can the hierarchy level of a state be changed in the graphical editor after it was created?
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -309,36 +350,29 @@ into which you want to move your copied state. Make sure the target
 state is of type Hierarchy or Concurrency. With Ctrl+V or Edit => Paste,
 the original state is moved into the target state.
 
-If you only wanna combine several states to have them on one level or to
-encapsulate them you can use the group feature. This will create a new states
-HierarchyState and move the currently selected states into those. So you select all
-states to group on one hierarchical level and then use the group-shortcut
-typically STRG-G or the menu bar Edit->Group.
+If you only want to combine several states you can use the group feature. This creates a new
+HierarchyState and moves the currently selected states into the new state. To use the group feature select all
+states to be grouped (they have to be on one hierarchical level) and then use the group-shortcut
+(STRG-G per default) or the menu bar Edit->Group entry.
 
 Known Issues
 """"""""""""
 
-:: _faq_maximization_issue:
+.. _faq_maximization_issue:
 
 A window can not be un-maximized what I can do?
 +++++++++++++++++++++++++++++++++++++++++++++++
 
-This is generally a problem the is related to your window manager of your desktop
-and can be caused by different screens sizes or similar nasty configurations.
+Generally, this ia a problem related to your window manager
+and can be caused by different screens sizes when using several monitors or similar nasty configurations.
 The fastest way to solve this problem is to delete your runtime_config.yaml file which
 is commonly situated at ``~/.config/rafcon/runtime_config.yaml`` and which will be generated
 automatically and cleanly after removal.
 
-:: _faq_start_issue:
+.. _faq_start_issue:
 
-Why start of RAFCON GUI sometimes never finish?
-+++++++++++++++++++++++++++++++++++++++++++++++
+Why does lauchning RAFCON sometimes blocks for several seconds?
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-This can happens on some distributions because of a ``.gtkrc`` file in the home directory so
-``~/.gtkrc``. Remove this file from your home directory and RAFCON should start correctly again.
-
-
-New Questions
--------------
-
-Please `create an issue <https://github.com/DLR-RM/RAFCON/issues/new>`__ for your question.
+This again is problem of some window managers and is related to the automatically generated config file ``~/.gtkrc``.
+Simply remove this file and RAFCON should start normally again.

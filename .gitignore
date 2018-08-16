@@ -89,6 +89,14 @@ coverage.xml
 .idea/**/markdown-exported-files.xml
 .idea/**/markdown-navigator.xml
 
+# as the jetbrains recommendation is not sufficient, custom files have to be added here as well
+.idea/misc.xml
+.idea/modules.xml
+.idea/rafcon.iml
+.idea/vcs.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/codeStyles/Project.xml
+
 # If you change .idea files and don't want those changes to be tracked by git, run e.g.
 # $ git update-index --skip-worktree .idea/vcs.xml
 # Later, use
