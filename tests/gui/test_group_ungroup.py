@@ -203,7 +203,34 @@ def test_bug_issue_539(caplog):
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
+
+def trigger_issue_574_reproduction_sequence():
+    from os.path import join
+    import rafcon.core.singleton
+    import rafcon.gui.singleton
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    main_window_controller = rafcon.gui.singleton.main_window_controller
+    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+
+    call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TEST_ASSETS_PATH,
+                                                                      "unit_test_state_machines",
+                                                                      "99_bottles_of_beer_no_wait"))
+    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm_manager_model.selected_state_machine_id]
+    call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values())
+    call_gui_callback(menubar_ctrl.on_group_states_activate, None, None)
+
+
+def test_bug_issue_574(caplog):
+    testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True}, libraries={})
+
+    try:
+        trigger_issue_574_reproduction_sequence()
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog)
+
 if __name__ == '__main__':
     # test_ungroup(None)
-    test_bug_issue_539(None)
+    # test_bug_issue_539(None)
+    test_bug_issue_574(None)
     # pytest.main(['-s', __file__])
