@@ -139,9 +139,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     # ----------------------------------- generic methods -----------------------------------------
     # ---------------------------------------------------------------------------------------------
 
-    def __del__(self):
-        self._parent = None
-
     def __str__(self):
         return "{2} with name '{0}' and id '{1}'".format(self.name, self.state_id, type(self).__name__)
 
