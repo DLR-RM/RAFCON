@@ -57,6 +57,7 @@ class ExecutionHistoryTreeController(ExtendedController):
     HISTORY_ITEM_STORAGE_ID = 1
     TOOL_TIP_STORAGE_ID = 2
     TOOL_TIP_TEXT = "Right click for more details\n" \
+                    "Middle click for external more detailed viewer\n" \
                     "Double click to select corresponding state"
 
     def __init__(self, model=None, view=None):
@@ -85,6 +86,24 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.history_tree.connect('button_press_event', self.mouse_click)
         view['reload_button'].connect('clicked', self.reload_history)
         view['clean_button'].connect('clicked', self.clean_history)
+        view['open_separately_button'].connect('clicked', self.open_selected_history_separately)
+
+    def open_selected_history_separately(self, widget, event=None):
+        model, row = self.history_tree.get_selection().get_selected()
+        path = self.history_tree_store.get_path(row)
+        selected_history_item = model[row][self.HISTORY_ITEM_STORAGE_ID]
+        selected_state_machine = self.model.get_selected_state_machine_model().state_machine
+
+        history_id = len(selected_state_machine.execution_histories) - 1 - path[0]
+        execution_history = selected_state_machine.execution_histories[history_id]
+        if execution_history.execution_history_storage and execution_history.execution_history_storage.filename:
+            from rafcon.gui.utils.external_editor import execute_shell_command_with_file_path
+            # TODO add run_id to select automatically respective item in external gui
+            # selected_history_item.run_id
+            execute_shell_command_with_file_path("execution_log_viewer.py",
+                                                 execution_history.execution_history_storage.filename, logger)
+        else:
+            logger.info("Activate execution file logging to use the external execution history viewer.")
 
     def append_string_to_menu(self, popup_menu, menu_item_string):
         final_string = menu_item_string
@@ -130,6 +149,16 @@ class ExecutionHistoryTreeController(ExtendedController):
 
             return True
 
+        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 2:
+            x = int(event.x)
+            y = int(event.y)
+            pthinfo = self.history_tree.get_path_at_pos(x, y)
+            if pthinfo is not None:
+                path, col, cellx, celly = pthinfo
+                self.history_tree.grab_focus()
+                self.history_tree.set_cursor(path, col, 0)
+                self.open_selected_history_separately(None)
+
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             x = int(event.x)
             y = int(event.y)
@@ -143,7 +172,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 popup_menu = gtk.Menu()
 
                 model, row = self.history_tree.get_selection().get_selected()
-                history_item = model[row][1]
+                history_item = model[row][self.HISTORY_ITEM_STORAGE_ID]
                 if not isinstance(history_item, ScopedDataItem) or history_item.scoped_data is None:
                     return
                 scoped_data = history_item.scoped_data
