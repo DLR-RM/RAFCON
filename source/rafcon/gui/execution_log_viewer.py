@@ -166,5 +166,9 @@ def main():
 
 
 if __name__ == "__main__":
+    from rafcon.gui.start import filesystem, setup_mvc_configuration
+    default_config_path = filesystem.get_default_config_path()
+    filesystem.create_path(default_config_path)
+    setup_mvc_configuration(default_config_path, default_config_path, default_config_path)
     tvexample = BasicTreeViewExample(args.file)
     main()
