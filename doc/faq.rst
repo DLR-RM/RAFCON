@@ -1,10 +1,10 @@
 FAQ
 ===
 
-On this page, we collect Frequently Ask Questions (FAQ) about
-:ref:`RAFCON`. At the moment, there are three categories of
-questions concerning `Core`_, `API`_ or
-`GUI`_. If you have a new question, please `create an issue <https://github.com/DLR-RM/RAFCON/issues/new>`__.
+On this page, we collect Frequently Ask Questions (FAQ) about :ref:`RAFCON`. At the moment, there are three
+categories of questions concerning `Core`_, `API`_ or `GUI`_. Some more answered questions can be found in our
+`list of closed issues labeled "question" <https://github.com/DLR-RM/RAFCON/issues?q=label%3Aquestion+is%3Aclosed>`__.
+If you have a new question, please `create an issue <https://github .com/DLR-RM/RAFCON/issues/new>`__.
 
 Core
 ----
