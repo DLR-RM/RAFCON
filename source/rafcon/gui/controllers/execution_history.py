@@ -96,6 +96,14 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         history_id = len(selected_state_machine.execution_histories) - 1 - path[0]
         execution_history = selected_state_machine.execution_histories[history_id]
+
+        from rafcon.core.states.state import StateExecutionStatus
+        if execution_history is selected_state_machine.execution_histories[-1] \
+                and selected_state_machine.root_state.state_execution_status is not StateExecutionStatus.INACTIVE:
+            logger.warning("Stop the state  or wait till it is finished. "
+                           "The external execution history viewer can only open finished executions.")
+            return
+
         if execution_history.execution_history_storage and execution_history.execution_history_storage.filename:
             from rafcon.gui.utils.external_editor import execute_shell_command_with_file_path
             # TODO add run_id to select automatically respective item in external gui
