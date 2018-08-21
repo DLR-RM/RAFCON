@@ -53,6 +53,7 @@ class ExecutionLogTreeController(ExtendedController):
                 elements = new_elements
 
         view.tree_view.get_selection().connect('changed', self.on_treeview_selection_changed)
+        view.tree_view.connect('button_press_event', self.mouse_click)
 
         # optional select a element of generated tree
         if self.run_id_to_select in self.item_iter:
@@ -109,3 +110,22 @@ class ExecutionLogTreeController(ExtendedController):
         item = self.items.get(hist_item_id)
         import pprint as pp
         self.view.text_view.get_buffer().set_text(pp.pformat(item))
+
+    def mouse_click(self, widget, event=None):
+        if event.type == gtk.gdk._2BUTTON_PRESS:
+            return self._handle_double_click(event)
+
+    def _handle_double_click(self, event):
+        """ Double click with left mouse button focuses the state and toggles the collapse status"""
+        if event.button == 1:  # Left mouse button
+            path_info = self.view.tree_view.get_path_at_pos(int(event.x), int(event.y))
+            if path_info:  # Valid entry was clicked on
+                path = path_info[0]
+                item_iter = self.tree_store.get_iter(path)
+
+                # Toggle collapse status if applicable for this kind of state
+                if self.view.tree_view.row_expanded(path):
+                    self.view.tree_view.collapse_row(path)
+                else:
+                    if self.tree_store.iter_has_child(item_iter):
+                        self.view.tree_view.expand_to_path(path)
