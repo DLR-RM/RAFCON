@@ -12,6 +12,8 @@ Next release
     
 - Improvements:
 
+    - :issue:`579` Integrate external execution log viewer
+
 
 - Bug Fixes:
 
