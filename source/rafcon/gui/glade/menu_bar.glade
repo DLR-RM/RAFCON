@@ -15,7 +15,7 @@
       <object class="GtkMenuItem" id="menu_file">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">File</property>
+        <property name="label" translatable="yes">_File</property>
         <property name="use_underline">True</property>
         <child type="submenu">
           <object class="GtkMenu" id="menuitem_file">
@@ -150,7 +150,7 @@
       <object class="GtkMenuItem" id="menu_edit">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Edit</property>
+        <property name="label" translatable="yes">_Edit</property>
         <property name="use_underline">True</property>
         <child type="submenu">
           <object class="GtkMenu" id="menuitem_edit">
@@ -309,7 +309,7 @@
       <object class="GtkMenuItem" id="menu_view">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">View</property>
+        <property name="label" translatable="yes">_View</property>
         <property name="use_underline">True</property>
         <child type="submenu">
           <object class="GtkMenu" id="menuitem_view">
@@ -378,7 +378,7 @@
       <object class="GtkMenuItem" id="menu_execution">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Execution</property>
+        <property name="label" translatable="yes">E_xecution</property>
         <property name="use_underline">True</property>
         <child type="submenu">
           <object class="GtkMenu" id="menuitem_execution">
@@ -498,7 +498,7 @@
       <object class="GtkImageMenuItem" id="menu_help">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label">Help</property>
+        <property name="label">_Help</property>
         <property name="use_underline">True</property>
         <property name="use_stock">True</property>
         <child type="submenu">

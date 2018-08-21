@@ -70,16 +70,16 @@ LOGGING_CONSOLE_GTK_PRIORITY: 300
 SHORTCUTS:
     abort: Escape
     add: <Control>A
-    add_execution_state: <Alt>E
+    add_execution_state: <Control><Alt>E
     add_hierarchy_state: 
-    - <Alt>H
+    - <Control><Alt>H
     - <Control><Shift>A
-    add_preemptive_state: <Alt>C
-    add_barrier_state: <Alt>B
-    add_output: <Alt>U
-    add_input: <Alt>N
-    add_outcome: <Alt>T
-    add_scoped_variable: <Alt>V
+    add_preemptive_state: <Control><Alt>C
+    add_barrier_state: <Control><Alt>B
+    add_output: <Control><Alt>U
+    add_input: <Control><Alt>N
+    add_outcome: <Control><Alt>T
+    add_scoped_variable: <Control><Alt>V
     apply: <Control><Shift>E
     backward_step: F9
     close: <Control>W
