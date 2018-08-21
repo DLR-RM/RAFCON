@@ -216,6 +216,7 @@ setup(
             'rafcon_core = rafcon.core.start:main'
         ],
         'gui_scripts': [
+            'rafcon_execution_log_viewer = rafcon.gui.execution_log_viewer:main',
             'rafcon_start_gui = rafcon.gui.start:main',
             'rafcon = rafcon.gui.start:main'
         ]
