@@ -8,7 +8,8 @@ Next release
 ------------
 
 - Features:
-    
+
+    - :issue:`581` Utility shortcuts to add transitions from selected state to parent default outcome and sibling states
 
 - Improvements:
 
