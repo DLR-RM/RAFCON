@@ -96,6 +96,7 @@ def test_functionality_example(caplog):
             rafcon.core.singleton.state_machine_execution_engine.stop()
             rafcon.core.singleton.state_machine_execution_engine.join()
     finally:
+        testing_utils.wait_for_gui()  # to avoid execution and model notification clinches
         testing_utils.shutdown_environment(gui_config=False, caplog=caplog, expected_warnings=2, expected_errors=3, unpatch_threading=False)
 
 
@@ -155,10 +156,10 @@ def test_tutorial_state_machine_examples(caplog):
 
 
 if __name__ == '__main__':
-    test_api_example(None)
-    test_ros_library_examples(None)
-    test_turtle_library_examples(None)
-    test_functionality_example(None)
-    test_plugins_example(None)
-    test_tutorial_state_machine_examples(None)
-    # pytest.main([__file__])
+    # test_api_example(None)
+    # test_ros_library_examples(None)
+    # test_turtle_library_examples(None)
+    # test_functionality_example(None)
+    # test_plugins_example(None)
+    # test_tutorial_state_machine_examples(None)
+    pytest.main(['-s', __file__])

@@ -8,8 +8,8 @@ Next release
 ------------
 
 - Features:
-
     
+
 - Improvements:
 
 
@@ -19,6 +19,21 @@ Next release
 
 Patch releases 0.12.\*
 ----------------------
+
+0.12.21
+"""""""
+
+- Features:
+    - new save state machine as menu item for root state right click menu to offer direct 'save as library' operations
+
+- Improvements:
+
+    - :issue:`579` Integrate external execution log viewer
+
+
+- Bug Fixes:
+
+    - :issue:`574` Group fails if it includes data flows between the grouped states or scoped variables
 
 0.12.20
 """""""
@@ -59,7 +74,7 @@ Patch releases 0.12.\*
 
 - Improvements:
 
-    - example statemachines and generic libraries get now installed via pypi
+    - example state machines and generic libraries get now installed via pypi
 
 
 0.12.16

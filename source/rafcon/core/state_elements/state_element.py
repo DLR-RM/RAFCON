@@ -61,9 +61,6 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __del__(self):
-        self._parent = None
-
     def __cmp__(self, other):
         if isinstance(other, StateElement):
             if self.__class__ is other.__class__:

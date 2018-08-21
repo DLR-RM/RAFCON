@@ -57,6 +57,7 @@ class ExecutionHistoryTreeController(ExtendedController):
     HISTORY_ITEM_STORAGE_ID = 1
     TOOL_TIP_STORAGE_ID = 2
     TOOL_TIP_TEXT = "Right click for more details\n" \
+                    "Middle click for external more detailed viewer\n" \
                     "Double click to select corresponding state"
 
     def __init__(self, model=None, view=None):
@@ -85,6 +86,43 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.history_tree.connect('button_press_event', self.mouse_click)
         view['reload_button'].connect('clicked', self.reload_history)
         view['clean_button'].connect('clicked', self.clean_history)
+        view['open_separately_button'].connect('clicked', self.open_selected_history_separately)
+
+    def open_selected_history_separately(self, widget, event=None):
+        model, row = self.history_tree.get_selection().get_selected()
+        path = self.history_tree_store.get_path(row)
+        selected_history_item = model[row][self.HISTORY_ITEM_STORAGE_ID]
+
+        # check if valid history item (in case of concurrency not all tree items has a history item in the tree store
+        if selected_history_item is None and model.iter_has_child(row):
+            child_iter = model.iter_nth_child(row, 0)
+            selected_history_item = model.get_value(child_iter, self.HISTORY_ITEM_STORAGE_ID)
+            if selected_history_item is None:
+                logger.info("The selected element could not be connected to a run-id and thereby no run-id selection "
+                            "is handed to external execution log viewer.")
+                return
+        run_id = selected_history_item.run_id if selected_history_item is not None else None
+
+        selected_state_machine = self.model.get_selected_state_machine_model().state_machine
+
+        history_id = len(selected_state_machine.execution_histories) - 1 - path[0]
+        execution_history = selected_state_machine.execution_histories[history_id]
+
+        from rafcon.core.states.state import StateExecutionStatus
+        if execution_history is selected_state_machine.execution_histories[-1] \
+                and selected_state_machine.root_state.state_execution_status is not StateExecutionStatus.INACTIVE:
+            logger.warning("Stop the state  or wait till it is finished. "
+                           "The external execution history viewer can only open finished executions.")
+            return
+
+        if execution_history.execution_history_storage and execution_history.execution_history_storage.filename:
+            from rafcon.gui.utils.shell_execution import execute_shell_command
+            # TODO run in fully separate process but from here to use the option for selection synchronization via dict
+            cmd = "rafcon_execution_log_viewer  {0} {1}" \
+                  "".format(execution_history.execution_history_storage.filename, run_id)
+            execute_shell_command(cmd, logger)
+        else:
+            logger.info("Activate execution file logging to use the external execution history viewer.")
 
     def append_string_to_menu(self, popup_menu, menu_item_string):
         final_string = menu_item_string
@@ -130,6 +168,16 @@ class ExecutionHistoryTreeController(ExtendedController):
 
             return True
 
+        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 2:
+            x = int(event.x)
+            y = int(event.y)
+            pthinfo = self.history_tree.get_path_at_pos(x, y)
+            if pthinfo is not None:
+                path, col, cellx, celly = pthinfo
+                self.history_tree.grab_focus()
+                self.history_tree.set_cursor(path, col, 0)
+                self.open_selected_history_separately(None)
+
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             x = int(event.x)
             y = int(event.y)
@@ -143,7 +191,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 popup_menu = gtk.Menu()
 
                 model, row = self.history_tree.get_selection().get_selected()
-                history_item = model[row][1]
+                history_item = model[row][self.HISTORY_ITEM_STORAGE_ID]
                 if not isinstance(history_item, ScopedDataItem) or history_item.scoped_data is None:
                     return
                 scoped_data = history_item.scoped_data

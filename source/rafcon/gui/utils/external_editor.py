@@ -9,11 +9,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import os
-import shlex
-import subprocess
 
-from rafcon.core.storage import storage
-
+from rafcon.gui.utils.shell_execution import execute_shell_command_with_file_path
 from rafcon.gui.utils.dialog import RAFCONInputDialog
 from rafcon.gui.singleton import global_gui_config
 
@@ -38,16 +35,7 @@ class AbstractExternalEditor(object):
         :param path: the path as first argument to the shell command
         :return: None
         """
-        logger.debug("Opening path with command: {}".format(command))
-        # This splits the command in a matter so that the editor gets called in a separate shell and thus
-        # does not lock the window.
-        args = shlex.split('{0} "{1}"'.format(command, os.path.join(path, self.get_file_name())))
-        try:
-            subprocess.Popen(args)
-            return True
-        except OSError as e:
-            logger.error('The operating system raised an error: {}'.format(e))
-        return False
+        execute_shell_command_with_file_path(command, path, logger)
 
     def get_file_name(self):
         """ The object base class specific file name, which can then be passed to e.g. the external editor shell command
@@ -103,7 +91,8 @@ class AbstractExternalEditor(object):
 
             def open_file_in_editor(cmd_to_open_editor, test_command=False):
                 self.save_file_data(file_system_path)
-                if not self.execute_shell_command_with_path(cmd_to_open_editor, file_system_path) and test_command:
+                script_file_path = os.path.join(file_system_path, self.get_file_name())
+                if not self.execute_shell_command_with_path(cmd_to_open_editor, script_file_path) and test_command:
                     # If a text field exists destroy it. Errors can occur with a specified editor as well
                     # e.g Permission changes or sth.
                     global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', None)

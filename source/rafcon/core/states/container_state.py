@@ -469,6 +469,9 @@ class ContainerState(State):
         # all internal data flows
         data_flows_internal = {df.data_flow_id: self.remove_data_flow(df.data_flow_id, destroy=False)
                                for df in related_data_flows['enclosed']}
+        # TODO add warning if a data-flow is connected to scoped variables which has ingoing and outgoing data flows
+        # TODO linked with selected states -> group would change behavior and scoped would need to be selected or
+        # TODO                                local scoped variable need to be introduced in new hierarchy state
         # all internal scoped variables
         scoped_variables_to_group = {dp_id: self.remove_scoped_variable(dp_id, destroy=False)
                                      for dp_id in scoped_variable_ids}
@@ -482,6 +485,13 @@ class ContainerState(State):
         state_id = state_id_generator()
         while state_id in state_ids:
             state_id = state_id_generator()
+        # if scoped variables are used all data flows have to be checked if those link to those and correct the state_id
+        if scoped_variable_ids:
+            for data_flow in data_flows_internal.itervalues():
+                if data_flow.from_state == self.state_id:
+                    data_flow.from_state = state_id
+                if data_flow.to_state == self.state_id:
+                    data_flow.to_state = state_id
         s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
                            scoped_variables=scoped_variables_to_group, state_id=state_id)
         state_id = self.add_state(s)
@@ -798,9 +808,9 @@ class ContainerState(State):
         if destroy:
             # Recursively delete all transitions, data flows and states within the state to be deleted
             self.states[state_id].destroy(recursive)
-        else:
-            self.states[state_id].parent = None
+
         # final delete the state it self
+        self.states[state_id].parent = None
         return self.states.pop(state_id)
 
     # do not observe
@@ -1254,7 +1264,9 @@ class ContainerState(State):
             raise AttributeError("The transition_id must not be -1 (Aborted) or -2 (Preempted)")
         if transition_id not in self._transitions:
             raise AttributeError("The transition_id %s does not exist" % str(transition_id))
-        return self._transitions.pop(transition_id)
+
+        self.transitions[transition_id].parent = None
+        return self.transitions.pop(transition_id)
 
     @lock_state_machine
     def remove_outcome_hook(self, outcome_id):
@@ -1315,9 +1327,11 @@ class ContainerState(State):
         :param int data_flow_id: the id of the data_flow to remove
         :raises exceptions.AttributeError: if the data_flow_id does not exist
         """
-        if data_flow_id not in self.data_flows:
+        if data_flow_id not in self._data_flows:
             raise AttributeError("The data_flow_id %s does not exist" % str(data_flow_id))
-        return self.data_flows.pop(data_flow_id)
+
+        self._data_flows[data_flow_id].parent = None
+        return self._data_flows.pop(data_flow_id)
 
     @lock_state_machine
     def remove_data_flows_with_data_port_id(self, data_port_id):
@@ -1387,6 +1401,7 @@ class ContainerState(State):
         # Check for name uniqueness
         valid, message = self._check_data_port_name(self._scoped_variables[scoped_variable_id])
         if not valid:
+            self._scoped_variables[scoped_variable_id].parent = None
             del self._scoped_variables[scoped_variable_id]
             raise ValueError(message)
 
@@ -1408,6 +1423,7 @@ class ContainerState(State):
             self.remove_data_flows_with_data_port_id(scoped_variable_id)
 
         # delete scoped variable
+        self._scoped_variables[scoped_variable_id].parent = None
         return self._scoped_variables.pop(scoped_variable_id)
 
     # ---------------------------------------------------------------------------------------------
@@ -1807,9 +1823,9 @@ class ContainerState(State):
             return False, "Data flow target not existing -> {0}".format(data_flow)
 
         # Data_ports without parents are not allowed to be connected twice
-        if not to_data_port.parent:
-            return False, "Source data port does not have a parent -> {0}".format(data_flow)
         if not from_data_port.parent:
+            return False, "Source data port does not have a parent -> {0}".format(data_flow)
+        if not to_data_port.parent:
             return False, "Target data port does not have a parent -> {0}".format(data_flow)
 
         # Check if data ports are identical
@@ -2079,6 +2095,11 @@ class ContainerState(State):
                 self._states = old_states
                 raise
 
+        # check that all old_states are no more referencing self as there parent
+        for old_state in old_states.itervalues():
+            if old_state not in self._states.itervalues() and old_state.parent is self:
+                old_state.parent = None
+
     @property
     def transitions(self):
         """Property for the _transitions field
@@ -2128,8 +2149,13 @@ class ContainerState(State):
                     self._transitions = old_transitions
                     raise
 
-        self._transitions = dict((transition_id, d) for (transition_id, d) in self._transitions.iteritems()
-                                if not transition_id in transition_ids_to_delete)
+        self._transitions = dict((transition_id, t) for (transition_id, t) in self._transitions.iteritems()
+                                 if transition_id not in transition_ids_to_delete)
+
+        # check that all old_transitions are no more referencing self as there parent
+        for old_transition in old_transitions.itervalues():
+            if old_transition not in self._transitions.itervalues() and old_transition.parent is self:
+                old_transition.parent = None
 
     @property
     def data_flows(self):
@@ -2180,8 +2206,13 @@ class ContainerState(State):
                     self._data_flows = old_data_flows
                     raise
 
-        self._data_flows= dict((data_flow_id, d) for (data_flow_id, d) in self._data_flows.iteritems()
-                               if not data_flow_id in data_flow_ids_to_delete)
+        self._data_flows = dict((data_flow_id, d) for (data_flow_id, d) in self._data_flows.iteritems()
+                                if data_flow_id not in data_flow_ids_to_delete)
+
+        # check that all old_data_flows are no more referencing self as there parent
+        for old_data_flow in old_data_flows.itervalues():
+            if old_data_flow not in self._data_flows.itervalues() and old_data_flow.parent is self:
+                old_data_flow.parent = None
 
     @property
     def start_state_id(self):
@@ -2276,6 +2307,11 @@ class ContainerState(State):
             except ValueError:
                 self._scoped_variables = old_scoped_variables
                 raise
+
+        # check that all old_scoped_variables are no more referencing self as there parent
+        for old_scoped_variable in old_scoped_variables.itervalues():
+            if old_scoped_variable not in self._scoped_variables.itervalues() and old_scoped_variable.parent is self:
+                old_scoped_variable.parent = None
 
     @property
     def scoped_data(self):
