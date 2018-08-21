@@ -28,6 +28,15 @@ class AbstractExternalEditor(object):
     def __init__(self):
         super(AbstractExternalEditor, self).__init__()
 
+    def execute_shell_command_with_path(self, command, path):
+        """ Executes a specific command in the shell (in our case an editor).
+
+        :param command: the command to be executed
+        :param path: the path as first argument to the shell command
+        :return: None
+        """
+        execute_shell_command_with_file_path(command, path, logger)
+
     def get_file_name(self):
         """ The object base class specific file name, which can then be passed to e.g. the external editor shell command
 
@@ -83,7 +92,7 @@ class AbstractExternalEditor(object):
             def open_file_in_editor(cmd_to_open_editor, test_command=False):
                 self.save_file_data(file_system_path)
                 script_file_path = os.path.join(file_system_path, self.get_file_name())
-                if not execute_shell_command_with_file_path(cmd_to_open_editor, script_file_path) and test_command:
+                if not self.execute_shell_command_with_path(cmd_to_open_editor, script_file_path) and test_command:
                     # If a text field exists destroy it. Errors can occur with a specified editor as well
                     # e.g Permission changes or sth.
                     global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', None)
