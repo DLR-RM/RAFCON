@@ -816,6 +816,32 @@ def meta_data_reference_check(meta):
     logger.verbose("source_deep_diff")
     diff_print(source_deep_diff)
 
+
+def get_closest_sibling_state(state_m):
+    """ Calculate the closest sibling
+
+    :param StateModel state_m:
+    :rtype: tuple
+    :return: distance, StateModel of closest state
+    """
+    if not state_m.parent:
+        logger.warning("A state can not have a closest sibling state if it has not parent as {0}".format(state_m))
+        return
+
+    min_distance = None
+    for sibling_state_m in state_m.parent.states.itervalues():
+        pos = state_m.get_meta_data_editor()['rel_pos']
+        sibling_pos = sibling_state_m.get_meta_data_editor()['rel_pos']
+
+        distance = ((pos[0] - sibling_pos[0])**2 + (pos[1] - sibling_pos[1])**2)**0.5
+
+        update_distance = not min_distance or min_distance[0] > distance
+        if sibling_state_m is not state_m and update_distance:
+            min_distance = (distance, sibling_state_m)
+
+    return min_distance
+
+
 # Something to remember maybe
 #
 # The function is used at the moment by the ungroup method of the ContainerStateModel, only.
