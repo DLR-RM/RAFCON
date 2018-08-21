@@ -8,7 +8,7 @@ Next release
 ------------
 
 - Features:
-
+    - new save state machine as menu item for root state right click menu to offer direct 'save as library' operations
     
 - Improvements:
 
