@@ -8,8 +8,24 @@ Next release
 ------------
 
 - Features:
-    - new save state machine as menu item for root state right click menu to offer direct 'save as library' operations
     
+
+- Improvements:
+
+
+- Bug Fixes:
+
+
+
+Patch releases 0.12.\*
+----------------------
+
+0.12.21
+"""""""
+
+- Features:
+    - new save state machine as menu item for root state right click menu to offer direct 'save as library' operations
+
 - Improvements:
 
     - :issue:`579` Integrate external execution log viewer
@@ -18,11 +34,6 @@ Next release
 - Bug Fixes:
 
     - :issue:`574` Group fails if it includes data flows between the grouped states or scoped variables
-
-
-
-Patch releases 0.12.\*
-----------------------
 
 0.12.20
 """""""
