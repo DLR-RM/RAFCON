@@ -105,11 +105,10 @@ class ExecutionHistoryTreeController(ExtendedController):
             return
 
         if execution_history.execution_history_storage and execution_history.execution_history_storage.filename:
-            from rafcon.gui.utils.external_editor import execute_shell_command_with_file_path
-            # TODO add run_id to select automatically respective item in external gui
-            # selected_history_item.run_id
-            execute_shell_command_with_file_path("execution_log_viewer.py",
-                                                 execution_history.execution_history_storage.filename, logger)
+            from rafcon.gui.utils.shell_execution import execute_shell_command, execute_shell_command_with_file_path
+            cmd = "rafcon_execution_log_viewer  {0} {1}" \
+                  "".format(execution_history.execution_history_storage.filename, selected_history_item.run_id)
+            execute_shell_command(cmd, logger)
         else:
             logger.info("Activate execution file logging to use the external execution history viewer.")
 
