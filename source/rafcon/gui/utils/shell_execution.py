@@ -6,7 +6,7 @@ _logger = log.get_logger(__name__)
 
 
 def execute_shell_command_with_file_path(command, path, logger=None):
-        """ Executes a specific command in the shell (in our case an editor).
+        """ Executes a specific command in the shell with a path as argument.
 
         :param command: the command to be executed
         :param path: the path as first argument to the shell command
@@ -15,12 +15,30 @@ def execute_shell_command_with_file_path(command, path, logger=None):
         """
         if logger is None:
             logger = _logger
-        logger.debug("Opening path with command: {}".format(command))
-        # This splits the command in a matter so that the editor gets called in a separate shell and thus
+        logger.debug("Opening path with command: {0} {1}".format(command, path))
+        # This splits the command in a matter so that the command gets called in a separate shell and thus
         # does not lock the window.
         args = shlex.split('{0} "{1}"'.format(command, path))
         try:
             subprocess.Popen(args)
+            return True
+        except OSError as e:
+            logger.error('The operating system raised an error: {}'.format(e))
+        return False
+
+
+def execute_shell_command(command, logger=None):
+        """ Executes a specific command in the shell.
+
+        :param command: the command to be executed
+        :param logger: optional logger instance which can be handed from other module
+        :return: None
+        """
+        if logger is None:
+            logger = _logger
+        logger.debug("Run shell command: {0}".format(command))
+        try:
+            subprocess.Popen(command, shell=True)
             return True
         except OSError as e:
             logger.error('The operating system raised an error: {}'.format(e))
