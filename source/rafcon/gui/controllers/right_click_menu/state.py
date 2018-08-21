@@ -29,7 +29,8 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import create_image_menu_item, create_check_menu_item, append_sub_menu_to_parent_menu
-from rafcon.gui.models import AbstractStateModel, ContainerStateModel, LibraryStateModel, ScopedVariableModel
+from rafcon.gui.models import AbstractStateModel, ContainerStateModel, LibraryStateModel, ScopedVariableModel, \
+    TransitionModel, DataFlowModel
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 
@@ -102,8 +103,11 @@ class StateMachineRightClickMenu(object):
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         selected_state_m = selection.get_selected_state()
         all_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_all()
-        if all([isinstance(elem, (AbstractStateModel, ScopedVariableModel)) for elem in all_m_list]) and \
-                not any([state_m.state.is_root_state for state_m in selection.states]):
+        # logger.info("Element in selection: " + str(selected_state_m) + " : " + str([elem for elem in all_m_list]))
+        if any([isinstance(elem, (AbstractStateModel, ScopedVariableModel)) for elem in all_m_list]) and \
+                all([isinstance(elem, (AbstractStateModel, ScopedVariableModel, TransitionModel, DataFlowModel))
+                     for elem in all_m_list]) and \
+                all([not state_m.state.is_root_state for state_m in selection.states]):
             menu.append(create_image_menu_item("Group states", constants.BUTTON_GROUP, self.on_group_states_activate,
                                                accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
         if len(selection.states) == 1:
