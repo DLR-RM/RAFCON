@@ -213,8 +213,8 @@ A typical config file looks like this:
         info: <Control>I
         is_start_state:
         - <Control>E
-        - <Control><Shift>C
-        transition_from_closest_sibling_state: <Control><Shift>X
+        - <Control><Shift>X
+        transition_from_closest_sibling_state: <Control><Shift>C
         transition_to_closest_sibling_state: <Control><Shift>V
         transition_to_parent_state: <Control><Shift>B
         left:
