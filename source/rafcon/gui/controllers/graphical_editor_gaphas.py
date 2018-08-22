@@ -501,7 +501,10 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'remove_transition':
                 transition_v = self.canvas.get_view_for_core_element(result)
                 if transition_v:
+                    state_m = model
+                    state_v = self.canvas.get_view_for_model(state_m)
                     transition_v.remove()
+                    self.canvas.request_update(state_v, matrix=False)
                     self.canvas.wait_for_update()
             elif method_name == 'transition_change':
                 transition_m = model
@@ -523,6 +526,9 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'remove_data_flow':
                 data_flow_v = self.canvas.get_view_for_core_element(result)
                 if data_flow_v:
+                    state_m = model
+                    state_v = self.canvas.get_view_for_model(state_m)
+                    self.canvas.request_update(state_v, matrix=False)
                     data_flow_v.remove()
                     self.canvas.wait_for_update()
             elif method_name == 'data_flow_change':
