@@ -90,6 +90,16 @@ class MenuBarController(ExtendedController):
         super(MenuBarController, self).destroy()
         self.full_screen_window.destroy()
 
+    @staticmethod
+    def create_logger_warning_if_shortcuts_are_overwritten_by_menu_bar():
+        shortcut_dict = global_gui_config.get_config_value('SHORTCUTS')
+        shortcut_key_patterns = [elem for l in shortcut_dict.values() for elem in l]
+        for key in ['E', 'F', 'V', 'X', 'H', 'e', 'f', 'v', 'x', 'h']:
+            if '<Alt>' + key in shortcut_key_patterns:
+                dict_pair = {k: v for k, v_list in shortcut_dict.iteritems() for v in v_list if '<Alt>' + key == v}
+                logger.warning("Your current shortcut {0} is not working because a menu-bar access key "
+                               "is overwriting it.".format(dict_pair))
+
     def register_view(self, view):
         """Called when the View was registered"""
         super(MenuBarController, self).register_view(view)
@@ -157,6 +167,8 @@ class MenuBarController(ExtendedController):
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
         self.registered_view = True
         self._update_recently_opened_state_machines()
+        # do not move next line - here to show warning in GUI debug console
+        self.create_logger_warning_if_shortcuts_are_overwritten_by_menu_bar()
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
@@ -460,6 +472,7 @@ class MenuBarController(ExtendedController):
         for item_name, shortcuts in global_gui_config.get_config_value('SHORTCUTS', {}).iteritems():
             if shortcuts and item_name in self.view.buttons:
                 self.view.set_menu_item_accelerator(item_name, shortcuts[0])
+        self.create_logger_warning_if_shortcuts_are_overwritten_by_menu_bar()
 
     def on_delete_check_sm_modified(self):
         if state_machine_manager.has_dirty_state_machine():
