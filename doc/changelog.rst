@@ -15,6 +15,8 @@ Next release
 
 - Bug Fixes:
 
+    - :issue:`538` Many error outputs when changing MAX_VISIBLE_LIBRARY_HIERARCHY
+
 
 
 Patch releases 0.12.\*
