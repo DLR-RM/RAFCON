@@ -12,6 +12,8 @@ Next release
 
 - Improvements:
 
+    - update of gaphas if transitions are removed
+
 
 - Bug Fixes:
 
