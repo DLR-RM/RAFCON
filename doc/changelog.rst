@@ -19,6 +19,7 @@ Next release
 - Bug Fixes:
 
     - :issue:`538` Many error outputs when changing MAX_VISIBLE_LIBRARY_HIERARCHY
+    - :issue:`584` Opening a external source editor fails for a never set active state machine id
 
 
 
