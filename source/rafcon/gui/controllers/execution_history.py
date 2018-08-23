@@ -116,11 +116,11 @@ class ExecutionHistoryTreeController(ExtendedController):
             return
 
         if execution_history.execution_history_storage and execution_history.execution_history_storage.filename:
-            from rafcon.gui.utils.shell_execution import execute_shell_command
+            from rafcon.gui.utils.shell_execution import execute_command_in_process
             # TODO run in fully separate process but from here to use the option for selection synchronization via dict
             cmd = "rafcon_execution_log_viewer  {0} {1}" \
                   "".format(execution_history.execution_history_storage.filename, run_id)
-            execute_shell_command(cmd, logger)
+            execute_command_in_process(cmd, shell=True, logger=logger)
         else:
             logger.info("Activate execution file logging to use the external execution history viewer.")
 
