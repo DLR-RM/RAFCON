@@ -20,7 +20,7 @@ from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models import LibraryStateModel, ContainerStateModel
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils import constants
-from rafcon.utils import log
+from rafcon.utils import log, geometry
 
 
 logger = log.get_logger(__name__)
@@ -820,7 +820,7 @@ def meta_data_reference_check(meta):
 def get_closest_sibling_state(state_m):
     """ Calculate the closest sibling
 
-    :param StateModel state_m:
+    :param StateModel state_m: Reference State model the closest sibling state should be find for
     :rtype: tuple
     :return: distance, StateModel of closest state
     """
@@ -830,13 +830,16 @@ def get_closest_sibling_state(state_m):
 
     min_distance = None
     for sibling_state_m in state_m.parent.states.itervalues():
+        if sibling_state_m is state_m:
+            continue
         pos = state_m.get_meta_data_editor()['rel_pos']
+        size = state_m.get_meta_data_editor()['size']
         sibling_pos = sibling_state_m.get_meta_data_editor()['rel_pos']
+        sibling_size = sibling_state_m.get_meta_data_editor()['size']
 
-        distance = ((pos[0] - sibling_pos[0])**2 + (pos[1] - sibling_pos[1])**2)**0.5
+        distance = geometry.cal_dist_between_2_coord_frame_aligned_boxes(pos, size, sibling_pos, sibling_size)
 
-        update_distance = not min_distance or min_distance[0] > distance
-        if sibling_state_m is not state_m and update_distance:
+        if not min_distance or min_distance[0] > distance:
             min_distance = (distance, sibling_state_m)
 
     return min_distance
