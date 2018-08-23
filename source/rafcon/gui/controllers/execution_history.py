@@ -21,6 +21,7 @@
 
 """
 
+from os import path
 import gtk
 import gobject
 from threading import RLock
@@ -90,7 +91,7 @@ class ExecutionHistoryTreeController(ExtendedController):
 
     def open_selected_history_separately(self, widget, event=None):
         model, row = self.history_tree.get_selection().get_selected()
-        path = self.history_tree_store.get_path(row)
+        item_path = self.history_tree_store.get_path(row)
         selected_history_item = model[row][self.HISTORY_ITEM_STORAGE_ID]
 
         # check if valid history item (in case of concurrency not all tree items has a history item in the tree store
@@ -105,7 +106,7 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         selected_state_machine = self.model.get_selected_state_machine_model().state_machine
 
-        history_id = len(selected_state_machine.execution_histories) - 1 - path[0]
+        history_id = len(selected_state_machine.execution_histories) - 1 - item_path[0]
         execution_history = selected_state_machine.execution_histories[history_id]
 
         from rafcon.core.states.state import StateExecutionStatus
@@ -117,10 +118,14 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         if execution_history.execution_history_storage and execution_history.execution_history_storage.filename:
             from rafcon.gui.utils.shell_execution import execute_command_in_process
+            gui_path = path.dirname(path.dirname(path.realpath(__file__)))
+            source_path = path.dirname(path.dirname(gui_path))
+            viewer_path = path.join(gui_path, "execution_log_viewer.py")
             # TODO run in fully separate process but from here to use the option for selection synchronization via dict
-            cmd = "rafcon_execution_log_viewer  {0} {1}" \
-                  "".format(execution_history.execution_history_storage.filename, run_id)
-            execute_command_in_process(cmd, shell=True, logger=logger)
+            cmd = "{path} {filename} {run_id}" \
+                  "".format(path=viewer_path, filename=execution_history.execution_history_storage.filename,
+                            run_id=run_id)
+            execute_command_in_process(cmd, shell=True, cwd=source_path, logger=logger)
         else:
             logger.info("Activate execution file logging to use the external execution history viewer.")
 
