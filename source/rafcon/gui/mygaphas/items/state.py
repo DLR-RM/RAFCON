@@ -846,9 +846,11 @@ class StateView(Element):
 
             state_v.set_enable_flag_keep_rect_within_constraints(enable=True)
 
-        # Minimum size constraints have not been resolved yet, so we have to enforce it manually
-        self.width = max(self.width, self.min_width)
-        self.height = max(self.height, self.min_height)
+        # Deactivate KeepRectangleWithin constraints for child states
+        self.set_enable_flag_keep_rect_within_constraints(enable=False)
+        # Now we can solve the KeepRectangleWithin constraints of this state without being called recusrively
+        # We also force the solving of the minimal size constraints
+        self.view.canvas.resolve_constraint((self.parent.keep_rect_constraints[self], self._c_min_w, self._c_min_h))
         new_size = (self.width, self.height)
         resize_state_v(self, old_size, new_size, paste)
 
