@@ -805,10 +805,11 @@ class StateView(Element):
             name_v = state_v.name_view
             if use_meta_data:
                 old_name_size = state_v.model.get_meta_data_editor()['name']['size']
+                old_name_rel_pos = state_v.model.get_meta_data_editor()['name']['rel_pos']
             else:
                 old_name_size = (name_v.width, name_v.height)
+                old_name_rel_pos = name_v.position
             new_name_size = (old_name_size[0] * width_factor, old_name_size[1] * height_factor)
-            old_name_rel_pos = state_v.model.get_meta_data_editor()['name']['rel_pos']
             new_name_rel_pos = calc_new_rel_pos(old_name_rel_pos, old_state_size, new_state_size)
             set_item_properties(name_v, new_name_size, new_name_rel_pos)
 
