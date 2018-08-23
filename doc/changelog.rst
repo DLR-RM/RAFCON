@@ -12,6 +12,7 @@ Next release
 
 - Improvements:
 
+    - :issue:`541` Where are the magnet lines gone?
     - update of gaphas if transitions are removed
 
 
