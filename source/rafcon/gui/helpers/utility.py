@@ -39,6 +39,10 @@ def remove_transitions_if_target_is_the_same(from_outcomes):
         return target
 
 
+def get_all_outcomes_except_of_abort_and_preempt(state):
+    return [outcome for outcome in state.outcomes.itervalues() if outcome.outcome_id >= 0]
+
+
 def add_transitions_from_selected_state_to_parent():
     """ Generates the default success transition of a state to its parent success port
 
@@ -58,11 +62,10 @@ def add_transitions_from_selected_state_to_parent():
         if not isinstance(parent_state, State):
             logger.warning("Can not create transition to parent state: Selected state has not parent state!")
             return
+
         # find all possible from outcomes
-        from_outcomes = []
-        for outcome in state.outcomes.itervalues():
-            if outcome.outcome_id >= 0:
-                from_outcomes.append(outcome)
+        from_outcomes = get_all_outcomes_except_of_abort_and_preempt(state)
+
         # find lowest valid outcome id
         possible_oc_ids = [oc_id for oc_id in state.parent.outcomes.keys() if oc_id >= 0]
         possible_oc_ids.sort()
@@ -123,10 +126,7 @@ def add_transitions_to_closest_sibling_state_from_selected_state():
         to_state = closest_sibling_state[1].state
 
         # find all possible from outcomes
-        from_outcomes = []
-        for outcome in state.outcomes.itervalues():
-            if outcome.outcome_id >= 0:
-                from_outcomes.append(outcome)
+        from_outcomes = get_all_outcomes_except_of_abort_and_preempt(state)
 
         from_oc_not_connected = [oc for oc in from_outcomes if not state.parent.get_transition_for_outcome(state, oc)]
         # all ports not connected connect to next state income
@@ -183,10 +183,7 @@ def add_transitions_from_closest_sibling_state_to_selected_state():
         from_state = closest_sibling_state[1].state
 
         # find all possible from outcomes
-        from_outcomes = []
-        for outcome in from_state.outcomes.itervalues():
-            if outcome.outcome_id >= 0:
-                from_outcomes.append(outcome)
+        from_outcomes = get_all_outcomes_except_of_abort_and_preempt(from_state)
 
         from_oc_not_connected = [oc for oc in from_outcomes if not state.parent.get_transition_for_outcome(from_state, oc)]
 
