@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -65,7 +65,7 @@ class Config(ObservableConfig):
 
     """
 
-    keys_requiring_restart = ('PROFILER_RUN',)
+    keys_requiring_restart = ()
 
     def __init__(self, logger_object=None):
         """Default constructor

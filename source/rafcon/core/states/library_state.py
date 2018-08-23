@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -17,14 +17,13 @@
    :synopsis: A module to represent a library state in the state machine
 
 """
-from copy import copy
+from copy import copy, deepcopy
 
 from gtkmvc import Observable
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.singleton import library_manager
 from rafcon.core.states.state import State, PATH_SEPARATOR
 from rafcon.core.decorators import lock_state_machine
-from rafcon.core.storage import storage
 from rafcon.utils import log
 from rafcon.utils import type_helpers
 from rafcon.utils.hashable import Hashable
@@ -92,15 +91,16 @@ class LibraryState(State):
             logger.info("Old library name '{0}' was located at {1}".format(library_name, library_path))
             logger.info("New library name '{0}' is located at {1}".format(new_library_name, new_library_path))
 
-        state_machine = storage.load_state_machine_from_path(self.lib_os_path)
-        lib_version = state_machine.version
-        self.state_copy = state_machine.root_state
+        # key = load_library_root_state_timer.start()
+        lib_version, state_copy = library_manager.get_library_state_copy_instance(self.lib_os_path)
+        self.state_copy = state_copy
+        # load_library_root_state_timer.stop(key)
         self.state_copy.parent = self
         if not str(lib_version) == version and not str(lib_version) == "None":
             raise AttributeError("Library does not have the correct version!")
 
         if name is None:
-            self.name = state_machine.root_state.name
+            self.name = self.state_copy.name
 
         # copy all ports and outcomes of self.state_copy to let the library state appear like the container state
         # this will also set the parent of all outcomes and data ports to self
@@ -118,8 +118,23 @@ class LibraryState(State):
                 self.use_runtime_value_input_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
             elif isinstance(self.input_data_port_runtime_values[data_port_id], basestring):
-                self.input_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
-                    self.input_data_port_runtime_values[data_port_id], data_port.data_type)
+                try:
+                    self.input_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
+                        self.input_data_port_runtime_values[data_port_id], data_port.data_type)
+                except AttributeError:
+                    # the parameter cannot be converted
+                    # this can be the case when the data type of port of the library state changed
+                    self.input_data_port_runtime_values[data_port_id] = data_port.default_value
+                    self.use_runtime_value_input_data_ports[data_port_id] = True
+                    self.marked_dirty = True
+
+        # if there is a key existing in the runtime values but not in the input_data_ports we delete it
+        for key in self.use_runtime_value_input_data_ports.keys():
+            if key not in self.input_data_ports.keys():
+                del self.use_runtime_value_input_data_ports[key]
+                del self.input_data_port_runtime_values[key]
+                # state machine cannot be marked dirty directly, as it does not exist yet
+                self.marked_dirty = True
 
         # handle output runtime values
         self.output_data_port_runtime_values = output_data_port_runtime_values
@@ -131,8 +146,24 @@ class LibraryState(State):
                 self.use_runtime_value_output_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
             elif isinstance(self.output_data_port_runtime_values[data_port_id], basestring):
-                self.output_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
-                    self.output_data_port_runtime_values[data_port_id], data_port.data_type)
+                try:
+                    self.output_data_port_runtime_values[data_port_id] = \
+                        type_helpers.convert_string_value_to_type_value(
+                            self.output_data_port_runtime_values[data_port_id], data_port.data_type)
+                except AttributeError:
+                    # the parameter cannot be converted
+                    # this can be the case when the data type of port of the library state changed
+                    self.output_data_port_runtime_values[data_port_id] = data_port.default_value
+                    self.use_runtime_value_output_data_ports[data_port_id] = True
+                    self.marked_dirty = True
+
+        # if there is a key existing in the runtime values but not in the output_data_ports we delete it
+        for key in self.use_runtime_value_output_data_ports.keys():
+            if key not in self.output_data_ports.keys():
+                del self.use_runtime_value_output_data_ports[key]
+                del self.output_data_port_runtime_values[key]
+                # state machine cannot be marked dirty directly, as it does not exist yet
+                self.marked_dirty = True
 
         self.initialized = True
 
@@ -154,11 +185,21 @@ class LibraryState(State):
         # overwrite may by default set True flags by False
         state.use_runtime_value_input_data_ports = copy(self.use_runtime_value_input_data_ports)
         state.use_runtime_value_output_data_ports = copy(self.use_runtime_value_output_data_ports)
+        state.semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
         return state
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
+
+    def destroy(self, recursive=True):
+        super(LibraryState, self).destroy(recursive)
+        if recursive:
+            if self.state_copy:
+                self.state_copy.destroy(recursive)
+            else:
+                logger.verbose("Multiple calls of destroy {0}".format(self))
+            self._state_copy = None
 
     def run(self):
         """ This defines the sequence of actions that are taken when the library state is executed
@@ -209,7 +250,7 @@ class LibraryState(State):
         raise NotImplementedError("Add outcome is not implemented for library state {}".format(self))
 
     @lock_state_machine
-    def remove_outcome(self, outcome_id, force=False):
+    def remove_outcome(self, outcome_id, force=False, destroy=True):
         """Overwrites the remove_outcome method of the State class. Prevents user from removing a
         outcome from the library state.
 
@@ -218,7 +259,7 @@ class LibraryState(State):
         :raises exceptions.NotImplementedError: in any case
         """
         if force:
-            State.remove_outcome(self, outcome_id, force)
+            return State.remove_outcome(self, outcome_id, force, destroy)
         else:
             raise NotImplementedError("Remove outcome is not implemented for library state {}".format(self))
 
@@ -233,7 +274,7 @@ class LibraryState(State):
         raise NotImplementedError("Add input data port is not implemented for library state {}".format(self))
 
     @lock_state_machine
-    def remove_input_data_port(self, data_port_id, force=False):
+    def remove_input_data_port(self, data_port_id, force=False, destroy=True):
         """
         Overwrites the remove_input_data_port method of the State class. Prevents user from removing a
         input data port from the library state.
@@ -244,7 +285,7 @@ class LibraryState(State):
         :raises exceptions.NotImplementedError: in the removal is not forced
         """
         if force:
-            State.remove_input_data_port(self, data_port_id, force)
+            return State.remove_input_data_port(self, data_port_id, force, destroy)
         else:
             raise NotImplementedError("Remove input data port is not implemented for library state {}".format(self))
 
@@ -259,7 +300,7 @@ class LibraryState(State):
         raise NotImplementedError("Add a output data port is not implemented for library state {}".format(self))
 
     @lock_state_machine
-    def remove_output_data_port(self, data_port_id, force=False):
+    def remove_output_data_port(self, data_port_id, force=False, destroy=True):
         """Overwrites the remove_output_data_port method of the State class. Prevents user from removing a
         output data port from the library state.
 
@@ -268,7 +309,7 @@ class LibraryState(State):
         :raises exceptions.NotImplementedError: in the removal is not forced
         """
         if force:
-            State.remove_output_data_port(self, data_port_id, force)
+            return State.remove_output_data_port(self, data_port_id, force, destroy)
         else:
             raise NotImplementedError("Remove output data port is not implemented for library state {}".format(self))
 
@@ -525,8 +566,8 @@ class LibraryState(State):
         :rtype: int
         """
         current_library_hierarchy_depth = 1
-        library_root_state = self.get_library_root_state()
+        library_root_state = self.get_next_upper_library_root_state()
         while library_root_state is not None:
             current_library_hierarchy_depth += 1
-            library_root_state = library_root_state.parent.get_library_root_state()
+            library_root_state = library_root_state.parent.get_next_upper_library_root_state()
         return current_library_hierarchy_depth

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -38,7 +38,7 @@ from rafcon.gui.singleton import state_machine_manager_model
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel
-from rafcon.gui.views.utils.editor import EditorView
+from rafcon.gui.views.state_editor.source_editor import SourceEditorView
 from rafcon.gui.utils.external_editor import AbstractExternalEditor
 
 from rafcon.utils import filesystem
@@ -62,7 +62,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
 
     def __init__(self, model, view):
         assert isinstance(model, AbstractStateModel)
-        assert isinstance(view, EditorView)
+        assert isinstance(view, SourceEditorView)
         lib_with_show_content = isinstance(model, LibraryStateModel) and not model.show_content()
         model = model.state_copy if lib_with_show_content else model
 
@@ -85,7 +85,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
         view['open_external_button'].set_tooltip_text("Open source in external editor. " +
                                                       global_gui_config.get_config_value('SHORTCUTS')['open_external_editor'][0])
 
-        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
+        if isinstance(self.model.state, LibraryState) or self.model.state.get_next_upper_library_root_state():
             view['pylint_check_button'].set_sensitive(False)
             view.textview.set_editable(False)
             view['apply_button'].set_sensitive(False)
@@ -200,6 +200,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
                 start_iter.set_line(int(line)-1)
                 tbuffer.place_cursor(start_iter)
                 message_string += "\n\nThe line was focused in the source editor."
+                self.view.scroll_to_cursor_onscreen()
 
             # select state to show source editor
             sm_m = state_machine_manager_model.get_state_machine_model(self.model)

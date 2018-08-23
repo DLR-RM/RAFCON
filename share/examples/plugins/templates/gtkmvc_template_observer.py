@@ -95,7 +95,9 @@ class MetaSignalModificationObserver(Observer):
             pass
         elif info['method_name'] == '__delitem__':
             self.relieve_model(self.state_machine_manager_model.state_machines[info['args'][0]])
-            self.relieve_model(self.state_machine_manager_model.state_machines[info['args'][0]].root_state)
+            if self.state_machine_manager_model.state_machines[info['args'][0]].root_state:
+                self.relieve_model(self.state_machine_manager_model.state_machines[info['args'][0]].root_state)
+                # otherwise relieved by root_state assign notification
             # self.logger.info(NotificationOverview(info))
         else:
             self.logger.warning(NotificationOverview(info))
@@ -104,10 +106,12 @@ class MetaSignalModificationObserver(Observer):
     def observe_root_state_assignments(self, model, prop_name, info):
         """ The method relieves observed root_state models and observes newly assigned root_state models.
         """
-        self.relieve_model(info['old'])
-        self.observe_model(info['new'])
-        self.logger.info("Exchange observed old root_state model with newly assigned one. sm_id: {}"
-                         "".format(info['new'].state.parent.state_machine_id))
+        if info['old']:
+            self.relieve_model(info['old'])
+        if info['new']:
+            self.observe_model(info['new'])
+            self.logger.info("Exchange observed old root_state model with newly assigned one. sm_id: {}"
+                             "".format(info['new'].state.parent.state_machine_id))
 
     @Observer.observe("meta_signal", signal=True)
     def observe_meta_signal_changes(self, changed_model, prop_name, info):

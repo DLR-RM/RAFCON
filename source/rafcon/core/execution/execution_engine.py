@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -108,11 +108,19 @@ class ExecutionEngine(Observable):
             self.set_execution_mode(StateMachineExecutionStatus.STARTED)
         else:
             # do not start another state machine before the old one did not finish its execution
-            while self.state_machine_running:
-                time.sleep(1.0)
+            if self.state_machine_running:
+                logger.warn("An old state machine is still running! Make sure that it terminates,"
+                            " before you can start another state machine!")
+                return
+
             logger.debug("Start execution engine ...")
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
+
+            if not self.state_machine_manager.active_state_machine_id:
+                logger.error("There exists no active state machine!")
+                return
+
             self.set_execution_mode(StateMachineExecutionStatus.STARTED)
 
             self.start_state_paths = []
@@ -142,6 +150,7 @@ class ExecutionEngine(Observable):
         self._status.execution_condition_variable.acquire()
         self._status.execution_condition_variable.notify_all()
         self._status.execution_condition_variable.release()
+        self.__running_state_machine = None
 
     def join(self, timeout=None):
         """Blocking wait for the execution to finish
@@ -263,9 +272,9 @@ class ExecutionEngine(Observable):
             self.set_execution_mode(StateMachineExecutionStatus.RUN_TO_SELECTED_STATE)
         else:
             logger.debug("Start execution engine and run to selected state!")
-            self.set_execution_mode(StateMachineExecutionStatus.RUN_TO_SELECTED_STATE)
             if state_machine_id is not None:
                 self.state_machine_manager.active_state_machine_id = state_machine_id
+            self.set_execution_mode(StateMachineExecutionStatus.RUN_TO_SELECTED_STATE)
             self.run_to_states = []
             self.run_to_states.append(path)
             self._run_active_state_machine()
@@ -311,6 +320,10 @@ class ExecutionEngine(Observable):
 
             wait = True
             for state_path in copy.deepcopy(self.run_to_states):
+                next_child_state_path = None
+                # can be None in case of no transition given
+                if next_child_state_to_execute:
+                    next_child_state_path = next_child_state_to_execute.get_path()
                 if state_path == state.get_path():
                     # the execution did a whole step_over for the hierarchy state "state"
                     # or a whole step_out for the hierarchy state "state"
@@ -319,8 +332,8 @@ class ExecutionEngine(Observable):
                     wait = True
                     self.run_to_states.remove(state_path)
                     break
-                elif state_path == next_child_state_to_execute.get_path():
-                    # this is the case that execution has reached a specifc state explicitely marked via
+                elif state_path == next_child_state_path:
+                    # this is the case that execution has reached a specific state explicitly marked via
                     # run_to_selected_state(); if this is the case run_to_selected_state() is finished and the execution
                     # has to wait for new execution commands
                     wait = True

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -76,40 +76,37 @@ class StateMachineManagerModel(ModelMT):
     def core_element(self):
         return self.state_machine_manager
 
-    def delete_state_machine_models(self):
-        for sm_id_to_delete in self.state_machines.keys():
-            sm_m = self.state_machines[sm_id_to_delete]
-            with sm_m.state_machine.modification_lock():
-                sm_m.prepare_destruction()
-                del self.state_machines[sm_id_to_delete]
-                sm_m.destroy()
-
     @ModelMT.observe("state_machine_manager", after=True)
     def model_changed(self, model, prop_name, info):
+        if isinstance(info['result'], Exception):
+            from rafcon.gui.utils.notification_overview import NotificationOverview
+            logger.exception("The result type is {0} and the full notification {1}"
+                             "".format(type(info['result']), NotificationOverview(info)))
+            return
+
         if info["method_name"] == "add_state_machine":
             logger.debug("Add new state machine model ... ")
-            for sm_id, sm in self.state_machine_manager.state_machines.iteritems():
-                if sm_id not in self.state_machines:
-                    logger.debug("Create new state machine model for state machine with id %s", sm.state_machine_id)
-                    with sm.modification_lock():
-                        self.state_machines[sm_id] = StateMachineModel(sm)
-                        self.selected_state_machine_id = sm_id
-        elif info["method_name"] == "remove_state_machine":
-            sm_id_to_delete = None
-            for sm_id, sm_m in self.state_machines.iteritems():
-                if sm_id not in self.state_machine_manager.state_machines:
-                    sm_id_to_delete = sm_id
-                    if self.selected_state_machine_id == sm_id:
-                        self.selected_state_machine_id = None
-                    break
+            sm_id = info['result']
+            if sm_id in self.state_machine_manager.state_machines and sm_id not in self.state_machines:
+                logger.debug("Create new state machine model for state machine with id %s", sm_id)
+                sm = self.state_machine_manager.state_machines[sm_id]
+                with sm.modification_lock():
+                    self.state_machines[sm_id] = StateMachineModel(sm)
+                    self.selected_state_machine_id = sm_id
+            else:
+                logger.error("Model of state machine {0} is supposed to not exist but the state machine object should."
+                             "".format(sm_id))
 
+        elif info["method_name"] == "remove_state_machine":
+            sm_id_to_delete = info['result'].state_machine_id
             if sm_id_to_delete is not None:
                 logger.debug("Delete state machine model for state machine with id %s", sm_id_to_delete)
+                if self.selected_state_machine_id == sm_id_to_delete:
+                    self.selected_state_machine_id = None
                 sm_m = self.state_machines[sm_id_to_delete]
                 sm_m.prepare_destruction()
                 del self.state_machines[sm_id_to_delete]
                 sm_m.destroy()
-                sm_m.selection.clear()
 
     def get_state_machine_model(self, state_m):
         """ Get respective state machine model for handed state model

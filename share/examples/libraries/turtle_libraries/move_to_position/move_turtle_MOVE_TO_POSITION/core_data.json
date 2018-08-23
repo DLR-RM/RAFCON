@@ -1,0 +1,67 @@
+{
+    "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
+    "description": null, 
+    "input_data_ports": {
+        "19": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 19, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "new_turtle", 
+            "name": "global_storage_id_of_turtle_pos"
+        }, 
+        "20": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 20, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "new_turtle", 
+            "name": "turtle_name"
+        }, 
+        "21": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 21, 
+            "data_type": {
+                "__type__": "__builtin__.float"
+            }, 
+            "default_value": 9.0, 
+            "name": "x_pos"
+        }, 
+        "22": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 22, 
+            "data_type": {
+                "__type__": "__builtin__.float"
+            }, 
+            "default_value": 5.0, 
+            "name": "y_pos"
+        }
+    }, 
+    "name": "move turtle", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }, 
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "position_not_reached_yet", 
+            "outcome_id": 1
+        }
+    }, 
+    "output_data_ports": {}, 
+    "state_id": "MOVE_TO_POSITION"
+}

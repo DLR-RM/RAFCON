@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -56,7 +56,13 @@ class DataPortListController(ListViewController):
     data_port_model_list = None
 
     def __init__(self):
-        raise NotImplementedError("You have to instatiate a subclass of DataPortListController")
+        raise NotImplementedError("You have to instantiate a subclass of DataPortListController")
+
+    def destroy(self):
+        if self.model.state.get_next_upper_library_root_state() is None and \
+                (isinstance(self.view, InputPortsListView) or isinstance(self.view, OutputPortsListView)):
+            self.view['default_value_col'].set_cell_data_func(self.view['default_value_text'], None)
+        super(DataPortListController, self).destroy()
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -64,7 +70,7 @@ class DataPortListController(ListViewController):
 
         view['name_col'].add_attribute(view['name_text'], 'text', self.NAME_STORAGE_ID)
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', self.DATA_TYPE_NAME_STORAGE_ID)
-        if not isinstance(self.model.state, LibraryState) and self.model.state.get_library_root_state() is None:
+        if not isinstance(self.model.state, LibraryState) and self.model.state.get_next_upper_library_root_state() is None:
             view['name_text'].set_property("editable", True)
             view['data_type_text'].set_property("editable", True)
 
@@ -72,12 +78,12 @@ class DataPortListController(ListViewController):
         if isinstance(view, InputPortsListView) or isinstance(view, OutputPortsListView):
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', self.DEFAULT_VALUE_STORAGE_ID)
             self._apply_value_on_edited_and_focus_out(view['default_value_text'], self._apply_new_data_port_default_value)
+            view['default_value_col'].set_cell_data_func(view['default_value_text'],
+                                                         self._default_value_cell_data_func)
             if isinstance(self.model.state, LibraryState):
                 view['default_value_col'].set_title("Used value")
-            if self.model.state.get_library_root_state() is None:  # never enabled means it is disabled
+            if self.model.state.get_next_upper_library_root_state() is None:  # never enabled means it is disabled
                 view['default_value_text'].set_property("editable", True)
-                view['default_value_col'].set_cell_data_func(view['default_value_text'],
-                                                             self._default_value_cell_data_func)
 
         self._apply_value_on_edited_and_focus_out(view['name_text'], self._apply_new_data_port_name)
         self._apply_value_on_edited_and_focus_out(view['data_type_text'], self._apply_new_data_port_type)
@@ -85,11 +91,12 @@ class DataPortListController(ListViewController):
         if isinstance(self.model.state, LibraryState):
             view['use_runtime_value_toggle'] = CellRendererToggle()
             view['use_runtime_value_col'] = TreeViewColumn("Use Runtime Value")
+            view['use_runtime_value_col'].set_property("sizing", "autosize")
             view.get_top_widget().append_column(view['use_runtime_value_col'])
             view['use_runtime_value_col'].pack_start(view['use_runtime_value_toggle'], True)
             view['use_runtime_value_col'].add_attribute(view['use_runtime_value_toggle'], 'active',
                                                         self.USE_RUNTIME_VALUE_STORAGE_ID)
-            if self.model.state.get_library_root_state() is None:
+            if self.model.state.get_next_upper_library_root_state() is None:
                 view['use_runtime_value_toggle'].set_property("activatable", True)
                 view['use_runtime_value_toggle'].connect("toggled", self.on_use_runtime_value_toggled)
 

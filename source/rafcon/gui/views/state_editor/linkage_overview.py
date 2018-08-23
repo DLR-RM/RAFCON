@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -18,6 +18,7 @@ from rafcon.gui import glade
 from rafcon.gui.views.utils.tree import TreeView
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
+import weakref
 
 
 class LinkageOverviewDataView(TreeView):
@@ -34,8 +35,11 @@ class LinkageOverviewLogicView(TreeView):
 
     def __init__(self):
         super(LinkageOverviewLogicView, self).__init__()
+        self._treeView = weakref.ref(self)
 
-        self.treeView = self
+    @property
+    def treeView(self):
+        return self._treeView()
 
 
 class LinkageOverviewView(View):

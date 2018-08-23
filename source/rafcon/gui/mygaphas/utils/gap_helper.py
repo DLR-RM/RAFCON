@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -9,10 +9,12 @@
 # Annika Wollschlaeger <annika.wollschlaeger@dlr.de>
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Matthias Buettner <matthias.buettner@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from rafcon.gui.mygaphas.items.connection import ConnectionView
 from rafcon.utils import log
+from rafcon.utils.dict_operations import check_if_dict_contains_object_reference_in_values
 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
 logger = log.get_logger(__name__)
 
@@ -167,17 +169,19 @@ def add_data_flow_to_state(from_port, to_port):
     responsible_parent_m = None
 
     # from parent to child
-    if isinstance(from_state_m, ContainerStateModel) and to_state_m.state.state_id in from_state_m.state.states:
+    if isinstance(from_state_m, ContainerStateModel) and \
+            check_if_dict_contains_object_reference_in_values(to_state_m.state, from_state_m.state.states):
         responsible_parent_m = from_state_m
     # from child to parent
-    elif isinstance(to_state_m, ContainerStateModel) and from_state_m.state.state_id in to_state_m.state.states:
+    elif isinstance(to_state_m, ContainerStateModel) and \
+            check_if_dict_contains_object_reference_in_values(from_state_m.state, to_state_m.state.states):
         responsible_parent_m = to_state_m
     # from parent to parent
-    elif isinstance(from_state_m, ContainerStateModel) and from_state_m.state.state_id == to_state_m.state.state_id:
+    elif isinstance(from_state_m, ContainerStateModel) and from_state_m.state is to_state_m.state:
         responsible_parent_m = from_state_m  # == to_state_m
     # from child to child
     elif (not from_state_m.state.is_root_state) and (not to_state_m.state.is_root_state) \
-            and from_state_m.state.state_id != to_state_m.state.state_id \
+            and from_state_m.state is not to_state_m.state \
             and from_state_m.parent.state.state_id and to_state_m.parent.state.state_id:
         responsible_parent_m = from_state_m.parent
 
@@ -278,12 +282,13 @@ def get_relative_positions_of_waypoints(transition_v):
     return rel_pos_list
 
 
-def update_meta_data_for_transition_waypoints(graphical_editor_view, transition_v, last_waypoint_list):
+def update_meta_data_for_transition_waypoints(graphical_editor_view, transition_v, last_waypoint_list, publish=True):
     """This method updates the relative position meta data of the transitions waypoints if they changed
 
     :param graphical_editor_view: Graphical Editor the change occurred in
     :param transition_v: Transition that changed
     :param last_waypoint_list: List of waypoints before change
+    :param bool publish: Whether to publish the changes using the meta signal
     """
 
     from rafcon.gui.mygaphas.items.connection import TransitionView
@@ -293,7 +298,8 @@ def update_meta_data_for_transition_waypoints(graphical_editor_view, transition_
     waypoint_list = get_relative_positions_of_waypoints(transition_v)
     if waypoint_list != last_waypoint_list:
         transition_m.set_meta_data_editor('waypoints', waypoint_list)
-        graphical_editor_view.emit('meta_data_changed', transition_m, "waypoints", True)
+        if publish:
+            graphical_editor_view.emit('meta_data_changed', transition_m, "waypoints", False)
 
 
 def update_meta_data_for_port(graphical_editor_view, item, handle):
@@ -365,7 +371,7 @@ def update_meta_data_for_state_view(graphical_editor_view, state_v, affects_chil
     if affects_children:
         update_meta_data_for_name_view(graphical_editor_view, state_v.name_view, publish=False)
         for transition_v in state_v.get_transitions():
-            update_meta_data_for_transition_waypoints(graphical_editor_view, transition_v, None)
+            update_meta_data_for_transition_waypoints(graphical_editor_view, transition_v, None, publish=False)
         for child_state_v in state_v.child_state_views():
             update_meta_data_for_state_view(graphical_editor_view, child_state_v, True, publish=False)
 

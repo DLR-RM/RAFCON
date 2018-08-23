@@ -24,8 +24,7 @@ include:
 
 Examples of unacceptable behavior by participants include:
 
-- The use of sexualized language or imagery and unwelcome sexual
-   attention or advances
+- The use of sexualized language or imagery and unwelcome sexual attention or advances
 - Trolling, insulting/derogatory comments, and personal or political
   attacks
 - Public or private harassment
@@ -48,6 +47,7 @@ contributions that are not aligned to this Code of Conduct, or to ban
 temporarily or permanently any contributor for other behaviors that they
 deem inappropriate, threatening, offensive, or harmful.
 
+.. _code_of_conduct_scope:
 
 Scope
 """""

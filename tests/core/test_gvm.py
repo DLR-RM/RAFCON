@@ -48,11 +48,14 @@ def test_locks(caplog):
     assert a == 1
 
     access_key = gvm.lock_variable('a')
+    gvm.lock_variable('a')
     a = gvm.get_variable('a', access_key=access_key)
     assert a == 1
     gvm.set_variable('a', 2, access_key=access_key)
     assert gvm.get_variable('a', access_key=access_key) == 2
-    testing_utils.assert_logger_warnings_and_errors(caplog)
+    gvm.unlock_variable('a', access_key)
+    gvm.unlock_variable('a', access_key)
+    testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=1, expected_errors=1)
 
 
 def test_type_check(caplog):
@@ -122,7 +125,7 @@ def test_type_check(caplog):
 
 
 if __name__ == '__main__':
-    # test_locks(None)
+    test_locks(None)
     # test_references(None)
-    test_type_check(None)
+    # test_type_check(None)
     # pytest.main([__file__])

@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -7,7 +7,10 @@
 #
 # Contributors:
 # Franz Steinmetz <franz.steinmetz@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+# Sebastian Riedel <sebastian.riedel@dlr.de>
+# ried_sa <Sebastian.Riedel@dlr.de>
 
 """
 .. module:: execution_history
@@ -31,7 +34,9 @@ from rafcon.core.id_generator import history_item_id_generator
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 import os
+import subprocess
 import pickle
+from weakref import ref
 
 
 class ExecutionHistoryStorage(object):
@@ -67,11 +72,17 @@ class ExecutionHistoryStorage(object):
         finally:
             self.store_lock.release()
 
-    def close(self):
+    def close(self, make_read_and_writable_for_all=False):
         self.store_lock.acquire()
         try:
             self.store.close()
             logger.debug('Closed log file %s' % self.filename)
+            if make_read_and_writable_for_all:
+                ret = subprocess.call(['chmod', 'a+rw', self.filename])
+                if ret:
+                    logger.debug('Could not make log file readable for all. chmod a+rw failed on %s.' % self.filename)
+                else:
+                    logger.debug('Set log file readable for all via chmod a+rw, file %s' % self.filename)
         except Exception as e:
             logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
@@ -102,6 +113,19 @@ class ExecutionHistory(Observable, Iterable, Sized):
         self._history_items = []            
         self.initial_prev = initial_prev
         self.execution_history_storage = None        
+
+    def destroy(self):
+        # logger.verbose("Destroy execution history!")
+        if self.execution_history_storage:
+            self.execution_history_storage.close()
+        self.execution_history_storage = None
+        if len(self._history_items) > 0:
+            if self._history_items[0]:
+                execution_history_iterator = iter(self)
+                for history_item in execution_history_iterator:
+                    history_item.destroy()
+        self._history_items = None
+        self.initial_prev = None
 
     def __iter__(self):
         return iter(self._history_items)                        
@@ -231,8 +255,8 @@ class HistoryItem(object):
     """
 
     def __init__(self, state, prev, run_id):
-        self.state_reference = state
-        self.path = state.get_path()
+        self._state_reference = state
+        self.path = copy.deepcopy(state.get_path())
         self.timestamp = time.time()
         self.run_id = run_id
         self.prev = prev
@@ -240,11 +264,32 @@ class HistoryItem(object):
         self.history_item_id = history_item_id_generator()
         self.state_type = str(type(state).__name__)
 
+    def destroy(self):
+        self._state_reference = None
+        self.path = None
+        self.timestamp = None
+        self.run_id = None
+        self.prev = None
+        self.next = None
+        self.history_item_id = None
+        self.state_type = None
+
+    @property
+    def state_reference(self):
+        """Property for the state_reference field
+        """
+        return self._state_reference
+
     def __str__(self):
         return "HistoryItem with reference state name %s (time: %s)" % (self.state_reference.name, self.timestamp)
 
     def to_dict(self):
         record = dict()
+
+        # here always the correct path is desired
+        record['path'] = self.state_reference.get_path()
+        record['path_by_name'] = self.state_reference.get_path(by_name=True)
+        record['state_type'] = str(type(self.state_reference).__name__)
 
         from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
         if isinstance(self.state_reference, LibraryState):
@@ -261,14 +306,22 @@ class HistoryItem(object):
             record['library_name'] = None
             record['library_path'] = None
 
+        # there are 3 names of interest:
+        # library_name (= library key), library_state_name (name of the user), state_name (name of the developer)
         record['state_name'] = target_state.name
-        record['state_type'] = str(type(target_state).__name__)
-        record['path'] = target_state.get_path()
-        record['path_by_name'] = target_state.get_path(by_name=True)
         record['timestamp'] = self.timestamp
         record['run_id'] = self.run_id  # library state and state copy have the same run_id
         record['history_item_id'] = self.history_item_id
-        record['semantic_data'] = target_state.semantic_data
+
+        # semantic data
+        semantic_data_dict = {}
+        for k, v in target_state.semantic_data.iteritems():
+            try:
+                semantic_data_dict[k] = pickle.dumps(v)
+            except Exception as e:
+                semantic_data_dict['!' + k] = (str(e), str(v))
+        record['semantic_data'] = semantic_data_dict
+
         record['description'] = target_state.description
 
         if self.prev is not None:
@@ -424,6 +477,11 @@ class ConcurrencyItem(HistoryItem):
         record = HistoryItem.to_dict(self)
         record['call_type'] = 'CONTAINER'
         return record
+
+    def destroy(self):
+        for execution_history in self.execution_histories:
+            execution_history.destroy()
+        super(ConcurrencyItem, self).destroy()
 
 
 CallType = Enum('METHOD_NAME', 'EXECUTE CONTAINER')

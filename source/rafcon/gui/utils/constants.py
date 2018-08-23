@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -61,7 +61,10 @@ RECURSIVE_RESIZE_MODIFIER = gtk.gdk.CONTROL_MASK
 
 MAX_VALUE_LABEL_TEXT_LENGTH = 7
 
-MINIMUM_SIZE_FOR_DISPLAY = 2
+MINIMUM_STATE_SIZE_FOR_DISPLAY = 5
+MINIMUM_NAME_SIZE_FOR_DISPLAY = 10
+MINIMUM_PORT_SIZE_FOR_DISPLAY = 4
+MINIMUM_PORT_NAME_SIZE_FOR_DISPLAY = 4
 
 GRID_SIZE = 10
 BORDER_WIDTH_STATE_SIZE_FACTOR = 25.
@@ -111,6 +114,7 @@ BUTTON_OPEN = "f115"
 BUTTON_SAVE = "f0c7"
 BUTTON_PROP = "f0ad"
 BUTTON_REFR = "f021"
+BUTTON_BAKE = "f187"
 BUTTON_CLOSE = "f00d"
 BUTTON_QUIT = "f08b"
 BUTTON_CUT = "f0c4"

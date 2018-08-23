@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -47,6 +47,7 @@ class ToolBarController(ExtendedController):
         self.view['button_refresh'].connect('clicked', self.on_button_refresh_clicked)
         self.view['button_refresh_selected'].connect('clicked', self.on_button_refresh_selected_clicked)
         self.view['button_refresh_libs'].connect('clicked', self.on_button_refresh_libs_clicked)
+        self.view['button_bake_state_machine'].connect('clicked', self.on_button_bake_state_machine_clicked)
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -72,3 +73,6 @@ class ToolBarController(ExtendedController):
 
     def on_button_refresh_libs_clicked(self, widget, data=None):
         self.menu_bar_ctrl.on_refresh_libraries_activate()
+
+    def on_button_bake_state_machine_clicked(self, widget, data=None):
+        self.menu_bar_ctrl.on_bake_state_machine_activate(widget, data)

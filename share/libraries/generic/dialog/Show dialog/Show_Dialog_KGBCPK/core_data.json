@@ -1,0 +1,89 @@
+{
+    "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
+    "description": "Show a message dialog with buttons\n\nThis library can be used to show a message dialog with arbitrary many buttons. A text and subtext can be defined, which are shown to the user. \nThe list of options defines the number and texts of the buttons shown.\nThe key mapping allows to use keys instead of the mouse to select options.\n\nParameters:\n* text: The headline\n* subtext: The text shown below the headline\n* options: A list of strings, which are used as button texts\n* key_mapping: A list with keys. The first entry corresponds to the first button, etc. An entry can either be a key name or a list of key names. To get the key name, the function gtk.gdk.keyval_name is used.\n\nReturns:\n* option: The index of the option the user chose", 
+    "input_data_ports": {
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 1, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "Decide wisely", 
+            "name": "text"
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 2, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "You only have this one chance", 
+            "name": "subtext"
+        }, 
+        "3": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 3, 
+            "data_type": {
+                "__type__": "__builtin__.list"
+            }, 
+            "default_value": [
+                "Blue pill", 
+                "Red pill", 
+                "Call Mum"
+            ], 
+            "name": "options"
+        }, 
+        "5": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 5, 
+            "data_type": {
+                "__type__": "__builtin__.list"
+            }, 
+            "default_value": [
+                [
+                    "1", 
+                    "kp_1"
+                ], 
+                [
+                    "2", 
+                    "kp_2"
+                ], 
+                [
+                    "3", 
+                    "kp_3"
+                ]
+            ], 
+            "name": "key_mapping"
+        }
+    }, 
+    "name": "Show Dialog", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "done", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {
+        "4": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.OutputDataPort", 
+            "data_port_id": 4, 
+            "data_type": {
+                "__type__": "__builtin__.int"
+            }, 
+            "default_value": 0, 
+            "name": "option"
+        }
+    }, 
+    "state_id": "KGBCPK"
+}

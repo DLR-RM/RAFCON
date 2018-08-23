@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -61,9 +61,6 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __del__(self):
-        self._parent = None
-
     def __cmp__(self, other):
         if isinstance(other, StateElement):
             if self.__class__ is other.__class__:
@@ -111,12 +108,12 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
                     # In case of just the data type is wrong raise an Exception but keep the data flow
                     if "not have matching data types" in message:
                         do_delete_item = False
-                        self._parent = parent
+                        self._parent = ref(parent)
                     raise RecoveryModeException("{0} invalid within state \"{1}\" (id {2}): {3}".format(
                         class_name, parent.name, parent.state_id, message), do_delete_item=do_delete_item)
                 else:
-                    raise ValueError("{0} invalid within state \"{1}\" (id {2}): {3}".format(
-                        class_name, parent.name, parent.state_id, message))
+                    raise ValueError("{0} invalid within state \"{1}\" (id {2}): {3} {4}".format(
+                        class_name, parent.name, parent.state_id, message, self))
 
     @property
     def state_element_id(self):

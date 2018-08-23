@@ -20,6 +20,7 @@
               <object class="GtkTreeViewColumn" id="name_col">
                 <property name="title">Name</property>
                 <property name="expand">True</property>
+                <property name="sizing">autosize</property>
                 <child>
                   <object class="GtkCellRendererText" id="name_text"/>
                   <attributes>
@@ -32,6 +33,7 @@
               <object class="GtkTreeViewColumn" id="type_col1">
                 <property name="title">Data Type</property>
                 <property name="expand">True</property>
+                <property name="sizing">autosize</property>
                 <child>
                   <object class="GtkCellRendererText" id="type_text"/>
                   <attributes>
@@ -44,6 +46,7 @@
               <object class="GtkTreeViewColumn" id="value_col">
                 <property name="title">Value</property>
                 <property name="expand">True</property>
+                <property name="sizing">autosize</property>
                 <child>
                   <object class="GtkCellRendererText" id="value_text"/>
                   <attributes>
@@ -56,6 +59,7 @@
               <object class="GtkTreeViewColumn" id="locked_col">
                 <property name="title">Locked</property>
                 <property name="expand">True</property>
+                <property name="sizing">autosize</property>
                 <child>
                   <object class="GtkCellRendererText" id="locked_text"/>
                   <attributes>
@@ -78,6 +82,39 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
+          <object class="GtkButton" id="unlock_global_variable_button">
+            <property name="label" translatable="yes">Unlock</property>
+            <property name="width_request">90</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="border_width">5</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="lock_global_variable_button">
+            <property name="label" translatable="yes">Lock</property>
+            <property name="width_request">90</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="border_width">5</property>
+            <property name="yalign">0.4699999988079071</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkButton" id="delete_global_variable_button">
             <property name="label" translatable="yes">Remove</property>
             <property name="width_request">90</property>
@@ -90,7 +127,7 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="pack_type">end</property>
-            <property name="position">0</property>
+            <property name="position">2</property>
           </packing>
         </child>
         <child>
@@ -106,11 +143,8 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="pack_type">end</property>
-            <property name="position">1</property>
+            <property name="position">3</property>
           </packing>
-        </child>
-        <child>
-          <placeholder/>
         </child>
       </object>
       <packing>

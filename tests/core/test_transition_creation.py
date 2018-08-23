@@ -82,6 +82,8 @@ def test_transition_creation(caplog):
     finally:
         testing_utils.test_multithreading_lock.release()
 
+    rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+
 
 if __name__ == '__main__':
     pytest.main([__file__])

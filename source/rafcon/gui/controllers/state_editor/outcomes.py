@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -72,8 +72,8 @@ class StateOutcomesListController(ListViewController):
         self.dict_to_other_outcome = {}
         # not used at the moment key-outcome_id -> label,  from_state_id,  transition_id
         self.dict_from_other_state = {}  # if widget gets extended
-
-        if not model.state.is_root_state:
+        # TODO check why the can happen should not be handed always the LibraryStateModel
+        if not (model.state.is_root_state or model.state.is_root_state_of_library):
             self.observe_model(model.parent)
 
         if self.model.get_state_machine_m() is not None:
@@ -91,13 +91,13 @@ class StateOutcomesListController(ListViewController):
             view['to_state_combo'].connect("edited", self.on_to_state_edited)
             view['to_outcome_combo'].connect("edited", self.on_to_outcome_edited)
 
-        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
+        if isinstance(self.model.state, LibraryState) or self.model.state.get_next_upper_library_root_state():
             view['id_cell'].set_property('editable', False)
             view['name_cell'].set_property('editable', False)
 
         self._apply_value_on_edited_and_focus_out(view['name_cell'], self.apply_new_outcome_name)
 
-        self.update()
+        self.update(initiator='"register view"')
 
     def apply_new_outcome_name(self, path, new_name):
         """Apply the newly entered outcome name it is was changed
@@ -241,7 +241,8 @@ class StateOutcomesListController(ListViewController):
         self.dict_to_other_outcome.clear()
         self.dict_from_other_state.clear()
 
-        if not model.state.is_root_state:
+        # TODO check this work around -> it could be avoided by observation of remove-before-notifications
+        if not (model.state.is_root_state or model.state.is_root_state_of_library) and self.model.parent.state:  # if parent model is not already destroyed
             # check for "to state combos" -> so all states in parent
             parent_id = model.parent.state.state_id
             for parent_child_state_m in model.parent.states.values():
@@ -298,28 +299,42 @@ class StateOutcomesListController(ListViewController):
 
         if isinstance(self.view, StateOutcomesTreeView):
             for cell_renderer in self.view['to_state_col'].get_cell_renderers():
-                if self.model.state.get_library_root_state() is None:
+                if self.model.state.get_next_upper_library_root_state() is None:
                     cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_state_combo_list)
                 cell_renderer.set_property("text-column", self.ID_STORAGE_ID)
                 cell_renderer.set_property("has-entry", False)
         if self.view and isinstance(self.view, StateOutcomesTreeView):
             for cell_renderer in self.view['to_outcome_col'].get_cell_renderers():
-                if self.model.state.get_library_root_state() is None:
+                if self.model.state.get_next_upper_library_root_state() is None:
                     cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_outcome_combo_list)
                 cell_renderer.set_property("text-column", self.ID_STORAGE_ID)
                 cell_renderer.set_property("has-entry", False)
 
-    def update(self):
-        self.update_internal_data_base()
-        self.update_list_store()
+    def update(self, initiator='Unknown'):
+        try:
+            self.update_internal_data_base()
+            self.update_list_store()
+        except Exception as e:
+            logger.exception("Unexpected failure while update of outcomes of {0} with path {1} "
+                             "with initiator {2}".format(self.model.state, self.model.state.get_path(), initiator))
 
     @ListViewController.observe("parent", after=True)
     @ListViewController.observe("outcomes", after=True)
     @ListViewController.observe("transitions", after=True)
     def outcomes_changed(self, model, prop_name, info):
-        self.update()
+        self.update(initiator=str(info))
+
+    # TODO D-Find out why the observation of the destruction_signal cause threading problems
+    # @ExtendedController.observe("destruction_signal", signal=True)
+    # def get_destruction_signal(self, model, prop_name, info):
+    #     """ Relieve models if the parent state model """
+    #     # this is necessary because the controller use data of its parent model and would try to adapt to
+    #     # transition changes before the self.model is destroyed, too
+    #     if not self.model.state.is_root_state and self.model.parent is model:
+    #         # as long as a relieve of models before the after will cause threading issues the controller is suspended
+    #         self.__suspended = True
 
 
 class StateOutcomesEditorController(ExtendedController):
@@ -327,7 +342,7 @@ class StateOutcomesEditorController(ExtendedController):
     def __init__(self, model, view):
         """Constructor
         """
-        ExtendedController.__init__(self, model, view)
+        super(StateOutcomesEditorController, self).__init__(model, view)
         self.oc_list_ctrl = StateOutcomesListController(model, view.treeView)
         self.add_controller('oc_list_ctrl', self.oc_list_ctrl)
 
@@ -341,7 +356,7 @@ class StateOutcomesEditorController(ExtendedController):
             view['add_button'].connect("clicked", self.oc_list_ctrl.on_add)
             view['remove_button'].connect("clicked", self.oc_list_ctrl.on_remove)
 
-            if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
+            if isinstance(self.model.state, LibraryState) or self.model.state.get_next_upper_library_root_state():
                 view['add_button'].set_sensitive(False)
                 view['remove_button'].set_sensitive(False)
 

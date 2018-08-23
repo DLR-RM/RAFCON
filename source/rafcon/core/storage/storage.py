@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -30,6 +30,7 @@ import rafcon
 from rafcon.utils.filesystem import read_file, write_file
 from rafcon.utils import storage_utils
 from rafcon.utils import log
+from rafcon.utils.timer import measure_time
 
 from rafcon.core.custom_exceptions import LibraryNotFoundException
 from rafcon.core.constants import DEFAULT_SCRIPT_PATH
@@ -235,7 +236,6 @@ def save_semantic_data_for_state(state, state_path_full):
         raise
 
 
-
 def save_state_recursively(state, base_path, parent_path, as_copy=False):
     """Recursively saves a state to a json file
 
@@ -271,6 +271,7 @@ def save_state_recursively(state, base_path, parent_path, as_copy=False):
             save_state_recursively(state, base_path, state_path, as_copy)
 
 
+@measure_time
 def load_state_machine_from_path(base_path, state_machine_id=None):
     """Loads a state machine from the given path
 
@@ -310,12 +311,18 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
             note_about_possible_incompatibility = "The state machine will be loaded with no guarantee of success."
 
             if active_rafcon_version[0] > previously_used_rafcon_version[0]:
-                logger.warn(rafcon_newer_than_sm_version)
-                logger.warn(note_about_possible_incompatibility)
-            elif active_rafcon_version[0] == previously_used_rafcon_version[0]:
+                # this is the default case
+                # for a list of breaking changes please see: doc/breaking_changes.rst
+                # logger.warn(rafcon_newer_than_sm_version)
+                # logger.warn(note_about_possible_incompatibility)
+                pass
+            if active_rafcon_version[0] == previously_used_rafcon_version[0]:
                 if active_rafcon_version[1] > previously_used_rafcon_version[1]:
-                    logger.info(rafcon_newer_than_sm_version)
-                    logger.info(note_about_possible_incompatibility)
+                    # this is the default case
+                    # for a list of breaking changes please see: doc/breaking_changes.rst
+                    # logger.info(rafcon_newer_than_sm_version)
+                    # logger.info(note_about_possible_incompatibility)
+                    pass
                 elif active_rafcon_version[1] == previously_used_rafcon_version[1]:
                     # Major and minor version of RAFCON and the state machine match
                     # It should be safe to load the state machine, as the patch level does not change the format
@@ -355,8 +362,13 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
 
     root_state_path = os.path.join(base_path, root_state_storage_id)
     state_machine.file_system_path = base_path
-    state_machine.root_state = load_state_recursively(parent=state_machine, state_path=root_state_path)
-    state_machine.marked_dirty = False
+    dirty_states = []
+    state_machine.root_state = load_state_recursively(parent=state_machine, state_path=root_state_path,
+                                                      dirty_states=dirty_states)
+    if len(dirty_states) > 0:
+        state_machine.marked_dirty = True
+    else:
+        state_machine.marked_dirty = False
 
     hierarchy_level = 0
     number_of_states, hierarchy_level = state_machine.root_state.get_states_statistics(hierarchy_level)
@@ -377,13 +389,14 @@ def load_state_from_path(state_path):
     return load_state_recursively(parent=None, state_path=state_path)
 
 
-def load_state_recursively(parent, state_path=None):
+def load_state_recursively(parent, state_path=None, dirty_states=[]):
     """Recursively loads the state
 
     It calls this method on each sub-state of a container state.
 
     :param parent:  the root state of the last load call to which the loaded state will be added
     :param state_path: the path on the filesystem where to find the meta file for the state
+    :param dirty_states: a dict of states which changed during loading
     :return:
     """
     from rafcon.core.states.execution_state import ExecutionState
@@ -445,15 +458,13 @@ def load_state_recursively(parent, state_path=None):
         # semantic data file does not have to be there
         pass
 
-
-
     one_of_my_child_states_not_found = False
 
     # load child states
     for p in os.listdir(state_path):
         child_state_path = os.path.join(state_path, p)
         if os.path.isdir(child_state_path):
-            child_state = load_state_recursively(state, child_state_path)
+            child_state = load_state_recursively(state, child_state_path, dirty_states)
             if child_state.name is LIBRARY_NOT_FOUND_DUMMY_STATE_NAME:
                 one_of_my_child_states_not_found = True
 
@@ -467,6 +478,9 @@ def load_state_recursively(parent, state_path=None):
             state.data_flows = data_flows
 
     state.file_system_path = state_path
+
+    if state.marked_dirty:
+        dirty_states.append(state)
 
     return state
 

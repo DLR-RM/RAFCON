@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -117,6 +117,8 @@ class StateOverviewController(ExtendedController):
             combo.set_sensitive(False)
 
             self.view['library_path'].set_text(self.model.state.library_path + "/" + self.model.state.library_name)
+            self.view['library_path'].set_sensitive(True)
+            self.view['library_path'].set_editable(False)
             view['show_content_checkbutton'].set_active(self.model.meta['gui']['show_content'] is True)
             view['show_content_checkbutton'].connect('toggled', self.on_toggle_show_content)
             # self.view['properties_widget'].remove(self.view['show_content_checkbutton'])
@@ -150,7 +152,7 @@ class StateOverviewController(ExtendedController):
             combo.set_sensitive(False)
 
         # in case the state is inside of a library
-        if self.model.state.get_library_root_state():
+        if self.model.state.get_next_upper_library_root_state():
             view['entry_name'].set_editable(False)
             combo.set_sensitive(False)
             view['is_start_state_checkbutton'].set_sensitive(False)

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -12,6 +12,7 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+# Sebastian Riedel <sebastian.riedel@dlr.de>
 
 """
 .. module:: execution_history
@@ -22,11 +23,12 @@
 
 import gtk
 import gobject
+from threading import RLock
 
 import rafcon
 
 from rafcon.core.state_machine_manager import StateMachineManager
-from rafcon.core.execution.execution_history import ConcurrencyItem, CallItem, ScopedDataItem
+from rafcon.core.execution.execution_history import ConcurrencyItem, CallItem, ScopedDataItem, HistoryItem
 from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.execution.execution_history import CallType, StateMachineStartItem
@@ -35,6 +37,7 @@ from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.views.execution_history import ExecutionHistoryView
 from rafcon.gui.singleton import state_machine_execution_model
+from rafcon.gui.config import global_gui_config
 
 from rafcon.utils import log
 
@@ -54,6 +57,7 @@ class ExecutionHistoryTreeController(ExtendedController):
     HISTORY_ITEM_STORAGE_ID = 1
     TOOL_TIP_STORAGE_ID = 2
     TOOL_TIP_TEXT = "Right click for more details\n" \
+                    "Middle click for external more detailed viewer\n" \
                     "Double click to select corresponding state"
 
     def __init__(self, model=None, view=None):
@@ -69,17 +73,62 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         self.observe_model(state_machine_execution_model)
         self._expansion_state = {}
+        self._update_lock = RLock()
 
         self.update()
+
+    def destroy(self):
+        self.clean_history(None, None)
+        super(ExecutionHistoryTreeController, self).destroy()
 
     def register_view(self, view):
         super(ExecutionHistoryTreeController, self).register_view(view)
         self.history_tree.connect('button_press_event', self.mouse_click)
         view['reload_button'].connect('clicked', self.reload_history)
         view['clean_button'].connect('clicked', self.clean_history)
+        view['open_separately_button'].connect('clicked', self.open_selected_history_separately)
+
+    def open_selected_history_separately(self, widget, event=None):
+        model, row = self.history_tree.get_selection().get_selected()
+        path = self.history_tree_store.get_path(row)
+        selected_history_item = model[row][self.HISTORY_ITEM_STORAGE_ID]
+
+        # check if valid history item (in case of concurrency not all tree items has a history item in the tree store
+        if selected_history_item is None and model.iter_has_child(row):
+            child_iter = model.iter_nth_child(row, 0)
+            selected_history_item = model.get_value(child_iter, self.HISTORY_ITEM_STORAGE_ID)
+            if selected_history_item is None:
+                logger.info("The selected element could not be connected to a run-id and thereby no run-id selection "
+                            "is handed to external execution log viewer.")
+                return
+        run_id = selected_history_item.run_id if selected_history_item is not None else None
+
+        selected_state_machine = self.model.get_selected_state_machine_model().state_machine
+
+        history_id = len(selected_state_machine.execution_histories) - 1 - path[0]
+        execution_history = selected_state_machine.execution_histories[history_id]
+
+        from rafcon.core.states.state import StateExecutionStatus
+        if execution_history is selected_state_machine.execution_histories[-1] \
+                and selected_state_machine.root_state.state_execution_status is not StateExecutionStatus.INACTIVE:
+            logger.warning("Stop the state  or wait till it is finished. "
+                           "The external execution history viewer can only open finished executions.")
+            return
+
+        if execution_history.execution_history_storage and execution_history.execution_history_storage.filename:
+            from rafcon.gui.utils.shell_execution import execute_shell_command
+            # TODO run in fully separate process but from here to use the option for selection synchronization via dict
+            cmd = "rafcon_execution_log_viewer  {0} {1}" \
+                  "".format(execution_history.execution_history_storage.filename, run_id)
+            execute_shell_command(cmd, logger)
+        else:
+            logger.info("Activate execution file logging to use the external execution history viewer.")
 
     def append_string_to_menu(self, popup_menu, menu_item_string):
-        menu_item = gtk.MenuItem(menu_item_string)
+        final_string = menu_item_string
+        if len(menu_item_string) > 2000:
+            final_string = menu_item_string[:1000] + "\n...\n" + menu_item_string[-1000:]
+        menu_item = gtk.MenuItem(final_string)
         menu_item.set_sensitive(False)
         menu_item.show()
         popup_menu.append(menu_item)
@@ -119,6 +168,16 @@ class ExecutionHistoryTreeController(ExtendedController):
 
             return True
 
+        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 2:
+            x = int(event.x)
+            y = int(event.y)
+            pthinfo = self.history_tree.get_path_at_pos(x, y)
+            if pthinfo is not None:
+                path, col, cellx, celly = pthinfo
+                self.history_tree.grab_focus()
+                self.history_tree.set_cursor(path, col, 0)
+                self.open_selected_history_separately(None)
+
         if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
             x = int(event.x)
             y = int(event.y)
@@ -132,7 +191,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 popup_menu = gtk.Menu()
 
                 model, row = self.history_tree.get_selection().get_selected()
-                history_item = model[row][1]
+                history_item = model[row][self.HISTORY_ITEM_STORAGE_ID]
                 if not isinstance(history_item, ScopedDataItem) or history_item.scoped_data is None:
                     return
                 scoped_data = history_item.scoped_data
@@ -217,6 +276,9 @@ class ExecutionHistoryTreeController(ExtendedController):
         if not root_iter:
             return
         current_expansion_state = {}
+        # this can be the case when the execution history tree is currently being deleted
+        if not self.get_history_item_for_tree_iter(root_iter).state_reference:
+            return
         state_machine = self.get_history_item_for_tree_iter(root_iter).state_reference.get_state_machine()
         self._expansion_state[state_machine.state_machine_id] = current_expansion_state
         while root_iter:
@@ -303,6 +365,8 @@ class ExecutionHistoryTreeController(ExtendedController):
         rebuild the tree view of the history item tree store
         :return:
         """
+        # with self._update_lock:
+        self._update_lock.acquire()
         self._store_expansion_state()
         self.history_tree_store.clear()
         selected_sm_m = self.model.get_selected_state_machine_model()
@@ -334,6 +398,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                     self.insert_execution_history(tree_item, execution_history, is_root=True)
 
         self._restore_expansion_state()
+        self._update_lock.release()
 
     def insert_history_item(self, parent, history_item, description, dummy=False):
         """Enters a single history item into the tree store
@@ -345,9 +410,23 @@ class ExecutionHistoryTreeController(ExtendedController):
         :return: Inserted tree item
         :rtype: gtk.TreeItem
         """
+        if not history_item.state_reference:
+            logger.error("This must never happen! Current history_item is {}".format(history_item))
+            return None
+        content = None
+
+        if global_gui_config.get_config_value("SHOW_PATH_NAMES_IN_EXECUTION_HISTORY", False):
+            content = (history_item.state_reference.name + " - " +
+                           history_item.state_reference.get_path() + " - " +
+                           description, None if dummy else history_item,
+                           None if dummy else self.TOOL_TIP_TEXT)
+        else:
+            content = (history_item.state_reference.name + " - " +
+                           description, None if dummy else history_item,
+                           None if dummy else self.TOOL_TIP_TEXT)
+
         tree_item = self.history_tree_store.insert_before(
-            parent, None, (history_item.state_reference.name + " - " + description, None if dummy else history_item,
-                           None if dummy else self.TOOL_TIP_TEXT))
+            parent, None, content)
         return tree_item
 
     def insert_execution_history(self, parent, execution_history, is_root=False):
@@ -367,6 +446,8 @@ class ExecutionHistoryTreeController(ExtendedController):
 
             elif isinstance(history_item, CallItem):
                 tree_item = self.insert_history_item(current_parent, history_item, "Enter" if is_root else "Call")
+                if not tree_item:
+                    return
                 if history_item.call_type is CallType.EXECUTE:
                     # this is necessary that already the CallType.EXECUTE item opens a new hierarchy in the
                     # tree view and not the CallType.CONTAINER item
@@ -377,6 +458,11 @@ class ExecutionHistoryTreeController(ExtendedController):
                         next(execution_history_iterator)  # skips the next history item in the iterator
 
             else:  # history_item is ReturnItem
+                if current_parent is None:
+                    # The reasons here can be: missing history items, items in the wrong order etc.
+                    # Does not happen when using RAFCON without plugins
+                    logger.error("Invalid execution history: current_parent is None")
+                    return
                 if history_item.call_type is CallType.EXECUTE:
                     self.insert_history_item(current_parent, history_item, "Return")
                 else:  # CONTAINER

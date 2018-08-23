@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -23,6 +23,7 @@ class LibraryTreeView(View, gtk.TreeView):
         # self.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
 
         tvcolumn_name = gtk.TreeViewColumn('Library Name')
+        tvcolumn_name.set_property("sizing", "autosize")
         self.append_column(tvcolumn_name)
         cell_renderer_name = gtk.CellRendererText()
         tvcolumn_name.pack_start(cell_renderer_name, True)

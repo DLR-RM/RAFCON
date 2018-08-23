@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -78,6 +78,8 @@ class GlobalVariableManagerController(ListViewController):
         self._apply_value_on_edited_and_focus_out(view['type_text'], self.apply_new_global_variable_type)
         view['new_global_variable_button'].connect('clicked', self.on_add)
         view['delete_global_variable_button'].connect('clicked', self.on_remove)
+        view['lock_global_variable_button'].connect('clicked', self.on_lock)
+        view['unlock_global_variable_button'].connect('clicked', self.on_unlock)
         self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
 
     def register_actions(self, shortcut_manager):
@@ -114,6 +116,42 @@ class GlobalVariableManagerController(ListViewController):
             logger.warning("Addition of new global variable '{0}' failed: {1}".format(gv_name, e))
         self.select_entry(gv_name)
         return True
+
+    def on_lock(self, widget, data=None):
+        """Locks respective selected core element"""
+        path_list = None
+        if self.view is not None:
+            model, path_list = self.tree_view.get_selection().get_selected_rows()
+        models = [self.list_store[path][self.MODEL_STORAGE_ID] for path in path_list] if path_list else []
+        if models:
+            if len(models) > 1:
+                self._logger.warning("Please select only one element to be locked.")
+            try:
+                self.model.global_variable_manager.lock_variable(models[0])
+            except AttributeError as e:
+                self._logger.warn("The respective core element of {1}.list_store couldn't be locked. -> {0}"
+                                  "".format(e, self.__class__.__name__))
+            return True
+        else:
+            self._logger.warning("Please select an element to be locked.")
+
+    def on_unlock(self, widget, data=None):
+        """Locks respective selected core element"""
+        path_list = None
+        if self.view is not None:
+            model, path_list = self.tree_view.get_selection().get_selected_rows()
+        models = [self.list_store[path][self.MODEL_STORAGE_ID] for path in path_list] if path_list else []
+        if models:
+            if len(models) > 1:
+                self._logger.warning("Please select only one element to be unlocked.")
+            try:
+                self.model.global_variable_manager.unlock_variable(models[0], None, force=True)
+            except AttributeError as e:
+                self._logger.warn("The respective core element of {1}.list_store couldn't be unlocked. -> {0}"
+                                  "".format(e, self.__class__.__name__))
+            return True
+        else:
+            self._logger.warning("Please select an element to be unlocked.")
 
     def remove_core_element(self, model):
         """Remove respective core element of handed global variable name

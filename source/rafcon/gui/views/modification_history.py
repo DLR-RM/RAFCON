@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -24,15 +24,19 @@ class HistoryTreeView(View, gtk.TreeView):
         foreground = 5
 
         tvcolumn = gtk.TreeViewColumn('Nr', gtk.CellRendererText(), text=1, foreground=foreground)
+        tvcolumn.set_property("sizing", "autosize")
         self.append_column(tvcolumn)
 
         tvcolumn = gtk.TreeViewColumn('Action', gtk.CellRendererText(), text=2, foreground=foreground)
+        tvcolumn.set_property("sizing", "autosize")
         self.append_column(tvcolumn)
 
         tvcolumn = gtk.TreeViewColumn('Parameters', gtk.CellRendererText(), text=7, foreground=foreground)
+        tvcolumn.set_property("sizing", "autosize")
         self.append_column(tvcolumn)
 
         tvcolumn = gtk.TreeViewColumn('Affects', gtk.CellRendererText(), text=3, foreground=foreground)
+        tvcolumn.set_property("sizing", "autosize")
         # tvcolumn.set_min_width(150)
         self.append_column(tvcolumn)
 

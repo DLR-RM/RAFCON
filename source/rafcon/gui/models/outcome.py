@@ -59,6 +59,10 @@ class OutcomeModel(StateElementModel):
     def model_changed(self, model, prop_name, info):
         super(OutcomeModel, self).model_changed(model, prop_name, info)
 
+    def prepare_destruction(self):
+        super(OutcomeModel, self).prepare_destruction()
+        self.outcome = None
+
     def _meta_data_editor_gaphas2opengl(self, vividict):
         if 'rel_pos' in vividict:
             del vividict['rel_pos']

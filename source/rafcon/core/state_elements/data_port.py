@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -205,9 +205,15 @@ class DataPort(StateElement):
         else:
 
             if old_data_type.__name__ == "float" and data_type == "int":
-                self._default_value = int(default_value)
+                if self.default_value:
+                    self._default_value = int(default_value)
+                else:
+                    self._default_value = 0
             elif old_data_type.__name__ == "int" and data_type == "float":
-                self._default_value = float(default_value)
+                if self.default_value:
+                    self._default_value = float(default_value)
+                else:
+                    self._default_value = 0.0
             else:
                 self._default_value = None
 

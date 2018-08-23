@@ -1,6 +1,7 @@
 import os
 import time
 import datetime
+import pytest
 
 # test environment elements
 import testing_utils
@@ -29,7 +30,7 @@ def wait_for_execution_engine_sync_counter(target_value, logger, timeout=5):
             break
         state_machine_execution_engine.synchronization_lock.release()
         if (datetime.datetime.now() - current_time).seconds > timeout:
-            raise RuntimeError("Something went wrong")
+            raise RuntimeError("Something went wrong while waiting for states to finish!")
         time.sleep(0.1)
 
 
@@ -42,6 +43,7 @@ def execute_library_state_forwards_backwards():
         menubar_ctrl.on_open_activate, None, None,
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_step_library_execution_test"))
     )
+    testing_utils.wait_for_gui()
     # reset the synchronization counter; although the tests run in different processes they share their memory
     # as the import statements are at the top of the file and not inside the parallel called functions
     state_machine_execution_engine.synchronization_lock.acquire()
@@ -75,20 +77,19 @@ def execute_library_state_forwards_backwards():
 
 def test_backward_stepping_library_state(caplog):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
-                          libraries={'generic': os.path.join("${RAFCON_LIB_PATH}", "generic"),
-                                     'unit_test': os.path.join(testing_utils.TESTS_PATH, 'assets',
+                          libraries={'unit_test': os.path.join(testing_utils.TESTS_PATH, 'assets',
                                                                'unit_test_state_machines',
                                                                'backward_step_library_execution_test', 'test_library')
                                      }
                           )
     call_gui_callback(initialize_global_variables)
-    # try:
-    execute_library_state_forwards_backwards()
-# except Exception,e:
-#     raise
-# finally:
-    testing_utils.close_gui()
-    testing_utils.shutdown_environment(caplog=caplog)
+    try:
+        execute_library_state_forwards_backwards()
+    except Exception:
+        raise
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 def verify_execute_preemptive_state_forwards_backwards():
@@ -110,8 +111,7 @@ def execute_preemptive_state_forwards_backwards():
         menubar_ctrl.on_open_activate, None, None,
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_step_preemtive_test"))
     )
-
-    gvm = gui_singleton.global_variable_manager_model
+    testing_utils.wait_for_gui()
 
     # reset the synchronization counter; although the tests run in different processes they share their memory
     # as the import statements are at the top of the file and not inside the parallel called functions
@@ -173,6 +173,7 @@ def execute_barrier_state_forwards_backwards():
         menubar_ctrl.on_open_activate, None, None,
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_step_barrier_test"))
     )
+    testing_utils.wait_for_gui()
 
     # reset the synchronization counter; although the tests run in different processes they share their memory
     # as the import statements are at the top of the file and not inside the parallel called functions
@@ -197,15 +198,28 @@ def execute_barrier_state_forwards_backwards():
         call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
+    print "cp1"
+
     for i in range(4):
         call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(3, logger)
 
+    print "cp2"
+
     call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+
+    print "cp3"
 
     sm = state_machine_manager.get_active_state_machine()
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
+
+    print "cp4"
+
+    testing_utils.wait_for_gui()
+
+    print "cp5"
+
     for key, sd in sm.root_state.scoped_data.iteritems():
         if sd.name == "beer_number":
             assert sd.value == 100
@@ -225,14 +239,12 @@ def test_backward_stepping_barrier_state(caplog):
     except Exception,e:
         raise
     finally:
-        # testing_utils.wait_for_gui()
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':
+    # test_backward_stepping_library_state(None)
     test_backward_stepping_barrier_state(None)
-    test_backward_stepping_preemptive_state(None)
-    test_backward_stepping_library_state(None)
-    # import pytest
+    # test_backward_stepping_preemptive_state(None)
     # pytest.main(['-s', __file__])

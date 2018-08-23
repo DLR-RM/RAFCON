@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -19,9 +19,9 @@
 
 import os
 import shutil
+import copy
 from gtkmvc import Observable
 
-import rafcon
 from rafcon.core import interface
 from rafcon.core.storage import storage
 from rafcon.core.custom_exceptions import LibraryNotFoundException
@@ -62,6 +62,16 @@ class LibraryManager(Observable):
         self._skipped_states = []
         self._skipped_library_roots = []
 
+        # loaded libraries
+        self._loaded_libraries = {}
+        self._libraries_instances = {}
+
+    def prepare_destruction(self):
+        self.clean_loaded_libraries()
+
+    def clean_loaded_libraries(self):
+        self._loaded_libraries.clear()
+
     def initialize(self):
         """Initializes the library manager
 
@@ -81,11 +91,12 @@ class LibraryManager(Observable):
         for library_root_key, library_root_path in config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
             library_root_path = self._clean_path(library_root_path)
             if os.path.exists(library_root_path):
-                logger.debug("Adding library '{1}' from {0}".format(library_root_path, library_root_key))
-                self._load_library_from_root_path(library_root_key, library_root_path)
+                logger.debug("Adding library root key '{0}' from path '{1}'".format(
+                    library_root_key, library_root_path))
+                self._load_libraries_from_root_path(library_root_key, library_root_path)
             else:
-                logger.warn("Configured path for library '{}' does not exist: {}".format(library_root_key,
-                                                                                         library_root_path))
+                logger.warn("Configured path for library root key '{}' does not exist: {}".format(
+                    library_root_key, library_root_path))
 
         # 2. Load libraries from RAFCON_LIBRARY_PATH
         library_path_env = os.environ.get('RAFCON_LIBRARY_PATH', '')
@@ -101,7 +112,7 @@ class LibraryManager(Observable):
             if library_root_key in self._libraries:
                 logger.warn("The library '{}' is already existing and will be overridden with '{}'".format(
                     library_root_key, library_root_path))
-            self._load_library_from_root_path(library_root_key, library_root_path)
+            self._load_libraries_from_root_path(library_root_key, library_root_path)
             logger.debug("Adding library '{1}' from {0}".format(library_root_path, library_root_key))
 
         self._libraries = OrderedDict(sorted(self._libraries.items()))
@@ -125,7 +136,7 @@ class LibraryManager(Observable):
         path = os.path.realpath(path)
         return path
 
-    def _load_library_from_root_path(self, library_root_key, library_root_path):
+    def _load_libraries_from_root_path(self, library_root_key, library_root_path):
         self._library_root_paths[library_root_key] = library_root_path
         self._libraries[library_root_key] = {}
         self._load_nested_libraries(library_root_path, self._libraries[library_root_key])
@@ -356,6 +367,34 @@ class LibraryManager(Observable):
             return LibraryState(library_path, library_name, "0.1")
         else:
             logger.warning("Library manager will not create a library instance which is not in the mounted libraries.")
+
+    def get_library_state_copy_instance(self, lib_os_path):
+        """ A method to get a state copy of the library specified via the lib_os_path.
+
+        :param lib_os_path: the location of the library to get a copy for
+        :return:
+        """
+
+        # originally liraries were called like this; DO NOT DELETE; interesting for performance tests
+        # state_machine = storage.load_state_machine_from_path(lib_os_path)
+        # return state_machine.version, state_machine.root_state
+
+        # TODO observe changes on file system and update data
+        if lib_os_path in self._loaded_libraries:
+            # this list can also be taken to open library state machines TODO -> implement it -> because faster
+            state_machine = self._loaded_libraries[lib_os_path]
+            # logger.info("Take copy of {0}".format(lib_os_path))
+            # as long as the a library state root state is never edited so the state first has to be copied here
+            state_copy = copy.deepcopy(state_machine.root_state)
+            return state_machine.version, state_copy
+        else:
+            state_machine = storage.load_state_machine_from_path(lib_os_path)
+            self._loaded_libraries[lib_os_path] = state_machine
+            if config.global_config.get_config_value("NO_PROGRAMMATIC_CHANGE_OF_LIBRARY_STATES_PERFORMED", False):
+                return state_machine.version, state_machine.root_state
+            else:
+                state_copy = copy.deepcopy(state_machine.root_state)
+                return state_machine.version, state_copy
 
     def remove_library_from_file_system(self, library_path, library_name):
         """Remove library from hard disk."""

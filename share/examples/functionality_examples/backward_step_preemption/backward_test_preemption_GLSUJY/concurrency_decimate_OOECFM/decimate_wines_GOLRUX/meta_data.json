@@ -1,0 +1,323 @@
+{
+    "data_flow10": {
+        "gui": {
+            "editor_opengl": {
+                "waypoints": []
+            }
+        }, 
+        "waypoints": {}
+    }, 
+    "data_flow13": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }, 
+            "editor_opengl": {
+                "waypoints": {}
+            }
+        }
+    }, 
+    "data_flow4": {
+        "gui": {
+            "editor_opengl": {
+                "waypoints": []
+            }
+        }, 
+        "waypoints": {}
+    }, 
+    "data_flow6": {
+        "gui": {
+            "editor_opengl": {
+                "waypoints": []
+            }
+        }, 
+        "waypoints": {}
+    }, 
+    "data_flow7": {
+        "gui": {
+            "editor_opengl": {
+                "waypoints": []
+            }
+        }, 
+        "waypoints": {}
+    }, 
+    "data_flow8": {
+        "gui": {
+            "editor_opengl": {
+                "waypoints": []
+            }
+        }, 
+        "waypoints": {}
+    }, 
+    "data_flow9": {
+        "gui": {
+            "editor_opengl": {
+                "waypoints": []
+            }
+        }, 
+        "waypoints": {}
+    }, 
+    "gui": {
+        "editor_gaphas": {
+            "income": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        4.096771955929711
+                    ]
+                }
+            }, 
+            "name": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.6827953259882852, 
+                        0.6827953259882852
+                    ]
+                }, 
+                "size": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        14.36063718016114, 
+                        1.0241929889824277
+                    ]
+                }
+            }, 
+            "outcome_pos": {
+                "-1": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1299.1143433474592, 
+                        -903.0493074493182
+                    ]
+                }, 
+                "-2": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1277.2992466498322, 
+                        -903.0493074493182
+                    ]
+                }, 
+                "0": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1310.0218916962729, 
+                        -957.5870491933858
+                    ]
+                }
+            }, 
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    14.683267096665247, 
+                    22.528395042980307
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    15.72622783213771, 
+                    8.193543911859422
+                ]
+            }
+        }
+    }, 
+    "input_data_port1": {
+        "gui": {
+            "editor_gaphas": {
+                "inner_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1066.936190938229, 
+                        -999.9309392987292
+                    ]
+                }, 
+                "inner_connector_radius": 0.7271698899209021, 
+                "inner_rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.782570553576889, 
+                        -6.577610447239209
+                    ]
+                }, 
+                "outer_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1135.5142065101409, 
+                        -1023.0323392862672
+                    ]
+                }, 
+                "outer_connector_radius": 2.272405906002819, 
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        6.577610447239209
+                    ]
+                }
+            }
+        }
+    }, 
+    "input_data_port2": {
+        "gui": {
+            "editor_gaphas": {
+                "inner_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1062.9936487464736, 
+                        -979.5893831552663
+                    ]
+                }, 
+                "inner_connector_radius": 0.7271698899209021, 
+                "inner_rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        4.377504034070739, 
+                        -6.537112046191268
+                    ]
+                }, 
+                "outer_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1135.5142065101409, 
+                        -1043.029511259092
+                    ]
+                }, 
+                "outer_connector_radius": 2.272405906002819, 
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        6.537112046191268
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome-1": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        14.906873440951767, 
+                        0
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome-2": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        13.268164658579883, 
+                        0
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome0": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        15.72622783213771, 
+                        4.096771955929711
+                    ]
+                }
+            }
+        }
+    }, 
+    "output_data_port12": {
+        "gui": {
+            "editor_gaphas": {
+                "inner_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1271.9816413197195, 
+                        -966.3118784447712
+                    ]
+                }, 
+                "inner_connector_radius": 0.7271698899209021, 
+                "inner_rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        14.859406667271585, 
+                        -4.970406172830664
+                    ]
+                }, 
+                "outer_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1202.7089639114092, 
+                        -1063.0266832319169
+                    ]
+                }, 
+                "outer_connector_radius": 2.272405906002819, 
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        8.193543911859422, 
+                        4.970406172830664
+                    ]
+                }
+            }
+        }
+    }, 
+    "transition1": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }, 
+            "editor_gaphas": {
+                "waypoints": {}
+            }
+        }
+    }, 
+    "transition2": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }, 
+            "editor_gaphas": {
+                "waypoints": {}
+            }
+        }
+    }, 
+    "transition3": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }, 
+            "editor_gaphas": {
+                "waypoints": {}
+            }
+        }
+    }, 
+    "transition4": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }, 
+            "editor_gaphas": {
+                "waypoints": {}
+            }
+        }
+    }, 
+    "transition6": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }, 
+            "editor_gaphas": {
+                "waypoints": {}
+            }
+        }
+    }
+}

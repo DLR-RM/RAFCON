@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -89,7 +89,7 @@ def convert_string_value_to_type_value(string_value, data_type):
         elif data_type == object:
             try:
                 converted_value = literal_eval(string_value)
-            except ValueError:
+            except (ValueError, SyntaxError):
                 converted_value = literal_eval('"' + string_value + '"')
         elif isinstance(data_type, type):  # Try native type conversion
             converted_value = data_type(string_value)

@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -67,6 +67,7 @@ class ExecutionState(State):
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, outcomes, None)
         state.script_text = deepcopy(self.script_text)
         state.description = deepcopy(self.description)
+        state.semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
         return state
 

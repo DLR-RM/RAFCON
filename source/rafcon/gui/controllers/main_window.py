@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -21,6 +21,7 @@
 
 """
 
+import os
 import logging
 import gtk
 from functools import partial
@@ -35,7 +36,7 @@ from rafcon.gui.controllers.global_variable_manager import GlobalVariableManager
 from rafcon.gui.controllers.library_tree import LibraryTreeController
 from rafcon.gui.controllers.menu_bar import MenuBarController
 from rafcon.gui.controllers.modification_history import ModificationHistoryTreeController
-from rafcon.gui.controllers.logging_console import LoggingConsoleController
+from rafcon.gui.controllers.debug_console import DebugConsoleController
 from rafcon.gui.controllers.state_icons import StateIconController
 from rafcon.gui.controllers.state_machine_tree import StateMachineTreeController
 from rafcon.gui.controllers.state_machines_editor import StateMachinesEditorController
@@ -85,11 +86,11 @@ class MainWindowController(ExtendedController):
         self.shortcut_manager = ShortcutManager(view['main_window'])
 
         ######################################################
-        # logging console
+        # debug console
         ######################################################
-        self.logging_console_controller = LoggingConsoleController(gui_singletons.gui_config_model,
-                                                                   view.logging_console_view)
-        self.add_controller('logging_console_controller', self.logging_console_controller)
+        debug_console_controller = DebugConsoleController(gui_singletons.gui_config_model,
+                                                          view.debug_console_view)
+        self.add_controller('debug_console_controller', debug_console_controller)
 
         ######################################################
         # library tree
@@ -177,11 +178,6 @@ class MainWindowController(ExtendedController):
             window_ctrl = UndockedWindowController(state_machine_manager_model, undocked_window_view, redock_callback)
             self.add_controller(window_ctrl_name, window_ctrl)
 
-        view['debug_console_button_hbox'].reorder_child(view['button_show_error'], 0)
-        view['debug_console_button_hbox'].reorder_child(view['button_show_warning'], 1)
-        view['debug_console_button_hbox'].reorder_child(view['button_show_info'], 2)
-        view['debug_console_button_hbox'].reorder_child(view['button_show_debug'], 3)
-
         # Initialize the Left-Bar Notebooks' titles according to initially-selected tabs
         upper_title = gui_helper_label.set_notebook_title(view['upper_notebook'],
                                                           view['upper_notebook'].get_current_page(),
@@ -202,6 +198,14 @@ class MainWindowController(ExtendedController):
         self.left_bar_hidden = False
         self.right_bar_hidden = False
         self.console_hidden = False
+
+    def destroy(self):
+        super(MainWindowController, self).destroy()
+        # The sidebars have no corresponding controller that could destroy the views what cause the connected methods
+        # to stay connected to (hold references on) the main window controller. So, we do this here. TODO D-solve it
+        self.left_bar_child.destroy()
+        self.right_bar_child.destroy()
+        self.console_child.destroy()
 
     @staticmethod
     def configure_event(widget, event, name):
@@ -264,12 +268,6 @@ class MainWindowController(ExtendedController):
                                         "clicked",
                                         self.on_button_step_backward_shortcut_clicked)
 
-        # Connect Debug console buttons' signals to their corresponding methods
-        for level in ["debug", "info", "warning", "error"]:
-            self.connect_button_to_function("button_show_{}".format(level), "toggled", self.on_log_button_toggled,
-                                            "LOGGING_SHOW_{}".format(level.upper()))
-        self.update_log_button_state()
-
         view['upper_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['upper_notebook_title'],
                                        view.left_bar_window, 'upper')
         view['lower_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['lower_notebook_title'],
@@ -323,20 +321,6 @@ class MainWindowController(ExtendedController):
         logger.setLevel(logging.INFO)
         logger.info("Ready")
         logger.setLevel(level)
-
-    @ExtendedController.observe('config', after=True)
-    def on_config_value_changed(self, config_m, prop_name, info):
-        """Callback when a config value has been changed
-
-        :param ConfigModel config_m: The config model that has been changed
-        :param str prop_name: Should always be 'config'
-        :param dict info: Information e.g. about the changed config key
-        """
-        config_key = info['args'][1]
-        # config_value = info['args'][2]
-
-        if "LOGGING_SHOW_" in config_key:
-            self.update_log_button_state()
 
     def connect_button_to_function(self, view_index, button_state, function, *args):
         handler_id = self.view[view_index].connect(button_state, function, *args)
@@ -490,6 +474,8 @@ class MainWindowController(ExtendedController):
         widget_name = window_key.lower()
         undocked_window_view = getattr(self.view, undocked_window_name)
         undocked_window = undocked_window_view.get_top_widget()
+        if os.getenv("RAFCON_START_MINIMIZED", False):
+            undocked_window.iconify()
 
         gui_helper_label.set_window_size_and_position(undocked_window, window_key)
         self.view[widget_name].reparent(undocked_window_view['central_eventbox'])
@@ -559,15 +545,6 @@ class MainWindowController(ExtendedController):
 
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_backward_step_activate(None)
-
-    def on_log_button_toggled(self, log_button, config_key):
-        gui_config.set_config_value(config_key, log_button.get_active())
-        gui_config.save_configuration()
-
-    def update_log_button_state(self):
-        for level in ["debug", "info", "warning", "error"]:
-            active = gui_config.get_config_value("LOGGING_SHOW_{}".format(level.upper()))
-            self.view["button_show_{}".format(level)].set_active(active)
 
     def on_notebook_tab_switch(self, notebook, page, page_num, title_label, window, notebook_identifier):
         """Triggered whenever a left-bar notebook tab is changed.
@@ -657,11 +634,23 @@ class MainWindowController(ExtendedController):
         global_runtime_config.save_configuration()
         
         # close all tabs
-        self.get_controller('states_editor_ctrl').prepare_destruction()  # avoid new state editor
+        self.get_controller('states_editor_ctrl').prepare_destruction()  # avoid new state editor TODO tbd (deleted)
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
+        rafcon.core.singleton.library_manager.prepare_destruction()
+
+        # gtkmvc installs a global glade custom handler that holds a reference to the last created View class,
+        # preventing it from being destructed. By installing a dummy callback handler, after all views have been
+        # created, the old handler is being removed and with it the reference, allowing all Views to be destructed.
+        try:
+            from gtk import glade
+            def dummy(*args, **kwargs):
+                pass
+            glade.set_custom_handler(dummy)
+        except ImportError:
+            pass
+
         # Recursively destroys the main window
-        self.get_controller('menu_bar_controller').logging_console_view.quit_flag = True
-        # idle_add seems not to be necessary here
-        # glib.idle_add(log_helpers.LoggingViewHandler.remove_logging_view, 'main')
-        log_helpers.LoggingViewHandler.remove_logging_view('main')
         self.destroy()
+        from rafcon.gui.clipboard import global_clipboard
+        global_clipboard.destroy()
+        gui_singletons.main_window_controller = None

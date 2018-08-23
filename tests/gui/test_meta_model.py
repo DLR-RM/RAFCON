@@ -1,6 +1,5 @@
 import pytest
-
-from rafcon.gui.models.meta import MetaModel
+import testing_utils
 
 
 def assert_single_editor_meta_data(model, gaphas):
@@ -12,6 +11,8 @@ def assert_single_editor_meta_data(model, gaphas):
 
 
 def test_meta_initialization():
+    testing_utils.dummy_gui(None)
+    from rafcon.gui.models.meta import MetaModel
     meta_m = MetaModel(meta={"1": 2, "2": 1})
     assert meta_m.meta == {"1": 2, "2": 1}
 
@@ -21,6 +22,8 @@ def test_meta_initialization():
 
 
 def test_meta_setter_return_value():
+    testing_utils.dummy_gui(None)
+    from rafcon.gui.models.meta import MetaModel
     meta_m = MetaModel()
     meta_data = meta_m.set_meta_data_editor("key", "value")
     assert meta_data["key"] == "value"
@@ -32,6 +35,8 @@ def test_meta_setter_return_value():
 
 @pytest.mark.parametrize("use_gaphas", [False, True])
 def test_editor_setter_getter(use_gaphas):
+    testing_utils.dummy_gui(None)
+    from rafcon.gui.models.meta import MetaModel
     meta_m = MetaModel()
 
     meta_data = meta_m.get_meta_data_editor(for_gaphas=use_gaphas)
@@ -54,6 +59,8 @@ def test_editor_setter_getter(use_gaphas):
 
 @pytest.mark.parametrize("use_gaphas", [False, True])
 def test_editor_setter_getter_conversion(use_gaphas):
+    testing_utils.dummy_gui(None)
+    from rafcon.gui.models.meta import MetaModel
     meta_m = MetaModel()
     meta_m.meta["gui"]["editor_opengl" if use_gaphas else "editor_gaphas"]["test"] = (1, 2)
     meta_data = meta_m.get_meta_data_editor(for_gaphas=use_gaphas)
@@ -64,9 +71,31 @@ def test_editor_setter_getter_conversion(use_gaphas):
 
 
 def test_meta_list_modification():
+    testing_utils.dummy_gui(None)
+    from rafcon.gui.models.meta import MetaModel
     meta_m = MetaModel()
     meta_data = meta_m.set_meta_data_editor("list", [1, 2, 3])
     assert meta_data["list"] == [1, 2, 3]
     meta_data = meta_m.set_meta_data_editor("list.0", 4)
     assert meta_data["list"] == [4, 2, 3]
+
+
+def test_meta_data_hash():
+    testing_utils.dummy_gui(None)
+    from rafcon.gui.models.meta import MetaModel
+
+    meta1_m = MetaModel()
+    meta1_m.meta["test"] = 1
+    meta1_m.meta["nested"]["dict"] = 2
+
+    meta2_m = MetaModel()
+    meta2_m.meta["test"] = 1
+    meta2_m.meta["nested"]["dict"] = 2
+
+    meta3_m = MetaModel()
+    meta3_m.meta["test"] = 1
+    meta3_m.meta["nested"]["dict"] = 3
+
+    assert meta1_m.meta_data_hash().digest() == meta2_m.meta_data_hash().digest()
+    assert meta1_m.meta_data_hash().digest() != meta3_m.meta_data_hash().digest()
 

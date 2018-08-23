@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -68,6 +68,13 @@ class StateTransitionsListController(LinkageListController):
         self.debug_log = False
         super(StateTransitionsListController, self).__init__(model, view, view.get_top_widget(), list_store, logger)
 
+    def destroy(self):
+        self.view['from_state_col'].set_cell_data_func(self.view['from_state_combo'], None)
+        self.view['to_state_col'].set_cell_data_func(self.view['to_state_combo'], None)
+        self.view['from_outcome_col'].set_cell_data_func(self.view['from_outcome_combo'], None)
+        self.view['to_outcome_col'].set_cell_data_func(self.view['to_outcome_combo'], None)
+        super(StateTransitionsListController, self).destroy()
+
     def register_view(self, view):
         """Called when the View was registered
         """
@@ -105,7 +112,7 @@ class StateTransitionsListController(LinkageListController):
         view['from_outcome_col'].set_cell_data_func(view['from_outcome_combo'], cell_text)
         view['to_outcome_col'].set_cell_data_func(view['to_outcome_combo'], cell_text)
 
-        if self.model.state.get_library_root_state():
+        if self.model.state.get_next_upper_library_root_state():
             view['from_state_combo'].set_property("editable", False)
             view['from_outcome_combo'].set_property("editable", False)
             view['to_state_combo'].set_property("editable", False)
@@ -117,11 +124,11 @@ class StateTransitionsListController(LinkageListController):
             view['to_outcome_combo'].connect("edited", self.on_combo_changed_to_outcome)
 
         view.tree_view.connect("grab-focus", self.on_focus)
-        self.update()
+        self.update(initiator='"register view"')
 
     def on_focus(self, widget, data=None):
         path = self.get_path()
-        self.update()
+        self.update(initiator='"focus"')
         if path:
             self.tree_view.set_cursor(path)
 
@@ -467,8 +474,8 @@ class StateTransitionsListController(LinkageListController):
                     self.get_possible_combos_for_transition(None, self.model, self.model)
                 self.combo['free_from_states'] = free_from_states
                 self.combo['free_from_outcomes_dict'] = free_from_outcomes_dict
-
-        if not self.model.state.is_root_state:
+        # TODO check why the can happen should not be handed always the LibraryStateModel
+        if not (self.model.state.is_root_state or self.model.state.is_root_state_of_library):
             # check for external combos
             for transition_id, transition in model.parent.state.transitions.items():
                 if transition.from_state == model.state.state_id or transition.to_state == model.state.state_id:
@@ -581,10 +588,14 @@ class StateTransitionsListController(LinkageListController):
                 except Exception as e:
                     logger.warning("There was a problem while updating the data-flow widget TreeStore. {0}".format(e))
 
-    def update(self):
-        self._update_internal_data_base()
-        self._update_tree_store()
-        self.update_selection_sm_prior()
+    def update(self, initiator='Unknown'):
+        try:
+            self._update_internal_data_base()
+            self._update_tree_store()
+            self.update_selection_sm_prior()
+        except Exception as e:
+            logger.exception("Unexpected failure while update of transitions related to {0} with path {1} "
+                             "with initiator {2}".format(self.model.state, self.model.state.get_path(), initiator))
 
     @LinkageListController.observe("state", before=True)
     def before_notification_of_parent_or_state(self, model, prop_name, info):
@@ -608,7 +619,7 @@ class StateTransitionsListController(LinkageListController):
                 overview['method_name'][-1] in ['name', 'group_states', 'ungroup_state', 'change_data_type',
                                                 "remove_outcome", "remove_transition"]:
             # logger.info("after_notification_state: UPDATE")
-            self.update()
+            self.update(initiator=str(overview))
 
     @LinkageListController.observe("states", after=True)
     @LinkageListController.observe("transitions", after=True)
@@ -645,7 +656,7 @@ class StateTransitionsListController(LinkageListController):
 
         try:
             # logger.info("after_notification_of_parent_or_state_from_lists: UPDATE")
-            self.update()
+            self.update(initiator=str(overview))
         except KeyError as e:
             if self.debug_log:
                 import traceback
@@ -677,11 +688,12 @@ class StateTransitionsEditorController(ExtendedController):
             view['internal_t_checkbutton'].set_active(False)
 
         if self.model.parent is not None and isinstance(self.model.parent.state, LibraryState) or \
-                self.model.state.get_library_root_state():
+                self.model.state.get_next_upper_library_root_state():
             view['add_t_button'].set_sensitive(False)
             view['remove_t_button'].set_sensitive(False)
 
-        if self.model.state.is_root_state:
+        # TODO check why the can happen should not be handed always the LibraryStateModel
+        if self.model.state.is_root_state or self.model.state.is_root_state_of_library:
             self.trans_list_ctrl.view_dict['transitions_external'] = False
             view['connected_to_t_checkbutton'].set_active(False)
 
@@ -698,8 +710,9 @@ class StateTransitionsEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("add", self.trans_list_ctrl.add_action_callback)
 
     def toggled_button(self, button, name=None):
-
-        if name in ['transitions_external'] and not self.model.state.is_root_state:
+        # TODO check why the can happen should not be handed always the LibraryStateModel
+        if name in ['transitions_external'] and \
+                not (self.model.state.is_root_state or self.model.state.is_root_state_of_library):
             self.trans_list_ctrl.view_dict[name] = button.get_active()
         elif name not in ['transitions_internal']:
             self.trans_list_ctrl.view_dict['transitions_external'] = False
@@ -711,4 +724,4 @@ class StateTransitionsEditorController(ExtendedController):
             self.trans_list_ctrl.view_dict['transitions_internal'] = False
             button.set_active(False)
 
-        self.trans_list_ctrl.update()
+        self.trans_list_ctrl.update(initiator='"button toggled"')

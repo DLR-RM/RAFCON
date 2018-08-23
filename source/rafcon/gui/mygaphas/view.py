@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -12,12 +12,14 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from contextlib import contextmanager
+from weakref import ref
 from gtkmvc.observer import Observer
 
 from gaphas.view import GtkView
 from gaphas.item import Element
 
 from rafcon.gui.mygaphas.painter import BoundingBoxPainter
+from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
 
 
 
@@ -30,10 +32,21 @@ class ExtendedGtkView(GtkView, Observer):
         GtkView.__init__(self, *args)
         Observer.__init__(self)
         self._selection = state_machine_m.selection
+        self.value_cache = ValueCache()
         self.observe_model(self._selection)
         self.observe_model(state_machine_m.root_state)
         self._bounding_box_painter = BoundingBoxPainter(self)
-        self.graphical_editor = graphical_editor_v
+        self._graphical_editor = ref(graphical_editor_v)
+
+    def prepare_destruction(self):
+        """Get rid of circular references"""
+        self._tool = None
+        self._painter = None
+        self.relieve_model(self._selection)
+
+    @property
+    def graphical_editor(self):
+        return self._graphical_editor()
 
     def get_port_at_point(self, vpos, distance=10, exclude=None, exclude_port_fun=None):
         """
@@ -155,10 +168,30 @@ class ExtendedGtkView(GtkView, Observer):
                     pass
         super(ExtendedGtkView, self).queue_draw_item(*gaphas_items)
 
+    def get_items_at_point(self, pos, selected=True, distance=0):
+        """ Return the items located at ``pos`` (x, y).
+
+         :param bool selected: if False returns first non-selected item
+         :param float distance: Maximum distance to be considered as "at point" (in viewport pixel)
+        """
+        items = self._qtree.find_intersect((pos[0] - distance, pos[1] - distance, 2 * distance, 2 * distance))
+        filtered_items = []
+        for item in self._canvas.sort(items, reverse=True):
+            if not selected and item in self.selected_items:
+                continue  # skip selected items
+
+            v2i = self.get_matrix_v2i(item)
+            i2v = self.get_matrix_i2v(item)
+            ix, iy = v2i.transform_point(*pos)
+            distance_i = item.point((ix, iy))
+            distance_v = i2v.transform_distance(distance_i, 0)[0]
+            if distance_v <= distance:
+                filtered_items.append(item)
+        return filtered_items
+
     @Observer.observe("destruction_signal", signal=True)
     def _on_root_state_destruction(self, root_state_m, signal_name, signal_msg):
         """Ignore future selection changes when state machine is being destroyed"""
-        self.relieve_model(self._selection)
         self.relieve_model(root_state_m)
 
     @Observer.observe("selection_changed_signal", signal=True)
@@ -187,7 +220,7 @@ class ExtendedGtkView(GtkView, Observer):
         with self._suppress_selection_events():
             for item in items:
                 self.queue_draw_item(item)
-                if item.model not in self._selection:
+                if item is not None and item.model not in self._selection:
                     self._selection.add(item.model)
                     selection_changed = True
         if selection_changed:

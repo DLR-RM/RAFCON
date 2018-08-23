@@ -1,0 +1,119 @@
+{
+    "__jsonqualname__": "rafcon.core.states.hierarchy_state.HierarchyState", 
+    "data_flows": {
+        "12": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 12, 
+            "from_key": 1, 
+            "from_state": "QUSEKE", 
+            "to_key": 1, 
+            "to_state": "QRRWWV"
+        }, 
+        "13": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 13, 
+            "from_key": 2, 
+            "from_state": "QUSEKE", 
+            "to_key": 0, 
+            "to_state": "QRRWWV"
+        }, 
+        "21": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 21, 
+            "from_key": 2, 
+            "from_state": "QRRWWV", 
+            "to_key": 0, 
+            "to_state": "VBOFVC"
+        }
+    }, 
+    "description": null, 
+    "input_data_ports": {
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 0, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": null, 
+            "name": "str_variable"
+        }, 
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 1, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "increase_gvm_counter", 
+            "name": "library_name"
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 2, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "unit_test_state_machines", 
+            "name": "library_path"
+        }
+    }, 
+    "name": "dynamic library insertion and deletion", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }, 
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "trajectory_failed", 
+            "outcome_id": 1
+        }
+    }, 
+    "output_data_ports": {}, 
+    "scoped_variables": {}, 
+    "state_id": "QUSEKE", 
+    "transitions": {
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": null, 
+            "from_state": null, 
+            "to_outcome": null, 
+            "to_state": "DUQFMX", 
+            "transition_id": 1
+        }, 
+        "3": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "DUQFMX", 
+            "to_outcome": null, 
+            "to_state": "QRRWWV", 
+            "transition_id": 3
+        }, 
+        "6": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "VBOFVC", 
+            "to_outcome": null, 
+            "to_state": "JJDVSN", 
+            "transition_id": 6
+        }, 
+        "28": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "JJDVSN", 
+            "to_outcome": 0, 
+            "to_state": "QUSEKE", 
+            "transition_id": 28
+        }
+    }
+}

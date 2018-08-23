@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -8,6 +8,7 @@
 # Contributors:
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+# Sebastian Riedel <sebastian.riedel@dlr.de>
 
 """
 .. module:: concurrency_state
@@ -94,7 +95,6 @@ class ConcurrencyState(ContainerState):
                 state.concurrency_queue = concurrency_queue
                 state.concurrency_queue_id = index
 
-
                 state.generate_run_id()
                 if not self.backward_execution:
                     # care for the history items; this item is only for execution visualization
@@ -118,6 +118,9 @@ class ConcurrencyState(ContainerState):
         :return:
         """
         state.join()
+        if state.backward_execution:
+            self.backward_execution = True
+
         state.state_execution_status = StateExecutionStatus.INACTIVE
         # care for the history items
         if not self.backward_execution:

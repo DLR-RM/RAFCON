@@ -1,3 +1,16 @@
+# Copyright (C) 2017-2018 DLR
+#
+# All rights reserved. This program and the accompanying materials are made
+# available under the terms of the Eclipse Public License v1.0 which
+# accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+#
+# Contributors:
+# Franz Steinmetz <franz.steinmetz@dlr.de>
+# Sebastian Brunner <sebastian.brunner@dlr.de>
+# Sebastian Riedel <sebastian.riedel@dlr.de>
+# ried_sa <Sebastian.Riedel@dlr.de>
+
 import shelve
 import json
 import pandas as pd
@@ -64,7 +77,7 @@ def log_to_raw_structure(execution_history_items):
 def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=True,
                                include_erroneous_data_ports=False, full_next=False):
     """
-    Collapsed structure means that all history items belonging the same state execution are
+    Collapsed structure means that all history items belonging to the same state execution are
     merged together into one object (e.g. CallItem and ReturnItem of an ExecutionState). This
     is based on the log structure in which all Items which belong together have the same run_id.
     The collapsed items hold input as well as output data (direct and scoped), and the outcome
@@ -87,6 +100,11 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
     :rtype: tuple
     """
 
+    # for debugging purposes
+    # execution_history_items_dict = dict()
+    # for k, v in execution_history_items.items():
+    #     execution_history_items_dict[k] = v
+
     start_item, previous, next_, concurrent, grouped = log_to_raw_structure(execution_history_items)
 
     start_item = None
@@ -105,7 +123,10 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                 for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
                           'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
                           'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
-                    execution_item[l] = item[l]
+                    try:
+                        execution_item[l] = item[l]
+                    except KeyError:
+                        logger.warn("Key {} not in history start item".format(str(l)))
 
                 ## add extended properties (added in later rafcon versions),
                 ## will add default value if not existing instead
@@ -128,7 +149,10 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
                       'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
                       'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
-                execution_item[l] = item[l]
+                try:
+                    execution_item[l] = item[l]
+                except KeyError:
+                    logger.warn("Key {} not in history start item".format(str(l)))
 
             ## add extended properties (added in later rafcon versions),
             ## will add default value if not existing instead

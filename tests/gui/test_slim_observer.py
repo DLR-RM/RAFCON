@@ -53,6 +53,7 @@ class ObserverTest():
 
 
 def test_slim_observer(caplog):
+    testing_utils.dummy_gui(None)
     test_observer = ObserverTest()
     test_observer.test_observable.first_var = 20.0
     assert test_observer.test_value == 20
@@ -67,4 +68,4 @@ def test_slim_observer(caplog):
 
 if __name__ == '__main__':
     # test_slim_observer(None)
-    pytest.main([__file__])
+    pytest.main(['-s', __file__])

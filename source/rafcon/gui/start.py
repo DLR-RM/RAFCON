@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -51,7 +51,6 @@ from rafcon.core.config import global_config
 # utils
 from rafcon.gui.utils import wait_for_gui
 import rafcon.utils.filesystem as filesystem
-from rafcon.utils import profiler
 from rafcon.utils import plugins
 from rafcon.utils.i18n import _, setup_l10n, setup_l10n_gtk
 from rafcon.utils import log
@@ -85,6 +84,16 @@ def setup_gtkmvc_logger():
     logging.getLogger('gtkmvc').addHandler(stdout)
 
 
+def install_reactor():
+    from twisted.internet import gtk2reactor
+    from twisted.internet.error import ReactorAlreadyInstalledError
+    try:
+        # needed for glib.idle_add, and signals
+        gtk2reactor.install()
+    except ReactorAlreadyInstalledError:
+        pass
+
+
 def pre_setup_plugins():
     """Loads plugins and calls the pre init hooks
 
@@ -95,9 +104,7 @@ def pre_setup_plugins():
 
     # check if twisted is imported and if so, install the required reactor
     if reactor_required():
-        from twisted.internet import gtk2reactor
-        # needed for glib.idle_add, and signals
-        gtk2reactor.install()
+        install_reactor()
 
     plugins.run_pre_inits()
 
@@ -183,12 +190,27 @@ def setup_gui():
     return main_window_controller
 
 
+def start_gtk():
+    # check if twisted is imported
+    if reactor_required():
+        from twisted.internet import reactor
+        import threading
+        is_main_thread = isinstance(threading.current_thread(), threading._MainThread)
+        reactor.run(installSignalHandlers=is_main_thread)
+    else:
+        gtk.main()
+
+
 def stop_gtk():
     # shutdown twisted correctly
     if reactor_required():
         from twisted.internet import reactor
         if reactor.running:
             reactor.callFromThread(reactor.stop)
+        # Twisted can be imported without the reactor being used
+        # => check if GTK main loop is running
+        elif gtk.main_level() > 0:
+            glib.idle_add(gtk.main_quit)
     else:
         glib.idle_add(gtk.main_quit)
 
@@ -198,11 +220,6 @@ def stop_gtk():
 
 def post_gui_destruction():
     plugins.run_hook("post_destruction")
-
-    if global_config.get_config_value("PROFILER_RUN", False):
-        result_path = global_config.get_config_value("PROFILER_RESULT_PATH")
-        view = global_config.get_config_value("PROFILER_VIEWER")
-        profiler.stop("global", result_path, view)
 
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
         rafcon.gui.models.auto_backup.remove_rafcon_instance_lock_file()
@@ -262,6 +279,12 @@ def signal_handler(signal, frame):
 
 
 def main():
+
+    # check if all env variables are set
+    if not os.environ.get("HOME", False):
+        logger.error("For starting RAFCON in GUI mode, the HOME environment variable has to be set!")
+        return
+
     register_signal_handlers(signal_handler)
 
     splash_screen = SplashScreen(contains_image=True, width=530, height=350)
@@ -314,20 +337,12 @@ def main():
             and rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
         glib.idle_add(backup_session.restore_session_from_runtime_config, priority=glib.PRIORITY_LOW)
 
-    if global_config.get_config_value("PROFILER_RUN", False):
-        profiler.start("global")
-
     if state_machine and (user_input.start_state_machine_flag or state_machine.get_state_by_path(user_input.start_state_path)):
         start_state_machine(state_machine, user_input.start_state_path, user_input.quit_flag)
 
     splash_screen.destroy()
     try:
-        # check if twisted is imported
-        if reactor_required():
-            from twisted.internet import reactor
-            reactor.run()
-        else:
-            gtk.main()
+        start_gtk()
 
         logger.info(_("Main window was closed"))
 

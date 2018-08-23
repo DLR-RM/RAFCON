@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -7,6 +7,7 @@
 #
 # Contributors:
 # Franz Steinmetz <franz.steinmetz@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from weakref import ref
@@ -64,7 +65,7 @@ class StateElementModel(MetaModel, Hashable):
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.core_element)
-        if self.parent and not self.parent.state.get_library_root_state():
+        if self.parent and not self.parent.state.get_next_upper_library_root_state():
             self.update_hash_from_dict(obj_hash, self.meta)
 
     @property
@@ -108,6 +109,8 @@ class StateElementModel(MetaModel, Hashable):
 
         Unregisters the model from observing itself.
         """
+        if self.core_element is None:
+            logger.verbose("Multiple calls of prepare destruction for {0}".format(self))
         self.destruction_signal.emit()
         try:
             self.unregister_observer(self)

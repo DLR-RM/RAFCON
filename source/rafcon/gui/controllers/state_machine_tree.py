@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -24,6 +24,7 @@ import gtk
 from functools import partial
 
 from rafcon.core.states.state import State
+from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.state import StateType
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
@@ -72,7 +73,7 @@ class StateMachineTreeController(TreeViewController):
 
         self.__expansion_state = {}
 
-        self._complex_action = False
+        self._ongoing_complex_actions = []
 
         self.register()
 
@@ -140,7 +141,8 @@ class StateMachineTreeController(TreeViewController):
     @TreeViewController.observe("state_machine", after=True)
     def states_update(self, model, prop_name, info):
 
-        if is_execution_status_update_notification_from_state_machine_model(prop_name, info) or self._complex_action:
+        if is_execution_status_update_notification_from_state_machine_model(prop_name, info) or \
+                self._ongoing_complex_actions:
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
@@ -148,7 +150,8 @@ class StateMachineTreeController(TreeViewController):
         if overview['prop_name'][-1] == 'state' and \
                 overview['method_name'][-1] in ["name"]:  # , "add_state", "remove_state"]:
             self.update_tree_store_row(overview['model'][-1])
-        elif overview['prop_name'][-1] == 'state' and \
+        # TODO check the work around for get_library_root_state -> maybe the notifications can be avoided if upper lib
+        elif overview['prop_name'][-1] == 'state' and not overview['model'][-1].state.get_next_upper_library_root_state() and \
                 overview['method_name'][-1] in ["add_state", "remove_state"]:
             self.update(overview['model'][-1])
 
@@ -189,7 +192,7 @@ class StateMachineTreeController(TreeViewController):
         if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state',
                                                     'group_states', 'ungroup_state', 'paste', 'undo/redo']:
             if info['arg'].after is False:
-                self._complex_action = True
+                self._ongoing_complex_actions.append(info['arg'].action)
                 if info['arg'].action in ['group_states', 'paste']:
                     self.observe_model(info['arg'].action_parent_m)
                 else:
@@ -198,20 +201,23 @@ class StateMachineTreeController(TreeViewController):
     @TreeViewController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
         # TODO check why the expansion of tree is not recovered
-        if isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and\
-                info['arg'].action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'undo/redo']:
+        if not (isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after):
+            return
+
+        action = info['arg'].action
+        if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'undo/redo']:
             target_state_m = info['arg'].action_parent_m
-        elif isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after and \
-                info['arg'].action in ['change_state_type', 'change_root_state_type']:
+        elif action in ['change_state_type', 'change_root_state_type']:
             target_state_m = info['arg'].affected_models[-1]
         else:
             return
 
-        self._complex_action = False
-        self.relieve_model(model)
+        self._ongoing_complex_actions.remove(action)
+        if not self._ongoing_complex_actions:
+            self.relieve_model(model)
 
-        # TODO check selection warnings if not all a the tree is recreated
-        self.update()  # if target_state_m.state.is_root_state else self.update(target_state_m.parent)
+            # TODO check selection warnings if not all a the tree is recreated
+            self.update()  # if target_state_m.state.is_root_state else self.update(target_state_m.parent)
 
     @TreeViewController.observe("root_state", assign=True)
     def state_machine_notification(self, model, property, info):
@@ -242,26 +248,35 @@ class StateMachineTreeController(TreeViewController):
                                      "".format(state_path, state_row_path, state_row_iter))
             self.__expansion_state[self.__my_selected_sm_id] = act_expansion_state
         except TypeError:
-            logger.error("expansion state of state machine {0} could not be stored".format(self.__my_selected_sm_id))
+            logger.error("Expansion state of state machine {0} could not be stored".format(self.__my_selected_sm_id))
 
     def redo_expansion_state(self, ignore_not_existing_rows=False):
+        """ Considers the tree to be collapsed and expand into all tree item with the flag set True """
+
+        def set_expansion_state(state_path):
+            state_row_iter = self.state_row_iter_dict_by_state_path[state_path]
+            if state_row_iter:  # may elements are missing afterwards
+                state_row_path = self.tree_store.get_path(state_row_iter)
+                self.view.expand_to_path(state_row_path)
+
         if self.__my_selected_sm_id in self.__expansion_state:
+            expansion_state = self.__expansion_state[self.__my_selected_sm_id]
             try:
-                for state_path, state_row_expanded in self.__expansion_state[self.__my_selected_sm_id].iteritems():
+                for state_path, state_row_expanded in expansion_state.iteritems():
                     if state_path in self.state_row_iter_dict_by_state_path:
-                        state_row_iter = self.state_row_iter_dict_by_state_path[state_path]
-                        if state_row_iter:  # may elements are missing afterwards
-                            state_row_path = self.tree_store.get_path(state_row_iter)
-                            if state_row_expanded:
-                                self.view.expand_to_path(state_row_path)
+                        if state_row_expanded:
+                            set_expansion_state(state_path)
                     else:
                         if not ignore_not_existing_rows and self._selected_sm_model and \
                                 self._selected_sm_model.state_machine.get_state_by_path(state_path, as_check=True):
+                            state = self._selected_sm_model.state_machine.get_state_by_path(state_path)
+                            if isinstance(state, LibraryState) or state.is_root_state_of_library:
+                                continue
                             logger.error("State not in StateMachineTree but in StateMachine, {0}.".format(state_path))
 
             except (TypeError, KeyError):
-                logger.error(
-                    "expansion state of state machine {0} could not be re-done".format(self.__my_selected_sm_id))
+                logger.error("Expansion state of state machine {0} could not be restored"
+                             "".format(self.__my_selected_sm_id))
 
     def update(self, changed_state_model=None, with_expand=False):
         """Checks if all states are in tree and if tree has states which were deleted
@@ -286,7 +301,17 @@ class StateMachineTreeController(TreeViewController):
             if changed_state_model.state.is_root_state:
                 parent_row_iter = self.state_row_iter_dict_by_state_path[changed_state_model.state.get_path()]
             else:
-                parent_row_iter = self.state_row_iter_dict_by_state_path[changed_state_model.parent.state.get_path()]
+                if changed_state_model.state.is_root_state_of_library:
+                    # because either lib-state or lib-state-root is in tree the next higher hierarchy state is updated
+                    changed_upper_state_m = changed_state_model.parent.parent
+                else:
+                    changed_upper_state_m = changed_state_model.parent
+                # TODO check the work around of the next 2 lines while refactoring -> it is a check to be more robust
+                while changed_upper_state_m.state.get_path() not in self.state_row_iter_dict_by_state_path:
+                    # show Warning because because avoided method states_update
+                    logger.warning("Take a parent state because this is not in.")
+                    changed_upper_state_m = changed_upper_state_m.parent
+                parent_row_iter = self.state_row_iter_dict_by_state_path[changed_upper_state_m.state.get_path()]
 
         # do recursive update
         self.insert_and_update_recursively(parent_row_iter, changed_state_model, with_expand)
@@ -407,10 +432,11 @@ class StateMachineTreeController(TreeViewController):
                                 child_model.state_copy_initialized
             child_is_lib_with_show_content = isinstance(child_model, LibraryStateModel) and show_content_flag
             child_is_lib_without_show_content = isinstance(child_model, LibraryStateModel) and not show_content_flag
+
             if not isinstance(state_model, ContainerStateModel) or child_model is None or \
-                    child_id not in state_model.states and not child_is_lib_with_show_content and \
-                    child_id == child_model.state.state_copy.state_id or \
-                    child_is_lib_without_show_content and child_id == child_model.state.state_copy.state_id or \
+                    child_id not in state_model.states and not child_is_lib_with_show_content \
+                    and isinstance(child_model, LibraryStateModel) and child_id == child_model.state.state_copy.state_id \
+                    or child_is_lib_without_show_content and child_id == child_model.state.state_copy.state_id or \
                     isinstance(_state_model, LibraryStateModel) and not self.show_content(_state_model) or \
                     child_model.state.is_root_state_of_library and not self.show_content(child_model.parent):
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -49,9 +49,9 @@ class ConnectionView(PerpLine):
             self._to_port.remove_connected_handle(self._to_handle)
             self.to_port.tmp_disconnect()
 
-    def prepare_destruction(self):
-        super(ConnectionView, self).prepare_destruction()
+    def remove(self):
         self.remove_connection_from_ports()
+        super(ConnectionView, self).remove()
 
 
 class ConnectionPlaceholderView(ConnectionView):
@@ -88,6 +88,10 @@ class TransitionView(ConnectionView):
         self._transition_m = ref(transition_model)
 
     def draw(self, context):
+        # Do not draw if the core element has already been destroyed
+        if not self.model.core_element:
+            return
+
         if context.selected:
             self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE_SELECTED'],
                                                             self.parent.transparency)
@@ -130,6 +134,10 @@ class DataFlowView(ConnectionView):
         return global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
 
     def draw(self, context):
+        # Do not draw if the core element has already been destroyed
+        if not self.model.core_element:
+            return
+
         if not self.show_connection:
             return
         if context.selected:

@@ -66,12 +66,41 @@ class CornerHandlePainter(ItemPaintHovered):
             cairo.stroke()
         cairo.restore()
 
+    def _paint_guides(self, context):
+        # Code copied from gaphas.guide.GuidePainter
+        try:
+            guides = self.view.guides
+        except AttributeError:
+            return
+
+        cr = context.cairo
+        view = self.view
+        allocation = view.allocation
+        w, h = allocation.width, allocation.height
+
+        cr.save()
+        try:
+            cr.set_line_width(1)
+            cr.set_source_rgba(0.0, 0.0, 1.0, 0.6)
+            for g in guides.vertical():
+                cr.move_to(g, 0)
+                cr.line_to(g, h)
+                cr.stroke()
+            for g in guides.horizontal():
+                cr.move_to(0, g)
+                cr.line_to(w, g)
+                cr.stroke()
+        finally:
+            cr.restore()
+
     def paint(self, context, selected):
         if selected:
             self._draw_handles(self.item, context.cairo)
         else:
             # Draw nice opaque handles when hovering an non-selected item:
             self._draw_handles(self.item, context.cairo, opacity=.25)
+
+        self._paint_guides(context)
 
 
 @PaintHovered.when_type(StateView)

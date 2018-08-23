@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -13,6 +13,7 @@
 # Michael Vilzmann <michael.vilzmann@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+# Sebastian Riedel <sebastian.riedel@dlr.de>
 
 """
 .. module:: state
@@ -100,7 +101,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self._final_outcome = None
         self._description = None
         # detailed execution status of the state
-        self._state_execution_status = None
+        self._state_execution_status = StateExecutionStatus.INACTIVE
 
         # before storing a state the file_system_path cannot return the file system path
         # therefore this variable is None till the state was stored
@@ -130,14 +131,13 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.execution_history = None
         self.backward_execution = False
 
+        self.marked_dirty = False
+
         # logger.debug("New {0} created".format(self))
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- generic methods -----------------------------------------
     # ---------------------------------------------------------------------------------------------
-
-    def __del__(self):
-        self._parent = None
 
     def __str__(self):
         return "{2} with name '{0}' and id '{1}'".format(self.name, self.state_id, type(self).__name__)
@@ -181,7 +181,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return self.state_to_dict(self)
 
     def update_hash(self, obj_hash):
-        return Hashable.update_hash_from_dict(obj_hash, self.to_dict())
+        Hashable.update_hash_from_dict(obj_hash, self.to_dict())
+        Hashable.update_hash_from_dict(obj_hash, self.semantic_data)
+        return obj_hash
 
     @classmethod
     def from_dict(cls, dictionary):
@@ -383,6 +385,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         # Check for name uniqueness
         valid, message = self._check_data_port_name(self._input_data_ports[data_port_id])
         if not valid:
+            self._input_data_ports[data_port_id].parent = None
             del self._input_data_ports[data_port_id]
             raise ValueError(message)
 
@@ -390,7 +393,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @lock_state_machine
     @Observable.observed
-    def remove_input_data_port(self, data_port_id, force=False):
+    def remove_input_data_port(self, data_port_id, force=False, destroy=True):
         """Remove an input data port from the state
 
         :param int data_port_id: the id or the output data port to remove
@@ -398,7 +401,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :raises exceptions.AttributeError: if the specified input data port does not exist
         """
         if data_port_id in self._input_data_ports:
-            self.remove_data_flows_with_data_port_id(data_port_id)
+            if destroy:
+                self.remove_data_flows_with_data_port_id(data_port_id)
+            self._input_data_ports[data_port_id].parent = None
             return self._input_data_ports.pop(data_port_id)
         else:
             raise AttributeError("input data port with name %s does not exit", data_port_id)
@@ -444,6 +449,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         # Check for name uniqueness
         valid, message = self._check_data_port_name(self._output_data_ports[data_port_id])
         if not valid:
+            self._output_data_ports[data_port_id].parent = None
             del self._output_data_ports[data_port_id]
             raise ValueError(message)
 
@@ -451,14 +457,16 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @lock_state_machine
     @Observable.observed
-    def remove_output_data_port(self, data_port_id, force=False):
+    def remove_output_data_port(self, data_port_id, force=False, destroy=True):
         """Remove an output data port from the state
 
         :param int data_port_id: the id of the output data port to remove
         :raises exceptions.AttributeError: if the specified input data port does not exist
         """
         if data_port_id in self._output_data_ports:
-            self.remove_data_flows_with_data_port_id(data_port_id)
+            if destroy:
+                self.remove_data_flows_with_data_port_id(data_port_id)
+            self._output_data_ports[data_port_id].parent = None
             return self._output_data_ports.pop(data_port_id)
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
@@ -624,24 +632,27 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return outcome_id
 
     @lock_state_machine
-    def remove(self, state_element, force=False):
+    def remove(self, state_element, recursive=True, force=False, destroy=True):
         """Remove item from state
 
         :param StateElement state_element: State element to be removed
+        :param bool recursive: Only applies to removal of state and decides whether the removal should be called
+            recursively on all child states
         :param bool force: if the removal should be forced without checking constraints
+        :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, Outcome):
-            self.remove_outcome(state_element.outcome_id, force)
+            return self.remove_outcome(state_element.outcome_id, force=force, destroy=destroy)
         elif isinstance(state_element, InputDataPort):
-            self.remove_input_data_port(state_element.data_port_id, force)
+            return self.remove_input_data_port(state_element.data_port_id, force, destroy=destroy)
         elif isinstance(state_element, OutputDataPort):
-            self.remove_output_data_port(state_element.data_port_id, force)
+            return self.remove_output_data_port(state_element.data_port_id, force, destroy=destroy)
         else:
             raise ValueError("Cannot remove state_element with invalid type")
 
     @lock_state_machine
     @Observable.observed
-    def remove_outcome(self, outcome_id, force=False):
+    def remove_outcome(self, outcome_id, force=False, destroy=True):
         """Remove an outcome from the state
 
         :param int outcome_id: the id of the outcome to remove
@@ -659,13 +670,14 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.remove_outcome_hook(outcome_id)
 
         # delete possible transition connected to this outcome
-        if not self.is_root_state:
+        if destroy and not self.is_root_state:
             for transition_id, transition in self.parent.transitions.iteritems():
                 if transition.from_outcome == outcome_id and transition.from_state == self.state_id:
                     self.parent.remove_transition(transition_id)
                     break  # found the one outgoing transition
 
         # delete outcome it self
+        self._outcomes[outcome_id].parent = None
         return self._outcomes.pop(outcome_id)
 
     @lock_state_machine
@@ -906,19 +918,19 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return removed_element
 
     @lock_state_machine
-    def destruct(self):
+    def destroy(self, recursive):
         """ Removes all the state elements.
 
-        :return:
+        :param recursive: Flag wether to destroy all state elements which are removed
         """
         for in_key in self.input_data_ports.keys():
-            self.remove_input_data_port(in_key, True)
+            self.remove_input_data_port(in_key, force=True, destroy=recursive)
 
         for out_key in self.output_data_ports.keys():
-            self.remove_output_data_port(out_key, True)
+            self.remove_output_data_port(out_key, force=True, destroy=recursive)
 
         for outcome_key in self.outcomes.keys():
-            self.remove_outcome(outcome_key, True)
+            self.remove_outcome(outcome_key, force=True, destroy=recursive)
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc
@@ -1033,6 +1045,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 self._input_data_ports = old_input_data_ports
                 raise
 
+        # check that all old_input_data_ports are no more referencing self as there parent
+        for old_input_data_port in old_input_data_ports.itervalues():
+            if old_input_data_port not in self._input_data_ports.itervalues() and old_input_data_port.parent is self:
+                old_input_data_port.parent = None
+
     @property
     def output_data_ports(self):
         """Property for the _output_data_ports field
@@ -1086,6 +1103,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 self._output_data_ports = old_output_data_ports
                 raise
 
+        # check that all old_output_data_ports are no more referencing self as there parent
+        for old_output_data_port in old_output_data_ports.itervalues():
+            if old_output_data_port not in self._output_data_ports.itervalues() and old_output_data_port.parent is self:
+                old_output_data_port.parent = None
+
     @property
     def outcomes(self):
         """Property for the _outcomes field
@@ -1135,6 +1157,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self._outcomes[-1] = Outcome(outcome_id=-1, name="aborted", parent=self)
         if -2 not in outcomes:
             self._outcomes[-2] = Outcome(outcome_id=-2, name="preempted", parent=self)
+
+        # check that all old_outcomes are no more referencing self as there parent
+        for old_outcome in old_outcomes.itervalues():
+            if old_outcome not in self._outcomes.itervalues() and old_outcome.parent is self:
+                old_outcome.parent = None
 
     @property
     def input_data(self):
@@ -1327,7 +1354,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         from rafcon.core.states.library_state import LibraryState
         return isinstance(self.parent, LibraryState)
 
-    def get_library_root_state(self):
+    def get_next_upper_library_root_state(self):
         """ Get next upper library root state
 
         The method recursively checks state parent states till finding a StateMachine as parent or a library root state.
@@ -1356,13 +1383,13 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         there is no further parent library root state.
         """
 
-        library_root_state = self.get_library_root_state()
+        library_root_state = self.get_next_upper_library_root_state()
         parent_library_root_state = library_root_state
         # initial a library root state has to be found and if there is no further parent root state
         # parent_library_root_state and library_root_state are no more identical
         while parent_library_root_state and library_root_state is parent_library_root_state:
             if library_root_state:
-                parent_library_root_state = library_root_state.parent.get_library_root_state()
+                parent_library_root_state = library_root_state.parent.get_next_upper_library_root_state()
 
             if parent_library_root_state:
                 library_root_state = parent_library_root_state

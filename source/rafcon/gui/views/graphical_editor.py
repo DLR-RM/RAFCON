@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -415,7 +415,8 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # Every state has at least the default outcomes "aborted" and "preempted"
         num_outcomes = max(0, len(outcomes))
         if num_outcomes < 2:
-            logger.warn("Expecting at least 2 outcomes, found {num:d}".format(num=num_outcomes))
+            # logger.warn("Expecting at least 2 outcomes, found {num:d}".format(num=num_outcomes))
+            pass
         else:
             num_outcomes -= 2
         i = 0

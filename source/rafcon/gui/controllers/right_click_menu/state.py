@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 DLR
+# Copyright (C) 2016-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -6,6 +6,7 @@
 # http://www.eclipse.org/legal/epl-v10.html
 #
 # Contributors:
+# Franz Steinmetz <franz.steinmetz@dlr.de>
 # Lukas Becker <lukas.becker@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
@@ -28,7 +29,8 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import create_image_menu_item, create_check_menu_item, append_sub_menu_to_parent_menu
-from rafcon.gui.models import AbstractStateModel, ContainerStateModel, LibraryStateModel, ScopedVariableModel
+from rafcon.gui.models import AbstractStateModel, ContainerStateModel, LibraryStateModel, ScopedVariableModel, \
+    TransitionModel, DataFlowModel
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 
@@ -101,8 +103,11 @@ class StateMachineRightClickMenu(object):
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         selected_state_m = selection.get_selected_state()
         all_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_all()
-        if all([isinstance(elem, (AbstractStateModel, ScopedVariableModel)) for elem in all_m_list]) and \
-                not any([state_m.state.is_root_state for state_m in selection.states]):
+        # logger.info("Element in selection: " + str(selected_state_m) + " : " + str([elem for elem in all_m_list]))
+        if any([isinstance(elem, (AbstractStateModel, ScopedVariableModel)) for elem in all_m_list]) and \
+                all([isinstance(elem, (AbstractStateModel, ScopedVariableModel, TransitionModel, DataFlowModel))
+                     for elem in all_m_list]) and \
+                all([not state_m.state.is_root_state for state_m in selection.states]):
             menu.append(create_image_menu_item("Group states", constants.BUTTON_GROUP, self.on_group_states_activate,
                                                accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
         if len(selection.states) == 1:
@@ -137,9 +142,10 @@ class StateMachineRightClickMenu(object):
         if len(selection.states) == 1 and not selected_state_m.state.is_root_state:
             save_as_sub_menu_item, save_as_sub_menu = append_sub_menu_to_parent_menu("Save state as", menu,
                                                                                      constants.BUTTON_SAVE)
-
+            callback_function = partial(self.on_save_as_activate,
+                                        save_as_function=gui_helper_state_machine.save_selected_state_as)
             save_as_sub_menu.append(create_image_menu_item("State machine", constants.BUTTON_SAVE,
-                                                           self.on_save_state_as_state_machine_activate,
+                                                           callback_function,
                                                            accel_code=shortcuts_dict['save_state_as'][0],
                                                            accel_group=accel_group))
             save_as_library_sub_menu_item, save_as_library_sub_menu = append_sub_menu_to_parent_menu("Library",
@@ -147,9 +153,32 @@ class StateMachineRightClickMenu(object):
                                                                                                      constants.SIGN_LIB)
             library_root_paths = core_singletons.library_manager.library_root_paths
             for library_root_key in library_root_paths.iterkeys():
+                callback_function = partial(self.on_save_as_activate,
+                                            path=library_root_paths[library_root_key],
+                                            save_as_function=gui_helper_state_machine.save_selected_state_as)
                 save_as_library_sub_menu.append(create_image_menu_item(library_root_key, constants.SIGN_LIB,
-                                                                       partial(self.on_save_state_as_state_machine_activate,
-                                                                               path=library_root_paths[library_root_key]),
+                                                                       callback_function,
+                                                                       accel_code=None, accel_group=accel_group))
+        else:
+            save_as_sub_menu_item, save_as_sub_menu = append_sub_menu_to_parent_menu("Save state machine as", menu,
+                                                                                     constants.BUTTON_SAVE)
+
+            callback_function = partial(self.on_save_as_activate,
+                                        save_as_function=gui_helper_state_machine.save_state_machine_as)
+            save_as_sub_menu.append(create_image_menu_item("State machine", constants.BUTTON_SAVE,
+                                                           callback_function,
+                                                           accel_code=shortcuts_dict['save_as'][0],
+                                                           accel_group=accel_group))
+            save_as_library_sub_menu_item, save_as_library_sub_menu = append_sub_menu_to_parent_menu("Library",
+                                                                                                     save_as_sub_menu,
+                                                                                                     constants.SIGN_LIB)
+            library_root_paths = core_singletons.library_manager.library_root_paths
+            for library_root_key in library_root_paths.iterkeys():
+                callback_function = partial(self.on_save_as_activate,
+                                            path=library_root_paths[library_root_key],
+                                            save_as_function=gui_helper_state_machine.save_state_machine_as)
+                save_as_library_sub_menu.append(create_image_menu_item(library_root_key, constants.SIGN_LIB,
+                                                                       callback_function,
                                                                        accel_code=None, accel_group=accel_group))
 
         return menu
@@ -211,8 +240,9 @@ class StateMachineRightClickMenu(object):
                                            accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
 
         menu.append(create_image_menu_item("Open separately", constants.BUTTON_OPEN,
-                                           self.on_open_activate,
-                                           accel_code=None, accel_group=accel_group))
+                                           self.on_open_library_state_separately_activate,
+                                           accel_code=shortcuts_dict['open_library_state_separately'][0],
+                                           accel_group=accel_group))
 
         menu.append(create_image_menu_item("Substitute state with library", constants.BUTTON_REFR,
                                            self.on_substitute_state_activate,
@@ -288,15 +318,17 @@ class StateMachineRightClickMenu(object):
         self.shortcut_manager.trigger_action('run_to_selected', None, None)
 
     @staticmethod
-    def on_save_state_as_state_machine_activate(widget, data=None, path=None):
+    def on_save_as_activate(widget, data=None, path=None, save_as_function=None):
         # workaround to set the initial path in the 'choose folder' dialog to the handed one
         old_last_path_open = gui_singletons.global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', None)
+        if save_as_function is None:
+            logger.error("Hand a function for operation 'save_as' currently it is '{0}'".format(save_as_function))
+            return
+
         try:
             if path is not None:
                 gui_singletons.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', path)
-                gui_helper_state_machine.save_selected_state_as()
-            else:
-                gui_helper_state_machine.save_selected_state_as()
+            save_as_function()
         except Exception:
             raise
         finally:
@@ -304,11 +336,8 @@ class StateMachineRightClickMenu(object):
             gui_singletons.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', old_last_path_open)
 
     @staticmethod
-    def on_open_activate(widget, data=None):
-        state_m = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_selected_state()
-        path, _, _ = gui_singletons.library_manager.get_os_path_to_library(state_m.state.library_path,
-                                                                           state_m.state.library_name)
-        gui_helper_state_machine.open_state_machine(path)
+    def on_open_library_state_separately_activate(widget, data=None):
+        gui_helper_state_machine.open_library_state_separately()
 
     def on_substitute_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('substitute_state', None, None)

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -66,6 +66,8 @@ class LibraryStateModel(AbstractStateModel):
                 # gui_helper_meta_data.scale_library_ports_meta_data(self)
             else:
                 self.meta_data_was_scaled = True
+                if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
+                    self.meta_data_was_scaled = False
 
     def initiate_library_root_state_model(self):
         model_class = get_state_model_class_for_state(self.state.state_copy)
@@ -74,6 +76,43 @@ class LibraryStateModel(AbstractStateModel):
             self.state_copy_initialized = True
         else:
             logger.error("Unknown state type '{type:s}'. Cannot create model.".format(type=type(self.state)))
+
+    def enforce_generation_of_state_copy_model(self):
+        """This enforce a load of state copy model without considering meta data"""
+        self.initiate_library_root_state_model()
+        self._load_input_data_port_models()
+        self._load_output_data_port_models()
+        self._load_outcome_models()
+
+    def prepare_destruction(self, recursive=True):
+        """Prepares the model for destruction
+
+        Recursively un-registers all observers and removes references to child models
+        """
+        self.destruction_signal.emit()
+        try:
+            self.unregister_observer(self)
+        except KeyError:  # Might happen if the observer was already unregistered
+            pass
+        if recursive:
+
+            if self.state_copy:
+                self.state_copy.prepare_destruction(recursive)
+                self.state_copy = None
+            else:
+                if self.state_copy_initialized:
+                    logger.verbose("Multiple calls of prepare destruction for {0}".format(self))
+
+            # The next lines are commented because not needed and create problems if used why it is an open to-do
+            # for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
+            #     if port.core_element is not None:
+            #         # TODO setting data ports None in a Library state cause gtkmvc attribute getter problems why?
+            #         port.prepare_destruction()
+
+        del self.input_data_ports[:]
+        del self.output_data_ports[:]
+        del self.outcomes[:]
+        self.state = None
 
     def __eq__(self, other):
         # logger.info("compare method")
@@ -152,3 +191,15 @@ class LibraryStateModel(AbstractStateModel):
         assert isinstance(source_state_m, LibraryStateModel)
         super(LibraryStateModel, self).copy_meta_data_from_state_m(source_state_m)
         self.meta_data_was_scaled = source_state_m.meta_data_was_scaled
+
+    @property
+    def is_about_to_be_destroyed_recursively(self):
+        return self._is_about_to_be_destroyed_recursively
+
+    @is_about_to_be_destroyed_recursively.setter
+    def is_about_to_be_destroyed_recursively(self, value):
+        if not isinstance(value, bool):
+            raise TypeError("The is_about_to_be_destroyed_recursively property has to be boolean.")
+        self._is_about_to_be_destroyed_recursively = value
+        if self.state_copy:
+            self.state_copy.is_about_to_be_destroyed_recursively = value

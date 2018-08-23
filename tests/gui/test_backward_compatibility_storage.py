@@ -65,6 +65,8 @@ def test_backward_compatibility_storage(caplog):
 
     try:
         run_backward_compatibility_state_machines(path)
+    except Exception:
+        raise
     finally:
         # two warning per minor version lower than the current RAFCON version
         state_machines = len([filename for filename in os.listdir(path) if os.path.isdir(os.path.join(path, filename))])
@@ -81,10 +83,11 @@ def test_unchanged_storage_format(caplog):
 
     path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_compatibility"))
 
-    initialize_environment(gui_config={'HISTORY_ENABLED': False,
-                                       'AUTO_BACKUP_ENABLED': False},
-                           libraries={'unit_test_state_machines': testing_utils.get_test_sm_path(
-                               "unit_test_state_machines")})
+    testing_utils.initialize_environment(
+        gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
+        libraries={'unit_test_state_machines': testing_utils.get_test_sm_path("unit_test_state_machines")},
+        gui_already_started=False
+    )
     try:
         current_rafcon_version = StrictVersion(rafcon.__version__).version
         current_minor = "{}.{}".format(current_rafcon_version[0], current_rafcon_version[1])
@@ -104,8 +107,10 @@ def test_unchanged_storage_format(caplog):
         old_state_machine_hash = calculate_state_machine_hash(old_state_machine_path)
         new_state_machine_hash = calculate_state_machine_hash(new_state_machine_path)
         assert old_state_machine_hash.digest() == new_state_machine_hash.digest()
+    except Exception:
+        raise
     finally:
-        testing_utils.shutdown_environment(caplog=caplog)
+        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def calculate_state_machine_hash(path):
@@ -134,6 +139,6 @@ def calculate_state_machine_hash(path):
     return hash
 
 if __name__ == '__main__':
-    # test_backward_compatibility_storage(None)
+    test_backward_compatibility_storage(None)
     test_unchanged_storage_format(None)
     # pytest.main(['-s', __file__])

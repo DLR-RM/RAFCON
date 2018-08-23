@@ -6,6 +6,7 @@
 # http://www.eclipse.org/legal/epl-v10.html
 #
 # Contributors:
+# Franz Steinmetz <franz.steinmetz@dlr.de>
 # Michael Vilzmann <michael.vilzmann@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 

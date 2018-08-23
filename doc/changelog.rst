@@ -7,18 +7,325 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Next release
 ------------
 
+- Features:
+    
+
 - Improvements:
 
-    - Hash calculations of state machines
+    - :issue:`541` Where are the magnet lines gone?
+    - update of gaphas if transitions are removed
+
 
 - Bug Fixes:
 
-    - :issue:`447`: Hashes of state machine in storage different then the reopened state machine after saving it
-    - :issue:`455`: gaphas drawing while proportional resize (smaller) seems to screw its childs meta data
+    - :issue:`538` Many error outputs when changing MAX_VISIBLE_LIBRARY_HIERARCHY
+    - :issue:`455`: Proportional resizing states now works properly
 
 
 Patch releases 0.12.\*
 ----------------------
+
+
+0.12.21
+"""""""
+
+- Features:
+    - new save state machine as menu item for root state right click menu to offer direct 'save as library' operations
+
+- Improvements:
+
+    - :issue:`579` Integrate external execution log viewer
+
+
+- Bug Fixes:
+
+    - :issue:`574` Group fails if it includes data flows between the grouped states or scoped variables
+
+0.12.20
+"""""""
+
+- Features:
+    
+    - maintenance release
+
+0.12.19
+"""""""
+
+- Bug Fixes:
+    
+    - fix setup.py, sdist now working on pypi
+
+0.12.18
+"""""""
+
+- Features:
+    
+    - new shortcut open library state separately as state machine by default on 'Shift+Ctrl+Space' (shortcut works for multiple states, too)
+
+- Improvements:
+
+    - Provides proper PyCharm config files (in the `.idea` folder)
+    - update menu item labels
+    - updated rst documentation
+
+- Bug Fixes:
+
+    - recent opened state machine list no more miss paths
+    - :issue:`550` Gaphas cairo.Error: invalid value (typically too big) for the size of the input (surface, pattern, etc.)
+    - :issue:`564` Zoom onto mouse position
+    - handle config option `ZOOM_WITH_CTRL` properly
+
+0.12.17
+"""""""
+
+- Improvements:
+
+    - example state machines and generic libraries get now installed via pypi
+
+
+0.12.16
+"""""""
+
+- Improvements:
+
+    - default config file extended
+
+0.12.15
+"""""""
+
+- Improvements:
+
+    - PYTHONUSERBASE added to search path list for gtk style files
+
+0.12.14
+"""""""
+
+- Improvements:
+
+    - library_manager: increase performance of loading libraries by caching a list of all loaded libraries
+    - gaphas editor: use new meta data hash method to speed up loading time
+
+0.12.13
+"""""""
+
+- Improvements:
+
+    - the column headers of state machine tree now can be used to sort the items according state name, ID or type
+    - more user friendly interface for tree and list view widgets e.g. data ports, outcomes and semantic data
+      -> scrollbar adjustment and selections are moving much less and try to stay in the front of respective widget
+    - correct tab motion to be more accurate
+    - execution_history widget shows more visible chars per data port
+
+
+0.12.12
+"""""""
+
+- Improvements:
+
+    - :issue:`530` automatically focus and adapt position of root state for fresh initiated state machines
+                   issue title was "Root state out of focus and badly positioned"
+    - :issue:`543` Changing default option for library name while saving
+                   -> for the default folder name white space are replaced with underscores and all is lower case
+    - also default library state name is now the folder name with replaced underscores with white spaces
+
+
+- Bug Fixes:
+
+    - :issue:`527` RAFCON GUI loops while startup if HOME environment variable is not defined
+                   -> a error message pointing on respective missing environment variable is added
+    - :issue:`539` grouping of states outcome transitions are not fully recovers (now bug is covered by test)
+    - :issue:`515` source editor does not show end of lines (finally)
+
+
+0.12.11
+"""""""
+
+- Improvements:
+
+    - :issue:`529` accelerate the follow mode switch for many logger messages
+    - dynamic insertion of states during state execution is working and tested
+    - secure dynamic modification of state machines while runtime by test created in
+      pull request :issue:`535` Dynamic insertion of states during execution
+
+- Bug Fixes:
+
+    - :issue:`515` source editor does not show end of lines (partly)
+    - :issue:`533` States inside library states cannot be selected
+    - :issue:`528` execution history destruction does not lead to max recursion depth
+
+
+0.12.10
+"""""""
+
+- Features:
+
+    - :issue:`520` Debug Console keeps track of last logger message if the follow mode is enabled
+
+- Improvements:
+
+    - in pull request :issue:`523` refactoring of debug console  for more intuitive and robust behavior
+      e.g. persistent cursor position
+    - :issue:`516` source editor does not show line of cursor after apply if the script is big
+
+- Bug Fixes:
+
+    - :issue:`519` rafcon freezes while opening a state machine
+        - solved in pull request :issue:`524` history elements hold direct state reference
+    - :issue:`514` text in entry widget of port not visible during editing (arrow key press left-right helps)
+        - the issue was not fully resolved but improved
+
+0.12.9
+""""""
+
+- Improvements:
+
+    - container state API can adjust output_data by new method write_output_data
+    - more robust execution history tree
+    - performance improvement by deleting gaphas views at once for recursive state destruction's
+
+- Bug Fixes:
+
+    - :issue:`521` Strange gaphas logs during deletion of a state
+    - fix gaphas exceptions if state machine selection holds elements which gaphas has not drawn
+
+0.12.8
+""""""
+
+- Feature:
+
+    - start RAFCON with `rafcon` instead of `rafcon_start_gui` or `rafcon_core` instead of `rafcon_start` (old
+      commands are still working)
+
+- Improvements:
+
+    - buttons to forcefully lock or unlock a global variable
+    - global variable manager logger messages got new failure warning messages
+    - copy/paste for semantic data elements
+    - new config value SHOW_PATH_NAMES_IN_EXECUTION_HISTORY
+    - make library path in state editor overview selectable
+    
+- Bug Fixes:
+
+    - :issue:`503` scoped variable looks weird
+    - :issue:`505` clean up profiler flag in config
+    - :issue:`506` root state input ports leave ugly stripes behind
+    - :issue:`501` transition is not selectable if it is drawn over state
+    - :issue:`512` execution of second state machine cause freeze of stop on previous state machine was not successful
+    - :issue:`514` text in entry widget of port not visible during editing
+    - fix state machine tree remove library state
+    - no deadlocks when locking a global variable two times
+    - :issue:`502` changing data ports not possible
+    - fix state element weakref parent assigenment in case of tolerating a invalid data flow
+
+
+0.12.7
+""""""
+
+- Improvements:
+
+    - updated documentation
+    - use verbose logging level instead of prints for modification history debug prints
+
+
+0.12.6
+""""""
+
+- Feature:
+
+    - tests folder is now released as well
+
+- Bug Fixes:
+
+    - fix open-gl support for show-content to support fast state machine exploration (also into all leaf-states by zoom)
+    - library state can be removed also when those are showing content
+
+
+
+0.12.5
+""""""
+
+- Feature
+
+    - new log level "VERBOSE", intended for development purposes
+    - state machines can now be baked (a snapshot of the state machine with all libraries can be saved)
+    - Graphviz can now be used to debug gtkmvc notifications and signals
+
+- Improvements:
+
+    - Gtk priority of logging output to the console view is now customizable via the gui_config
+    - better plugin support of changes to the state-editor tabs
+    - gaphas combines now complex meta data actions in one meta data changed signal -> one undo/redo-Action
+
+- Bug Fixes:
+
+    - :issue:`484` label handles are hard to grasp
+    - :issue:`486` Gaphas is not emitting meta data signal if NameView is moved
+    - quick fix for not working "state type change" in combination with library states (which was based on respective
+      object destruction while those operations) -> will be fully solved in :issue:`493`
+    - quick fix for not set or too late set of active state machine id -> will be fully solved in :issue:`495`
+    - fix meta data for undo/redo of add object operations
+    - fix exception handling, causing issues with the graphical editor when invalid connection were created
+    - When hovering the menu bar, an exception was printed
+
+
+0.12.4
+""""""
+
+- Improvements:
+
+    - Provide a `PULL_REQUEST_TEMPLATE` for pull requests opened in GitHub
+    - Optimize updates/redrawing of graphical editor
+
+- Bug Fixes:
+
+    - :issue:`414` state machines with libraries cannot be closed
+
+
+0.12.3
+""""""
+
+- Feature
+    - The env variable :envvar:`RAFCON_START_MINIMIZED` allows to start RAFCON minimized, which is helpful when running
+      the tests
+
+- Improvements:
+
+    - :issue:`414` Memory optimizations: The memory usage should no longer increase over time, as unused objects are now freed
+    - A new/extended test verifies the correct destruction of removed elements
+    - Optimize NameView font size calculations, noticeable during zooming
+    - ports outside of the visible view are no longer drawn, which increases the performance, especially while
+      zooming in large state machines
+    - Hash calculations of state machines
+    - Placement of NameView
+    - drawing of connections, ports and labels, especially when deeply nested
+    - :issue:`469` unit test refactorings
+
+- Bug Fixes:
+
+    - :issue:`459` execution_log utils; backward compatibility missing and :issue:`458` ReturnItem
+    - :issue:`454` group/ungroup is not preserving meta data recursively
+    - :issue:`452` Session restore, gaphas and extended controller causes exception when closing RAFCON
+    - :issue:`450` Names of states inside a library become smaller
+    - :issue:`447` Hashes of state machine in storage different then the reopened state machine after saving it
+    - :issue:`449` ports (of transitions or data flows) cannot be moved
+    - :issue:`471` selection of states in hierarchies >= 5 not possible
+
+
+0.12.2
+""""""
+
+- New Features:
+
+    - Fix logging for library state execution
+
+- Improvements:
+
+    - Improve execution logging (semantic data is supported now)
+    - :issue:`445` Tests need to ensure correct import order for GUI singletons
+
+- Bug Fixes:
+
+    - :issue:`446` "show content" leads to sm marked as modified
 
 
 0.12.1
@@ -31,14 +338,11 @@ Patch releases 0.12.\*
 
 - Improvements:
 
-    -
+    - :issue:`415` Increase visibility of library content
 
 - Bug Fixes:
 
-    - :issue:`427`
-    - :issue:`428`
-    - :issue:`430`
-    - :issue:`431`
+    - :issue:`378` Editing default values does not work sometimes
 
 
 0.12.0
@@ -48,10 +352,6 @@ Patch releases 0.12.\*
 
     - Semantic meta data editor and storage for every state
     - :issue:`411` Allow outputting data from preempted states
-
-- Improvements:
-
-    -
 
 - Bug Fixes:
 
@@ -95,7 +395,7 @@ Patch releases 0.11.\*
 - New Features:
 
     - Move into viewport: Double click on elements in several widgets cause the element to moved into the viewport
-    (not yet supported by all widgets)
+      (not yet supported by all widgets)
     - Usage of selection modifiers (e.g. <Ctrl>, <Shift>) should now be more consistent
     - Ports in the graphical editor can now be selection
     - The port selection is synchronized between the graphical editor and the other widgets
@@ -776,7 +1076,7 @@ Patch releases 0.4.\*
 """""
 
 - Add start scripts in bin folder
-- When using RAFCON with RMPM, you can run RAFCON just with the commands ``rafco_start`` or ``rafcon_start_gui``
+- When using RAFCON with RMPM, you can run RAFCON just with the commands ``rafcon_start`` or ``rafcon_start_gui``
 - Bug fixes for state type changes
 
 0.4.5

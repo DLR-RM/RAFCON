@@ -341,6 +341,10 @@ widget_class "*Scrollbar*" style : highest "rafcon-scrollbar"
 style "rafcon-scrollbar-decent" = "scrollbar" {
     #bg[PRELIGHT]      = @scrollbar_scroller_active_decent
     bg[PRELIGHT]      = shade(0.5, @scrollbar_scroller_active_decent)
+    bg[INSENSITIVE]   = @scrollbar_background
+    bg[ACTIVE]        = @scrollbar_background
+    bg[NORMAL]        = @scrollbar_scroller
+    bg[SELECTED]      = @scrollbar_background
 }
 widget "*graphical_editor_scroller*" style : highest "rafcon-scrollbar-decent"
 
@@ -375,6 +379,7 @@ widget "*.data_flows_title_wrapper" style : highest "widget-title"
 widget "*.data_linkage_title_wrapper" style : highest "widget-title"
 widget "*.logical_linkage_title_wrapper" style : highest "widget-title"
 widget "*.description_title_wrapper" style : highest "widget-title"
+widget "*.semantic_data_title_wrapper" style : highest "widget-title"
 
 
 style "rafcon-trees" {

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -25,3 +25,5 @@ class GlobalVariableEditorView(View):
 
         self['new_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['lock_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['unlock_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)

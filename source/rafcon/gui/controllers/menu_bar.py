@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -33,14 +33,14 @@ from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrenc
 from rafcon.gui import singleton as gui_singletons
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.controllers.config_window import ConfigWindowController
+from rafcon.gui.controllers.preferences_window import PreferencesWindowController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
-from rafcon.gui.views.config_window import ConfigWindowView
+from rafcon.gui.views.preferences_window import PreferencesWindowView
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.views.utils.about_dialog import AboutDialogView
 import rafcon.gui.backup.session as backup_session
@@ -64,7 +64,7 @@ class MenuBarController(ExtendedController):
         assert isinstance(view, MainWindowView)
         ExtendedController.__init__(self, state_machine_manager_model, view.menu_bar)
         self.shortcut_manager = shortcut_manager
-        self.logging_console_view = view.logging_console_view
+        self.logging_console_view = view.debug_console_view.logging_console_view
         self.main_window_view = view
         self.observe_model(gui_singletons.core_config_model)
         self.observe_model(gui_singletons.gui_config_model)
@@ -85,6 +85,20 @@ class MenuBarController(ExtendedController):
         self.main_window_view.right_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.left_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.console_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
+
+    def destroy(self):
+        super(MenuBarController, self).destroy()
+        self.full_screen_window.destroy()
+
+    @staticmethod
+    def create_logger_warning_if_shortcuts_are_overwritten_by_menu_bar():
+        shortcut_dict = global_gui_config.get_config_value('SHORTCUTS')
+        shortcut_key_patterns = [elem for l in shortcut_dict.values() for elem in l]
+        for key in ['E', 'F', 'V', 'X', 'H', 'e', 'f', 'v', 'x', 'h']:
+            if '<Alt>' + key in shortcut_key_patterns:
+                dict_pair = {k: v for k, v_list in shortcut_dict.iteritems() for v in v_list if '<Alt>' + key == v}
+                logger.warning("Your current shortcut {0} is not working because a menu-bar access key "
+                               "is overwriting it.".format(dict_pair))
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -111,9 +125,10 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('save', 'activate', self.on_save_activate)
         self.connect_button_to_function('save_as', 'activate', self.on_save_as_activate)
         self.connect_button_to_function('save_as_copy', 'activate', self.on_save_as_copy_activate)
-        self.connect_button_to_function('menu_properties', 'activate', self.on_menu_properties_activate)
+        self.connect_button_to_function('menu_preferences', 'activate', self.on_menu_preferences_activate)
         self.connect_button_to_function('refresh_all', 'activate', self.on_refresh_all_activate)
         self.connect_button_to_function('refresh_libraries', 'activate', self.on_refresh_libraries_activate)
+        self.connect_button_to_function('bake_state_machine', 'activate', self.on_bake_state_machine_activate)
         self.connect_button_to_function('quit', 'activate', self.on_quit_activate)
 
         self.connect_button_to_function('cut', 'activate', self.on_cut_selection_activate)
@@ -152,6 +167,8 @@ class MenuBarController(ExtendedController):
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
         self.registered_view = True
         self._update_recently_opened_state_machines()
+        # do not move next line - here to show warning in GUI debug console
+        self.create_logger_warning_if_shortcuts_are_overwritten_by_menu_bar()
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
@@ -184,7 +201,7 @@ class MenuBarController(ExtendedController):
         for item in self.view.sub_menu_open_recently.get_children():
             self.view.sub_menu_open_recently.remove(item)
 
-        menu_item = gui_helper_label.create_image_menu_item("cleanup onto feasible paths", constants.ICON_ERASE,
+        menu_item = gui_helper_label.create_image_menu_item("remove invalid paths", constants.ICON_ERASE,
                                                             global_runtime_config.clean_recently_opened_state_machines)
         self.view.sub_menu_open_recently.append(menu_item)
         self.view.sub_menu_open_recently.append(gtk.SeparatorMenuItem())
@@ -295,6 +312,8 @@ class MenuBarController(ExtendedController):
                                               partial(self.call_action_callback,
                                                       "on_substitute_library_with_template_activate"))
         self.add_callback_to_shortcut_manager('open', partial(self.call_action_callback, "on_open_activate"))
+        self.add_callback_to_shortcut_manager('open_library_state_separately',
+                                              self.on_open_library_state_separately_activate)
         self.add_callback_to_shortcut_manager('new', partial(self.call_action_callback, "on_new_activate"))
         self.add_callback_to_shortcut_manager('quit', partial(self.call_action_callback, "on_quit_activate"))
 
@@ -373,6 +392,10 @@ class MenuBarController(ExtendedController):
     def on_open_activate(widget=None, data=None, path=None):
         gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
 
+    @staticmethod
+    def on_open_library_state_separately_activate(widget, data=None):
+        gui_helper_state_machine.open_library_state_separately()
+
     def on_save_activate(self, widget, data=None, delete_old_state_machine=False):
         return gui_helper_state_machine.save_state_machine(delete_old_state_machine=delete_old_state_machine,
                                                            recent_opened_notification=True)
@@ -386,6 +409,9 @@ class MenuBarController(ExtendedController):
     @staticmethod
     def on_refresh_libraries_activate():
         gui_helper_state_machine.refresh_libraries()
+
+    def on_bake_state_machine_activate(self, widget, data=None, force=False):
+        gui_helper_state_machine.bake_selected_state_machine()
 
     def on_refresh_all_activate(self, widget, data=None, force=False):
         gui_helper_state_machine.refresh_all(force=force)
@@ -407,13 +433,13 @@ class MenuBarController(ExtendedController):
         return gui_helper_state_machine.save_selected_state_as()
 
     @staticmethod
-    def on_menu_properties_activate(widget, data=None):
-        config_window_view = ConfigWindowView()
-        config_window_ctrl = ConfigWindowController(gui_singletons.core_config_model, config_window_view,
-                                                    gui_singletons.gui_config_model)
-        gui_singletons.main_window_controller.add_controller('config_window_ctrl', config_window_ctrl)
-        config_window_view.show()
-        config_window_view.get_top_widget().present()
+    def on_menu_preferences_activate(widget, data=None):
+        preferences_window_view = PreferencesWindowView()
+        preferences_window_ctrl = PreferencesWindowController(gui_singletons.core_config_model, preferences_window_view,
+                                                              gui_singletons.gui_config_model)
+        gui_singletons.main_window_controller.add_controller('preferences_window_ctrl', preferences_window_ctrl)
+        preferences_window_view.show()
+        preferences_window_view.get_top_widget().present()
 
     def on_quit_activate(self, widget, data=None, force=False):
         global_runtime_config.prepare_recently_opened_state_machines_list_for_storage()
@@ -446,6 +472,7 @@ class MenuBarController(ExtendedController):
         for item_name, shortcuts in global_gui_config.get_config_value('SHORTCUTS', {}).iteritems():
             if shortcuts and item_name in self.view.buttons:
                 self.view.set_menu_item_accelerator(item_name, shortcuts[0])
+        self.create_logger_warning_if_shortcuts_are_overwritten_by_menu_bar()
 
     def on_delete_check_sm_modified(self):
         if state_machine_manager.has_dirty_state_machine():
@@ -607,6 +634,10 @@ class MenuBarController(ExtendedController):
             else:  # change the active state machine to be the selected state machine
                 core_singletons.state_machine_manager.active_state_machine_id = selected_state_machine_id
 
+        # is there no active state machine id set the selected state machine (if it is set) is now the active one
+        if selected_state_machine_id and active_state_machine_id is None:
+            gui_singletons.state_machine_manager.active_state_machine_id = selected_state_machine_id
+
     def on_start_activate(self, widget, data=None):
         self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.start(self.model.selected_state_machine_id)
@@ -677,13 +708,13 @@ class MenuBarController(ExtendedController):
         is_start_state_inactive = False
         if self.model.get_selected_state_machine_model():
             state_m_list = self.model.get_selected_state_machine_model().selection.states
-            selected_state = self.model.get_selected_state_machine_model().selection.get_selected_state()
+            selected_state_m = self.model.get_selected_state_machine_model().selection.get_selected_state()
             has_no_start_state_state_types = (BarrierConcurrencyState, PreemptiveConcurrencyState)
-            if len(state_m_list) == 1 and isinstance(selected_state, AbstractStateModel) and \
-                    not state_m_list[0].state.is_root_state and \
-                    not isinstance(selected_state.parent.state, has_no_start_state_state_types):
+            if len(state_m_list) == 1 and isinstance(selected_state_m, AbstractStateModel) and \
+                    not selected_state_m.state.is_root_state and \
+                    not isinstance(selected_state_m.parent.state, has_no_start_state_state_types):
                 # if is start state -> enabled-box
-                if selected_state.is_start:
+                if selected_state_m.is_start:
                     self.view.set_menu_item_icon('is_start_state', constants.BUTTON_CHECK)
                 else:  # if is not start state -> empty-box
                     self.view.set_menu_item_icon('is_start_state', constants.BUTTON_SQUARE)

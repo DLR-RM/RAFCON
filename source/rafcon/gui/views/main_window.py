@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -16,6 +16,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+import os
+
 from gtkmvc import View
 
 from rafcon.gui.config import global_gui_config
@@ -25,7 +27,7 @@ from rafcon.gui.utils import constants
 from rafcon.gui.views.execution_history import ExecutionHistoryView
 from rafcon.gui.views.global_variable_editor import GlobalVariableEditorView
 from rafcon.gui.views.library_tree import LibraryTreeView
-from rafcon.gui.views.logging_console import LoggingConsoleView
+from rafcon.gui.views.debug_console import DebugConsoleView
 from rafcon.gui.views.menu_bar import MenuBarView
 from rafcon.gui.views.modification_history import ModificationHistoryView
 from rafcon.gui.views.state_icons import StateIconView
@@ -44,6 +46,10 @@ class MainWindowView(View):
 
     def __init__(self):
         View.__init__(self)
+
+        if os.getenv("RAFCON_START_MINIMIZED", False):
+            self.get_top_widget().iconify()
+
         # Add gui components by removing their corresponding placeholders defined in the glade file first and then
         # adding the widgets.
         self.left_bar_notebooks = [self['upper_notebook'], self['lower_notebook']]
@@ -55,8 +61,6 @@ class MainWindowView(View):
         self['undock_left_bar_button'].set_tooltip_text("Undock left side bar widget")
         self['undock_right_bar_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
         self['undock_right_bar_button'].set_tooltip_text("Undock right side bar widget")
-        self['undock_console_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
-        self['undock_console_button'].set_tooltip_text("Undock debug console widget")
         self['collapse_tree_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_COLLAPSE))
         self['collapse_tree_button'].set_tooltip_text("Collapse tree of widget")
 
@@ -143,12 +147,16 @@ class MainWindowView(View):
         self['state_editor_label_hbox'].add(state_editor_label)
 
         ######################################################
-        # Logging
+        # Debug Console
         ######################################################
-        self.logging_console_view = LoggingConsoleView()
-        self['console'].remove(self['console_scroller'])
-        self['console'].pack_start(self.logging_console_view.get_top_widget(), True, True, 0)
-        self.logging_console_view.get_top_widget().show()
+        self.debug_console_view = DebugConsoleView()
+        self['debug_console_viewport'].add(self.debug_console_view.get_top_widget())
+        self.debug_console_view.get_top_widget().show()
+        # map hide and undock buttons within and debug widget to be usable from main window view with generic naming
+        self['undock_console_button'] = self.debug_console_view['undock_console_button']
+        self['console_hide_button'] = self.debug_console_view['console_hide_button']
+        self['console_container'] = self.debug_console_view['console_container']
+        self['console'] = self.debug_console_view['console']
 
         ##################################################
         # menu bar view
@@ -176,7 +184,6 @@ class MainWindowView(View):
         ################################################
         self['left_bar_hide_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_LEFTA))
         self['right_bar_hide_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_RIGHTA))
-        self['console_hide_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_DOWNA))
 
         ################################################
         # Return Buttons
@@ -232,13 +239,6 @@ class MainWindowView(View):
         else:
             self['lower_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
         self['lower_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
-
-        self['debug_eventbox'].set_border_width(0)
-
-        self['button_show_info'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_INFO', True))
-        self['button_show_debug'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True))
-        self['button_show_warning'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_WARNING', True))
-        self['button_show_error'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_ERROR', True))
 
         self.left_bar_window = UndockedWindowView('left_bar_window')
         self.right_bar_window = UndockedWindowView('right_bar_window')

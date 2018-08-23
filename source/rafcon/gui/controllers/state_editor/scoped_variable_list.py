@@ -74,14 +74,14 @@ class ScopedVariableListController(ListViewController):
         super(ScopedVariableListController, self).register_view(view)
 
         view['name_col'].add_attribute(view['name_text'], 'text', self.NAME_STORAGE_ID)
-        if not isinstance(self.model.state, LibraryState) and self.model.state.get_library_root_state() is None:
+        if not isinstance(self.model.state, LibraryState) and self.model.state.get_next_upper_library_root_state() is None:
             view['name_text'].set_property("editable", True)
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', self.DATA_TYPE_NAME_STORAGE_ID)
-        if not isinstance(self.model.state, LibraryState) and self.model.state.get_library_root_state() is None:
+        if not isinstance(self.model.state, LibraryState) and self.model.state.get_next_upper_library_root_state() is None:
             view['data_type_text'].set_property("editable", True)
         if isinstance(view, ScopedVariablesListView):
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', self.DEFAULT_VALUE_STORAGE_ID)
-            if not isinstance(self.model.state, LibraryState) and self.model.state.get_library_root_state() is None:
+            if not isinstance(self.model.state, LibraryState) and self.model.state.get_next_upper_library_root_state() is None:
                 view['default_value_text'].set_property("editable", True)
             self._apply_value_on_edited_and_focus_out(view['default_value_text'],
                                                       self.apply_new_scoped_variable_default_value)

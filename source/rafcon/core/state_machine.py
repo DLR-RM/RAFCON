@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -14,6 +14,7 @@
 # Michael Vilzmann <michael.vilzmann@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+# Sebastian Riedel <sebastian.riedel@dlr.de>
 
 """
 .. module:: state_machine
@@ -148,7 +149,8 @@ class StateMachine(Observable, JSONObject, Hashable):
         # execution finished, close execution history log file (if present)
         if len(self._execution_histories) > 0:
             if self._execution_histories[-1].execution_history_storage is not None:
-                self._execution_histories[-1].execution_history_storage.close()
+                set_read_and_writable_for_all = global_config.get_config_value("EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL", False)
+                self._execution_histories[-1].execution_history_storage.close(set_read_and_writable_for_all)
         from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
@@ -163,7 +165,7 @@ class StateMachine(Observable, JSONObject, Hashable):
         finally:
             self.release_modification_lock()
 
-    @Observable.observed
+    # @Observable.observed
     def acquire_modification_lock(self, blocking=True):
         """Acquires the modification lock of the state machine
 
@@ -175,7 +177,7 @@ class StateMachine(Observable, JSONObject, Hashable):
         """
         return self._modification_lock.acquire(blocking)
 
-    @Observable.observed
+    # @Observable.observed
     def release_modification_lock(self):
         """Releases the acquired state machine modification lock.
         """
@@ -211,6 +213,11 @@ class StateMachine(Observable, JSONObject, Hashable):
     def clear_execution_histories(self):
         del self._execution_histories[:]
 
+    def destroy_execution_histories(self):
+        for execution_history in self._execution_histories:
+            execution_history.destroy()
+        self.clear_execution_histories()
+
     @Observable.observed
     def _add_new_execution_history(self):
         new_execution_history = ExecutionHistory()
@@ -221,9 +228,9 @@ class StateMachine(Observable, JSONObject, Hashable):
                 base_dir = base_dir.replace('%RAFCON_TEMP_PATH_BASE', RAFCON_TEMP_PATH_BASE)
             if not os.path.exists(base_dir):
                 os.makedirs(base_dir)
-            shelve_name = os.path.join(base_dir, 'rafcon_execution_log_%s_%s.shelve' %
-                                       (self.root_state.name.replace(' ', '-'),
-                                        time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())))
+            shelve_name = os.path.join(base_dir, '%s_rafcon_execution_log_%s.shelve' %
+                                       (time.strftime('%Y-%m-%d-%H:%M:%S', time.localtime()),
+                                        self.root_state.name.replace(' ', '-')))
             execution_history_store = ExecutionHistoryStorage(shelve_name)
             new_execution_history.set_execution_history_storage(execution_history_store)
         self._execution_histories.append(new_execution_history)

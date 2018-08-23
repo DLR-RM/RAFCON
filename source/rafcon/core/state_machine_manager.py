@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -104,8 +104,7 @@ class StateMachineManager(Observable):
                 raise AttributeError("The state machine is already open {0}".format(state_machine.file_system_path))
         logger.debug("Add new state machine with id {0}".format(state_machine.state_machine_id))
         self._state_machines[state_machine.state_machine_id] = state_machine
-        if self.active_state_machine_id is None:
-            self.active_state_machine_id = state_machine.state_machine_id
+        return state_machine.state_machine_id
 
     @Observable.observed
     def remove_state_machine(self, state_machine_id):
@@ -114,11 +113,13 @@ class StateMachineManager(Observable):
         :param state_machine_id: the id of the state machine to be removed
         """
         import rafcon.core.singleton as core_singletons
+        removed_state_machine = None
         if state_machine_id in self._state_machines:
             logger.debug("Remove state machine with id {0}".format(state_machine_id))
-            del self._state_machines[state_machine_id]
+            removed_state_machine = self._state_machines.pop(state_machine_id)
         else:
             logger.error("There is no state_machine with state_machine_id: %s" % state_machine_id)
+            return removed_state_machine
 
         # a not stopped or finished state machine will stay the active state machine TODO test this and rethink it
         if state_machine_id is self.active_state_machine_id and \
@@ -127,6 +128,9 @@ class StateMachineManager(Observable):
                 self.active_state_machine_id = self._state_machines[self._state_machines.keys()[0]].state_machine_id
             else:
                 self.active_state_machine_id = None
+        # destroy execution history
+        removed_state_machine.destroy_execution_histories()
+        return removed_state_machine
 
     def get_active_state_machine(self):
         """Return a reference to the active state-machine

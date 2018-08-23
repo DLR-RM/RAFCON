@@ -19,18 +19,6 @@ DataFlow's DataFlowModel is in.
 
 from gtkmvc.observer import Observer
 
-# mvc
-import rafcon.gui.singleton
-
-# core elements
-import rafcon.core.singleton
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.container_state import ContainerState
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.state_machine import StateMachine
-
-from rafcon.core.states.state import StateExecutionStatus
-
 import testing_utils
 import pytest
 
@@ -305,6 +293,10 @@ class TransitionNotificationLogObserver(NotificationLogObserver):
 
 
 def create_models(*args, **kargs):
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.state_machine import StateMachine
+    import rafcon.gui.models.state_machine
 
     state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
@@ -363,9 +355,7 @@ def create_models(*args, **kargs):
 
     state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4, 'Nested2': state5}
     sm = StateMachine(ctr_state)
-    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-
-    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
+    sm_m = rafcon.gui.models.state_machine.StateMachineModel(sm)
 
     return ctr_state, sm_m, state_dict
 
@@ -380,6 +370,7 @@ def get_state_model_by_path(state_model, path):
 
 
 def setup_observer_dict_for_state_model(state_model, with_print=False):
+    from rafcon.core.states.container_state import ContainerState
 
     def generate_observer_dict(state_m):
         observer_dict = {state_m.state.get_path(): StateNotificationLogObserver(state_m, with_print)}
@@ -426,6 +417,8 @@ def full_observer_dict_reset(observer_dict):
 
 
 def test_outcome_add_remove_notification(caplog):
+    testing_utils.dummy_gui(None)
+    import rafcon.gui.singleton
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
     states_observer_dict = setup_observer_dict_for_state_model(sm_model.root_state, with_print=with_print)
@@ -455,15 +448,15 @@ def test_outcome_add_remove_notification(caplog):
 
     # check state
     state_model_observer = states_observer_dict[state_dict[state_name].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'state': 1, 'outcomes': 1})
+    check_count_of_model_notifications(state_model_observer, {'state': 1, 'outcomes': 2})
 
     # check parent
     state_model_observer = states_observer_dict[state_dict['State3'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 1})
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     # check grand parent
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 1})
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     sm_model.destroy()
     rafcon.gui.singleton.global_gui_config.load()
@@ -475,6 +468,9 @@ def test_outcome_modify_notification(caplog):
         - name      (setter-method -> 1 before and 1 after notification)
         Observable Methods of Outcome DO NOT EXIST.
     """
+    testing_utils.dummy_gui(None)
+    # core elements
+    import rafcon.core.singleton
 
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
@@ -551,6 +547,9 @@ def test_outcome_modify_notification(caplog):
 
 
 def test_input_port_add_remove_notification(caplog):
+    testing_utils.dummy_gui(None)
+    # core elements
+    import rafcon.core.singleton
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -582,15 +581,15 @@ def test_input_port_add_remove_notification(caplog):
 
     # check state
     state_model_observer = states_observer_dict[state_dict['Nested2'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'state': 1, 'input_data_ports': 1})
+    check_count_of_model_notifications(state_model_observer, {'state': 1, 'input_data_ports': 2})
 
     # check parent
     state_model_observer = states_observer_dict[state_dict['State3'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 1})
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     # check grand parent
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 1})
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     sm_model.destroy()
     rafcon.gui.singleton.global_gui_config.load()
@@ -605,6 +604,9 @@ def test_input_port_modify_notification(caplog):
         Observable Methods of InputDataPort are:
         - change_data_type  (method + data_type-setter -> 2 before and 2 after notification)
     """
+    testing_utils.dummy_gui(None)
+    # core elements
+    import rafcon.core.singleton
 
     def check_input_notifications(input_observer, states_obs_dict, _state_dict, forecast=1):
 
@@ -666,6 +668,8 @@ def test_input_port_modify_notification(caplog):
 
 
 def test_output_port_add_remove_notification(caplog):
+    testing_utils.dummy_gui(None)
+    import rafcon.core.singleton
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -697,15 +701,15 @@ def test_output_port_add_remove_notification(caplog):
 
     # check state
     state_model_observer = states_observer_dict[state_dict['Nested2'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'state': 1, 'output_data_ports': 1})
+    check_count_of_model_notifications(state_model_observer, {'state': 1, 'output_data_ports': 2})
 
     # check parent
     state_model_observer = states_observer_dict[state_dict['State3'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 1})
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     # check grand parent
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 1})
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     sm_model.destroy()
     rafcon.gui.singleton.global_gui_config.load()
@@ -721,6 +725,9 @@ def test_output_port_modify_notification(caplog):
         Observable Methods of OutputDataPort are:
         - change_data_type  (method + data_type-setter -> 2 before and 2 after notification)
     """
+    testing_utils.dummy_gui(None)
+    # core elements
+    import rafcon.core.singleton
 
     def check_output_notifications(output_observer, states_obs_dict, _state_dict, forecast=1):
 
@@ -783,6 +790,8 @@ def test_output_port_modify_notification(caplog):
 
 
 def test_scoped_variable_add_remove_notification(caplog):
+    testing_utils.dummy_gui(None)
+    import rafcon.core.singleton
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -814,15 +823,15 @@ def test_scoped_variable_add_remove_notification(caplog):
 
     # check state
     state_model_observer = states_observer_dict[state_dict['Nested'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'state': 1, 'scoped_variables': 1})
+    check_count_of_model_notifications(state_model_observer, {'state': 1, 'scoped_variables': 2})
 
     # check parent
     state_model_observer = states_observer_dict[state_dict['State3'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 1})
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     # check grand parent
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 1})
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     sm_model.destroy()
     rafcon.gui.singleton.global_gui_config.load()
@@ -838,6 +847,9 @@ def test_scoped_variable_modify_notification(caplog):
         Observable Methods of ScopedVariable are:
         - change_data_type  (method + data_type-setter -> 2 before and 2 after notification)
     """
+    testing_utils.dummy_gui(None)
+    # core elements
+    import rafcon.core.singleton
 
     def check_output_notifications(output_observer, states_obs_dict, _state_dict, forecast=1):
 
@@ -935,6 +947,9 @@ def test_scoped_variable_modify_notification(caplog):
 
 
 def test_data_flow_add_remove_notification(caplog):
+    testing_utils.dummy_gui(None)
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -977,15 +992,15 @@ def test_data_flow_add_remove_notification(caplog):
 
     # check state
     state_model_observer = states_observer_dict[state_dict[state_name].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'state': 1, 'data_flows': 1})
+    check_count_of_model_notifications(state_model_observer, {'state': 1, 'data_flows': 2})
 
     # check parent
     state_model_observer = states_observer_dict[state_dict['State3'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 1})
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     # check grand parent
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 1})
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     sm_model.destroy()
     rafcon.gui.singleton.global_gui_config.load()
@@ -1000,6 +1015,9 @@ def test_data_flow_modify_notification(caplog):
         - modify_origin     (method -> 1 before and 1 after notification)
         - modify_target     (method -> 1 before and 1 after notification)
     """
+    testing_utils.dummy_gui(None)
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
 
     def check_data_flow_notifications(data_flow_m_observer, states_obs_dict, _state_dict, forecast=1):
 
@@ -1109,6 +1127,10 @@ def test_data_flow_modify_notification(caplog):
 
 
 def test_transition_add_remove_notification(caplog):
+    # core elements
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
+    testing_utils.dummy_gui(None)
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -1150,15 +1172,15 @@ def test_transition_add_remove_notification(caplog):
 
     # check state
     state_model_observer = states_observer_dict[state_dict['Nested'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'state': 1, 'transitions': 1})
+    check_count_of_model_notifications(state_model_observer, {'state': 1, 'transitions': 2})
 
     # check parent
     state_model_observer = states_observer_dict[state_dict['State3'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 1})
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     # check grand parent
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 1})
+    check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     sm_model.destroy()
     rafcon.gui.singleton.global_gui_config.load()
@@ -1175,6 +1197,10 @@ def test_transition_modify_notification(caplog):
         - modify_origin     (method -> 1 before and 1 after notification)
         - modify_target     (method -> 1 before and 1 after notification)
     """
+    # core elements
+    testing_utils.dummy_gui(None)
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
 
     def check_transition_notifications(transition_m_observer, states_obs_dict, _state_dict, forecast=1):
 
@@ -1284,6 +1310,10 @@ def test_transition_modify_notification(caplog):
 
 
 def test_state_add_remove_notification(caplog):
+    # core elements
+    testing_utils.dummy_gui(None)
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
     # create testbed
     rafcon.gui.singleton.global_gui_config.set_config_value('AUTO_BACKUP_ENABLED', False)
     [state, sm_model, state_dict] = create_models()
@@ -1321,19 +1351,20 @@ def test_state_add_remove_notification(caplog):
 
     # check state
     state_model_observer = states_observer_dict[state_dict['Nested'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'state': 1, 'states': 5})
+    check_count_of_model_notifications(state_model_observer, {'state': 1, 'states': 10})
 
     # check parent
     state_model_observer = states_observer_dict[state_dict['State3'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 5})
+    check_count_of_model_notifications(state_model_observer, {'states': 10})
 
     # check grand parent
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 5})
+    check_count_of_model_notifications(state_model_observer, {'states': 10})
 
     sm_model.destroy()
     rafcon.gui.singleton.global_gui_config.load()
     testing_utils.assert_logger_warnings_and_errors(caplog)
+
 
 # TODO do the notification checks for the LibraryState
 def test_state_property_modify_notification(caplog):
@@ -1379,13 +1410,25 @@ def test_state_property_modify_notification(caplog):
         - add_outcome, remove_outcome
         # ContainerState
         - add_state, remove_state
-        - add_transtion, remove_transition
+        - add_transition, remove_transition
         - add_data_flow, remove_data_flow
         - add_scoped_variable, remove_scoped_variable
     """
+    testing_utils.dummy_gui(None)
+    # core elements
+    import rafcon.core.singleton
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.state import StateExecutionStatus
 
     def check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=1, child_effects={}):
+        """ The method is checking if the notifications of a element are recursively pass throw there parents.
 
+        :param states_observer_dict:
+        :param sub_state_name:
+        :param forecast:
+        :param child_effects:
+        :return:
+        """
         # check state
         state_model_observer = states_observer_dict[state_dict[sub_state_name].get_path()]
         check_dict = {'state': forecast}
@@ -1393,7 +1436,6 @@ def test_state_property_modify_notification(caplog):
         print state_model_observer.log["before"]
         print state_model_observer.log["after"]
         check_count_of_model_notifications(state_model_observer, check_dict)
-
 
         # check parent
         num_child_effects = 0
@@ -1463,35 +1505,47 @@ def test_state_property_modify_notification(caplog):
     forecast = full_observer_dict_reset(states_observer_dict)
     new_dict = {}
     nr_of_old_elements = len(state_dict['Nested'].input_data_ports)
+    nr_of_old_no_more_in = len(state_dict['Nested'].input_data_ports)
     nr_of_new_elements = len(new_dict)
     state_dict['Nested'].input_data_ports = new_dict
     forecast += 1
     state_m_observer = states_observer_dict[state_dict['Nested'].get_path()]
-    check_count_of_model_notifications(state_m_observer, {'state': forecast, 'input_data_ports': nr_of_new_elements+nr_of_old_elements})
+    check_count_of_model_notifications(state_m_observer,
+                                       {'state': forecast,
+                                        'input_data_ports': nr_of_new_elements + nr_of_old_elements + nr_of_old_no_more_in})
 
     # output_data_ports(self, output_data_ports) None or dict
     forecast = full_observer_dict_reset(states_observer_dict)
     new_dict = {}
     nr_of_old_elements = len(state_dict['Nested'].output_data_ports)
+    nr_of_old_no_more_in = len(state_dict['Nested'].output_data_ports)
     nr_of_new_elements = len(new_dict)
     state_dict['Nested'].output_data_ports = new_dict
     forecast += 1
     state_m_observer = states_observer_dict[state_dict['Nested'].get_path()]
-    check_count_of_model_notifications(state_m_observer, {'state': forecast, 'output_data_ports': nr_of_new_elements+nr_of_old_elements})
+    check_count_of_model_notifications(state_m_observer,
+                                       {'state': forecast,
+                                        'output_data_ports': nr_of_new_elements + nr_of_old_elements + nr_of_old_no_more_in})
 
     # outcomes(self, outcomes) None or dict
     forecast = full_observer_dict_reset(states_observer_dict)
     new_dict = {}
     nr_of_old_elements = len(state_dict['Nested'].outcomes)
+    nr_of_old_no_more_in = len(state_dict['Nested'].outcomes)
     nr_of_new_elements = len(new_dict)
     state_dict['Nested'].outcomes = new_dict
     forecast += 1
+    check_count_of_model_notifications(state_m_observer,
+                                       {'state': forecast,
+                                        'outcomes': nr_of_new_elements + nr_of_old_elements + nr_of_old_no_more_in})
     nr_of_old_elements += len(state_dict['Nested'].outcomes)
-    nr_of_new_elements += len(state_dict['Nested'].outcomes)
+    # nr_of_new_elements += len(state_dict['Nested'].outcomes)
     state_dict['Nested'].outcomes = state_dict['Nested'].outcomes
     forecast += 1
     state_m_observer = states_observer_dict[state_dict['Nested'].get_path()]
-    check_count_of_model_notifications(state_m_observer, {'state': forecast, 'outcomes': nr_of_new_elements+nr_of_old_elements})
+    check_count_of_model_notifications(state_m_observer,
+                                       {'state': forecast,
+                                        'outcomes': nr_of_new_elements + nr_of_old_elements + nr_of_old_no_more_in})
 
     # Observer reset
     forecast = full_observer_dict_reset(states_observer_dict)
@@ -1537,53 +1591,68 @@ def test_state_property_modify_notification(caplog):
 
     # check state
     state_model_observer = states_observer_dict[state_dict['Nested'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'state': 2, 'transitions': 2})
+    check_count_of_model_notifications(state_model_observer, {'state': 2, 'transitions': 3})
 
     # check parent
     state_model_observer = states_observer_dict[state_dict['State3'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 2})
+    check_count_of_model_notifications(state_model_observer, {'states': 3})
 
     # check grand parent
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
-    check_count_of_model_notifications(state_model_observer, {'states': 2})
+    check_count_of_model_notifications(state_model_observer, {'states': 3})
 
-    # states(self, states) None or dict
+    # states(self, states) None or dict # TODO 1
     forecast = full_observer_dict_reset(states_observer_dict)
+    new_dict = {}
+    nr_of_old_states = len([elem for elem in state_dict['Nested'].states.itervalues()
+                            if elem not in new_dict.itervalues()])
+    nr_of_new_elements = len([elem for elem in new_dict.itervalues()
+                              if elem not in state_dict['Nested'].states.itervalues()])
     state_dict['Nested'].states = {}
-    forecast += 1
+    forecast += 1 + nr_of_old_states + nr_of_new_elements
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast, child_effects={
-        'states': 2})
+        'states': 2*nr_of_old_states + 2*nr_of_new_elements, 'state': 1})
+    # 2*the elements removed and added because it is a dict with remove notification and the parent is unset
 
     # input_data_ports(self, input_data_ports) None or dict
     forecast = full_observer_dict_reset(states_observer_dict)
     new_dict = {}
-    nr_of_old_elements = len(state_dict['Nested'].transitions)
-    nr_of_new_elements = len(new_dict)
+    nr_of_old_elements = len([elem for elem in state_dict['Nested'].transitions.itervalues()
+                              if elem not in new_dict.itervalues()])
+    nr_of_new_elements = len([elem for elem in new_dict.itervalues()
+                              if elem not in state_dict['Nested'].transitions.itervalues()])
     # transitions(self, transitions) None or dict
     state_dict['Nested'].transitions = new_dict
-    forecast += 1
+    forecast += 1 + nr_of_old_elements + nr_of_new_elements
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast, child_effects={
-        'transitions': nr_of_old_elements + nr_of_new_elements})
+        'transitions': 2*nr_of_old_elements + 2*nr_of_new_elements, 'state': 1})
+    # 2*the elements removed and added because it is a list with remove notification and the parent is unset
 
     # data_flows(self, data_flows) None or dict
     forecast = full_observer_dict_reset(states_observer_dict)
     new_dict = {}
-    nr_of_old_elements = len(state_dict['Nested'].data_flows)
-    nr_of_new_elements = len(new_dict)
+    nr_of_old_elements = len([elem for elem in state_dict['Nested'].data_flows.itervalues()
+                              if elem not in new_dict.itervalues()])
+    nr_of_new_elements = len([elem for elem in new_dict.itervalues()
+                              if elem not in state_dict['Nested'].data_flows.itervalues()])
     state_dict['Nested'].data_flows = new_dict
     forecast += 1
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast, child_effects={
-        'data_flows': nr_of_old_elements + nr_of_new_elements})
+        'data_flows': 2*nr_of_old_elements + 2*nr_of_new_elements, 'state': 1})
+    # 2*the elements removed and added because it is a list with remove notification and the parent is unset
 
     # scoped_variables(self, scoped_variables) None or dict
     forecast = full_observer_dict_reset(states_observer_dict)
     new_dict = {}
-    nr_of_old_elements = len(state_dict['Nested'].scoped_variables)
-    nr_of_new_elements = len(new_dict)
+    nr_of_old_elements = len([elem for elem in state_dict['Nested'].scoped_variables.itervalues()
+                              if elem not in new_dict.itervalues()])
+    nr_of_new_elements = len([elem for elem in new_dict.itervalues()
+                              if elem not in state_dict['Nested'].scoped_variables.itervalues()])
     state_dict['Nested'].scoped_variables = new_dict
-    forecast += 1
+    forecast += 1 + nr_of_old_elements + nr_of_new_elements
     check_states_notifications(states_observer_dict, sub_state_name='Nested', forecast=forecast, child_effects={
-        'scoped_variables': nr_of_old_elements + nr_of_new_elements})
+        'scoped_variables': 2*nr_of_old_elements + 2*nr_of_new_elements, 'state': 1})
+    # 2*the elements removed and added because it is a list with remove notification and the parent is unset
 
     # Observer reset
     for path, state_m_observer in states_observer_dict.iteritems():
@@ -1649,10 +1718,18 @@ def test_state_property_modify_notification(caplog):
 
 
 if __name__ == '__main__':
+    # test_outcome_add_remove_notification(None)
     # test_outcome_modify_notification(None)
-    # test_scoped_data_modify_notification(None)
+    # test_input_port_add_remove_notification(None)
+    # test_input_port_modify_notification(None)
+    # test_output_port_add_remove_notification(None)
+    # test_scoped_variable_add_remove_notification(None)
+    # test_scoped_variable_modify_notification(None)
+    # test_data_flow_add_remove_notification(None)
+    # test_data_flow_modify_notification(None)
     # test_transition_add_remove_notification(None)
     # test_transition_modify_notification(None)
+    # test_state_add_remove_notification(None)
     # test_state_property_modify_notification(None)
-    pytest.main([__file__])
+    pytest.main(['-s', __file__])
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -10,6 +10,7 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+# Sebastian Riedel <sebastian.riedel@dlr.de>
 
 """
 .. module:: hierarchy_state
@@ -33,7 +34,7 @@ logger = log.get_logger(__name__)
 
 class HierarchyState(ContainerState):
 
-    """A class tto represent a hierarchy state for the state machine
+    """A class to represent a hierarchy state for the state machine
 
     The hierarchy state holds several child states, that can be container states on their own
     """
@@ -92,11 +93,14 @@ class HierarchyState(ContainerState):
         try:
             self._initialize_hierarchy()
             while self.child_state is not self:
+                # print "hs1", self.name
                 self.handling_execution_mode = True
                 execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, self.child_state)
                 self.handling_execution_mode = False
                 if self.state_execution_status is not StateExecutionStatus.EXECUTE_CHILDREN:
                     self.state_execution_status = StateExecutionStatus.EXECUTE_CHILDREN
+
+                # print "hs2", self.name
 
                 self.backward_execution = False
                 if self.preempted:
@@ -113,22 +117,30 @@ class HierarchyState(ContainerState):
                 if self.child_state is None:
                     break
 
+                # print "hs3", self.name
+
                 self._execute_current_child()
 
                 if self.backward_execution:
+                    # print "hs4", self.name
                     break_loop = self._handle_backward_execution_after_child_execution()
                     if break_loop:
+                        # print "hs4.1", self.name
                         break
                 else:
+                    # print "hs5", self.name
                     break_loop = self._handle_forward_execution_after_child_execution()
                     if break_loop:
                         break
+                # print "hs6", self.name
             return self._finalize_hierarchy()
 
         except Exception, e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
+            self.child_state = None
+            self.last_child = None
             return self.finalize(Outcome(-1, "aborted"))
 
     def _handle_backward_execution_before_child_execution(self):
@@ -172,6 +184,15 @@ class HierarchyState(ContainerState):
                                generate_run_id=False)
 
         self.child_state.join()
+
+        # this line is important to indicate the parent the current execution status
+        # it may also change during the execution of an hierarchy state
+        # e.g. a hierarchy state may be started in forward execution mode but can leave in backward execution mode
+        # print self.child_state
+        # print self.child_state.backward_execution
+        self.backward_execution = self.child_state.backward_execution
+        # for h in self.execution_history._history_items:
+        #     print h
 
         if self.preempted:
             if self.backward_execution:
@@ -263,6 +284,7 @@ class HierarchyState(ContainerState):
         if self.preempted:
             self.final_outcome = Outcome(-2, "preempted")
 
+        self.child_state = None
+        self.last_child = None
+
         return self.finalize(self.final_outcome)
-
-

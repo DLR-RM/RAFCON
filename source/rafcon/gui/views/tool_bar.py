@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -29,26 +29,30 @@ class ToolBarView(View):
         View.__init__(self)
 
         button_new = self['button_new']
-        button_new.set_label_widget(create_label_widget_with_icon(constants.BUTTON_NEW, _("New State Machine")))
-
+        button_new.set_label_widget(create_label_widget_with_icon(constants.BUTTON_NEW, _("New state machine")))
 
         button_refresh = self['button_refresh']
         button_refresh.set_label_widget(create_label_widget_with_icon(constants.BUTTON_REFR, _("Refresh"),
-                                                                      "Refresh all Libraries and State Machines"))
+                                                                      "Refresh all libraries and state machines"))
 
         button_refresh_selected = self['button_refresh_selected']
         button_refresh_selected.set_label_widget(create_label_widget_with_icon(constants.BUTTON_REFR,
                                                                                _("Refresh Selected"),
-                                                                               "Refresh selected State Machine"))
+                                                                               "Refresh selected state machine"))
 
         button_open = self['button_open']
-        button_open.set_label_widget(create_label_widget_with_icon(constants.BUTTON_OPEN, _("Open State Machine")))
+        button_open.set_label_widget(create_label_widget_with_icon(constants.BUTTON_OPEN, _("Open state machine")))
 
         button_save = self['button_save']
-        button_save.set_label_widget(create_label_widget_with_icon(constants.BUTTON_SAVE, _("Save State Machine")))
+        button_save.set_label_widget(create_label_widget_with_icon(constants.BUTTON_SAVE, _("Save state machine")))
 
         button_refresh_libs = self['button_refresh_libs']
         button_refresh_libs.set_label_widget(
-            create_label_widget_with_icon(constants.BUTTON_REFR, _("Refresh Libraries"), "Refresh all Libraries"))
+            create_label_widget_with_icon(constants.BUTTON_REFR, _("Refresh Libraries"), "Refresh all libraries"))
 
+        button_bake_state_machine = self['button_bake_state_machine']
+        button_bake_state_machine.set_label_widget(
+            create_label_widget_with_icon(
+                constants.BUTTON_BAKE, _("Bake State Machine"),
+                "Saves the currently selected state machine and all library folders it refers to"))
         # self.get_top_widget().set_border_width(constants.BORDER_WIDTH)
