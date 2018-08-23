@@ -212,6 +212,12 @@ class StateView(Element):
             constraint = parent_state_v.keep_rect_constraints[self]
             solver.remove_constraint(constraint)
 
+    def set_enable_flag_keep_rect_within_constraints(self, enable):
+        """ Enable/disables the KeepRectangleWithinConstraint for child states """
+        for child_state_v in self.child_state_views():
+            self.keep_rect_constraints[child_state_v].enable = enable
+            child_state_v.keep_rect_constraints[child_state_v._name_view].enable = enable
+
     def has_selected_child(self):
         for child in self.canvas.get_children(self):
             if isinstance(child, StateView) and child.selected:
@@ -765,6 +771,7 @@ class StateView(Element):
         return pos
 
     def resize_all_children(self, old_size, paste=False):
+
         def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
             new_rel_pos_x = old_rel_pos[0] * new_parent_size[0] / old_parent_size[0]
             new_rel_pos_y = old_rel_pos[1] * new_parent_size[1] / old_parent_size[1]
@@ -783,6 +790,9 @@ class StateView(Element):
                 item.update_minimum_size_of_children()
 
         def resize_state_v(state_v, old_state_size, new_state_size, use_meta_data):
+
+            state_v.set_enable_flag_keep_rect_within_constraints(enable=False)
+
             width_factor = float(new_state_size[0]) / old_state_size[0]
             height_factor = float(new_state_size[1]) / old_state_size[1]
 
@@ -833,11 +843,14 @@ class StateView(Element):
                 state_copy_v = self.canvas.get_view_for_model(state_v.model.state_copy)
                 resize_child_state_v(state_copy_v)
 
-        # Minimum size constraints have not been resolved yet, so we have to enfore it manually
+            state_v.set_enable_flag_keep_rect_within_constraints(enable=True)
+
+        # Minimum size constraints have not been resolved yet, so we have to enforce it manually
         self.width = max(self.width, self.min_width)
         self.height = max(self.height, self.min_height)
         new_size = (self.width, self.height)
         resize_state_v(self, old_size, new_size, paste)
+
 
 
 class NameView(Element):
