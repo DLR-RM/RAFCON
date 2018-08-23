@@ -13,9 +13,12 @@ Next release
 - Improvements:
 
     - :issue:`541` Where are the magnet lines gone?
+    - update of gaphas if transitions are removed
 
 
 - Bug Fixes:
+
+    - :issue:`538` Many error outputs when changing MAX_VISIBLE_LIBRARY_HIERARCHY
 
 
 
