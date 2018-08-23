@@ -99,8 +99,8 @@ class ExecutionHistoryTreeController(ExtendedController):
             child_iter = model.iter_nth_child(row, 0)
             selected_history_item = model.get_value(child_iter, self.HISTORY_ITEM_STORAGE_ID)
             if selected_history_item is None:
-                logger.info("The selected element could not be connected to a run-id and thereby no run-id selection "
-                            "is handed to external execution log viewer.")
+                logger.info("The selected element could not be connected to a run-id. Therefore, no run-id is handed "\
+                            "to the external execution log viewer.")
                 return
         run_id = selected_history_item.run_id if selected_history_item is not None else None
 
@@ -112,7 +112,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         from rafcon.core.states.state import StateExecutionStatus
         if execution_history is selected_state_machine.execution_histories[-1] \
                 and selected_state_machine.root_state.state_execution_status is not StateExecutionStatus.INACTIVE:
-            logger.warning("Stop the state  or wait till it is finished. "
+            logger.warning("Stop the execution or wait until it is finished. "
                            "The external execution history viewer can only open finished executions.")
             return
 
@@ -127,7 +127,8 @@ class ExecutionHistoryTreeController(ExtendedController):
                             run_id=run_id)
             execute_command_in_process(cmd, shell=True, cwd=source_path, logger=logger)
         else:
-            logger.info("Activate execution file logging to use the external execution history viewer.")
+            logger.info("Set EXECUTION_LOG_ENABLE to True in your config to activate execution file logging and to use "
+                        "the external execution history viewer.")
 
     def append_string_to_menu(self, popup_menu, menu_item_string):
         final_string = menu_item_string
