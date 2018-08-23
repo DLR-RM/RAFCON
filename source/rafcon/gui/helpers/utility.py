@@ -25,17 +25,18 @@ def all_outcomes_have_transitions_with_the_same_target(outcomes):
             target_state_id = transition.to_state
             target_outcome_id = transition.to_outcome
         else:
-            return False
+            return
 
-    return True
+    return target_state_id, target_outcome_id
 
 
 def remove_transitions_if_target_is_the_same(from_outcomes):
-    if all_outcomes_have_transitions_with_the_same_target(from_outcomes):
+    target = all_outcomes_have_transitions_with_the_same_target(from_outcomes)
+    if target:
         for from_outcome in from_outcomes:
             transition = from_outcome.parent.parent.get_transition_for_outcome(from_outcome.parent, from_outcome)
             from_outcome.parent.parent.remove(transition)
-        return True
+        return target
 
 
 def add_transitions_from_selected_state_to_parent():
@@ -98,12 +99,13 @@ def add_transitions_to_closest_sibling_state_from_selected_state():
 
     :return:
     """
+    task_string = "to closest sibling state"
     selected_sm_id = rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id
     if not selected_sm_id:
-        logger.warning("Can not create transition to next state: No state machine selected!")
+        logger.warning("Can not create transition {0}: No state machine selected!".format(task_string))
         return
     else:
-        logger.debug("Check transition to next state ...")
+        logger.debug("Check transition {0} ...".format(task_string))
 
     selected_sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[selected_sm_id]
     if len(selected_sm_m.selection.states) == 1:
@@ -111,11 +113,13 @@ def add_transitions_to_closest_sibling_state_from_selected_state():
         state = selected_state_m.state
         parent_state = state.parent
         if not isinstance(parent_state, State):
-            logger.warning("Can not create transition to parent state: Selected state has not parent state!")
+            logger.warning("Can not create transition {0}: Selected state has not parent state!".format(task_string))
             return
 
         # find closest other state to connect to -> to_state
         closest_sibling_state = gui_helper_meta_data.get_closest_sibling_state(selected_state_m)
+        if closest_sibling_state is None:
+            logger.info("Can not create transition {0}: There is no other sibling state.".format(task_string))
         to_state = closest_sibling_state[1].state
 
         # find all possible from outcomes
@@ -127,21 +131,27 @@ def add_transitions_to_closest_sibling_state_from_selected_state():
         from_oc_not_connected = [oc for oc in from_outcomes if not state.parent.get_transition_for_outcome(state, oc)]
         # all ports not connected connect to next state income
         if from_oc_not_connected:
-            logger.debug("Create transition to next state ...")
+            logger.debug("Create transition {0} ...".format(task_string))
             for from_outcome in from_oc_not_connected:
                 parent_state.add_transition(state.state_id, from_outcome.outcome_id, to_state.state_id, None)
         # no transitions are removed if not all connected to the same other state
         else:
-            if remove_transitions_if_target_is_the_same(from_outcomes):
-                logger.info("Removed transitions from outcomes to closest sibling state "
-                            "because all point to the same target.")
+            target = remove_transitions_if_target_is_the_same(from_outcomes)
+            if target:
+                target_state_id, _ = target
+                if not target_state_id == to_state.state_id:
+                    logger.info("Removed transitions from outcomes {0} "
+                                "because all point to the same target.".format(task_string.replace('closest ', '')))
+                    add_transitions_to_closest_sibling_state_from_selected_state()
+                else:
+                    logger.info("Removed transitions from outcomes {0} "
+                                "because all point to the same target.".format(task_string))
                 return True
-            logger.info("Will not create transition to closest sibling state: "
-                        "Not clear situation of connected transitions."
-                        "There will be no transitions to other states be touched.")
+            logger.info("Will not create transition {0}: Not clear situation of connected transitions."
+                        "There will be no transitions to other states be touched.".format(task_string))
 
     else:
-        logger.warning("Can not create transition to closest sibling state: Please select one state!")
+        logger.warning("Can not create transition {0}: Please select one state!".format(task_string))
     return True
 
 
@@ -150,12 +160,13 @@ def add_transitions_from_closest_sibling_state_to_selected_state():
 
     :return:
     """
+    task_string = "from closest sibling state"
     selected_sm_id = rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id
     if not selected_sm_id:
-        logger.warning("Can not create transitions from closest sibling state: No state machine selected!")
+        logger.warning("Can not create transitions {0}: No state machine selected!".format(task_string))
         return
     else:
-        logger.debug("Check transitions from closest sibling state ...")
+        logger.debug("Check transitions {0} ...".format(task_string))
 
     selected_sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[selected_sm_id]
     if len(selected_sm_m.selection.states) == 1:
@@ -163,10 +174,12 @@ def add_transitions_from_closest_sibling_state_to_selected_state():
         state = selected_state_m.state
         parent_state = state.parent
         if not isinstance(parent_state, State):
-            logger.warning("Can not create transition to parent state: Selected state has not parent state!")
+            logger.warning("Can not create transition {0}: Selected state has no parent state!".format(task_string))
             return
         # find closest other state to connect to -> from_state
         closest_sibling_state = gui_helper_meta_data.get_closest_sibling_state(selected_state_m)
+        if closest_sibling_state is None:
+            logger.info("Can not create transition {0}: There is no other sibling state.".format(task_string))
         from_state = closest_sibling_state[1].state
 
         # find all possible from outcomes
@@ -179,19 +192,25 @@ def add_transitions_from_closest_sibling_state_to_selected_state():
 
         # all ports not connected connect to state income
         if from_oc_not_connected:
-            logger.debug("Create transitions from closest sibling state ...")
+            logger.debug("Create transitions {0} ...".format(task_string))
             for from_outcome in from_oc_not_connected:
                 parent_state.add_transition(from_state.state_id, from_outcome.outcome_id, state.state_id, None)
         # no transitions are removed if not all connected to the same other target
         else:
-            if remove_transitions_if_target_is_the_same(from_outcomes):
-                logger.info("Removed transitions origin from outcomes of closest sibling state "
-                            "because all point to the same target.")
+            target = remove_transitions_if_target_is_the_same(from_outcomes)
+            if target:
+                target_state_id, _ = target
+                if not target_state_id == state.state_id:
+                    logger.info("Removed transitions origin from outcomes of {0} "
+                                "because all point to the same target.".format(task_string.replace("from ", "")))
+                    add_transitions_from_closest_sibling_state_to_selected_state()
+                else:
+                    logger.info("Removed transitions origin from outcomes of {0} to selected state {0} "
+                                "because all point to the same target.".format(task_string.replace("from ", "")))
                 return True
-            logger.info("Will not create transition from closest sibling state: "
-                        "Not clear situation of connected transitions."
-                        "There will be no transitions to other states be touched.")
+            logger.info("Will not create transition {0}: Not clear situation of connected transitions."
+                        "There will be no transitions to other states be touched.".format(task_string))
 
     else:
-        logger.warning("Can not create transition from closest sibling state: Please select one state!")
+        logger.warning("Can not create transition {0}: Please select one state!".format(task_string))
     return True
