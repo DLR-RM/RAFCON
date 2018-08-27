@@ -37,7 +37,6 @@ from rafcon.gui.views.states_editor import StatesEditorView
 from rafcon.gui.views.tool_bar import ToolBarView
 from rafcon.gui.views.top_tool_bar import TopToolBarView
 from rafcon.gui.views.undocked_window import UndockedWindowView
-from rafcon.utils.i18n import _
 
 
 class MainWindowView(View):
