@@ -31,8 +31,6 @@ from yaml_configuration.config import config_path
 import rafcon
 from rafcon.gui.config import global_gui_config
 import rafcon.gui.singleton as gui_singletons
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.runtime_config import global_runtime_config
 import rafcon.gui.models.auto_backup
 from rafcon.gui.utils.splash_screen import SplashScreen
@@ -52,7 +50,7 @@ from rafcon.core.config import global_config
 from rafcon.gui.utils import wait_for_gui
 import rafcon.utils.filesystem as filesystem
 from rafcon.utils import plugins
-from rafcon.utils.i18n import _, setup_l10n, setup_l10n_gtk
+from rafcon.utils.i18n import setup_l10n
 from rafcon.utils import log
 
 logger = log.get_logger("rafcon.start.gui")
@@ -178,6 +176,9 @@ def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_pa
 
 
 def setup_gui():
+    from rafcon.gui.controllers.main_window import MainWindowController
+    from rafcon.gui.views.main_window import MainWindowView
+
     # Create the GUI-View
     main_window_view = MainWindowView()
 
@@ -287,6 +288,8 @@ def main():
 
     register_signal_handlers(signal_handler)
 
+    setup_l10n()
+
     splash_screen = SplashScreen(contains_image=True, width=530, height=350)
     splash_screen.rotate_image(random_=True)
     splash_screen.set_text(_("Starting RAFCON..."))
@@ -294,8 +297,6 @@ def main():
         gtk.main_iteration()
 
     setup_installation()
-    setup_l10n()
-    setup_l10n_gtk()
 
     splash_screen.set_text("Setting up logger...")
     setup_gtkmvc_logger()
