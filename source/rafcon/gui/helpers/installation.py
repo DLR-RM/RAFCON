@@ -75,7 +75,12 @@ def install_fonts(logger=None, restart=False):
     if font_installed and restart:
         log.info("Restarting RAFCON to apply new fonts...")
         python = sys.executable
-        os.execl(python, python, *sys.argv)
+        environ = dict(**os.environ)
+        # Passing this to the new RAFCON environment will prevent further checks and thus restarts
+        environ["RAFCON_CHECK_INSTALLATION"] = "False"
+        args_and_env = list(sys.argv)
+        args_and_env.append(environ)
+        os.execle(python, python, *args_and_env)
 
 
 def install_gtk_source_view_styles(logger=None):
