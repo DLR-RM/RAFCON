@@ -8,21 +8,21 @@
 # Contributors:
 # Michael Vilzmann <michael.vilzmann@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+# Franz Steinmetz <franz.steinmetz@dlr.de>
 
 import locale
 import gettext
-
-_ = gettext.gettext
+from rafcon.utils.resources import resource_filename
 
 
 def setup_l10n():
     locale.setlocale(locale.LC_ALL, '')
-    gettext.bindtextdomain('rafcon', 'locale')
-    gettext.textdomain('rafcon')
 
+    localedir = resource_filename('rafcon', 'locale')
 
-def setup_l10n_gtk():
-    import gtk
-    for module in (gettext, gtk.glade):
-        module.bindtextdomain('rafcon', 'locale')
-        module.textdomain('rafcon')
+    # Install gettext globally: Allow to use _("my string) without imports
+    gettext.install('rafcon', localedir)
+
+    # Required for glade and the GtkBuilder
+    locale.bindtextdomain('rafcon', localedir)
+    locale.textdomain('rafcon')
