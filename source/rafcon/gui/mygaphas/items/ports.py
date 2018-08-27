@@ -66,7 +66,7 @@ class PortView(object):
 
         self._port_image_cache = ImageCache()
         self._label_image_cache = ImageCache()
-        self._last_label_size = 0, 0
+        self._last_label_size = self.port_side_size, self.port_side_size
         self._last_label_relative_pos = 0, 0
 
     def __getattr__(self, name):
