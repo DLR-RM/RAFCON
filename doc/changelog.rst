@@ -19,6 +19,7 @@ Next release
 - Bug Fixes:
 
     - :issue:`538` Many error outputs when changing MAX_VISIBLE_LIBRARY_HIERARCHY
+    - :issue:`571` Wrong rendering of scoped variables
 
 
 
