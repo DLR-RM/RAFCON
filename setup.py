@@ -103,7 +103,7 @@ def get_all_files_recursivly(*path):
     """
     result_list = list()
     root_dir = os.path.join(*path)
-    print "retrieving all files from foler '{}' recursivly and adding to data_files ... ".format(root_dir)
+    print "retrieving all files from folder '{}'recursivelyy and adding to data_files ... ".format(root_dir)
 
     # remove share/ (package_dir) => e.g. target_dir_sub_path will be just "libraries"
     target_dir_sub_path = os.path.join(*root_dir.split(os.sep)[1:])
@@ -138,9 +138,11 @@ def create_mo_files():
         except os.error:  # already exists
             pass
         msgfmt_cmd = 'msgfmt -o {} {}'.format(path.join(mo_dir, mo_file), path.join(localedir, po_file))
-        subprocess.call(msgfmt_cmd, shell=True)
-
-        data_files.append(get_data_files_tuple(mo_dir))
+        result = subprocess.call(msgfmt_cmd, shell=True)
+        if result == 0:
+            data_files.append(get_data_files_tuple(mo_dir))
+        else:
+            print "Could not compile translation '{}'. RAFCON will not be available in this language.".format(lang)
 
     return data_files
 
