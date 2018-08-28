@@ -260,7 +260,7 @@ class HierarchyState(ContainerState):
             self.final_outcome = self.outcomes[transition.to_outcome]
 
         if self.child_state is self:
-            singleton.state_machine_execution_engine.notify_run_to_states(self)
+            singleton.state_machine_execution_engine.modify_run_to_states(self)
         return False
 
     def _finalize_hierarchy(self):

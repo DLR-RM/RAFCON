@@ -22,7 +22,8 @@ import copy
 import threading
 import time
 import Queue
-from threading import Lock
+from threading import Lock, RLock
+import sys
 
 from gtkmvc import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
@@ -295,6 +296,9 @@ class ExecutionEngine(Observable):
         self.synchronization_counter += 1
         self.synchronization_lock.release()
 
+        # print "handle_execution_mode before: ", state.name, self.run_to_states
+        # sys.stdout.flush()
+
         if self._status.execution_mode is StateMachineExecutionStatus.STARTED:
             # logger.debug("Execution engine started!")
             pass
@@ -319,6 +323,8 @@ class ExecutionEngine(Observable):
             logger.debug("Stepping mode: waiting for next step!")
 
             wait = True
+            # if there is not state in self.run_to_states then RAFCON waits for the next user input and simply does
+            # one step
             for state_path in copy.deepcopy(self.run_to_states):
                 next_child_state_path = None
                 # can be None in case of no transition given
@@ -343,7 +349,8 @@ class ExecutionEngine(Observable):
                 # in this case the execution does not have to wait and has to run until the selected state is reached
                 else:
                     wait = False
-                    break
+                    # do not break here, the state_path may be of another state machine branch
+                    # break
 
             if wait:
                 try:
@@ -351,6 +358,8 @@ class ExecutionEngine(Observable):
                     self._status.execution_condition_variable.wait()
                 finally:
                     self._status.execution_condition_variable.release()
+                # state was notified => thus, a new user command was issued, which has to be handled!
+                state.execution_history.new_execution_command_handled = False
 
             # calculate states to which should be run
             if self._status.execution_mode is StateMachineExecutionStatus.BACKWARD:
@@ -360,39 +369,58 @@ class ExecutionEngine(Observable):
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OVER:
                 # the state that called this method is a hierarchy state => thus we save this state and wait until this
                 # very state will execute its next state; only then we will wait on the condition variable
-                self.run_to_states.append(state.get_path())
+                if not state.execution_history.new_execution_command_handled:
+                    self.run_to_states.append(state.get_path())
+                    # print "forward over: ", state.get_path()
+                    # sys.stdout.flush()
+                else:
+                    pass
+                    # print "forward over: user event already handled!"
+                    # sys.stdout.flush()
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OUT:
                 from rafcon.core.states.state import State
                 if isinstance(state.parent, State):
-                    parent_path = state.parent.get_path()
-                    self.run_to_states.append(parent_path)
+                    from rafcon.core.states.library_state import LibraryState
+                    if isinstance(state.parent, LibraryState):
+                        parent_path = state.parent.parent.get_path()
+                    else:
+                        parent_path = state.parent.get_path()
+                    if not state.execution_history.new_execution_command_handled:
+                        self.run_to_states.append(parent_path)
+                        print "forward out: ", state.get_path()
+                        sys.stdout.flush()
+                    else:
+                        pass
+                        # print "forward out: user event already handled!"
+                        # sys.stdout.flush()
                 else:
-                    # this is the case if step_out is called from the highest level
-
-                    # OLD convenience: this is handled in the same way as the FORWARD_OVER
-                    # self.run_to_states.append(state.get_path())
-
-                    # just run the state machine to the end in this case
+                    # if step_out is called from the highest level just run the state machine to the end
                     self.run_to_states = []
                     self.set_execution_mode(StateMachineExecutionStatus.STARTED)
             elif self._status.execution_mode is StateMachineExecutionStatus.RUN_TO_SELECTED_STATE:
-                # "Run to states were already updated thus doing nothing"
+                # "run_to_states" were already updated thus doing nothing
                 pass
 
-        # in the case when the stop method wakes up the paused or step mode StateMachineExecutionStatus.STOPPED
+        state.execution_history.new_execution_command_handled = True
+
+        # in the case that the stop method wakes up the paused or step mode a StateMachineExecutionStatus.STOPPED
         # will be returned
         return_value = self._status.execution_mode
 
+        # print "handle_execution_mode after: ", state.name, self.run_to_states
+        # sys.stdout.flush()
+
         return return_value
 
-    def notify_run_to_states(self, state):
+    def modify_run_to_states(self, state):
         """
-        This is a very special case. Inside a hierarchy state a step_over is triggered but the step_over affects the
+        This is a special case. Inside a hierarchy state a step_over is triggered but the step_over affects the
         last child. In this case the step_over must be transformed to a step_out and thus modify the self.run_to_states
         :param state:
         :return:
         """
-        if self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OVER:
+        if self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OVER or \
+            self._status.execution_mode  is StateMachineExecutionStatus.FORWARD_OUT:
             step_over_to_step_out_transform_found = False
             for state_path in copy.deepcopy(self.run_to_states):
                 if state_path == state.get_path():
@@ -402,7 +430,11 @@ class ExecutionEngine(Observable):
             if step_over_to_step_out_transform_found:
                 from rafcon.core.states.state import State
                 if isinstance(state.parent, State):
-                    parent_path = state.parent.get_path()
+                    from rafcon.core.states.library_state import LibraryState
+                    if isinstance(state.parent, LibraryState):
+                        parent_path = state.parent.parent.get_path()
+                    else:
+                        parent_path = state.parent.get_path()
                     self.run_to_states.append(parent_path)
 
     def execute_state_machine_from_path(self, state_machine=None, path=None, start_state_path=None, wait_for_execution_finished=True):
