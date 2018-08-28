@@ -296,9 +296,6 @@ class ExecutionEngine(Observable):
         self.synchronization_counter += 1
         self.synchronization_lock.release()
 
-        # print "handle_execution_mode before: ", state.name, self.run_to_states
-        # sys.stdout.flush()
-
         if self._status.execution_mode is StateMachineExecutionStatus.STARTED:
             # logger.debug("Execution engine started!")
             pass
@@ -371,12 +368,8 @@ class ExecutionEngine(Observable):
                 # very state will execute its next state; only then we will wait on the condition variable
                 if not state.execution_history.new_execution_command_handled:
                     self.run_to_states.append(state.get_path())
-                    # print "forward over: ", state.get_path()
-                    # sys.stdout.flush()
                 else:
                     pass
-                    # print "forward over: user event already handled!"
-                    # sys.stdout.flush()
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OUT:
                 from rafcon.core.states.state import State
                 if isinstance(state.parent, State):
@@ -387,12 +380,8 @@ class ExecutionEngine(Observable):
                         parent_path = state.parent.get_path()
                     if not state.execution_history.new_execution_command_handled:
                         self.run_to_states.append(parent_path)
-                        print "forward out: ", state.get_path()
-                        sys.stdout.flush()
                     else:
                         pass
-                        # print "forward out: user event already handled!"
-                        # sys.stdout.flush()
                 else:
                     # if step_out is called from the highest level just run the state machine to the end
                     self.run_to_states = []
@@ -406,9 +395,6 @@ class ExecutionEngine(Observable):
         # in the case that the stop method wakes up the paused or step mode a StateMachineExecutionStatus.STOPPED
         # will be returned
         return_value = self._status.execution_mode
-
-        # print "handle_execution_mode after: ", state.name, self.run_to_states
-        # sys.stdout.flush()
 
         return return_value
 
