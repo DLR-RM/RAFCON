@@ -4,6 +4,7 @@ import time
 # core elements
 from rafcon.core.storage import storage
 import rafcon.core.singleton
+from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.utils import log
 
 # test environment elements
@@ -88,6 +89,10 @@ def test_step_through_library(caplog):
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
     rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
+    state_machine_execution_engine.synchronization_lock.acquire()
+    state_machine_execution_engine.synchronization_counter = 0
+    state_machine_execution_engine.synchronization_lock.release()
+
     rafcon.core.singleton.state_machine_execution_engine.step_mode()
     wait_for_execution_engine_sync_counter(1, logger)
 
@@ -138,6 +143,6 @@ def test_step_through_library(caplog):
             assert s.value == 4
 
 if __name__ == '__main__':
-    # test_custom_entry_point(None)
+    test_custom_entry_point(None)
     test_step_through_library(None)
     # pytest.main([__file__])
