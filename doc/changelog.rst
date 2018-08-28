@@ -15,14 +15,13 @@ Next release
     - :issue:`541` Where are the magnet lines gone?
     - update of gaphas if transitions are removed
 
-
 - Bug Fixes:
 
     - :issue:`538` Many error outputs when changing MAX_VISIBLE_LIBRARY_HIERARCHY
     - :issue:`571` Wrong rendering of scoped variables
     - :issue:`584` Opening a external source editor fails for a never set active state machine id
     - :issue:`551` Prevent RAFCON from restarting if installation of fonts fails
-
+    - stepping works inside library and concurrency states
 
 
 
