@@ -137,10 +137,14 @@ def test_step_through_library(caplog):
     rafcon.core.singleton.state_machine_execution_engine.stop()
     rafcon.core.singleton.state_machine_execution_engine.join()
 
-    from rafcon.core.state_elements.scope import ScopedVariable
-    for s in state_machine.root_state.scoped_data.itervalues():
-        if s.name == 'bottles' and s.data_port_type == ScopedVariable:
-            assert s.value == 4
+    try:
+        from rafcon.core.state_elements.scope import ScopedVariable
+        for s in state_machine.root_state.scoped_data.itervalues():
+            if s.name == 'bottles' and s.data_port_type == ScopedVariable:
+                assert s.value == 4
+    finally:
+        testing_utils.shutdown_environment_only_core(caplog=caplog)
+
 
 if __name__ == '__main__':
     test_custom_entry_point(None)
