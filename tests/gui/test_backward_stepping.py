@@ -167,11 +167,17 @@ def execute_barrier_state_forwards_backwards():
     wait_for_execution_engine_sync_counter(1, logger)
 
     # forward
-    for i in range(4):
+    for i in range(2):
         call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(3, logger)
 
-    for i in range(4):
+    call_gui_callback(menubar_ctrl.on_step_over_activate, None, None)
+    wait_for_execution_engine_sync_counter(3, logger)
+
+    call_gui_callback(menubar_ctrl.on_step_out_activate, None, None)
+    wait_for_execution_engine_sync_counter(4, logger)
+
+    for i in range(3):
         call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
