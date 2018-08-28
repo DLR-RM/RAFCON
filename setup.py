@@ -133,7 +133,11 @@ def create_mo_files():
         lang, extension = path.splitext(po_file)
         mo_dir = path.join(localedir, lang, 'LC_MESSAGES')
         mo_file = domain + '.mo'
-        msgfmt_cmd = 'msgfmt {} -o {}'.format(path.join(localedir, po_file), path.join(mo_dir, mo_file))
+        try:
+            os.makedirs(mo_dir)
+        except os.error:  # already exists
+            pass
+        msgfmt_cmd = 'msgfmt -o {} {}'.format(path.join(mo_dir, mo_file), path.join(localedir, po_file))
         subprocess.call(msgfmt_cmd, shell=True)
 
         data_files.append(get_data_files_tuple(mo_dir))
