@@ -330,11 +330,13 @@ def run_gui_thread(gui_config=None, runtime_config=None):
     import gtk
     from rafcon.core.start import reactor_required
     from rafcon.gui.start import start_gtk, install_reactor
+    from rafcon.utils.i18n import setup_l10n
     global gui_ready
     # see https://stackoverflow.com/questions/35700140/pygtk-run-gtk-main-loop-in-a-seperate-thread
     gobject.threads_init()
     if reactor_required():
         install_reactor()
+    setup_l10n()
     from rafcon.gui.controllers.main_window import MainWindowController
     from rafcon.gui.views.main_window import MainWindowView
 
