@@ -50,6 +50,13 @@ Steps for releasing
 
 .. include:: includes/release_steps.rst
 
+
+Translating RAFCON
+------------------
+
+.. include:: includes/translation.rst
+
+
 HowTo on creating a splashscreen
 --------------------------------
 

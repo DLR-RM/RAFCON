@@ -37,12 +37,12 @@ class StateEditorView(View):
     top = 'main_frame_vbox'
 
     icons = {
-        "Source": constants.ICON_SOURCE,
-        "Data Linkage": constants.ICON_DLINK,
-        "Logical Linkage": constants.ICON_LLINK,
-        "Linkage Overview": constants.ICON_OVERV,
-        "Description": constants.ICON_DESC,
-        "Semantic Data": constants.ICON_SEMANTICS
+        _('Source'): constants.ICON_SOURCE,
+        _("Data Linkage"): constants.ICON_DLINK,
+        _("Logical Linkage"): constants.ICON_LLINK,
+        _("Linkage Overview"): constants.ICON_OVERV,
+        _("Description"): constants.ICON_DESC,
+        _("Semantic Data"): constants.ICON_SEMANTICS
     }
 
     def __init__(self):

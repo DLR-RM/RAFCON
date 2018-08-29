@@ -103,7 +103,7 @@ def get_all_files_recursivly(*path):
     """
     result_list = list()
     root_dir = os.path.join(*path)
-    print "retrieving all files from foler '{}' recursivly and adding to data_files ... ".format(root_dir)
+    print "retrieving all files from folder '{}'recursivelyy and adding to data_files ... ".format(root_dir)
 
     # remove share/ (package_dir) => e.g. target_dir_sub_path will be just "libraries"
     target_dir_sub_path = os.path.join(*root_dir.split(os.sep)[1:])
@@ -120,6 +120,31 @@ def get_all_files_recursivly(*path):
             target_path = os.path.join("share", "rafcon", target_dir_sub_path, relative_directory)
             result_list.append((target_path, file_list))
     return result_list
+
+
+def create_mo_files():
+    data_files = []
+    domain = "rafcon"
+    localedir = path.join('source', 'rafcon', 'locale')
+    po_files = [po_file
+                for po_file in next(os.walk(localedir))[2]
+                if os.path.splitext(po_file)[1] == '.po']
+    for po_file in po_files:
+        lang, extension = path.splitext(po_file)
+        mo_dir = path.join(localedir, lang, 'LC_MESSAGES')
+        mo_file = domain + '.mo'
+        try:
+            os.makedirs(mo_dir)
+        except os.error:  # already exists
+            pass
+        msgfmt_cmd = 'msgfmt -o {} {}'.format(path.join(mo_dir, mo_file), path.join(localedir, po_file))
+        result = subprocess.call(msgfmt_cmd, shell=True)
+        if result == 0:
+            data_files.append(get_data_files_tuple(mo_dir))
+        else:
+            print "Could not compile translation '{}'. RAFCON will not be available in this language.".format(lang)
+
+    return data_files
 
 
 def generate_data_files():
@@ -143,6 +168,8 @@ def generate_data_files():
         get_data_files_tuple(themes_folder, 'dark', 'gtk-sourceview'),
     ]
 
+    locale_data_files = create_mo_files()
+
     version_data_file = [("./", ["./VERSION"])]
 
     # print gui_data_files
@@ -151,7 +178,8 @@ def generate_data_files():
     examples_data_files = get_all_files_recursivly(examples_folder)
     # print examples_data_files
     libraries_data_files = get_all_files_recursivly(libraries_folder)
-    generated_data_files = gui_data_files + examples_data_files + libraries_data_files + version_data_file
+    generated_data_files = gui_data_files + locale_data_files + examples_data_files + libraries_data_files + \
+                           version_data_file
     # for elem in generated_data_files:
     #     print elem
     return generated_data_files

@@ -2,9 +2,12 @@
 
 [ -d "./tmp" ]
 tmp_exists=$?
+version=value=$(<VERSION)
 
 find 'source/rafcon' -iname '*.glade' -exec intltool-extract --type=gettext/glade --local {} \;
-find 'source/rafcon' -iname '*.py' | xargs xgettext --language=Python --keyword=_ --keyword=N_ --output=messages.pot --default-domain=rafcon ./tmp/*.h
+mv tmp glade
+find 'source/rafcon' -iname '*.py' | xargs xgettext --language=Python --keyword=_ --keyword=N_ --output=rafcon.pot --output-dir=source/rafcon/locale --default-domain=rafcon --copyright-holder DLR --package-name RAFCON --package-version=$version --msgid-bugs-address=rafcon@dlr.de ./glade/*.h
+mv glade tmp
 
 if (( tmp_exists == 1 )); then
   rm -r "./tmp"

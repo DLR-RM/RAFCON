@@ -20,6 +20,10 @@ import os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath(os.path.join('..', 'source')))
 
+# Required to make the gettext function _("") globally available
+from rafcon.utils.i18n import setup_l10n
+setup_l10n()
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
