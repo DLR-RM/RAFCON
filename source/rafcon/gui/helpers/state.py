@@ -35,6 +35,57 @@ state_type_to_state_class_dict = {StateType.EXECUTION: ExecutionState, StateType
 logger = log.get_logger(__name__)
 
 
+def negative_check_for_model_in_expected_future_models(target_state_m, model, msg, delete=True, with_logger=None):
+    """ Checks if the expected future models list/set includes still a specific model
+
+    Return False if the handed model is still in and also creates a warning message as feedback.
+
+    :param StateModel target_state_m: The state model which expected_future_models attribute should be checked
+    :param Model model: Model to check for.
+    :param str msg: Message for the logger if a model is still in.
+    :param bool delete: Flag to delete respective model from list/set.
+    :param with_logger: A optional logger to use in case of logging messages
+    :rtype bool
+    :return: True if empty and False if still model in set/list
+    """
+    if with_logger is None:
+        with_logger = logger
+    # check that the model in the list expected_future_model was used
+    if model in target_state_m.expected_future_models:
+        with_logger.warning("{0} -> still in is: {1} Please inform the developer how to reproduce this."
+                            "".format(msg, model))
+        if delete:
+            # TODO think about to destroy this models
+            target_state_m.expected_future_models.remove(model)
+        return False
+    return True
+
+
+def check_expected_future_model_list_is_empty(target_state_m, msg, delete=True, with_logger=None):
+    """ Checks if the expected future models list/set is empty
+
+    Return False if there are still elements in and also creates a warning message as feedback.
+
+    :param StateModel target_state_m: The state model which expected_future_models attribute should be checked
+    :param str msg: Message for the logger if a model is still in.
+    :param bool delete: Flag to delete respective model from list/set.
+    :param with_logger: A optional logger to use in case of logging messages
+    :rtype bool
+    :return: True if empty and False if still model in set/list
+    """
+    if with_logger is None:
+        with_logger = logger
+    # check that the model in the list expected_future_model was used
+    if target_state_m.expected_future_models:
+        with_logger.warning("{0} -> still in are: {1} Please inform the developer how to reproduce this."
+                            "".format(msg, target_state_m.expected_future_models))
+        if delete:
+            # TODO think about to destroy this models
+            target_state_m.expected_future_models.clear()
+        return False
+    return True
+
+
 def add_state(container_state_m, state_type):
     """Add a state to a container state
 
@@ -220,7 +271,8 @@ def create_state_model_for_state(new_state, meta, state_element_models):
     from rafcon.gui.models.abstract_state import get_state_model_class_for_state
     state_m_class = get_state_model_class_for_state(new_state)
     new_state_m = state_m_class(new_state, meta=meta, load_meta_data=False, expected_future_models=state_element_models)
-    assert len(new_state_m.expected_future_models) == 0
+    error_msg = "New state has not re-used all handed expected future models."
+    check_expected_future_model_list_is_empty(new_state_m, msg=error_msg)
 
     return new_state_m
 
@@ -573,11 +625,11 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
     action_parent_m.group_states.__func__.tmp_models_storage = tmp_models_dict
     action_parent_m.group_states.__func__.affected_models = affected_models
 
-    assert len(action_parent_m.expected_future_models) == 0
+    error_msg = "Group action has not started with empty expected future models list."
+    check_expected_future_model_list_is_empty(action_parent_m, msg=error_msg)
     for key in ['states', 'scoped_variables', 'transitions', 'data_flows']:
         for model in tmp_models_dict[key].values():
             action_parent_m.expected_future_models.add(model)
-    # print "## number #1 of models", len(action_parent_m.expected_future_models), action_parent_m.expected_future_models
 
     # CORE
     new_state = e = None
@@ -594,8 +646,8 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         tmp_models_dict['state'] = grouped_state_m
 
         # if models are left over check if the model remove methods have eaten your models because destroy flag was True
-        # print "## number #2 of models", len(action_parent_m.expected_future_models), action_parent_m.expected_future_models
-        assert len(action_parent_m.expected_future_models) == 0
+        error_msg = "Group action has not re-used all models of grouped elements."
+        check_expected_future_model_list_is_empty(action_parent_m, msg=error_msg)
         if not gui_helper_meta_data.scale_meta_data_according_states(tmp_models_dict):
             logger.error("Meta data adaptation for group states failed.")
         else:
@@ -646,13 +698,12 @@ def ungroup_state(state_m):
     action_parent_m.ungroup_state.__func__.affected_models = affected_models
     # print "ungroup", id(old_state_m), [id(m) for m in tmp_models_dict['states']]
 
-    # print "set future models"
-    assert len(action_parent_m.expected_future_models) == 0
+    error_msg = "Un-Group action has not started with empty expected future models list."
+    check_expected_future_model_list_is_empty(action_parent_m, msg=error_msg)
     for key in ['states']:  # , 'scoped_variables', 'transitions', 'data_flows']:
         for m in tmp_models_dict[key].values():
             if not m.state.state_id == UNIQUE_DECIDER_STATE_ID:
                 action_parent_m.expected_future_models.add(m)
-    # print "## number #1 of models", len(action_parent_m.expected_future_models), action_parent_m.expected_future_models
 
     # CORE
     e = None
@@ -661,8 +712,8 @@ def ungroup_state(state_m):
     except Exception as e:
         logger.exception("State ungroup failed")
 
-    # print "## number #2 of models", len(action_parent_m.expected_future_models), action_parent_m.expected_future_models
-    assert len(action_parent_m.expected_future_models) == 0
+    error_msg = "Un-Group action has not re-used all models of grouped elements."
+    check_expected_future_model_list_is_empty(action_parent_m, msg=error_msg)
 
     # AFTER MODEL
     if e is None:
