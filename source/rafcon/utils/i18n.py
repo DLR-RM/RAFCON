@@ -12,15 +12,22 @@
 
 import locale
 import gettext
+
 from rafcon.utils.resources import resource_filename
+from rafcon.utils import log
+
+logger = log.get_logger(__name__)
 
 
 def setup_l10n():
-    locale.setlocale(locale.LC_ALL, '')
+    try:
+        locale.setlocale(locale.LC_ALL, '')
+    except locale.Error as e:
+        logger.warning("Cannot setup translations: {}".format(e))
 
     localedir = resource_filename('rafcon', 'locale')
 
-    # Install gettext globally: Allow to use _("my string) without imports
+    # Install gettext globally: Allows to use _("my string") without further imports
     gettext.install('rafcon', localedir)
 
     # Required for glade and the GtkBuilder
