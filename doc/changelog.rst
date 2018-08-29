@@ -14,12 +14,14 @@ Next release
 
     - :issue:`541` Where are the magnet lines gone?
     - update of gaphas if transitions are removed
+    - extend German RAFCON translation
 
 
 - Bug Fixes:
 
     - :issue:`538` Many error outputs when changing MAX_VISIBLE_LIBRARY_HIERARCHY
     - :issue:`584` Opening a external source editor fails for a never set active state machine id
+    - make i18n working
 
 
 
