@@ -26,8 +26,6 @@ if __name__ == "__main__":
     model = []  # use a not None model to avoid AssertionError in register_adapters methods
     log_tree_ctrl = SingleWidgetWindowController(model, single_view, ExecutionLogTreeController, args.file, args.run_id)
 
-    # file = "/home_local/beld_rc/log/rafcon/2018-08-20-11:13:16_rafcon_execution_log_new-root-state.shelve"
-    # run_id = "43f86e72-a459-11e8-a593-484d7ef05adc.run_id.00000000000000000003"
     # log_tree_ctrl = SingleWidgetWindowController(None, single_view, ExecutionLogTreeController, file, run_id)
 
     gtk.main()

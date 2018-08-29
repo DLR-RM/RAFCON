@@ -10,7 +10,7 @@
 
 import os
 
-from rafcon.gui.utils.shell_execution import execute_shell_command_with_file_path
+from rafcon.gui.utils.shell_execution import execute_command_with_path_in_process
 from rafcon.gui.utils.dialog import RAFCONInputDialog
 from rafcon.gui.singleton import global_gui_config
 
@@ -35,7 +35,7 @@ class AbstractExternalEditor(object):
         :param path: the path as first argument to the shell command
         :return: None
         """
-        execute_shell_command_with_file_path(command, path, logger)
+        execute_command_with_path_in_process(command, path, logger=logger)
 
     def get_file_name(self):
         """ The object base class specific file name, which can then be passed to e.g. the external editor shell command

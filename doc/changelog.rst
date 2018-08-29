@@ -21,8 +21,12 @@ Next release
 - Bug Fixes:
 
     - :issue:`538` Many error outputs when changing MAX_VISIBLE_LIBRARY_HIERARCHY
+    - :issue:`571` Wrong rendering of scoped variables
     - :issue:`584` Opening a external source editor fails for a never set active state machine id
     - make i18n working
+    - :issue:`551` Prevent RAFCON from restarting if installation of fonts fails
+
+
 
 
 
