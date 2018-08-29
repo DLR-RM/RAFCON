@@ -106,3 +106,30 @@ def rad2deg(radians):
     :rtype: float
     """
     return radians / pi * 180.
+
+
+def equal(t1, t2, digit=None):
+    """ Compare two iterators and its elements on specific digit precision
+
+    The method assume that t1 and t2 are are list or tuple.
+
+    :param t1: First element to compare
+    :param t2: Second element to compare
+    :param int digit: Number of digits to compare
+    :rtype bool
+    :return: True if equal and False if different
+    """
+
+    if not len(t1) == len(t2):
+        return False
+
+    if digit is not None:
+        for idx in range(len(t1)):
+            if not round(t1[idx]*10**digit) == round(t2[idx]*10**digit):
+                return False
+    else:
+        for idx in range(len(t1)):
+            if not t1[idx] == t2[idx]:
+                return False
+
+    return True
