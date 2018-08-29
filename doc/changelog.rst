@@ -15,6 +15,7 @@ Next release
     - :issue:`541` Where are the magnet lines gone?
     - update of gaphas if transitions are removed
     - extend German RAFCON translation
+    - extend Developer's Guide by how-to on translating RAFCON
 
 
 - Bug Fixes:
