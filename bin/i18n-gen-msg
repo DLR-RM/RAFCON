@@ -2,13 +2,20 @@
 
 [ -d "./tmp" ]
 tmp_exists=$?
+
+# RAFCON version will be written to the POT file header
 version=value=$(<VERSION)
 
+# Extract translatable strings from glade into header files, which are in the next step parsed by xgettext
 find 'source/rafcon' -iname '*.glade' -exec intltool-extract --type=gettext/glade --local {} \;
+# Rename temporary folder into something more meaningful, as it will later appear in the PO(T) file
 mv tmp glade
+# Extract all translatable strings from *.py and the previously generated *.h files
+# Generate a POT file from these strings with a proper header and write it to source/rafcon/locale
 find 'source/rafcon' -iname '*.py' | xargs xgettext --language=Python --keyword=_ --keyword=N_ --output=rafcon.pot --output-dir=source/rafcon/locale --default-domain=rafcon --copyright-holder DLR --package-name RAFCON --package-version=$version --msgid-bugs-address=rafcon@dlr.de ./glade/*.h
 mv glade tmp
 
+# Clean up
 if (( tmp_exists == 1 )); then
   rm -r "./tmp"
 fi
