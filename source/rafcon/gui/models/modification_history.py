@@ -42,6 +42,7 @@ from rafcon.core.state_elements.transition import Transition
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
+from rafcon.gui.helpers.meta_data import check_gaphas_view_is_meta_data_consistent
 
 from rafcon.utils import log
 from rafcon.utils.constants import TEMP_PATH, RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
@@ -85,6 +86,7 @@ class ModificationsHistoryModel(ModelMT):
         self.with_verbose = False
         self.with_debug_logs = False
         self.with_meta_data_actions = True
+        self.check_gaphas_consistency = True
 
         self.re_initiate_meta_data()
 
@@ -108,6 +110,9 @@ class ModificationsHistoryModel(ModelMT):
         return get_state_element_meta(self.state_machine_model.root_state)
 
     def update_internal_tmp_storage(self):
+        if self.check_gaphas_consistency:
+            logger.info("Check gaphas view is meta data consistent before doing tmp-storage update")
+            check_gaphas_view_is_meta_data_consistent(self.state_machine_model, with_logger_messages=True)
         self.tmp_meta_storage = self.get_root_state_element_meta()
 
     def prepare_destruction(self):
@@ -470,7 +475,7 @@ class ModificationsHistoryModel(ModelMT):
 
     def finish_new_action(self, overview):
         if isinstance(self.active_action, MetaAction) and self.check_gaphas_consistency:
-            self.check_gaphas_view_is_meta_data_consistent(with_logger_messages=True)
+            check_gaphas_view_is_meta_data_consistent(self.state_machine_model, with_logger_messages=True)
 
         # logger.debug("History stores AFTER")
         if self.with_debug_logs:
