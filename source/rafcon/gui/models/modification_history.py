@@ -64,13 +64,14 @@ class ModificationsHistoryModel(ModelMT):
         assert isinstance(state_machine_model, StateMachineModel)
         self.state_machine_model = state_machine_model
         self.__state_machine_id = state_machine_model.state_machine.state_machine_id
-        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        self._tmp_meta_storage = None
+        self.tmp_meta_storage = self.get_root_state_element_meta()
 
         self.observe_model(self.state_machine_model)
         self.observe_model(self.state_machine_model.root_state)
         self.__buffered_root_state_model = self.state_machine_model.root_state
 
-        self.active_action = None
+        self._active_action = None
         self.locked = False
         self.busy = False
         self.count_before = 0
@@ -86,6 +87,28 @@ class ModificationsHistoryModel(ModelMT):
         self.with_meta_data_actions = True
 
         self.re_initiate_meta_data()
+
+    @property
+    def active_action(self):
+        return self._active_action
+
+    @active_action.setter
+    def active_action(self, value):
+        self._active_action = value
+
+    @property
+    def tmp_meta_storage(self):
+        return self._tmp_meta_storage
+
+    @tmp_meta_storage.setter
+    def tmp_meta_storage(self, value):
+        self._tmp_meta_storage = value
+
+    def get_root_state_element_meta(self):
+        return get_state_element_meta(self.state_machine_model.root_state)
+
+    def update_internal_tmp_storage(self):
+        self.tmp_meta_storage = self.get_root_state_element_meta()
 
     def prepare_destruction(self):
         """Prepares the model for destruction
@@ -156,7 +179,7 @@ class ModificationsHistoryModel(ModelMT):
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
             # logger.debug("StateMachineAction Undo")
             self._re_initiate_observation()
-        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        self.update_internal_tmp_storage()
 
     def undo(self):
         if not self.modifications.trail_history or self.modifications.trail_pointer == 0 \
@@ -176,7 +199,7 @@ class ModificationsHistoryModel(ModelMT):
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
             # logger.debug("StateMachineAction Undo")
             self._re_initiate_observation()
-        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        self.update_internal_tmp_storage()
         self.change_count += 1
         # logger.debug("release lock 2 - for undo {0}".format(self.modifications.trail_pointer))
         self.state_machine_model.storage_lock.release()
@@ -211,7 +234,7 @@ class ModificationsHistoryModel(ModelMT):
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer], StateMachineAction):
             # logger.debug("StateMachineAction Redo")
             self._re_initiate_observation()
-        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        self.update_internal_tmp_storage()
         self.change_count += 1
         # logger.debug("release lock 3 - for redo")
         self.state_machine_model.storage_lock.release()
@@ -361,10 +384,10 @@ class ModificationsHistoryModel(ModelMT):
                                overview['info'][-1], overview['info'][0])
                 assert False  # should never happen
 
-            return result
-
         else:
-            return self.start_new_action_old(overview)
+            result = self.start_new_action_old(overview)
+
+        return result
 
     def start_new_action_old(self, overview):
 
@@ -446,6 +469,9 @@ class ModificationsHistoryModel(ModelMT):
         return result
 
     def finish_new_action(self, overview):
+        if isinstance(self.active_action, MetaAction) and self.check_gaphas_consistency:
+            self.check_gaphas_view_is_meta_data_consistent(with_logger_messages=True)
+
         # logger.debug("History stores AFTER")
         if self.with_debug_logs:
             self.store_test_log_file(str(overview) + "\n")
@@ -454,7 +480,7 @@ class ModificationsHistoryModel(ModelMT):
             self.active_action.set_after(overview)
             self.state_machine_model.history.modifications.insert_action(self.active_action)
             # logger.debug("history is now: %s" % self.state_machine_model.history.modifications.single_trail_history())
-            self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+            self.update_internal_tmp_storage()
         except:
             logger.exception("Failure occurred while finishing action")
             # traceback.print_exc(file=sys.stdout)
@@ -464,7 +490,7 @@ class ModificationsHistoryModel(ModelMT):
 
     def re_initiate_meta_data(self):
         self.active_action = []
-        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        self.update_internal_tmp_storage()
 
     @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state_model changed
     # @ModelMT.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
@@ -490,7 +516,7 @@ class ModificationsHistoryModel(ModelMT):
                 overview['signal'][-1]['origin'] in ['group_states', 'ungroup_state', 'substitute_state']:
             # update last actions after_storage -> meta-data
             self.active_action.after_storage = self.active_action.get_storage()
-            self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+            self.update_internal_tmp_storage()
         else:
             if isinstance(overview['model'][-1], AbstractStateModel):
                 changed_parent_model = overview['model'][-1]
