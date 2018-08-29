@@ -25,6 +25,7 @@ import gtk
 from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers.label import react_to_event
+from rafcon.gui.helpers.meta_data import check_gaphas_view_is_meta_data_consistent
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
 from rafcon.gui.singleton import global_gui_config
@@ -65,6 +66,7 @@ class ModificationHistoryTreeController(ExtendedController):
         self.doing_update = False
         self.no_cursor_observation = False
         self.next_activity_focus_self = True
+        self.on_toggle_mode_check_gaphas_view_is_meta_data_consistent = True
 
         self.register()
 
@@ -143,6 +145,8 @@ class ModificationHistoryTreeController(ExtendedController):
             self._mode = 'branch'
         else:
             self._mode = 'trail'
+        if self.on_toggle_mode_check_gaphas_view_is_meta_data_consistent:
+            check_gaphas_view_is_meta_data_consistent(self._selected_sm_model, with_logger_messages=True)
         logger.info("modification history mode: {0}".format(self._mode))
         self.update(None, None, None)
 
