@@ -19,7 +19,7 @@ def test_gtk_translation(caplog):
         gvm_view = gvm_controller.view
         remove_button = gvm_view["delete_global_variable_button"]
 
-        print _("Remove"), remove_button.get_label()
+        print "Found text in label is: ", _("Remove"), remove_button.get_label()
         assert _("Remove") == "Entfernen" == remove_button.get_label()
 
     finally:
@@ -29,4 +29,5 @@ def test_gtk_translation(caplog):
 
 if __name__ == '__main__':
     test_gtk_translation(None)
+    # import pytest
     # pytest.main([__file__])
