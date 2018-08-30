@@ -123,12 +123,12 @@ def equal(t1, t2, digit=None):
     if not len(t1) == len(t2):
         return False
 
-    if digit is not None:
-        for idx in range(len(t1)):
-            if not round(t1[idx]*10**digit) == round(t2[idx]*10**digit):
+
+    for idx in range(len(t1)):
+        if digit is not None:
+            if not round(t1[idx], digit) == round(t2[idx], digit):
                 return False
-    else:
-        for idx in range(len(t1)):
+        else:
             if not t1[idx] == t2[idx]:
                 return False
 
