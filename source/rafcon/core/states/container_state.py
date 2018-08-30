@@ -481,10 +481,7 @@ class ContainerState(State):
         from rafcon.core.states.hierarchy_state import HierarchyState
         # secure state id conflicts for the taken transitions
         from rafcon.core.id_generator import state_id_generator
-        state_ids.append(self.state_id)
-        state_id = state_id_generator()
-        while state_id in state_ids:
-            state_id = state_id_generator()
+        state_id = state_id_generator(used_state_ids=state_ids + [self.state_id])
         # if scoped variables are used all data flows have to be checked if those link to those and correct the state_id
         if scoped_variable_ids:
             for data_flow in data_flows_internal.itervalues():
@@ -755,8 +752,8 @@ class ContainerState(State):
         assert isinstance(state, State)
         # logger.info("add state {}".format(state))
 
-        # handle the case that the child state id is the same as the container state id
-        while state.state_id == self.state_id:
+        # handle the case that the child state id is the same as the container state id or future sibling state id
+        while state.state_id == self.state_id or state.state_id in self.states:
             state.change_state_id()
 
         # TODO: add validity checks for states and then remove this check => to discuss
