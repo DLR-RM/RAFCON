@@ -849,7 +849,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :return:
         """
         if state_id is None:
-            state_id = state_id_generator([self.state_id])
+            state_id = state_id_generator(used_state_ids=[self.state_id])
         if not self.is_root_state and not self.is_root_state_of_library:
             used_ids = self.parent.states.keys() + [self.parent.state_id, self.state_id]
             if state_id in used_ids:
