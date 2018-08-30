@@ -817,9 +817,36 @@ def meta_data_reference_check(meta):
     diff_print(source_deep_diff)
 
 
-def check_gaphas_view_is_meta_data_consistent(state_machine_m, with_logger_messages=False):
-    from rafcon.utils.geometry import equal
+def check_gaphas_state_meta_data_consistency(state_m, canvas, with_logger_messages=False):
     from rafcon.core.states.container_state import ContainerState
+    from rafcon.utils.geometry import equal
+    state_v = canvas.get_view_for_model(state_m)
+    if not state_v:
+        logger.verbose("There is no corresponding gaphas view for the state model {}".format(state_m))
+        return
+    if with_logger_messages:
+        logger.verbose("Check state model {0}".format(state_m))
+        logger.verbose("Canvas view {0}".format(state_v))
+    rel_pos = state_m.get_meta_data_editor()["rel_pos"]
+    size = state_m.get_meta_data_editor()["size"]
+    canvas_pos = state_v.position
+    canvas_size = (state_v.width, state_v.height)
+    if with_logger_messages:
+        if not equal(rel_pos, canvas_pos, digit=5):
+            logger.error("{}: rel_pos meta data {} ~= gaphas view {}"
+                         "".format(state_m.state.name, rel_pos, state_v.position))
+        if not equal(size, canvas_size, digit=5):
+            logger.error("{}: size meta data {} ~= gaphas view {}"
+                         "".format(state_m.state.name, size, (state_v.width, state_v.height)))
+    else:
+        assert rel_pos == canvas_pos
+        assert size == canvas_size
+    if isinstance(state_m.state, ContainerState):
+        for child_state_m in state_m.states.itervalues():
+            check_gaphas_state_meta_data_consistency(child_state_m, canvas, with_logger_messages)
+
+
+def check_gaphas_state_machine_meta_data_consistency(state_machine_m, with_logger_messages=False):
     import rafcon.gui.singleton
     sm_id = state_machine_m.state_machine.state_machine_id
     state_machines_ctrl = rafcon.gui.singleton.main_window_controller.get_controller("state_machines_editor_ctrl")
@@ -828,32 +855,7 @@ def check_gaphas_view_is_meta_data_consistent(state_machine_m, with_logger_messa
         logger.verbose("Wait for gaphas.canvas of state machine {0}.".format(sm_id))
         return
 
-    def check_state_meta_data(state_m):
-        canvas_state_view = sm_gaphas_ctrl.canvas.get_view_for_model(state_m)
-        if not canvas_state_view:
-            return
-        if with_logger_messages:
-            logger.verbose("Check state model {0}".format(state_m))
-            logger.verbose("Canvas view {0}".format(canvas_state_view))
-        rel_pos = state_m.get_meta_data_editor()["rel_pos"]
-        size = state_m.get_meta_data_editor()["size"]
-        canvas_pos = canvas_state_view.position
-        canvas_size = (canvas_state_view.width, canvas_state_view.height)
-        if with_logger_messages:
-            if not equal(rel_pos, canvas_pos, digit=5):
-                logger.error("{}: rel_pos meta data {0} ~= gaphas view {1}"
-                             "".format(state_m.state.name, rel_pos, canvas_state_view.position))
-            if not equal(size, canvas_size, digit=5):
-                logger.error("{}: size meta data {0} ~= gaphas view {1}"
-                             "".format(state_m.state.name, size, (canvas_state_view.width, canvas_state_view.height)))
-        else:
-            assert rel_pos == canvas_pos
-            assert size == canvas_size
-        if isinstance(state_m.state, ContainerState):
-            for child_state_m in state_m.states.itervalues():
-                check_state_meta_data(child_state_m)
-
-    check_state_meta_data(state_machine_m.root_state)
+    check_gaphas_state_meta_data_consistency(state_machine_m.root_state, sm_gaphas_ctrl.canvas, with_logger_messages)
 
 
 # Something to remember maybe
