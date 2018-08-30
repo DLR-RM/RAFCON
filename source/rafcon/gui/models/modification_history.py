@@ -112,7 +112,7 @@ class ModificationsHistoryModel(ModelMT):
     def update_internal_tmp_storage(self):
         if self.check_gaphas_consistency:
             logger.info("Check gaphas view is meta data consistent before doing tmp-storage update")
-            check_gaphas_view_is_meta_data_consistent(self.state_machine_model, with_logger_messages=True)
+            check_gaphas_state_machine_meta_data_consistency(self.state_machine_model, with_logger_messages=True)
         self.tmp_meta_storage = self.get_root_state_element_meta()
 
     def prepare_destruction(self):
@@ -475,7 +475,7 @@ class ModificationsHistoryModel(ModelMT):
 
     def finish_new_action(self, overview):
         if isinstance(self.active_action, MetaAction) and self.check_gaphas_consistency:
-            check_gaphas_view_is_meta_data_consistent(self.state_machine_model, with_logger_messages=True)
+            check_gaphas_state_machine_meta_data_consistency(self.state_machine_model, with_logger_messages=True)
 
         # logger.debug("History stores AFTER")
         if self.with_debug_logs:
