@@ -252,15 +252,10 @@ class Clipboard(Observable):
 
         # secure that state_id is not target state state_id or of one state in its sub-hierarchy level
         old_state_id = orig_state_copy.state_id
-        new_state_id = old_state_id
-        while new_state_id in target_state.states.iterkeys() or new_state_id == target_state.state_id:
-            new_state_id = state_id_generator()
 
-        if not new_state_id == old_state_id:
+        new_state_id = target_state.add_state(orig_state_copy)
+        if not old_state_id == new_state_id:
             logger.debug("Change state_id of pasted state from '{0}' to '{1}'".format(old_state_id, new_state_id))
-            orig_state_copy.change_state_id(new_state_id)
-
-        target_state.add_state(orig_state_copy)
 
         # check that the model in the list expected_future_model was used otherwise show a warning
         error_msg = "The model of the already existing state copy was not used."
