@@ -673,9 +673,20 @@ class ContainerState(State):
         enclosed_t_id_dict = {}
 
         # re-create states
+        old_state_ids = [state.state_id for state in child_states]
         for child_state in child_states:
+            old_state_id = child_state.state_id
+            # needed to change state id here because not handled in add state and to avoid old state ids
+            new_id = None
+            if child_state.state_id in self.states.keys():
+                new_id = state_id_generator(used_state_ids=self.states.keys() + old_state_ids + [self.state_id])
+                child_state.change_state_id(new_id)
             new_state_id = self.add_state(child_state)
-            state_id_dict[child_state.state_id] = new_state_id
+            if new_id is not None and not new_id == new_state_id:
+                logger.error("In group the changed state id should not be changed again by add_state because it "
+                             "could become a old_state_id again and screw data flows and transitions.")
+            # remember new and old state id relations
+            state_id_dict[old_state_id] = new_state_id
         # re-create scoped variables
         for sv in child_scoped_variables:
             name = sv.name
