@@ -817,10 +817,11 @@ def meta_data_reference_check(meta):
     diff_print(source_deep_diff)
 
 
-def get_closest_sibling_state(state_m):
-    """ Calculate the closest sibling
+def get_closest_sibling_state(state_m, from_logical_port=None):
+    """ Calculate the closest sibling also from optional logical port of handed state model
 
     :param StateModel state_m: Reference State model the closest sibling state should be find for
+    :param str from_logical_port: The logical port of handed state model to be used as reference.
     :rtype: tuple
     :return: distance, StateModel of closest state
     """
@@ -828,12 +829,28 @@ def get_closest_sibling_state(state_m):
         logger.warning("A state can not have a closest sibling state if it has not parent as {0}".format(state_m))
         return
 
+    margin = cal_margin(state_m.parent.get_meta_data_editor()['size'])
+    pos = state_m.get_meta_data_editor()['rel_pos']
+    size = state_m.get_meta_data_editor()['size']  # otherwise measure from reference state itself
+    if from_logical_port in ["outcome", "income"]:
+        size = (margin, margin)
+    if from_logical_port == "outcome":
+        outcomes_m = [outcome_m for outcome_m in state_m.outcomes if outcome_m.outcome.outcome_id >= 0]
+        free_outcomes_m = [oc_m for oc_m in outcomes_m
+                           if not state_m.state.parent.get_transition_for_outcome(state_m.state, oc_m.outcome)]
+        if free_outcomes_m:
+            outcome_m = free_outcomes_m[0]
+        else:
+            outcome_m = outcomes_m[0]
+        pos = add_pos(pos, outcome_m.get_meta_data_editor()['rel_pos'])
+    elif from_logical_port == "income":
+        pos = add_pos(pos, state_m.get_meta_data_editor()['income']['rel_pos'])
+
     min_distance = None
     for sibling_state_m in state_m.parent.states.itervalues():
         if sibling_state_m is state_m:
             continue
-        pos = state_m.get_meta_data_editor()['rel_pos']
-        size = state_m.get_meta_data_editor()['size']
+
         sibling_pos = sibling_state_m.get_meta_data_editor()['rel_pos']
         sibling_size = sibling_state_m.get_meta_data_editor()['size']
 
