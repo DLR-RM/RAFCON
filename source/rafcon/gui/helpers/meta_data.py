@@ -818,40 +818,42 @@ def meta_data_reference_check(meta):
 
 
 def check_gaphas_view_is_meta_data_consistent(state_machine_m, with_logger_messages=False):
-        from rafcon.utils.geometry import equal
-        from rafcon.core.states.container_state import ContainerState
-        import rafcon.gui.singleton
-        sm_id = state_machine_m.state_machine.state_machine_id
-        state_machines_ctrl = rafcon.gui.singleton.main_window_controller.get_controller("state_machines_editor_ctrl")
-        sm_gaphas_ctrl = state_machines_ctrl.get_controller(sm_id)
-        if sm_gaphas_ctrl is None or sm_gaphas_ctrl.canvas is None:
-            logger.verbose("Wait for gaphas.canvas of state machine {0}.".format(sm_id))
+    from rafcon.utils.geometry import equal
+    from rafcon.core.states.container_state import ContainerState
+    import rafcon.gui.singleton
+    sm_id = state_machine_m.state_machine.state_machine_id
+    state_machines_ctrl = rafcon.gui.singleton.main_window_controller.get_controller("state_machines_editor_ctrl")
+    sm_gaphas_ctrl = state_machines_ctrl.get_controller(sm_id)
+    if sm_gaphas_ctrl is None or sm_gaphas_ctrl.canvas is None:
+        logger.verbose("Wait for gaphas.canvas of state machine {0}.".format(sm_id))
+        return
+
+    def check_state_meta_data(state_m):
+        canvas_state_view = sm_gaphas_ctrl.canvas.get_view_for_model(state_m)
+        if not canvas_state_view:
             return
+        if with_logger_messages:
+            logger.verbose("Check state model {0}".format(state_m))
+            logger.verbose("Canvas view {0}".format(canvas_state_view))
+        rel_pos = state_m.get_meta_data_editor()["rel_pos"]
+        size = state_m.get_meta_data_editor()["size"]
+        canvas_pos = canvas_state_view.position
+        canvas_size = (canvas_state_view.width, canvas_state_view.height)
+        if with_logger_messages:
+            if not equal(rel_pos, canvas_pos, digit=5):
+                logger.error("{}: rel_pos meta data {0} ~= gaphas view {1}"
+                             "".format(state_m.state.name, rel_pos, canvas_state_view.position))
+            if not equal(size, canvas_size, digit=5):
+                logger.error("{}: size meta data {0} ~= gaphas view {1}"
+                             "".format(state_m.state.name, size, (canvas_state_view.width, canvas_state_view.height)))
+        else:
+            assert rel_pos == canvas_pos
+            assert size == canvas_size
+        if isinstance(state_m.state, ContainerState):
+            for child_state_m in state_m.states.itervalues():
+                check_state_meta_data(child_state_m)
 
-        def check_state_meta_data(state_m):
-            canvas_state_view = sm_gaphas_ctrl.canvas.get_view_for_model(state_m)
-            if with_logger_messages:
-                logger.verbose("Check state model {0}".format(state_m))
-                logger.verbose("Canvas view {0}".format(canvas_state_view))
-            rel_pos = state_m.get_meta_data_editor()["rel_pos"]
-            size = state_m.get_meta_data_editor()["size"]
-            canvas_pos = canvas_state_view.position
-            canvas_size = (canvas_state_view.width, canvas_state_view.height)
-            if with_logger_messages:
-                if not equal(rel_pos, canvas_pos, digit=5):
-                    logger.error("rel_pos meta data {0} ~= gaphas view {1}"
-                                 "".format(rel_pos, canvas_state_view.position))
-                if not equal(size, canvas_size, digit=5):
-                    logger.error("size meta data {0} ~= gaphas view {1}"
-                                 "".format(size, (canvas_state_view.width, canvas_state_view.height)))
-            else:
-                assert rel_pos == canvas_pos
-                assert size == canvas_size
-            if isinstance(state_m.state, ContainerState):
-                for child_state_m in state_m.states.itervalues():
-                    check_state_meta_data(child_state_m)
-
-        check_state_meta_data(state_machine_m.root_state)
+    check_state_meta_data(state_machine_m.root_state)
 
 
 # Something to remember maybe
