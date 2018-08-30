@@ -1,0 +1,1 @@
+./doc/development/includes/code_of_conduct.rst
