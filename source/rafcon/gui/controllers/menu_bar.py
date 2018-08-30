@@ -31,11 +31,9 @@ from rafcon.core.singleton import state_machine_manager, library_manager
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.gui import singleton as gui_singletons
-import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.preferences_window import PreferencesWindowController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
@@ -44,6 +42,11 @@ from rafcon.gui.views.preferences_window import PreferencesWindowView
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.views.utils.about_dialog import AboutDialogView
 import rafcon.gui.backup.session as backup_session
+
+import rafcon.gui.helpers.label as gui_helper_label
+import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+import rafcon.gui.helpers.utility as gui_helper_utility
+
 from rafcon.utils import plugins
 from rafcon.utils import log
 
@@ -319,6 +322,12 @@ class MenuBarController(ExtendedController):
 
         self.add_callback_to_shortcut_manager('is_start_state', partial(self.call_action_callback,
                                                                         "on_toggle_is_start_state_active"))
+        callback_function = partial(self.call_action_callback, "on_add_transitions_from_closest_sibling_state_active")
+        self.add_callback_to_shortcut_manager('transition_from_closest_sibling_state', callback_function)
+        callback_function = partial(self.call_action_callback, "on_add_transitions_to_closest_sibling_state_active")
+        self.add_callback_to_shortcut_manager('transition_to_closest_sibling_state', callback_function)
+        callback_function = partial(self.call_action_callback, "on_add_transitions_to_parent_state_active")
+        self.add_callback_to_shortcut_manager('transition_to_parent_state', callback_function)
         self.add_callback_to_shortcut_manager('group', partial(self.call_action_callback, "on_group_states_activate"))
         self.add_callback_to_shortcut_manager('ungroup', partial(self.call_action_callback,
                                                                  "on_ungroup_state_activate"))
@@ -530,6 +539,18 @@ class MenuBarController(ExtendedController):
     @staticmethod
     def on_toggle_is_start_state_active(widget, data=None):
         return gui_helper_state_machine.selected_state_toggle_is_start_state()
+
+    @staticmethod
+    def on_add_transitions_from_closest_sibling_state_active(widget, data=None):
+        return gui_helper_utility.add_transitions_from_closest_sibling_state_to_selected_state()
+
+    @staticmethod
+    def on_add_transitions_to_closest_sibling_state_active(widget, data=None):
+        return gui_helper_utility.add_transitions_to_closest_sibling_state_from_selected_state()
+
+    @staticmethod
+    def on_add_transitions_to_parent_state_active(widget, data=None):
+        return gui_helper_utility.add_transitions_from_selected_state_to_parent()
 
     def on_copy_selection_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action("copy", None, None)
