@@ -270,7 +270,8 @@ class StateMachineTreeController(TreeViewController):
                         if not ignore_not_existing_rows and self._selected_sm_model and \
                                 self._selected_sm_model.state_machine.get_state_by_path(state_path, as_check=True):
                             state = self._selected_sm_model.state_machine.get_state_by_path(state_path)
-                            if isinstance(state, LibraryState) or state.is_root_state_of_library:
+                            if isinstance(state, LibraryState) or state.is_root_state_of_library or \
+                                    state.get_next_upper_library_root_state():
                                 continue
                             logger.error("State not in StateMachineTree but in StateMachine, {0}.".format(state_path))
 
