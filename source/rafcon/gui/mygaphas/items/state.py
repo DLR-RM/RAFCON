@@ -353,6 +353,8 @@ class StateView(Element):
         return state_nw_pos, state_se_pos
 
     def apply_meta_data(self, recursive=False):
+        # Do not check KeepRectWithin constraints when applying meta data, as this causes issues in recursive operations
+        self.set_enable_flag_keep_rect_within_constraints(False)
         state_meta = self.model.get_meta_data_editor()
 
         self.position = state_meta['rel_pos']
@@ -385,6 +387,7 @@ class StateView(Element):
                 for state_v in self.canvas.get_children(self):
                     if isinstance(state_v, StateView):
                         state_v.apply_meta_data(recursive=True)
+        self.set_enable_flag_keep_rect_within_constraints(True)
 
     def draw(self, context):
         # Do not draw if
