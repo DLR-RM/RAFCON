@@ -42,7 +42,7 @@ from rafcon.core.state_elements.transition import Transition
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
-from rafcon.gui.helpers.meta_data import check_gaphas_view_is_meta_data_consistent
+from rafcon.gui.helpers.meta_data import check_gaphas_state_machine_meta_data_consistency
 
 from rafcon.utils import log
 from rafcon.utils.constants import TEMP_PATH, RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
