@@ -22,6 +22,7 @@ Next release
 
 - Bug Fixes:
 
+    - :issue:`455`: Proportional resizing states now works properly
     - :issue:`538` Many error outputs when changing MAX_VISIBLE_LIBRARY_HIERARCHY
     - :issue:`571` Wrong rendering of scoped variables
     - :issue:`584` Opening a external source editor fails for a never set active state machine id
@@ -31,9 +32,9 @@ Next release
                    corrupt state machine or fails
 
 
-
 Patch releases 0.12.\*
 ----------------------
+
 
 0.12.21
 """""""

@@ -108,6 +108,33 @@ def rad2deg(radians):
     return radians / pi * 180.
 
 
+def equal(t1, t2, digit=None):
+    """ Compare two iterators and its elements on specific digit precision
+
+    The method assume that t1 and t2 are are list or tuple.
+
+    :param t1: First element to compare
+    :param t2: Second element to compare
+    :param int digit: Number of digits to compare
+    :rtype bool
+    :return: True if equal and False if different
+    """
+
+    if not len(t1) == len(t2):
+        return False
+
+
+    for idx in range(len(t1)):
+        if digit is not None:
+            if not round(t1[idx], digit) == round(t2[idx], digit):
+                return False
+        else:
+            if not t1[idx] == t2[idx]:
+                return False
+
+    return True
+
+
 def cal_dist_between_2_coord_frame_aligned_boxes(box1_pos, box1_size, box2_pos, box2_size):
     """ Calculate Euclidean distance between two boxes those edges are parallel to the coordinate axis
 
