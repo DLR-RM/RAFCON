@@ -126,6 +126,16 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     current_sm_length = len(sm_manager_model.state_machines)
     call_gui_callback(menubar_ctrl.on_new_activate, None)
 
+    # test decider state removal of barrier state
+    sm_m = sm_manager_model.state_machines[first_sm_id + 1]
+    call_gui_callback(sm_m.selection.set, [sm_m.root_state])
+    from rafcon.core.states.barrier_concurrency_state import UNIQUE_DECIDER_STATE_ID
+    from rafcon.core.states.state import StateType
+    call_gui_callback(gui_helper_state_machine.add_new_state, sm_m, StateType.BARRIER_CONCURRENCY)
+    decider_state_path = "/".join([sm_m.root_state.states.values()[0].state.get_path(), UNIQUE_DECIDER_STATE_ID])
+    call_gui_callback(sm_m.selection.set, sm_m.get_state_model_by_path(decider_state_path))
+    call_gui_callback(menubar_ctrl.on_delete_activate, None, None)
+
     assert len(sm_manager_model.state_machines) == current_sm_length + 1
     call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TUTORIAL_PATH,
                                                                       "basic_turtle_demo_sm"))
@@ -344,7 +354,7 @@ def test_gui(caplog):
         trigger_gui_signals()
     finally:
         testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 
 if __name__ == '__main__':
