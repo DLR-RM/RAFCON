@@ -1004,7 +1004,7 @@ def test_model_and_core_modification_history_destruct_with_gui(caplog):
                  "generic": os.path.join(testing_utils.LIBRARY_SM_PATH, "generic")}
     run_setup_gui_destruct(caplog, elements, searched_class, run_simple_modification_construction,
                            gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True}, libraries=libraries,
-                           expected_warnings=0, expected_errors=1)
+                           expected_warnings=0, expected_errors=2)
                            # gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
