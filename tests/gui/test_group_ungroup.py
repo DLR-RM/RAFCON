@@ -237,8 +237,70 @@ def test_bug_issue_574(caplog):
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
+
+def trigger_issue_586_reproduction_sequence():
+    from os.path import join
+    import rafcon.core.singleton
+    import rafcon.gui.singleton
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    main_window_controller = rafcon.gui.singleton.main_window_controller
+    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+    current_sm_length = len(sm_manager_model.state_machines)
+    assert current_sm_length == 0
+
+    call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TEST_ASSETS_PATH,
+                                                                      "unit_test_state_machines",
+                                                                      "backward_step_barrier_test"))
+    sm_m = sm_manager_model.state_machines.values()[0]
+    assert sm_m.state_machine_id == sm_manager_model.selected_state_machine_id
+    concurrent_decimate_state_m = sm_m.get_state_model_by_path("GLSUJY/OOECFM")
+
+    # check start conditions overlapping ids
+    state_ids = concurrent_decimate_state_m.states.keys()
+    import rafcon.core.constants
+    state_ids.remove(rafcon.core.constants.UNIQUE_DECIDER_STATE_ID)
+    child_state_ids = concurrent_decimate_state_m.states.values()[0].states.keys()
+    for state_id in state_ids:
+        assert all([child_id in child_state_ids for child_id in concurrent_decimate_state_m.states[state_id].states.keys()])
+
+    call_gui_callback(sm_m.selection.set, concurrent_decimate_state_m)
+    call_gui_callback(menubar_ctrl.on_ungroup_state_activate, None, None)
+    testing_utils.wait_for_gui()
+
+    # ungroup all three child states which all have the same state ids as there child states plus data flows
+    for state_id in state_ids:
+        print "ungroup state:", state_id
+        assert state_id in sm_m.root_state.states
+        child_state_m = sm_m.get_state_model_by_path("GLSUJY/" + state_id)
+        call_gui_callback(sm_m.selection.set, child_state_m)
+        call_gui_callback(menubar_ctrl.on_ungroup_state_activate, None, None)
+
+    # store and refresh selected
+    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
+    call_gui_callback(menubar_ctrl.on_refresh_selected_activate, None, None)
+
+    # # or an extra -> undo all
+    # call_gui_callback(sm_m.history.undo)
+    #
+    # call_gui_callback(sm_m.history.undo)
+    #
+    # call_gui_callback(sm_m.history.undo)
+    #
+    # call_gui_callback(sm_m.history.undo)
+
+
+def test_bug_issue_586(caplog):
+    testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True}, libraries={})
+
+    try:
+        trigger_issue_586_reproduction_sequence()
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog)
+
 if __name__ == '__main__':
     # test_ungroup(None)
     # test_bug_issue_539(None)
-    test_bug_issue_574(None)
+    # test_bug_issue_574(None)
+    test_bug_issue_586(None)
     # pytest.main(['-s', __file__])

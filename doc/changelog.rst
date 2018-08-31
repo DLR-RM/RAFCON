@@ -17,6 +17,7 @@ Next release
     - update of gaphas if transitions are removed
     - extend German RAFCON translation
     - extend Developer's Guide by how-to on translating RAFCON
+    - add_state is adapting handed state's state_id automatically in case of conflict instate enforcing an AttributeError
 
 
 - Bug Fixes:
@@ -26,8 +27,8 @@ Next release
     - :issue:`584` Opening a external source editor fails for a never set active state machine id
     - make i18n working
     - :issue:`551` Prevent RAFCON from restarting if installation of fonts fails
-
-
+    - :issue:`586` Ungroup of a state with data flows in between of it child states twice in the same hierarchy creates
+                   corrupt state machine or fails
 
 
 

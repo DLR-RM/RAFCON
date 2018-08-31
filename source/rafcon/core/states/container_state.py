@@ -481,10 +481,7 @@ class ContainerState(State):
         from rafcon.core.states.hierarchy_state import HierarchyState
         # secure state id conflicts for the taken transitions
         from rafcon.core.id_generator import state_id_generator
-        state_ids.append(self.state_id)
-        state_id = state_id_generator()
-        while state_id in state_ids:
-            state_id = state_id_generator()
+        state_id = state_id_generator(used_state_ids=state_ids + [self.state_id])
         # if scoped variables are used all data flows have to be checked if those link to those and correct the state_id
         if scoped_variable_ids:
             for data_flow in data_flows_internal.itervalues():
@@ -676,9 +673,20 @@ class ContainerState(State):
         enclosed_t_id_dict = {}
 
         # re-create states
+        old_state_ids = [state.state_id for state in child_states]
         for child_state in child_states:
+            old_state_id = child_state.state_id
+            # needed to change state id here because not handled in add state and to avoid old state ids
+            new_id = None
+            if child_state.state_id in self.states.keys():
+                new_id = state_id_generator(used_state_ids=self.states.keys() + old_state_ids + [self.state_id])
+                child_state.change_state_id(new_id)
             new_state_id = self.add_state(child_state)
-            state_id_dict[child_state.state_id] = new_state_id
+            if new_id is not None and not new_id == new_state_id:
+                logger.error("In ungroup state the changed state id should not be changed again by add_state because it"
+                             " could become a old_state_id again and screw data flows and transitions.")
+            # remember new and old state id relations
+            state_id_dict[old_state_id] = new_state_id
         # re-create scoped variables
         for sv in child_scoped_variables:
             name = sv.name
@@ -755,8 +763,8 @@ class ContainerState(State):
         assert isinstance(state, State)
         # logger.info("add state {}".format(state))
 
-        # handle the case that the child state id is the same as the container state id
-        while state.state_id == self.state_id:
+        # handle the case that the child state id is the same as the container state id or future sibling state id
+        while state.state_id == self.state_id or state.state_id in self.states:
             state.change_state_id()
 
         # TODO: add validity checks for states and then remove this check => to discuss
