@@ -1,3 +1,4 @@
+import os
 from contextlib import contextmanager
 
 from rafcon.utils import i18n
@@ -5,8 +6,19 @@ from rafcon.utils import i18n
 import testing_utils
 
 
+def create_mo_files():
+    from rafcon.gui.helpers import installation
+    curdir = os.path.abspath(os.curdir)
+    while "setup.py" not in os.listdir(os.curdir):
+        os.chdir("..")
+    installation.create_mo_files()
+    os.chdir(curdir)
+
+
 @contextmanager
 def use_locale(locale, monkeypatch):
+    create_mo_files()
+
     # See https://www.gnu.org/software/gettext/manual/html_node/Locale-Environment-Variables.html
     locale_env_vars = ["LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG"]
     for env_var in locale_env_vars:
@@ -19,6 +31,8 @@ def use_locale(locale, monkeypatch):
 
 
 def test_invalid_locale_setting(caplog, monkeypatch):
+    create_mo_files()
+
     with use_locale("invalid", monkeypatch):
         i18n.setup_l10n()
 

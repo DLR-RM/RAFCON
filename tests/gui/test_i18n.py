@@ -1,8 +1,9 @@
 import testing_utils
-from core.test_i18n import use_locale
+from core.test_i18n import use_locale, create_mo_files
 
 
 def test_gtk_translation(caplog, monkeypatch):
+    create_mo_files()
     with use_locale("de_DE.UTF-8", monkeypatch):
         # i18n.setup_l10n() is called inside run_gui()
         testing_utils.run_gui()

@@ -56,8 +56,6 @@ class PostDevelopCommand(DevelopCommand):
     """Post installation step for development mode
     """
     def run(self):
-        DevelopCommand.run(self)
-        installation = load_source("installation", install_helper)
         installation.install_fonts()
         discover_fonts()
         installation.install_gtk_source_view_styles()
@@ -69,7 +67,6 @@ class PostInstallCommand(InstallCommand):
     """
     def run(self):
         InstallCommand.run(self)
-        installation = load_source("installation", install_helper)
         installation.install_fonts()
         discover_fonts()
         installation.install_gtk_source_view_styles()
@@ -122,31 +119,6 @@ def get_all_files_recursivly(*path):
     return result_list
 
 
-def create_mo_files():
-    data_files = []
-    domain = "rafcon"
-    localedir = path.join('source', 'rafcon', 'locale')
-    po_files = [po_file
-                for po_file in next(os.walk(localedir))[2]
-                if os.path.splitext(po_file)[1] == '.po']
-    for po_file in po_files:
-        lang, extension = path.splitext(po_file)
-        mo_dir = path.join(localedir, lang, 'LC_MESSAGES')
-        mo_file = domain + '.mo'
-        try:
-            os.makedirs(mo_dir)
-        except os.error:  # already exists
-            pass
-        msgfmt_cmd = 'msgfmt -o {} {}'.format(path.join(mo_dir, mo_file), path.join(localedir, po_file))
-        result = subprocess.call(msgfmt_cmd, shell=True)
-        if result == 0:
-            data_files.append(get_data_files_tuple(mo_dir))
-        else:
-            print "Could not compile translation '{}'. RAFCON will not be available in this language.".format(lang)
-
-    return data_files
-
-
 def generate_data_files():
     """ Generate the data_files list used in the setup function
 
@@ -168,7 +140,7 @@ def generate_data_files():
         get_data_files_tuple(themes_folder, 'dark', 'gtk-sourceview'),
     ]
 
-    locale_data_files = create_mo_files()
+    locale_data_files = installation.create_mo_files()
 
     version_data_file = [("./", ["./VERSION"])]
 
@@ -190,6 +162,7 @@ global_requirements = ['astroid~=1.6', 'pylint', 'pyyaml', 'psutil', 'jsonconver
 
 script_path = path.realpath(__file__)
 install_helper = path.join(path.dirname(script_path), "source", "rafcon", "gui", "helpers", "installation.py")
+installation = load_source("installation", install_helper)
 
 # read version from VERSION file
 # this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon

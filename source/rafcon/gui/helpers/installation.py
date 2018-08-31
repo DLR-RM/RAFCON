@@ -141,3 +141,34 @@ def install_libraries(logger=None, overwrite=True):
         shutil.copytree(library_path, user_library_path)
     except (IOError, shutil.Error) as e:
         log.error("Could not install RAFCON libraries: {}".format(e))
+
+
+def create_mo_files():
+    from os import path
+    import subprocess
+    data_files = []
+    domain = "rafcon"
+    localedir = path.join('source', 'rafcon', 'locale')
+    po_files = [po_file
+                for po_file in next(os.walk(localedir))[2]
+                if path.splitext(po_file)[1] == '.po']
+    for po_file in po_files:
+        po_path = path.join(localedir, po_file)
+        lang, extension = path.splitext(po_file)
+        mo_file = domain + '.mo'
+        mo_dir = path.join(localedir, lang, 'LC_MESSAGES')
+        mo_path = path.join(mo_dir, mo_file)
+        try:
+            os.makedirs(mo_dir)
+        except os.error:  # already exists
+            pass
+        msgfmt_cmd = 'msgfmt -o {} {}'.format(mo_path, po_path)
+        result = subprocess.call(msgfmt_cmd, shell=True)
+        if result == 0:  # Compilation successful
+            target_path = path.join("share", *mo_path.split(os.sep)[1:])  # remove source/ (package_dir)
+            data_files.append((target_path, mo_path))
+        else:
+            distutils.log.warn("Could not compile translation '{}'. RAFCON will not be available in this "
+                               "language.".format(lang))
+
+    return data_files
