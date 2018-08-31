@@ -16,8 +16,8 @@ Next release
     - redraw graphical editor if connections are removed
     - extend German RAFCON translation
     - extend Developer's Guide by how-to on translating RAFCON
-    - API: ``add_state`` is adapting the passes ``state_id`` automatically in case of conflicts instead of raising an
-      ``AttributeError``
+    - API: ``add_state`` is adapting the passed ``state.state_id`` automatically in case of conflicts
+      instead of raising an ``AttributeError``
 
 
 - Bug Fixes:
@@ -29,8 +29,8 @@ Next release
     - :issue:`571` Wrong rendering of scoped variables
     - :issue:`584` Opening a external source editor fails for a never set active state machine id
     - :issue:`586` Ungroup of a state with data flows in between of it child states twice in the same hierarchy
-    - :issue:`589` decider state can be deleted
       creates corrupt state machine or fails
+    - :issue:`589` decider state can be deleted
     - make i18n work
 
 
