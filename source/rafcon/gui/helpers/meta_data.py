@@ -862,7 +862,6 @@ def get_closest_sibling_state(state_m, from_logical_port=None):
     return min_distance
 
 
-
 def check_gaphas_state_meta_data_consistency(state_m, canvas, recursive=True, with_logger_messages=False):
     from rafcon.core.states.container_state import ContainerState
     from rafcon.utils.geometry import equal
@@ -872,8 +871,7 @@ def check_gaphas_state_meta_data_consistency(state_m, canvas, recursive=True, wi
         logger.verbose("There is no corresponding gaphas view for the state model {}".format(state_m))
         return
     if with_logger_messages:
-        logger.verbose("Check state model {0}".format(state_m))
-        logger.verbose("Canvas view {0}".format(state_v))
+        logger.verbose("Check state model {0} and Canvas view {1}".format(state_m, state_v))
 
     meta_rel_pos = state_m.get_meta_data_editor()["rel_pos"]
     meta_size = state_m.get_meta_data_editor()["size"]
@@ -901,6 +899,8 @@ def check_gaphas_state_meta_data_consistency(state_m, canvas, recursive=True, wi
 def check_gaphas_state_machine_meta_data_consistency(state_machine_m, with_logger_messages=False):
     import rafcon.gui.singleton
     sm_id = state_machine_m.state_machine.state_machine_id
+    if rafcon.gui.singleton.main_window_controller is None:
+        return
     state_machines_ctrl = rafcon.gui.singleton.main_window_controller.get_controller("state_machines_editor_ctrl")
     sm_gaphas_ctrl = state_machines_ctrl.get_controller(sm_id)
     if sm_gaphas_ctrl is None or sm_gaphas_ctrl.canvas is None:
