@@ -80,9 +80,16 @@ def test_concurrency_barrier_save_load(caplog):
         assert rafcon.core.singleton.global_variable_manager.get_variable("var_y") == 20
         assert root_state.final_outcome.outcome_id == 4
 
+        with pytest.raises(ValueError):
+            concurrency_barrier_state.remove(UNIQUE_DECIDER_STATE_ID)
+
+        with pytest.raises(AttributeError):
+            concurrency_barrier_state.remove_state(UNIQUE_DECIDER_STATE_ID)
+
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     finally:
         testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    test_concurrency_barrier_save_load(None)
+    # pytest.main([__file__])
