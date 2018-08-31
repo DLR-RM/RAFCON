@@ -86,7 +86,7 @@ class ModificationsHistoryModel(ModelMT):
         self.with_verbose = False
         self.with_debug_logs = False
         self.with_meta_data_actions = True
-        self.check_gaphas_consistency = True
+        self.check_gaphas_consistency = False
 
         self.re_initiate_meta_data()
 
