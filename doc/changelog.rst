@@ -19,7 +19,6 @@ Next release
     - API: ``add_state`` is adapting the passed ``state.state_id`` automatically in case of conflicts
       instead of raising an ``AttributeError``
 
-
 - Bug Fixes:
 
     - :issue:`455` Proportional resizing states now works properly
@@ -30,6 +29,7 @@ Next release
     - :issue:`584` Opening a external source editor fails for a never set active state machine id
     - :issue:`586` Ungroup of a state with data flows in between of it child states twice in the same hierarchy
       creates corrupt state machine or fails
+    - stepping works inside library and concurrency states
     - :issue:`589` decider state can be deleted
     - make i18n work
 

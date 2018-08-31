@@ -1,7 +1,9 @@
 import copy
+import datetime
 import signal
 import sys
 import tempfile
+import time
 from os import mkdir, environ
 from os.path import join, dirname, realpath, exists, abspath
 from threading import Lock, Condition, Event, Thread, currentThread
@@ -546,3 +548,19 @@ def dummy_gui(caplog):
         finally:
             close_gui()
             shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+
+
+def wait_for_execution_engine_sync_counter(target_value, logger, timeout=5):
+    from rafcon.core.singleton import state_machine_execution_engine
+    logger.debug("++++++++++ waiting for execution engine sync for " + str(target_value) + " steps ++++++++++")
+    current_time = datetime.datetime.now()
+    while True:
+        state_machine_execution_engine.synchronization_lock.acquire()
+        if state_machine_execution_engine.synchronization_counter == target_value:
+            state_machine_execution_engine.synchronization_counter = 0
+            state_machine_execution_engine.synchronization_lock.release()
+            break
+        state_machine_execution_engine.synchronization_lock.release()
+        if (datetime.datetime.now() - current_time).seconds > timeout:
+            raise RuntimeError("Something went wrong while waiting for states to finish!")
+        time.sleep(0.1)

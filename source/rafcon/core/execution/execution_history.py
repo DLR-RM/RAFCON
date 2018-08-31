@@ -112,7 +112,8 @@ class ExecutionHistory(Observable, Iterable, Sized):
         super(ExecutionHistory, self).__init__()
         self._history_items = []            
         self.initial_prev = initial_prev
-        self.execution_history_storage = None        
+        self.execution_history_storage = None
+        self.new_execution_command_handled = True
 
     def destroy(self):
         # logger.verbose("Destroy execution history!")

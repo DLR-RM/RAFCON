@@ -1,11 +1,9 @@
 import os
 import time
-import datetime
-import pytest
 
 # test environment elements
 import testing_utils
-from testing_utils import call_gui_callback
+from testing_utils import call_gui_callback, wait_for_execution_engine_sync_counter
 
 # general tool elements
 from rafcon.utils import log
@@ -16,22 +14,6 @@ def initialize_global_variables():
     import rafcon.gui.singleton as gui_singleton
     gui_singleton.global_variable_manager_model.global_variable_manager.set_variable("global_variable_1", "value1")
     gui_singleton.global_variable_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
-
-
-def wait_for_execution_engine_sync_counter(target_value, logger, timeout=5):
-    from rafcon.core.singleton import state_machine_execution_engine
-    logger.debug("++++++++++ waiting for execution engine sync for " + str(target_value) + " steps ++++++++++")
-    current_time = datetime.datetime.now()
-    while True:
-        state_machine_execution_engine.synchronization_lock.acquire()
-        if state_machine_execution_engine.synchronization_counter == target_value:
-            state_machine_execution_engine.synchronization_counter = 0
-            state_machine_execution_engine.synchronization_lock.release()
-            break
-        state_machine_execution_engine.synchronization_lock.release()
-        if (datetime.datetime.now() - current_time).seconds > timeout:
-            raise RuntimeError("Something went wrong while waiting for states to finish!")
-        time.sleep(0.1)
 
 
 def execute_library_state_forwards_backwards():
@@ -185,11 +167,17 @@ def execute_barrier_state_forwards_backwards():
     wait_for_execution_engine_sync_counter(1, logger)
 
     # forward
-    for i in range(4):
+    for i in range(2):
         call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(3, logger)
 
-    for i in range(4):
+    call_gui_callback(menubar_ctrl.on_step_over_activate, None, None)
+    wait_for_execution_engine_sync_counter(3, logger)
+
+    call_gui_callback(menubar_ctrl.on_step_out_activate, None, None)
+    wait_for_execution_engine_sync_counter(4, logger)
+
+    for i in range(3):
         call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
