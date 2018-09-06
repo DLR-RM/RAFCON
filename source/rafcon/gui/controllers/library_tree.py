@@ -316,8 +316,9 @@ class LibraryTreeController(ExtendedController):
         if path:
             # Second confirmation to delete library
             tree_m_row = self.tree_store[path]
+            library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
             # assert isinstance(tree_m_row[self.ITEM_STORAGE_ID], str)
-            library_file_system_path = tree_m_row[self.OS_PATH_STORAGE_ID]
+            library_file_system_path = library_os_path
 
             if "root" in widget.get_label():
                 button_texts = [widget.get_label() + "from tree and config", "Cancel"]
@@ -331,7 +332,7 @@ class LibraryTreeController(ExtendedController):
                              "\n\nphysical path:        {1}.\n\n\n"\
                              "{3}" \
                              "".format(os.path.join(self.convert_if_human_readable(tree_m_row[self.LIB_PATH_STORAGE_ID]),
-                                                    tree_m_row[self.ID_STORAGE_ID]),
+                                                    item_key),
                                        library_file_system_path,
                                        widget.get_label().lower(),
                                        partial_message)
@@ -343,21 +344,22 @@ class LibraryTreeController(ExtendedController):
             dialog.destroy()
             if response_id == 1:
                 if "root" in widget.get_label():
-                    logger.info("Remove library root key '{0}' from config.".format(tree_m_row[self.ID_STORAGE_ID]))
+                    logger.info("Remove library root key '{0}' from config.".format(item_key))
                     from rafcon.gui.singleton import global_config
                     library_paths = global_config.get_config_value('LIBRARY_PATHS')
                     del library_paths[tree_m_row[self.LIB_KEY_STORAGE_ID]]
                     global_config.save_configuration()
                     self.model.library_manager.refresh_libraries()
                 elif "libraries" in widget.get_label():
-                    logger.debug("Remove of all libraries in {} is triggered.".format(tree_m_row[self.OS_PATH_STORAGE_ID]))
+                    logger.debug("Remove of all libraries in {} is triggered.".format(library_os_path))
                     import shutil
-                    shutil.rmtree(tree_m_row[self.OS_PATH_STORAGE_ID])
+                    shutil.rmtree(library_os_path)
                     self.model.library_manager.refresh_libraries()
                 else:
-                    logger.debug("Remove of Library {} is triggered.".format(tree_m_row[self.ITEM_STORAGE_ID]))
-                    self.model.library_manager.remove_library_from_file_system(tree_m_row[self.LIB_PATH_STORAGE_ID],
-                                                                               tree_m_row[self.ID_STORAGE_ID])
+
+                    logger.debug("Remove of Library {} is triggered.".format(library_os_path))
+                    self.model.library_manager.remove_library_from_file_system(library_path,
+                                                                               library_name)
             elif response_id in [2, -4]:
                 pass
             else:
@@ -376,24 +378,34 @@ class LibraryTreeController(ExtendedController):
         gui_helper_state_machine.substitute_selected_state(self._get_selected_library_state(), as_template=True,
                                                            keep_name=keep_name)
 
+    def extract_library_properties_from_selected_row(self):
+        """ Extracts properties library_os_path, library_path, library_name and tree_item_key from tree store row """
+        (model, row) = self.view.get_selection().get_selected()
+        tree_item_key = model[row][self.ID_STORAGE_ID]
+        library_item = model[row][self.ITEM_STORAGE_ID]
+        library_path = model[row][self.LIB_PATH_STORAGE_ID]
+        if isinstance(library_item, dict):  # sub-tree
+            os_path = model[row][self.OS_PATH_STORAGE_ID]
+            return os_path, None, None, tree_item_key  # relevant elements of sub-tree
+        assert isinstance(library_item, str)
+        library_os_path = library_item
+
+        library_name = library_os_path.split(os.path.sep)[-1]
+
+        return library_os_path, library_path, library_name, tree_item_key
+
     def _get_selected_library_state(self):
         """Returns the LibraryState which was selected in the LibraryTree
 
         :return: selected state in TreeView
         :rtype: LibraryState
         """
-        (model, row) = self.view.get_selection().get_selected()
-        library_item_key = model[row][self.ID_STORAGE_ID]
-        library_item = model[row][self.ITEM_STORAGE_ID]
-        library_path = model[row][self.LIB_PATH_STORAGE_ID]
-
-        if isinstance(library_item, dict):
+        library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
+        if library_path is None:
             return None
-        assert isinstance(library_item, str)
-        library_file_system_path = library_item
 
         logger.debug("Link library state '{0}' (with library tree path: {2} and file system path: {1}) into state "
-                     "machine.".format(str(library_item_key), library_file_system_path,
-                                       self.convert_if_human_readable(str(library_path)) + "/" + str(library_item_key)))
-        library_name = library_file_system_path.split(os.path.sep)[-1]
+                     "machine.".format(str(item_key), library_os_path,
+                                       self.convert_if_human_readable(str(library_path)) + "/" + str(item_key)))
+        library_name = library_os_path.split(os.path.sep)[-1]
         return LibraryState(library_path, library_name, "0.1", format_folder_name_human_readable(library_name))

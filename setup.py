@@ -56,8 +56,6 @@ class PostDevelopCommand(DevelopCommand):
     """Post installation step for development mode
     """
     def run(self):
-        DevelopCommand.run(self)
-        installation = load_source("installation", install_helper)
         installation.install_fonts()
         discover_fonts()
         installation.install_gtk_source_view_styles()
@@ -69,7 +67,6 @@ class PostInstallCommand(InstallCommand):
     """
     def run(self):
         InstallCommand.run(self)
-        installation = load_source("installation", install_helper)
         installation.install_fonts()
         discover_fonts()
         installation.install_gtk_source_view_styles()
@@ -103,7 +100,7 @@ def get_all_files_recursivly(*path):
     """
     result_list = list()
     root_dir = os.path.join(*path)
-    print "retrieving all files from foler '{}' recursivly and adding to data_files ... ".format(root_dir)
+    print "retrieving all files from folder '{}'recursivelyy and adding to data_files ... ".format(root_dir)
 
     # remove share/ (package_dir) => e.g. target_dir_sub_path will be just "libraries"
     target_dir_sub_path = os.path.join(*root_dir.split(os.sep)[1:])
@@ -143,6 +140,8 @@ def generate_data_files():
         get_data_files_tuple(themes_folder, 'dark', 'gtk-sourceview'),
     ]
 
+    locale_data_files = installation.create_mo_files()
+
     version_data_file = [("./", ["./VERSION"])]
 
     # print gui_data_files
@@ -151,7 +150,8 @@ def generate_data_files():
     examples_data_files = get_all_files_recursivly(examples_folder)
     # print examples_data_files
     libraries_data_files = get_all_files_recursivly(libraries_folder)
-    generated_data_files = gui_data_files + examples_data_files + libraries_data_files + version_data_file
+    generated_data_files = gui_data_files + locale_data_files + examples_data_files + libraries_data_files + \
+                           version_data_file
     # for elem in generated_data_files:
     #     print elem
     return generated_data_files
@@ -162,6 +162,7 @@ global_requirements = ['astroid~=1.6', 'pylint', 'pyyaml', 'psutil', 'jsonconver
 
 script_path = path.realpath(__file__)
 install_helper = path.join(path.dirname(script_path), "source", "rafcon", "gui", "helpers", "installation.py")
+installation = load_source("installation", install_helper)
 
 # read version from VERSION file
 # this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon

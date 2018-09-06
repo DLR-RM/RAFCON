@@ -28,7 +28,6 @@ from rafcon.gui.utils.dialog import RAFCONCheckBoxTableDialog
 from rafcon.gui.utils.constants import RAFCON_INSTANCE_LOCK_FILE_PATH
 from rafcon.utils.vividict import Vividict
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
-from rafcon.utils.i18n import _
 from rafcon.utils import log
 from rafcon.utils.storage_utils import get_time_string_for_float
 logger = log.get_logger(__name__)

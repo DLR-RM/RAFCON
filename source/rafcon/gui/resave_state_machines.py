@@ -24,8 +24,7 @@ from rafcon.gui.utils import wait_for_gui
 from rafcon.core.config import global_config
 import rafcon.core.singleton as core_singletons
 
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
+import rafcon.gui.start
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
@@ -92,6 +91,9 @@ def trigger_gui_signals(*args):
 
 def convert(config_path, source_path, target_path=None):
     logger.info("RAFCON launcher")
+    rafcon.gui.start.setup_l10n()
+    from rafcon.gui.controllers.main_window import MainWindowController
+    from rafcon.gui.views.main_window import MainWindowView
 
     setup_environment()
 

@@ -159,6 +159,19 @@ class MyCanvas(gaphas.canvas.Canvas):
         while not event.is_set():
             gtk.main_iteration(False)
 
+    def resolve_constraint(self, constraints):
+        constraints = constraints if hasattr(constraints, "__iter__") else [constraints]
+        for constraint in constraints:
+            self.solver.request_resolve_constraint(constraint)
+        if not self.solver._solving:
+            self.solver.solve()
+
+    def resolve_item_constraints(self, item):
+        for constraint in item.constraints:
+            self.solver.request_resolve_constraint(constraint)
+        if not self.solver._solving:
+            self.solver.solve()
+
 
 class ItemProjection(object):
     """Project a point of item A into the coordinate system of item B.

@@ -110,7 +110,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
     def save_file_data(self, path):
         """ Implements the abstract method of the ExternalEditor class.
         """
-        sm = state_machine_manager_model.state_machine_manager.get_active_state_machine()
+        sm = self.model.state.get_state_machine()
         if sm.marked_dirty and not self.saved_initial:
             try:
                 # Save the file before opening it to update the applied changes. Use option create_full_path=True

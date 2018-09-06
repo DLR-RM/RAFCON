@@ -24,6 +24,7 @@ import gtk
 from functools import partial
 
 from rafcon.core.states.state import State
+from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.state import StateType
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.right_click_menu.state import StateMachineTreeRightClickMenuController
@@ -247,26 +248,36 @@ class StateMachineTreeController(TreeViewController):
                                      "".format(state_path, state_row_path, state_row_iter))
             self.__expansion_state[self.__my_selected_sm_id] = act_expansion_state
         except TypeError:
-            logger.error("expansion state of state machine {0} could not be stored".format(self.__my_selected_sm_id))
+            logger.error("Expansion state of state machine {0} could not be stored".format(self.__my_selected_sm_id))
 
     def redo_expansion_state(self, ignore_not_existing_rows=False):
+        """ Considers the tree to be collapsed and expand into all tree item with the flag set True """
+
+        def set_expansion_state(state_path):
+            state_row_iter = self.state_row_iter_dict_by_state_path[state_path]
+            if state_row_iter:  # may elements are missing afterwards
+                state_row_path = self.tree_store.get_path(state_row_iter)
+                self.view.expand_to_path(state_row_path)
+
         if self.__my_selected_sm_id in self.__expansion_state:
+            expansion_state = self.__expansion_state[self.__my_selected_sm_id]
             try:
-                for state_path, state_row_expanded in self.__expansion_state[self.__my_selected_sm_id].iteritems():
+                for state_path, state_row_expanded in expansion_state.iteritems():
                     if state_path in self.state_row_iter_dict_by_state_path:
-                        state_row_iter = self.state_row_iter_dict_by_state_path[state_path]
-                        if state_row_iter:  # may elements are missing afterwards
-                            state_row_path = self.tree_store.get_path(state_row_iter)
-                            if state_row_expanded:
-                                self.view.expand_to_path(state_row_path)
+                        if state_row_expanded:
+                            set_expansion_state(state_path)
                     else:
                         if not ignore_not_existing_rows and self._selected_sm_model and \
                                 self._selected_sm_model.state_machine.get_state_by_path(state_path, as_check=True):
+                            state = self._selected_sm_model.state_machine.get_state_by_path(state_path)
+                            if isinstance(state, LibraryState) or state.is_root_state_of_library or \
+                                    state.get_next_upper_library_root_state():
+                                continue
                             logger.error("State not in StateMachineTree but in StateMachine, {0}.".format(state_path))
 
             except (TypeError, KeyError):
-                logger.error(
-                    "expansion state of state machine {0} could not be re-done".format(self.__my_selected_sm_id))
+                logger.error("Expansion state of state machine {0} could not be restored"
+                             "".format(self.__my_selected_sm_id))
 
     def update(self, changed_state_model=None, with_expand=False):
         """Checks if all states are in tree and if tree has states which were deleted

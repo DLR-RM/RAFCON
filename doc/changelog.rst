@@ -8,17 +8,50 @@ Next release
 ------------
 
 - Features:
-    
+
+    -
 
 - Improvements:
 
+    -
 
 - Bug Fixes:
 
+    -
 
 
 Patch releases 0.12.\*
 ----------------------
+
+
+0.12.22
+"""""""
+
+- Features:
+
+    - :issue:`581` Utility shortcuts to add transitions from selected state to parent default outcome and sibling states
+
+- Improvements:
+
+    - redraw graphical editor if connections are removed
+    - extend German RAFCON translation
+    - extend Developer's Guide by how-to on translating RAFCON
+    - API: ``add_state`` is adapting the passed ``state.state_id`` automatically in case of conflicts
+      instead of raising an ``AttributeError``
+
+- Bug Fixes:
+
+    - :issue:`455` Proportional resizing states now works properly
+    - :issue:`538` Many error outputs when changing MAX_VISIBLE_LIBRARY_HIERARCHY
+    - :issue:`541` Where are the magnet lines gone?
+    - :issue:`551` Prevent RAFCON from restarting if installation of fonts fails
+    - :issue:`571` Wrong rendering of scoped variables
+    - :issue:`584` Opening a external source editor fails for a never set active state machine id
+    - :issue:`586` Ungroup of a state with data flows in between of it child states twice in the same hierarchy
+      creates corrupt state machine or fails
+    - stepping works inside library and concurrency states
+    - :issue:`589` decider state can be deleted
+    - make i18n work
 
 0.12.21
 """""""

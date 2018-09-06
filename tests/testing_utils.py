@@ -1,7 +1,9 @@
 import copy
+import datetime
 import signal
 import sys
 import tempfile
+import time
 from os import mkdir, environ
 from os.path import join, dirname, realpath, exists, abspath
 from threading import Lock, Condition, Event, Thread, currentThread
@@ -330,11 +332,13 @@ def run_gui_thread(gui_config=None, runtime_config=None):
     import gtk
     from rafcon.core.start import reactor_required
     from rafcon.gui.start import start_gtk, install_reactor
+    from rafcon.utils.i18n import setup_l10n
     global gui_ready
     # see https://stackoverflow.com/questions/35700140/pygtk-run-gtk-main-loop-in-a-seperate-thread
     gobject.threads_init()
     if reactor_required():
         install_reactor()
+    setup_l10n()
     from rafcon.gui.controllers.main_window import MainWindowController
     from rafcon.gui.views.main_window import MainWindowView
 
@@ -544,3 +548,19 @@ def dummy_gui(caplog):
         finally:
             close_gui()
             shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+
+
+def wait_for_execution_engine_sync_counter(target_value, logger, timeout=5):
+    from rafcon.core.singleton import state_machine_execution_engine
+    logger.debug("++++++++++ waiting for execution engine sync for " + str(target_value) + " steps ++++++++++")
+    current_time = datetime.datetime.now()
+    while True:
+        state_machine_execution_engine.synchronization_lock.acquire()
+        if state_machine_execution_engine.synchronization_counter == target_value:
+            state_machine_execution_engine.synchronization_counter = 0
+            state_machine_execution_engine.synchronization_lock.release()
+            break
+        state_machine_execution_engine.synchronization_lock.release()
+        if (datetime.datetime.now() - current_time).seconds > timeout:
+            raise RuntimeError("Something went wrong while waiting for states to finish!")
+        time.sleep(0.1)

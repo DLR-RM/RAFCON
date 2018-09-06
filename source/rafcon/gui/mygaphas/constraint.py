@@ -48,6 +48,8 @@ class KeepRectangleWithinConstraint(Constraint):
         self.child_se = child_se
         self.child = child
 
+        self.enable = True
+
         if not margin_method:
             margin_method = lambda: 0
         self.margin_method = margin_method
@@ -55,6 +57,9 @@ class KeepRectangleWithinConstraint(Constraint):
     def solve_for(self, var=None):
         """Ensure that the children is within its parent
         """
+        if not self.enable:
+            return
+
         margin = self.margin_method()
 
         def parent_width():

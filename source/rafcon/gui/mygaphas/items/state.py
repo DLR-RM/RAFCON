@@ -154,10 +154,7 @@ class StateView(Element):
 
     def update_minimum_size_of_children(self):
         if self.canvas:
-            for constraint in self.constraints:
-                self.canvas.solver.request_resolve_constraint(constraint)
-            if not self.canvas.solver._solving:
-                self.canvas.solver.solve()
+            self.canvas.resolve_item_constraints(self)
             for item in self.canvas.get_all_children(self):
                 if isinstance(item, (StateView, NameView)):
                     item.update_minimum_size()
@@ -227,6 +224,12 @@ class StateView(Element):
         if parent_state_v is not None and isinstance(parent_state_v, StateView):
             constraint = parent_state_v.keep_rect_constraints.pop(self)
             solver.remove_constraint(constraint)
+
+    def set_enable_flag_keep_rect_within_constraints(self, enable):
+        """ Enable/disables the KeepRectangleWithinConstraint for child states """
+        for child_state_v in self.child_state_views():
+            self.keep_rect_constraints[child_state_v].enable = enable
+            child_state_v.keep_rect_constraints[child_state_v._name_view].enable = enable
 
     def has_selected_child(self):
         for child in self.canvas.get_children(self):
@@ -350,6 +353,8 @@ class StateView(Element):
         return state_nw_pos, state_se_pos
 
     def apply_meta_data(self, recursive=False):
+        # Do not check KeepRectWithin constraints when applying meta data, as this causes issues in recursive operations
+        self.set_enable_flag_keep_rect_within_constraints(False)
         state_meta = self.model.get_meta_data_editor()
 
         self.position = state_meta['rel_pos']
@@ -382,6 +387,7 @@ class StateView(Element):
                 for state_v in self.canvas.get_children(self):
                     if isinstance(state_v, StateView):
                         state_v.apply_meta_data(recursive=True)
+        self.set_enable_flag_keep_rect_within_constraints(True)
 
     def draw(self, context):
         # Do not draw if
@@ -796,6 +802,7 @@ class StateView(Element):
         return pos
 
     def resize_all_children(self, old_size, paste=False):
+
         def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
             new_rel_pos_x = old_rel_pos[0] * new_parent_size[0] / old_parent_size[0]
             new_rel_pos_y = old_rel_pos[1] * new_parent_size[1] / old_parent_size[1]
@@ -814,6 +821,9 @@ class StateView(Element):
                 item.update_minimum_size_of_children()
 
         def resize_state_v(state_v, old_state_size, new_state_size, use_meta_data):
+
+            state_v.set_enable_flag_keep_rect_within_constraints(enable=False)
+
             width_factor = float(new_state_size[0]) / old_state_size[0]
             height_factor = float(new_state_size[1]) / old_state_size[1]
 
@@ -826,10 +836,11 @@ class StateView(Element):
             name_v = state_v.name_view
             if use_meta_data:
                 old_name_size = state_v.model.get_meta_data_editor()['name']['size']
+                old_name_rel_pos = state_v.model.get_meta_data_editor()['name']['rel_pos']
             else:
                 old_name_size = (name_v.width, name_v.height)
+                old_name_rel_pos = name_v.position
             new_name_size = (old_name_size[0] * width_factor, old_name_size[1] * height_factor)
-            old_name_rel_pos = state_v.model.get_meta_data_editor()['name']['rel_pos']
             new_name_rel_pos = calc_new_rel_pos(old_name_rel_pos, old_state_size, new_state_size)
             set_item_properties(name_v, new_name_size, new_name_rel_pos)
 
@@ -840,6 +851,8 @@ class StateView(Element):
                     old_child_size = (child_state_v.width, child_state_v.height)
 
                 new_child_size = (old_child_size[0] * width_factor, old_child_size[1] * height_factor)
+                new_child_size = (max(new_child_size[0], child_state_v.min_width),
+                                  max(new_child_size[1], child_state_v.min_height))
                 resize_state_v(child_state_v, old_child_size, new_child_size, use_meta_data)
 
             # Set new port view properties
@@ -862,8 +875,19 @@ class StateView(Element):
                 state_copy_v = self.canvas.get_view_for_model(state_v.model.state_copy)
                 resize_child_state_v(state_copy_v)
 
+            state_v.set_enable_flag_keep_rect_within_constraints(enable=True)
+
+        # Deactivate KeepRectangleWithin constraints for child states
+        self.set_enable_flag_keep_rect_within_constraints(enable=False)
+        # Now we can solve the KeepRectangleWithin constraints of this state without being called recursively
+        # We also force the solving of the minimal size constraints
+        if self.parent:
+            self.view.canvas.resolve_constraint((self.parent.keep_rect_constraints[self], self._c_min_w, self._c_min_h))
+        else:
+            self.view.canvas.resolve_constraint((self._c_min_w, self._c_min_h))
         new_size = (self.width, self.height)
         resize_state_v(self, old_size, new_size, paste)
+
 
 
 class NameView(Element):

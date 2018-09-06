@@ -19,6 +19,7 @@ import Queue
 
 from gtkmvc import Observable
 
+import rafcon.core.singleton as singleton
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.execution.execution_history import CallType
 from rafcon.core.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
@@ -160,6 +161,8 @@ class ConcurrencyState(ContainerState):
         self.check_output_data_type()
         self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
         self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
+
+        singleton.state_machine_execution_engine.modify_run_to_states(self)
 
         if self.preempted:
             final_outcome = Outcome(-2, "preempted")

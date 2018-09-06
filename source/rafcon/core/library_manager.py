@@ -375,7 +375,7 @@ class LibraryManager(Observable):
         :return:
         """
 
-        # originally liraries were called like this; DO NOT DELETE; interesting for performance tests
+        # originally libraries were called like this; DO NOT DELETE; interesting for performance tests
         # state_machine = storage.load_state_machine_from_path(lib_os_path)
         # return state_machine.version, state_machine.root_state
 

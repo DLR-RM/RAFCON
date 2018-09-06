@@ -24,6 +24,7 @@ from rafcon.gui.models.selection import Selection
 from rafcon.gui.models import StateModel
 from rafcon.gui.models.signals import ActionSignalMsg
 import rafcon.gui.helpers.meta_data as gui_helpers_meta_data
+import rafcon.gui.helpers.state as gui_helpers_state
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -251,16 +252,15 @@ class Clipboard(Observable):
 
         # secure that state_id is not target state state_id or of one state in its sub-hierarchy level
         old_state_id = orig_state_copy.state_id
-        new_state_id = old_state_id
-        while new_state_id in target_state.states.iterkeys() or new_state_id == target_state.state_id:
-            new_state_id = state_id_generator()
 
-        if not new_state_id == old_state_id:
+        new_state_id = target_state.add_state(orig_state_copy)
+        if not old_state_id == new_state_id:
             logger.debug("Change state_id of pasted state from '{0}' to '{1}'".format(old_state_id, new_state_id))
-            orig_state_copy.change_state_id(new_state_id)
 
-        target_state.add_state(orig_state_copy)
-        assert target_state_m.states[orig_state_copy.state_id] is orig_state_copy_m
+        # check that the model in the list expected_future_model was used otherwise show a warning
+        error_msg = "The model of the already existing state copy was not used."
+        gui_helpers_state.negative_check_for_model_in_expected_future_models(target_state_m, orig_state_copy_m,
+                                                                             msg=error_msg, with_logger=logger)
 
         # new_state_copy_m.copy_meta_data_from_state_m(orig_state_copy_m)
         self.state_id_mapping_dict[old_state_id] = new_state_id

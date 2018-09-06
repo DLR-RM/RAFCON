@@ -501,7 +501,10 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'remove_transition':
                 transition_v = self.canvas.get_view_for_core_element(result)
                 if transition_v:
+                    state_m = model
+                    state_v = self.canvas.get_view_for_model(state_m)
                     transition_v.remove()
+                    self.canvas.request_update(state_v, matrix=False)
                     self.canvas.wait_for_update()
             elif method_name == 'transition_change':
                 transition_m = model
@@ -523,6 +526,9 @@ class GraphicalEditorController(ExtendedController):
             elif method_name == 'remove_data_flow':
                 data_flow_v = self.canvas.get_view_for_core_element(result)
                 if data_flow_v:
+                    state_m = model
+                    state_v = self.canvas.get_view_for_model(state_m)
+                    self.canvas.request_update(state_v, matrix=False)
                     data_flow_v.remove()
                     self.canvas.wait_for_update()
             elif method_name == 'data_flow_change':
@@ -535,17 +541,17 @@ class GraphicalEditorController(ExtendedController):
             #           OUTCOMES
             # ----------------------------------
             elif method_name == 'add_outcome':
-                parent_library_root_state_m = model
-                state_v = self.canvas.get_view_for_model(parent_library_root_state_m)
-                for outcome_m in parent_library_root_state_m.outcomes:
+                state_m = model
+                state_v = self.canvas.get_view_for_model(state_m)
+                for outcome_m in state_m.outcomes:
                     if outcome_m.outcome.outcome_id == result:
                         state_v.add_outcome(outcome_m)
                         self.canvas.request_update(state_v, matrix=False)
                         self.canvas.wait_for_update()
                         break
             elif method_name == 'remove_outcome':
-                parent_library_root_state_m = model
-                state_v = self.canvas.get_view_for_model(parent_library_root_state_m)
+                state_m = model
+                state_v = self.canvas.get_view_for_model(state_m)
                 if state_v is None:
                     logger.debug("no state_v found for method_name '{}'".format(method_name))
                 else:
@@ -559,26 +565,26 @@ class GraphicalEditorController(ExtendedController):
             #           DATA PORTS
             # ----------------------------------
             elif method_name == 'add_input_data_port':
-                parent_library_root_state_m = model
-                state_v = self.canvas.get_view_for_model(parent_library_root_state_m)
-                for input_data_port_m in parent_library_root_state_m.input_data_ports:
+                state_m = model
+                state_v = self.canvas.get_view_for_model(state_m)
+                for input_data_port_m in state_m.input_data_ports:
                     if input_data_port_m.data_port.data_port_id == result:
                         state_v.add_input_port(input_data_port_m)
                         self.canvas.request_update(state_v, matrix=False)
                         self.canvas.wait_for_update()
                         break
             elif method_name == 'add_output_data_port':
-                parent_library_root_state_m = model
-                state_v = self.canvas.get_view_for_model(parent_library_root_state_m)
-                for output_data_port_m in parent_library_root_state_m.output_data_ports:
+                state_m = model
+                state_v = self.canvas.get_view_for_model(state_m)
+                for output_data_port_m in state_m.output_data_ports:
                     if output_data_port_m.data_port.data_port_id == result:
                         state_v.add_output_port(output_data_port_m)
                         self.canvas.request_update(state_v, matrix=False)
                         self.canvas.wait_for_update()
                         break
             elif method_name == 'remove_input_data_port':
-                parent_library_root_state_m = model
-                state_v = self.canvas.get_view_for_model(parent_library_root_state_m)
+                state_m = model
+                state_v = self.canvas.get_view_for_model(state_m)
                 if state_v is None:
                     logger.debug("no state_v found for method_name '{}'".format(method_name))
                 else:
@@ -588,8 +594,8 @@ class GraphicalEditorController(ExtendedController):
                         self.canvas.request_update(state_v, matrix=False)
                         self.canvas.wait_for_update()
             elif method_name == 'remove_output_data_port':
-                parent_library_root_state_m = model
-                state_v = self.canvas.get_view_for_model(parent_library_root_state_m)
+                state_m = model
+                state_v = self.canvas.get_view_for_model(state_m)
                 if state_v is None:
                     logger.debug("no state_v found for method_name '{}'".format(method_name))
                 else:
@@ -607,17 +613,17 @@ class GraphicalEditorController(ExtendedController):
             #         SCOPED VARIABLES
             # ----------------------------------
             elif method_name == 'add_scoped_variable':
-                parent_library_root_state_m = model
-                state_v = self.canvas.get_view_for_model(parent_library_root_state_m)
-                for scoped_variable_m in parent_library_root_state_m.scoped_variables:
+                state_m = model
+                state_v = self.canvas.get_view_for_model(state_m)
+                for scoped_variable_m in state_m.scoped_variables:
                     if scoped_variable_m.scoped_variable.data_port_id == result:
                         state_v.add_scoped_variable(scoped_variable_m)
                         self.canvas.request_update(state_v, matrix=False)
                         self.canvas.wait_for_update()
                         break
             elif method_name == 'remove_scoped_variable':
-                parent_library_root_state_m = model
-                state_v = self.canvas.get_view_for_model(parent_library_root_state_m)
+                state_m = model
+                state_v = self.canvas.get_view_for_model(state_m)
                 if state_v is None:
                     logger.debug("no state_v found for method_name '{}'".format(method_name))
                 else:

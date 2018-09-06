@@ -20,7 +20,7 @@ from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models import LibraryStateModel, ContainerStateModel
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils import constants
-from rafcon.utils import log
+from rafcon.utils import log, geometry
 
 
 logger = log.get_logger(__name__)
@@ -815,6 +815,100 @@ def meta_data_reference_check(meta):
     diff_print(source_dump_diff)
     logger.verbose("source_deep_diff")
     diff_print(source_deep_diff)
+
+
+def get_closest_sibling_state(state_m, from_logical_port=None):
+    """ Calculate the closest sibling also from optional logical port of handed state model
+
+    :param StateModel state_m: Reference State model the closest sibling state should be find for
+    :param str from_logical_port: The logical port of handed state model to be used as reference.
+    :rtype: tuple
+    :return: distance, StateModel of closest state
+    """
+    if not state_m.parent:
+        logger.warning("A state can not have a closest sibling state if it has not parent as {0}".format(state_m))
+        return
+
+    margin = cal_margin(state_m.parent.get_meta_data_editor()['size'])
+    pos = state_m.get_meta_data_editor()['rel_pos']
+    size = state_m.get_meta_data_editor()['size']  # otherwise measure from reference state itself
+    if from_logical_port in ["outcome", "income"]:
+        size = (margin, margin)
+    if from_logical_port == "outcome":
+        outcomes_m = [outcome_m for outcome_m in state_m.outcomes if outcome_m.outcome.outcome_id >= 0]
+        free_outcomes_m = [oc_m for oc_m in outcomes_m
+                           if not state_m.state.parent.get_transition_for_outcome(state_m.state, oc_m.outcome)]
+        if free_outcomes_m:
+            outcome_m = free_outcomes_m[0]
+        else:
+            outcome_m = outcomes_m[0]
+        pos = add_pos(pos, outcome_m.get_meta_data_editor()['rel_pos'])
+    elif from_logical_port == "income":
+        pos = add_pos(pos, state_m.get_meta_data_editor()['income']['rel_pos'])
+
+    min_distance = None
+    for sibling_state_m in state_m.parent.states.itervalues():
+        if sibling_state_m is state_m:
+            continue
+
+        sibling_pos = sibling_state_m.get_meta_data_editor()['rel_pos']
+        sibling_size = sibling_state_m.get_meta_data_editor()['size']
+
+        distance = geometry.cal_dist_between_2_coord_frame_aligned_boxes(pos, size, sibling_pos, sibling_size)
+
+        if not min_distance or min_distance[0] > distance:
+            min_distance = (distance, sibling_state_m)
+
+    return min_distance
+
+
+def check_gaphas_state_meta_data_consistency(state_m, canvas, recursive=True, with_logger_messages=False):
+    from rafcon.core.states.container_state import ContainerState
+    from rafcon.utils.geometry import equal
+
+    state_v = canvas.get_view_for_model(state_m)
+    if not state_v:
+        logger.verbose("There is no corresponding gaphas view for the state model {}".format(state_m))
+        return
+    if with_logger_messages:
+        logger.verbose("Check state model {0} and Canvas view {1}".format(state_m, state_v))
+
+    meta_rel_pos = state_m.get_meta_data_editor()["rel_pos"]
+    meta_size = state_m.get_meta_data_editor()["size"]
+    view_rel_pos = state_v.position
+    view_size = (state_v.width, state_v.height)
+
+    if not equal(meta_rel_pos, view_rel_pos, digit=5):
+        error_msg = "{}: meta rel pos == {} != {} == view rel pos".format(state_m.state.name, meta_rel_pos,
+                                                                          view_rel_pos)
+        if not with_logger_messages:
+            assert False, error_msg
+        logger.error(error_msg)
+
+    if not equal(meta_size, view_size, digit=5):
+        error_msg = "{}: meta size == {} != {} == view size".format(state_m.state.name, meta_size, view_size)
+        if not with_logger_messages:
+            assert False, error_msg
+        logger.error(error_msg)
+
+    if recursive and isinstance(state_m.state, ContainerState):
+        for child_state_m in state_m.states.itervalues():
+            check_gaphas_state_meta_data_consistency(child_state_m, canvas, True, with_logger_messages)
+
+
+def check_gaphas_state_machine_meta_data_consistency(state_machine_m, with_logger_messages=False):
+    import rafcon.gui.singleton
+    sm_id = state_machine_m.state_machine.state_machine_id
+    if rafcon.gui.singleton.main_window_controller is None:
+        return
+    state_machines_ctrl = rafcon.gui.singleton.main_window_controller.get_controller("state_machines_editor_ctrl")
+    sm_gaphas_ctrl = state_machines_ctrl.get_controller(sm_id)
+    if sm_gaphas_ctrl is None or sm_gaphas_ctrl.canvas is None:
+        logger.verbose("Wait for gaphas.canvas of state machine {0}.".format(sm_id))
+        return
+
+    check_gaphas_state_meta_data_consistency(state_machine_m.root_state, sm_gaphas_ctrl.canvas, True, with_logger_messages)
+
 
 # Something to remember maybe
 #
