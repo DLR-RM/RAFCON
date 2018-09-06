@@ -10,7 +10,6 @@ from os import path
 import os
 import sys
 from imp import load_source
-import subprocess
 
 
 class PyTest(TestCommand):
@@ -44,20 +43,11 @@ class PyTest(TestCommand):
         sys.exit(error_number)
 
 
-def discover_fonts():
-    ret = subprocess.call(['fc-cache', '-fv'])
-    if ret:
-        print 'Could not call command to discover new fonts: fc-cache -fv'
-    else:
-        print 'Called discover_fonts: fc-cache -fv'
-
-
 class PostDevelopCommand(DevelopCommand):
     """Post installation step for development mode
     """
     def run(self):
         installation.install_fonts()
-        discover_fonts()
         installation.install_gtk_source_view_styles()
         installation.install_libraries()
 
@@ -68,7 +58,6 @@ class PostInstallCommand(InstallCommand):
     def run(self):
         InstallCommand.run(self)
         installation.install_fonts()
-        discover_fonts()
         installation.install_gtk_source_view_styles()
         installation.install_libraries()
 
