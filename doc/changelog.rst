@@ -9,6 +9,26 @@ Next release
 
 - Features:
 
+    -
+
+- Improvements:
+
+    -
+
+- Bug Fixes:
+
+    -
+
+
+Patch releases 0.12.\*
+----------------------
+
+
+0.12.22
+"""""""
+
+- Features:
+
     - :issue:`581` Utility shortcuts to add transitions from selected state to parent default outcome and sibling states
 
 - Improvements:
@@ -32,11 +52,6 @@ Next release
     - stepping works inside library and concurrency states
     - :issue:`589` decider state can be deleted
     - make i18n work
-
-
-Patch releases 0.12.\*
-----------------------
-
 
 0.12.21
 """""""
