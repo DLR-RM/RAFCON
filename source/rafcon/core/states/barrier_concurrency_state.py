@@ -73,15 +73,12 @@ class BarrierConcurrencyState(ConcurrencyState):
             else:
                 logger.warning("Argument decider_state has to be instance of DeciderState not {}".format(decider_state))
 
-        if not load_from_storage:
-            if UNIQUE_DECIDER_STATE_ID not in states:
-                states[UNIQUE_DECIDER_STATE_ID] = DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID)
+        if not load_from_storage and UNIQUE_DECIDER_STATE_ID not in states:
+            states[UNIQUE_DECIDER_STATE_ID] = DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID)
+
         # TODO figure out how to solve those two clinch better of copy/add state and already existing transitions #1 #2
         ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes,
                                   states, transitions, data_flows, start_state_id, scoped_variables)
-
-        if not load_from_storage and UNIQUE_DECIDER_STATE_ID not in self.states:
-            self.add_state(DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID))
 
         for state_id, state in self.states.iteritems():
             if state_id != UNIQUE_DECIDER_STATE_ID:
