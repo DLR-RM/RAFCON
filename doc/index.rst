@@ -15,6 +15,7 @@ concurrent state execution, to represent robot programs. It ships with a graphic
 creation of state machines and contains IDE like debugging mechanisms. Alternatively, state machines can
 programmatically be generated using RAFCON's API.
 
+RAFCON is licensed under the `Eclipse Public License - v 1.0 (EPL) <http://www.eclipse.org/legal/epl-v10.html>`__.
 
 .. figure:: _static/RAFCON_GUI_screenshot.png
    :width: 90 %
