@@ -17,7 +17,7 @@ Next release
 
 - Bug Fixes:
 
-    -
+    - API: ``AttributeError`` when passing ``DeciderState`` to constructor of ``BarrierConcurrencyState``
 
 
 Patch releases 0.12.\*

@@ -65,16 +65,17 @@ class BarrierConcurrencyState(ConcurrencyState):
                  states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None,
                  decider_state=None, load_from_storage=False):
         self.__init_running = True
+        states = {} if states is None else states
         if decider_state is not None:
             if isinstance(decider_state, DeciderState):
-                decider_state.state_id = UNIQUE_DECIDER_STATE_ID
+                decider_state._state_id = UNIQUE_DECIDER_STATE_ID
                 states[UNIQUE_DECIDER_STATE_ID] = decider_state
             else:
                 logger.warning("Argument decider_state has to be instance of DeciderState not {}".format(decider_state))
 
         if not load_from_storage:
-            if states is not None and UNIQUE_DECIDER_STATE_ID not in states:
-                states[UNIQUE_DECIDER_STATE_ID] = (DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID))
+            if UNIQUE_DECIDER_STATE_ID not in states:
+                states[UNIQUE_DECIDER_STATE_ID] = DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID)
         # TODO figure out how to solve those two clinch better of copy/add state and already existing transitions #1 #2
         ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes,
                                   states, transitions, data_flows, start_state_id, scoped_variables)
@@ -83,7 +84,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             self.add_state(DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID))
 
         for state_id, state in self.states.iteritems():
-            if not state_id == UNIQUE_DECIDER_STATE_ID:
+            if state_id != UNIQUE_DECIDER_STATE_ID:
                 for outcome in self.states[state_id].outcomes.values():
                     # TODO figure out how to solve this clinch better #3
                     match = [t.from_state == state_id and t.from_outcome == outcome.outcome_id for t in self.transitions.itervalues()]

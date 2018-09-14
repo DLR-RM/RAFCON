@@ -1,6 +1,6 @@
 # core elements
 from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.core.storage import storage
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.script import Script
@@ -54,6 +54,13 @@ def create_concurrency_barrier_state():
     return barrier_state
 
 
+def test_create_barrier_state_with_predefined_decider_state():
+    decider_name = "Decision Maker"
+    decider_state = DeciderState(decider_name)
+    barrier_state = BarrierConcurrencyState("Barrier State", decider_state=decider_state)
+    assert len([state for state in barrier_state.states.values() if state.name == decider_name]) == 1
+
+
 def test_concurrency_barrier_save_load(caplog):
     concurrency_barrier_state = create_concurrency_barrier_state()
 
@@ -91,5 +98,6 @@ def test_concurrency_barrier_save_load(caplog):
         testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 if __name__ == '__main__':
+    test_create_barrier_state_with_predefined_decider_state(None)
     test_concurrency_barrier_save_load(None)
     # pytest.main([__file__])
