@@ -30,6 +30,7 @@ RAFCON is licensed under the `Eclipse Public License - v 1.0 (EPL) <http://www.e
    concepts.rst
    getting_started.rst
    changelog.rst
+   breaking_changes.rst
    tutorials.rst
    building_docs.rst
    configuration.rst
