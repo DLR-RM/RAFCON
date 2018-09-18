@@ -17,12 +17,24 @@ Next release
 
 - Bug Fixes:
 
-    - API: ``AttributeError`` when passing ``DeciderState`` to constructor of ``BarrierConcurrencyState``
+    - 
 
 
 Patch releases 0.12.\*
 ----------------------
 
+0.12.23
+-------
+
+- Improvements:
+
+    - Update documenation regarding installation
+    - Update rafcon dependencies in setup.py
+
+- Bug Fixes:
+
+    - API: ``AttributeError`` when passing ``DeciderState`` to constructor of ``BarrierConcurrencyState``
+    - Installation of mo-files (for language support) works
 
 0.12.22
 """""""
