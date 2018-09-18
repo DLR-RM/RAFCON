@@ -10,7 +10,6 @@ from os import path
 import os
 import sys
 from imp import load_source
-import subprocess
 
 
 class PyTest(TestCommand):
@@ -44,20 +43,11 @@ class PyTest(TestCommand):
         sys.exit(error_number)
 
 
-def discover_fonts():
-    ret = subprocess.call(['fc-cache', '-fv'])
-    if ret:
-        print 'Could not call command to discover new fonts: fc-cache -fv'
-    else:
-        print 'Called discover_fonts: fc-cache -fv'
-
-
 class PostDevelopCommand(DevelopCommand):
     """Post installation step for development mode
     """
     def run(self):
         installation.install_fonts()
-        discover_fonts()
         installation.install_gtk_source_view_styles()
         installation.install_libraries()
 
@@ -68,7 +58,6 @@ class PostInstallCommand(InstallCommand):
     def run(self):
         InstallCommand.run(self)
         installation.install_fonts()
-        discover_fonts()
         installation.install_gtk_source_view_styles()
         installation.install_libraries()
 
@@ -157,8 +146,8 @@ def generate_data_files():
     return generated_data_files
 
 
-global_requirements = ['astroid~=1.6', 'pylint', 'pyyaml', 'psutil', 'jsonconversion~=0.2', 'yaml_configuration~=0.0',
-                       'python-gtkmvc-dlr==1.99.2', 'gaphas>=0.7', 'pandas']
+global_requirements = ['pylint>=1.6,<2', 'pyyaml~=3.10', 'psutil', 'jsonconversion~=0.2', 'yaml_configuration~=0.0',
+                       'python-gtkmvc-dlr==1.99.2', 'gaphas>=0.7']
 
 script_path = path.realpath(__file__)
 install_helper = path.join(path.dirname(script_path), "source", "rafcon", "gui", "helpers", "installation.py")
@@ -202,7 +191,7 @@ setup(
 
     data_files=generate_data_files(),
 
-    setup_requires=['Sphinx>=1.4', 'Pygments>=2.0'] + global_requirements,
+    setup_requires=['Sphinx>=1.4'] + global_requirements,
     tests_require=['pytest', 'pytest-catchlog', 'graphviz', 'pymouse'] + global_requirements,
     install_requires=global_requirements,
 

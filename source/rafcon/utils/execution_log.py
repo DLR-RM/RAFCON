@@ -9,11 +9,9 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 # Sebastian Riedel <sebastian.riedel@dlr.de>
-# ried_sa <Sebastian.Riedel@dlr.de>
 
 import shelve
 import json
-import pandas as pd
 import pickle
 
 from rafcon.utils import log
@@ -315,6 +313,11 @@ def log_to_DataFrame(execution_history_items, data_in_columns=[], data_out_colum
 
     The available data per execution item (row in the table) can be printed using pandas.DataFrame.columns.
     """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("The Python package 'pandas' is required for log_to_DataFrame.")
+
     start, next_, concurrency, hierarchy, gitems = log_to_collapsed_structure(
         execution_history_items, throw_on_pickle_error=throw_on_pickle_error)
     gitems.pop(start['run_id'])

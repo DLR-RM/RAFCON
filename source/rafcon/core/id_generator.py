@@ -74,7 +74,7 @@ def generate_data_port_id(used_data_port_ids):
     """ Create a new and unique data port id
 
     :param list used_data_port_ids: Handed list of ids already in use
-    :rtype int
+    :rtype: int
     :return: data_port_id
     """
     data_port_id_counter = -1
@@ -89,7 +89,7 @@ def generate_semantic_data_key(used_semantic_keys):
     """ Create a new and unique semantic data key
 
     :param list used_semantic_keys: Handed list of keys already in use
-    :rtype str
+    :rtype: str
     :return: semantic_data_id
     """
     semantic_data_id_counter = -1
@@ -129,7 +129,7 @@ def state_id_generator(size=STATE_ID_LENGTH, chars=string.ascii_uppercase, used_
     :param size: the length of the generated keys
     :param chars: the set of characters a sample draws from
     :param list used_state_ids: Handed list of ids already in use
-    :rtype str
+    :rtype: str
     :return: new_state_id
     """
     new_state_id = ''.join(random.choice(chars) for x in range(size))

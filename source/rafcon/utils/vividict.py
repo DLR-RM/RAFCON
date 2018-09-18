@@ -84,7 +84,11 @@ class Vividict(dict, YAMLObject, JSONObject):
         :return: A Python dict
         :rtype: dict
         """
-        from numpy import ndarray
+        try:
+            from numpy import ndarray
+        except ImportError:
+            ndarray = dict
+
         dictionary = {}
 
         def np_to_native(np_val):

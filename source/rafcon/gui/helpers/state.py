@@ -45,7 +45,7 @@ def negative_check_for_model_in_expected_future_models(target_state_m, model, ms
     :param str msg: Message for the logger if a model is still in.
     :param bool delete: Flag to delete respective model from list/set.
     :param with_logger: A optional logger to use in case of logging messages
-    :rtype bool
+    :rtype: bool
     :return: True if empty and False if still model in set/list
     """
     if with_logger is None:
@@ -70,7 +70,7 @@ def check_expected_future_model_list_is_empty(target_state_m, msg, delete=True, 
     :param str msg: Message for the logger if a model is still in.
     :param bool delete: Flag to delete respective model from list/set.
     :param with_logger: A optional logger to use in case of logging messages
-    :rtype bool
+    :rtype: bool
     :return: True if empty and False if still model in set/list
     """
     if with_logger is None:

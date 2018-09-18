@@ -12,6 +12,7 @@
 import os
 import sys
 import shutil
+import subprocess
 import distutils.log
 
 try:
@@ -72,15 +73,20 @@ def install_fonts(logger=None, restart=False):
         log.error("Could not install fonts, IOError: {}".format(e))
         return
 
-    if font_installed and restart:
-        log.info("Restarting RAFCON to apply new fonts...")
-        python = sys.executable
-        environ = dict(**os.environ)
-        # Passing this to the new RAFCON environment will prevent further checks and thus restarts
-        environ["RAFCON_CHECK_INSTALLATION"] = "False"
-        args_and_env = list(sys.argv)
-        args_and_env.append(environ)
-        os.execle(python, python, *args_and_env)
+    if font_installed:
+        log.info("Running font detection ...")
+        fail = subprocess.call(['fc-cache', '-fv', '"' + user_otf_fonts_folder + '"'])
+        if fail:
+            log.warn("Could not run font detection. RAFCON might not find the correct fonts.")
+        if restart:
+            log.info("Restarting RAFCON to apply new fonts...")
+            python = sys.executable
+            environ = dict(**os.environ)
+            # Passing this to the new RAFCON environment will prevent further checks and thus restarts
+            environ["RAFCON_CHECK_INSTALLATION"] = "False"
+            args_and_env = list(sys.argv)
+            args_and_env.append(environ)
+            os.execle(python, python, *args_and_env)
 
 
 def install_gtk_source_view_styles(logger=None):
@@ -165,8 +171,8 @@ def create_mo_files():
         msgfmt_cmd = 'msgfmt -o {} {}'.format(mo_path, po_path)
         result = subprocess.call(msgfmt_cmd, shell=True)
         if result == 0:  # Compilation successful
-            target_path = path.join("share", *mo_path.split(os.sep)[1:])  # remove source/ (package_dir)
-            data_files.append((target_path, mo_path))
+            target_dir = path.join("share", *mo_dir.split(os.sep)[1:])  # remove source/ (package_dir)
+            data_files.append((target_dir, [mo_path]))
         else:
             distutils.log.warn("Could not compile translation '{}'. RAFCON will not be available in this "
                                "language.".format(lang))

@@ -15,11 +15,14 @@ concurrent state execution, to represent robot programs. It ships with a graphic
 creation of state machines and contains IDE like debugging mechanisms. Alternatively, state machines can
 programmatically be generated using RAFCON's API.
 
+RAFCON is licensed under the `Eclipse Public License - v 1.0 (EPL) <http://www.eclipse.org/legal/epl-v10.html>`__.
 
 .. figure:: _static/RAFCON_GUI_screenshot.png
    :width: 90 %
    :alt: Screenshot of RAFCON with an example state machine
    :align: center
+
+Have a look at our `website <https://dlr-rm.github.io/RAFCON/getting_started.html>`__ for an introduction about installing RAFCON.
 
 .. toctree::
    :maxdepth: 1
@@ -27,8 +30,8 @@ programmatically be generated using RAFCON's API.
    :caption: Table of Contents
 
    concepts.rst
-   getting_started.rst
    changelog.rst
+   breaking_changes.rst
    tutorials.rst
    building_docs.rst
    configuration.rst

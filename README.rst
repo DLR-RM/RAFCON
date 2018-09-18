@@ -45,16 +45,14 @@ Installation requirements for Ubuntu 16.04
 
 .. code-block:: bash
 
-   sudo apt install python-setuptools python-dev
-   sudo apt install python-opengl python-gtkglext1 python-gtksourceview2
+   sudo apt-get install python-setuptools python-dev python-opengl python-gtkglext1 python-gtksourceview2
 
 Installation requirements for Ubuntu 18.04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
-   sudo apt-get install python-setuptools python-dev build-essential python-opengl python-gtkglext1 python-gtksourceview2 python-pip
-   pip2 install --user pylint
+   sudo apt-get install python-setuptools python-dev python-opengl python-gtkglext1 python-gtksourceview2 build-essential python-pip glade python-glade2 libcanberra-gtk-module
 
 
 General requirements
@@ -63,8 +61,8 @@ General requirements
 If you are not using Ubuntu 16.04 or 18.04, please make sure that the following packages are installed:
 
 * Python 2.7
-* python-setuptools
-* pip
+* python-setuptools (recent version required: v40 known to be working)
+* pip (recent version required: v18 known to be working)
 * python-opengl
 * python-gtkglext1
 * python-gtksourceview2
@@ -76,7 +74,7 @@ Installing RAFCON (from PyPi)
 
 .. code-block:: bash
 
-   pip2.7 install rafcon --user
+   pip2 install rafcon --user
 
 The ``--user`` flag is optional. If not set, RAFCON is installed globally.
 
@@ -97,7 +95,7 @@ If you don't want to edit the source code of RAFCON, it can be installed directl
 
 .. code-block:: bash
 
-   pip2.7 install /install/directory/rafcon/ --user
+   pip2 install /install/directory/rafcon/ --user
 
 
 Installing RAFCON (editable from source)
@@ -107,7 +105,7 @@ If you want to be able to change the source code, you can install RAFCON in edit
 
 .. code-block:: bash
 
-   pip2.7 install --editable /install/directory/rafcon/ --user
+   pip2 install --editable /install/directory/rafcon/ --user
 
 Any changes in ``/install/directory/rafcon/source`` will take effect when launching RAFCON.
 
@@ -141,7 +139,7 @@ If you want to uninstall RAFCON, all you need to do is call
 
 .. code-block:: bash
 
-   pip2.7 uninstall rafcon
+   pip2 uninstall rafcon
 
 
 Clean RAFCON directory

@@ -17,12 +17,24 @@ Next release
 
 - Bug Fixes:
 
-    -
+    - 
 
 
 Patch releases 0.12.\*
 ----------------------
 
+0.12.23
+-------
+
+- Improvements:
+
+    - Update documenation regarding installation
+    - Update rafcon dependencies in setup.py
+
+- Bug Fixes:
+
+    - API: ``AttributeError`` when passing ``DeciderState`` to constructor of ``BarrierConcurrencyState``
+    - Installation of mo-files (for language support) works
 
 0.12.22
 """""""
@@ -46,6 +58,7 @@ Patch releases 0.12.\*
     - :issue:`541` Where are the magnet lines gone?
     - :issue:`551` Prevent RAFCON from restarting if installation of fonts fails
     - :issue:`571` Wrong rendering of scoped variables
+    - :issue:`580` update font installation
     - :issue:`584` Opening a external source editor fails for a never set active state machine id
     - :issue:`586` Ungroup of a state with data flows in between of it child states twice in the same hierarchy
       creates corrupt state machine or fails

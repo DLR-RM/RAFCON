@@ -97,9 +97,9 @@ def convert_string_value_to_type_value(string_value, data_type):
             converted_value = data_type(string_value)
         else:
             raise ValueError("No conversion from string '{0}' to data type '{0}' defined".format(
-                string_value, data_type))
+                string_value, data_type.__name__))
     except (ValueError, SyntaxError, TypeError) as e:
-        raise AttributeError("Can't convert '{0}' to type '{1}': {2}".format(string_value, data_type, e))
+        raise AttributeError("Can't convert '{0}' to type '{1}': {2}".format(string_value, data_type.__name__, e))
     return converted_value
 
 

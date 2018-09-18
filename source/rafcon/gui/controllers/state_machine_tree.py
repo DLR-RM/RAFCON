@@ -317,7 +317,21 @@ class StateMachineTreeController(TreeViewController):
         # do recursive update
         self.insert_and_update_recursively(parent_row_iter, changed_state_model, with_expand)
 
+    def get_row_iter_for_state_model(self, state_model):
+        if state_model.state.get_path() not in self.state_row_iter_dict_by_state_path:
+            if isinstance(state_model, LibraryStateModel) and \
+                    state_model.state_copy.state.get_path() in self.state_row_iter_dict_by_state_path:
+                return self.state_row_iter_dict_by_state_path[state_model.state_copy.state.get_path()]
+            else:
+                logger.error("For state model {0} no row iter could be found to be updated.".format(state_model))
+                return
+        else:
+            return self.state_row_iter_dict_by_state_path[state_model.state.get_path()]
+
     def update_tree_store_row(self, state_model):
+        state_row_iter = self.get_row_iter_for_state_model(state_model)
+        if state_row_iter is None:
+            return
         state_row_iter = self.state_row_iter_dict_by_state_path[state_model.state.get_path()]
         state_row_path = self.tree_store.get_path(state_row_iter)
 
