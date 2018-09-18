@@ -22,13 +22,14 @@ RAFCON is licensed under the `Eclipse Public License - v 1.0 (EPL) <http://www.e
    :alt: Screenshot of RAFCON with an example state machine
    :align: center
 
+Have a look at our `website <https://dlr-rm.github.io/RAFCON/getting_started.html>`__ for an introduction about installing RAFCON.
+
 .. toctree::
    :maxdepth: 1
    :numbered: 2
    :caption: Table of Contents
 
    concepts.rst
-   getting_started.rst
    changelog.rst
    breaking_changes.rst
    tutorials.rst

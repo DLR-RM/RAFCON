@@ -1,11 +1,8 @@
-Getting started
-===============
 
-For an introduction of how to install rafcon, have a look here: https://dlr-rm.github.io/RAFCON/getting_started.html
+For an introduction of how to install RAFCON as a user, have a look at the `website <https://dlr-rm.github
+.io/RAFCON/getting_started.html>`__. Also, to get the correct dependencies, follow the instruction given on this site.
 
-Also, to get the correct dependencies, follow the instruction given on this site.
-
-The following describes how to get the latest RAFCON version per github.
+The following describes how to get the latest RAFCON version per GitHub.
 
 First, change to the directory in which you want to clone RAFCON:
 
