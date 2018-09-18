@@ -171,8 +171,8 @@ def create_mo_files():
         msgfmt_cmd = 'msgfmt -o {} {}'.format(mo_path, po_path)
         result = subprocess.call(msgfmt_cmd, shell=True)
         if result == 0:  # Compilation successful
-            target_path = path.join("share", *mo_path.split(os.sep)[1:])  # remove source/ (package_dir)
-            data_files.append((target_path, mo_path))
+            target_dir = path.join("share", *mo_dir.split(os.sep)[1:])  # remove source/ (package_dir)
+            data_files.append((target_dir, [mo_path]))
         else:
             distutils.log.warn("Could not compile translation '{}'. RAFCON will not be available in this "
                                "language.".format(lang))
