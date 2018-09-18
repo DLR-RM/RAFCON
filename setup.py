@@ -191,7 +191,7 @@ setup(
 
     data_files=generate_data_files(),
 
-    setup_requires=['Sphinx>=1.4', 'Pygments>=2.0'] + global_requirements,
+    setup_requires=['Sphinx>=1.4'] + global_requirements,
     tests_require=['pytest', 'pytest-catchlog', 'graphviz', 'pymouse'] + global_requirements,
     install_requires=global_requirements,
 
