@@ -1,11 +1,9 @@
-astroid~=1.6
 pylint
 pyyaml
 psutil
 jsonconversion~=0.2
 yaml_configuration~=0.0
 gaphas>=0.7
-pandas
 Sphinx==1.7.4
 Pygments>=2.0
 pytest
