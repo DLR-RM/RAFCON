@@ -12,9 +12,6 @@ from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrenc
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.storage import storage
 
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
-
 import rafcon.core.singleton
 import rafcon.gui.singleton
 
@@ -112,7 +109,9 @@ def create_turtle_statemachine(base_path, example_path):
 def run_turtle_demo():
     import rafcon.core
     import rafcon.core.start
+    from rafcon.utils.i18n import setup_l10n
     signal.signal(signal.SIGINT, rafcon.core.start.signal_handler)
+    setup_l10n()
     global_config.load()
     global_gui_config.load()
     # set the test_libraries path temporarily to the correct value
@@ -139,6 +138,9 @@ def run_turtle_demo():
     # # load the state machine
     # [state_machine, version, creation_time] = storage.load_statemachine_from_path(
     #     "../../share/examples/tutorials/basic_turtle_demo_sm")
+
+    from rafcon.gui.controllers.main_window import MainWindowController
+    from rafcon.gui.views.main_window import MainWindowView
 
     rafcon.core.singleton.library_manager.initialize()
     main_window_view = MainWindowView()
