@@ -158,7 +158,7 @@ def create_mo_files():
     po_files = [po_file
                 for po_file in next(os.walk(localedir))[2]
                 if path.splitext(po_file)[1] == '.po']
-    for po_file in po_files:q
+    for po_file in po_files:
         po_path = path.join(localedir, po_file)
         lang, extension = path.splitext(po_file)
         mo_file = domain + '.mo'
