@@ -5,7 +5,7 @@ LIBRARY_PATHS: {
 "tutorials": "${RAFCON_LIB_PATH}/../examples/tutorials",
 "ros": "${RAFCON_LIB_PATH}/../examples/libraries/ros_libraries",
 "turtle_libraries": "${RAFCON_LIB_PATH}/../examples/libraries/turtle_libraries",
-"intermediate_level": "${RAFCON_LIB_PATH}/../examples/functionality_examples"
+"advanced_examples": "${RAFCON_LIB_PATH}/../examples/functionality_examples"
 }
 LIBRARY_RECOVERY_MODE: False
 
