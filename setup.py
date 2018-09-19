@@ -130,6 +130,9 @@ def generate_data_files():
     ]
 
     locale_data_files = installation.create_mo_files()
+    # example tuple
+    # locale_data_files = [('share/rafcon/locale/de/LC_MESSAGES', ['source/rafcon/locale/de/LC_MESSAGES/rafcon.mo'])]
+    # print locale_data_files
 
     version_data_file = [("./", ["./VERSION"])]
 
@@ -139,7 +142,7 @@ def generate_data_files():
     examples_data_files = get_all_files_recursivly(examples_folder)
     # print examples_data_files
     libraries_data_files = get_all_files_recursivly(libraries_folder)
-    generated_data_files = gui_data_files + locale_data_files + examples_data_files + libraries_data_files + \
+    generated_data_files = locale_data_files + gui_data_files + examples_data_files + libraries_data_files + \
                            version_data_file
     # for elem in generated_data_files:
     #     print elem

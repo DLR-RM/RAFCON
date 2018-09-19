@@ -158,7 +158,7 @@ def create_mo_files():
     po_files = [po_file
                 for po_file in next(os.walk(localedir))[2]
                 if path.splitext(po_file)[1] == '.po']
-    for po_file in po_files:
+    for po_file in po_files:q
         po_path = path.join(localedir, po_file)
         lang, extension = path.splitext(po_file)
         mo_file = domain + '.mo'
@@ -171,6 +171,10 @@ def create_mo_files():
         msgfmt_cmd = 'msgfmt -o {} {}'.format(mo_path, po_path)
         result = subprocess.call(msgfmt_cmd, shell=True)
         if result == 0:  # Compilation successful
+            # add po file
+            target_dir = path.join("share", *localedir.split(os.sep)[1:])  # remove source/ (package_dir)
+            data_files.append((target_dir, [os.path.join(localedir, po_file)]))
+            # add mo file
             target_dir = path.join("share", *mo_dir.split(os.sep)[1:])  # remove source/ (package_dir)
             data_files.append((target_dir, [mo_path]))
         else:
