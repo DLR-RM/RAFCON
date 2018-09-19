@@ -45,15 +45,18 @@ Installation requirements for Ubuntu 16.04
 
 .. code-block:: bash
 
-   sudo apt-get install python-setuptools python-dev python-opengl python-gtkglext1 python-gtksourceview2
+   sudo apt-get install python-dev python-opengl python-gtkglext1 python-gtksourceview2 python-pip
+   sudo -H pip2 install --upgrade pip
+   sudo -H pip2 install --upgrade setuptools
 
 Installation requirements for Ubuntu 18.04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
-   sudo apt-get install python-setuptools python-dev python-opengl python-gtkglext1 python-gtksourceview2 build-essential python-pip glade python-glade2 libcanberra-gtk-module
-
+   sudo apt-get install python-dev python-opengl python-gtkglext1 python-gtksourceview2 python-pip build-essential glade python-glade2 libcanberra-gtk-module
+   sudo -H pip2 install --upgrade pip
+   sudo -H pip2 install --upgrade setuptools
 
 General requirements
 ^^^^^^^^^^^^^^^^^^^^
@@ -61,8 +64,8 @@ General requirements
 If you are not using Ubuntu 16.04 or 18.04, please make sure that the following packages are installed:
 
 * Python 2.7
-* python-setuptools (recent version required: v40 known to be working)
 * pip (recent version required: v18 known to be working)
+* python-setuptools (recent version required: v40 known to be working)
 * python-opengl
 * python-gtkglext1
 * python-gtksourceview2
