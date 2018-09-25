@@ -35,7 +35,7 @@ class GuidedStateMixin(GuideMixin):
         states_v = self._get_siblings_and_parent()
 
         try:
-            guides = map(Guide, states_v)
+            guides = list(map(Guide, states_v))
         except TypeError:
             guides = []
 
@@ -55,7 +55,7 @@ class GuidedStateMixin(GuideMixin):
         states_v = self._get_siblings_and_parent()
 
         try:
-            guides = map(Guide, states_v)
+            guides = list(map(Guide, states_v))
         except TypeError:
             guides = []
 

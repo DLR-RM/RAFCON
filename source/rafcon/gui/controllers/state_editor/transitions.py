@@ -220,7 +220,7 @@ class StateTransitionsListController(LinkageListController):
             free_outcomes = self.combo['free_from_outcomes_dict'][new_from_state_id]
 
         current_from_outcome = responsible_state_m.state.transitions[t_id].from_outcome
-        free_outcome_ids = map(lambda outcome_m: None if outcome_m is None else outcome_m.outcome_id, free_outcomes)
+        free_outcome_ids = [None if outcome_m is None else outcome_m.outcome_id for outcome_m in free_outcomes]
         if len(free_outcomes) == 0:
             logger.warning('There is no free outcome for the chosen state')
             return

@@ -1257,7 +1257,7 @@ class GraphicalEditorController(ExtendedController):
                 def find_closest_snap_angle(angle):
                     multiple = angle // snap_angle
                     multiple = [multiple - 1, multiple, multiple + 1]
-                    diff = map(lambda mul: abs(abs(snap_angle * mul) - abs(angle)), multiple)
+                    diff = [abs(abs(snap_angle * mul) - abs(angle)) for mul in multiple]
                     min_index = diff.index(min(diff))
                     return snap_angle * multiple[min_index]
 
@@ -2055,7 +2055,7 @@ class GraphicalEditorController(ExtendedController):
             return None
 
         try:
-            selected_ids = map(get_id, hits)  # Get the OpenGL ids for the hits
+            selected_ids = list(map(get_id, hits))  # Get the OpenGL ids for the hits
             selected_ids = [opengl_id for opengl_id in selected_ids if opengl_id is not None]  # Filter out Nones
             (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.root_state_m, 1, None, 0,
                                                                         all,

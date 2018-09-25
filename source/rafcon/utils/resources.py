@@ -55,10 +55,10 @@ def resource_filename(package_or_requirement, resource_name):
     # i.e. if a resource "r" is searched in rafcon.gui.controllers,
     # the resource "r" residing in rafcon.gui may also be returned
     while not package_or_requirement_os == []:
-        paths = map(
+        paths = list(map(
             lambda path: os.path.join(os.path.join(path, *package_or_requirement_os), resource_name),
             paths_to_search_for_resource,
-        )
+        ))
 
         for path in paths:
             if os.path.isfile(path):
@@ -90,10 +90,10 @@ def resource_exists(package_or_requirement, resource_name):
     # i.e. if a resource "r" is searched in rafcon.gui.controllers,
     # the resource "r" residing in rafcon.gui may also be returned
     while not package_or_requirement_os == []:
-        paths = map(
+        paths = list(map(
             lambda path: os.path.join(os.path.join(path, *package_or_requirement_os), resource_name),
             paths_to_search_for_resource,
-        )
+        ))
 
         for path in paths:
             if os.path.isfile(path):
