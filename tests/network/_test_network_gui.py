@@ -152,7 +152,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
 
 
 def interacting_function_server(queue_dict):
-    for id, queue in queue_dict.iteritems():
+    for id, queue in queue_dict.items():
         assert isinstance(queue, multiprocessing.queues.Queue)
 
     import rafcon.core.singleton as core_singletons
@@ -163,7 +163,7 @@ def interacting_function_server(queue_dict):
 
     active_sm = core_singletons.state_machine_manager.get_active_state_machine()
     # root state is a hierarchy state
-    for key, sv in active_sm.root_state.scoped_variables.iteritems():
+    for key, sv in active_sm.root_state.scoped_variables.items():
         if sv.name == "bottles":
             sv.default_value = 3
     execution_engine.run_to_selected_state("GLSUJY/NDIVLD")  # wait before Decimate Bottles
@@ -177,7 +177,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     sleep_time = 0.01
     logger.info("Start interacting with server\n\n")
 
-    for id, queue in queue_dict.iteritems():
+    for id, queue in queue_dict.items():
         assert isinstance(queue, multiprocessing.queues.Queue)
 
     while not global_monitoring_manager.endpoint_initialized:

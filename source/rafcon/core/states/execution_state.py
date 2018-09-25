@@ -61,9 +61,9 @@ class ExecutionState(State):
         return str(self) == str(other) and self.script_text == other.script_text
 
     def __copy__(self):
-        input_data_ports = {elem_id: copy(elem) for elem_id, elem in self._input_data_ports.iteritems()}
-        output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.iteritems()}
-        outcomes = {elem_id: copy(elem) for elem_id, elem in self._outcomes.iteritems()}
+        input_data_ports = {elem_id: copy(elem) for elem_id, elem in self._input_data_ports.items()}
+        output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.items()}
+        outcomes = {elem_id: copy(elem) for elem_id, elem in self._outcomes.items()}
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, outcomes, None)
         state.script_text = deepcopy(self.script_text)
         state.description = deepcopy(self.description)
@@ -116,7 +116,7 @@ class ExecutionState(State):
             return self.outcomes[outcome_item]
 
         # Outcome name was returned
-        for outcome_id, outcome in self.outcomes.iteritems():
+        for outcome_id, outcome in self.outcomes.items():
             if outcome.name == outcome_item:
                 return self.outcomes[outcome_id]
 

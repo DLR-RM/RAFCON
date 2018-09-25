@@ -77,7 +77,7 @@ class ContainerStateModel(StateModel):
         """
         # Create model for each child class
         child_states = self.state.states
-        for child_state in child_states.itervalues():
+        for child_state in child_states.values():
             # Create hierarchy
             model_class = get_state_model_class_for_state(child_state)
             if model_class is not None:
@@ -87,17 +87,17 @@ class ContainerStateModel(StateModel):
 
     def _load_scoped_variable_models(self):
         """ Adds models for each scoped variable of the state """
-        for scoped_variable in self.state.scoped_variables.itervalues():
+        for scoped_variable in self.state.scoped_variables.values():
             self._add_model(self.scoped_variables, scoped_variable, ScopedVariableModel)
 
     def _load_data_flow_models(self):
         """ Adds models for each data flow of the state """
-        for data_flow in self.state.data_flows.itervalues():
+        for data_flow in self.state.data_flows.values():
             self._add_model(self.data_flows, data_flow, DataFlowModel)
 
     def _load_transition_models(self):
         """ Adds models for each transition of the state """
-        for transition in self.state.transitions.itervalues():
+        for transition in self.state.transitions.values():
             self._add_model(self.transitions, transition, TransitionModel)
 
     def __contains__(self, item):
@@ -112,7 +112,7 @@ class ContainerStateModel(StateModel):
         """
         if not isinstance(item, (StateModel, StateElementModel)):
             return False
-        return super(ContainerStateModel, self).__contains__(item) or item in self.states.values() \
+        return super(ContainerStateModel, self).__contains__(item) or item in list(self.states.values()) \
                or item in self.transitions or item in self.data_flows \
                or item in self.scoped_variables
 
@@ -128,7 +128,7 @@ class ContainerStateModel(StateModel):
                 scoped_variable.prepare_destruction()
             for connection in self.transitions[:] + self.data_flows[:]:
                 connection.prepare_destruction()
-            for state in self.states.itervalues():
+            for state in self.states.values():
                 state.prepare_destruction(recursive)
         del self.scoped_variables[:]
         del self.transitions[:]
@@ -217,7 +217,7 @@ class ContainerStateModel(StateModel):
 
     def update_child_is_start(self):
         """ Updates the `is_child` property of its child states """
-        for state_id, state_m in self.states.iteritems():
+        for state_id, state_m in self.states.items():
             state_m.update_is_start()
 
     def _get_model_info(self, model, info=None):
@@ -300,7 +300,7 @@ class ContainerStateModel(StateModel):
     def insert_meta_data_from_models_dict(self, source_models_dict, notify_logger_method):
         # TODO D-Clean this up and integrate proper into group/ungroup functionality
         if 'states' in source_models_dict:
-            for child_state_id, old_state_m in source_models_dict['states'].iteritems():
+            for child_state_id, old_state_m in source_models_dict['states'].items():
                 new_state_m = self.states[child_state_id]
                 if new_state_m is None:
                     raise RuntimeError("State model to set meta data could not be found"
@@ -311,7 +311,7 @@ class ContainerStateModel(StateModel):
                     new_state_m.meta = old_state_m.meta
                     notify_logger_method("Should only happen in ungroup - new model {0}".format(new_state_m))
         if 'scoped_variables' in source_models_dict:
-            for sv_dp_id, old_sv_m in source_models_dict['scoped_variables'].iteritems():
+            for sv_dp_id, old_sv_m in source_models_dict['scoped_variables'].items():
                 new_sv_m = self.get_scoped_variable_m(sv_dp_id)
                 if new_sv_m is None:
                     raise RuntimeError("Scoped variable model to set meta data could not be found"
@@ -323,7 +323,7 @@ class ContainerStateModel(StateModel):
                     notify_logger_method("Should only happen in ungroup - new model {0}".format(new_sv_m))
 
         if 'transitions' in source_models_dict:
-            for t_id, old_t_m in source_models_dict['transitions'].iteritems():
+            for t_id, old_t_m in source_models_dict['transitions'].items():
                 new_t_m = self.get_transition_m(t_id)
                 if new_t_m is None:
                     raise RuntimeError("transition model to set meta data could not be found"
@@ -334,7 +334,7 @@ class ContainerStateModel(StateModel):
                     new_t_m.meta = old_t_m.meta
                     notify_logger_method("Should only happen in ungroup - new model {0}".format(new_t_m))
         if 'data_flows' in source_models_dict:
-            for df_id, old_df_m in source_models_dict['data_flows'].iteritems():
+            for df_id, old_df_m in source_models_dict['data_flows'].items():
                 new_df_m = self.get_data_flow_m(df_id)
                 if new_df_m is None:
                     raise RuntimeError("data flow model to set meta data could not be found"
@@ -420,7 +420,7 @@ class ContainerStateModel(StateModel):
         :param str copy_path: Optional copy path if meta data is not stored to the file system path of state machine
         """
         super(ContainerStateModel, self).store_meta_data(copy_path)
-        for state_key, state in self.states.iteritems():
+        for state_key, state in self.states.items():
             state.store_meta_data(copy_path)
 
     def copy_meta_data_from_state_m(self, source_state_m):
@@ -444,7 +444,7 @@ class ContainerStateModel(StateModel):
             source_data_flow_m = source_state_m.get_data_flow_m(data_flow_m.data_flow.data_flow_id)
             data_flow_m.meta = deepcopy(source_data_flow_m.meta)
 
-        for state_key, state in self.states.iteritems():
+        for state_key, state in self.states.items():
             state.copy_meta_data_from_state_m(source_state_m.states[state_key])
 
         super(ContainerStateModel, self).copy_meta_data_from_state_m(source_state_m)

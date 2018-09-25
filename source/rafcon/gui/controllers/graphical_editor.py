@@ -1342,7 +1342,7 @@ class GraphicalEditorController(ExtendedController):
         # minimum size of our state
         if not resize_content and isinstance(state_m, ContainerStateModel):
             # Check lower right corner of all child states
-            for child_state_m in state_m.states.itervalues():
+            for child_state_m in state_m.states.values():
                 _, child_right_edge, child_bottom_edge, _ = self.get_boundaries(child_state_m)
                 if child_right_edge is not None and child_bottom_edge is not None:
                     min_right_edge = child_right_edge if min_right_edge < child_right_edge else min_right_edge
@@ -1441,7 +1441,7 @@ class GraphicalEditorController(ExtendedController):
                         port_m.set_meta_data_editor('inner_rel_pos', new_rel_pos, from_gaphas=False)
 
                     # Resize all child states
-                    for child_state_m in state_m.states.itervalues():
+                    for child_state_m in state_m.states.values():
                         old_rel_pos = child_state_m.get_meta_data_editor(for_gaphas=False)['rel_pos']
                         new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
                         child_state_m.set_meta_data_editor('rel_pos', new_rel_pos, from_gaphas=False)
@@ -1665,7 +1665,7 @@ class GraphicalEditorController(ExtendedController):
             width = size[0]
             height = size[1]
 
-            for child_state in state_m.states.itervalues():
+            for child_state in state_m.states.values():
                 # Calculate default positions for the child states
                 # Make the inset from the top left corner
 
@@ -2108,7 +2108,7 @@ class GraphicalEditorController(ExtendedController):
         # If it is a container state, check its transitions, data flows and child states
         if isinstance(search_state_m, ContainerStateModel):
 
-            for state in search_state_m.states.itervalues():
+            for state in search_state_m.states.values():
                 if len(ids) > 0:
                     (selection, selection_depth) = self._selection_ids_to_model(ids, state, search_state_depth + 1,
                                                                                 selection, selection_depth, all,

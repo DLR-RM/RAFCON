@@ -130,9 +130,9 @@ class StateOutcomesListController(ListViewController):
                 insert_self_transition_meta_data(self.model, t_id, 'outcomes_widget', combined_action=True)
 
         outcome_id = self.list_store[path][self.ID_STORAGE_ID]
-        if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
+        if outcome_id in list(self.dict_to_other_state.keys()) or outcome_id in list(self.dict_to_other_outcome.keys()):
             transition_parent_state = self.model.parent.state
-            if outcome_id in self.dict_to_other_state.keys():
+            if outcome_id in list(self.dict_to_other_state.keys()):
                 t_id = self.dict_to_other_state[outcome_id][2]
             else:
                 t_id = self.dict_to_other_outcome[outcome_id][2]
@@ -176,8 +176,8 @@ class StateOutcomesListController(ListViewController):
             return
         outcome_id = self.list_store[path][self.ID_STORAGE_ID]
         transition_parent_state = self.model.parent.state
-        if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
-            if outcome_id in self.dict_to_other_state.keys():
+        if outcome_id in list(self.dict_to_other_state.keys()) or outcome_id in list(self.dict_to_other_outcome.keys()):
+            if outcome_id in list(self.dict_to_other_state.keys()):
                 t_id = self.dict_to_other_state[outcome_id][2]
             else:
                 t_id = self.dict_to_other_outcome[outcome_id][2]
@@ -245,7 +245,7 @@ class StateOutcomesListController(ListViewController):
         if not (model.state.is_root_state or model.state.is_root_state_of_library) and self.model.parent.state:  # if parent model is not already destroyed
             # check for "to state combos" -> so all states in parent
             parent_id = model.parent.state.state_id
-            for parent_child_state_m in model.parent.states.values():
+            for parent_child_state_m in list(model.parent.states.values()):
                 if not model.state.state_id == parent_child_state_m.state.state_id:
                     self.to_state_combo_list.append([parent_child_state_m.state.name + "." + parent_child_state_m.state.state_id,
                                                      parent_child_state_m.state.state_id, parent_id])
@@ -253,12 +253,12 @@ class StateOutcomesListController(ListViewController):
                     self.to_state_combo_list.append(["self." + parent_child_state_m.state.state_id,
                                                      parent_child_state_m.state.state_id, parent_id])
             # check for "to outcome combos" -> so all outcomes of parent
-            for outcome in model.parent.state.outcomes.values():
+            for outcome in list(model.parent.state.outcomes.values()):
                 self.to_outcome_combo_list.append(['parent.' + outcome.name + '.' + str(outcome.outcome_id),
                                                    outcome.outcome_id, parent_id])
-            for transition_id, transition in model.parent.state.transitions.items():
+            for transition_id, transition in list(model.parent.state.transitions.items()):
                 # check for "to other state" connections -> so from self-state and self-outcome "external" transitions
-                if transition.from_state == model.state.state_id and transition.from_outcome in model.state.outcomes.keys():
+                if transition.from_state == model.state.state_id and transition.from_outcome in list(model.state.outcomes.keys()):
                     # check for "to other outcomes" connections -> so to parent-state and parent-outcome "ext" transitions
                     if transition.to_state == model.parent.state.state_id:
                         to_state_id = model.parent.state.state_id
@@ -276,7 +276,7 @@ class StateOutcomesListController(ListViewController):
                                                                              transition.transition_id]
         if isinstance(model, ContainerStateModel):
             # check for "from other state" connections -> so to self-state and self-outcome "internal" transitions
-            for transition_id, transition in model.state.transitions.items():
+            for transition_id, transition in list(model.state.transitions.items()):
                 if transition.to_state is None:  # no to_state means self
                     if transition.to_outcome in self.dict_from_other_state:
                         self.dict_from_other_state[transition.to_outcome].append([transition.from_state, transition.from_outcome, transition.transition_id])
@@ -286,12 +286,12 @@ class StateOutcomesListController(ListViewController):
     def update_list_store(self):
 
         self.list_store.clear()
-        for outcome in self.model.state.outcomes.values():
+        for outcome in list(self.model.state.outcomes.values()):
             to_state = None
-            if outcome.outcome_id in self.dict_to_other_state.keys():
+            if outcome.outcome_id in list(self.dict_to_other_state.keys()):
                 to_state = self.dict_to_other_state[outcome.outcome_id][0]
             to_outcome = None
-            if outcome.outcome_id in self.dict_to_other_outcome.keys():
+            if outcome.outcome_id in list(self.dict_to_other_outcome.keys()):
                 to_outcome = self.dict_to_other_outcome[outcome.outcome_id][0]
                 to_state = 'parent'
             self.list_store.append([outcome.outcome_id, outcome.name, to_state, to_outcome,

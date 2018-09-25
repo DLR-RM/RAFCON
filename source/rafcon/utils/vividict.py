@@ -52,7 +52,7 @@ class Vividict(dict, YAMLObject, JSONObject):
 
         :param new_dict: The dict that will be added to the own dict
         """
-        for key, value in new_dict.iteritems():
+        for key, value in new_dict.items():
             if isinstance(value, dict):
                 self[str(key)] = Vividict(value)
             else:
@@ -100,7 +100,7 @@ class Vividict(dict, YAMLObject, JSONObject):
             :return: value as native Python value
             """
             if isinstance(np_val, dict):
-                for key, value in np_val.iteritems():
+                for key, value in np_val.items():
                     np_val[key] = np_to_native(value)
             if isinstance(np_val, ndarray):
                 np_val = np_val.tolist()
@@ -113,7 +113,7 @@ class Vividict(dict, YAMLObject, JSONObject):
                 return np_val
             return np_val.item()  # Get the gloat/int etc value
 
-        for key, value in vividict.iteritems():
+        for key, value in vividict.items():
             # Convert numpy values to native Python values
             value = np_to_native(value)
             if isinstance(value, Vividict):

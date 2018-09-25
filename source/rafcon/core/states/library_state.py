@@ -111,9 +111,9 @@ class LibraryState(State):
         # handle input runtime values
         self.input_data_port_runtime_values = input_data_port_runtime_values
         self.use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
-        for data_port_id, data_port in self.input_data_ports.iteritems():
+        for data_port_id, data_port in self.input_data_ports.items():
             # Ensure that all input data ports have a runtime value
-            if data_port_id not in self.input_data_port_runtime_values.iterkeys():
+            if data_port_id not in iter(self.input_data_port_runtime_values.keys()):
                 self.input_data_port_runtime_values[data_port_id] = data_port.default_value
                 self.use_runtime_value_input_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
@@ -129,8 +129,8 @@ class LibraryState(State):
                     self.marked_dirty = True
 
         # if there is a key existing in the runtime values but not in the input_data_ports we delete it
-        for key in self.use_runtime_value_input_data_ports.keys():
-            if key not in self.input_data_ports.keys():
+        for key in list(self.use_runtime_value_input_data_ports.keys()):
+            if key not in list(self.input_data_ports.keys()):
                 del self.use_runtime_value_input_data_ports[key]
                 del self.input_data_port_runtime_values[key]
                 # state machine cannot be marked dirty directly, as it does not exist yet
@@ -139,9 +139,9 @@ class LibraryState(State):
         # handle output runtime values
         self.output_data_port_runtime_values = output_data_port_runtime_values
         self.use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
-        for data_port_id, data_port in self.output_data_ports.iteritems():
+        for data_port_id, data_port in self.output_data_ports.items():
             # Ensure that all output data ports have a runtime value
-            if data_port_id not in self.output_data_port_runtime_values.iterkeys():
+            if data_port_id not in iter(self.output_data_port_runtime_values.keys()):
                 self.output_data_port_runtime_values[data_port_id] = data_port.default_value
                 self.use_runtime_value_output_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
@@ -158,8 +158,8 @@ class LibraryState(State):
                     self.marked_dirty = True
 
         # if there is a key existing in the runtime values but not in the output_data_ports we delete it
-        for key in self.use_runtime_value_output_data_ports.keys():
-            if key not in self.output_data_ports.keys():
+        for key in list(self.use_runtime_value_output_data_ports.keys()):
+            if key not in list(self.output_data_ports.keys()):
                 del self.use_runtime_value_output_data_ports[key]
                 del self.output_data_port_runtime_values[key]
                 # state machine cannot be marked dirty directly, as it does not exist yet
@@ -174,7 +174,7 @@ class LibraryState(State):
         return str(self) == str(other) and self._state_copy == other.state_copy
 
     def __copy__(self):
-        outcomes = {elem_id: copy(elem) for elem_id, elem in self.outcomes.iteritems()}
+        outcomes = {elem_id: copy(elem) for elem_id, elem in self.outcomes.items()}
         state = self.__class__(self._library_path, self._library_name, self._version,  # library specific attributes
                                # the following are the container state specific attributes
                                self._name, self._state_id, outcomes,
@@ -350,11 +350,11 @@ class LibraryState(State):
         use_runtime_value_output_data_ports = {}
 
         if 'input_data_ports' in dictionary:  # this case is for backward compatibility
-            for idp_id, input_data_port in dictionary['input_data_ports'].iteritems():
+            for idp_id, input_data_port in dictionary['input_data_ports'].items():
                 input_data_port_runtime_values[idp_id] = input_data_port.default_value
                 use_runtime_value_input_data_ports[idp_id] = True
 
-            for odp_id, output_data_port in dictionary['output_data_ports'].iteritems():
+            for odp_id, output_data_port in dictionary['output_data_ports'].items():
                 output_data_port_runtime_values[odp_id] = output_data_port.default_value
                 use_runtime_value_output_data_ports[odp_id] = True
         else:  # this is the default case

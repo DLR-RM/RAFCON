@@ -151,7 +151,7 @@ def collect_state_memory_addresses(state, address_book=None):
         address_book = []
 
     def append_addresses_of_dict_elements(dict_of_elements, address_book):
-        for elem in dict_of_elements.itervalues():
+        for elem in dict_of_elements.values():
             # print "{0}: {1}".format(elem.__class__.__name__, id(elem))
             address_book.append(id(elem))
 
@@ -171,7 +171,7 @@ def collect_state_memory_addresses(state, address_book=None):
         append_addresses_of_dict_elements(state.data_flows, address_book)
         append_addresses_of_dict_elements(state.transitions, address_book)
         append_addresses_of_dict_elements(state.scoped_variables, address_book)
-        for elem in state.states.itervalues():
+        for elem in state.states.values():
             # print "{0}: {1}".format(elem.__class__.__name__, id(elem))
             collect_state_memory_addresses(elem, address_book)
             address_book.append(id(elem))
@@ -207,7 +207,7 @@ def collect_state_model_memory_addresses(state_m, address_book=None):
         append_addresses_of_list_elements(state_m.data_flows, address_book)
         append_addresses_of_list_elements(state_m.transitions, address_book)
         append_addresses_of_list_elements(state_m.scoped_variables, address_book)
-        for elem in state_m.states.itervalues():
+        for elem in state_m.states.values():
             # print "{3} {0}: {1} {2}".format(elem.__class__.__name__, id(elem), id(elem.meta), state_m.state.get_path())
             address_book.append(id(elem))
             address_book.append(id(elem.meta))

@@ -316,7 +316,7 @@ class HistoryItem(object):
 
         # semantic data
         semantic_data_dict = {}
-        for k, v in target_state.semantic_data.iteritems():
+        for k, v in target_state.semantic_data.items():
             try:
                 semantic_data_dict[k] = pickle.dumps(v)
             except Exception as e:
@@ -383,7 +383,7 @@ class ScopedDataItem(HistoryItem):
     def to_dict(self):
         record = HistoryItem.to_dict(self)
         scoped_data_dict = {}
-        for k, v in self.scoped_data.iteritems():
+        for k, v in self.scoped_data.items():
             try:
                 scoped_data_dict[v.name] = pickle.dumps(v.value)
             except Exception as e:
@@ -394,7 +394,7 @@ class ScopedDataItem(HistoryItem):
         record['scoped_data'] = scoped_data_dict
 
         child_state_input_output_dict = {}
-        for k, v in self.child_state_input_output_data.iteritems():
+        for k, v in self.child_state_input_output_data.items():
             try:
                 child_state_input_output_dict[k] = pickle.dumps(v)
             except Exception as e:

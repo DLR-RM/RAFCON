@@ -114,11 +114,11 @@ def trigger_issue_539_reproduction_sequence():
     current_sm_length = len(sm_manager_model.state_machines)
     assert current_sm_length == 0
     call_gui_callback(menubar_ctrl.on_new_activate, None)
-    new_state_machine_m = sm_manager_model.state_machines.values()[0]
+    new_state_machine_m = list(sm_manager_model.state_machines.values())[0]
 
     call_gui_callback(menubar_ctrl.on_add_state_activate, None)
 
-    new_state_m = new_state_machine_m.root_state.states.values()[0]
+    new_state_m = list(new_state_machine_m.root_state.states.values())[0]
     call_gui_callback(new_state_machine_m.selection.set, new_state_m)
 
     call_gui_callback(menubar_ctrl.on_toggle_is_start_state_active, None)
@@ -130,9 +130,9 @@ def trigger_issue_539_reproduction_sequence():
     # make the example bit more complex
     call_gui_callback(new_state_machine_m.selection.set, new_state_machine_m.root_state)
     call_gui_callback(menubar_ctrl.on_add_state_activate, None)
-    new_state_m_2 = new_state_machine_m.root_state.states.values()[0]
+    new_state_m_2 = list(new_state_machine_m.root_state.states.values())[0]
     if new_state_m_2 == new_state_m:
-        new_state_m_2 = new_state_machine_m.root_state.states.values()[1]
+        new_state_m_2 = list(new_state_machine_m.root_state.states.values())[1]
     # -> add two transitions to rebuild
     call_gui_callback(new_state_machine_m.root_state.state.add_transition,
                       new_state_m.state.state_id, -1,
@@ -146,7 +146,7 @@ def trigger_issue_539_reproduction_sequence():
 
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
 
-    new_state_m_from_group_action = new_state_machine_m.root_state.states.values()[0]
+    new_state_m_from_group_action = list(new_state_machine_m.root_state.states.values())[0]
 
     # TODO substitute these checks by creation of transitions and an in list check on respective hierarchy level
     # TODO (will be faster)
@@ -217,7 +217,7 @@ def trigger_issue_574_reproduction_sequence():
                                                                       "unit_test_state_machines",
                                                                       "99_bottles_of_beer_no_wait"))
     sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm_manager_model.selected_state_machine_id]
-    call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values())
+    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values()))
     call_gui_callback(menubar_ctrl.on_group_states_activate, None, None)
 
     # TODO add check for warning if a data-flow is connected to scoped variables which has ingoing and outgoing
@@ -225,7 +225,7 @@ def trigger_issue_574_reproduction_sequence():
 
     call_gui_callback(sm_m.history.undo)
 
-    call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values() + list(sm_m.root_state.scoped_variables))
+    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values()) + list(sm_m.root_state.scoped_variables))
     call_gui_callback(menubar_ctrl.on_group_states_activate, None, None)
 
 
@@ -252,17 +252,17 @@ def trigger_issue_586_reproduction_sequence():
     call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TEST_ASSETS_PATH,
                                                                       "unit_test_state_machines",
                                                                       "backward_step_barrier_test"))
-    sm_m = sm_manager_model.state_machines.values()[0]
+    sm_m = list(sm_manager_model.state_machines.values())[0]
     assert sm_m.state_machine_id == sm_manager_model.selected_state_machine_id
     concurrent_decimate_state_m = sm_m.get_state_model_by_path("GLSUJY/OOECFM")
 
     # check start conditions overlapping ids
-    state_ids = concurrent_decimate_state_m.states.keys()
+    state_ids = list(concurrent_decimate_state_m.states.keys())
     import rafcon.core.constants
     state_ids.remove(rafcon.core.constants.UNIQUE_DECIDER_STATE_ID)
-    child_state_ids = concurrent_decimate_state_m.states.values()[0].states.keys()
+    child_state_ids = list(concurrent_decimate_state_m.states.values())[0].states.keys()
     for state_id in state_ids:
-        assert all([child_id in child_state_ids for child_id in concurrent_decimate_state_m.states[state_id].states.keys()])
+        assert all([child_id in child_state_ids for child_id in list(concurrent_decimate_state_m.states[state_id].states.keys())])
 
     call_gui_callback(sm_m.selection.set, concurrent_decimate_state_m)
     call_gui_callback(menubar_ctrl.on_ungroup_state_activate, None, None)

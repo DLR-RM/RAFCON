@@ -90,7 +90,7 @@ def test_functionality_example(caplog):
     testing_utils.test_multithreading_lock.acquire()
     try:
         # main_window_controller = rafcon.gui.singleton.main_window_controller
-        for state_machine_id in rafcon.core.singleton.state_machine_manager.state_machines.keys():
+        for state_machine_id in list(rafcon.core.singleton.state_machine_manager.state_machines.keys()):
             rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine_id
             rafcon.core.singleton.state_machine_execution_engine.start()
             time.sleep(3)

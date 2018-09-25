@@ -901,7 +901,7 @@ class InputPortView(DataPortView):
 
     def draw(self, context, state):
         input_data = self.parent.model.state.input_data
-        if len(self.parent.model.state.input_data) > 0 and self.name in input_data.iterkeys():
+        if len(self.parent.model.state.input_data) > 0 and self.name in iter(input_data.keys()):
             self._value = input_data[self.name]
         super(InputPortView, self).draw(context, state)
 
@@ -913,6 +913,6 @@ class OutputPortView(DataPortView):
 
     def draw(self, context, state):
         output_data = self.parent.model.state.output_data
-        if len(self.parent.model.state.input_data) > 0 and self.name in output_data.iterkeys():
+        if len(self.parent.model.state.input_data) > 0 and self.name in iter(output_data.keys()):
             self._value = output_data[self.name]
         super(OutputPortView, self).draw(context, state)

@@ -37,27 +37,27 @@ def trigger_copy_delete_bug_signals():
 
     current_sm_length = len(sm_manager_model.state_machines)
     call_gui_callback(menubar_ctrl.on_new_activate, None)
-    first_sm_id = sm_manager_model.state_machines.keys()[0]
+    first_sm_id = list(sm_manager_model.state_machines.keys())[0]
 
     # 2. action
     call_gui_callback(menubar_ctrl.on_add_state_activate, None)
     assert len(sm_manager_model.state_machines) == current_sm_length + 1
     sm_m = sm_manager_model.state_machines[first_sm_id]
     root_state_m = sm_m.root_state
-    logger.info("States of root state: {}".format(root_state_m.states.values()))
-    new_state_m = root_state_m.states.values()[0]  # becomes the hstate
+    logger.info("States of root state: {}".format(list(root_state_m.states.values())))
+    new_state_m = list(root_state_m.states.values())[0]  # becomes the hstate
 
     call_gui_callback(sm_m.selection.set, new_state_m)
     import rafcon.gui.helpers.state as gui_helpers_state
     call_gui_callback(gui_helpers_state.change_state_type, new_state_m, HierarchyState)
-    logger.info("States of root state after type change: {}".format([str(state_m.state) for state_m in root_state_m.states.values()]))
-    new_hstate_m = root_state_m.states.values()[0]
+    logger.info("States of root state after type change: {}".format([str(state_m.state) for state_m in list(root_state_m.states.values())]))
+    new_hstate_m = list(root_state_m.states.values())[0]
 
     # 3. action
     call_gui_callback(sm_m.selection.set, new_hstate_m)
     call_gui_callback(menubar_ctrl.on_add_state_activate, None)
-    logger.info("States of hierarchy state: {}".format(new_hstate_m.states.values()))
-    new_state_m = new_hstate_m.states.values()[0]
+    logger.info("States of hierarchy state: {}".format(list(new_hstate_m.states.values())))
+    new_state_m = list(new_hstate_m.states.values())[0]
 
     # 4. action copy-paste
     page_id = state_machines_ctrl.get_page_num(first_sm_id)
@@ -71,9 +71,9 @@ def trigger_copy_delete_bug_signals():
         assert isinstance(graphical_editor_ctrl, graphical_editor_gaphas.GraphicalEditorController)
         assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
 
-    new_estate_m = root_state_m.states.values()[0]
+    new_estate_m = list(root_state_m.states.values())[0]
     if new_estate_m.state.get_path() == new_hstate_m.state.get_path():
-        new_estate_m = root_state_m.states.values()[1]
+        new_estate_m = list(root_state_m.states.values())[1]
 
     call_gui_callback(sm_m.selection.set, new_estate_m)
     call_gui_callback(menubar_ctrl.on_delete_activate, None)

@@ -15,7 +15,7 @@ def execute(self, inputs, outputs, gvm):
     self.parent.add_transition(self.state_id, 0, s.state_id, None)
     self.parent.add_transition(s.state_id, 0, "VBOFVC", None)
     parent_id = None
-    for d_id, d in self.parent.input_data_ports.iteritems():
+    for d_id, d in self.parent.input_data_ports.items():
         if d.name == "str_variable":
             parent_id = d_id
     self.parent.add_data_flow(self.parent.state_id, parent_id, s.state_id, 0)
@@ -40,7 +40,7 @@ def execute_old(self, inputs, outputs, gvm):
     glib.idle_add(self.parent.add_transition, s.state_id, 1, "QLRVDQ", None)
     wait_for_gui()
     parent_id = None
-    for d_id, d in self.parent.input_data_ports.iteritems():
+    for d_id, d in self.parent.input_data_ports.items():
         if d.name == "grasp_width":
             parent_id = d_id
     glib.idle_add(self.parent.add_data_flow, self.parent.state_id, parent_id, s.state_id, 0)

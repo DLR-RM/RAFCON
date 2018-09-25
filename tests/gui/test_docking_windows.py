@@ -147,7 +147,7 @@ def check_pane_positions():
     debug_sleep_time = 0
 
     stored_pane_positions = {}
-    for config_id, pan_id in constants.PANE_ID.iteritems():
+    for config_id, pan_id in constants.PANE_ID.items():
         default_pos = constants.DEFAULT_PANE_POS[config_id]
         stored_pane_positions[config_id] = global_runtime_config.get_config_value(config_id, default_pos)
         if stored_pane_positions[config_id] is None:
@@ -191,7 +191,7 @@ def check_pane_positions():
     testing_utils.wait_for_gui()
 
     print("check if pane positions are still like in runtime_config.yaml")
-    for config_id, pane_id in constants.PANE_ID.iteritems():
+    for config_id, pane_id in constants.PANE_ID.items():
         print("check pos of ", config_id, pane_id)
         assert main_window_controller.view[pane_id].get_position() == stored_pane_positions[config_id]
 
@@ -216,7 +216,7 @@ def test_window_positions(caplog):
     try:
         undock_sidebars()
     finally:
-        for key, value in original_runtime_config.iteritems():
+        for key, value in original_runtime_config.items():
             call_gui_callback(global_runtime_config.set_config_value, key, value)
 
         testing_utils.close_gui()
@@ -239,7 +239,7 @@ def test_pane_positions(caplog):
     try:
         check_pane_positions()
     finally:
-        for key, value in original_runtime_config.iteritems():
+        for key, value in original_runtime_config.items():
             call_gui_callback(global_runtime_config.set_config_value, key, value)
 
         testing_utils.close_gui()

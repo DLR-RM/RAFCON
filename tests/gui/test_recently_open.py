@@ -116,7 +116,7 @@ def trigger_gui_signals(*args):
     # menu-bar: New State Machine and save state machine (check in list and in menu) -> after save list updated
     call_gui_callback(testing_utils.wait_for_gui)
     current_sm_length = len(sm_manager_model.state_machines)
-    first_sm_id = sm_manager_model.state_machines.keys()[0]
+    first_sm_id = list(sm_manager_model.state_machines.keys())[0]
     call_gui_callback(menubar_ctrl.on_new_activate, None)
     call_gui_callback(sm_manager_model.__setattr__, "selected_state_machine_id", first_sm_id)
 

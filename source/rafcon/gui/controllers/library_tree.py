@@ -158,7 +158,7 @@ class LibraryTreeController(ExtendedController):
         # print "\n\n store of state machine {0} \n\n".format(self.__my_selected_sm_id)
         try:
             act_expansion_library = {}
-            for library_path, library_row_iter in self.library_row_iter_dict_by_library_path.iteritems():
+            for library_path, library_row_iter in self.library_row_iter_dict_by_library_path.items():
                 library_row_path = self.tree_store.get_path(library_row_iter)
                 act_expansion_library[library_path] = self.view.row_expanded(library_row_path)
                 # if act_expansion_library[library_path]:
@@ -171,7 +171,7 @@ class LibraryTreeController(ExtendedController):
         if self.__expansion_state:
             # print "\n\n redo of state machine {0} \n\n".format(self.__my_selected_sm_id)
             try:
-                for library_path, library_row_expanded in self.__expansion_state.iteritems():
+                for library_path, library_row_expanded in self.__expansion_state.items():
                     library_row_iter = self.library_row_iter_dict_by_library_path[library_path]
                     if library_row_iter:  # may elements are missing afterwards
                         library_row_path = self.tree_store.get_path(library_row_iter)
@@ -185,7 +185,7 @@ class LibraryTreeController(ExtendedController):
         self.store_expansion_state()
         self.tree_store.clear()
         self.library_row_iter_dict_by_library_path.clear()
-        for library_key, library_item in self.model.library_manager.libraries.iteritems():
+        for library_key, library_item in self.model.library_manager.libraries.items():
             self.insert_rec(None, library_key, library_item, "")
         self.redo_expansion_state()
         if self.__expansion_state:
@@ -228,7 +228,7 @@ class LibraryTreeController(ExtendedController):
             library_path = os.path.join(library_path, library_key)
         self.library_row_iter_dict_by_library_path[library_path] = tree_item
         if isinstance(library_item, dict):
-            for child_library_key, child_library_item in library_item.iteritems():
+            for child_library_key, child_library_item in library_item.items():
                 self.insert_rec(tree_item, child_library_key, child_library_item, library_path, library_root_path)
 
     def on_drag_data_get(self, widget, context, data, info, time):

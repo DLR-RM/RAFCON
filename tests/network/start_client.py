@@ -55,7 +55,7 @@ def start_client(interacting_function, queue_dict):
     import testing_utils
 
     # check if twisted is imported
-    if "twisted" in sys.modules.keys():
+    if "twisted" in list(sys.modules.keys()):
         from twisted.internet import gtk2reactor
         # needed for glib.idle_add, and signals
         gtk2reactor.install()
@@ -109,7 +109,7 @@ def start_client(interacting_function, queue_dict):
     interacting_thread.start()
 
     # check if twisted is imported
-    if "twisted" in sys.modules.keys():
+    if "twisted" in list(sys.modules.keys()):
         reactor.run()
     else:
         logger.error("Client: Twisted is not in sys.modules or twisted is not working! Exiting program ... !")

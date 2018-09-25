@@ -61,10 +61,10 @@ class PreemptiveConcurrencyState(ConcurrencyState):
 
             # preempt all child states
             if not self.backward_execution:
-                for state_id, state in self.states.iteritems():
+                for state_id, state in self.states.items():
                     state.recursively_preempt_states()
             # join all states
-            for history_index, state in enumerate(self.states.itervalues()):
+            for history_index, state in enumerate(self.states.values()):
                 self.join_state(state, history_index, concurrency_history_item)
                 self.add_state_execution_output_to_scoped_data(state.output_data, state)
                 self.update_scoped_variables_with_output_dictionary(state.output_data, state)

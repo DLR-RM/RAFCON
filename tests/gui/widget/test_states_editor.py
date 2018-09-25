@@ -107,7 +107,7 @@ def check_state_editor_models(sm_m, parent_state_m, logger=None):
         #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
         # for tab in states_editor_controller.closed_tabs.itervalues():
         #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
-        for state_m in parent_state_m.states.values():
+        for state_m in list(parent_state_m.states.values()):
             # get widget of state-model
             # if not state_m.state.name == "Decider":
             state_identifier = states_editor_controller.get_state_identifier(state_m)

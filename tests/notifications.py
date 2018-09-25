@@ -64,12 +64,12 @@ def show_debug_graph(print_to_console=False, open_text_file=True, render_graph=T
         text_file.write("{}\n".format("#" * 30))
         text_file.write("nodes\n")
         text_file.write("{}\n".format("#" * 30))
-        for node_name in nodes.itervalues():
+        for node_name in nodes.values():
             text_file.write(node_name+"\n-----\n")
         text_file.write("{}\n".format("#" * 30))
         text_file.write("edges\n")
         text_file.write("{}\n".format("#" * 30))
-        for sequence_number, edge_info in edges.iteritems():
+        for sequence_number, edge_info in edges.items():
             source_node_id = edge_info['source_node_id']
             source_node_name = edge_info['source_node_name']
             target_node_id = edge_info['target_node_id']
@@ -133,11 +133,11 @@ def feed_debugging_graph(observable, observer, callback, *args, **kwargs):
         source_node_name = node_name(observable)
         target_node_name = node_name(observer)
 
-        if source_node_id not in existing_dot_nodes_to_colors.keys():
+        if source_node_id not in list(existing_dot_nodes_to_colors.keys()):
             existing_dot_nodes_to_colors[source_node_id] = color
             notification_graph_to_render.node(source_node_id, source_node_name)
             nodes[source_node_id] = source_node_name
-        if target_node_id not in existing_dot_nodes_to_colors.keys():
+        if target_node_id not in list(existing_dot_nodes_to_colors.keys()):
             existing_dot_nodes_to_colors[target_node_id] = color
             notification_graph_to_render.node(target_node_id, target_node_name)
             nodes[target_node_id] = target_node_name

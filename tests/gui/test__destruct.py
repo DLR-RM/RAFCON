@@ -367,10 +367,10 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
         if isinstance(it, dict):
             if name:
                 return set(["{0}: {1}".format(key, element_in_iter.__class__.__name__)
-                            for key, element_in_iter in it.iteritems()])
+                            for key, element_in_iter in it.items()])
             else:
                 return set(["{0}: {1}".format(key, element_in_iter.__class__)
-                            for key, element_in_iter in it.iteritems()])
+                            for key, element_in_iter in it.items()])
         else:
             if name:
                 return set([element_in_iter.__class__.__name__ for element_in_iter in it])
@@ -460,7 +460,7 @@ def run_simple_modification_construction():
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     testing_utils.call_gui_callback(check_state_editor_models, sm_m, sm_m.root_state)
     import rafcon.gui.helpers.state
-    list_exsisting_state_ids = sm_m.root_state.states.keys()
+    list_exsisting_state_ids = list(sm_m.root_state.states.keys())
 
     print("%" * 50)
     print("check before add_state")
@@ -474,7 +474,7 @@ def run_simple_modification_construction():
     testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
                                     rafcon.gui.helpers.state.StateType.HIERARCHY)
 
-    new_state_ids = [state_id for state_id, state_m in sm_m.root_state.states.iteritems()
+    new_state_ids = [state_id for state_id, state_m in sm_m.root_state.states.items()
                      if state_id not in list_exsisting_state_ids]
     for state_id in new_state_ids:
         testing_utils.call_gui_callback(sm_m.root_state.state.remove_state, state_id)
@@ -1027,7 +1027,7 @@ def run_copy_cut_and_paste():
     #########################################
 
     # select state 1
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State1":
             selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
             testing_utils.call_gui_callback(selection.add, sm_model)
@@ -1046,7 +1046,7 @@ def run_copy_cut_and_paste():
     testing_utils.call_gui_callback(selection.clear)
 
     # select state 3
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State3":
             from rafcon.gui.models.container_state import ContainerStateModel
             assert isinstance(sm_model, ContainerStateModel)
@@ -1060,7 +1060,7 @@ def run_copy_cut_and_paste():
 
     # another time
     # select state 3
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State3":
             from rafcon.gui.models.container_state import ContainerStateModel
             assert isinstance(sm_model, ContainerStateModel)
@@ -1077,7 +1077,7 @@ def run_copy_cut_and_paste():
     #########################################
 
     # select state 1
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State1":
             state1 = sm_model.state
             selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
@@ -1102,7 +1102,7 @@ def run_copy_cut_and_paste():
     testing_utils.call_gui_callback(selection.clear)
 
     # select state 3
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State3":
             from rafcon.gui.models.container_state import ContainerStateModel
             assert isinstance(sm_model, ContainerStateModel)

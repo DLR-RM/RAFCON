@@ -207,7 +207,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 self.append_string_to_menu(popup_menu, "------------------------")
                 self.append_string_to_menu(popup_menu, "Scoped Data: ")
                 self.append_string_to_menu(popup_menu, "------------------------")
-                for key, data in scoped_data.iteritems():
+                for key, data in scoped_data.items():
                     menu_item_string = "    %s (%s - %s):\t%s" % (
                         data.name.replace("_", "__"), key, data.value_type, data.value)
                     self.append_string_to_menu(popup_menu, menu_item_string)
@@ -222,7 +222,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.append_string_to_menu(popup_menu, "Output Data:")
                         self.append_string_to_menu(popup_menu, "------------------------")
 
-                    for key, data in input_output_data.iteritems():
+                    for key, data in input_output_data.items():
                         menu_item_string = "    %s :\t%s" % (key.replace("_", "__"), data)
                         self.append_string_to_menu(popup_menu, menu_item_string)
 
@@ -328,7 +328,7 @@ class ExecutionHistoryTreeController(ExtendedController):
     @ExtendedController.observe("state_machines", after=True)
     def notification_sm_changed(self, model, prop_name, info):
         """Remove references to non-existing state machines"""
-        for state_machine_id in self._expansion_state.keys():
+        for state_machine_id in list(self._expansion_state.keys()):
             if state_machine_id not in self.model.state_machines:
                 del self._expansion_state[state_machine_id]
 

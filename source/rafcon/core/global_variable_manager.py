@@ -283,9 +283,9 @@ class GlobalVariableManager(Observable):
         :return:
         """
         output_list = []
-        if len(self.__global_variable_dictionary.keys()) == 0:
+        if len(list(self.__global_variable_dictionary.keys())) == 0:
             return output_list
-        for g_key in self.__global_variable_dictionary.keys():
+        for g_key in list(self.__global_variable_dictionary.keys()):
             # string comparison
             if g_key and start_key in g_key:
                 output_list.append(g_key)
@@ -299,7 +299,7 @@ class GlobalVariableManager(Observable):
     def global_variable_dictionary(self):
         """Property for the _global_variable_dictionary field"""
         dict_copy = {}
-        for key, value in self.__global_variable_dictionary.iteritems():
+        for key, value in self.__global_variable_dictionary.items():
             if key in self.__variable_references and self.__variable_references[key]:
                 dict_copy[key] = value
             else:
@@ -312,7 +312,7 @@ class GlobalVariableManager(Observable):
 
         :return: Keys of all variables
         """
-        return self.__global_variable_dictionary.keys()
+        return list(self.__global_variable_dictionary.keys())
 
     def get_representation(self, key):
         if not self.variable_exist(key):

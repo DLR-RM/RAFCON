@@ -61,7 +61,7 @@ def trigger_source_editor_signals():
     call_gui_callback(rafcon.gui.singleton.state_machine_manager.__setattr__, "active_state_machine_id",
                       sm_m.state_machine.state_machine_id)
     root_state_m = sm_m.root_state
-    state_m = root_state_m.states.values()[0]
+    state_m = list(root_state_m.states.values())[0]
     states_editor_controller = rafcon.gui.singleton.main_window_controller.get_controller('states_editor_ctrl')
     state_identifier = states_editor_controller.get_state_identifier(state_m)
     call_gui_callback(states_editor_controller.activate_state_tab, state_m)

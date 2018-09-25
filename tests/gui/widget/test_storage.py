@@ -90,7 +90,7 @@ def create_models():
     # give gui time to create the state machine
     testing_utils.wait_for_gui()
 
-    for sm_in in rafcon.core.singleton.state_machine_manager.state_machines.values():
+    for sm_in in list(rafcon.core.singleton.state_machine_manager.state_machines.values()):
         rafcon.core.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
     # give the gui time to remove the state machine
     testing_utils.wait_for_gui()
@@ -213,7 +213,7 @@ def check_state_storage(state, parent_path, missing_elements, existing_elements=
         check_file(file_path, "meta data", missing_elements, existing_elements)
 
     if isinstance(state, ContainerState):
-        for key, child_state in state.states.iteritems():
+        for key, child_state in state.states.items():
             check_state_storage(child_state, folder_path, missing_elements, existing_elements, check_meta_data)
 
 
@@ -314,7 +314,7 @@ def check_state_recursively_if_state_scripts_are_valid(state):
     from rafcon.core.states.container_state import ContainerState
     from rafcon.core.states.execution_state import ExecutionState
     if isinstance(state, ContainerState):
-        for child_state in state.states.itervalues():
+        for child_state in state.states.values():
             check_state_recursively_if_state_scripts_are_valid(child_state)
     else:
         if isinstance(state, ExecutionState):

@@ -42,7 +42,7 @@ class MyCanvas(gaphas.canvas.Canvas):
         model = view.model
         del self._model_view_map[model]
         # Do not retrieve core element from model, as the model could have already been destroyed
-        core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
+        core_element = list(self._core_view_map.keys())[list(self._core_view_map.values()).index(view)]
         del self._core_view_map[core_element]
 
     def add(self, item, parent=None, index=None):

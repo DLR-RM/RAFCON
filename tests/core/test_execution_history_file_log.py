@@ -32,20 +32,20 @@ def test_execution_log(caplog):
 
         start, next, concurrent, hierarchy, collapsed_items = log_helper.log_to_collapsed_structure(ss)
 
-        prod1_id = [k for k, v in collapsed_items.items() if v['state_name'] == 'MakeProd1' ][0]
+        prod1_id = [k for k, v in list(collapsed_items.items()) if v['state_name'] == 'MakeProd1' ][0]
         prod1 = collapsed_items[prod1_id]
         assert prod1['scoped_data_ins']['product'] == 2
         assert prod1['scoped_data_outs']['product'] == 2
         assert prod1['outcome_name'] == 'success'
 
-        prod2_id = [k for k, v in collapsed_items.items() if v['state_name'] == 'MakeProd2' ][0]
+        prod2_id = [k for k, v in list(collapsed_items.items()) if v['state_name'] == 'MakeProd2' ][0]
         prod2 = collapsed_items[prod2_id]
         assert prod2['data_ins']['input_1'] == 0
         assert prod2['data_outs']['output_1'] == 3
         assert prod2['scoped_data_ins']['product'] == 1
         assert prod2['scoped_data_outs']['product'] == 1
 
-        start_states = [k for k, v in collapsed_items.items() if v['state_name'] == 'Start' and v['state_type'] == 'ExecutionState']
+        start_states = [k for k, v in list(collapsed_items.items()) if v['state_name'] == 'Start' and v['state_type'] == 'ExecutionState']
         assert len(start_states) == 3 # Start state is executed three times until state machine is done
         start_id = start_states[0]
         start_item = collapsed_items[start_id]

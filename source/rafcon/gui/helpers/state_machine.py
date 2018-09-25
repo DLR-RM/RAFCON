@@ -53,7 +53,7 @@ logger = log.get_logger(__name__)
 
 
 def is_element_none_with_error_message(method_name, element_dict):
-    missing_elements = [element_name for element_name, element in element_dict.iteritems() if element is None]
+    missing_elements = [element_name for element_name, element in element_dict.items() if element is None]
     if missing_elements:
         logger.error("The following elements are missing to perform {0}: {1}".format(missing_elements))
 
@@ -171,8 +171,8 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
 
     previous_path = state_machine_m.state_machine.file_system_path
     previous_marked_dirty = state_machine_m.state_machine.marked_dirty
-    all_tabs = states_editor_ctrl.tabs.values()
-    all_tabs.extend(states_editor_ctrl.closed_tabs.values())
+    all_tabs = list(states_editor_ctrl.tabs.values())
+    all_tabs.extend(list(states_editor_ctrl.closed_tabs.values()))
     dirty_source_editor_ctrls = [tab_dict['controller'].get_controller('source_ctrl') for tab_dict in all_tabs if
                                  tab_dict['source_code_view_is_dirty'] is True and
                                  tab_dict['state_m'].state.get_state_machine().state_machine_id ==
@@ -411,7 +411,7 @@ def refresh_libraries():
 
 
 def replace_all_libraries_by_template(state_model):
-    for s_id, child_state_model in state_model.states.iteritems():
+    for s_id, child_state_model in state_model.states.items():
         if isinstance(child_state_model, LibraryStateModel):
             library_name = child_state_model.state.library_name
             library_path = child_state_model.state.library_path
@@ -422,7 +422,7 @@ def replace_all_libraries_by_template(state_model):
 
 
 def save_all_libraries(target_path):
-    for library_key, library_root_path in library_manager.library_root_paths.iteritems():
+    for library_key, library_root_path in library_manager.library_root_paths.items():
         # lib_target_path = os.path.join(target_path, os.path.split(library_root_path)[1])
         lib_target_path = os.path.join(target_path, library_key)
         copy_file_or_folder(library_root_path, lib_target_path)
@@ -436,12 +436,12 @@ def save_library_config(target_path):
     new_config = rafcon.core.config.Config()
 
     # copy content
-    for key, value in tmp_dict.iteritems():
+    for key, value in tmp_dict.items():
         new_config.set_config_value(key, value)
 
     # recreate library paths to be relative to config file
     new_library_paths_entry = {}
-    for library_key, library_root_path in library_manager.library_root_paths.iteritems():
+    for library_key, library_root_path in library_manager.library_root_paths.items():
         new_library_paths_entry[library_key] = os.path.relpath(os.path.join(target_path, library_key), config_path)
     new_config.set_config_value("LIBRARY_PATHS", new_library_paths_entry)
 
@@ -461,7 +461,7 @@ def generate_linux_launch_files(target_path, config_path, state_machine_path):
     launch_file_with_env = os.path.join(target_path, "launch_rafcon_with_env_generated.sh")
     with open(launch_file_with_env, 'w') as file_pointer:
         file_pointer.write(she_bang)
-        for key, value in os.environ.iteritems():
+        for key, value in os.environ.items():
             if key not in ["PWD", "BASH_FUNC_mc%%", "BASH_FUNC_module%%", "RAFCON_LIBRARY_PATH"]:
                 file_pointer.write("export {}=\"{}\"\n".format(key, value))
         file_pointer.write("\n")
@@ -520,8 +520,8 @@ def refresh_selected_state_machine():
         return
 
     # check if the a dirty flag is still set
-    all_tabs = states_editor_ctrl.tabs.values()
-    all_tabs.extend(states_editor_ctrl.closed_tabs.values())
+    all_tabs = list(states_editor_ctrl.tabs.values())
+    all_tabs.extend(list(states_editor_ctrl.closed_tabs.values()))
     dirty_source_editor = [tab_dict['controller'] for tab_dict in all_tabs if
                            tab_dict['source_code_view_is_dirty'] is True]
     if selected_sm.marked_dirty or dirty_source_editor:
@@ -568,8 +568,8 @@ def refresh_all(force=False):
             return
 
         # check if the a dirty flag is still set
-        all_tabs = states_editor_ctrl.tabs.values()
-        all_tabs.extend(states_editor_ctrl.closed_tabs.values())
+        all_tabs = list(states_editor_ctrl.tabs.values())
+        all_tabs.extend(list(states_editor_ctrl.closed_tabs.values()))
         dirty_source_editor = [tab_dict['controller'] for tab_dict in all_tabs if
                                tab_dict['source_code_view_is_dirty'] is True]
         if state_machine_manager.has_dirty_state_machine() or dirty_source_editor:
@@ -577,7 +577,7 @@ def refresh_all(force=False):
             message_string = "Are you sure you want to reload the libraries and all state machines?\n\n" \
                              "The following elements have been modified and not saved. " \
                              "These changes will get lost:"
-            for sm_id, sm in state_machine_manager.state_machines.iteritems():
+            for sm_id, sm in state_machine_manager.state_machines.items():
                 if sm.marked_dirty:
                     message_string = "%s\n* State machine #%s and name '%s'" % (
                         message_string, str(sm_id), sm.root_state.name)
@@ -895,7 +895,7 @@ def add_outcome_to_selected_states(selected_states=None):
     ids = {}
     for state_m in selected_states:
         # save name with generated outcome id
-        outcome_id = id_generator.generate_outcome_id(state_m.state.outcomes.keys())
+        outcome_id = id_generator.generate_outcome_id(list(state_m.state.outcomes.keys()))
         name = "success_" + str(outcome_id)
         try:
             state_m.state.add_outcome(name=name, outcome_id=outcome_id)

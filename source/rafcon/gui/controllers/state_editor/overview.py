@@ -129,7 +129,7 @@ class StateOverviewController(ExtendedController):
             self.view['properties_widget'].remove(self.view['show_content_checkbutton'])
             self.view['properties_widget'].resize(2, 5)
 
-            for key, value in self.state_types_dict.iteritems():
+            for key, value in self.state_types_dict.items():
                 if isinstance(self.model.state, value['class']):
                     l_store.prepend([key])
                 else:

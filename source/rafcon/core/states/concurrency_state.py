@@ -88,7 +88,7 @@ class ConcurrencyState(ContainerState):
         # to avoid code duplication both concurrency states have the same start child function
         concurrency_queue = Queue.Queue(maxsize=0)  # infinite Queue size
 
-        for index, state in enumerate(self.states.itervalues()):
+        for index, state in enumerate(self.states.values()):
             if state is not do_not_start_state:
 
                 state.input_data = self.get_inputs_for_state(state)

@@ -86,7 +86,7 @@ def start_server(interacting_function, queue_dict):
 
     plugins.run_post_inits(setup_config)
 
-    if "twisted" in sys.modules.keys():
+    if "twisted" in list(sys.modules.keys()):
         print("################# twisted found #######################")
         interacting_thread = threading.Thread(target=interacting_function,
                                               args=[queue_dict, ])

@@ -55,12 +55,12 @@ class StateMachineManager(Observable):
 
     def open_state_machines(self, state_machine_path_by_sm_id):
         from rafcon.core.storage import storage
-        for sm_id, sm_path in state_machine_path_by_sm_id.iteritems():
+        for sm_id, sm_path in state_machine_path_by_sm_id.items():
             state_machine = storage.load_state_machine_from_path(sm_path, sm_id)
             self.add_state_machine(state_machine)
 
     def get_sm_id_for_root_state_id(self, root_state_id):
-        for sm_id, sm in self.state_machines.iteritems():
+        for sm_id, sm in self.state_machines.items():
             if sm.root_state.state_id == root_state_id:
                 return sm_id
 
@@ -73,18 +73,18 @@ class StateMachineManager(Observable):
 
         :return: True if contains state machine that is marked dirty, False otherwise.
         """
-        for sm in self.state_machines.itervalues():
+        for sm in self.state_machines.values():
             if sm.marked_dirty:
                 return True
         return False
 
     def reset_dirty_flags(self):
         """Set all marked_dirty flags of the state machine to false."""
-        for sm_id, sm in self.state_machines.iteritems():
+        for sm_id, sm in self.state_machines.items():
             sm.marked_dirty = False
 
     def is_state_machine_open(self, file_system_path):
-        for loaded_sm in self._state_machines.itervalues():
+        for loaded_sm in self._state_machines.values():
             if loaded_sm.file_system_path == file_system_path:
                 return True
         return False
@@ -125,7 +125,7 @@ class StateMachineManager(Observable):
         if state_machine_id is self.active_state_machine_id and \
                 core_singletons.state_machine_execution_engine.finished_or_stopped():
             if len(self._state_machines) > 0:
-                self.active_state_machine_id = self._state_machines[self._state_machines.keys()[0]].state_machine_id
+                self.active_state_machine_id = self._state_machines[list(self._state_machines.keys())[0]].state_machine_id
             else:
                 self.active_state_machine_id = None
         # destroy execution history
@@ -143,7 +143,7 @@ class StateMachineManager(Observable):
     def get_open_state_machine_of_file_system_path(self, file_system_path):
         """Return a reference to the state machine with respective path if open
         """
-        for sm in self.state_machines.itervalues():
+        for sm in self.state_machines.values():
             if sm.file_system_path == file_system_path:
                 return sm
 
@@ -170,7 +170,7 @@ class StateMachineManager(Observable):
     def active_state_machine_id(self, state_machine_id):
         import rafcon.core.singleton as core_singletons
         if state_machine_id is not None:
-            if state_machine_id not in self.state_machines.keys():
+            if state_machine_id not in list(self.state_machines.keys()):
                 raise AttributeError("State machine not in list of all state machines")
         if not core_singletons.state_machine_execution_engine.finished_or_stopped() and \
                 state_machine_id != self._active_state_machine_id:

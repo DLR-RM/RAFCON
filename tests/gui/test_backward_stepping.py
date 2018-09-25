@@ -51,7 +51,7 @@ def execute_library_state_forwards_backwards():
     sm = state_machine_manager.get_active_state_machine()
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
-    for key, sd in sm.root_state.scoped_data.iteritems():
+    for key, sd in sm.root_state.scoped_data.items():
         if sd.name == "beer_count":
             assert sd.value == 100
 
@@ -209,7 +209,7 @@ def execute_barrier_state_forwards_backwards():
 
     print("cp5")
 
-    for key, sd in sm.root_state.scoped_data.iteritems():
+    for key, sd in sm.root_state.scoped_data.items():
         if sd.name == "beer_number":
             assert sd.value == 100
         elif sd.name == "wine_number":

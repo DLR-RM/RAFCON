@@ -143,8 +143,8 @@ def trigger_gui_signals_first_run(*args):
     state_machine = create_state_machine()
     call_gui_callback(sm_manager_model.state_machine_manager.add_state_machine, state_machine)
     call_gui_callback(testing_utils.wait_for_gui)
-    print(sm_manager_model.state_machines.keys())
-    current_sm_id = sm_manager_model.state_machines.keys()[0]
+    print(list(sm_manager_model.state_machines.keys()))
+    current_sm_id = list(sm_manager_model.state_machines.keys())[0]
     current_number_of_sm = len(sm_manager_model.state_machines)
 
     # new state machine with storage and no changes
@@ -222,7 +222,7 @@ def trigger_gui_signals_first_run(*args):
     # defined selection
     sm_m = sm_manager_model.state_machines[move_this_sm_id]
     call_gui_callback(sm_manager_model.__setattr__, 'selected_state_machine_id', move_this_sm_id)
-    call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0])
+    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values())[0])
     print("last state machine:", sm_m.state_machine.file_system_path)
 
     ####################

@@ -225,7 +225,7 @@ def initialize_environment_core(core_config=None, libraries=None, delete=False):
     else:
         global_config.load()
         if isinstance(core_config, dict):
-            for key, value in core_config.iteritems():
+            for key, value in core_config.items():
                 global_config.set_config_value(key, value)
 
     rewind_and_set_libraries(libraries=libraries)
@@ -251,7 +251,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
     else:
         global_gui_config.load()
         if isinstance(gui_config, dict):
-            for key, value in gui_config.iteritems():
+            for key, value in gui_config.items():
                 global_gui_config.set_config_value(key, value)
 
     # initialize global runtime config
@@ -260,7 +260,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
     else:
         global_runtime_config.load()
         if isinstance(runtime_config, dict):
-            for key, value in runtime_config.iteritems():
+            for key, value in runtime_config.items():
                 global_runtime_config.set_config_value(key, value)
 
     GUI_INITIALIZED = True
@@ -362,9 +362,9 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
 
     if gui_config is None:
         gui_config = {'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False}
-    if 'HISTORY_ENABLED' not in gui_config.keys():
+    if 'HISTORY_ENABLED' not in list(gui_config.keys()):
         gui_config['HISTORY_ENABLED'] = False
-    if 'AUTO_BACKUP_ENABLED' not in gui_config.keys():
+    if 'AUTO_BACKUP_ENABLED' not in list(gui_config.keys()):
         gui_config['AUTO_BACKUP_ENABLED'] = False
 
     if patch_threading:
