@@ -16,6 +16,7 @@
 
 """
 
+from builtins import filter
 import functools
 import itertools
 
