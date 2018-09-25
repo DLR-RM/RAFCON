@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import pytest
 # test for expected exceptions
@@ -78,7 +79,7 @@ def create_state_machine2():
 def test_default_values_of_data_ports(caplog):
 
     storage_path = testing_utils.get_unique_temp_path()
-    print storage_path
+    print(storage_path)
 
     sm = create_state_machine()
 
@@ -96,7 +97,7 @@ def test_default_values_of_data_ports(caplog):
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
 
-    print root_state.output_data
+    print(root_state.output_data)
     try:
         assert root_state.output_data["output_data_port1"] == "default_value"
     finally:
@@ -199,7 +200,7 @@ def test_unique_port_names(caplog):
 def test_runtime_checks_for_data_port_data_types(caplog):
 
     storage_path = testing_utils.get_unique_temp_path()
-    print storage_path
+    print(storage_path)
 
     sm = create_state_machine2()
 

@@ -7,6 +7,7 @@
 
 
 """
+from __future__ import print_function
 
 from multiprocessing import Process, Queue
 import multiprocessing
@@ -52,14 +53,14 @@ def custom_assert(statement1, statement2):
     try:
         assert statement1 == statement2
     except Exception as e:
-        print statement1 + " is not equal " + statement2
+        print(statement1 + " is not equal " + statement2)
         exit()
 
 
 def print_highlight(statement):
-    print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-    print statement
-    print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    print(statement)
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
 
 def reset_global_variable_manager(global_variable_manager):
@@ -98,41 +99,41 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     queue_dict[CLIENT1_TO_SERVER_QUEUE].get()
 
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put("start stepping")
-    print "starting tests\n\n"
+    print("starting tests\n\n")
 
-    print "server: cp0"
+    print("server: cp0")
     # step test
     while gvm.get_variable("decimate_counter") < 1:
         time.sleep(sleep_time)  # sleep just to prevent busy loop
     synchronize_with_root_state(root_state, execution_engine, "NDIVLD")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[0])  # step mode also means a step into
 
-    print "server: cp1"
+    print("server: cp1")
     while gvm.get_variable("count_counter") < 1:
         time.sleep(sleep_time)
     synchronize_with_root_state(root_state, execution_engine, "SFZGMH")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[1])  # step over
 
-    print "server: cp2"
+    print("server: cp2")
     while gvm.get_variable("sing_counter") < 2:
         time.sleep(sleep_time)
     synchronize_with_root_state(root_state, execution_engine, "PXTKIH")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[2])  # step into
 
-    print "server: cp3"
+    print("server: cp3")
     while gvm.get_variable("sing_counter") > 1:
         time.sleep(sleep_time)
     # wait until the backward execution of the state is done
     synchronize_with_root_state(root_state, execution_engine, "PXTKIH")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[3])  # backward step
 
-    print "server: cp4"
+    print("server: cp4")
     while not execution_engine.finished_or_stopped():
         time.sleep(sleep_time)
     execution_engine.join()
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[4])  # step out and run until the end
     reset_global_variable_manager(gvm)
-    print "server: step test successful\n\n"
+    print("server: step test successful\n\n")
 
     # start and finish execution test
     while execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
@@ -145,7 +146,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     execution_engine.stop()  # reset state machine before the next test
     # do not notify the client before the state machine is really stopped
     execution_engine.join()
-    print "server: start and wait until finished test successful\n\n"
+    print("server: start and wait until finished test successful\n\n")
     # old_sync_counter = execution_engine.synchronization_counter
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[5])  # run until end
 
@@ -168,7 +169,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
         time.sleep(sleep_time)
     execution_engine.join()
     reset_global_variable_manager(gvm)
-    print "server: run until test successful\n\n"
+    print("server: run until test successful\n\n")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[7])
 
     # start from test
@@ -181,16 +182,16 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     # as the state machine run to the end this is safe
     execution_engine.stop()
     execution_engine.join()
-    print "server: start from test successful\n"
+    print("server: start from test successful\n")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[8])
 
     execution_engine.stop()
     execution_engine.join()
-    print "server: wait for sync message from client\n"
+    print("server: wait for sync message from client\n")
     queue_dict[CLIENT1_TO_SERVER_QUEUE].get()
-    print "server: send sync message to client\n"
+    print("server: send sync message to client\n")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put("sync")
-    print "server: wait for kill command from main queue\n"
+    print("server: wait for kill command from main queue\n")
     # set a timeout of 3 seconds
     queue_dict[KILL_SERVER_QUEUE].get(3)
     os._exit(0)
@@ -282,13 +283,13 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     remote_execution_engine.start(start_state_path="GLSUJY/NDIVLD")
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[8])
 
-    print "client: send sync message to server\n"
+    print("client: send sync message to server\n")
     queue_dict[CLIENT1_TO_SERVER_QUEUE].put("sync")
-    print "client: wait for sync message from server\n"
+    print("client: wait for sync message from server\n")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].get()
-    print "client: tell the main queue that tests were successful\n"
+    print("client: tell the main queue that tests were successful\n")
     queue_dict[MAIN_QUEUE].put(START_FROM_SUCCESSFUL)
-    print "client: wait for kill command from main queue\n"
+    print("client: wait for kill command from main queue\n")
     # set a timeout of 3 seconds
     queue_dict[KILL_CLIENT1_QUEUE].get(3)
     os._exit(0)
@@ -338,7 +339,7 @@ def check_if_ports_are_open():
 def test_single_client():
 
     if not check_if_ports_are_open():
-        print "Address already in use by another server!"
+        print("Address already in use by another server!")
         assert True == False
 
     test_successful = True
@@ -380,15 +381,15 @@ def test_single_client():
         raise
     try:
         assert data == START_FROM_SUCCESSFUL
-        print "Test successful"
+        print("Test successful")
     except AssertionError, e:
-        print "Test not successful"
+        print("Test not successful")
         test_successful = False
 
     queue_dict[KILL_SERVER_QUEUE].put("Kill", timeout=10)
     queue_dict[KILL_CLIENT1_QUEUE].put("Kill", timeout=10)
 
-    print "Joining processes"
+    print("Joining processes")
 
     # wait for each process a maximum of 10 seconds
     client1.join(timeout=10)

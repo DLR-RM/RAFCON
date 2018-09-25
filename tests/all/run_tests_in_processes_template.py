@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import pytest
@@ -14,7 +15,7 @@ def run_pytest_on_module(filename, unit_test_message_queue):
             "Error: Unit test {0} failed with an uncaught exception: {1}\nTraceback: {2}".format(
                 filename, e, str(traceback.format_exc()))
         )
-    print "return value of unit test " + filename + ": " + str(return_value)
+    print("return value of unit test " + filename + ": " + str(return_value))
     # successful processes return 0
     if return_value != 0:
         sys.stderr.write("Error: Unit test {0} failed\nTraceback: {1}".format(
@@ -35,7 +36,7 @@ def run_unit_tests_in_processes(path_with_test_modules):
     process_list = []
 
     def run_tests_in_path(path):
-        print os.listdir(path)
+        print(os.listdir(path))
         for file_name in os.listdir(path):
             abs_path = os.path.join(path, file_name)
             if os.path.isfile(abs_path) and file_name.startswith("test_") and file_name.endswith(".py"):
@@ -43,7 +44,7 @@ def run_unit_tests_in_processes(path_with_test_modules):
                 test_process = Process(target=run_pytest_on_module, args=(abs_path, unit_test_message_queue))
                 process_list.append(test_process)
                 test_process.start()
-                print "Started unit test: " + abs_path
+                print("Started unit test: " + abs_path)
                 # as some tests are not completely runtime independent, they are executed sequentially
                 test_process.join()
                 return_value = unit_test_message_queue.get()

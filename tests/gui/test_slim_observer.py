@@ -1,3 +1,4 @@
+from __future__ import print_function
 from gtkmvc.observable import Observable
 import testing_utils
 import pytest
@@ -21,7 +22,7 @@ class ObservableTest(Observable):
 
     @Observable.observed
     def complex_method(self, param1, param2, param3):
-        print param3
+        print(param3)
         self.observable_test_var = param1 + param2
         return 20
 

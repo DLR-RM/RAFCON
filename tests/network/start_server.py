@@ -7,6 +7,7 @@
 
 
 """
+from __future__ import print_function
 
 import os
 import signal
@@ -22,7 +23,7 @@ def check_for_sm_finished(sm, monitoring_manager=None):
         except Empty, e:
             pass
         # no logger output here to make it easier for the parser
-        print "RAFCON live signal"
+        print("RAFCON live signal")
 
     sm.root_state.join()
 
@@ -86,7 +87,7 @@ def start_server(interacting_function, queue_dict):
     plugins.run_post_inits(setup_config)
 
     if "twisted" in sys.modules.keys():
-        print "################# twisted found #######################"
+        print("################# twisted found #######################")
         interacting_thread = threading.Thread(target=interacting_function,
                                               args=[queue_dict, ])
         interacting_thread.start()
@@ -104,8 +105,8 @@ def start_server(interacting_function, queue_dict):
 
 
 def print_object(queue_dict):
-    print "dummy prints:"
-    print queue_dict
+    print("dummy prints:")
+    print(queue_dict)
 
 
 if __name__ == '__main__':

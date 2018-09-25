@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import time
 import pytest
@@ -108,8 +109,8 @@ def print_state_sizes(state_m, canvas, state_names=None):
     meta_pos = state_m.get_meta_data_editor()["rel_pos"]
     view_pos = state_v.position
     if state_names is None or state_m.state.name in state_names:
-        print "{} size: {} ?= {}".format(state_m.state.name, meta_size, view_size)
-        print "{} pos: {} ?= {}".format(state_m.state.name, meta_pos, view_pos)
+        print("{} size: {} ?= {}".format(state_m.state.name, meta_size, view_size))
+        print("{} pos: {} ?= {}".format(state_m.state.name, meta_pos, view_pos))
     if isinstance(state_m.state, ContainerState):
         for child_state_m in state_m.states.itervalues():
             print_state_sizes(child_state_m, canvas)
@@ -139,30 +140,30 @@ def test_simple_state_size_resize(state_path, recursive, rel_size, caplog, monke
 
         orig_state_size = state_m.get_meta_data_editor()["size"]
         check_gaphas_state_meta_data_consistency(state_m, canvas, recursive=True)
-        print "\ninitial:"
+        print("\ninitial:")
         print_state_sizes(state_m, canvas, ["C"])
 
         view_rel_size = transform_size_v2i(view, state_v, rel_size)
         resize_state(view, state_v, rel_size, 3, recursive, monkeypatch)
         new_state_size = add_vectors(orig_state_size, view_rel_size)
-        print "\nfirst resize:"
+        print("\nfirst resize:")
         print_state_sizes(state_m, canvas, ["C"])
         assert_state_size_and_meta_data_consistency(state_m, state_v, new_state_size, canvas)
 
         rel_size = (-rel_size[0], -rel_size[1])
         view_rel_size = transform_size_v2i(view, state_v, rel_size)
         resize_state(view, state_v, rel_size, 3, recursive, monkeypatch)
-        print "\nsecond resize:"
+        print("\nsecond resize:")
         print_state_sizes(state_m, canvas, ["C"])
         assert_state_size_and_meta_data_consistency(state_m, state_v, orig_state_size, canvas)
 
         call_gui_callback(sm_m.history.undo)
-        print "\nfirst undo:"
+        print("\nfirst undo:")
         print_state_sizes(state_m, canvas, ["C"])
         assert_state_size_and_meta_data_consistency(state_m, state_v, new_state_size, canvas)
 
         call_gui_callback(sm_m.history.undo)
-        print "\nsecond undo:"
+        print("\nsecond undo:")
         print_state_sizes(state_m, canvas, ["C"])
         assert_state_size_and_meta_data_consistency(state_m, state_v, orig_state_size, canvas)
 

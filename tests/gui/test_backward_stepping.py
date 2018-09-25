@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import time
 
@@ -186,27 +187,27 @@ def execute_barrier_state_forwards_backwards():
         call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
-    print "cp1"
+    print("cp1")
 
     for i in range(4):
         call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(3, logger)
 
-    print "cp2"
+    print("cp2")
 
     call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
-    print "cp3"
+    print("cp3")
 
     sm = state_machine_manager.get_active_state_machine()
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
 
-    print "cp4"
+    print("cp4")
 
     testing_utils.wait_for_gui()
 
-    print "cp5"
+    print("cp5")
 
     for key, sd in sm.root_state.scoped_data.iteritems():
         if sd.name == "beer_number":

@@ -16,6 +16,7 @@ E.g. a change of DataFlow has to be observed by the DataFlowModel, the parent St
 all recursive parent-StateModels of this State as well as to the may Observable list of DataFlowModel's in which the
 DataFlow's DataFlowModel is in.
 """
+from __future__ import print_function
 
 from gtkmvc.observer import Observer
 
@@ -85,11 +86,11 @@ class StateNotificationLogObserver(NotificationLogObserver):
         if prop_name in self.log['before']:
             self.log['before'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
             if self.with_print:
-                print "++++++++ log BEFORE instance '%s' and property '%s' in state %s" % \
-                      (info.instance, prop_name, self.observed_model.state.name)
-                print "observer: ", self
+                print("++++++++ log BEFORE instance '%s' and property '%s' in state %s" % \
+                      (info.instance, prop_name, self.observed_model.state.name))
+                print("observer: ", self)
         else:
-            print "!!!! NOT a prop_name '%s' to be observed in BEFORE %s %s" % (prop_name, model, info)
+            print("!!!! NOT a prop_name '%s' to be observed in BEFORE %s %s" % (prop_name, model, info))
             self.no_failure = False
 
     @Observer.observe('states', after=True)
@@ -107,11 +108,11 @@ class StateNotificationLogObserver(NotificationLogObserver):
         if prop_name in self.log['after']:
             self.log['after'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
             if self.with_print:
-                print "++++++++ log AFTER instance '%s' and property '%s' in state %s" % \
-                      (info.instance, prop_name, self.observed_model.state.name)
-                print "observer: ", self
+                print("++++++++ log AFTER instance '%s' and property '%s' in state %s" % \
+                      (info.instance, prop_name, self.observed_model.state.name))
+                print("observer: ", self)
         else:
-            print "!!!! NOT a prop_name '%s' to be observed in AFTER %s %s" % (prop_name, model, info)
+            print("!!!! NOT a prop_name '%s' to be observed in AFTER %s %s" % (prop_name, model, info))
             self.no_failure = False
 
 
@@ -132,10 +133,10 @@ class OutcomeNotificationLogObserver(NotificationLogObserver):
         if prop_name in self.log['before']:
             self.log['before'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
             if self.with_print:
-                print "++++++++ log BEFORE instance '%s' and property '%s' in outcome %s" % \
-                      (info.instance, prop_name, self.observed_model.outcome.name)
+                print("++++++++ log BEFORE instance '%s' and property '%s' in outcome %s" % \
+                      (info.instance, prop_name, self.observed_model.outcome.name))
         else:
-            print "!!!! NOT a prop_name '%s' to be observed in BEFORE" % prop_name
+            print("!!!! NOT a prop_name '%s' to be observed in BEFORE" % prop_name)
             self.no_failure = False
 
     @Observer.observe("outcome", after=True)
@@ -143,10 +144,10 @@ class OutcomeNotificationLogObserver(NotificationLogObserver):
         if prop_name in self.log['after']:
             self.log['after'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
             if self.with_print:
-                print "++++++++ log AFTER instance '%s' and property '%s' in outcome %s" % \
-                      (info.instance, prop_name, self.observed_model.outcome.name)
+                print("++++++++ log AFTER instance '%s' and property '%s' in outcome %s" % \
+                      (info.instance, prop_name, self.observed_model.outcome.name))
         else:
-            print "!!!! NOT a prop_name '%s' to be observed in AFTER" % prop_name
+            print("!!!! NOT a prop_name '%s' to be observed in AFTER" % prop_name)
             self.no_failure = False
 
 
@@ -168,10 +169,10 @@ class DataPortNotificationLogObserver(NotificationLogObserver):
         if prop_name in self.log['before']:
             self.log['before'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
             if self.with_print:
-                print "++++++++ log BEFORE instance '%s' and property '%s' in data_port %s" % \
-                      (info.instance, prop_name, self.observed_model.data_port.name)
+                print("++++++++ log BEFORE instance '%s' and property '%s' in data_port %s" % \
+                      (info.instance, prop_name, self.observed_model.data_port.name))
         else:
-            print "!!!! NOT a prop_name '%s' to be observed in BEFORE" % prop_name
+            print("!!!! NOT a prop_name '%s' to be observed in BEFORE" % prop_name)
             self.no_failure = False
 
     @Observer.observe("data_port", after=True)
@@ -179,10 +180,10 @@ class DataPortNotificationLogObserver(NotificationLogObserver):
         if prop_name in self.log['after']:
             self.log['after'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
             if self.with_print:
-                print "++++++++ log AFTER instance '%s' and property '%s' in data_port %s" % \
-                      (info.instance, prop_name, self.observed_model.data_port.name)
+                print("++++++++ log AFTER instance '%s' and property '%s' in data_port %s" % \
+                      (info.instance, prop_name, self.observed_model.data_port.name))
         else:
-            print "!!!! NOT a prop_name '%s' to be observed in AFTER" % prop_name
+            print("!!!! NOT a prop_name '%s' to be observed in AFTER" % prop_name)
             self.no_failure = False
 
 
@@ -204,10 +205,10 @@ class ScopedVariableNotificationLogObserver(NotificationLogObserver):
         if prop_name in self.log['before']:
             self.log['before'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
             if self.with_print:
-                print "++++++++ log BEFORE instance '%s' and property '%s' in scoped_variable %s" % \
-                      (info.instance, prop_name, self.observed_model.scoped_variable.name)
+                print("++++++++ log BEFORE instance '%s' and property '%s' in scoped_variable %s" % \
+                      (info.instance, prop_name, self.observed_model.scoped_variable.name))
         else:
-            print "!!!! NOT a prop_name '%s' to be observed in BEFORE" % prop_name
+            print("!!!! NOT a prop_name '%s' to be observed in BEFORE" % prop_name)
             self.no_failure = False
 
     @Observer.observe("scoped_variable", after=True)
@@ -215,10 +216,10 @@ class ScopedVariableNotificationLogObserver(NotificationLogObserver):
         if prop_name in self.log['after']:
             self.log['after'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
             if self.with_print:
-                print "++++++++ log AFTER instance '%s' and property '%s' in scoped_variable %s" % \
-                      (info.instance, prop_name, self.observed_model.scoped_variable.name)
+                print("++++++++ log AFTER instance '%s' and property '%s' in scoped_variable %s" % \
+                      (info.instance, prop_name, self.observed_model.scoped_variable.name))
         else:
-            print "!!!! NOT a prop_name '%s' to be observed in AFTER" % prop_name
+            print("!!!! NOT a prop_name '%s' to be observed in AFTER" % prop_name)
             self.no_failure = False
 
 
@@ -239,10 +240,10 @@ class DataFlowNotificationLogObserver(NotificationLogObserver):
         if prop_name in self.log['before']:
             self.log['before'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
             if self.with_print:
-                print "++++++++ log BEFORE instance '%s' and property '%s' in data_flow %s" % \
-                      (info.instance, prop_name, self.observed_model.data_flow)
+                print("++++++++ log BEFORE instance '%s' and property '%s' in data_flow %s" % \
+                      (info.instance, prop_name, self.observed_model.data_flow))
         else:
-            print "!!!! NOT a prop_name '%s' to be observed in BEFORE" % prop_name
+            print("!!!! NOT a prop_name '%s' to be observed in BEFORE" % prop_name)
             self.no_failure = False
 
     @Observer.observe("data_flow", after=True)
@@ -250,10 +251,10 @@ class DataFlowNotificationLogObserver(NotificationLogObserver):
         if prop_name in self.log['after']:
             self.log['after'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
             if self.with_print:
-                print "++++++++ log AFTER instance '%s' and property '%s' in data_flow %s" % \
-                      (info.instance, prop_name, self.observed_model.data_flow)
+                print("++++++++ log AFTER instance '%s' and property '%s' in data_flow %s" % \
+                      (info.instance, prop_name, self.observed_model.data_flow))
         else:
-            print "!!!! NOT a prop_name '%s' to be observed in AFTER" % prop_name
+            print("!!!! NOT a prop_name '%s' to be observed in AFTER" % prop_name)
             self.no_failure = False
 
 
@@ -274,10 +275,10 @@ class TransitionNotificationLogObserver(NotificationLogObserver):
         if prop_name in self.log['before']:
             self.log['before'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
             if self.with_print:
-                print "++++++++ log BEFORE instance '%s' and property '%s' in transition %s" % \
-                      (info.instance, prop_name, self.observed_model.transition)
+                print("++++++++ log BEFORE instance '%s' and property '%s' in transition %s" % \
+                      (info.instance, prop_name, self.observed_model.transition))
         else:
-            print "!!!! NOT a prop_name '%s' to be observed in BEFORE" % prop_name
+            print("!!!! NOT a prop_name '%s' to be observed in BEFORE" % prop_name)
             self.no_failure = False
 
     @Observer.observe("transition", after=True)
@@ -285,10 +286,10 @@ class TransitionNotificationLogObserver(NotificationLogObserver):
         if prop_name in self.log['after']:
             self.log['after'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
             if self.with_print:
-                print "++++++++ log AFTER instance '%s' and property '%s' in transition %s" % \
-                      (info.instance, prop_name, self.observed_model.transition)
+                print("++++++++ log AFTER instance '%s' and property '%s' in transition %s" % \
+                      (info.instance, prop_name, self.observed_model.transition))
         else:
-            print "!!!! NOT a prop_name '%s' to be observed in AFTER" % prop_name
+            print("!!!! NOT a prop_name '%s' to be observed in AFTER" % prop_name)
             self.no_failure = False
 
 
@@ -385,27 +386,27 @@ def setup_observer_dict_for_state_model(state_model, with_print=False):
 def check_count_of_model_notifications(model_observer, forecast_dict):
     number_of_all_notifications = 0
     # check if there are unforseen notifications
-    print "BEFORE: \n", '\n'.join([str(elem[0]) + '\n\t' + '\n\t'.join([str(el) for el in elem[1]])
-                                   for elem in model_observer.log['before'].iteritems() if len(elem) > 0])
-    print "\nAFTER: \n", '\n'.join([str(elem[0]) + '\n\t' + '\n\t'.join([str(el) for el in elem[1]])
-                                    for elem in model_observer.log['after'].iteritems() if len(elem) > 0])
+    print("BEFORE: \n", '\n'.join([str(elem[0]) + '\n\t' + '\n\t'.join([str(el) for el in elem[1]])
+                                   for elem in model_observer.log['before'].iteritems() if len(elem) > 0]))
+    print("\nAFTER: \n", '\n'.join([str(elem[0]) + '\n\t' + '\n\t'.join([str(el) for el in elem[1]])
+                                    for elem in model_observer.log['after'].iteritems() if len(elem) > 0]))
     for prop_name, nr_of_notifications in forecast_dict.iteritems():
         if 'parent' in forecast_dict:
-            print model_observer
-        print "estimated for %s: %s and occured %s" % (prop_name, nr_of_notifications,
+            print(model_observer)
+        print("estimated for %s: %s and occured %s" % (prop_name, nr_of_notifications,
                                                        [len(model_observer.log['before'][prop_name]),
-                                                       len(model_observer.log['after'][prop_name])])
-        print "path: ", model_observer.observed_model.state.get_path()
-        print "observer: ", model_observer
+                                                       len(model_observer.log['after'][prop_name])]))
+        print("path: ", model_observer.observed_model.state.get_path())
+        print("observer: ", model_observer)
         assert len(model_observer.log['before'][prop_name]) == nr_of_notifications
         assert len(model_observer.log['after'][prop_name]) == nr_of_notifications
         number_of_all_notifications += 2*nr_of_notifications
     # check if there are unforseen notifications
-    print "BEFORE: \n", '\n'.join([str(elem[0]) + '\n\t' + '\n\t'.join([str(el) for el in elem[1]])
-                                   for elem in model_observer.log['before'].iteritems() if len(elem) > 0])
-    print "\nAFTER: \n", '\n'.join([str(elem[0]) + '\n\t' + '\n\t'.join([str(el) for el in elem[1]])
-                                    for elem in model_observer.log['after'].iteritems() if len(elem) > 0])
-    print "over all estimated: %s and occured %s" % (number_of_all_notifications, model_observer.get_number_of_notifications())
+    print("BEFORE: \n", '\n'.join([str(elem[0]) + '\n\t' + '\n\t'.join([str(el) for el in elem[1]])
+                                   for elem in model_observer.log['before'].iteritems() if len(elem) > 0]))
+    print("\nAFTER: \n", '\n'.join([str(elem[0]) + '\n\t' + '\n\t'.join([str(el) for el in elem[1]])
+                                    for elem in model_observer.log['after'].iteritems() if len(elem) > 0]))
+    print("over all estimated: %s and occured %s" % (number_of_all_notifications, model_observer.get_number_of_notifications()))
     assert model_observer.get_number_of_notifications() == number_of_all_notifications
     assert model_observer.no_failure
 
@@ -524,7 +525,7 @@ def test_outcome_modify_notification(caplog):
         outcome_models_observer_dict[outcome_id] = OutcomeNotificationLogObserver(state_model.outcomes[outcome_id],
                                                                                   with_print=with_print)
         outcome.name = "new_name_" + str(outcome_id)
-        print "OUTCOME", outcome_id
+        print("OUTCOME", outcome_id)
 
     # check grand-parent
     state_model_observer = states_observer_dict[state_dict['Container'].get_path()]
@@ -622,8 +623,8 @@ def test_input_port_modify_notification(caplog):
         state_model_observer = states_obs_dict[_state_dict['Nested2'].get_path()]
         check_count_of_model_notifications(state_model_observer, {'input_data_ports': forecast})
 
-        print "input_data_port_model over all estimated %s occurred %s" % \
-              (input_observer.get_number_of_notifications(), 2*forecast)
+        print("input_data_port_model over all estimated %s occurred %s" % \
+              (input_observer.get_number_of_notifications(), 2*forecast))
         assert input_observer.get_number_of_notifications() == 2*forecast
 
     # create testbed
@@ -743,8 +744,8 @@ def test_output_port_modify_notification(caplog):
         state_model_observer = states_obs_dict[_state_dict['Nested2'].get_path()]
         check_count_of_model_notifications(state_model_observer, {'output_data_ports': forecast})
 
-        print "output_data_port_model over all estimated %s occurred %s" % \
-              (output_observer.get_number_of_notifications(), 2*forecast)
+        print("output_data_port_model over all estimated %s occurred %s" % \
+              (output_observer.get_number_of_notifications(), 2*forecast))
         assert output_observer.get_number_of_notifications() == 2*forecast
 
     # create testbed
@@ -865,8 +866,8 @@ def test_scoped_variable_modify_notification(caplog):
         state_model_observer = states_obs_dict[_state_dict['Nested'].get_path()]
         check_count_of_model_notifications(state_model_observer, {'scoped_variables': forecast})
 
-        print "scoped_variable_model over all estimated %s occurred %s" % \
-              (output_observer.get_number_of_notifications(), 2*forecast)
+        print("scoped_variable_model over all estimated %s occurred %s" % \
+              (output_observer.get_number_of_notifications(), 2*forecast))
         assert output_observer.get_number_of_notifications() == 2*forecast
 
     # create testbed
@@ -1033,8 +1034,8 @@ def test_data_flow_modify_notification(caplog):
         state_model_observer = states_obs_dict[_state_dict['Nested'].get_path()]
         check_count_of_model_notifications(state_model_observer, {'data_flows': forecast})
 
-        print "data_flow_model over all estimated %s occurred %s" % \
-              (data_flow_m_observer.get_number_of_notifications(), 2*forecast)
+        print("data_flow_model over all estimated %s occurred %s" % \
+              (data_flow_m_observer.get_number_of_notifications(), 2*forecast))
         assert data_flow_m_observer.get_number_of_notifications() == 2*forecast
 
     # create testbed
@@ -1216,8 +1217,8 @@ def test_transition_modify_notification(caplog):
         state_model_observer = states_obs_dict[_state_dict['Nested'].get_path()]
         check_count_of_model_notifications(state_model_observer, {'transitions': forecast})
 
-        print "transition_model over all estimated %s occurred %s" % \
-              (transition_m_observer.get_number_of_notifications(), 2*forecast)
+        print("transition_model over all estimated %s occurred %s" % \
+              (transition_m_observer.get_number_of_notifications(), 2*forecast))
         assert transition_m_observer.get_number_of_notifications() == 2*forecast
 
     # create testbed
@@ -1433,8 +1434,8 @@ def test_state_property_modify_notification(caplog):
         state_model_observer = states_observer_dict[state_dict[sub_state_name].get_path()]
         check_dict = {'state': forecast}
         check_dict.update(child_effects)
-        print state_model_observer.log["before"]
-        print state_model_observer.log["after"]
+        print(state_model_observer.log["before"])
+        print(state_model_observer.log["after"])
         check_count_of_model_notifications(state_model_observer, check_dict)
 
         # check parent

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (C) 2016-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
@@ -71,7 +72,7 @@ class NotificationOverview(dict):
         dict.__init__(self, overview_dict)
         self.__description = s
         if self.with_prints:
-            print "\nNotificationOverview {}\n".format(str(self))
+            print("\nNotificationOverview {}\n".format(str(self)))
         NotificationOverview._generation_time += time.time() - start_time
     #     self.store_debug_log_file("\nNotificationOverview {}\n".format(str(self)))
     #
@@ -107,7 +108,7 @@ class NotificationOverview(dict):
             dict.update(self, E)
 
     def print_overview(self, overview=None):
-        print self
+        print(self)
 
     def get_nice_info_dict_string(self, info, level='\t', overview=None):
         """ Inserts all elements of a notification info-dictionary of gtkmvc or a Signal into one string and indicates

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # general tool elements
 from rafcon.utils import log
 
@@ -52,7 +53,7 @@ def trigger_logging_view_gui_signals():
     text_of_line_number = call_gui_callback(logging_console_ctrl.view.get_text_of_line, line_number)
     text_of_current_line = call_gui_callback(logging_console_ctrl.view.get_text_of_line, current_line_number)
     assert text_of_current_line == text_of_line_number
-    print '#'*20, "\n\nThis is focused {0} \n\n".format(text_of_current_line), '#'*20
+    print('#'*20, "\n\nThis is focused {0} \n\n".format(text_of_current_line), '#'*20)
 
     logger.debug("1 test if cursor line is constant for change to 'CONSOLE_FOLLOW_LOGGING' True")
     call_gui_callback(global_gui_config.set_config_value, 'CONSOLE_FOLLOW_LOGGING', True)
@@ -99,7 +100,7 @@ def trigger_logging_view_gui_signals():
 
     assert config_file_end == config_file_start
 
-    print "finished debug console test"
+    print("finished debug console test")
 
 
 def test_logging_view_widget(caplog):

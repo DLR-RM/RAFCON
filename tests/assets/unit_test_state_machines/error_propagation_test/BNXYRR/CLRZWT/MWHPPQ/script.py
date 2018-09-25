@@ -1,10 +1,11 @@
+from __future__ import print_function
 
 
 def execute(self, inputs, outputs, gvm):
-    print "Handling execution abortion ... "
+    print("Handling execution abortion ... ")
     
     if "error" in inputs:
-        print inputs["error"]
+        print(inputs["error"])
         
     number1 = 0
     number2 = 1 / number1

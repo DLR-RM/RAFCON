@@ -7,6 +7,7 @@
 
 
 """
+from __future__ import print_function
 
 from multiprocessing import Process, Queue
 
@@ -81,7 +82,7 @@ def synchronize_with_client_threads(queue_dict, execution_engine):
 
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put("state machine executed successfully")  # synchronize with client1
     queue_dict[SERVER_TO_CLIENT2_QUEUE].put("state machine executed successfully")  # synchronize with client2
-    print "server: start pause resume test successful\n\n"
+    print("server: start pause resume test successful\n\n")
 
     execution_engine.stop()
     execution_engine.join()
@@ -180,7 +181,7 @@ def test_multi_clients():
     from network.test_single_client import launch_server
     from test_single_client import check_if_ports_are_open
     if not check_if_ports_are_open():
-        print "Address already in use by another server!"
+        print("Address already in use by another server!")
         assert True == False
 
     test_successful = True
@@ -219,16 +220,16 @@ def test_multi_clients():
         raise
     try:
         assert data == START_PAUSE_RESUME_SUCCESSFUL
-        print "Test successful"
+        print("Test successful")
     except AssertionError, e:
-        print "Test not successful"
+        print("Test not successful")
         test_successful = False
 
     queue_dict[KILL_SERVER_QUEUE].put("Kill", timeout=10)
     queue_dict[KILL_CLIENT1_QUEUE].put("Kill", timeout=10)
     queue_dict[KILL_CLIENT2_QUEUE].put("Kill", timeout=10)
 
-    print "Joining processes"
+    print("Joining processes")
     server.join(timeout=10)
     client1.join(timeout=10)
     client2.join(timeout=10)

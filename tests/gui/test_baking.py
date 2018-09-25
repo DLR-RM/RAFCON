@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # test environment elements
 import os
@@ -27,8 +28,8 @@ def trigger_baking_commands():
     )
 
     state_machine1 = state_machine_manager.state_machines[sm_id_0 + 1]
-    print "#1 ", state_machine1
-    print "#2 ", call_gui_callback(state_machine1.mutable_hash).hexdigest()
+    print("#1 ", state_machine1)
+    print("#2 ", call_gui_callback(state_machine1.mutable_hash).hexdigest())
 
     baking_path = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "baking")
     # baking_path = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE, "baking")
@@ -41,8 +42,8 @@ def trigger_baking_commands():
 
     from rafcon.core.id_generator import generate_state_machine_id
     state_machine2 = state_machine_manager.state_machines[sm_id_0 + 4]
-    print "#3 ", state_machine2
-    print "#4 ", call_gui_callback(state_machine1.mutable_hash).hexdigest()
+    print("#3 ", state_machine2)
+    print("#4 ", call_gui_callback(state_machine1.mutable_hash).hexdigest())
 
     mutable_hash_sm1 = call_gui_callback(state_machine1.mutable_hash)
     mutable_hash_sm2 = call_gui_callback(state_machine2.mutable_hash)

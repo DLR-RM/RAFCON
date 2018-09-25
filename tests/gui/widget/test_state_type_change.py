@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 
 # general tool elements
@@ -95,7 +96,7 @@ def store_state_elements(state, state_m, return_list=None):
     from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 
     """Stores all ids of elements in or outside of the actual state"""
-    print "STORE state elements of %s, %s" % (state.name, state_m.state.name)
+    print("STORE state elements of %s, %s" % (state.name, state_m.state.name))
     global store_elements_ignores
     state_elements = {}
     state_m_elements = {}
@@ -106,7 +107,7 @@ def store_state_elements(state, state_m, return_list=None):
     # collect input_data_ports
     state_elements['input_data_ports'] = []
     for p_id, p in state.input_data_ports.iteritems():
-        print "input ports", p_id, state.input_data_ports.keys()
+        print("input ports", p_id, state.input_data_ports.keys())
         state_elements['input_data_ports'].append(p_id)
     # - check if the right models are there and only those
     model_id_store = []
@@ -178,7 +179,7 @@ def store_state_elements(state, state_m, return_list=None):
         # - check if the right models are there and only those
         model_id_store = []
         state_m_elements['states_meta'] = {}
-        print state_m.states.keys()
+        print(state_m.states.keys())
         for s_m_id, s_m in state_m.states.iteritems():
             # if not hasattr(s_m, "state"):
             #     print s_m
@@ -197,7 +198,7 @@ def store_state_elements(state, state_m, return_list=None):
                                                          "missing_decider_state_models" not in store_elements_ignores):
                 assert s_id in model_id_store
             else:
-                print "skip unique_state_id for model check"
+                print("skip unique_state_id for model check")
 
     # collect data_flows
     if isinstance(state, ContainerState):
@@ -291,7 +292,7 @@ def store_state_elements(state, state_m, return_list=None):
                 state_m_elements['data_flows_external_not_related'].append(df_id)
                 state_m_elements['data_flows_external_not_related_meta'][df_id] = t_m.meta
     else:
-        print "STATE is a root_state"
+        print("STATE is a root_state")
 
     if return_list is not None:
         return_list.append(state_elements)
@@ -307,14 +308,14 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
     from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 
-    print "CHECK state elements of %s, %s " % (state.name, state_m.state.name)
-    print "AGAINST stored elements of %s, %s " % (stored_state_elements['name'],
-                                                  stored_state_m_elements['name'])
+    print("CHECK state elements of %s, %s " % (state.name, state_m.state.name))
+    print("AGAINST stored elements of %s, %s " % (stored_state_elements['name'],
+                                                  stored_state_m_elements['name']))
     # check ports
     if 'ports' in check_list:
         # collect input_data_ports
         for p_id, p in state.input_data_ports.iteritems():
-            print state.state_id, p_id, stored_state_elements['input_data_ports']
+            print(state.state_id, p_id, stored_state_elements['input_data_ports'])
             assert p_id in stored_state_elements['input_data_ports']
         # - check if the right models are there and only those
         model_id_store = []
@@ -357,9 +358,9 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
 
     # check states
     if not type(state_m.state) is type(state):
-        print "given model is not linked with given state"
-        print "State-Model State-Type: ", state_m.state
-        print "State-Type: ", state
+        print("given model is not linked with given state")
+        print("State-Model State-Type: ", state_m.state)
+        print("State-Type: ", state)
     # TODO last element of condition has to be deleted again
     if 'states' in check_list and isinstance(state, ContainerState):
         for s_id, s in state.states.iteritems():
@@ -373,13 +374,13 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
             assert s_m_id == s_m.state.state_id
             if not s_m_id == UNIQUE_DECIDER_STATE_ID:
                 if not s_m_id in stored_state_elements['states']:
-                    print "missing state: ", s_m_id, stored_state_elements['states']
+                    print("missing state: ", s_m_id, stored_state_elements['states'])
                 assert s_m_id in stored_state_elements['states']
 
                 assert s_m.state.state_id in stored_state_elements['states']
                 model_id_store.append(s_m.state.state_id)
                 # - check if meta data is still the same
-                print stored_state_m_elements['states_meta'][s_m.state.state_id], s_m.meta
+                print(stored_state_m_elements['states_meta'][s_m.state.state_id], s_m.meta)
                 assert stored_state_m_elements['states_meta'][s_m.state.state_id] == s_m.meta
         for s_id in stored_state_elements['states']:
             if not s_id == UNIQUE_DECIDER_STATE_ID:
@@ -407,12 +408,12 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     else:
         assert not isinstance(state, ContainerState)
 
-    print "ignore internal_transitions in check: ", "internal_transitions" in check_elements_ignores
+    print("ignore internal_transitions in check: ", "internal_transitions" in check_elements_ignores)
     if "internal_transitions" not in check_elements_ignores:
         # check transitions internal
         if 'transitions_internal' in check_list:
             for t_id, t in state.transitions.iteritems():
-                print state.name, t_id, stored_state_elements['transitions'], state.transitions.keys()
+                print(state.name, t_id, stored_state_elements['transitions'], state.transitions.keys())
                 assert t_id in stored_state_elements['transitions']
             # - check if the right models are there and only those
             model_id_store = []
@@ -464,8 +465,8 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
             model_id_store.append(df_m.data_flow.data_flow_id)
             # - check if meta data is still the same
             assert stored_state_m_elements['data_flows_meta'][df_m.data_flow.data_flow_id] == df_m.meta
-        print stored_state_elements['data_flows']
-        print model_id_store
+        print(stored_state_elements['data_flows'])
+        print(model_id_store)
         for df_id in stored_state_elements['data_flows']:
             assert df_id in model_id_store
     else:
@@ -497,18 +498,18 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     # else:
     #     assert state.parent is None  # root state now has a parent
 
-    print "\n check state type"
+    print("\n check state type")
     # check state type and check source script
     if isinstance(state, ExecutionState):
-        print "\n\nEXECUTION_STATE\n\n"
+        print("\n\nEXECUTION_STATE\n\n")
     elif isinstance(state, HierarchyState):
-        print "\n\nHIERARCHY_STATE\n\n"
+        print("\n\nHIERARCHY_STATE\n\n")
     elif isinstance(state, BarrierConcurrencyState):
-        print "\n\nBARRIER_STATE\n\n"
+        print("\n\nBARRIER_STATE\n\n")
     elif isinstance(state, PreemptiveConcurrencyState):
-        print "\n\nPREEMPTIVE_STATE\n\n"
+        print("\n\nPREEMPTIVE_STATE\n\n")
     else:
-        print "\n\nNO EXECUTABLE STATE TYPE", state
+        print("\n\nNO EXECUTABLE STATE TYPE", state)
         assert state in [ExecutionState, HierarchyState, PreemptiveConcurrencyState, BarrierConcurrencyState]
 
 
@@ -556,7 +557,7 @@ def debug_logger_print(s, logger):
     if logger:
         logger.debug(s)
     else:
-        print s
+        print(s)
 
 
 def get_state_editor_ctrl_and_store_id_dict(sm_m, state_m, main_window_controller, sleep_time_max, logger=None):
@@ -621,7 +622,7 @@ def trigger_state_type_change_tests(with_gui):
     stored_state_elements = input_and_return_list[0]
     stored_state_m_elements = input_and_return_list[1]
 
-    print "\n\n %s \n\n" % state_m.state.name
+    print("\n\n %s \n\n" % state_m.state.name)
 
     # HS -> BCS
     input_and_return_list = [state_m]
@@ -652,28 +653,28 @@ def trigger_state_type_change_tests(with_gui):
     call_gui_callback(testing_utils.wait_for_gui)
     stored_state_elements = input_and_return_list[0]
     stored_state_m_elements = input_and_return_list[1]
-    print "\n\n %s \n\n" % state_m.state.name
+    print("\n\n %s \n\n" % state_m.state.name)
 
 
     # HS -> BCS
-    print "Test: change root state type: HS -> BCS"
+    print("Test: change root state type: HS -> BCS")
     input_and_return_list = [state_m]
     call_gui_callback(sm_m.selection.set, input_and_return_list)
     call_gui_callback(change_state_type, input_and_return_list, 'BARRIER_CONCURRENCY', 'Container', check_list_root_BCS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # BCS -> HS
-    print "Test: change root state type: BCS -> HS"
+    print("Test: change root state type: BCS -> HS")
     call_gui_callback(change_state_type, input_and_return_list, 'HIERARCHY', 'Container', check_list_root_HS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # HS -> PCS
-    print "Test: change root state type: HS -> PCS"
+    print("Test: change root state type: HS -> PCS")
     call_gui_callback(change_state_type, input_and_return_list, 'PREEMPTION_CONCURRENCY', 'Container', check_list_root_PCS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # PCS -> ES
-    print "Test: change root state type: PCS -> ES"
+    print("Test: change root state type: PCS -> ES")
     call_gui_callback(change_state_type, input_and_return_list, 'EXECUTION', 'Container', check_list_root_ES,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 

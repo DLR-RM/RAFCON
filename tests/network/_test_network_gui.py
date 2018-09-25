@@ -7,6 +7,7 @@
 
 
 """
+from __future__ import print_function
 
 from multiprocessing import Process, Queue
 import multiprocessing
@@ -50,7 +51,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     TEST1
     """
     queue_dict[SERVER_TO_CLIENT].put("start")
-    print "starting tests\n\n"
+    print("starting tests\n\n")
 
     # stop start test
     while not execution_engine.finished_or_stopped():
@@ -69,7 +70,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     if execution_engine.status.execution_mode is not StateMachineExecutionStatus.STOPPED:
         execution_engine.join()
     queue_dict[SERVER_TO_CLIENT].put("start received and successfully ran the state machine")
-    print "server: stop start test successful\n\n"
+    print("server: stop start test successful\n\n")
 
     """
     TEST2 disconnect -> run sm -> connect -> run sm
@@ -77,7 +78,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     from monitoring import server
     from monitoring.monitoring_manager import global_monitoring_manager
     # test disconnect by client run
-    print "disconnect/connect by client test"
+    print("disconnect/connect by client test")
     queue_dict[SERVER_TO_CLIENT].put("disconnect_me_and_run")
     queue_dict[CLIENT_TO_SERVER].get()
     assert gvm.get_variable("count_counter") == 0
@@ -87,7 +88,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     queue_dict[CLIENT_TO_SERVER].get()
     if not execution_engine.finished_or_stopped():
         execution_engine.join()
-    print "server sm finished"
+    print("server sm finished")
     assert gvm.get_variable("count_counter") == 3
     assert gvm.get_variable("sing_counter") == 3
     assert gvm.get_variable("decimate_counter") == 3
@@ -96,20 +97,20 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     if not execution_engine.finished_or_stopped():
         execution_engine.join()
     reset_global_variable_manager(gvm)
-    print "server: disconnect/connect by client test successful\n\n"
+    print("server: disconnect/connect by client test successful\n\n")
 
     """
     TEST3 disable -> run sm -> enable -> run sm
     """
     # test dis- enabled by server run
-    print "dis- /enabled test by server"
+    print("dis- /enabled test by server")
     for address in server.network_manager_model.connected_ip_port:
         global_monitoring_manager.disable(address)
         # while not server.network_manager_model.get_connected_status(address) == "disabled":
         #     time.sleep(0.01)
     queue_dict[SERVER_TO_CLIENT].put("you are disabled")
     queue_dict[CLIENT_TO_SERVER].get()
-    print "sm on client executed and stopped"
+    print("sm on client executed and stopped")
     assert gvm.get_variable("count_counter") == 0
     assert gvm.get_variable("sing_counter") == 0
     assert gvm.get_variable("decimate_counter") == 0
@@ -119,7 +120,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     queue_dict[CLIENT_TO_SERVER].get()
     if not execution_engine.finished_or_stopped():
         execution_engine.join()
-    print "server sm finished"
+    print("server sm finished")
     assert gvm.get_variable("count_counter") == 3
     assert gvm.get_variable("sing_counter") == 3
     assert gvm.get_variable("decimate_counter") == 3
@@ -128,12 +129,12 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     if not execution_engine.finished_or_stopped():
         execution_engine.join()
     reset_global_variable_manager(gvm)
-    print "server: dis- /enabled by server test successful\n\n"
+    print("server: dis- /enabled by server test successful\n\n")
 
     """
     TEST4 change client ID in config -> apply -> check connected client ID
     """
-    print "apply config test"
+    print("apply config test")
     queue_dict[SERVER_TO_CLIENT].put("ready to change config")
     queue_dict[CLIENT_TO_SERVER].get()
     client_id = []
@@ -141,7 +142,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
         client_id.append(server.network_manager_model.get_connected_id(address))
     assert "apply_test_client_id" in client_id
     queue_dict[SERVER_TO_CLIENT].put("succeeded")
-    print "apply config test successful\n\n"
+    print("apply config test successful\n\n")
 
     execution_engine.stop()
     execution_engine.join()
@@ -237,18 +238,18 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
 
     while not network_manager_model.get_connected_status(address) == "connected":
         time.sleep(sleep_time)
-    print "status connected"
+    print("status connected")
 
     # import rafcon.core.singleton as core_singletons
     while not isinstance(remote_execution_engine, MonitoringExecutionEngine):
         remote_execution_engine = core_singletons.state_machine_execution_engine
         time.sleep(sleep_time)
 
-    print "sm monitoring"
+    print("sm monitoring")
     remote_execution_engine.start()
     while remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
         time.sleep(sleep_time)
-    print "sm started"
+    print("sm started")
 
     queue_dict[CLIENT_TO_SERVER].put("reconnected_and_executed")
     queue_dict[SERVER_TO_CLIENT].get()
@@ -258,13 +259,13 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
         remote_execution_engine.join()
 
     queue_dict[MAIN_QUEUE].put(DISCONNECTED_RUN_SUCCESSFUL)
-    print "client disconnection test succeeded"
+    print("client disconnection test succeeded")
 
     """
     TEST3 disable -> run sm -> enable -> run sm
     """
     queue_dict[SERVER_TO_CLIENT].get()
-    print "client disabled test begin"
+    print("client disabled test begin")
     for address in network_manager_model.connected_ip_port:
         while not network_manager_model.get_connected_status(address) == "disabled":
             time.sleep(sleep_time)
@@ -287,10 +288,10 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     if not remote_execution_engine.finished_or_stopped():
         remote_execution_engine.join()
 
-    print "disabled run stopped"
+    print("disabled run stopped")
     queue_dict[CLIENT_TO_SERVER].put("reached end")
     queue_dict[SERVER_TO_CLIENT].get()
-    print "ended disabled run"
+    print("ended disabled run")
     # for address in network_manager_model.connected_ip_port:
     #     while not network_manager_model.get_connected_status(address) == "connected":
     #         time.sleep(0.01)
@@ -302,10 +303,10 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
         time.sleep(sleep_time)
 
     remote_execution_engine.start()
-    print "started enabled sm"
+    print("started enabled sm")
     while remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
         time.sleep(sleep_time)
-    print "start enabled run"
+    print("start enabled run")
     queue_dict[CLIENT_TO_SERVER].put("started execution")
     queue_dict[SERVER_TO_CLIENT].get()
 
@@ -388,7 +389,7 @@ def test_network_gui():
         client1.terminate()
         raise
     finally:
-        print "Joining processes"
+        print("Joining processes")
         server.join(timeout=10)
         client1.join(timeout=10)
 

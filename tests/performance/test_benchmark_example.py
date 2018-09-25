@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 
 
@@ -13,7 +14,7 @@ def something(duration=0.000001):
 def test_my_stuff(benchmark):
     # benchmark something
     result = benchmark.pedantic(something, iterations=10, rounds=10)
-    print result
+    print(result)
 
     # Extra code, to verify that the run completed correctly.
     # Sometimes you may want to check the result

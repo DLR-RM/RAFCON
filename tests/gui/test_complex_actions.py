@@ -1,5 +1,6 @@
 """Every test function of this module should later be improved in a separate module to secure all functionality of the 
 every respective feature."""
+from __future__ import print_function
 import threading
 
 # general tool elements
@@ -67,26 +68,26 @@ def trigger_repetitive_group_ungroup(*args):
     call_gui_callback(testing_utils.wait_for_gui)
 
     sm_m = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
-    print "select: ", sm_m.root_state.states.values()
+    print("select: ", sm_m.root_state.states.values())
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values())
 
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
     # call_gui_callback(sm_m.root_state.states.values()[0].state.name, "Stage 1")
-    print "Stage 1", sm_m.root_state.states.values()[0].state.get_path()
+    print("Stage 1", sm_m.root_state.states.values()[0].state.get_path())
     call_gui_callback(set_state_name, sm_m.root_state.states.values()[0].state, "Stage 1")
 
-    print "select: ", sm_m.root_state.states.values()
+    print("select: ", sm_m.root_state.states.values())
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values())
     # time.sleep(1)
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
-    print "Stage 2", sm_m.root_state.states.values()[0].states.values()[0].state.get_path()
+    print("Stage 2", sm_m.root_state.states.values()[0].states.values()[0].state.get_path())
     call_gui_callback(set_state_name, sm_m.root_state.states.values()[0].states.values()[0].state, "Stage 2")
 
-    print "select: ", sm_m.root_state.states.values()
+    print("select: ", sm_m.root_state.states.values())
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values()[0].states.values())
     # time.sleep(1)
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
-    print "Stage 3", sm_m.root_state.states.values()[0].states.values()[0].states.values()[0].state.get_path()
+    print("Stage 3", sm_m.root_state.states.values()[0].states.values()[0].states.values()[0].state.get_path())
     call_gui_callback(
         set_state_name, sm_m.root_state.states.values()[0].states.values()[0].states.values()[0].state, "Stage 3"
     )
@@ -96,7 +97,7 @@ def trigger_repetitive_group_ungroup(*args):
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values()[0])
     # time.sleep(1)
     s = sm_m.root_state.states.values()[0].states.values()[0]
-    print "ungroup Stage 2", s.state.get_path(), s
+    print("ungroup Stage 2", s.state.get_path(), s)
     call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0])
     # time.sleep(1)
@@ -106,22 +107,22 @@ def trigger_repetitive_group_ungroup(*args):
     # time.sleep(1)
     call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
 
-    print "make Stage 1 group all states of root state"
+    print("make Stage 1 group all states of root state")
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values())
     # time.sleep(1)
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
     call_gui_callback(set_state_name, sm_m.root_state.states.values()[0].state, "Stage 1")
 
-    print "make Stage 1 to barrier state"
+    print("make Stage 1 to barrier state")
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0])
     call_gui_callback(gui_helper_state.change_state_type, sm_m.root_state.states.values()[0], BarrierConcurrencyState)
     # time.sleep(1)
 
     # raw_input("enter")
-    print '#'*30, '\n', '### positive example #1 \n', '#'*30
+    print('#'*30, '\n', '### positive example #1 \n', '#'*30)
     selected_states = [sm_m.root_state.states.values()[0].states[state_id] for state_id in ['State1', 'State2']]
-    print "\n" * 50
-    print "select: ", [str(state_m) for state_m in selected_states]
+    print("\n" * 50)
+    print("select: ", [str(state_m) for state_m in selected_states])
     call_gui_callback(sm_m.selection.set, selected_states)
     # time.sleep(1)
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
@@ -129,23 +130,23 @@ def trigger_repetitive_group_ungroup(*args):
     # core test
     # call_gui_callback(sm_m.root_state.states.values()[0].state.group_states, ['State1', 'State2'])
     # sm_m.root_state.states.values()[0].states.values()[0].state.name = "Stage 2"
-    print "\n" * 50
+    print("\n" * 50)
     # raw_input("enter")
-    print "ungroup by undo again"
+    print("ungroup by undo again")
     # time.sleep(10)
     call_gui_callback(sm_m.history.undo)
-    print "wait2 undo"
+    print("wait2 undo")
     # import time
     # time.sleep(10)
 
-    print '#'*30, '\n', '### negative example #1 by including a decider state-> exception test\n', '#'*30
+    print('#'*30, '\n', '### negative example #1 by including a decider state-> exception test\n', '#'*30)
     selected_states = [sm_m.root_state.states.values()[0].states[state_id] for state_id in
                        ['State1', 'State2', UNIQUE_DECIDER_STATE_ID]]
-    print "select: ", [str(state_m) for state_m in selected_states]
+    print("select: ", [str(state_m) for state_m in selected_states])
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0].states.values())
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
 
-    print '#'*30, '\n', '### positive example #2 ungroup a barrier state \n', '#'*30
+    print('#'*30, '\n', '### positive example #2 ungroup a barrier state \n', '#'*30)
     call_gui_callback(sm_m.selection.set, sm_m.root_state.states.values()[0])
     call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
 

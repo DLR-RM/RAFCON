@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 
 # general tool elements
@@ -127,7 +128,7 @@ def check_state_editor_models(sm_m, parent_state_m, logger=None):
 
     state_identifier = states_editor_controller.get_state_identifier(parent_state_m)
     parent_state_m.get_state_machine_m()
-    print "try to select", parent_state_m
+    print("try to select", parent_state_m)
     sm_m.selection.set([parent_state_m])
     [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, state_identifier, sleep_time_max)
     # logger.debug("wait for state's state editor %s" % time_waited)

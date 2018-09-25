@@ -1,3 +1,4 @@
+from __future__ import print_function
 from os.path import join
 from graphviz import Digraph
 from collections import OrderedDict
@@ -43,7 +44,7 @@ def enable_debugging():
 def show_debug_graph(print_to_console=False, open_text_file=True, render_graph=True):
     global notification_graph_to_render
     assert isinstance(notification_graph_to_render, Digraph)
-    print "started rendering graph ... "
+    print("started rendering graph ... ")
     notification_graph_to_render.engine = 'circo'  # nice
     # dot_graph.engine = 'fdp'  # nice, slowest
     # dot_graph.engine = 'neato'
@@ -104,7 +105,7 @@ def show_debug_graph(print_to_console=False, open_text_file=True, render_graph=T
     if print_to_console:
         print(full_notification_graph_to_print_out.source)
 
-    print "finished rendering graph"
+    print("finished rendering graph")
 
 
 def disable_debugging():

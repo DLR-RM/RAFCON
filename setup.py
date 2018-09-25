@@ -12,6 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from __future__ import print_function
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 from setuptools.command.develop import develop as DevelopCommand
@@ -46,9 +47,9 @@ class PyTest(TestCommand):
         sys.path.insert(0, test_path)
         sys.path.insert(0, rafcon_path)
         os.environ["PYTHONPATH"] = rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
-        print
-        print "Running pytest with the following arguments:", shlex.split(self.pytest_args) + ['tests']
-        print
+        print()
+        print("Running pytest with the following arguments:", shlex.split(self.pytest_args) + ['tests'])
+        print()
         error_number = pytest.main(shlex.split(self.pytest_args) + ['tests'])
         sys.exit(error_number)
 
@@ -99,7 +100,7 @@ def get_all_files_recursivly(*path):
     """
     result_list = list()
     root_dir = os.path.join(*path)
-    print "retrieving all files from folder '{}'recursivelyy and adding to data_files ... ".format(root_dir)
+    print("retrieving all files from folder '{}'recursivelyy and adding to data_files ... ".format(root_dir))
 
     # remove share/ (package_dir) => e.g. target_dir_sub_path will be just "libraries"
     target_dir_sub_path = os.path.join(*root_dir.split(os.sep)[1:])

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import threading
 import pytest
 import time
@@ -130,11 +131,11 @@ def undock_sidebars():
         window.disconnect(show_handler_id)
         window.disconnect(hide_handler_id)
 
-    print "=> test left_bar_window"
+    print("=> test left_bar_window")
     test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR")
-    print "=> test right_bar_window"
+    print("=> test right_bar_window")
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
-    print "=> test console_window"
+    print("=> test console_window")
     test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
     testing_utils.call_gui_callback(wait_for_gui)
 
@@ -163,13 +164,13 @@ def check_pane_positions():
         call_gui_callback(connect_window, window, 'hide', notify_on_event, output_list)
         hide_handler_id = output_list[0]
 
-        print "undocking..."
+        print("undocking...")
         time.sleep(debug_sleep_time)
         ready.clear()
         call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key.lower())].emit, "clicked")
         wait_for_event_notification()
 
-        print "docking..."
+        print("docking...")
         time.sleep(debug_sleep_time)
         ready.clear()
         attribute_name_of_undocked_window_view = window_key.lower() + "_window"
@@ -181,17 +182,17 @@ def check_pane_positions():
         window.disconnect(configure_handler_id)
         window.disconnect(hide_handler_id)
 
-    print "=> test left_bar_window"
+    print("=> test left_bar_window")
     test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR")
-    print "=> test right_bar_window"
+    print("=> test right_bar_window")
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
-    print "=> test console_window"
+    print("=> test console_window")
     test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
     testing_utils.wait_for_gui()
 
-    print "check if pane positions are still like in runtime_config.yaml"
+    print("check if pane positions are still like in runtime_config.yaml")
     for config_id, pane_id in constants.PANE_ID.iteritems():
-        print "check pos of ", config_id, pane_id
+        print("check pos of ", config_id, pane_id)
         assert main_window_controller.view[pane_id].get_position() == stored_pane_positions[config_id]
 
 

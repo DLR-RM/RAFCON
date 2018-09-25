@@ -17,6 +17,7 @@
    :synopsis: A module caring about the logging capability of RAFCON
 
 """
+from __future__ import print_function
 
 import os
 import logging
@@ -92,7 +93,7 @@ with open(logging_conf_path) as logging_conf_file:
         logging.config.dictConfig(logging_config)
     except ValueError as e:
         # we can't use a logger here (chicken-egg-problem)
-        print "Could not load {} (ValueError: {})".format(logging_conf_path, e)
+        print("Could not load {} (ValueError: {})".format(logging_conf_path, e))
 
 
 def get_logger(name):

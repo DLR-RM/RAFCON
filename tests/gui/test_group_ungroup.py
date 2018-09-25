@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 from os.path import join
 
@@ -150,43 +151,43 @@ def trigger_issue_539_reproduction_sequence():
     # TODO substitute these checks by creation of transitions and an in list check on respective hierarchy level
     # TODO (will be faster)
     # check if transitions are there by negative check and trying to create them
-    print "check start transition in root state"
+    print("check start transition in root state")
     with pytest.raises(ValueError):
         call_gui_callback(new_state_machine_m.root_state.state.add_transition,
                           new_state_machine_m.root_state.state.state_id, None,
                           new_state_m_from_group_action.state.state_id, None)
 
-    print "check start inside of grouped state"
+    print("check start inside of grouped state")
     with pytest.raises(ValueError):
         call_gui_callback(new_state_m_from_group_action.state.add_transition,
                           new_state_m_from_group_action.state.state_id, None,
                           new_state_m.state.state_id, None)
 
-    print "check end inside of grouped state"
+    print("check end inside of grouped state")
     with pytest.raises(ValueError):
         call_gui_callback(new_state_m_from_group_action.state.add_transition,
                           new_state_m.state.state_id, 0,
                           new_state_m_from_group_action.state.state_id, 0)
 
-    print "check end transition in root state - relevant transition for bug issue 539"
+    print("check end transition in root state - relevant transition for bug issue 539")
     with pytest.raises(ValueError):
         call_gui_callback(new_state_machine_m.root_state.state.add_transition,
                           new_state_m_from_group_action.state.state_id, 0,
                           new_state_machine_m.root_state.state.state_id, 0)
 
     # the extra checks for more complex scenario
-    print "check income transition for second state"
+    print("check income transition for second state")
     with pytest.raises(ValueError):
         call_gui_callback(new_state_m_from_group_action.state.add_transition,
                           new_state_m.state.state_id, -1,
                           new_state_m_2.state.state_id, 0)
-    print "check outcome transition for second state"
+    print("check outcome transition for second state")
     with pytest.raises(ValueError):
         call_gui_callback(new_state_m_from_group_action.state.add_transition,
                           new_state_m_2.state.state_id, 0,
                           new_state_m_from_group_action.state.state_id, 0)
 
-    print "finished run of trigger_issue_539_reproduction_sequence"
+    print("finished run of trigger_issue_539_reproduction_sequence")
 
 
 def test_bug_issue_539(caplog):
@@ -269,7 +270,7 @@ def trigger_issue_586_reproduction_sequence():
 
     # ungroup all three child states which all have the same state ids as there child states plus data flows
     for state_id in state_ids:
-        print "ungroup state:", state_id
+        print("ungroup state:", state_id)
         assert state_id in sm_m.root_state.states
         child_state_m = sm_m.get_state_model_by_path("GLSUJY/" + state_id)
         call_gui_callback(sm_m.selection.set, child_state_m)

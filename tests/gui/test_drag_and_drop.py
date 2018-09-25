@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 from rafcon.utils import log
 
@@ -67,7 +68,7 @@ def trigger_drag_and_drop_tests(*args):
     state_machine_m = sm_manager_model.get_selected_state_machine_model()
 
     # insert state in root_state
-    print "insert state in root_state"
+    print("insert state in root_state")
     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 200, 200, None)
     # Override selection
     state_m = state_machine_m.root_state
@@ -77,7 +78,7 @@ def trigger_drag_and_drop_tests(*args):
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 2
 
     # insert state from IconView
-    print "insert state from IconView"
+    print("insert state from IconView")
     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 300, 300, None)
     # Override selection
     state_m = state_machine_m.root_state
@@ -88,14 +89,14 @@ def trigger_drag_and_drop_tests(*args):
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 3
 
     # insert state next to root state
-    print "insert state next to root state"
+    print("insert state next to root state")
     # Position (0, 0) in left above the root state
     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 0, 0, None)
     call_gui_callback(state_icon_controller.on_mouse_motion, None, StructHelper(30, 15, None))
     call_gui_callback(state_icon_controller.on_drag_data_get, None, None, selection_data, None, None)
 
     # insert state in state1
-    print "insert state in state1"
+    print("insert state in state1")
     state_m = state_machine_m.root_state.states['State1']
     call_gui_callback(state_machine_m.selection.set, [state_m])
     # Selecting a state using the drag_motion event is too unreliable, as the exact position depends on the size of

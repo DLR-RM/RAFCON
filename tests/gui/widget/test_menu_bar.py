@@ -1,3 +1,4 @@
+from __future__ import print_function
 # general tool elements
 from rafcon.utils import log
 
@@ -66,17 +67,17 @@ def select_and_paste_state(state_machine_model, source_state_model, target_state
     :param page: The notebook page of the corresponding state machine in the state machines editor
     :return: The target state model, and the child state count before pasting
     """
-    print "\n\n %s \n\n" % source_state_model.state.name
+    print("\n\n %s \n\n" % source_state_model.state.name)
     call_gui_callback(state_machine_model.selection.set, [source_state_model])
     call_gui_callback(getattr(menu_bar_ctrl, 'on_{}_selection_activate'.format(operation)), None, None)
-    print "\n\n %s \n\n" % target_state_model.state.name
+    print("\n\n %s \n\n" % target_state_model.state.name)
     call_gui_callback(state_machine_model.selection.set, [target_state_model])
     old_child_state_count = len(target_state_model.state.states)
     main_window_controller.view['main_window'].grab_focus()
     focus_graphical_editor_in_page(page)
     call_gui_callback(menu_bar_ctrl.on_paste_clipboard_activate, None, None)
     testing_utils.wait_for_gui()
-    print target_state_model.state.states.keys()
+    print(target_state_model.state.states.keys())
     assert len(target_state_model.state.states) == old_child_state_count + 1
     return target_state_model, old_child_state_count
 
@@ -171,7 +172,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     ##########################################################
     # group states
     # TODO improve test to related data flows
-    print "#"*30, "\n", '#### group states \n', "#"*30, "\n"
+    print("#"*30, "\n", '#### group states \n', "#"*30, "\n")
     state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
     state_ids_old = [state_id for state_id in state_m_parent.state.states]
     state_m_list = [state_m_parent.states[child_state_id] for child_state_id in ['PAYECU', 'UEPNNW', 'KQDJYS']]
@@ -179,7 +180,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
 
     ##########################################################
     # ungroup new state
-    print "#"*30, "\n", '#### ungroup state \n', "#"*30, "\n"
+    print("#"*30, "\n", '#### ungroup state \n', "#"*30, "\n")
     new_state = None
     for state_id in state_m_parent.state.states:
         if state_id not in state_ids_old:
@@ -187,17 +188,17 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     call_gui_callback(gui_helper_state.ungroup_state, sm_m.get_state_model_by_path(new_state.get_path()))
 
     #########################################################
-    print "select & copy an execution state -> and paste it somewhere"
+    print("select & copy an execution state -> and paste it somewhere")
     select_and_paste_state(sm_m, sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ'), sm_m.get_state_model_by_path(
         'CDMJPK/RMKGEW'), menubar_ctrl, 'copy', main_window_controller, page)
 
     ###########################################################
-    print "select & copy a hierarchy state -> and paste it some where"
+    print("select & copy a hierarchy state -> and paste it some where")
     select_and_paste_state(sm_m, sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY'),
                            sm_m.get_state_model_by_path('CDMJPK'), menubar_ctrl, 'copy', main_window_controller, page)
 
     ##########################################################
-    print "select a library state -> and paste it some where WITH CUT !!!"
+    print("select a library state -> and paste it some where WITH CUT !!!")
     state_m, old_child_state_count = select_and_paste_state(sm_m,
                                                             sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY'),
                                                             sm_m.get_state_model_by_path('CDMJPK'), menubar_ctrl, 'cut',
@@ -220,10 +221,10 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     state_m_to_copy = sm_m.get_state_model_by_path('CDMJPK/' + new_template_state.state_id)
 
     ##########################################################
-    print "copy & paste complex state into itself"
+    print("copy & paste complex state into itself")
 
     copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menubar_ctrl)
-    print "increase complexity by doing it twice -> increase the hierarchy-level"
+    print("increase complexity by doing it twice -> increase the hierarchy-level")
     copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menubar_ctrl)
 
     ##########################################################
@@ -276,7 +277,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
         data_port_id = state_m_parent.state.states[new_state_id].input_data_ports.items()[0][0]
         state_m_parent.state.states[new_state_id].use_runtime_value_input_data_ports[data_port_id] = True
         state_m_parent.state.states[new_state_id].input_data_port_runtime_values[data_port_id] = 2.0
-        print
+        print()
     else:
         raise
         # state_m_parent.state.states[new_state_id].input_data_ports.items()[0][1].default_value = 2.0

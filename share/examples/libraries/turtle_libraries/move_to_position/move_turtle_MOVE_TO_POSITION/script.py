@@ -1,3 +1,4 @@
+from __future__ import print_function
 import math
 import rospy
 from geometry_msgs.msg import Vector3
@@ -55,16 +56,16 @@ def execute(self, inputs, outputs, gvm):
     r = rospy.Rate(2)
 
     if (my_x or my_y or my_phi) is None:
-        print "move_to_position: global variable is None, return from execute function"
-        print "move_to_position: my_x"
-        print "move_to_position: my_y"
-        print "move_to_position: my_phi"
+        print("move_to_position: global variable is None, return from execute function")
+        print("move_to_position: my_x")
+        print("move_to_position: my_y")
+        print("move_to_position: my_phi")
         r.sleep()
         return 1
 
-    print "my_x: ", my_x
-    print "my_y: ", my_y
-    print "my_phi: ", my_phi
+    print("my_x: ", my_x)
+    print("my_y: ", my_y)
+    print("my_phi: ", my_phi)
 
     x_diff = inputs["x_pos"] - my_x
     y_diff = inputs["y_pos"] - my_y
@@ -75,10 +76,10 @@ def execute(self, inputs, outputs, gvm):
     ######################################################
 
     target_direction = math.atan2(y_diff, x_diff)
-    print "move_to_position: target_direction: ", target_direction
+    print("move_to_position: target_direction: ", target_direction)
 
     orientation_diff = normalize_angle_to_pos_neg_180(theta - target_direction)
-    print "move_to_position: orientation_diff: ", orientation_diff
+    print("move_to_position: orientation_diff: ", orientation_diff)
 
     # negative sign as we want to countersteer
     target_orientation_sign = -sign(orientation_diff)
@@ -97,11 +98,11 @@ def execute(self, inputs, outputs, gvm):
     if tmp > 1.0:
         tmp = 1.0
     x_move = tmp * max_x_move
-    print "move_to_position: x_move before taking direction into account: ", x_move
+    print("move_to_position: x_move before taking direction into account: ", x_move)
 
     if math.fabs(theta_move) > math.pi / 3:
         x_move = min_x_move
-    print "move_to_position: x_move before checking minimal distance: ", x_move
+    print("move_to_position: x_move before checking minimal distance: ", x_move)
 
     if distance < 1.5:
         x_move = 0

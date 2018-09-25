@@ -18,6 +18,7 @@
 
 
 # default libraries
+from __future__ import print_function
 import os
 import sys
 import logging
@@ -253,8 +254,8 @@ def signal_handler(signal, frame):
     core_singletons.shut_down_signal = signal
 
     # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
-    print _("Signal '{}' received.\nExecution engine will be stopped and program will be shutdown!").format(
-        SIGNALS_TO_NAMES_DICT.get(signal, "[unknown]"))
+    print(_("Signal '{}' received.\nExecution engine will be stopped and program will be shutdown!").format(
+        SIGNALS_TO_NAMES_DICT.get(signal, "[unknown]")))
 
     try:
         if not state_machine_execution_engine.finished_or_stopped():
@@ -262,12 +263,12 @@ def signal_handler(signal, frame):
             state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
     except Exception as e:
         import traceback
-        print _("Could not stop state machine: {0} {1}").format(e.message, traceback.format_exc())
+        print(_("Could not stop state machine: {0} {1}").format(e.message, traceback.format_exc()))
 
     try:
         gui_singletons.main_window_controller.prepare_destruction()
     except Exception as e:
-        print "Exception while preparing destruction", e
+        print("Exception while preparing destruction", e)
         os._exit(1)
 
     stop_gtk()

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import logging
 import shutil
@@ -17,7 +18,7 @@ def create_state_machine():
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.state_machine import StateMachine
 
-    print "create models"
+    print("create models")
 
     logger.setLevel(logging.VERBOSE)
     for handler in logging.getLogger('gtkmvc').handlers:
@@ -281,7 +282,7 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
 
 @pytest.mark.parametrize("with_gui", [True, False])
 def test_storage_with_gui(with_gui, caplog):
-    print "test storage with gui", with_gui
+    print("test storage with gui", with_gui)
 
     testing_utils.dummy_gui(None)
 
@@ -305,7 +306,7 @@ def test_storage_with_gui(with_gui, caplog):
 
     if e:
         raise e
-    print "test storage with gui {0} finished".format(with_gui)
+    print("test storage with gui {0} finished".format(with_gui))
 
 
 # TODO add examples of bad naming that cause before problems \n or [ ] and so on
@@ -321,7 +322,7 @@ def check_state_recursively_if_state_scripts_are_valid(state):
 
 
 def test_on_clean_storing_with_name_in_path(caplog):
-    print "test_on_clean_storing_with_name_in_path"
+    print("test_on_clean_storing_with_name_in_path")
 
     testing_utils.dummy_gui(None)
 

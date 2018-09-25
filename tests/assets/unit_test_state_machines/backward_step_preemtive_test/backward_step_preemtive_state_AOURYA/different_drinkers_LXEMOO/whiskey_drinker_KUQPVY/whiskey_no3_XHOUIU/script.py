@@ -1,10 +1,11 @@
+from __future__ import print_function
 import time
 
 def execute(self, inputs, outputs, gvm):
     while True:
         time.sleep(0.010)
         if self.preempted:
-            print "i was preempted"
+            print("i was preempted")
             break    
 #        beer = gvm.get_variable('beers')
 #        if beer >= 3:

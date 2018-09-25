@@ -7,6 +7,7 @@
 
 
 """
+from __future__ import print_function
 
 import logging
 import gtk
@@ -60,7 +61,7 @@ def start_client(interacting_function, queue_dict):
         gtk2reactor.install()
         from twisted.internet import reactor
     else:
-        print "Twisted not imported! Thus the gkt2reatcor is not installed!"
+        print("Twisted not imported! Thus the gkt2reatcor is not installed!")
         exit()
 
     plugins.run_pre_inits()
@@ -128,10 +129,10 @@ def start_client(interacting_function, queue_dict):
 
 
 def print_objects(main_window_controller, global_monitoring_manager, queue_dict):
-    print "dummy prints:"
-    print main_window_controller
-    print global_monitoring_manager
-    print queue_dict
+    print("dummy prints:")
+    print(main_window_controller)
+    print(global_monitoring_manager)
+    print(queue_dict)
 
 if __name__ == '__main__':
     start_client(print_objects, "multiprocessing_queue_dict")

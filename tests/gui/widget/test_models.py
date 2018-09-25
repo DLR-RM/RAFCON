@@ -1,3 +1,4 @@
+from __future__ import print_function
 from gtkmvc.observer import Observer
 
 import pytest
@@ -71,7 +72,7 @@ class StateNotificationLogObserver(NotificationLogObserver):
             #     print "observer: ", self
         else:
             if self.with_print:
-                print "!!!! NOT a prop_name '%s' to be observed in BEFORE %s %s" % (prop_name, model, info)
+                print("!!!! NOT a prop_name '%s' to be observed in BEFORE %s %s" % (prop_name, model, info))
             self.no_failure = False
 
         self.parent_state_of_notification_source(model, prop_name, info, before_after='before')
@@ -96,14 +97,14 @@ class StateNotificationLogObserver(NotificationLogObserver):
             #     print "observer: ", self
         else:
             if self.with_print:
-                print "!!!! NOT a prop_name '%s' to be observed in AFTER %s %s" % (prop_name, model, info)
+                print("!!!! NOT a prop_name '%s' to be observed in AFTER %s %s" % (prop_name, model, info))
             self.no_failure = False
 
         self.parent_state_of_notification_source(model, prop_name, info, before_after='after')
 
     def parent_state_of_notification_source(self, model, prop_name, info, before_after):
         if self.with_print:
-            print "----- xxxxxxx %s \n%s\n%s\n%s\n" % (before_after, model, prop_name, info)
+            print("----- xxxxxxx %s \n%s\n%s\n%s\n" % (before_after, model, prop_name, info))
 
         def set_dict(info, d):
             d['model'].append(info['model'])
@@ -111,29 +112,29 @@ class StateNotificationLogObserver(NotificationLogObserver):
             d['instance'].append(info['instance'])
             d['method_name'].append(info['method_name'])
             if self.with_print:
-                print "set"
+                print("set")
 
         def find_parent(info, elem):
             elem['info'].append(info)
             if 'kwargs' in info and info['kwargs']:
                 if self.with_print:
-                    print 'kwargs'
+                    print('kwargs')
                 elem['level'].append('kwargs')
                 set_dict(info, elem)
                 if 'method_name' in info['kwargs']:
                     find_parent(info['kwargs'], elem)
             elif 'info' in info and info['info']:
                 if self.with_print:
-                    print 'info'
+                    print('info')
                 elem['level'].append('info')
                 set_dict(info, elem)
                 find_parent(info['info'], elem)
             elif 'info' in info or 'kwargs' in info:
                 set_dict(info, elem)
             else:
-                print info
+                print(info)
                 from rafcon.gui.utils.notification_overview import NotificationOverview
-                print 'NotificationLogger ---> assert !!! Type of notification not known'#\n{0}'.format(NotificationOverview(info))
+                print('NotificationLogger ---> assert !!! Type of notification not known')#\n{0}'.format(NotificationOverview(info))
                 assert True
             return elem
 
@@ -418,7 +419,7 @@ def store_state_elements(state, state_m):
                 state_m_elements['data_flows_external_not_related'].append(df_id)
                 # state_m_elements['data_flows_external_not_related_meta'][df_id] = t_m.meta
     else:
-        print "STATE is a root_state"
+        print("STATE is a root_state")
 
     return state_elements, state_m_elements
 
@@ -459,7 +460,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     if 'outcomes' in check_list:
         # collect outcomes
         for oc_id, oc, in state.outcomes.iteritems():
-            print oc_id, stored_state_elements['outcomes']
+            print(oc_id, stored_state_elements['outcomes'])
             assert oc_id in stored_state_elements['outcomes']
         # - check if the right models are there and only those
         model_id_store = []
@@ -784,9 +785,9 @@ def test_add_remove_models(caplog):
     StateNotificationLogObserver(sm_model.root_state, with_print=False)
 
     def print_all_states_with_path_and_name(state):
-        print state.get_path(), state.name, type(state)
+        print(state.get_path(), state.name, type(state))
         if isinstance(state.parent, State):
-            print "parent is: ", state.parent.state_id, state.parent.name
+            print("parent is: ", state.parent.state_id, state.parent.name)
 
         from rafcon.core.states.container_state import ContainerState
         if isinstance(state, ContainerState):
@@ -822,7 +823,7 @@ def test_add_remove_models(caplog):
         everything_right = True
         everything_right = everything_right and state.get_path() == state_dict['path']
         if not state.get_path() == state_dict['path']:
-            print "path is inconsistent", state.state_id, state.name, state.get_path(), state_dict['path']
+            print("path is inconsistent", state.state_id, state.name, state.get_path(), state_dict['path'])
         for s_id, s_dict in state_dict['states'].iteritems():
             if s_id in state.states:
                 everything_right = everything_right and check_if_all_states_there(state.states[s_id], s_dict)
@@ -832,7 +833,7 @@ def test_add_remove_models(caplog):
             for s_id, s in state.states.iteritems():
                 everything_right = everything_right and s_id in state_dict['states']
                 if not s_id in state_dict['states']:
-                    print "state '%s' not found in '%s %s' list of states %s" % (s_id, state.state_id, state.name, state_dict['states'])
+                    print("state '%s' not found in '%s %s' list of states %s" % (s_id, state.state_id, state.name, state_dict['states']))
         return everything_right
 
     def do_check_for_state(state_dict, state_name):
@@ -858,23 +859,23 @@ def test_add_remove_models(caplog):
         # add state
         state_dict[state_name].add_state(state4)
         state_dict[state_name].add_state(state5)
-        print state_dict[state_name].states
+        print(state_dict[state_name].states)
 
         state4_path = state4.get_path()
         state5_path = state5.get_path()
-        print state_dict[state_name].get_path(), state_dict[state_name].state_id, state_dict[state_name].name
-        print state4_path, state4.state_id
-        print state5_path, state5.state_id
+        print(state_dict[state_name].get_path(), state_dict[state_name].state_id, state_dict[state_name].name)
+        print(state4_path, state4.state_id)
+        print(state5_path, state5.state_id)
         # store_state_machine(sm_model, test_history_path1)
         state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
         state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
         check_state_for_all_models(state, state_m)
         # store_state_machine(sm_model, test_history_path2)
 
-        print state4.state_id
+        print(state4.state_id)
         if isinstance(state4.parent.parent, State):
             pstate = sm_model.get_state_model_by_path(state4.parent.parent.get_path())
-            print pstate.states.keys(), "\n\n"
+            print(pstate.states.keys(), "\n\n")
             # print pstate.state_id, pstate.name, pstate.get_path()
 
         # print_all_states_with_path_and_name(state_dict['Container'])
@@ -1100,23 +1101,23 @@ def test_state_property_models_consistency(caplog):
     state_dict['Nested'].input_data_ports = {}
     state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
     state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
-    print "CHECK INPUTS_LIST_ASSIGNMENT"
+    print("CHECK INPUTS_LIST_ASSIGNMENT")
     check_state_for_all_models(state, state_m)
 
     # output_data_ports(self, output_data_ports) None or dict
-    print "DO OUTPUTS_LIST_ASSIGNMENT"
+    print("DO OUTPUTS_LIST_ASSIGNMENT")
     state_dict['Nested'].output_data_ports = {}
     state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
     state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
-    print "CHECK OUTPUTS_LIST_ASSIGNMENT"
+    print("CHECK OUTPUTS_LIST_ASSIGNMENT")
     check_state_for_all_models(state, state_m)
 
     # outcomes(self, outcomes) None or dict
-    print "DO OUTCOMES_LIST_ASSIGNMENT"
+    print("DO OUTCOMES_LIST_ASSIGNMENT")
     state_dict['Nested'].outcomes = state2.outcomes
     state_m = sm_model.get_state_model_by_path(state_dict[state_name].get_path())
     state = sm_model.state_machine.get_state_by_path(state_dict[state_name].get_path())
-    print "CHECK OUTCOMES_LIST_ASSIGNMENT"
+    print("CHECK OUTCOMES_LIST_ASSIGNMENT")
     check_state_for_all_models(state, state_m)
 
     state_dict['Nested'].outcomes = {}

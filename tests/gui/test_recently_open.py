@@ -1,3 +1,4 @@
+from __future__ import print_function
 import threading
 import shutil
 from os.path import join
@@ -63,7 +64,7 @@ def check_order_and_consistency_of_menu(menubar_ctrl):
     for index, elem in enumerate(menubar_ctrl.view.sub_menu_open_recently):
         if index in [0, 1]:
             continue
-        print elem.get_label()
+        print(elem.get_label())
         assert recently_opened[index - 2] in elem.get_label()
 
 
@@ -99,7 +100,7 @@ def trigger_gui_signals(*args):
     import rafcon.core.config
     from rafcon.core.states.library_state import LibraryState
 
-    print "WT: ", threading.currentThread()
+    print("WT: ", threading.currentThread())
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_controller = rafcon.gui.singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
@@ -191,9 +192,9 @@ def trigger_gui_signals(*args):
     call_gui_callback(sm_manager_model.__setattr__, "selected_state_machine_id", lib_sm_m.state_machine.state_machine_id)
     call_gui_callback(testing_utils.wait_for_gui)
     call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
-    print recently_opened_state_machines_paths
+    print(recently_opened_state_machines_paths)
     assert lib_sm_m.state_machine.file_system_path == recently_opened_state_machines_paths[0]
-    print recently_opened_state_machines_paths, library_os_path, sm_manager_model.state_machines[reopen_first_sm_id].state_machine.file_system_path
+    print(recently_opened_state_machines_paths, library_os_path, sm_manager_model.state_machines[reopen_first_sm_id].state_machine.file_system_path)
     assert sm_manager_model.state_machines[reopen_first_sm_id].state_machine.file_system_path == recently_opened_state_machines_paths[1]
     call_gui_callback(global_runtime_config.clean_recently_opened_state_machines)
     assert not sm_manager_model.state_machines[reopen_first_sm_id].state_machine.file_system_path == recently_opened_state_machines_paths[1]
@@ -212,7 +213,7 @@ def trigger_gui_signals(*args):
     assert recently_opened_state_machines_paths == global_runtime_config.get_config_value('recently_opened_state_machines')
 
     # try to open state machine that is not there -> no fatal failure
-    print "OPEN FAILURE CASE"
+    print("OPEN FAILURE CASE")
     call_gui_callback(global_runtime_config.update_recently_opened_state_machines_with, lib_sm_m.state_machine)
     lib_sm_path = lib_sm_m.state_machine.file_system_path
     shutil.rmtree(lib_sm_m.state_machine.file_system_path)
@@ -231,7 +232,7 @@ def trigger_gui_signals(*args):
     assert 'NOT_ACCESSIBLE' in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
 
     # TODO maybe finally move this into the auto-backup or restore test module
-    print "AUTO BACKUP TEST"
+    print("AUTO BACKUP TEST")
     number_of_open_sm = len(sm_manager_model.state_machines)
     backup_path = sm_manager_model.state_machines[reopen_first_sm_id].auto_backup.meta['last_backup']['file_system_path']
     from rafcon.gui.models import auto_backup
