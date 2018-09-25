@@ -22,9 +22,9 @@ The template is a `.xcf` which is the native project format of GIMP. This guide 
 
 6. Now select the layer with your picture in the Layer widget.
 
-    - Go to the Tools widget and select the ``Scale`` tool.
-    - Click on your picture with the ``Scale`` tool and fit it in the 570x320px field.
-    - If your not satisfied with your result, try the "Move" tool and move the layer around.
+   - Go to the Tools widget and select the ``Scale`` tool.
+   - Click on your picture with the ``Scale`` tool and fit it in the 570x320px field.
+   - If your not satisfied with your result, try the "Move" tool and move the layer around.
 
 7. Notice the small eye in the Layer widget next to a layer? Activate the visibility of a logo that serves your needs the best.
 
