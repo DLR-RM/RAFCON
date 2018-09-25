@@ -476,10 +476,10 @@ def patch_gtkmvc_model_mt():
         from .notifications import feed_debugging_graph
         feed_debugging_graph(self, observer, method, *args, **kwargs)
 
-        if not self._ModelMT__observer_threads.has_key(observer):
+        if observer not in self._ModelMT__observer_threads:
             logger.error("ASSERT WILL COME observer not in observable threads observer: {0} observable: {1}"
                          "-> known threads are {2}".format(observer, self, self._ModelMT__observer_threads))
-        assert self._ModelMT__observer_threads.has_key(observer)
+        assert observer in self._ModelMT__observer_threads
         if _threading.currentThread() == self._ModelMT__observer_threads[observer]:
             # standard call => single threaded
             # print "{0} -> {1}: single threading '{2}' in call_thread {3} object_generation_thread {3} \n{4}" \
@@ -523,7 +523,7 @@ def unpatch_gtkmvc_model_mt():
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
     import gtkmvc
-    if any([e is None for e in original_ModelMT_notify_observer, original_state_start, original_run_state_machine]):
+    if any([e is None for e in (original_ModelMT_notify_observer, original_state_start, original_run_state_machine)]):
         raise EnvironmentError("All methods to un-patch have to be set not None.")
     gtkmvc.model_mt.ModelMT.__notify_observer__ = original_ModelMT_notify_observer
     rafcon.core.states.state.State.start = original_state_start

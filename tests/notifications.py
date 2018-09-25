@@ -94,7 +94,7 @@ def show_debug_graph(print_to_console=False, open_text_file=True, render_graph=T
                 target_node=target_node_name,
                 prop_name=edge_info['prop_name'],
                 change=change,
-                callback=edge_info['callback'].__func__.func_name
+                callback=edge_info['callback'].__func__.__name__
             ))
             text_file.write("\n-----\n")
 

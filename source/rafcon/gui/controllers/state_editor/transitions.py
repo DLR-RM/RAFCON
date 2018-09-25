@@ -31,6 +31,7 @@ from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.utils import log
+from functools import reduce
 
 logger = log.get_logger(__name__)
 

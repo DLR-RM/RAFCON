@@ -1268,7 +1268,7 @@ class DataFlowAction(StateElementAction):
 
     def set_data_flow_version(self, df, arguments):
         if self.action_type in self.possible_args:
-            exec "df.{0} = arguments['{0}']".format(self.action_type)
+            exec("df.{0} = arguments['{0}']".format(self.action_type))
         elif self.action_type == 'modify_origin':
             df.modify_origin(from_state=arguments['from_state'], from_key=arguments['from_key'])
         elif self.action_type == 'modify_target':
@@ -1303,7 +1303,7 @@ class TransitionAction(StateElementAction):
 
     def set_transition_version(self, t, arguments):
         if self.action_type in self.possible_args:
-            exec "t.{0} = arguments['{0}']".format(self.action_type)
+            exec("t.{0} = arguments['{0}']".format(self.action_type))
         elif self.action_type == 'modify_origin':
             t.modify_origin(from_state=arguments['from_state'], from_outcome=arguments['from_outcome'])
         elif self.action_type == 'modify_target':
@@ -1336,7 +1336,7 @@ class DataPortAction(StateElementAction):
 
     def set_data_port_version(self, dp, arguments):
         if self.action_type in self.possible_args:
-            exec "dp.{0} = arguments['{0}']".format(self.action_type)
+            exec("dp.{0} = arguments['{0}']".format(self.action_type))
         elif self.action_type == 'data_type':
             dp.data_type = arguments['data_type']
             dp.default_value = arguments['default_value']
@@ -1376,7 +1376,7 @@ class OutcomeAction(StateElementAction):
 
     def set_outcome_version(self, oc, arguments):
         if self.action_type in self.possible_args:
-            exec "oc.{0} = arguments['{0}']".format(self.action_type)
+            exec("oc.{0} = arguments['{0}']".format(self.action_type))
         else:
             raise TypeError("Only types of the following list are allowed. {0}".format(self.possible_method_names))
 
@@ -1511,8 +1511,8 @@ class StateAction(Action):
 
     def set_attr_to_version(self, s, arguments):
         if self.action_type in self.possible_args:
-            exec "s.{0} = copy.deepcopy(arguments['{0}'])".format(self.substitute_dict.get(self.action_type,
-                                                                                           self.action_type))
+            exec("s.{0} = copy.deepcopy(arguments['{0}'])".format(self.substitute_dict.get(self.action_type,
+                                                                                           self.action_type)))
         else:
             assert False
 

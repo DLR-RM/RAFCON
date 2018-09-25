@@ -1366,8 +1366,8 @@ class GraphicalEditorController(ExtendedController):
                     max_bottom_edge = port_bottom_edge if max_bottom_edge > port_bottom_edge else max_bottom_edge
 
         # Check for parent size limitation
-        max_right_edge = sys.maxint
-        min_bottom_edge = -sys.maxint - 1
+        max_right_edge = sys.maxsize
+        min_bottom_edge = -sys.maxsize - 1
         if not state_m.state.is_root_state:
             if state_m.state.is_root_state_of_library:
                 parent_state_m = state_m.parent.parent
