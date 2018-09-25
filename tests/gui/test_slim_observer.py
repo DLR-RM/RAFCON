@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import object
 from gtkmvc.observable import Observable
 import testing_utils
 import pytest
@@ -27,7 +28,7 @@ class ObservableTest(Observable):
         return 20
 
 
-class ObserverTest():
+class ObserverTest(object):
 
     def __init__(self):
         self.test_observable = ObservableTest()

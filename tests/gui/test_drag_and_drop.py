@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+from builtins import object
 from rafcon.utils import log
 
 # test environment elements
@@ -10,7 +11,7 @@ import pytest
 logger = log.get_logger(__name__)
 
 
-class StructHelper:
+class StructHelper(object):
     def __init__(self, x, y, text):
         self.x = x
         self.y = y

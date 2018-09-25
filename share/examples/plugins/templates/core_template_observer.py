@@ -1,3 +1,4 @@
+from builtins import object
 import rafcon.core.singleton
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.library_state import LibraryState
@@ -6,7 +7,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class ExecutionEngineObserver:
+class ExecutionEngineObserver(object):
 
     def __init__(self):
         self.logger = log.get_logger(type(self).__name__)
@@ -30,7 +31,7 @@ class ExecutionEngineObserver:
         self.logger.info("ExecutionEngine will be set to 'stop'.")
 
 
-class ExecutionStatusObserver:
+class ExecutionStatusObserver(object):
     """ The Observer registers recursively to all states of all state-machines known at time of initiation and
     registers to newly add state-machines by the state-machine-manager.
     """

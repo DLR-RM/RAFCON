@@ -1,3 +1,4 @@
+from builtins import object
 import os
 import pytest
 import testing_utils
@@ -17,7 +18,7 @@ def assert_all_false(*elements):
         assert not elem
 
 
-class TestErrorPreemptionHandling():
+class TestErrorPreemptionHandling(object):
 
     state_machine = None
 

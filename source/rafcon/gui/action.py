@@ -344,7 +344,7 @@ def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=Non
     check_state_model_for_is_start_state(state_model)
 
 
-class CoreObjectIdentifier:
+class CoreObjectIdentifier(object):
     # TODO generalize and include into utils
 
     type_related_list_name_dict = {InputDataPort.__name__: 'input_data_ports',

@@ -14,6 +14,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 
+from builtins import object
 from builtins import range
 from math import sin, cos, pi, atan2
 from enum import Enum
@@ -48,7 +49,7 @@ class Direction(Enum):
     left = 4
 
 
-class Color:
+class Color(object):
 
     _r = 0
     _g = 0
