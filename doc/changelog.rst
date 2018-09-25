@@ -40,99 +40,99 @@ Patch releases 0.12.\*
 
 - Improvements:
 
-    - Update documenation regarding installation
-    - Update rafcon dependencies in setup.py
+  - Update documenation regarding installation
+  - Update rafcon dependencies in setup.py
 
 - Bug Fixes:
 
-    - API: ``AttributeError`` when passing ``DeciderState`` to constructor of ``BarrierConcurrencyState``
-    - Installation of mo-files (for language support) works
+  - API: ``AttributeError`` when passing ``DeciderState`` to constructor of ``BarrierConcurrencyState``
+  - Installation of mo-files (for language support) works
 
 0.12.22
 """""""
 
 - Features:
 
-    - :issue:`581` Utility shortcuts to add transitions from selected state to parent default outcome and sibling states
+  - :issue:`581` Utility shortcuts to add transitions from selected state to parent default outcome and sibling states
 
 - Improvements:
 
-    - redraw graphical editor if connections are removed
-    - extend German RAFCON translation
-    - extend Developer's Guide by how-to on translating RAFCON
-    - API: ``add_state`` is adapting the passed ``state.state_id`` automatically in case of conflicts
+  - redraw graphical editor if connections are removed
+  - extend German RAFCON translation
+  - extend Developer's Guide by how-to on translating RAFCON
+  - API: ``add_state`` is adapting the passed ``state.state_id`` automatically in case of conflicts
       instead of raising an ``AttributeError``
 
 - Bug Fixes:
 
-    - :issue:`455` Proportional resizing states now works properly
-    - :issue:`538` Many error outputs when changing MAX_VISIBLE_LIBRARY_HIERARCHY
-    - :issue:`541` Where are the magnet lines gone?
-    - :issue:`551` Prevent RAFCON from restarting if installation of fonts fails
-    - :issue:`571` Wrong rendering of scoped variables
-    - :issue:`580` update font installation
-    - :issue:`584` Opening a external source editor fails for a never set active state machine id
-    - :issue:`586` Ungroup of a state with data flows in between of it child states twice in the same hierarchy
+  - :issue:`455` Proportional resizing states now works properly
+  - :issue:`538` Many error outputs when changing MAX_VISIBLE_LIBRARY_HIERARCHY
+  - :issue:`541` Where are the magnet lines gone?
+  - :issue:`551` Prevent RAFCON from restarting if installation of fonts fails
+  - :issue:`571` Wrong rendering of scoped variables
+  - :issue:`580` update font installation
+  - :issue:`584` Opening a external source editor fails for a never set active state machine id
+  - :issue:`586` Ungroup of a state with data flows in between of it child states twice in the same hierarchy
       creates corrupt state machine or fails
-    - stepping works inside library and concurrency states
-    - :issue:`589` decider state can be deleted
-    - make i18n work
+  - stepping works inside library and concurrency states
+  - :issue:`589` decider state can be deleted
+  - make i18n work
 
 0.12.21
 """""""
 
 - Features:
-    - new save state machine as menu item for root state right click menu to offer direct 'save as library' operations
+  - new save state machine as menu item for root state right click menu to offer direct 'save as library' operations
 
 - Improvements:
 
-    - :issue:`579` Integrate external execution log viewer
+  - :issue:`579` Integrate external execution log viewer
 
 
 - Bug Fixes:
 
-    - :issue:`574` Group fails if it includes data flows between the grouped states or scoped variables
+  - :issue:`574` Group fails if it includes data flows between the grouped states or scoped variables
 
 0.12.20
 """""""
 
 - Features:
     
-    - maintenance release
+  - maintenance release
 
 0.12.19
 """""""
 
 - Bug Fixes:
     
-    - fix setup.py, sdist now working on pypi
+  - fix setup.py, sdist now working on pypi
 
 0.12.18
 """""""
 
 - Features:
     
-    - new shortcut open library state separately as state machine by default on 'Shift+Ctrl+Space' (shortcut works for multiple states, too)
+  - new shortcut open library state separately as state machine by default on 'Shift+Ctrl+Space' (shortcut works for multiple states, too)
 
 - Improvements:
 
-    - Provides proper PyCharm config files (in the `.idea` folder)
-    - update menu item labels
-    - updated rst documentation
+  - Provides proper PyCharm config files (in the `.idea` folder)
+  - update menu item labels
+  - updated rst documentation
 
 - Bug Fixes:
 
-    - recent opened state machine list no more miss paths
-    - :issue:`550` Gaphas cairo.Error: invalid value (typically too big) for the size of the input (surface, pattern, etc.)
-    - :issue:`564` Zoom onto mouse position
-    - handle config option `ZOOM_WITH_CTRL` properly
+  - recent opened state machine list no more miss paths
+  - :issue:`550` Gaphas cairo.Error: invalid value (typically too big) for the size of the input (surface, pattern, etc.)
+  - :issue:`564` Zoom onto mouse position
+  - handle config option `ZOOM_WITH_CTRL` properly
 
 0.12.17
 """""""
 
 - Improvements:
 
-    - example state machines and generic libraries get now installed via pypi
+  - example state machines and generic libraries get now installed via pypi
 
 
 0.12.16
@@ -140,33 +140,33 @@ Patch releases 0.12.\*
 
 - Improvements:
 
-    - default config file extended
+  - default config file extended
 
 0.12.15
 """""""
 
 - Improvements:
 
-    - PYTHONUSERBASE added to search path list for gtk style files
+  - PYTHONUSERBASE added to search path list for gtk style files
 
 0.12.14
 """""""
 
 - Improvements:
 
-    - library_manager: increase performance of loading libraries by caching a list of all loaded libraries
-    - gaphas editor: use new meta data hash method to speed up loading time
+  - library_manager: increase performance of loading libraries by caching a list of all loaded libraries
+  - gaphas editor: use new meta data hash method to speed up loading time
 
 0.12.13
 """""""
 
 - Improvements:
 
-    - the column headers of state machine tree now can be used to sort the items according state name, ID or type
-    - more user friendly interface for tree and list view widgets e.g. data ports, outcomes and semantic data
+  - the column headers of state machine tree now can be used to sort the items according state name, ID or type
+  - more user friendly interface for tree and list view widgets e.g. data ports, outcomes and semantic data
       -> scrollbar adjustment and selections are moving much less and try to stay in the front of respective widget
-    - correct tab motion to be more accurate
-    - execution_history widget shows more visible chars per data port
+  - correct tab motion to be more accurate
+  - execution_history widget shows more visible chars per data port
 
 
 0.12.12
@@ -174,19 +174,19 @@ Patch releases 0.12.\*
 
 - Improvements:
 
-    - :issue:`530` automatically focus and adapt position of root state for fresh initiated state machines
+  - :issue:`530` automatically focus and adapt position of root state for fresh initiated state machines
                    issue title was "Root state out of focus and badly positioned"
-    - :issue:`543` Changing default option for library name while saving
+  - :issue:`543` Changing default option for library name while saving
                    -> for the default folder name white space are replaced with underscores and all is lower case
-    - also default library state name is now the folder name with replaced underscores with white spaces
+  - also default library state name is now the folder name with replaced underscores with white spaces
 
 
 - Bug Fixes:
 
-    - :issue:`527` RAFCON GUI loops while startup if HOME environment variable is not defined
+  - :issue:`527` RAFCON GUI loops while startup if HOME environment variable is not defined
                    -> a error message pointing on respective missing environment variable is added
-    - :issue:`539` grouping of states outcome transitions are not fully recovers (now bug is covered by test)
-    - :issue:`515` source editor does not show end of lines (finally)
+  - :issue:`539` grouping of states outcome transitions are not fully recovers (now bug is covered by test)
+  - :issue:`515` source editor does not show end of lines (finally)
 
 
 0.12.11
@@ -194,16 +194,16 @@ Patch releases 0.12.\*
 
 - Improvements:
 
-    - :issue:`529` accelerate the follow mode switch for many logger messages
-    - dynamic insertion of states during state execution is working and tested
-    - secure dynamic modification of state machines while runtime by test created in
+  - :issue:`529` accelerate the follow mode switch for many logger messages
+  - dynamic insertion of states during state execution is working and tested
+  - secure dynamic modification of state machines while runtime by test created in
       pull request :issue:`535` Dynamic insertion of states during execution
 
 - Bug Fixes:
 
-    - :issue:`515` source editor does not show end of lines (partly)
-    - :issue:`533` States inside library states cannot be selected
-    - :issue:`528` execution history destruction does not lead to max recursion depth
+  - :issue:`515` source editor does not show end of lines (partly)
+  - :issue:`533` States inside library states cannot be selected
+  - :issue:`528` execution history destruction does not lead to max recursion depth
 
 
 0.12.10
@@ -211,63 +211,63 @@ Patch releases 0.12.\*
 
 - Features:
 
-    - :issue:`520` Debug Console keeps track of last logger message if the follow mode is enabled
+  - :issue:`520` Debug Console keeps track of last logger message if the follow mode is enabled
 
 - Improvements:
 
-    - in pull request :issue:`523` refactoring of debug console  for more intuitive and robust behavior
+  - in pull request :issue:`523` refactoring of debug console  for more intuitive and robust behavior
       e.g. persistent cursor position
-    - :issue:`516` source editor does not show line of cursor after apply if the script is big
+  - :issue:`516` source editor does not show line of cursor after apply if the script is big
 
 - Bug Fixes:
 
-    - :issue:`519` rafcon freezes while opening a state machine
-        - solved in pull request :issue:`524` history elements hold direct state reference
-    - :issue:`514` text in entry widget of port not visible during editing (arrow key press left-right helps)
-        - the issue was not fully resolved but improved
+  - :issue:`519` rafcon freezes while opening a state machine
+    - solved in pull request :issue:`524` history elements hold direct state reference
+  - :issue:`514` text in entry widget of port not visible during editing (arrow key press left-right helps)
+    - the issue was not fully resolved but improved
 
 0.12.9
 """"""
 
 - Improvements:
 
-    - container state API can adjust output_data by new method write_output_data
-    - more robust execution history tree
-    - performance improvement by deleting gaphas views at once for recursive state destruction's
+  - container state API can adjust output_data by new method write_output_data
+  - more robust execution history tree
+  - performance improvement by deleting gaphas views at once for recursive state destruction's
 
 - Bug Fixes:
 
-    - :issue:`521` Strange gaphas logs during deletion of a state
-    - fix gaphas exceptions if state machine selection holds elements which gaphas has not drawn
+  - :issue:`521` Strange gaphas logs during deletion of a state
+  - fix gaphas exceptions if state machine selection holds elements which gaphas has not drawn
 
 0.12.8
 """"""
 
 - Feature:
 
-    - start RAFCON with `rafcon` instead of `rafcon_start_gui` or `rafcon_core` instead of `rafcon_start` (old
+  - start RAFCON with `rafcon` instead of `rafcon_start_gui` or `rafcon_core` instead of `rafcon_start` (old
       commands are still working)
 
 - Improvements:
 
-    - buttons to forcefully lock or unlock a global variable
-    - global variable manager logger messages got new failure warning messages
-    - copy/paste for semantic data elements
-    - new config value SHOW_PATH_NAMES_IN_EXECUTION_HISTORY
-    - make library path in state editor overview selectable
+  - buttons to forcefully lock or unlock a global variable
+  - global variable manager logger messages got new failure warning messages
+  - copy/paste for semantic data elements
+  - new config value SHOW_PATH_NAMES_IN_EXECUTION_HISTORY
+  - make library path in state editor overview selectable
     
 - Bug Fixes:
 
-    - :issue:`503` scoped variable looks weird
-    - :issue:`505` clean up profiler flag in config
-    - :issue:`506` root state input ports leave ugly stripes behind
-    - :issue:`501` transition is not selectable if it is drawn over state
-    - :issue:`512` execution of second state machine cause freeze of stop on previous state machine was not successful
-    - :issue:`514` text in entry widget of port not visible during editing
-    - fix state machine tree remove library state
-    - no deadlocks when locking a global variable two times
-    - :issue:`502` changing data ports not possible
-    - fix state element weakref parent assigenment in case of tolerating a invalid data flow
+  - :issue:`503` scoped variable looks weird
+  - :issue:`505` clean up profiler flag in config
+  - :issue:`506` root state input ports leave ugly stripes behind
+  - :issue:`501` transition is not selectable if it is drawn over state
+  - :issue:`512` execution of second state machine cause freeze of stop on previous state machine was not successful
+  - :issue:`514` text in entry widget of port not visible during editing
+  - fix state machine tree remove library state
+  - no deadlocks when locking a global variable two times
+  - :issue:`502` changing data ports not possible
+  - fix state element weakref parent assigenment in case of tolerating a invalid data flow
 
 
 0.12.7
@@ -275,8 +275,8 @@ Patch releases 0.12.\*
 
 - Improvements:
 
-    - updated documentation
-    - use verbose logging level instead of prints for modification history debug prints
+  - updated documentation
+  - use verbose logging level instead of prints for modification history debug prints
 
 
 0.12.6
@@ -284,12 +284,12 @@ Patch releases 0.12.\*
 
 - Feature:
 
-    - tests folder is now released as well
+  - tests folder is now released as well
 
 - Bug Fixes:
 
-    - fix open-gl support for show-content to support fast state machine exploration (also into all leaf-states by zoom)
-    - library state can be removed also when those are showing content
+  - fix open-gl support for show-content to support fast state machine exploration (also into all leaf-states by zoom)
+  - library state can be removed also when those are showing content
 
 
 
@@ -298,26 +298,26 @@ Patch releases 0.12.\*
 
 - Feature
 
-    - new log level "VERBOSE", intended for development purposes
-    - state machines can now be baked (a snapshot of the state machine with all libraries can be saved)
-    - Graphviz can now be used to debug gtkmvc notifications and signals
+  - new log level "VERBOSE", intended for development purposes
+  - state machines can now be baked (a snapshot of the state machine with all libraries can be saved)
+  - Graphviz can now be used to debug gtkmvc notifications and signals
 
 - Improvements:
 
-    - Gtk priority of logging output to the console view is now customizable via the gui_config
-    - better plugin support of changes to the state-editor tabs
-    - gaphas combines now complex meta data actions in one meta data changed signal -> one undo/redo-Action
+  - Gtk priority of logging output to the console view is now customizable via the gui_config
+  - better plugin support of changes to the state-editor tabs
+  - gaphas combines now complex meta data actions in one meta data changed signal -> one undo/redo-Action
 
 - Bug Fixes:
 
-    - :issue:`484` label handles are hard to grasp
-    - :issue:`486` Gaphas is not emitting meta data signal if NameView is moved
-    - quick fix for not working "state type change" in combination with library states (which was based on respective
+  - :issue:`484` label handles are hard to grasp
+  - :issue:`486` Gaphas is not emitting meta data signal if NameView is moved
+  - quick fix for not working "state type change" in combination with library states (which was based on respective
       object destruction while those operations) -> will be fully solved in :issue:`493`
-    - quick fix for not set or too late set of active state machine id -> will be fully solved in :issue:`495`
-    - fix meta data for undo/redo of add object operations
-    - fix exception handling, causing issues with the graphical editor when invalid connection were created
-    - When hovering the menu bar, an exception was printed
+  - quick fix for not set or too late set of active state machine id -> will be fully solved in :issue:`495`
+  - fix meta data for undo/redo of add object operations
+  - fix exception handling, causing issues with the graphical editor when invalid connection were created
+  - When hovering the menu bar, an exception was printed
 
 
 0.12.4
@@ -325,42 +325,42 @@ Patch releases 0.12.\*
 
 - Improvements:
 
-    - Provide a `PULL_REQUEST_TEMPLATE` for pull requests opened in GitHub
-    - Optimize updates/redrawing of graphical editor
+  - Provide a `PULL_REQUEST_TEMPLATE` for pull requests opened in GitHub
+  - Optimize updates/redrawing of graphical editor
 
 - Bug Fixes:
 
-    - :issue:`414` state machines with libraries cannot be closed
+  - :issue:`414` state machines with libraries cannot be closed
 
 
 0.12.3
 """"""
 
 - Feature
-    - The env variable :envvar:`RAFCON_START_MINIMIZED` allows to start RAFCON minimized, which is helpful when running
+  - The env variable :envvar:`RAFCON_START_MINIMIZED` allows to start RAFCON minimized, which is helpful when running
       the tests
 
 - Improvements:
 
-    - :issue:`414` Memory optimizations: The memory usage should no longer increase over time, as unused objects are now freed
-    - A new/extended test verifies the correct destruction of removed elements
-    - Optimize NameView font size calculations, noticeable during zooming
-    - ports outside of the visible view are no longer drawn, which increases the performance, especially while
+  - :issue:`414` Memory optimizations: The memory usage should no longer increase over time, as unused objects are now freed
+  - A new/extended test verifies the correct destruction of removed elements
+  - Optimize NameView font size calculations, noticeable during zooming
+  - ports outside of the visible view are no longer drawn, which increases the performance, especially while
       zooming in large state machines
-    - Hash calculations of state machines
-    - Placement of NameView
-    - drawing of connections, ports and labels, especially when deeply nested
-    - :issue:`469` unit test refactorings
+  - Hash calculations of state machines
+  - Placement of NameView
+  - drawing of connections, ports and labels, especially when deeply nested
+  - :issue:`469` unit test refactorings
 
 - Bug Fixes:
 
-    - :issue:`459` execution_log utils; backward compatibility missing and :issue:`458` ReturnItem
-    - :issue:`454` group/ungroup is not preserving meta data recursively
-    - :issue:`452` Session restore, gaphas and extended controller causes exception when closing RAFCON
-    - :issue:`450` Names of states inside a library become smaller
-    - :issue:`447` Hashes of state machine in storage different then the reopened state machine after saving it
-    - :issue:`449` ports (of transitions or data flows) cannot be moved
-    - :issue:`471` selection of states in hierarchies >= 5 not possible
+  - :issue:`459` execution_log utils; backward compatibility missing and :issue:`458` ReturnItem
+  - :issue:`454` group/ungroup is not preserving meta data recursively
+  - :issue:`452` Session restore, gaphas and extended controller causes exception when closing RAFCON
+  - :issue:`450` Names of states inside a library become smaller
+  - :issue:`447` Hashes of state machine in storage different then the reopened state machine after saving it
+  - :issue:`449` ports (of transitions or data flows) cannot be moved
+  - :issue:`471` selection of states in hierarchies >= 5 not possible
 
 
 0.12.2
@@ -368,16 +368,16 @@ Patch releases 0.12.\*
 
 - New Features:
 
-    - Fix logging for library state execution
+  - Fix logging for library state execution
 
 - Improvements:
 
-    - Improve execution logging (semantic data is supported now)
-    - :issue:`445` Tests need to ensure correct import order for GUI singletons
+  - Improve execution logging (semantic data is supported now)
+  - :issue:`445` Tests need to ensure correct import order for GUI singletons
 
 - Bug Fixes:
 
-    - :issue:`446` "show content" leads to sm marked as modified
+  - :issue:`446` "show content" leads to sm marked as modified
 
 
 0.12.1
@@ -385,16 +385,16 @@ Patch releases 0.12.\*
 
 - New Features:
 
-    - Semantic data editor supports external editor
-    - Transparency of library states improved when content is shown
+  - Semantic data editor supports external editor
+  - Transparency of library states improved when content is shown
 
 - Improvements:
 
-    - :issue:`415` Increase visibility of library content
+  - :issue:`415` Increase visibility of library content
 
 - Bug Fixes:
 
-    - :issue:`378` Editing default values does not work sometimes
+  - :issue:`378` Editing default values does not work sometimes
 
 
 0.12.0
@@ -402,16 +402,16 @@ Patch releases 0.12.\*
 
 - New Features:
 
-    - Semantic meta data editor and storage for every state
-    - :issue:`411` Allow outputting data from preempted states
+  - Semantic meta data editor and storage for every state
+  - :issue:`411` Allow outputting data from preempted states
 
 - Bug Fixes:
 
-    - :issue:`426` Again meta data of library ports are screwed after insertion
-    - :issue:`425` Connection via points not visible
-    - :issue:`424` Wrong path for tooltip for state machines editor tabs
-    - :issue:`431` Test for recently opened state machine fails
-    - :issue:`430` Selection test fails
+  - :issue:`426` Again meta data of library ports are screwed after insertion
+  - :issue:`425` Connection via points not visible
+  - :issue:`424` Wrong path for tooltip for state machines editor tabs
+  - :issue:`431` Test for recently opened state machine fails
+  - :issue:`430` Selection test fails
 
 
 
@@ -423,76 +423,76 @@ Patch releases 0.11.\*
 
 - Bug Fixes:
 
-    - :issue:`428` fix recursion problem in execution log viewer
-    - :issue:`427` Middle click on state machine tab label close wrong state machine
-    - :issue:`419` wrong outcome data in execution history
+  - :issue:`428` fix recursion problem in execution log viewer
+  - :issue:`427` Middle click on state machine tab label close wrong state machine
+  - :issue:`419` wrong outcome data in execution history
 
 - Improvements:
 
-    - :issue:`411` Allow outputting data from preempted states
-    - drag'n drop with focus can be enabled and disabled by using the gui config flag DRAG_N_DROP_WITH_FOCUS
-    - graphical editor add way points around the state for self transitions as support for the user
-    - refactor state machines editor tab click methods and small fixing
-    - better on double click focus by gaphas editor and now also triggered by state machine tree
+  - :issue:`411` Allow outputting data from preempted states
+  - drag'n drop with focus can be enabled and disabled by using the gui config flag DRAG_N_DROP_WITH_FOCUS
+  - graphical editor add way points around the state for self transitions as support for the user
+  - refactor state machines editor tab click methods and small fixing
+  - better on double click focus by gaphas editor and now also triggered by state machine tree
 
 0.11.5
 """"""
 
 - Bug Fixes:
-    - :issue:`421` RAFCON does not remember window size after closing -> final part
+  - :issue:`421` RAFCON does not remember window size after closing -> final part
 
 0.11.4
 """"""
 
 - New Features:
 
-    - Move into viewport: Double click on elements in several widgets cause the element to moved into the viewport
+  - Move into viewport: Double click on elements in several widgets cause the element to moved into the viewport
       (not yet supported by all widgets)
-    - Usage of selection modifiers (e.g. <Ctrl>, <Shift>) should now be more consistent
-    - Ports in the graphical editor can now be selection
-    - The port selection is synchronized between the graphical editor and the other widgets
-    - Ports can be removed from within the graphical editor
+  - Usage of selection modifiers (e.g. <Ctrl>, <Shift>) should now be more consistent
+  - Ports in the graphical editor can now be selection
+  - The port selection is synchronized between the graphical editor and the other widgets
+  - Ports can be removed from within the graphical editor
 
 - Improvements:
 
-    - Refactoring of the selection
-    - Unit tests for selection
-    - :issue:`411` Allow outputting data from preempted states
-    - :issue:`410` Refactor selection
-    - :issue:`403` Incomes and outcomes cannot be differentiated visually
+  - Refactoring of the selection
+  - Unit tests for selection
+  - :issue:`411` Allow outputting data from preempted states
+  - :issue:`410` Refactor selection
+  - :issue:`403` Incomes and outcomes cannot be differentiated visually
 
 - Bug Fixes:
 
-    - Memory leak fixes
-    - :issue:`402` Connections end in nowhere
-    - :issue:`417` ports of root state do not move with roots state
-    - :issue:`421` RAFCON does not remeber window size after closing -> first part
+  - Memory leak fixes
+  - :issue:`402` Connections end in nowhere
+  - :issue:`417` ports of root state do not move with roots state
+  - :issue:`421` RAFCON does not remeber window size after closing -> first part
 
 0.11.3
 """"""
 
 - Improvements:
 
-    - :issue:`405` Possibility to zoom in and out while drawing a connection
-    - :issue:`404` Possibility to scroll left and right in graphical editor
-    - :issue:`403` Incomes and outcomes cannot be differentiated visually
+  - :issue:`405` Possibility to zoom in and out while drawing a connection
+  - :issue:`404` Possibility to scroll left and right in graphical editor
+  - :issue:`403` Incomes and outcomes cannot be differentiated visually
 
 - Bug Fixes:
 
-    - :issue:`412` global variables cannot be removed
-    - :issue:`413` tree view controller error
+  - :issue:`412` global variables cannot be removed
+  - :issue:`413` tree view controller error
 
 0.11.2
 """"""
 
 - Improvements:
 
-    - meta data scaling more robust and protect other elements from side effects of it
+  - meta data scaling more robust and protect other elements from side effects of it
 
 - Bug Fixes:
 
-    - :issue:`393` $HOME/.config/rafcon is not generated initially + tests
-    - :issue:`406` Empty library root state without child states cause meta data resize problems with side effects in
+  - :issue:`393` $HOME/.config/rafcon is not generated initially + tests
+  - :issue:`406` Empty library root state without child states cause meta data resize problems with side effects in
       gaphas drawing
 
 0.11.1
@@ -500,18 +500,18 @@ Patch releases 0.11.\*
 
 - New Features:
 
-    - :issue:`384` add "Collapse all" button for library manager and enable the feature for the state machine tree, too
+  - :issue:`384` add "Collapse all" button for library manager and enable the feature for the state machine tree, too
 
 - Improvements:
 
-    - port position default values
+  - port position default values
 
 - Bug Fixes:
 
-    - Fix issues when copying/converting logical or data ports with clipboard while cut/copy/paste
-    - Fix library state port position scaling after adding
-    - Fix gaphas viewer problems with undo/redo of complex actions like copy and paste or add/remove of ports
-    - :issue:`10` Fully integrate modification history with gaphas
+  - Fix issues when copying/converting logical or data ports with clipboard while cut/copy/paste
+  - Fix library state port position scaling after adding
+  - Fix gaphas viewer problems with undo/redo of complex actions like copy and paste or add/remove of ports
+  - :issue:`10` Fully integrate modification history with gaphas
 
 0.11.0
 """"""
@@ -790,7 +790,7 @@ Patch releases 0.7.\*
 
 - states are now saved in forlder that are named after: state.name + $ + state.state_id
 - Hotfix:
-    - fix unmovable windows for sled11 64bit
+  - fix unmovable windows for sled11 64bit
 
 0.7.12
 """"""
