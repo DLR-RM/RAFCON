@@ -9,15 +9,15 @@ Next release
 
 - Features:
 
-    -
+  -
 
 - Improvements:
 
-    -
+  - All menu accelerators are installed
 
 - Bug Fixes:
 
-    - 
+  - no more GtkWarning in stdout
 
 
 Patch releases 0.12.\*
