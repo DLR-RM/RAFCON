@@ -48,13 +48,6 @@ class LoggingViewHandler(logging.Handler):
     def __init__(self):
         super(LoggingViewHandler, self).__init__()
 
-        try:
-            # noinspection PyStatementEffect
-            unicode
-            self._unicode = True
-        except NameError:
-            self._unicode = False
-
     @classmethod
     def add_logging_view(cls, name, text_view):
         cls._logging_views[name] = text_view
@@ -79,20 +72,14 @@ class LoggingViewHandler(logging.Handler):
                 record.__setattr__("name", record.name.replace("rafcon.", ""))
             msg = self.format(record)
             fs = "%s"
-            if not self._unicode:  # if no unicode support...
-                entry = fs % msg
-            else:
+            try:
+                ufs = u'%s'
                 try:
-                    if isinstance(msg, unicode):
-                        ufs = u'%s'
-                        try:
-                            entry = ufs % msg
-                        except UnicodeEncodeError:
-                            entry = fs % msg
-                    else:
-                            entry = fs % msg
-                except UnicodeError:
+                    entry = ufs % msg
+                except UnicodeEncodeError:
                     entry = fs % msg
+            except UnicodeError:
+                entry = fs % msg
 
             for logging_view in list(self._logging_views.values()):
                 logging_view.print_message(entry, record.levelno)

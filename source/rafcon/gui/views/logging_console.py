@@ -106,7 +106,7 @@ class LoggingConsoleView(View):
         :param text_to_split: Text to split
         :return: List containing the content of text_to_split split up
         """
-        assert isinstance(text_to_split, (str, unicode))
+        assert isinstance(text_to_split, str)
         try:
             time, rest = text_to_split.split(': ', 1)
             source, message = rest.split(':', 1)

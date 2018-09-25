@@ -43,12 +43,12 @@ class RAFCONMessageDialog(gtk.MessageDialog):
 
         if parent:
             super(RAFCONMessageDialog, self).set_transient_for(parent)
-        if isinstance(markup_text, (str, unicode, str)):
+        if isinstance(markup_text, str):
             from cgi import escape
             super(RAFCONMessageDialog, self).set_markup(escape(str(markup_text)))
         else:
-            logger.debug("The specified message text is not a String is type {1} -> {0}".format(markup_text,
-                                                                                                type(markup_text)))
+            logger.debug("The specified message '{1}' text is not a string, but {0}".format(markup_text,
+                                                                                            type(markup_text)))
         if callback:
             self.add_callback(callback, *callback_args)
 

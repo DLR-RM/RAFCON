@@ -1313,9 +1313,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self._description = None
             return
 
-        if not isinstance(description, (str, unicode)):
-            if not isinstance(description, unicode):
-                raise TypeError("Description must be of type str or unicode")
+        if not isinstance(description, str):
+            raise TypeError("Description must be a string")
 
         self._description = description
 
