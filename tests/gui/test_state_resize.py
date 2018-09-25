@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import range
 from builtins import zip
 import os
 import time
@@ -70,7 +71,7 @@ def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypa
     motion_event.state |= gtk.gdk.BUTTON_PRESS_MASK
     if recursive:
         motion_event.state |= RECURSIVE_RESIZE_MODIFIER
-    for i in xrange(num_motion_events):
+    for i in range(num_motion_events):
         motion_event.x = start_pos_handle[0] + rel_size[0] * (float(i + 1) / num_motion_events)
         motion_event.y = start_pos_handle[1] + rel_size[1] * (float(i + 1) / num_motion_events)
         call_gui_callback(resize_tool.on_motion_notify, motion_event)

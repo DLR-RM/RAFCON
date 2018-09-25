@@ -519,9 +519,9 @@ class ListViewController(AbstractTreeViewController):
                 # print model, paths, pthinfo[0]
                 if paths and pthinfo and pthinfo[0]:
                     if self._last_path_selection[0] <= pthinfo[0][0]:
-                        new_row_ids_selected = range(self._last_path_selection[0], pthinfo[0][0]+1)
+                        new_row_ids_selected = list(range(self._last_path_selection[0], pthinfo[0][0]+1))
                     else:
-                        new_row_ids_selected = range(self._last_path_selection[0], pthinfo[0][0]-1, -1)
+                        new_row_ids_selected = list(range(self._last_path_selection[0], pthinfo[0][0]-1, -1))
                     # self._logger.info("range to select {0}, {1}".format(new_row_ids_selected, model))
                     self._tree_selection.unselect_all()
                     for path in new_row_ids_selected:

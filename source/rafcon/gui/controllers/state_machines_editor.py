@@ -267,7 +267,7 @@ class StateMachinesEditorController(ExtendedController):
 
         # to retrieve the current tab colors
         number_of_pages = self.view["notebook"].get_n_pages()
-        old_label_colors = range(number_of_pages)
+        old_label_colors = list(range(number_of_pages))
         for p in range(number_of_pages):
             page = self.view["notebook"].get_nth_page(p)
             label = self.view["notebook"].get_tab_label(page).get_child().get_children()[0]
