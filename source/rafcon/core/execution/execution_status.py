@@ -19,7 +19,6 @@ from enum import Enum
 from gtkmvc import Observable
 from threading import _Condition
 
-from execution_history import ExecutionHistory
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
