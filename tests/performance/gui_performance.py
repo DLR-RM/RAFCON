@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # local
 from rafcon.utils.timer import measure_time
 import testing_utils
@@ -36,7 +37,7 @@ def test_gui(number_child_states=10, number_childs_per_child=10, barrier=False, 
     caplog=None):
     create_gui()
     from rafcon.core.state_machine import StateMachine
-    from core_performance import create_hierarchy_state, create_barrier_concurrency_state
+    from .core_performance import create_hierarchy_state, create_barrier_concurrency_state
     try:
         if barrier:
             state_machine = StateMachine(create_barrier_concurrency_state(number_child_states, number_childs_per_child))

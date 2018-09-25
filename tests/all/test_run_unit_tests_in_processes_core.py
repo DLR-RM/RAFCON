@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 import pytest
 
 
-import run_tests_in_processes_template
+from . import run_tests_in_processes_template
 
 
 def test_run_unit_tests():

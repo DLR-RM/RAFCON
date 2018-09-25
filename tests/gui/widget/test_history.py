@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import absolute_import
 import logging
 import gtk
 import threading
@@ -20,11 +21,11 @@ from rafcon.utils import log
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
-from test_state_type_change import store_state_elements, check_state_elements, \
+from .test_state_type_change import store_state_elements, check_state_elements, \
      check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
      check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
      get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
-from test_states_editor import check_state_editor_models
+from .test_states_editor import check_state_editor_models
 import pytest
 
 NO_SAVE = False
@@ -65,7 +66,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
         print("by Function")
         on_save_activate(sm_model, logger)
 
-    from test_storage import check_that_all_files_are_there
+    from .test_storage import check_that_all_files_are_there
 
     if with_gui:
         call_gui_callback(check_that_all_files_are_there, sm_model.state_machine, path, False, True)
@@ -247,7 +248,7 @@ def test_add_remove_history(caplog):
 
     def do_check_for_state(state_name):
 
-        from test_models import check_state_for_all_models
+        from .test_models import check_state_for_all_models
 
         def check_models_for_state_with_name(state_name, state_path_dict, sm_model):
             state_m = sm_model.get_state_model_by_path(state_path_dict[state_name])
@@ -1371,7 +1372,7 @@ def trigger_state_type_change_tests(with_gui):
     [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
 
     print("\n\n ###### State: %s" % state_dict[state_of_type_change])
-    from test_storage import check_that_all_files_are_there
+    from .test_storage import check_that_all_files_are_there
     check_that_all_files_are_there(sm_m.state_machine, state_machine_path + '_before2', False, True)
     check_that_all_files_are_there(sm_m.state_machine, state_machine_path + '_after2', False, True)
 

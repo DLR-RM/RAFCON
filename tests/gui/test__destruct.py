@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import absolute_import
 import os
 import gc
 import time
@@ -484,18 +485,18 @@ def run_simple_modification_construction():
     print("%" * 50)
     print("do test menu bar")
     print("%" * 50)
-    import widget.test_menu_bar
+    from . import widget.test_menu_bar
     # TODO D-get this test also running with substitute_library
     widget.test_menu_bar.trigger_gui_signals(with_refresh=True, with_substitute_library=False)
     print("%" * 50)
     print("do test complex actions, group & ungroup")
     print("%" * 50)
-    import test_complex_actions
+    from . import test_complex_actions
     test_complex_actions.trigger_repetitive_group_ungroup()
     print("%" * 50)
     print("do test ungroup")
     print("%" * 50)
-    import test_group_ungroup
+    from . import test_group_ungroup
     test_group_ungroup.trigger_ungroup_signals()
     testing_utils.call_gui_callback(testing_utils.wait_for_gui)
 

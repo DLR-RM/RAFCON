@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import absolute_import
 import copy
 import datetime
 import signal
@@ -472,7 +473,7 @@ def patch_gtkmvc_model_mt():
         direct method call depending whether the caller's thread is
         different from the observer's thread"""
 
-        from notifications import feed_debugging_graph
+        from .notifications import feed_debugging_graph
         feed_debugging_graph(self, observer, method, *args, **kwargs)
 
         if not self._ModelMT__observer_threads.has_key(observer):

@@ -1,9 +1,10 @@
 from __future__ import print_function
+from __future__ import absolute_import
 from os.path import join
 from graphviz import Digraph
 from collections import OrderedDict
 
-from testing_utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
+from .testing_utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
 
 # notification debugging
 debugging_enabled = False

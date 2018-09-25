@@ -8,6 +8,7 @@
 
 """
 from __future__ import print_function
+from __future__ import absolute_import
 
 from multiprocessing import Process, Queue
 import multiprocessing
@@ -15,9 +16,9 @@ import threading
 import time
 import os
 import pytest
-from test_multi_clients import reset_global_variable_manager
-from test_single_client import launch_client
-from test_single_client import launch_server
+from .test_multi_clients import reset_global_variable_manager
+from .test_single_client import launch_client
+from .test_single_client import launch_server
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -351,7 +352,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
 
 def test_network_gui():
 
-    from test_single_client import check_if_ports_are_open
+    from .test_single_client import check_if_ports_are_open
     assert check_if_ports_are_open(), "Address already in use by another server!"
 
     test_successful = True
