@@ -172,7 +172,7 @@ class BarrierConcurrencyState(ConcurrencyState):
 
             return self.finalize_concurrency_state(self.final_outcome)
 
-        except Exception, e:
+        except Exception as e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE

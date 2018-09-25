@@ -221,7 +221,7 @@ def test_multi_clients():
     try:
         assert data == START_PAUSE_RESUME_SUCCESSFUL
         print("Test successful")
-    except AssertionError, e:
+    except AssertionError as e:
         print("Test not successful")
         test_successful = False
 

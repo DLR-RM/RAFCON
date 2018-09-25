@@ -44,7 +44,7 @@ def test_hierarchy_state_execution(caplog):
     try:
         # Changing the data type has to fail, as the data port is already connected to a data flow
         state_machine.root_state.input_data_ports[42].data_type = str
-    except Exception, e:
+    except Exception as e:
         assert isinstance(e, ValueError)
 
     testing_utils.test_multithreading_lock.acquire()

@@ -39,7 +39,7 @@ def set_velocity(x, phi, turtle_name, logger):
         turtle_vel_publisher.publish(twist_msg)
         rate = rospy.Rate(10)
         rate.sleep()
-    except rospy.ROSInterruptException, e:
+    except rospy.ROSInterruptException as e:
         logger.error("Failed to send a velocity command to turtle {}: {}".format(turtle_name, str(e)))
 
 

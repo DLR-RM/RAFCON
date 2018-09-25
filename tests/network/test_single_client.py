@@ -382,7 +382,7 @@ def test_single_client():
     try:
         assert data == START_FROM_SUCCESSFUL
         print("Test successful")
-    except AssertionError, e:
+    except AssertionError as e:
         print("Test not successful")
         test_successful = False
 

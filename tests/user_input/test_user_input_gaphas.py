@@ -125,7 +125,7 @@ def test_user_input_gaphas(caplog):
             libraries={'unit_test_state_machines': testing_utils.get_test_sm_path("unit_test_state_machines")})
     try:
         create_and_resize_state()
-    except Exception, e:
+    except Exception as e:
         raise
     finally:
         testing_utils.close_gui()

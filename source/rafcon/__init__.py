@@ -26,7 +26,7 @@ except DistributionNotFound:
             # append a1 to signal that this is not a release version but a alpha/develop version
             # a1 is used as e.g. dev1 is not supported by the StrictVersion class
             __version__ = content[0] + "a1"
-    except Exception, e:
+    except Exception as e:
         from rafcon.utils import log
         logger = log.get_logger(__name__)
         logger.error(str(e))

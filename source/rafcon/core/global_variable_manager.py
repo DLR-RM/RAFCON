@@ -205,7 +205,7 @@ class GlobalVariableManager(Observable):
             else:
                 logger.error("Global variable key {} does not exist".format(str(key)))
                 return False
-        except Exception, e:
+        except Exception as e:
             logger.error("Exception thrown: {}".format(str(e)))
             return False
 

@@ -20,7 +20,7 @@ def check_for_sm_finished(sm, monitoring_manager=None):
     while sm.root_state.state_execution_status is not StateExecutionStatus.INACTIVE:
         try:
             sm.root_state.concurrency_queue.get(timeout=10.0)
-        except Empty, e:
+        except Empty as e:
             pass
         # no logger output here to make it easier for the parser
         print("RAFCON live signal")

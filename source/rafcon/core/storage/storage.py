@@ -413,10 +413,10 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
 
     try:
         state_info = load_data_file(path_core_data)
-    except ValueError, e:
+    except ValueError as e:
         logger.exception("Error while loading state data: {0}".format(e))
         return
-    except LibraryNotFoundException, e:
+    except LibraryNotFoundException as e:
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(str(e.message)))
         state_info = storage_utils.load_objects_from_json(path_core_data, as_dict=True)
@@ -454,7 +454,7 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     try:
         semantic_data = load_data_file(os.path.join(state_path, SEMANTIC_DATA_FILE))
         state.semantic_data = semantic_data
-    except Exception, e:
+    except Exception as e:
         # semantic data file does not have to be there
         pass
 

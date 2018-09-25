@@ -26,7 +26,7 @@ def add_library_root_path_to_shortcut_folders_of_dialog(dialog):
     for library_key in library_keys:
         try:
             dialog.add_shortcut_folder(library_paths[library_key])
-        except glib.GError, e:
+        except glib.GError as e:
             # this occurs if the shortcut file already exists
             # unfortunately dialog.list_shortcut_folders() does not work
             # that's why the error is caught

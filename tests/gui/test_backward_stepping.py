@@ -225,7 +225,7 @@ def test_backward_stepping_barrier_state(caplog):
     call_gui_callback(initialize_global_variables)
     try:
         execute_barrier_state_forwards_backwards()
-    except Exception,e:
+    except Exception as e:
         raise
     finally:
         testing_utils.close_gui()

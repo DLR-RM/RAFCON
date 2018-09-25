@@ -130,7 +130,7 @@ class Script(Observable, yaml.YAMLObject):
 
             try:
                 exec code in tmp_module.__dict__
-            except RuntimeError, e:
+            except RuntimeError as e:
                 raise IOError("The compilation of the script module failed - error message: %s" % str(e))
 
             # return the module
