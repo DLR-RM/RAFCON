@@ -17,7 +17,7 @@
 
 """
 
-from past.builtins import basestring
+from past.builtins import str
 from gtkmvc import Observable
 
 from rafcon.core.id_generator import generate_data_flow_id
@@ -132,7 +132,7 @@ class DataFlow(StateElement):
         :param int from_key: Data port id of the origin port
         :raises exceptions.ValueError: If parameters have wrong types or the new data flow is not valid
         """
-        if not isinstance(from_state, basestring):
+        if not isinstance(from_state, str):
             raise ValueError("Invalid data flow origin port: from_state must be of type str")
         if not isinstance(from_key, int):
             raise ValueError("Invalid data flow origin port: from_key must be of type int")
@@ -158,7 +158,7 @@ class DataFlow(StateElement):
     @lock_state_machine
     # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
-        if not isinstance(from_state, basestring):
+        if not isinstance(from_state, str):
             raise ValueError("from_state must be of type str")
 
         self._change_property_with_validity_check('_from_state', from_state)
@@ -187,7 +187,7 @@ class DataFlow(StateElement):
         :param int to_key: Data port id of the target port
         :raises exceptions.ValueError: If parameters have wrong types or the new data flow is not valid
         """
-        if not isinstance(to_state, basestring):
+        if not isinstance(to_state, str):
             raise ValueError("Invalid data flow target port: from_state must be of type str")
         if not isinstance(to_key, int):
             raise ValueError("Invalid data flow target port: from_outcome must be of type int")
@@ -213,7 +213,7 @@ class DataFlow(StateElement):
     @lock_state_machine
     # @Observable.observed  # should not be observed to stay consistent
     def to_state(self, to_state):
-        if not isinstance(to_state, basestring):
+        if not isinstance(to_state, str):
             raise ValueError("to_state must be of type str")
 
         self._change_property_with_validity_check('_to_state', to_state)

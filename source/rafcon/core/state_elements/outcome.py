@@ -17,7 +17,7 @@
 
 """
 
-from past.builtins import basestring
+from past.builtins import str
 from gtkmvc import Observable
 
 from rafcon.core.state_elements.state_element import StateElement
@@ -113,7 +113,7 @@ class Outcome(StateElement):
     @lock_state_machine
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, basestring):
+        if not isinstance(name, str):
             raise TypeError("name must be of type str")
 
         if len(name) < 1:

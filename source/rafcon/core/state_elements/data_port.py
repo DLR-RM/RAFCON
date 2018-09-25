@@ -17,7 +17,7 @@
    :synopsis: A module to represent data ports the state machine
 
 """
-from past.builtins import basestring
+from past.builtins import str
 from enum import Enum
 from gtkmvc import Observable
 
@@ -137,7 +137,7 @@ class DataPort(StateElement):
     @lock_state_machine
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, basestring):
+        if not isinstance(name, str):
             raise TypeError("Name must be of type str")
 
         if len(name) < 1:
@@ -233,7 +233,7 @@ class DataPort(StateElement):
 
         if default_value is not None:
             # If the default value is passed as string, we have to convert it to the data type
-            if isinstance(default_value, basestring):
+            if isinstance(default_value, str):
                 if len(default_value) > 1 and default_value[0] == '$':
                     return default_value
                 if default_value == "None":

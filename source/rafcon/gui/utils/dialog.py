@@ -11,7 +11,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from past.builtins import basestring
+from past.builtins import str
 from builtins import str
 import gtk
 import gobject
@@ -43,7 +43,7 @@ class RAFCONMessageDialog(gtk.MessageDialog):
 
         if parent:
             super(RAFCONMessageDialog, self).set_transient_for(parent)
-        if isinstance(markup_text, (str, unicode, basestring)):
+        if isinstance(markup_text, (str, unicode, str)):
             from cgi import escape
             super(RAFCONMessageDialog, self).set_markup(escape(str(markup_text)))
         else:
@@ -272,12 +272,12 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
             toggled_callback = on_toggled
 
         # check if data is consistent
-        if not all(len(row) == len(table_header) or not isinstance(row[-1], (str, basestring, bool)) and
+        if not all(len(row) == len(table_header) or not isinstance(row[-1], (str, str, bool)) and
                 len(row) == 1 + len(table_header) for row in table_data):
             raise ValueError("All rows of the table_data list has to be the same length as the table_header list "
                              "(+1 data element), here length = {0}". format(len(table_header)))
 
-        if not all([isinstance(row_elem, (bool, str, basestring))
+        if not all([isinstance(row_elem, (bool, str, str))
                    for index, row_elem in enumerate(table_data[0]) if not index + 1 == len(table_data[0])]):
             raise TypeError("All row elements have to be of type boolean or string except of last one.")
 
@@ -300,7 +300,7 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
                     check_box_renderer.connect("toggled", toggled_callback, index)
                 checkbox_column = gtk.TreeViewColumn(table_header[index], check_box_renderer, active=index)
                 self.tree_view.append_column(checkbox_column)
-            elif column_type in (str, basestring):
+            elif column_type in (str, str):
                 text_renderer = gtk.CellRendererText()
                 text_column = gtk.TreeViewColumn(table_header[index], text_renderer, text=index)
                 self.tree_view.append_column(text_column)
@@ -311,7 +311,7 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
 
         # correct last list element if not boolean or string and table data length is +1 compared to table header
         if first_row_data_types and len(first_row_data_types) == len(table_header) + 1 and \
-                not isinstance(first_row_data_types[-1], (bool, str, basestring)):
+                not isinstance(first_row_data_types[-1], (bool, str, str)):
             first_row_data_types[-1] = gobject.TYPE_PYOBJECT
 
         # fill list store

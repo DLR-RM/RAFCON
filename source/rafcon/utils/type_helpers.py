@@ -21,7 +21,7 @@
 
 
 
-from past.builtins import basestring
+from past.builtins import str
 from builtins import str
 import __builtin__
 from pydoc import locate, ErrorDuringImport
@@ -74,7 +74,7 @@ def convert_string_value_to_type_value(string_value, data_type):
     from ast import literal_eval
 
     try:
-        if data_type in (str, basestring, type(None)):
+        if data_type in (str, str, type(None)):
             converted_value = str(string_value)
         elif data_type == unicode:
             converted_value = unicode(string_value)

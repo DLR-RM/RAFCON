@@ -13,7 +13,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from past.builtins import basestring
+from past.builtins import str
 from builtins import str
 from weakref import ref
 from pango import SCALE, FontDescription, WRAP_WORD
@@ -926,7 +926,7 @@ class NameView(Element):
 
     @name.setter
     def name(self, name):
-        assert isinstance(name, basestring)
+        assert isinstance(name, str)
         self._name = name
 
     @property

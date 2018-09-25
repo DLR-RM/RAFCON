@@ -16,7 +16,7 @@
 
 """
 
-from past.builtins import basestring
+from past.builtins import str
 from builtins import str
 import os
 import imp
@@ -189,12 +189,12 @@ class Script(Observable, yaml.YAMLObject):
 
     @path.setter
     def path(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             raise TypeError("The path of a script has to be a string or None to use the default value.")
         self._path = value
 
     def load_script_from_path_and_take_over_path(self, path, with_build_module=True):
-        if not isinstance(path, basestring):
+        if not isinstance(path, str):
             raise TypeError("The path of a script has to be a string or None to use the default value.")
 
         if self._check_path:
