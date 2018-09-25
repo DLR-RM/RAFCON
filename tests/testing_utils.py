@@ -1,4 +1,6 @@
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
 from builtins import str
 import copy
 import datetime

@@ -21,9 +21,11 @@
 
 
 
+from future import standard_library
+standard_library.install_aliases()
 from past.builtins import str
 from builtins import str
-import __builtin__
+import builtins
 from pydoc import locate, ErrorDuringImport
 from inspect import isclass
 

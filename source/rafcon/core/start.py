@@ -21,12 +21,14 @@
 
 """
 
+from future import standard_library
+standard_library.install_aliases()
 import os
 import argparse
 from os.path import realpath, dirname, join, exists
 import signal
 import time
-from Queue import Empty
+from queue import Empty
 import threading
 import sys
 
@@ -85,9 +87,9 @@ def setup_environment():
             os.environ['RAFCON_LIB_PATH'] = join(dirname(dirname(rafcon_root_path)), 'share', 'libraries')
 
     # Install dummy _ builtin function in case i18.setup_l10n() is not called
-    import __builtin__
-    if not "_" in __builtin__.__dict__:
-        __builtin__.__dict__["_"] = lambda s: s
+    import builtins
+    if not "_" in builtins.__dict__:
+        builtins.__dict__["_"] = lambda s: s
 
 
 def parse_state_machine_path(path):

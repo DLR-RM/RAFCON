@@ -21,13 +21,15 @@
 
 """
 
+from future import standard_library
+standard_library.install_aliases()
 from past.builtins import str
 from builtins import str
-import Queue
+import queue
 import copy
 import os
 import threading
-from __builtin__ import staticmethod
+from builtins import staticmethod
 from weakref import ref
 import copy
 
@@ -1273,7 +1275,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     @lock_state_machine
     #@Observable.observed
     def concurrency_queue(self, concurrency_queue):
-        if not isinstance(concurrency_queue, Queue.Queue):
+        if not isinstance(concurrency_queue, queue.Queue):
             if not concurrency_queue is None:
                 raise TypeError("concurrency_queue must be of type Queue or None")
             else:

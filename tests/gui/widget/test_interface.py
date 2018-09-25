@@ -1,4 +1,6 @@
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
 import os
 import gtk
 
@@ -9,7 +11,7 @@ from testing_utils import RAFCON_TEMP_PATH_TEST_BASE
 def test_core_open_folder(monkeypatch):
     """Tests `open_folder_cmd_line` function from `rafcon.core.interface`"""
     testing_utils.dummy_gui(None)
-    import __builtin__
+    import builtins
     print("execute test_core_open_folder")
     import rafcon.core.interface as core_interface
     # replaces raw_input by an expression that returns "/tmp"
@@ -34,7 +36,7 @@ def test_core_create_folder(monkeypatch):
     """Tests `create_folder_cmd_line` function from `rafcon.core.interface`"""
     testing_utils.dummy_gui(None)
     print("execute test_core_create_folder")
-    import __builtin__
+    import builtins
     import rafcon.core.interface as core_interface
     # replaces raw_input by an expression that returns RAFCON_TEMP_PATH_TEST_BASE
     monkeypatch.setattr(__builtin__, 'raw_input', lambda _: RAFCON_TEMP_PATH_TEST_BASE)

@@ -18,6 +18,8 @@
 
 """
 
+from future import standard_library
+standard_library.install_aliases()
 import os
 import subprocess
 import gtk
@@ -25,7 +27,7 @@ import shlex
 import contextlib
 from pylint import lint
 from pylint.reporters.json import JSONReporter
-from cStringIO import StringIO
+from io import StringIO
 from astroid import MANAGER
 from rafcon.utils.resources import resource_filename
 

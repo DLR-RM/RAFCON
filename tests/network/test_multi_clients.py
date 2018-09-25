@@ -10,6 +10,8 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
+from future import standard_library
+standard_library.install_aliases()
 from multiprocessing import Process, Queue
 
 import multiprocessing
@@ -112,7 +114,7 @@ def interacting_function_server(queue_dict):
 
 
 def interacting_function_client1(main_window_controller, global_monitoring_manager, queue_dict):
-    import Queue
+    import queue
     from rafcon.utils import log
     logger = log.get_logger("Interacting client1")
 
@@ -137,7 +139,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     try:
         # Wait for client2 to pause the state machine
         queue_dict[CLIENT2_TO_CLIENT1].get(timeout=10)  # get paused signal from client2
-    except Queue.Empty:
+    except queue.Empty:
         queue_dict[MAIN_QUEUE].put(TEST_ERROR)
         logger.exception("Client2 did not respond")
         os._exit(0)
