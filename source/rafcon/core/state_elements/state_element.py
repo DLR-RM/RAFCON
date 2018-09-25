@@ -17,6 +17,8 @@
 
 """
 
+from past.builtins import basestring
+from builtins import str
 from weakref import ref
 from yaml import YAMLObject
 from gtkmvc import Observable

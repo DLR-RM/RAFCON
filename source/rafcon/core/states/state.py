@@ -21,6 +21,8 @@
 
 """
 
+from past.builtins import basestring
+from builtins import str
 import Queue
 import copy
 import os

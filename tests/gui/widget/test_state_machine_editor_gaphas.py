@@ -1,5 +1,6 @@
 from __future__ import print_function
 # general tool elements
+from builtins import str
 from rafcon.utils import log
 
 # test environment elements

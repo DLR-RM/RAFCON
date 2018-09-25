@@ -9,6 +9,9 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 
+from builtins import filter
+from builtins import range
+from builtins import str
 from copy import deepcopy
 
 import json

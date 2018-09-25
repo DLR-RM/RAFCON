@@ -14,6 +14,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import filter
+from builtins import next
 import gtk
 from enum import Enum
 from gaphas.aspect import HandleFinder, InMotion

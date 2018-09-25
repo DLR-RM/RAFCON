@@ -10,6 +10,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import str
 import os.path
 from copy import copy, deepcopy
 from weakref import ref

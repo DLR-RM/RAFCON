@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import str
 import math
 import rospy
 from geometry_msgs.msg import Vector3

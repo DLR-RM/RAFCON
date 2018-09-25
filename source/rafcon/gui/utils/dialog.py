@@ -11,6 +11,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from past.builtins import basestring
+from builtins import str
 import gtk
 import gobject
 

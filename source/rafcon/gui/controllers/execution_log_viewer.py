@@ -10,6 +10,7 @@
 
 # example basictreeview.py
 
+from builtins import str
 import gtk
 import shelve
 

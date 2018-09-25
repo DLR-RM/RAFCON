@@ -17,6 +17,7 @@
 
 """
 
+from past.builtins import basestring
 from gtkmvc import Observable
 
 from rafcon.core.state_elements.state_element import StateElement

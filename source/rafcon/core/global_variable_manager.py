@@ -20,6 +20,7 @@
 
 """
 
+from builtins import str
 import time
 import copy
 from gtkmvc import Observable

@@ -1,6 +1,7 @@
 """Every test function of this module should later be improved in a separate module to secure all functionality of the 
 every respective feature."""
 from __future__ import print_function
+from builtins import str
 import threading
 
 # general tool elements

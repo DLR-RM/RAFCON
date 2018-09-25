@@ -11,6 +11,7 @@
 
 """ Module collects methods and function to be integrated into a respective class if that is of advantage, in future.
 """
+from builtins import range
 import os
 import time
 

@@ -20,6 +20,7 @@
 
 """
 
+from builtins import str
 import gtk
 import gobject
 

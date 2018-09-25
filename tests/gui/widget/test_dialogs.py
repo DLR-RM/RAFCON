@@ -1,3 +1,4 @@
+from builtins import str
 import gtk
 import threading
 import testing_utils

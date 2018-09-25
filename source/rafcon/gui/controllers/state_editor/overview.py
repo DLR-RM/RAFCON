@@ -18,6 +18,7 @@
      is-start-state flag and state-type.
 
 """
+from builtins import str
 import glib
 import gtk
 from gtk.gdk import keyval_name

@@ -19,6 +19,8 @@
    :synopsis: A module to represent a generic container state in the state machine
 
 """
+from builtins import filter
+from builtins import str
 import traceback
 from copy import copy, deepcopy
 from threading import Condition

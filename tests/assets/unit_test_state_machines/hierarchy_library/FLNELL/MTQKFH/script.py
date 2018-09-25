@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import str
 def execute(self, inputs, outputs, gvm):
     print("Executing library_execution_state1 ...")
     print(inputs)

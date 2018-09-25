@@ -11,6 +11,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import str
 from rafcon.core.states.state import State, StateType
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.execution_state import ExecutionState

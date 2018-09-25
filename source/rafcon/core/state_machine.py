@@ -22,6 +22,8 @@
 
 """
 
+from past.builtins import basestring
+from builtins import range
 from contextlib import contextmanager
 from copy import copy
 from threading import RLock

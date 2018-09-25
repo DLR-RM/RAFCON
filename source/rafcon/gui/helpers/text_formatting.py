@@ -12,6 +12,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 
+from past.builtins import basestring
 def limit_string(text, max_length, separator="&#x2026;"):
     from xml.sax.saxutils import escape
     import math

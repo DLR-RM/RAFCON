@@ -19,6 +19,7 @@
 
 """
 
+from builtins import str
 import traceback
 
 from gtkmvc import Observable

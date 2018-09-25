@@ -17,6 +17,8 @@
    :synopsis: A module to represent a library state in the state machine
 
 """
+from past.builtins import basestring
+from builtins import str
 from copy import copy, deepcopy
 
 from gtkmvc import Observable

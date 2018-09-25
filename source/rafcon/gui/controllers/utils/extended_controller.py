@@ -18,6 +18,7 @@
 
 """
 
+from builtins import map
 from gtkmvc import Controller
 
 from rafcon.gui.shortcut_manager import ShortcutManager

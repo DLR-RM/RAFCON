@@ -17,6 +17,9 @@
    :synopsis: A module for the history of one thread during state machine execution
 
 """
+from builtins import object
+from builtins import range
+from builtins import str
 import time
 import copy
 from collections import Iterable, Sized

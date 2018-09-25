@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import str
 from gtkmvc.observer import Observer
 
 import pytest

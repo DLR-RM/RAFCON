@@ -13,6 +13,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import range
 import gtk
 import gobject
 from gtkmvc import View

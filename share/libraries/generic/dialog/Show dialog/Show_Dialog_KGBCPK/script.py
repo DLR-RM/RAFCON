@@ -1,4 +1,6 @@
 
+from past.builtins import basestring
+from builtins import str
 def on_dialog_key_press(dialog, event, key_mapping, buttons):
     from gtk.gdk import keyval_name
     key_name = str.lower(str(keyval_name(event.keyval)))

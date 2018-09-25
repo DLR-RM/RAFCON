@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import zip
 import os
 import time
 import pytest

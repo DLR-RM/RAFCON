@@ -17,6 +17,7 @@
 
 """
 
+from past.builtins import basestring
 from gtkmvc import Observable
 
 from rafcon.core.id_generator import generate_data_flow_id

@@ -21,6 +21,7 @@
 
 """
 
+from builtins import str
 import gtk
 
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController

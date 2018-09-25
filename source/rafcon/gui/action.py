@@ -20,6 +20,8 @@ initialized with consistent arguments.
 This general Action (one procedure for all possible edition) procedure is expansive and complex, therefore it is aimed
 to define specific _-Action-Classes for simple/specific edit actions.
 """
+from builtins import object
+from builtins import str
 import copy
 import json
 import difflib

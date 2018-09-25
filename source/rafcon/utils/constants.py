@@ -19,6 +19,7 @@
 
 """
 
+from builtins import str
 import tempfile
 import getpass
 import os

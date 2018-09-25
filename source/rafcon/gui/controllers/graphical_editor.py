@@ -20,6 +20,9 @@
 
 """
 
+from builtins import range
+from builtins import filter
+from builtins import map
 import gobject
 import itertools
 import sys

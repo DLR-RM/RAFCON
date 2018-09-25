@@ -17,6 +17,7 @@
 
 """
 
+from builtins import object
 import gtk
 from functools import partial
 

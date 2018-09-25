@@ -1,3 +1,4 @@
+from builtins import str
 import time
 from timeit import default_timer as timer
 

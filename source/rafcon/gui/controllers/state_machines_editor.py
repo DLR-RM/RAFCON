@@ -21,6 +21,8 @@
 
 """
 
+from builtins import range
+from builtins import str
 import collections
 import copy
 import gtk

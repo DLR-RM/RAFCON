@@ -16,6 +16,7 @@
 
 """
 
+from builtins import str
 import traceback
 
 from rafcon.core.state_elements.outcome import Outcome

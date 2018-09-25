@@ -16,6 +16,7 @@
    Additional this module holds methods that employing the state machine manager. Maybe this changes in future.
 """
 
+from builtins import str
 import copy
 import time
 import os

@@ -9,6 +9,7 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import object
 from cairo import ImageSurface, FORMAT_ARGB32, Context, Error
 from gtk.gdk import CairoContext
 

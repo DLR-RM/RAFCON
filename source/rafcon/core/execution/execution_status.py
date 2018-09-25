@@ -15,6 +15,7 @@
    :synopsis: A module to represent the state machine status
 
 """
+from builtins import str
 from enum import Enum
 from gtkmvc import Observable
 from threading import _Condition

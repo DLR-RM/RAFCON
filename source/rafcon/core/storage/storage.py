@@ -16,6 +16,8 @@
 
 """
 
+from past.builtins import basestring
+from builtins import str
 import os
 import re
 import math

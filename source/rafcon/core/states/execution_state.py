@@ -18,6 +18,7 @@
 
 """
 
+from builtins import str
 import traceback
 import sys
 import os

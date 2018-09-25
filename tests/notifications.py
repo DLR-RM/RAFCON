@@ -1,4 +1,6 @@
 from __future__ import print_function
+from builtins import hex
+from builtins import str
 from os.path import join
 from graphviz import Digraph
 from collections import OrderedDict

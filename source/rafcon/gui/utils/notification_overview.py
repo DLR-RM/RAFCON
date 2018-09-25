@@ -10,6 +10,7 @@ from __future__ import print_function
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import str
 import datetime
 import time
 from rafcon.utils import constants

@@ -21,6 +21,9 @@
 
 """
 
+from builtins import range
+from builtins import next
+from builtins import str
 from os import path
 import gtk
 import gobject

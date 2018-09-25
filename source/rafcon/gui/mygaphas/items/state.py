@@ -13,6 +13,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from past.builtins import basestring
+from builtins import str
 from weakref import ref
 from pango import SCALE, FontDescription, WRAP_WORD
 from copy import copy

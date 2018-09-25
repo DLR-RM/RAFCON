@@ -22,6 +22,8 @@ The HistoryChanges-Class provides the functionalities to organize and access all
 Hereby the branching of the edit process is stored and should be accessible, too.
 
 """
+from builtins import object
+from builtins import str
 import copy
 
 from gtkmvc import ModelMT, Observable

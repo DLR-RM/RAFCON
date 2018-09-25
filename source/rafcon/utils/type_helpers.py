@@ -21,6 +21,8 @@
 
 
 
+from past.builtins import basestring
+from builtins import str
 import __builtin__
 from pydoc import locate, ErrorDuringImport
 from inspect import isclass

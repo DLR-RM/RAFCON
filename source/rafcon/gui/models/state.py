@@ -12,6 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import range
 from gtkmvc import ModelMT
 
 from rafcon.gui.models.abstract_state import AbstractStateModel

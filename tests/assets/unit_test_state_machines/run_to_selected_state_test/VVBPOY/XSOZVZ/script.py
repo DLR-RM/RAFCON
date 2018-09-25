@@ -1,3 +1,4 @@
+from builtins import str
 def execute(self, inputs, outputs, gvm):
     from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
     import os

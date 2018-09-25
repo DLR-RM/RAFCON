@@ -19,6 +19,7 @@
 
 """
 
+from builtins import range
 import gobject
 import gtk
 from functools import partial

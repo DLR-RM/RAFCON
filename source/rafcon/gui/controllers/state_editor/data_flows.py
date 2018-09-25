@@ -19,6 +19,8 @@
 
 """
 
+from builtins import filter
+from builtins import str
 import gobject
 from gtk import ListStore
 

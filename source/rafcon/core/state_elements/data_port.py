@@ -17,6 +17,7 @@
    :synopsis: A module to represent data ports the state machine
 
 """
+from past.builtins import basestring
 from enum import Enum
 from gtkmvc import Observable
 

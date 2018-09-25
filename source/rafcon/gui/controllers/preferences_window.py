@@ -17,6 +17,8 @@
    :synopsis: a module holding the controller for the configuration of GUI and Core
 
 """
+from past.builtins import basestring
+from builtins import str
 import gtk
 import yaml_configuration.config
 from os.path import dirname

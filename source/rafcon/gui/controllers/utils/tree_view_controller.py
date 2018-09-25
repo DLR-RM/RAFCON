@@ -11,6 +11,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import range
+from builtins import str
 import glib
 import gtk
 from gtk.gdk import CONTROL_MASK, SHIFT_MASK

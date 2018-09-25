@@ -11,6 +11,7 @@
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import object
 from simplegeneric import generic
 from gaphas.geometry import distance_line_point, distance_rectangle_point
 from gaphas.segment import Segment

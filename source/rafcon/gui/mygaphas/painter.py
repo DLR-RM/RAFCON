@@ -10,6 +10,7 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import zip
 from cairo import ANTIALIAS_NONE, Matrix
 
 from rafcon.gui.config import global_gui_config as gui_config

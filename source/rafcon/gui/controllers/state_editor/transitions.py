@@ -19,6 +19,9 @@
 
 """
 
+from builtins import map
+from builtins import filter
+from builtins import str
 import gobject
 import gtk
 

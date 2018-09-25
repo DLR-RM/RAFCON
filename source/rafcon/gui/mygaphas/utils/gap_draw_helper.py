@@ -11,6 +11,7 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import str
 from math import pi
 
 from pango import SCALE, FontDescription
