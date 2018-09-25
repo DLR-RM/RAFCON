@@ -142,10 +142,10 @@ class StateDataFlowsListController(LinkageListController):
         # print "\n internal from %s \n\n internal to %s" % (self.free_to_port_internal, self.from_port_internal)
         internal_data_flows = []
         if self.free_to_port_internal and self.from_port_internal:
-            for from_state_id, elems in self.from_port_internal.items():
+            for from_state_id, elems in list(self.from_port_internal.items()):
                 # print "\n\nfrom_state %s and ports %s" % (from_state_id, [(elem.name, elem.data_type) for elem in elems])
                 for from_port in elems:
-                    for to_state_id, elems in self.free_to_port_internal.items():
+                    for to_state_id, elems in list(self.free_to_port_internal.items()):
                         # print "\nto_state %s and ports %s" % (to_state_id, [(elem.name, elem.data_type) for elem in elems])
                         for to_port in elems:
                             if type_helpers.type_inherits_of_type(from_port.data_type, to_port.data_type):
@@ -156,10 +156,10 @@ class StateDataFlowsListController(LinkageListController):
         # print "\n\n\n" + 60*"-" + "\n external from %s \n\n external to %s" % (self.free_to_port_external, self.from_port_external)
         external_data_flows = []
         if self.free_to_port_external and self.from_port_external:
-            for from_state_id, elems in self.from_port_external.items():
+            for from_state_id, elems in list(self.from_port_external.items()):
                 # print "\n\nfrom_state %s and ports %s" % (from_state_id, [(elem.name, elem.data_type) for elem in elems])
                 for from_port in elems:
-                    for to_state_id, elems in self.free_to_port_external.items():
+                    for to_state_id, elems in list(self.free_to_port_external.items()):
                         # print "\nto_state %s and ports %s" % (to_state_id, [(elem.name, elem.data_type) for elem in elems])
                         for to_port in elems:
                             if type_helpers.type_inherits_of_type(from_port.data_type, to_port.data_type):
@@ -560,7 +560,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                     to_states_store.append(['self.' + model.state.name + '.' + model.state.state_id])
                 if model.state.state_id in from_ports_internal or model.state.state_id == data_flow.from_state:
                     from_states_store.append(['self.' + model.state.name + '.' + model.state.state_id])
-                for state_model in model.states.values():
+                for state_model in list(model.states.values()):
                     if state_model.state.state_id in free_to_port_internal or \
                                     state_model.state.state_id == data_flow.to_state:
                         to_states_store.append([state_model.state.name + '.' + state_model.state.state_id])

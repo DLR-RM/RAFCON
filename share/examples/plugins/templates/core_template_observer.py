@@ -39,7 +39,7 @@ class ExecutionStatusObserver(object):
     def __init__(self):
         self.logger = log.get_logger(type(self).__name__)
         self.logger.info("Initiate ExecutionStatusObserver")
-        for id, sm in rafcon.core.singleton.state_machine_manager.state_machines.items():
+        for id, sm in list(rafcon.core.singleton.state_machine_manager.state_machines.items()):
             self.register_states_of_state_machine(sm)
         rafcon.core.singleton.state_machine_manager.add_observer(self, "add_state_machine",
                                                                          notify_after_function=self.on_add_state_machine_after)
@@ -63,7 +63,7 @@ class ExecutionStatusObserver(object):
         if isinstance(state, ContainerState):
             state.add_observer(self, "add_state",
                                notify_after_function=self.on_add_state)
-            for state in state.states.values():
+            for state in list(state.states.values()):
                 self.recursively_register_child_states(state)
                 state.add_observer(self, "state_execution_status",
                                    notify_after_function=self.on_state_execution_status_changed_after)

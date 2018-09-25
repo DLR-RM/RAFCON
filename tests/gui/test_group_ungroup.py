@@ -260,7 +260,7 @@ def trigger_issue_586_reproduction_sequence():
     state_ids = list(concurrent_decimate_state_m.states.keys())
     import rafcon.core.constants
     state_ids.remove(rafcon.core.constants.UNIQUE_DECIDER_STATE_ID)
-    child_state_ids = list(concurrent_decimate_state_m.states.values())[0].states.keys()
+    child_state_ids = list(list(concurrent_decimate_state_m.states.values())[0].states.keys())
     for state_id in state_ids:
         assert all([child_id in child_state_ids for child_id in list(concurrent_decimate_state_m.states[state_id].states.keys())])
 

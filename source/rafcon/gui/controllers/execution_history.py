@@ -210,7 +210,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 self.append_string_to_menu(popup_menu, "------------------------")
                 self.append_string_to_menu(popup_menu, "Scoped Data: ")
                 self.append_string_to_menu(popup_menu, "------------------------")
-                for key, data in scoped_data.items():
+                for key, data in list(scoped_data.items()):
                     menu_item_string = "    %s (%s - %s):\t%s" % (
                         data.name.replace("_", "__"), key, data.value_type, data.value)
                     self.append_string_to_menu(popup_menu, menu_item_string)
@@ -225,7 +225,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.append_string_to_menu(popup_menu, "Output Data:")
                         self.append_string_to_menu(popup_menu, "------------------------")
 
-                    for key, data in input_output_data.items():
+                    for key, data in list(input_output_data.items()):
                         menu_item_string = "    %s :\t%s" % (key.replace("_", "__"), data)
                         self.append_string_to_menu(popup_menu, menu_item_string)
 

@@ -106,7 +106,7 @@ def store_state_elements(state, state_m, return_list=None):
     state_m_elements['path'] = state_m.state.get_path()
     # collect input_data_ports
     state_elements['input_data_ports'] = []
-    for p_id, p in state.input_data_ports.items():
+    for p_id, p in list(state.input_data_ports.items()):
         print("input ports", p_id, list(state.input_data_ports.keys()))
         state_elements['input_data_ports'].append(p_id)
     # - check if the right models are there and only those
@@ -117,13 +117,13 @@ def store_state_elements(state, state_m, return_list=None):
         model_id_store.append(p_m.data_port.data_port_id)
         # - store model meta data
         state_m_elements['input_data_ports_meta'][p_m.data_port.data_port_id] = p_m.meta
-    for p_id, p in state.input_data_ports.items():
+    for p_id, p in list(state.input_data_ports.items()):
         assert p_id in model_id_store
     # print state_elements['input_data_ports'], state.input_data_ports
 
     # collect output_data_ports
     state_elements['output_data_ports'] = []
-    for p_id, p in state.output_data_ports.items():
+    for p_id, p in list(state.output_data_ports.items()):
         state_elements['output_data_ports'].append(p_id)
     # - check if the right models are there and only those
     model_id_store = []
@@ -133,7 +133,7 @@ def store_state_elements(state, state_m, return_list=None):
         model_id_store.append(p_m.data_port.data_port_id)
         # - store model meta data
         state_m_elements['output_data_ports_meta'][p_m.data_port.data_port_id] = p_m.meta
-    for p_id, p in state.output_data_ports.items():
+    for p_id, p in list(state.output_data_ports.items()):
         assert p_id in model_id_store
     # print state_elements['output_data_ports'], state.output_data_ports
     # print state.name
@@ -141,7 +141,7 @@ def store_state_elements(state, state_m, return_list=None):
 
     # collect outcomes
     state_elements['outcomes'] = []
-    for oc_id, oc, in state.outcomes.items():
+    for oc_id, oc, in list(state.outcomes.items()):
         state_elements['outcomes'].append(oc_id)
     # - check if the right models are there and only those
     model_id_store = []
@@ -151,14 +151,14 @@ def store_state_elements(state, state_m, return_list=None):
         model_id_store.append(oc_m.outcome.outcome_id)
         # - store model meta data
         state_m_elements['outcomes_meta'][oc_m.outcome.outcome_id] = oc_m.meta
-    for oc_id, oc in state.outcomes.items():
+    for oc_id, oc in list(state.outcomes.items()):
         assert oc_id in model_id_store
     # print state_elements['outcomes'], state.outcomes
 
     # collect scoped_variables
     if isinstance(state, ContainerState):
         state_elements['scoped_variables'] = []
-        for sv_id, sv, in state.scoped_variables.items():
+        for sv_id, sv, in list(state.scoped_variables.items()):
             state_elements['scoped_variables'].append(sv_id)
         # - check if the right models are there and only those
         model_id_store = []
@@ -168,19 +168,19 @@ def store_state_elements(state, state_m, return_list=None):
             model_id_store.append(sv_m.scoped_variable.data_port_id)
             # - store model meta data
             state_m_elements['scoped_variables_meta'][sv_m.scoped_variable.data_port_id] = sv_m.meta
-        for sv_id, sv in state.scoped_variables.items():
+        for sv_id, sv in list(state.scoped_variables.items()):
             assert sv_id in model_id_store
 
     # collect states
     if isinstance(state, ContainerState):
         state_elements['states'] = []
-        for s_id, s in state.states.items():
+        for s_id, s in list(state.states.items()):
             state_elements['states'].append(s_id)
         # - check if the right models are there and only those
         model_id_store = []
         state_m_elements['states_meta'] = {}
         print(list(state_m.states.keys()))
-        for s_m_id, s_m in state_m.states.items():
+        for s_m_id, s_m in list(state_m.states.items()):
             # if not hasattr(s_m, "state"):
             #     print s_m
             assert s_m_id == s_m.state.state_id
@@ -190,7 +190,7 @@ def store_state_elements(state, state_m, return_list=None):
             # - store model meta data
             state_m_elements['states_meta'][s_m.state.state_id] = s_m.meta
         # -check if all states have a model otherwise check after change has to fail
-        for s_id, s in state.states.items():
+        for s_id, s in list(state.states.items()):
             # print s_id, model_id_store, s_id == UNIQUE_DECIDER_STATE_ID, s_id in model_id_store,
             # "missing_decider_state_models" in store_elements_ignores
             if not s_id == UNIQUE_DECIDER_STATE_ID or \
@@ -203,7 +203,7 @@ def store_state_elements(state, state_m, return_list=None):
     # collect data_flows
     if isinstance(state, ContainerState):
         state_elements['data_flows'] = []
-        for df_id, df in state.data_flows.items():
+        for df_id, df in list(state.data_flows.items()):
             state_elements['data_flows'].append(df_id)
         # - check if the right models are there and only those
         model_id_store = []
@@ -213,13 +213,13 @@ def store_state_elements(state, state_m, return_list=None):
             model_id_store.append(df_m.data_flow.data_flow_id)
             # - store model meta data
             state_m_elements['data_flows_meta'][df_m.data_flow.data_flow_id] = df_m.meta
-        for df_id, df in state.data_flows.items():
+        for df_id, df in list(state.data_flows.items()):
             assert df_id in model_id_store
 
     # collect transitions
     if isinstance(state, ContainerState):
         state_elements['transitions'] = []
-        for t_id, t in state.transitions.items():
+        for t_id, t in list(state.transitions.items()):
             state_elements['transitions'].append(t_id)
         # - check if the right models are there and only those
         model_id_store = []
@@ -232,7 +232,7 @@ def store_state_elements(state, state_m, return_list=None):
             model_id_store.append(t_m.transition.transition_id)
             # - store model meta data
             state_m_elements['transitions_meta'][t_m.transition.transition_id] = t_m.meta
-        for t_id, t in state.transitions.items():
+        for t_id, t in list(state.transitions.items()):
             # TODO test needs to be improved to cover BarrierState, too
             if UNIQUE_DECIDER_STATE_ID not in [t.to_state, t.from_state]:
                 assert t_id in model_id_store
@@ -248,7 +248,7 @@ def store_state_elements(state, state_m, return_list=None):
         # collect transitions of parent related and not related to me
         state_elements['transitions_external'] = []
         state_elements['transitions_external_not_related'] = []
-        for t_id, t in state.parent.transitions.items():
+        for t_id, t in list(state.parent.transitions.items()):
             if is_related_transition(state.parent, state.state_id, t):
                 state_elements['transitions_external'].append(t_id)
             else:
@@ -271,7 +271,7 @@ def store_state_elements(state, state_m, return_list=None):
         # collect data flows of parent related and not related to me
         state_elements['data_flows_external'] = []
         state_elements['data_flows_external_not_related'] = []
-        for df_id, df in state.parent.data_flows.items():
+        for df_id, df in list(state.parent.data_flows.items()):
             if is_related_data_flow(state.parent, state.state_id, df):
                 state_elements['data_flows_external'].append(df_id)
             else:
@@ -314,7 +314,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     # check ports
     if 'ports' in check_list:
         # collect input_data_ports
-        for p_id, p in state.input_data_ports.items():
+        for p_id, p in list(state.input_data_ports.items()):
             print(state.state_id, p_id, stored_state_elements['input_data_ports'])
             assert p_id in stored_state_elements['input_data_ports']
         # - check if the right models are there and only those
@@ -328,7 +328,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
             assert p_id in model_id_store
 
         # collect output_data_ports
-        for p_id, p in state.output_data_ports.items():
+        for p_id, p in list(state.output_data_ports.items()):
             assert p_id in stored_state_elements['output_data_ports']
         # - check if the right models are there and only those
         model_id_store = []
@@ -343,7 +343,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     # check outcomes
     if 'outcomes' in check_list:
         # collect outcomes
-        for oc_id, oc, in state.outcomes.items():
+        for oc_id, oc, in list(state.outcomes.items()):
             # print oc_id, stored_state_elements['outcomes']
             assert oc_id in stored_state_elements['outcomes']
         # - check if the right models are there and only those
@@ -363,12 +363,12 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
         print("State-Type: ", state)
     # TODO last element of condition has to be deleted again
     if 'states' in check_list and isinstance(state, ContainerState):
-        for s_id, s in state.states.items():
+        for s_id, s in list(state.states.items()):
             if not s_id == UNIQUE_DECIDER_STATE_ID:
                 assert s_id in stored_state_elements['states']
         # - check if the right models are there and only those
         model_id_store = []
-        for s_m_id, s_m in state_m.states.items():
+        for s_m_id, s_m in list(state_m.states.items()):
             # if not hasattr(s_m, "state"):
             #     print s_m
             assert s_m_id == s_m.state.state_id
@@ -394,7 +394,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     # check scoped_variables
     # TODO last element of condition has to be deleted again:
     if 'scoped_variables' in check_list and isinstance(state, ContainerState):
-        for sv_id, sv, in state.scoped_variables.items():
+        for sv_id, sv, in list(state.scoped_variables.items()):
             assert sv_id in stored_state_elements['scoped_variables']
         # - check if the right models are there and only those
         model_id_store = []
@@ -412,7 +412,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     if "internal_transitions" not in check_elements_ignores:
         # check transitions internal
         if 'transitions_internal' in check_list:
-            for t_id, t in state.transitions.items():
+            for t_id, t in list(state.transitions.items()):
                 print(state.name, t_id, stored_state_elements['transitions'], list(state.transitions.keys()))
                 assert t_id in stored_state_elements['transitions']
             # - check if the right models are there and only those
@@ -432,7 +432,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
 
         # check transitions external
         if 'transitions_external' in check_list:
-            for t_id, t in state.parent.transitions.items():
+            for t_id, t in list(state.parent.transitions.items()):
                 if is_related_transition(state.parent, state.state_id, t):
                     assert t_id in stored_state_elements['transitions_external']
                 else:
@@ -456,7 +456,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
     # TODO last element of condition has to be deleted again
     if 'data_flows_internal' in check_list and isinstance(state, ContainerState):
         # - all data_flows in the actual state should be in the stored_state_elements, too
-        for df_id, df in state.data_flows.items():
+        for df_id, df in list(state.data_flows.items()):
             assert df_id in stored_state_elements['data_flows']
         # - check if the right models are there (1) and only those (2)
         model_id_store = []
@@ -477,7 +477,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
 
     # check data_flows external
     if 'data_flows_external' in check_list:
-        for df_id, df in state.parent.data_flows.items():
+        for df_id, df in list(state.parent.data_flows.items()):
             if is_related_data_flow(state.parent, state.state_id, df):
                 assert df_id in stored_state_elements['data_flows_external']
             else:

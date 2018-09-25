@@ -622,7 +622,7 @@ class MainWindowController(ExtendedController):
         logger.debug("Saving runtime config to {0}".format(global_runtime_config.config_file_path))
 
         # store pane last positions
-        for key, widget_name in constants.PANE_ID.items():
+        for key, widget_name in list(constants.PANE_ID.items()):
             global_runtime_config.store_widget_properties(self.view[widget_name], key.replace('_POS', ''))
 
         # store hidden or undocked widget flags correctly -> make them independent for restoring

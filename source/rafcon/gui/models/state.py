@@ -161,21 +161,21 @@ class StateModel(AbstractStateModel):
         """Reloads the input data port models directly from the the state
         """
         self.input_data_ports = []
-        for input_data_port in self.state.input_data_ports.values():
+        for input_data_port in list(self.state.input_data_ports.values()):
             self._add_model(self.input_data_ports, input_data_port, DataPortModel)
 
     def _load_output_data_port_models(self):
         """Reloads the output data port models directly from the the state
         """
         self.output_data_ports = []
-        for output_data_port in self.state.output_data_ports.values():
+        for output_data_port in list(self.state.output_data_ports.values()):
             self._add_model(self.output_data_ports, output_data_port, DataPortModel)
 
     def _load_outcome_models(self):
         """Reloads the input data port models directly from the the state
         """
         self.outcomes = []
-        for outcome in self.state.outcomes.values():
+        for outcome in list(self.state.outcomes.values()):
             self._add_model(self.outcomes, outcome, OutcomeModel)
 
     def re_initiate_model_list(self, model_list_or_dict, core_objects_dict, model_name, model_class, model_key):
@@ -250,7 +250,7 @@ class StateModel(AbstractStateModel):
                     return True
             return False
 
-        for core_element in core_elements_dict.values():
+        for core_element in list(core_elements_dict.values()):
             if core_element_has_model(core_element):
                 continue
 
@@ -308,7 +308,7 @@ class StateModel(AbstractStateModel):
         for model_or_key in model_list_or_dict:
             model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
             found = False
-            for core_object in core_objects_dict.values():
+            for core_object in list(core_objects_dict.values()):
                 if core_object is getattr(model, model_name):
                     found = True
                     break

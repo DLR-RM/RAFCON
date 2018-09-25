@@ -72,7 +72,7 @@ class GuiConfig(ObservableConfig):
         if not using_default_config:
             default_gui_config = yaml.load(self.default_config) if self.default_config else {}
             shortcuts_dict = self.get_config_value('SHORTCUTS')
-            for shortcut_name, shortcuts_list in default_gui_config.get('SHORTCUTS', {}).items():
+            for shortcut_name, shortcuts_list in list(default_gui_config.get('SHORTCUTS', {}).items()):
                 if shortcut_name not in shortcuts_dict:
                     self.logger.info("Shortcut for '{0}' is {1}, now, and was taken from default config."
                                      "".format(shortcut_name, shortcuts_list))
@@ -115,8 +115,8 @@ class GuiConfig(ObservableConfig):
             raise ValueError("No color definitions found")
 
         # replace unicode strings with str strings
-        colors = {str(key): str(value) for key, value in colors.items()}
-        gtk_colors = {str(key): gtk.gdk.Color(str(value)) for key, value in colors.items()}
+        colors = {str(key): str(value) for key, value in list(colors.items())}
+        gtk_colors = {str(key): gtk.gdk.Color(str(value)) for key, value in list(colors.items())}
         self.gtk_colors.update(gtk_colors)
         self.colors.update(colors)
 

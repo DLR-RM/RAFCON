@@ -15,7 +15,7 @@ def execute(self, inputs, outputs, gvm):
     self.parent.add_transition(e.state_id, 0, self.parent.state_id, 0)
     wait_for_gui()
     parent_id = None
-    for d_id, d in self.parent.output_data_ports.items():
+    for d_id, d in list(self.parent.output_data_ports.items()):
         if d.name == "output_0":
             parent_id = d_id
     self.parent.add_data_flow(e.state_id, 2, self.parent.state_id, parent_id)

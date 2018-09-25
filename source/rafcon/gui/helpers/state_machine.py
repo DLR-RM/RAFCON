@@ -54,7 +54,7 @@ logger = log.get_logger(__name__)
 
 
 def is_element_none_with_error_message(method_name, element_dict):
-    missing_elements = [element_name for element_name, element in element_dict.items() if element is None]
+    missing_elements = [element_name for element_name, element in list(element_dict.items()) if element is None]
     if missing_elements:
         logger.error("The following elements are missing to perform {0}: {1}".format(missing_elements))
 
@@ -412,7 +412,7 @@ def refresh_libraries():
 
 
 def replace_all_libraries_by_template(state_model):
-    for s_id, child_state_model in state_model.states.items():
+    for s_id, child_state_model in list(state_model.states.items()):
         if isinstance(child_state_model, LibraryStateModel):
             library_name = child_state_model.state.library_name
             library_path = child_state_model.state.library_path
@@ -423,7 +423,7 @@ def replace_all_libraries_by_template(state_model):
 
 
 def save_all_libraries(target_path):
-    for library_key, library_root_path in library_manager.library_root_paths.items():
+    for library_key, library_root_path in list(library_manager.library_root_paths.items()):
         # lib_target_path = os.path.join(target_path, os.path.split(library_root_path)[1])
         lib_target_path = os.path.join(target_path, library_key)
         copy_file_or_folder(library_root_path, lib_target_path)
@@ -437,12 +437,12 @@ def save_library_config(target_path):
     new_config = rafcon.core.config.Config()
 
     # copy content
-    for key, value in tmp_dict.items():
+    for key, value in list(tmp_dict.items()):
         new_config.set_config_value(key, value)
 
     # recreate library paths to be relative to config file
     new_library_paths_entry = {}
-    for library_key, library_root_path in library_manager.library_root_paths.items():
+    for library_key, library_root_path in list(library_manager.library_root_paths.items()):
         new_library_paths_entry[library_key] = os.path.relpath(os.path.join(target_path, library_key), config_path)
     new_config.set_config_value("LIBRARY_PATHS", new_library_paths_entry)
 
@@ -462,7 +462,7 @@ def generate_linux_launch_files(target_path, config_path, state_machine_path):
     launch_file_with_env = os.path.join(target_path, "launch_rafcon_with_env_generated.sh")
     with open(launch_file_with_env, 'w') as file_pointer:
         file_pointer.write(she_bang)
-        for key, value in os.environ.items():
+        for key, value in list(os.environ.items()):
             if key not in ["PWD", "BASH_FUNC_mc%%", "BASH_FUNC_module%%", "RAFCON_LIBRARY_PATH"]:
                 file_pointer.write("export {}=\"{}\"\n".format(key, value))
         file_pointer.write("\n")
@@ -578,7 +578,7 @@ def refresh_all(force=False):
             message_string = "Are you sure you want to reload the libraries and all state machines?\n\n" \
                              "The following elements have been modified and not saved. " \
                              "These changes will get lost:"
-            for sm_id, sm in state_machine_manager.state_machines.items():
+            for sm_id, sm in list(state_machine_manager.state_machines.items()):
                 if sm.marked_dirty:
                     message_string = "%s\n* State machine #%s and name '%s'" % (
                         message_string, str(sm_id), sm.root_state.name)

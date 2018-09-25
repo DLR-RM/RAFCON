@@ -78,26 +78,26 @@ def trigger_repetitive_group_ungroup(*args):
     call_gui_callback(set_state_name, list(sm_m.root_state.states.values())[0].state, "Stage 1")
 
     print("select: ", list(sm_m.root_state.states.values()))
-    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values())[0].states.values())
+    call_gui_callback(sm_m.selection.set, list(list(sm_m.root_state.states.values())[0].states.values()))
     # time.sleep(1)
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
-    print("Stage 2", list(sm_m.root_state.states.values())[0].states.values()[0].state.get_path())
-    call_gui_callback(set_state_name, list(sm_m.root_state.states.values())[0].states.values()[0].state, "Stage 2")
+    print("Stage 2", list(list(sm_m.root_state.states.values())[0].states.values())[0].state.get_path())
+    call_gui_callback(set_state_name, list(list(sm_m.root_state.states.values())[0].states.values())[0].state, "Stage 2")
 
     print("select: ", list(sm_m.root_state.states.values()))
-    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values())[0].states.values()[0].states.values())
+    call_gui_callback(sm_m.selection.set, list(list(sm_m.root_state.states.values())[0].states.values())[0].states.values())
     # time.sleep(1)
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
-    print("Stage 3", list(sm_m.root_state.states.values())[0].states.values()[0].states.values()[0].state.get_path())
+    print("Stage 3", list(list(sm_m.root_state.states.values())[0].states.values())[0].states.values()[0].state.get_path())
     call_gui_callback(
-        set_state_name, list(sm_m.root_state.states.values())[0].states.values()[0].states.values()[0].state, "Stage 3"
+        set_state_name, list(list(sm_m.root_state.states.values())[0].states.values())[0].states.values()[0].state, "Stage 3"
     )
     # time.sleep(5)
 
     # raw_input("press enter")
-    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values())[0].states.values()[0])
+    call_gui_callback(sm_m.selection.set, list(list(sm_m.root_state.states.values())[0].states.values())[0])
     # time.sleep(1)
-    s = list(sm_m.root_state.states.values())[0].states.values()[0]
+    s = list(list(sm_m.root_state.states.values())[0].states.values())[0]
     print("ungroup Stage 2", s.state.get_path(), s)
     call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
     call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values())[0])
@@ -144,7 +144,7 @@ def trigger_repetitive_group_ungroup(*args):
     selected_states = [list(sm_m.root_state.states.values())[0].states[state_id] for state_id in
                        ['State1', 'State2', UNIQUE_DECIDER_STATE_ID]]
     print("select: ", [str(state_m) for state_m in selected_states])
-    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values())[0].states.values())
+    call_gui_callback(sm_m.selection.set, list(list(sm_m.root_state.states.values())[0].states.values()))
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
 
     print('#'*30, '\n', '### positive example #2 ungroup a barrier state \n', '#'*30)

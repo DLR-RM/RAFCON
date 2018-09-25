@@ -65,7 +65,7 @@ def dict_has_empty_elements(d, ignored_keys=None, ignored_partial_keys=None):
         # print "dict check -> result empty", d
         return True
     else:
-        for k, v in d.items():
+        for k, v in list(d.items()):
             # print "check", k, " -> ", v
             if isinstance(v, dict):
                 if dict_has_empty_elements(v):
@@ -96,7 +96,7 @@ def model_has_empty_meta(m, ignored_keys=None, ignored_partial_keys=None):
         # print "XXX", m, m.meta
         return True
     if isinstance(m, ContainerStateModel):
-        for state_m in m.states.values():
+        for state_m in list(m.states.values()):
             if dict_has_empty_elements(state_m.meta, ignored_keys, ignored_partial_keys):
                 # print "LXXX", state_m, state_m.meta
                 return True
@@ -322,7 +322,7 @@ def get_boundaries_of_elements_in_dict(models_dict, clearance=0.):
     for key in parts:
         elems_dict = models_dict[key]
         rel_positions = []
-        for model in elems_dict.values():
+        for model in list(elems_dict.values()):
             _size = (0., 0.)
             if key == 'states':
                 rel_positions = [model.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']]
@@ -378,7 +378,7 @@ def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor)
     """ Add position offset to all handed models in dict"""
     # print "\n", "#"*30, "offset models", pos_offset, "#"*30
     # Update relative position of states within the container in order to maintain their absolute position
-    for child_state_m in models_dict['states'].values():
+    for child_state_m in list(models_dict['states'].values()):
         old_rel_pos = child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
         # print "old_rel_pos", old_rel_pos, child_state_m
         child_state_m.set_meta_data_editor('rel_pos', add_pos(old_rel_pos, pos_offset), from_gaphas=gaphas_editor)
@@ -386,7 +386,7 @@ def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor)
 
     # Do the same for scoped variable
     if not gaphas_editor:
-        for scoped_variable_m in models_dict['scoped_variables'].values():
+        for scoped_variable_m in list(models_dict['scoped_variables'].values()):
             old_rel_pos = scoped_variable_m.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']
             scoped_variable_m.set_meta_data_editor('inner_rel_pos', add_pos(old_rel_pos, pos_offset), gaphas_editor)
 
@@ -558,7 +558,7 @@ def resize_state_meta(state_m, factor, gaphas_editor):
         resize_state_port_meta(state_m, factor, gaphas_editor)
         if isinstance(state_m, ContainerStateModel):
             _resize_connection_models_list(state_m.transitions[:] + state_m.data_flows[:], factor, gaphas_editor)
-            for child_state_m in state_m.states.values():
+            for child_state_m in list(state_m.states.values()):
                 resize_state_meta(child_state_m, factor, gaphas_editor)
     # print "re-sized state", state_m.get_meta_data_editor(for_gaphas=gaphas_editor), state_m.core_element
 
@@ -567,7 +567,7 @@ def resize_of_all_models_in_dict(models_dict, factor, gaphas_editor):
     # print "\n", "#"*30, "resize models", factor, "#"*30,
 
     # Update relative position of states within the container in order to maintain their absolute position
-    for child_state_m in models_dict['states'].values():
+    for child_state_m in list(models_dict['states'].values()):
         resize_state_meta(child_state_m, factor, gaphas_editor)
 
     # Do the same for data and logic ports
@@ -808,7 +808,7 @@ def meta_data_reference_check(meta):
         if diff['same_ref']:
             logger.verbose("same_ref: {0} {1}".format(diff['same_ref'], diff['same_ref_value']))
             assert False
-        for value in diff['value'].values():
+        for value in list(diff['value'].values()):
             if isinstance(value, dict):
                 diff_print(value)
 
@@ -850,7 +850,7 @@ def get_closest_sibling_state(state_m, from_logical_port=None):
         pos = add_pos(pos, state_m.get_meta_data_editor()['income']['rel_pos'])
 
     min_distance = None
-    for sibling_state_m in state_m.parent.states.values():
+    for sibling_state_m in list(state_m.parent.states.values()):
         if sibling_state_m is state_m:
             continue
 
@@ -895,7 +895,7 @@ def check_gaphas_state_meta_data_consistency(state_m, canvas, recursive=True, wi
         logger.error(error_msg)
 
     if recursive and isinstance(state_m.state, ContainerState):
-        for child_state_m in state_m.states.values():
+        for child_state_m in list(state_m.states.values()):
             check_gaphas_state_meta_data_consistency(child_state_m, canvas, True, with_logger_messages)
 
 

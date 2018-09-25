@@ -369,10 +369,10 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
         if isinstance(it, dict):
             if name:
                 return set(["{0}: {1}".format(key, element_in_iter.__class__.__name__)
-                            for key, element_in_iter in it.items()])
+                            for key, element_in_iter in list(it.items())])
             else:
                 return set(["{0}: {1}".format(key, element_in_iter.__class__)
-                            for key, element_in_iter in it.items()])
+                            for key, element_in_iter in list(it.items())])
         else:
             if name:
                 return set([element_in_iter.__class__.__name__ for element_in_iter in it])
@@ -476,7 +476,7 @@ def run_simple_modification_construction():
     testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
                                     rafcon.gui.helpers.state.StateType.HIERARCHY)
 
-    new_state_ids = [state_id for state_id, state_m in sm_m.root_state.states.items()
+    new_state_ids = [state_id for state_id, state_m in list(sm_m.root_state.states.items())
                      if state_id not in list_exsisting_state_ids]
     for state_id in new_state_ids:
         testing_utils.call_gui_callback(sm_m.root_state.state.remove_state, state_id)

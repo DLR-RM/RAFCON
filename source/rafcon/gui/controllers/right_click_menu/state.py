@@ -128,7 +128,7 @@ class StateMachineRightClickMenu(object):
                 change_type_sub_menu_item, change_type_sub_menu = append_sub_menu_to_parent_menu("Change state type",
                                                                                                  menu,
                                                                                                  constants.BUTTON_EXCHANGE)
-                for class_key, item in state_type_class_dict.items():
+                for class_key, item in list(state_type_class_dict.items()):
                     class_item = create_image_menu_item(class_key, constants.SIGN_LIB,
                                                         partial(self.on_type_change_activate,
                                                                 target_class=item['class']),
@@ -153,7 +153,7 @@ class StateMachineRightClickMenu(object):
                                                                                                      save_as_sub_menu,
                                                                                                      constants.SIGN_LIB)
             library_root_paths = core_singletons.library_manager.library_root_paths
-            for library_root_key in library_root_paths.keys():
+            for library_root_key in list(library_root_paths.keys()):
                 callback_function = partial(self.on_save_as_activate,
                                             path=library_root_paths[library_root_key],
                                             save_as_function=gui_helper_state_machine.save_selected_state_as)
@@ -174,7 +174,7 @@ class StateMachineRightClickMenu(object):
                                                                                                      save_as_sub_menu,
                                                                                                      constants.SIGN_LIB)
             library_root_paths = core_singletons.library_manager.library_root_paths
-            for library_root_key in library_root_paths.keys():
+            for library_root_key in list(library_root_paths.keys()):
                 callback_function = partial(self.on_save_as_activate,
                                             path=library_root_paths[library_root_key],
                                             save_as_function=gui_helper_state_machine.save_state_machine_as)

@@ -213,7 +213,7 @@ def check_state_storage(state, parent_path, missing_elements, existing_elements=
         check_file(file_path, "meta data", missing_elements, existing_elements)
 
     if isinstance(state, ContainerState):
-        for key, child_state in state.states.items():
+        for key, child_state in list(state.states.items()):
             check_state_storage(child_state, folder_path, missing_elements, existing_elements, check_meta_data)
 
 
@@ -314,7 +314,7 @@ def check_state_recursively_if_state_scripts_are_valid(state):
     from rafcon.core.states.container_state import ContainerState
     from rafcon.core.states.execution_state import ExecutionState
     if isinstance(state, ContainerState):
-        for child_state in state.states.values():
+        for child_state in list(state.states.values()):
             check_state_recursively_if_state_scripts_are_valid(child_state)
     else:
         if isinstance(state, ExecutionState):

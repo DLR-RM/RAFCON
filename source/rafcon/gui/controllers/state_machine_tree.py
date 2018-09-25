@@ -237,7 +237,7 @@ class StateMachineTreeController(TreeViewController):
     def store_expansion_state(self):
         try:
             act_expansion_state = {}
-            for state_path, state_row_iter in self.state_row_iter_dict_by_state_path.items():
+            for state_path, state_row_iter in list(self.state_row_iter_dict_by_state_path.items()):
                 state_row_path = self.tree_store.get_path(state_row_iter)
                 if state_row_path is not None:
                     act_expansion_state[state_path] = self.view.row_expanded(state_row_path)
@@ -263,7 +263,7 @@ class StateMachineTreeController(TreeViewController):
         if self.__my_selected_sm_id in self.__expansion_state:
             expansion_state = self.__expansion_state[self.__my_selected_sm_id]
             try:
-                for state_path, state_row_expanded in expansion_state.items():
+                for state_path, state_row_expanded in list(expansion_state.items()):
                     if state_path in self.state_row_iter_dict_by_state_path:
                         if state_row_expanded:
                             set_expansion_state(state_path)

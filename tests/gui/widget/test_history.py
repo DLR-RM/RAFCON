@@ -52,7 +52,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
 
     def print_states(state):
         if isinstance(state, ContainerState):
-            for state_id, child_state in state.states.items():
+            for state_id, child_state in list(state.states.items()):
                 print(child_state.get_path())
                 print_states(child_state)
     print_states(sm_model.state_machine.root_state)
@@ -729,7 +729,7 @@ def test_outcome_property_modifications_history(caplog):
     def do_check_for_state(state_dict, state_name='Nested'):
         ####################################################
         # modify outcome and generate in previous a observer
-        for outcome_id, outcome in state_dict['Nested2'].outcomes.items():
+        for outcome_id, outcome in list(state_dict['Nested2'].outcomes.items()):
             if not outcome_id < 0:
                 outcome.name = "new_name_" + str(outcome_id)
                 sm_model.history.undo()
@@ -743,7 +743,7 @@ def test_outcome_property_modifications_history(caplog):
 
         ####################################################
         # modify outcome
-        for outcome_id, outcome in state_dict['Nested'].outcomes.items():
+        for outcome_id, outcome in list(state_dict['Nested'].outcomes.items()):
             outcome.name = "new_name_" + str(outcome_id)
             sm_model.history.undo()
             sm_model.history.redo()

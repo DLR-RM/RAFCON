@@ -181,7 +181,7 @@ class ModificationHistoryTreeController(ExtendedController):
         :rtype: bool
         """
         # TODO re-organize as request to controller which holds source-editor-view or any parent to it
-        for key, tab in gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.items():
+        for key, tab in list(gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.items()):
             if tab['controller'].get_controller('source_ctrl') is not None and \
                     react_to_event(self.view, tab['controller'].get_controller('source_ctrl').view.textview,
                                    (key_value, modifier_mask)) or \
@@ -202,7 +202,7 @@ class ModificationHistoryTreeController(ExtendedController):
         :rtype: bool
         """
         # TODO re-organize as request to controller which holds source-editor-view or any parent to it
-        for key, tab in gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.items():
+        for key, tab in list(gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.items()):
             if tab['controller'].get_controller('source_ctrl') is not None and \
                     react_to_event(self.view, tab['controller'].get_controller('source_ctrl').view.textview,
                                    (key_value, modifier_mask)) or \
@@ -261,7 +261,7 @@ class ModificationHistoryTreeController(ExtendedController):
                 for index, value in enumerate(action.before_overview['args'][-1]):
                     if not index == 0:
                         parameters.append(str(value))
-            for name, value in action.before_overview['kwargs'][-1].items():
+            for name, value in list(action.before_overview['kwargs'][-1].items()):
                 parameters.append("{0}: {1}".format(name, value))
 
             if hasattr(action, 'action_type') and action.action_type == "script_text" and hasattr(action, 'script_diff'):

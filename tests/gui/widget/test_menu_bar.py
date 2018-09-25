@@ -329,7 +329,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
         call_gui_callback(sm_manager_model.__setattr__, 'selected_state_machine_id',
                           lib_state.get_state_machine().state_machine_id)
         call_gui_callback(gui_helper_state_machine.substitute_selected_library_state_with_template, True)  # keep_name=True
-        new_states = [state for state in old_parent.states.values() if state.state_id not in state_ids]
+        new_states = [state for state in list(old_parent.states.values()) if state.state_id not in state_ids]
         assert new_states and len(new_states) == 1 and new_states[0].name == 'DIALOG_X'
         ##########################################################
 

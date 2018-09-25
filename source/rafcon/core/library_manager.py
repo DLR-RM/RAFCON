@@ -88,7 +88,7 @@ class LibraryManager(Observable):
         self._skipped_library_roots = []
 
         # 1. Load libraries from config.yaml
-        for library_root_key, library_root_path in config.global_config.get_config_value("LIBRARY_PATHS").items():
+        for library_root_key, library_root_path in list(config.global_config.get_config_value("LIBRARY_PATHS").items()):
             library_root_path = self._clean_path(library_root_path)
             if os.path.exists(library_root_path):
                 logger.debug("Adding library root key '{0}' from path '{1}'".format(
@@ -321,7 +321,7 @@ class LibraryManager(Observable):
         """Return library root key if path is within library root paths"""
         path = os.path.realpath(path)
         library_root_key = None
-        for library_root_key, library_root_path in self._library_root_paths.items():
+        for library_root_key, library_root_path in list(self._library_root_paths.items()):
             rel_path = os.path.relpath(path, library_root_path)
             if rel_path.startswith('..'):
                 library_root_key = None

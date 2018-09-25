@@ -113,7 +113,7 @@ def print_state_sizes(state_m, canvas, state_names=None):
         print("{} size: {} ?= {}".format(state_m.state.name, meta_size, view_size))
         print("{} pos: {} ?= {}".format(state_m.state.name, meta_pos, view_pos))
     if isinstance(state_m.state, ContainerState):
-        for child_state_m in state_m.states.values():
+        for child_state_m in list(state_m.states.values()):
             print_state_sizes(child_state_m, canvas)
 
 

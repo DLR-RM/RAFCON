@@ -134,7 +134,7 @@ class StatesEditorController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         self.observe_model(gui_config_model)
 
-        for state_machine_m in self.model.state_machines.values():
+        for state_machine_m in list(self.model.state_machines.values()):
             self.observe_model(state_machine_m)
 
         # TODO: Workaround used for tab-close on middle click
@@ -232,10 +232,10 @@ class StatesEditorController(ExtendedController):
         """ Method remove state-tabs for those no state machine exists anymore.
         """
         tabs_to_close = []
-        for state_identifier, tab_dict in self.tabs.items():
+        for state_identifier, tab_dict in list(self.tabs.items()):
             if tab_dict['sm_id'] not in self.model.state_machine_manager.state_machines:
                 tabs_to_close.append(state_identifier)
-        for state_identifier, tab_dict in self.closed_tabs.items():
+        for state_identifier, tab_dict in list(self.closed_tabs.items()):
             if tab_dict['sm_id'] not in self.model.state_machine_manager.state_machines:
                 tabs_to_close.append(state_identifier)
         for state_identifier in tabs_to_close:
@@ -318,7 +318,7 @@ class StatesEditorController(ExtendedController):
 
     def reload_style(self):
         tabs_to_delete = []
-        for state_identifier, tab_dict in self.tabs.items():
+        for state_identifier, tab_dict in list(self.tabs.items()):
             tabs_to_delete.append(state_identifier)
         for state_identifier in tabs_to_delete:
             self.close_page(state_identifier, delete=True)
@@ -406,7 +406,7 @@ class StatesEditorController(ExtendedController):
         :param state_m: The state model to be searched
         :return: page containing the state and the state_identifier
         """
-        for state_identifier, page_info in self.tabs.items():
+        for state_identifier, page_info in list(self.tabs.items()):
             if page_info['state_m'] is state_m:
                 return page_info['page'], state_identifier
         return None, None
@@ -508,7 +508,7 @@ class StatesEditorController(ExtendedController):
 
         states_to_be_closed = []
         # Iterate over all tabs
-        for state_identifier, tab_info in self.tabs.items():
+        for state_identifier, tab_info in list(self.tabs.items()):
             # If the tab is currently open, keep it open
             if current_state_identifier == state_identifier:
                 continue
@@ -560,7 +560,7 @@ class StatesEditorController(ExtendedController):
     def get_state_identifier_for_page(self, page):
         """Return the state identifier for a given page
         """
-        for identifier, page_info in self.tabs.items():
+        for identifier, page_info in list(self.tabs.items()):
             if page_info["page"] is page:  # reference comparison on purpose
                 return identifier
 

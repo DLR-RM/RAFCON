@@ -300,7 +300,7 @@ class GlobalVariableManager(Observable):
     def global_variable_dictionary(self):
         """Property for the _global_variable_dictionary field"""
         dict_copy = {}
-        for key, value in self.__global_variable_dictionary.items():
+        for key, value in list(self.__global_variable_dictionary.items()):
             if key in self.__variable_references and self.__variable_references[key]:
                 dict_copy[key] = value
             else:

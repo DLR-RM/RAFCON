@@ -269,7 +269,7 @@ def save_state_recursively(state, base_path, parent_path, as_copy=False):
     # create yaml files for all children
     if isinstance(state, ContainerState):
         remove_obsolete_folders(list(state.states.values()), os.path.join(base_path, state_path))
-        for state in state.states.values():
+        for state in list(state.states.values()):
             save_state_recursively(state, base_path, state_path, as_copy)
 
 
@@ -527,7 +527,7 @@ def clean_path_element(text, max_length=None, separator='_'):
     :return:
     """
     elements_to_replace = REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION
-    for elem, replace_with in elements_to_replace.items():
+    for elem, replace_with in list(elements_to_replace.items()):
         text = text.replace(elem, replace_with)
     if max_length is not None:
         text = limit_text_max_length(text, max_length, separator)
@@ -544,7 +544,7 @@ def limit_text_to_be_path_element(text, max_length=None, separator='_'):
     """
     # TODO: Should there not only be one method i.e. either this one or "clean_path_element"
     elements_to_replace = {' ': '_', '*': '_'}
-    for elem, replace_with in elements_to_replace.items():
+    for elem, replace_with in list(elements_to_replace.items()):
         text = text.replace(elem, replace_with)
     text = re.sub('[^a-zA-Z0-9-_]', '', text)
     if max_length is not None:

@@ -51,7 +51,7 @@ class Clipboard(Observable):
     def __str__(self):
         return "Clipboard: parent of copy is state with state_id {0} and copies in are {1}" \
                "".format(self.copy_parent_state_id,
-                         {key: elems for key, elems in self.model_copies.items() if elems})
+                         {key: elems for key, elems in list(self.model_copies.items()) if elems})
 
     def get_action_arguments(self, target_state_m):
         """ Collect argument attributes for action signal
@@ -63,7 +63,7 @@ class Clipboard(Observable):
         :param rafcon.gui.models.abstract_state.AbstractStateModel target_state_m: State model of target of action
         :return: dict with lists of elements part of the action, action parent model
         """
-        non_empty_lists_dict = {key: elems for key, elems in self.model_copies.items() if elems}
+        non_empty_lists_dict = {key: elems for key, elems in list(self.model_copies.items()) if elems}
         port_attrs = ['input_data_ports', 'output_data_ports', 'scoped_variables', 'outcomes']
         port_is_pasted = any([key in non_empty_lists_dict for key in port_attrs])
         return non_empty_lists_dict, target_state_m.parent if target_state_m.parent and port_is_pasted else target_state_m
@@ -109,12 +109,12 @@ class Clipboard(Observable):
                                                            affected_models=[], after=False,
                                                            kwargs={'remove': non_empty_lists_dict}))
 
-        for state_element_attr, models_list in selection_dict_of_copied_models.items():
+        for state_element_attr, models_list in list(selection_dict_of_copied_models.items()):
             # gui_helper_state_machine.delete_core_elements_of_models(models_list, destroy=False,
             #                                                         recursive=False, force=False)
             gui_helper_state_machine.delete_core_elements_of_models(models_list, destroy=True,
                                                                     recursive=True, force=True)
-        affected_models = [model for models in non_empty_lists_dict.values() for model in models]
+        affected_models = [model for models in list(non_empty_lists_dict.values()) for model in models]
         action_parent_m.action_signal.emit(ActionSignalMsg(action='cut', origin='clipboard',
                                                            action_parent_m=action_parent_m,
                                                            affected_models=affected_models, after=True))
@@ -213,14 +213,14 @@ class Clipboard(Observable):
 
         # move meta data from original copied model to newly insert models and resize them to fit into target_state_m
         models_dict = {'state': target_state_m}
-        for state_element_attr, state_elements in insert_dict.items():
+        for state_element_attr, state_elements in list(insert_dict.items()):
             models_dict[state_element_attr] = {}
             for new_state_element_m, copied_state_element_m in state_elements:
                 new_core_element_id = new_state_element_m.core_element.core_element_id
                 models_dict[state_element_attr][new_core_element_id] = new_state_element_m
 
         affected_models = []
-        for key, state_elements in insert_dict.items():
+        for key, state_elements in list(insert_dict.items()):
             if key == 'state':
                 continue
             for new_state_element_m, copied_state_element_m in state_elements:
@@ -229,7 +229,7 @@ class Clipboard(Observable):
         # commented parts are here for later use to detect empty meta data fields and debug those
         if all([all([not gui_helpers_meta_data.model_has_empty_meta(state_element_m) for state_element_m, _ in elems_list])
                 if isinstance(elems_list, list) else gui_helpers_meta_data.model_has_empty_meta(elems_list)
-                for elems_list in insert_dict.values()]) or \
+                for elems_list in list(insert_dict.values())]) or \
                 len(dict_of_non_empty_lists_of_model_copies) == 1 and 'states' in dict_of_non_empty_lists_of_model_copies:
             try:
                 gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
@@ -358,7 +358,7 @@ class Clipboard(Observable):
             parent_m_count_dict[model.parent] = parent_m_count_dict[model.parent] + 1 if model.parent in parent_m_count_dict else 1
         parent_m = None
         current_count_parent = 0
-        for possible_parent_m, count in parent_m_count_dict.items():
+        for possible_parent_m, count in list(parent_m_count_dict.items()):
             parent_m = possible_parent_m if current_count_parent < count else parent_m
         # if root no parent exist and only on model can be selected
         if len(selection.states) == 1 and selection.get_selected_state().state.is_root_state:
@@ -437,7 +437,7 @@ class Clipboard(Observable):
                 if data_flow_m not in selection.data_flows:
                     selection.add(data_flow_m)
             # extend by selected ports enclosed data flows
-            for data_flow_id, data_flow in parent_m.state.data_flows.items():
+            for data_flow_id, data_flow in list(parent_m.state.data_flows.items()):
                 from_port, to_port = get_ports_related_to_data_flow(data_flow)
                 if from_port in ports and to_port in ports:
                     selection.add(parent_m.get_data_flow_m(data_flow_id))
@@ -447,7 +447,7 @@ class Clipboard(Observable):
                 if transition_m not in selection.transitions:
                     selection.add(transition_m)
             # extend by selected state and outcome enclosed transitions
-            for transition_id, transition in parent_m.state.transitions.items():
+            for transition_id, transition in list(parent_m.state.transitions.items()):
                 from_state, to_state, to_oc = get_states_related_to_transition(transition)
                 if from_state in possible_states and to_oc in possible_outcomes:
                     selection.add(parent_m.get_transition_m(transition_id))
@@ -486,14 +486,14 @@ class Clipboard(Observable):
         self.model_copies = deepcopy(selected_models_dict)
 
         new_content_of_clipboard = ', '.join(["{0} {1}".format(len(elems), key if len(elems) > 1 else key[:-1])
-                                             for key, elems in self.model_copies.items() if elems])
+                                             for key, elems in list(self.model_copies.items()) if elems])
         logger.info("The new content is {0}".format(new_content_of_clipboard.replace('_', ' ')))
 
         return selected_models_dict, parent_m
 
     def destroy_all_models_in_dict(self, target_dict, destroy_parent=True):
         if target_dict:
-            for model_list in target_dict.values():
+            for model_list in list(target_dict.values()):
                 if isinstance(model_list, (list, tuple)):
                     for model in model_list:
                         model.prepare_destruction()
