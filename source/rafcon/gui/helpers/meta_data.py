@@ -766,8 +766,8 @@ def meta_data_reference_check(meta):
         v1_keys = list(v1.keys())
         v2_keys = list(v2.keys())
         not_to_check = set(v1_keys).symmetric_difference(v2_keys)
-        d['missing_keys1'] = filter(lambda k: k in not_to_check, v1_keys)
-        d['missing_keys2'] = filter(lambda k: k in not_to_check, v2_keys)
+        d['missing_keys1'] = [k for k in v1_keys if k in not_to_check]
+        d['missing_keys2'] = [k for k in v2_keys if k in not_to_check]
         for key in set(v1_keys + v2_keys):
             if key not in not_to_check:
                 if not hasattr(v1[key], 'keys'):

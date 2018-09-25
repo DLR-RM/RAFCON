@@ -2056,7 +2056,7 @@ class GraphicalEditorController(ExtendedController):
 
         try:
             selected_ids = map(get_id, hits)  # Get the OpenGL ids for the hits
-            selected_ids = filter(lambda opengl_id: opengl_id is not None, selected_ids)  # Filter out Nones
+            selected_ids = [opengl_id for opengl_id in selected_ids if opengl_id is not None]  # Filter out Nones
             (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.root_state_m, 1, None, 0,
                                                                         all,
                                                                         find_states, find_transitions,

@@ -22,7 +22,7 @@ import itertools
 
 def wraps_safely(obj, attr_names=functools.WRAPPER_ASSIGNMENTS):
     # Solves problem with missing attributes: http://stackoverflow.com/a/28752007
-    return functools.wraps(obj, assigned=filter(functools.partial(hasattr, obj), attr_names))
+    return functools.wraps(obj, assigned=list(filter(functools.partial(hasattr, obj), attr_names)))
 
 global_lock_counter = 0
 

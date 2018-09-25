@@ -378,8 +378,8 @@ class ContainerState(State):
         def reduce_dfs(port_data_linkages, df_id):
             for port_key in list(port_data_linkages.keys()):
                 port_df = port_data_linkages[port_key]
-                port_df['internal'] = filter(lambda df: df.data_flow_id != df_id, port_df['internal'])
-                port_df['external'] = filter(lambda df: df.data_flow_id != df_id, port_df['external'])
+                port_df['internal'] = [df for df in port_df['internal'] if df.data_flow_id != df_id]
+                port_df['external'] = [df for df in port_df['external'] if df.data_flow_id != df_id]
                 if not port_df['internal'] and not port_df['external']:
                     del port_data_linkages[port_key]
 

@@ -344,8 +344,8 @@ class StateTransitionsListController(LinkageListController):
             # print [o.outcome_id for o in from_o_combo], state_model.state.state_id
             for transition in list(trans_dict.values()):
                 # print transition, [[o.outcome_id == transition.from_outcome, transition.from_state == state_model.state.state_id] for o in from_o_combo]
-                from_o_combo = filter(lambda o: not (o.outcome_id == transition.from_outcome and
-                                                     transition.from_state == state.state_id), from_o_combo)
+                from_o_combo = [o for o in from_o_combo if not (o.outcome_id == transition.from_outcome and
+                                                     transition.from_state == state.state_id)]
                 # print [o.outcome_id for o in from_o_combo]
             if len(from_o_combo) > 0:
                 free_from_outcomes_dict[state.state_id] = from_o_combo
@@ -356,7 +356,7 @@ class StateTransitionsListController(LinkageListController):
         # for from-state-combo use all states with free outcomes and from_state
         combined_states = [model.state] if is_external else [self_model.state]
         combined_states.extend(list(model.state.states.values()))
-        free_from_states = filter(lambda state: state.state_id in list(free_from_outcomes_dict.keys()), combined_states)
+        free_from_states = [state for state in combined_states if state.state_id in list(free_from_outcomes_dict.keys())]
 
         if trans is None:
             return None, None, None, None, free_from_states, free_from_outcomes_dict

@@ -764,8 +764,8 @@ def find_free_keys(model):
             port_keys = list(model.state.output_data_ports.keys())
             # print "actual keys: ", port_keys
             for data_flow in list(model.state.data_flows.values()):
-                port_keys = filter(lambda port_id: not (model.state.state_id == data_flow.to_state and
-                                                        port_id == data_flow.to_key), port_keys)
+                port_keys = [port_id for port_id in port_keys if not (model.state.state_id == data_flow.to_state and
+                                                        port_id == data_flow.to_key)]
                 # print "actual keys: ", port_keys
             # print "found free prots: ", port_keys
             free_container_ports.extend([model.state.output_data_ports[i] for i in port_keys])
@@ -787,8 +787,8 @@ def find_free_keys(model):
                 port_keys = list(state_model.state.input_data_ports.keys())
                 # print "actual keys: ", port_keys
                 for data_flow in list(model.state.data_flows.values()):
-                    port_keys = filter(lambda port_id: not (state_model.state.state_id == data_flow.to_state and
-                                                            port_id == data_flow.to_key), port_keys)
+                    port_keys = [port_id for port_id in port_keys if not (state_model.state.state_id == data_flow.to_state and
+                                                            port_id == data_flow.to_key)]
                     # print "actual keys: ", port_keys
 
                 # print "found free prots: ", port_keys
