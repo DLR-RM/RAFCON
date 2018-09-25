@@ -111,7 +111,8 @@ class MenuBarView(View):
             if menu_item_name in global_gui_config.get_config_value('SHORTCUTS'):
                 shortcuts = global_gui_config.get_config_value('SHORTCUTS')[menu_item_name]
                 if shortcuts:
-                    self.set_menu_item_accelerator(menu_item_name, shortcuts[0])
+                    main_shortcut = shortcuts[0] if isinstance(shortcuts, list) else shortcuts
+                    self.set_menu_item_accelerator(menu_item_name, main_shortcut)
 
     def set_menu_item_icon(self, menu_item_name, uni_code=None):
         menu_item = self[menu_item_name]
