@@ -395,4 +395,4 @@ def log_to_ganttplot(execution_history_items):
     fig, ax = plt.subplots(1, 1)
     ax.barh(bottom=[name2idx[k] for k in d.path_by_name], width=returndate-calldate,
             left=calldate, align='center', color=[state2color[s] for s in d.state_type], lw=0.0)
-    plt.yticks(range(len(ordered_unique_states)), ordered_unique_states)
+    plt.yticks(list(range(len(ordered_unique_states))), ordered_unique_states)
