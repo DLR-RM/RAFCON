@@ -294,10 +294,10 @@ def change_state_type(state_m, target_class):
     affected_models = [old_state_m]
     state_element_models = []
     obsolete_state_element_models = []
-    for state_elements in list(required_child_models.values()):
+    for state_elements in required_child_models.values():
         affected_models.extend(state_elements)
         state_element_models.extend(state_elements)
-    for state_elements in list(obsolete_child_models.values()):
+    for state_elements in obsolete_child_models.values():
         affected_models.extend(state_elements)
         obsolete_state_element_models.extend(state_elements)
 
@@ -399,7 +399,7 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
                 state_element_list = getattr(state_m_to_insert, state_element_key)
                 # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
                 if hasattr(state_element_list, 'keys'):
-                    state_element_list = list(state_element_list.values())
+                    state_element_list = state_element_list.values()
                 models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
 
             resize_factor = gui_helper_meta_data.scale_meta_data_according_state(models_dict, as_template=True)
@@ -536,13 +536,13 @@ def substitute_state(target_state_m, state_m_to_insert):
         changed_models = []
         new_state_m.meta = tmp_meta_data['state']
         changed_models.append(new_state_m)
-        for t_id, t_meta in list(tmp_meta_data['transitions'].items()):
+        for t_id, t_meta in tmp_meta_data['transitions'].items():
             if action_parent_m.get_transition_m(t_id) is not None:
                 action_parent_m.get_transition_m(t_id).meta = t_meta
                 changed_models.append(action_parent_m.get_transition_m(t_id))
             elif t_id in action_parent_m.state.substitute_state.__func__.re_create_io_going_t_ids:
                 logger.warning("Transition model with id {0} to set meta data could not be found.".format(t_id))
-        for df_id, df_meta in list(tmp_meta_data['data_flows'].items()):
+        for df_id, df_meta in tmp_meta_data['data_flows'].items():
             if action_parent_m.get_data_flow_m(df_id) is not None:
                 action_parent_m.get_data_flow_m(df_id).meta = df_meta
                 changed_models.append(action_parent_m.get_data_flow_m(df_id))
@@ -611,9 +611,9 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         tmp_models_dict['data_flows'][df.data_flow_id] = action_parent_m.get_data_flow_m(df.data_flow_id)
 
     affected_models = []
-    for elemets_dict in list(tmp_models_dict.values()):
+    for elemets_dict in tmp_models_dict.values():
         if isinstance(elemets_dict, dict):
-            affected_models.extend(iter(list(elemets_dict.values())))
+            affected_models.extend(elemets_dict.values())
         elif isinstance(elemets_dict, AbstractStateModel):
             affected_models.extend(elemets_dict)
 
@@ -629,7 +629,7 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
     error_msg = "Group action has not started with empty expected future models list."
     check_expected_future_model_list_is_empty(action_parent_m, msg=error_msg)
     for key in ['states', 'scoped_variables', 'transitions', 'data_flows']:
-        for model in list(tmp_models_dict[key].values()):
+        for model in tmp_models_dict[key].values():
             action_parent_m.expected_future_models.add(model)
 
     # CORE
@@ -681,7 +681,7 @@ def ungroup_state(state_m):
 
     related_transitions, related_data_flows = action_parent_m.state.related_linkage_state(state_id)
     tmp_models_dict['state'] = action_parent_m.states[state_id]
-    for s_id, s_m in list(action_parent_m.states[state_id].states.items()):
+    for s_id, s_m in action_parent_m.states[state_id].states.items():
         tmp_models_dict['states'][s_id] = s_m
     for sv_m in action_parent_m.states[state_id].scoped_variables:
         tmp_models_dict['scoped_variables'][sv_m.scoped_variable.data_port_id] = sv_m
@@ -702,7 +702,7 @@ def ungroup_state(state_m):
     error_msg = "Un-Group action has not started with empty expected future models list."
     check_expected_future_model_list_is_empty(action_parent_m, msg=error_msg)
     for key in ['states']:  # , 'scoped_variables', 'transitions', 'data_flows']:
-        for m in list(tmp_models_dict[key].values()):
+        for m in tmp_models_dict[key].values():
             if not m.state.state_id == UNIQUE_DECIDER_STATE_ID:
                 action_parent_m.expected_future_models.add(m)
 
@@ -730,22 +730,22 @@ def ungroup_state(state_m):
             # correct state element ids with new state element ids to set meta data on right state element
             tmp_models_dict['states'] = \
                 {new_state_id: tmp_models_dict['states'][old_state_id]
-                 for old_state_id, new_state_id in list(action_parent_m.state.ungroup_state.__func__.state_id_dict.items())}
+                 for old_state_id, new_state_id in action_parent_m.state.ungroup_state.__func__.state_id_dict.items()}
             tmp_models_dict['scoped_variables'] = \
                 {new_sv_id: tmp_models_dict['scoped_variables'][old_sv_id]
-                 for old_sv_id, new_sv_id in list(action_parent_m.state.ungroup_state.__func__.sv_id_dict.items())}
+                 for old_sv_id, new_sv_id in action_parent_m.state.ungroup_state.__func__.sv_id_dict.items()}
             tmp_models_dict['transitions'] = \
                 {new_t_id: tmp_models_dict['transitions'][old_t_id]
-                 for old_t_id, new_t_id in list(action_parent_m.state.ungroup_state.__func__.enclosed_t_id_dict.items())}
+                 for old_t_id, new_t_id in action_parent_m.state.ungroup_state.__func__.enclosed_t_id_dict.items()}
             tmp_models_dict['data_flows'] = \
                 {new_df_id: tmp_models_dict['data_flows'][old_df_id]
-                 for old_df_id, new_df_id in list(action_parent_m.state.ungroup_state.__func__.enclosed_df_id_dict.items())}
+                 for old_df_id, new_df_id in action_parent_m.state.ungroup_state.__func__.enclosed_df_id_dict.items()}
 
             action_parent_m.insert_meta_data_from_models_dict(tmp_models_dict, logger.info)
 
         affected_models = action_parent_m.ungroup_state.__func__.affected_models
-        for elemets_dict in list(tmp_models_dict.values()):
-            affected_models.extend(iter(list(elemets_dict.values())))
+        for elemets_dict in tmp_models_dict.values():
+            affected_models.extend(elemets_dict.values())
 
     old_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
                                                    action_parent_m=action_parent_m,

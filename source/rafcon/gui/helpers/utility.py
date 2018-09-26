@@ -40,7 +40,7 @@ def remove_transitions_if_target_is_the_same(from_outcomes):
 
 
 def get_all_outcomes_except_of_abort_and_preempt(state):
-    return [outcome for outcome in list(state.outcomes.values()) if outcome.outcome_id >= 0]
+    return [outcome for outcome in state.outcomes.values() if outcome.outcome_id >= 0]
 
 
 def get_selected_single_state_model_and_check_for_its_parent():
@@ -78,7 +78,7 @@ def add_transitions_from_selected_state_to_parent():
     from_outcomes = get_all_outcomes_except_of_abort_and_preempt(state)
 
     # find lowest valid outcome id
-    possible_oc_ids = [oc_id for oc_id in list(state.parent.outcomes.keys()) if oc_id >= 0]
+    possible_oc_ids = [oc_id for oc_id in state.parent.outcomes.keys() if oc_id >= 0]
     possible_oc_ids.sort()
     to_outcome = state.parent.outcomes[possible_oc_ids[0]]
 
