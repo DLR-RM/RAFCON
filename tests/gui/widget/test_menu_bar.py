@@ -212,7 +212,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     assert len(state_m.state.states) == old_child_state_count + 2
 
     state = None
-    for state in list(state_m.state.states.values()):
+    for state in state_m.state.states.values():
         if state.name == "Dialog [3 options]":
             break
     assert state is not None
@@ -234,7 +234,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     transitions_before, data_flows_before = state_m_parent.state.related_linkage_state('RQXPAI')
     call_gui_callback(state_m_parent.state.substitute_state, 'RQXPAI', lib_state.state_copy)
     new_state_id = None
-    for state_id in list(state_m_parent.state.states.keys()):
+    for state_id in state_m_parent.state.states.keys():
         if state_id not in old_keys:
             new_state_id = state_id
     transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)

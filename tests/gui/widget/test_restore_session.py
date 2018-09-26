@@ -144,7 +144,7 @@ def trigger_gui_signals_first_run(*args):
     state_machine = create_state_machine()
     call_gui_callback(sm_manager_model.state_machine_manager.add_state_machine, state_machine)
     call_gui_callback(testing_utils.wait_for_gui)
-    print(list(sm_manager_model.state_machines.keys()))
+    print(sm_manager_model.state_machines.keys())
     current_sm_id = list(sm_manager_model.state_machines.keys())[0]
     current_number_of_sm = len(sm_manager_model.state_machines)
 

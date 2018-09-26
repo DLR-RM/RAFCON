@@ -58,7 +58,7 @@ def test_create_barrier_state_with_predefined_decider_state():
     decider_name = "Decision Maker"
     decider_state = DeciderState(decider_name)
     barrier_state = BarrierConcurrencyState("Barrier State", decider_state=decider_state)
-    assert len([state for state in list(barrier_state.states.values()) if state.name == decider_name]) == 1
+    assert len([state for state in barrier_state.states.values() if state.name == decider_name]) == 1
 
 
 def test_concurrency_barrier_save_load(caplog):

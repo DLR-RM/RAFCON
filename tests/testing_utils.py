@@ -228,7 +228,7 @@ def initialize_environment_core(core_config=None, libraries=None, delete=False):
     else:
         global_config.load()
         if isinstance(core_config, dict):
-            for key, value in list(core_config.items()):
+            for key, value in core_config.items():
                 global_config.set_config_value(key, value)
 
     rewind_and_set_libraries(libraries=libraries)
@@ -254,7 +254,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
     else:
         global_gui_config.load()
         if isinstance(gui_config, dict):
-            for key, value in list(gui_config.items()):
+            for key, value in gui_config.items():
                 global_gui_config.set_config_value(key, value)
 
     # initialize global runtime config
@@ -263,7 +263,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
     else:
         global_runtime_config.load()
         if isinstance(runtime_config, dict):
-            for key, value in list(runtime_config.items()):
+            for key, value in runtime_config.items():
                 global_runtime_config.set_config_value(key, value)
 
     GUI_INITIALIZED = True

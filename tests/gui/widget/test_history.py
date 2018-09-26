@@ -53,7 +53,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
 
     def print_states(state):
         if isinstance(state, ContainerState):
-            for state_id, child_state in list(state.states.items()):
+            for state_id, child_state in state.states.items():
                 print(child_state.get_path())
                 print_states(child_state)
     print_states(sm_model.state_machine.root_state)
@@ -245,7 +245,7 @@ def test_add_remove_history(caplog):
     state_dict['state2'] = state2
 
     state_path_dict = {}
-    for key in list(state_dict.keys()):
+    for key in state_dict:
         state_path_dict[key] = state_dict[key].get_path()
 
     def do_check_for_state(state_name):
@@ -299,8 +299,8 @@ def test_add_remove_history(caplog):
 
         #############
         # add state
-        print("xyz", list(state_dict[state_name].states.keys()), state_name)
-        print("xyz", list(sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).states.keys()), state_name)
+        print("xyz", state_dict[state_name].states.keys(), state_name)
+        print("xyz", sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).states.keys(), state_name)
         sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).add_state(state4)
         state_path_dict['state4'] = state4.get_path()
         print(sm_model.state_machine.get_state_by_path(state_path_dict['state4']).get_path())
@@ -730,7 +730,7 @@ def test_outcome_property_modifications_history(caplog):
     def do_check_for_state(state_dict, state_name='Nested'):
         ####################################################
         # modify outcome and generate in previous a observer
-        for outcome_id, outcome in list(state_dict['Nested2'].outcomes.items()):
+        for outcome_id, outcome in state_dict['Nested2'].outcomes.items():
             if not outcome_id < 0:
                 outcome.name = "new_name_" + str(outcome_id)
                 sm_model.history.undo()
@@ -744,7 +744,7 @@ def test_outcome_property_modifications_history(caplog):
 
         ####################################################
         # modify outcome
-        for outcome_id, outcome in list(state_dict['Nested'].outcomes.items()):
+        for outcome_id, outcome in state_dict['Nested'].outcomes.items():
             outcome.name = "new_name_" + str(outcome_id)
             sm_model.history.undo()
             sm_model.history.redo()
@@ -1743,7 +1743,7 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
 
     current_sm_length = len(sm_manager_model.state_machines)
     # print "1:", sm_manager_model.state_machines.keys()
-    logger.debug('number of sm is : {0}'.format(list(sm_manager_model.state_machines.keys())))
+    logger.debug('number of sm is : {0}'.format(sm_manager_model.state_machines.keys()))
 
     def create_state_machine():
         root_state = HierarchyState("new root state", state_id="ROOT")
@@ -1760,7 +1760,7 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
         logger.debug("Creating new state-machine...")
         state_machine = create_state_machine()
 
-    logger.debug('number of sm is : {0}'.format(list(sm_manager_model.state_machines.keys())))
+    logger.debug('number of sm is : {0}'.format(sm_manager_model.state_machines.keys()))
     assert len(sm_manager_model.state_machines) == current_sm_length+1
     sm_m = sm_manager_model.state_machines[state_machine.state_machine_id]
     # save_state_machine(sm_m, state_machine_path + '_before1', logger, with_gui, menubar_ctrl)
