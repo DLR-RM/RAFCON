@@ -13,7 +13,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import map
+from past.builtins import map
 from gaphas.aspect import InMotion, HandleInMotion
 from gaphas.guide import GuidedItemInMotion, GuidedItemHandleInMotion, Guide, GuideMixin
 

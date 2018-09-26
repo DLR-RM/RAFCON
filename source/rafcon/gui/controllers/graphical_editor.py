@@ -22,7 +22,7 @@
 
 from builtins import range
 from builtins import filter
-from builtins import map
+from past.builtins import map
 import gobject
 import itertools
 import sys

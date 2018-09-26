@@ -13,7 +13,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import map
+from past.builtins import map
 from builtins import next
 from builtins import str
 from gtkmvc import ModelMT, Signal

@@ -14,7 +14,7 @@
 
 from builtins import object
 from builtins import next
-from builtins import map
+from past.builtins import map
 import gaphas.canvas
 from gaphas.item import Item
 
