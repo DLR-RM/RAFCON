@@ -18,7 +18,6 @@
 """
 
 from builtins import input
-from builtins import raw_input
 import os
 
 
