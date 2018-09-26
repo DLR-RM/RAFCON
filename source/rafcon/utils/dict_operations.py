@@ -21,7 +21,7 @@ def check_if_dict_contains_object_reference_in_values(object_to_check, dict_to_c
     :param dict_to_check: The dict to search in.
     :return:
     """
-    for key, value in list(dict_to_check.items()):
+    for key, value in dict_to_check.items():
         if object_to_check is value:
             return True
     return False

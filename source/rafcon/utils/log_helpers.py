@@ -81,7 +81,7 @@ class LoggingViewHandler(logging.Handler):
             except UnicodeError:
                 entry = fs % msg
 
-            for logging_view in list(self._logging_views.values()):
+            for logging_view in self._logging_views.values():
                 logging_view.print_message(entry, record.levelno)
         except (KeyboardInterrupt, SystemExit):
             raise

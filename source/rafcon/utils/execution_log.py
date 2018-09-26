@@ -40,7 +40,7 @@ def log_to_raw_structure(execution_history_items):
     grouped_by_run_id = {}
     start_item = None
 
-    for k,v in list(execution_history_items.items()):
+    for k,v in execution_history_items.items():
         if v['item_type'] == 'StateMachineStartItem':
             start_item = v
         else:
@@ -116,7 +116,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
 
     # single state executions are not supported
     if len(next_) == 0 or len(next_) == 1:
-        for rid, gitems in list(grouped.items()):
+        for rid, gitems in grouped.items():
             if gitems[0]['item_type'] == 'StateMachineStartItem':
                 item = gitems[0]
                 execution_item = {}
@@ -142,7 +142,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
         return start_item, collapsed_next, collapsed_concurrent, collapsed_hierarchy, collapsed_items
 
     # build collapsed items
-    for rid, gitems in list(grouped.items()):
+    for rid, gitems in grouped.items():
         if gitems[0]['item_type'] == 'StateMachineStartItem':
             item = gitems[0]
             execution_item = {}
@@ -275,7 +275,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                 if isinstance(data_dict, string_types):  # formerly data dict was a json string
                     r = json.loads(data_dict)
                 else:
-                    for k, v in list(data_dict.items()):
+                    for k, v in data_dict.items():
                         if not k.startswith('!'): # ! indicates storage error
                             try:
                                 r[k] = pickle.loads(v)
@@ -339,7 +339,7 @@ def log_to_DataFrame(execution_history_items, data_in_columns=[], data_out_colum
 
     df_items = []
 
-    for rid, item in list(gitems.items()):
+    for rid, item in gitems.items():
         row_data = [item[k] for k in df_keys]
 
         for key, selected_columns in [('data_ins', data_in_columns),
