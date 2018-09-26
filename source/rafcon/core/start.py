@@ -213,7 +213,7 @@ def stop_reactor_on_state_machine_finish(state_machine):
 
 
 def reactor_required():
-    if "twisted" in list(sys.modules.keys()):
+    if "twisted" in sys.modules.keys():
         return True
     return False
 

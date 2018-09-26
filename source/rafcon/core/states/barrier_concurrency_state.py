@@ -81,11 +81,11 @@ class BarrierConcurrencyState(ConcurrencyState):
         ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes,
                                   states, transitions, data_flows, start_state_id, scoped_variables)
 
-        for state_id, state in list(self.states.items()):
+        for state_id, state in self.states.items():
             if state_id != UNIQUE_DECIDER_STATE_ID:
-                for outcome in list(self.states[state_id].outcomes.values()):
+                for outcome in self.states[state_id].outcomes.values():
                     # TODO figure out how to solve this clinch better #3
-                    match = [t.from_state == state_id and t.from_outcome == outcome.outcome_id for t in list(self.transitions.values())]
+                    match = [t.from_state == state_id and t.from_outcome == outcome.outcome_id for t in self.transitions.values()]
                     if not outcome.outcome_id < 0 and not any(match):
                         try:
                             self.add_transition(from_state_id=state_id, from_outcome=outcome.outcome_id,
@@ -280,7 +280,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             decider_state = states.pop(UNIQUE_DECIDER_STATE_ID, None)
             if decider_state is not None:
                 self.add_state(decider_state)
-            for state in list(states.values()):
+            for state in states.values():
                 self.add_state(state)
 
     def remove_state(self, state_id, recursive=True, force=False, destroy=True):
@@ -358,7 +358,7 @@ class DeciderState(ExecutionState):
         :return:
         """
         return_value = None
-        for state_id, name_outcome_tuple in list(self.final_outcomes_dict.items()):
+        for state_id, name_outcome_tuple in self.final_outcomes_dict.items():
             if name_outcome_tuple[0] == name:
                 return_value = name_outcome_tuple[1]
                 break
@@ -371,7 +371,7 @@ class DeciderState(ExecutionState):
         :return:
         """
         return_value = None
-        for s_id, name_outcome_tuple in list(self.final_outcomes_dict.items()):
+        for s_id, name_outcome_tuple in self.final_outcomes_dict.items():
             if s_id == state_id:
                 return_value = name_outcome_tuple[1]
                 break
@@ -388,7 +388,7 @@ class DeciderState(ExecutionState):
         :return:
         """
         return_value = None
-        for state_id, name_outcome_tuple in list(self.child_errors.items()):
+        for state_id, name_outcome_tuple in self.child_errors.items():
             if name_outcome_tuple[0] == name:
                 return_value = name_outcome_tuple[1]
                 break

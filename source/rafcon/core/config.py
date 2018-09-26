@@ -43,7 +43,7 @@ class ObservableConfig(DefaultConfig, Observable):
         DefaultConfig.__init__(self, defaults, logger_object, rel_config_path='rafcon')
         Observable.__init__(self)
         config = yaml.load(defaults)
-        self.keys = set([] if not config else list(config.keys()))
+        self.keys = set([] if not config else config.keys())
         
     @Observable.observed
     def set_config_value(self, key, value):

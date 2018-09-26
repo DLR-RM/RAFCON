@@ -88,7 +88,7 @@ class LibraryManager(Observable):
         self._skipped_library_roots = []
 
         # 1. Load libraries from config.yaml
-        for library_root_key, library_root_path in list(config.global_config.get_config_value("LIBRARY_PATHS").items()):
+        for library_root_key, library_root_path in config.global_config.get_config_value("LIBRARY_PATHS").items():
             library_root_path = self._clean_path(library_root_path)
             if os.path.exists(library_root_path):
                 logger.debug("Adding library root key '{0}' from path '{1}'".format(
@@ -147,7 +147,7 @@ class LibraryManager(Observable):
         full_path = os.path.join(folder_path, folder_name)[len(library_root_path) + 1:]
         library_path = folder_path[len(library_root_path):]
         if not storage.clean_path(library_path) == library_path or not storage.clean_path(folder_name) == folder_name:
-            not_allowed_characters = "'" + "', '".join(list(storage.REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION.keys())) + "'"
+            not_allowed_characters = "'" + "', '".join(storage.REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION.keys()) + "'"
             logger.warning("The library path {1} is deprecated please avoid use of {0}. If you renaming the "
                            "state machine also adapt related state machine which make use of this library."
                            "".format(not_allowed_characters, full_path))
@@ -321,7 +321,7 @@ class LibraryManager(Observable):
         """Return library root key if path is within library root paths"""
         path = os.path.realpath(path)
         library_root_key = None
-        for library_root_key, library_root_path in list(self._library_root_paths.items()):
+        for library_root_key, library_root_path in self._library_root_paths.items():
             rel_path = os.path.relpath(path, library_root_path)
             if rel_path.startswith('..'):
                 library_root_key = None
