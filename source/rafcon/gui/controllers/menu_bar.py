@@ -97,10 +97,10 @@ class MenuBarController(ExtendedController):
     @staticmethod
     def create_logger_warning_if_shortcuts_are_overwritten_by_menu_bar():
         shortcut_dict = global_gui_config.get_config_value('SHORTCUTS')
-        shortcut_key_patterns = [elem for l in list(shortcut_dict.values()) for elem in l]
+        shortcut_key_patterns = [elem for l in shortcut_dict.values() for elem in l]
         for key in ['E', 'F', 'V', 'X', 'H', 'e', 'f', 'v', 'x', 'h']:
             if '<Alt>' + key in shortcut_key_patterns:
-                dict_pair = {k: v for k, v_list in list(shortcut_dict.items()) for v in v_list if '<Alt>' + key == v}
+                dict_pair = {k: v for k, v_list in shortcut_dict.items() for v in v_list if '<Alt>' + key == v}
                 logger.warning("Your current shortcut {0} is not working because a menu-bar access key "
                                "is overwriting it.".format(dict_pair))
 
@@ -295,7 +295,7 @@ class MenuBarController(ExtendedController):
         Unregister all registered functions to a view element
         :return:
         """
-        for handler_id in list(self.handler_ids.keys()):
+        for handler_id in self.handler_ids.keys():
             self.view[handler_id].disconnect(self.handler_ids[handler_id])
 
     def register_actions(self, shortcut_manager):
@@ -385,7 +385,7 @@ class MenuBarController(ExtendedController):
         Remove all callbacks registered to the shortcut manager
         :return:
         """
-        for action in list(self.registered_shortcut_callbacks.keys()):
+        for action in self.registered_shortcut_callbacks.keys():
             for callback in self.registered_shortcut_callbacks[action]:
                 self.shortcut_manager.remove_callback_for_action(action, callback)
         # delete all registered shortcut callbacks
@@ -479,7 +479,7 @@ class MenuBarController(ExtendedController):
     def refresh_shortcuts(self):
         self.shortcut_manager.remove_shortcuts()
         self.shortcut_manager.update_shortcuts()
-        for item_name, shortcuts in list(global_gui_config.get_config_value('SHORTCUTS', {}).items()):
+        for item_name, shortcuts in global_gui_config.get_config_value('SHORTCUTS', {}).items():
             if shortcuts and item_name in self.view.buttons:
                 self.view.set_menu_item_accelerator(item_name, shortcuts[0])
         self.create_logger_warning_if_shortcuts_are_overwritten_by_menu_bar()
@@ -490,7 +490,7 @@ class MenuBarController(ExtendedController):
             message_string = "Are you sure you want to exit RAFCON?\n\n" \
                              "The following state machines have been modified and not saved. " \
                              "These changes will get lost:"
-            for sm_id, sm in list(state_machine_manager.state_machines.items()):
+            for sm_id, sm in state_machine_manager.state_machines.items():
                 if sm.marked_dirty:
                     message_string = "%s\n#%s: %s " % (message_string, str(sm_id), sm.root_state.name)
             dialog = RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"],

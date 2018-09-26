@@ -48,7 +48,7 @@ class ExecutionLogTreeController(ExtendedController):
         # we'll add some data now - 4 rows with 3 child rows each
         if not self.start:
             logger.warning('WARNING: no start item found, just listing all items')
-            elements = [(None, run_id) for run_id in list(self.items.keys())]
+            elements = [(None, run_id) for run_id in self.items.keys()]
         else:
             elements = [(None, self.start['run_id'])]
 

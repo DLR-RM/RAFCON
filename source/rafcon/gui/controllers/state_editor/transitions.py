@@ -337,10 +337,10 @@ class StateTransitionsListController(LinkageListController):
 
         # collect all free from-outcome-combo and from_state which are still valid -> filter all outcome already in use
         free_from_outcomes_dict = {}
-        for state in list(model.state.states.values()):
-            from_o_combo = list(state.outcomes.values())
+        for state in model.state.states.values():
+            from_o_combo = state.outcomes.values()
             # print [o.outcome_id for o in from_o_combo], state_model.state.state_id
-            for transition in list(trans_dict.values()):
+            for transition in trans_dict.values():
                 # print transition, [[o.outcome_id == transition.from_outcome, transition.from_state == state_model.state.state_id] for o in from_o_combo]
                 from_o_combo = [o for o in from_o_combo if not (o.outcome_id == transition.from_outcome and
                                                      transition.from_state == state.state_id)]
@@ -353,8 +353,8 @@ class StateTransitionsListController(LinkageListController):
 
         # for from-state-combo use all states with free outcomes and from_state
         combined_states = [model.state] if is_external else [self_model.state]
-        combined_states.extend(list(model.state.states.values()))
-        free_from_states = [state for state in combined_states if state.state_id in list(free_from_outcomes_dict.keys())]
+        combined_states.extend(model.state.states.values())
+        free_from_states = [state for state in combined_states if state.state_id in free_from_outcomes_dict]
 
         if trans is None:
             return None, None, None, None, free_from_states, free_from_outcomes_dict
@@ -402,7 +402,7 @@ class StateTransitionsListController(LinkageListController):
                 to_state_combo.append([possible_state.name + '.' + possible_state.state_id])
 
         to_states = [model.state] if is_external else [self_model.state]
-        to_states.extend(list(model.state.states.values()))
+        to_states.extend(model.state.states.values())
         generate_to_state_combo(to_state)
         for state in to_states:
             if not to_state.state_id == state.state_id:
@@ -417,7 +417,7 @@ class StateTransitionsListController(LinkageListController):
 
         if trans.to_outcome is not None:
             append_to_outcome_combo(model.state.outcomes[trans.to_outcome])
-        for outcome in list(model.state.outcomes.values()):
+        for outcome in model.state.outcomes.values():
             if not (trans.to_outcome == outcome.outcome_id and trans.to_state == model.state.state_id):
                 append_to_outcome_combo(outcome)
 
@@ -455,7 +455,7 @@ class StateTransitionsListController(LinkageListController):
 
         if isinstance(model, ContainerStateModel):
             # check for internal combos
-            for transition_id, transition in list(model.state.transitions.items()):
+            for transition_id, transition in model.state.transitions.items():
                 self.combo['internal'][transition_id] = {}
 
                 [from_state_combo, from_outcome_combo,
@@ -479,7 +479,7 @@ class StateTransitionsListController(LinkageListController):
         # TODO check why the can happen should not be handed always the LibraryStateModel
         if not (self.model.state.is_root_state or self.model.state.is_root_state_of_library):
             # check for external combos
-            for transition_id, transition in list(model.parent.state.transitions.items()):
+            for transition_id, transition in model.parent.state.transitions.items():
                 if transition.from_state == model.state.state_id or transition.to_state == model.state.state_id:
                     self.combo['external'][transition_id] = {}
 
@@ -510,7 +510,7 @@ class StateTransitionsListController(LinkageListController):
         self.list_store.clear()
         if self.view_dict['transitions_internal'] and isinstance(self.model, ContainerStateModel) and \
                 len(self.model.state.transitions) > 0:
-            for transition_id in list(self.combo['internal'].keys()):
+            for transition_id in self.combo['internal'].keys():
                 # print "TRANSITION_ID: ", transition_id, self.model.state.transitions
                 t = self.model.state.transitions[transition_id]
 
@@ -548,7 +548,7 @@ class StateTransitionsListController(LinkageListController):
 
         if self.view_dict['transitions_external'] and self.model.parent and \
                 len(self.model.parent.state.transitions) > 0:
-            for transition_id in list(self.combo['external'].keys()):
+            for transition_id in self.combo['external'].keys():
                 # print "TRANSITION_ID: ", transition_id, self.model.parent.state.transitions
                 try:
                     t = self.model.parent.state.transitions[transition_id]

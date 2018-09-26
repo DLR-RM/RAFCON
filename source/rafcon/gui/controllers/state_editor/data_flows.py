@@ -141,7 +141,7 @@ class StateDataFlowsListController(LinkageListController):
         # print "\n internal from %s \n\n internal to %s" % (self.free_to_port_internal, self.from_port_internal)
         internal_data_flows = []
         if self.free_to_port_internal and self.from_port_internal:
-            for from_state_id, elems in list(self.from_port_internal.items()):
+            for from_state_id, elems in self.from_port_internal.items():
                 # print "\n\nfrom_state %s and ports %s" % (from_state_id, [(elem.name, elem.data_type) for elem in elems])
                 for from_port in elems:
                     for to_state_id, elems in list(self.free_to_port_internal.items()):

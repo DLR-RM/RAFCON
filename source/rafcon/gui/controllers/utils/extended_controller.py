@@ -74,7 +74,7 @@ class ExtendedController(Controller):
         # Get name of controller
         if isinstance(controller, ExtendedController):
             # print self.__class__.__name__, " remove ", controller.__class__.__name__
-            for key, child_controller in list(self.__child_controllers.items()):
+            for key, child_controller in self.__child_controllers.items():
                 if controller is child_controller:
                     break
             else:
@@ -166,7 +166,7 @@ class ExtendedController(Controller):
 
     def __register_actions_of_child_controllers(self):
         assert isinstance(self.__child_controllers, dict)
-        for controller in list(self.__child_controllers.values()):
+        for controller in self.__child_controllers.values():
             register_function = getattr(controller, "register_actions", None)
             if hasattr(register_function, '__call__'):
                 register_function(self.__shortcut_manager)

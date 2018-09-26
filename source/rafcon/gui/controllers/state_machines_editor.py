@@ -143,7 +143,7 @@ class StateMachinesEditorController(ExtendedController):
         self.view['notebook'].connect('switch-page', self.on_switch_page)
 
         # Add all already open state machines
-        for state_machine in list(self.model.state_machines.values()):
+        for state_machine in self.model.state_machines.values():
             self.add_graphical_state_machine_editor(state_machine)
 
     def register_actions(self, shortcut_manager):
@@ -161,7 +161,7 @@ class StateMachinesEditorController(ExtendedController):
         """Triggered when the close button in the tab is clicked
         """
         page = widget.get_nth_page(page_number)
-        for tab_info in list(self.tabs.values()):
+        for tab_info in self.tabs.values():
             if tab_info['page'] is page:
                 state_machine_m = tab_info['state_machine_m']
                 self.on_close_clicked(event, state_machine_m, None, force=False)
@@ -181,7 +181,7 @@ class StateMachinesEditorController(ExtendedController):
         # From documentation: Note the page parameter is a GPointer and not usable within PyGTK. Use the page_num
         # parameter to retrieve the new current page using the get_nth_page() method.
         page = notebook.get_nth_page(page_num)
-        for tab_info in list(self.tabs.values()):
+        for tab_info in self.tabs.values():
             if tab_info['page'] is page and tab_info['state_machine_m'].state_machine:
                 new_sm_id = tab_info['state_machine_m'].state_machine.state_machine_id
                 if self.model.selected_state_machine_id != new_sm_id:
@@ -192,7 +192,7 @@ class StateMachinesEditorController(ExtendedController):
                 return page
 
     def rearrange_state_machines(self, page_num_by_sm_id):
-        for sm_id, page_num in list(page_num_by_sm_id.items()):
+        for sm_id, page_num in page_num_by_sm_id.items():
             state_machine_m = self.tabs[sm_id]['state_machine_m']
             tab, tab_label = create_tab_header('', self.on_close_clicked, self.on_mouse_right_click,
                                                state_machine_m, 'refused')
@@ -210,7 +210,7 @@ class StateMachinesEditorController(ExtendedController):
         return self.tabs[state_machine_id]['page']
 
     def get_state_machine_id_for_page(self, page):
-        for tab_info in list(self.tabs.values()):
+        for tab_info in self.tabs.values():
             if tab_info['page'] is page:
                 return tab_info['state_machine_m'].state_machine.state_machine_id
 
@@ -290,7 +290,7 @@ class StateMachinesEditorController(ExtendedController):
     @ExtendedController.observe("state_machines", after=True)
     def model_changed(self, model, prop_name, info):
         # Check for new state machines
-        for sm_id, sm in list(self.model.state_machine_manager.state_machines.items()):
+        for sm_id, sm in self.model.state_machine_manager.state_machines.items():
             if sm_id not in self.tabs:
                 self.add_graphical_state_machine_editor(self.model.state_machines[sm_id])
 
@@ -335,7 +335,7 @@ class StateMachinesEditorController(ExtendedController):
     def on_mouse_right_click(self, event, state_machine_m, result):
 
         menu = gtk.Menu()
-        for sm_id, sm_m in list(self.model.state_machines.items()):
+        for sm_id, sm_m in self.model.state_machines.items():
             menu_item = create_image_menu_item(sm_m.root_state.state.name, constants.BUTTON_EXCHANGE,
                                                callback=self.change_selected_state_machine_id, callback_args=[sm_id])
             menu.append(menu_item)
@@ -458,7 +458,7 @@ class StateMachinesEditorController(ExtendedController):
 
     def close_all_pages(self):
         """Closes all tabs of the state machines editor."""
-        state_machine_m_list = [tab['state_machine_m'] for tab in list(self.tabs.values())]
+        state_machine_m_list = [tab['state_machine_m'] for tab in self.tabs.values()]
         for state_machine_m in state_machine_m_list:
             self.on_close_clicked(None, state_machine_m, None, force=True)
 
@@ -503,7 +503,7 @@ class StateMachinesEditorController(ExtendedController):
         # create a dictionary from state machine id to state machine path and one for tab page number for recovery
         state_machine_path_by_sm_id = {}
         page_num_by_sm_id = {}
-        for sm_id, sm in list(self.model.state_machine_manager.state_machines.items()):
+        for sm_id, sm in self.model.state_machine_manager.state_machines.items():
             # the sm.base_path is only None if the state machine has never been loaded or saved before
             if sm_id in state_machine_ids and sm.file_system_path is not None:
                 state_machine_path_by_sm_id[sm_id] = sm.file_system_path
@@ -531,7 +531,7 @@ class StateMachinesEditorController(ExtendedController):
         # recover initial selected state machine and case handling if now state machine is open anymore
         if currently_selected_sm_id:
             # case if only unsaved state machines are open
-            if currently_selected_sm_id in iter(list(self.model.state_machine_manager.state_machines.keys())):
+            if currently_selected_sm_id in self.model.state_machine_manager.state_machines:
                 self.set_active_state_machine(currently_selected_sm_id)
 
     def refresh_state_machine_by_id(self, state_machine_id):
