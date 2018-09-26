@@ -48,10 +48,10 @@ class Vividict(dict, YAMLObject, JSONObject):
         value = self[key] = type(self)()
         return value
 
-    def __setattr__(self, key, value):
+    def __setitem__(self, key, value):
         assert isinstance(key, string_types), "Vividict keys must be strings"
         key = str(key)
-        super(Vividict, self).__setattr__(key, value)
+        super(Vividict, self).__setitem__(key, value)
 
     def set_dict(self, new_dict):
         """Sets the dictionary of the Vividict
