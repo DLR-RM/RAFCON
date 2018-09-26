@@ -175,7 +175,7 @@ class DataPortListController(ListViewController):
 
     @staticmethod
     def _get_new_list_store():
-        return ListStore(str, str, str, int, bool, str, gobject.TYPE_PYOBJECT)
+        return ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, int, bool, gobject.TYPE_STRING, gobject.TYPE_PYOBJECT)
 
     def _default_value_cell_data_func(self, tree_view_column, cell, model, iter):
         """Function set renderer properties for every single cell independently

@@ -64,7 +64,7 @@ class StateTransitionsListController(LinkageListController):
     def __init__(self, model, view):
         # ListStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
         #                   name-color, to-state-color, transition-object, state-object, is_editable, transition-model
-        list_store = gtk.ListStore(int, str, str, str, str, bool,
+        list_store = gtk.ListStore(int, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, bool,
                                    gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
 
         self.view_dict = {'transitions_internal': True, 'transitions_external': True}
@@ -322,10 +322,10 @@ class StateTransitionsListController(LinkageListController):
         :param is_external:
         :return:
         """
-        from_state_combo = gtk.ListStore(str, str)
-        from_outcome_combo = gtk.ListStore(str)
-        to_state_combo = gtk.ListStore(str)
-        to_outcome_combo = gtk.ListStore(str)
+        from_state_combo = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING)
+        from_outcome_combo = gtk.ListStore(gobject.TYPE_STRING)
+        to_state_combo = gtk.ListStore(gobject.TYPE_STRING)
+        to_outcome_combo = gtk.ListStore(gobject.TYPE_STRING)
 
         trans_dict = model.state.transitions
 

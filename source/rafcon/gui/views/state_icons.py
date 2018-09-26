@@ -12,6 +12,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import gtk
+import gobject
 from gtkmvc import View
 from rafcon.gui.utils import constants
 
@@ -31,7 +32,7 @@ class StateIconView(View, gtk.IconView):
         self.set_row_spacing(0)
         self.set_column_spacing(0)
 
-        liststore = gtk.ListStore(str, str)
+        liststore = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING)
         self.set_model(liststore)
         self.set_markup_column(0)
         self.set_tooltip_column(1)

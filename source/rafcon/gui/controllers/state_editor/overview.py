@@ -21,6 +21,7 @@
 from builtins import str
 import glib
 import gtk
+import gobject
 from gtk.gdk import keyval_name
 from gtkmvc import Model
 
@@ -101,7 +102,7 @@ class StateOverviewController(ExtendedController):
 
         cell = gtk.CellRendererText()
         format_cell(cell, constants.BUTTON_MIN_HEIGHT, constants.GRID_SIZE)
-        l_store = gtk.ListStore(str)
+        l_store = gtk.ListStore(gobject.TYPE_STRING)
         combo = gtk.ComboBox()
         combo.set_name("state_type_combo")
         combo.set_focus_on_click(False)

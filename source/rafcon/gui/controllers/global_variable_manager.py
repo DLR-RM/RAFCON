@@ -23,6 +23,7 @@
 
 from builtins import str
 import gtk
+import gobject
 
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -61,7 +62,7 @@ class GlobalVariableManagerController(ListViewController):
         # list store order -> gv_name, data_type, data_value, is_locked
         super(GlobalVariableManagerController, self).__init__(model, view,
                                                               view['global_variable_tree_view'],
-                                                              gtk.ListStore(str, str, str, str), logger)
+                                                              gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING), logger)
 
         self.global_variable_counter = 0
         self.list_store_iterators = {}

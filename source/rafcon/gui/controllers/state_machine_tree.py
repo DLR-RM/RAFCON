@@ -60,7 +60,7 @@ class StateMachineTreeController(TreeViewController):
 
     def __init__(self, model, view):
         assert isinstance(model, StateMachineManagerModel)
-        tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT, str)
+        tree_store = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_PYOBJECT, gobject.TYPE_STRING)
         super(StateMachineTreeController, self).__init__(model, view, view, tree_store)
 
         self.add_controller("state_right_click_ctrl", StateMachineTreeRightClickMenuController(model, view))

@@ -68,7 +68,7 @@ class ScopedVariableListController(ListViewController):
 
     @staticmethod
     def get_new_list_store():
-        return gtk.ListStore(str, str, str, int, gobject.TYPE_PYOBJECT)
+        return gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, int, gobject.TYPE_PYOBJECT)
 
     def register_view(self, view):
         """Called when the View was registered"""

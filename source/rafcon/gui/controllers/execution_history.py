@@ -69,7 +69,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         assert isinstance(view, ExecutionHistoryView)
 
         super(ExecutionHistoryTreeController, self).__init__(model, view)
-        self.history_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
+        self.history_tree_store = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_PYOBJECT, gobject.TYPE_STRING)
         # a TreeView
         self.history_tree = view['history_tree']
         self.history_tree.set_model(self.history_tree_store)

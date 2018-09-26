@@ -20,6 +20,7 @@
 from past.builtins import str
 from builtins import str
 import gtk
+import gobject
 import yaml_configuration.config
 from os.path import dirname
 
@@ -47,10 +48,10 @@ class PreferencesWindowController(ExtendedController):
         self.observe_model(gui_config_model)
 
         # (config_key, config_value, text_visible, toggle_activatable, toggle_visible, text_editable, toggle_value)
-        self.core_list_store = gtk.ListStore(str, str, bool, bool, bool, bool, bool)
-        self.library_list_store = gtk.ListStore(str, str)
-        self.gui_list_store = gtk.ListStore(str, str, bool, bool, bool, bool, bool)
-        self.shortcut_list_store = gtk.ListStore(str, str)
+        self.core_list_store = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, bool, bool, bool, bool, bool)
+        self.library_list_store = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING)
+        self.gui_list_store = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, bool, bool, bool, bool, bool)
+        self.shortcut_list_store = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING)
 
         self._lib_counter = 0
         self._gui_checkbox = gtk.CheckButton("GUI Config")

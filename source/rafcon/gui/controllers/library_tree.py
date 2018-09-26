@@ -54,7 +54,7 @@ class LibraryTreeController(ExtendedController):
         assert isinstance(model, LibraryManagerModel)
         assert isinstance(view, gtk.TreeView)
         ExtendedController.__init__(self, model, view)
-        self.tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str, str, str)
+        self.tree_store = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_PYOBJECT, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
         view.set_model(self.tree_store)
         view.set_tooltip_column(3)
 

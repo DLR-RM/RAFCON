@@ -12,6 +12,7 @@
 
 from builtins import str
 import gtk
+import gobject
 import shelve
 
 import rafcon.utils.execution_log as log_helper
@@ -38,7 +39,7 @@ class ExecutionLogTreeController(ExtendedController):
                                                   throw_on_pickle_error=False,
                                                   include_erroneous_data_ports=True)
         # create a TreeStore with one string column to use as the model
-        self.tree_store = gtk.TreeStore(str, str)
+        self.tree_store = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING)
         self.item_iter = {}
         view.tree_view.set_model(self.tree_store)
 

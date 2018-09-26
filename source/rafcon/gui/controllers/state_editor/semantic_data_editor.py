@@ -59,7 +59,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
             model_to_observe = model
 
         # define tree store with the values in [key, value Is Dict]
-        tree_store = gtk.TreeStore(str, str, bool, gobject.TYPE_PYOBJECT)
+        tree_store = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING, bool, gobject.TYPE_PYOBJECT)
 
         # unfortunately this cannot be down with super, as gtkmvc does not use super() consistently
         TreeViewController.__init__(self, model_to_observe, view,
