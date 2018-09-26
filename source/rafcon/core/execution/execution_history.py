@@ -17,6 +17,7 @@
    :synopsis: A module for the history of one thread during state machine execution
 
 """
+from future.utils import native_str
 from builtins import object
 from builtins import range
 from builtins import str
@@ -58,7 +59,7 @@ class ExecutionHistoryStorage(object):
     def store_item(self, key, value):
         self.store_lock.acquire()
         try:
-            self.store[key] = value
+            self.store[native_str(key)] = value
         except Exception as e:
             logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
