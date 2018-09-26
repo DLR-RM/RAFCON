@@ -16,7 +16,7 @@
 
 """
 
-
+from future.utils import string_types
 from builtins import str
 from yaml import YAMLObject
 from jsonconversion.jsonobject import JSONObject
@@ -43,8 +43,15 @@ class Vividict(dict, YAMLObject, JSONObject):
         :param key: the missing key for a value to be stored
         :return: the new value for the specified key
         """
+        assert isinstance(key, string_types), "Vividict keys must be strings"
+        key = str(key)
         value = self[key] = type(self)()
         return value
+
+    def __setattr__(self, key, value):
+        assert isinstance(key, string_types), "Vividict keys must be strings"
+        key = str(key)
+        super(Vividict, self).__setattr__(key, value)
 
     def set_dict(self, new_dict):
         """Sets the dictionary of the Vividict
@@ -119,6 +126,7 @@ class Vividict(dict, YAMLObject, JSONObject):
             value = np_to_native(value)
             if isinstance(value, Vividict):
                 value = Vividict.vividict_to_dict(value)
+            print key, type(key), type(value)
             dictionary[key] = value
 
         return dictionary
