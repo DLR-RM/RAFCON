@@ -434,7 +434,7 @@ def patch_gtkmvc_model_mt():
     import gtkmvc
     from gtkmvc.model_mt import Model, _threading, gobject
     from rafcon.core.states.state import run_id_generator, threading
-    from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger, Queue
+    from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger
 
     original_ModelMT_notify_observer = gtkmvc.model_mt.ModelMT.__notify_observer__
     original_state_start = rafcon.core.states.state.State.start
@@ -455,9 +455,10 @@ def patch_gtkmvc_model_mt():
     def _patched_run_active_state_machine(self):
         """Store running state machine and observe its status
         """
+        import queue
         # Create new concurrency queue for root state to be able to synchronize with the execution
         self._ExecutionEngine__running_state_machine = self.state_machine_manager.get_active_state_machine()
-        self._ExecutionEngine__running_state_machine.root_state.concurrency_queue = Queue.Queue(maxsize=0)
+        self._ExecutionEngine__running_state_machine.root_state.concurrency_queue = queue.Queue(maxsize=0)
 
         if self._ExecutionEngine__running_state_machine:
             self._ExecutionEngine__running_state_machine.start()
