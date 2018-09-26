@@ -210,7 +210,7 @@ class ScopedVariableListController(ListViewController):
                 # get module of type, e.g. numpy
                 data_type_module = data_type.__module__
                 # if the type is not a builtin type, also show the module
-                if data_type_module != '__builtin__':
+                if data_type_module not in ['__builtin__', 'builtins']:
                     data_type_name = data_type_module + '.' + data_type_name
                 tmp.append([sv_model.scoped_variable.name, data_type_name,
                             sv_model.scoped_variable.default_value, sv_model.scoped_variable.data_port_id, sv_model])

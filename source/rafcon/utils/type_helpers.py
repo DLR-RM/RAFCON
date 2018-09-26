@@ -25,9 +25,9 @@ from future import standard_library
 standard_library.install_aliases()
 from past.builtins import str
 from builtins import str
-import builtins
 from pydoc import locate, ErrorDuringImport
 from inspect import isclass
+import sys
 
 
 def convert_string_to_type(string_value):
@@ -44,8 +44,12 @@ def convert_string_to_type(string_value):
 
     # Get object associated with string
     # First check whether we are having a built in type (int, str, etc)
-    if hasattr(__builtin__, string_value):
-        obj = getattr(__builtin__, string_value)
+    if sys.version_info >= (3,):
+        import builtins as builtins23
+    else:
+        import __builtin__ as builtins23
+    if hasattr(builtins23, string_value):
+        obj = getattr(builtins23, string_value)
         if type(obj) is type:
             return obj
     # If not, try to locate the module

@@ -297,7 +297,7 @@ class HoverItemTool(gaphas.tool.HoverTool):
 
         # States/Names take precedence over connections if the connections are on the same hierarchy and if there is
         # a port beneath the cursor
-        first_state_v = filter(lambda item: isinstance(item, (NameView, StateView)), items)[0]
+        first_state_v = next(filter(lambda item: isinstance(item, (NameView, StateView)), items))
         first_state_v = first_state_v.parent if isinstance(first_state_v, NameView) else first_state_v
         if first_state_v:
             # There can be several connections above the state/name skip those and find the first non-connection-item

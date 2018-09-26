@@ -213,7 +213,7 @@ class DataPortListController(ListViewController):
             # get module of type, e.g. numpy
             data_type_module = data_type.__module__
             # if the type is not a builtin type, also show the module
-            if data_type_module != '__builtin__':
+            if data_type_module not in ['__builtin__', 'builtins']:
                 data_type_name = data_type_module + '.' + data_type_name
             if data_port_m.data_port.default_value is None:
                 default_value = "None"

@@ -87,9 +87,12 @@ def setup_environment():
             os.environ['RAFCON_LIB_PATH'] = join(dirname(dirname(rafcon_root_path)), 'share', 'libraries')
 
     # Install dummy _ builtin function in case i18.setup_l10n() is not called
-    import builtins
-    if not "_" in builtins.__dict__:
-        builtins.__dict__["_"] = lambda s: s
+    if sys.version_info >= (3,):
+        import builtins as builtins23
+    else:
+        import __builtin__ as builtins23
+    if "_" not in builtins23.__dict__:
+        builtins23.__dict__["_"] = lambda s: s
 
 
 def parse_state_machine_path(path):
