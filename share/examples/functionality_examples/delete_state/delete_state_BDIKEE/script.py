@@ -47,7 +47,7 @@ def execute(self, inputs, outputs, gvm):
     target_state = self.parent.parent
     #glib.idle_add(self.parent.remove_state, state_id)
     target_state.remove_state(state_id)
-    while state_id in list(target_state.states.keys()):
+    while state_id in target_state.states.keys():
         time.sleep(0.1)
     #wait_for_gui()
     call_gui_callback(wait_for_gui)
