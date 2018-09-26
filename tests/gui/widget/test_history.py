@@ -1,5 +1,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from future.utils import string_types
 from builtins import str
 import logging
 import gtk
@@ -1828,7 +1829,7 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
         keyboard = pykeyboard.PyKeyboard()
 
         def press_key(characters, duration=0.05):
-            assert all([isinstance(character, (int, str)) for character in characters])
+            assert all([isinstance(character, (int, string_types)) for character in characters])
             assert isinstance(duration, (int, float))
             for character in characters:
                 print("press_key: ", character)

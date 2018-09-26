@@ -17,7 +17,7 @@
 
 """
 
-from past.builtins import str
+from future.utils import string_types
 from gtkmvc import Observable
 
 from rafcon.core.state_elements.state_element import StateElement
@@ -117,8 +117,8 @@ class Transition(StateElement):
         :raises exceptions.ValueError: If parameters have wrong types or the new transition is not valid
         """
         if not (from_state is None and from_outcome is None):
-            if not isinstance(from_state, str):
-                raise ValueError("Invalid transition origin port: from_state must be of type str")
+            if not isinstance(from_state, string_types):
+                raise ValueError("Invalid transition origin port: from_state must be a string")
             if not isinstance(from_outcome, int):
                 raise ValueError("Invalid transition origin port: from_outcome must be of type int")
 
@@ -143,8 +143,8 @@ class Transition(StateElement):
         :raises exceptions.ValueError: If parameters have wrong types or the new transition is not valid
         """
         if not (to_state is None and (to_outcome is not int and to_outcome is not None)):
-            if not isinstance(to_state, str):
-                raise ValueError("Invalid transition target port: to_state must be of type str")
+            if not isinstance(to_state, string_types):
+                raise ValueError("Invalid transition target port: to_state must be a string")
             if not isinstance(to_outcome, int) and to_outcome is not None:
                 raise ValueError("Invalid transition target port: to_outcome must be of type int or None (if to_state "
                                  "is of type str)")
@@ -171,8 +171,8 @@ class Transition(StateElement):
     @lock_state_machine
     # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
-        if from_state is not None and not isinstance(from_state, str):
-            raise ValueError("from_state must be of type str")
+        if from_state is not None and not isinstance(from_state, string_types):
+            raise ValueError("from_state must be a string")
 
         self._change_property_with_validity_check('_from_state', from_state)
 
@@ -203,8 +203,8 @@ class Transition(StateElement):
     @lock_state_machine
     @Observable.observed
     def to_state(self, to_state):
-        if to_state is not None and not isinstance(to_state, str):
-            raise ValueError("to_state must be of type str")
+        if to_state is not None and not isinstance(to_state, string_types):
+            raise ValueError("to_state must be a string")
 
         self._change_property_with_validity_check('_to_state', to_state)
 

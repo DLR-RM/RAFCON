@@ -17,7 +17,7 @@
 
 """
 
-from past.builtins import str
+from future.utils import string_types
 from builtins import str
 from weakref import ref
 from yaml import YAMLObject
@@ -163,7 +163,7 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
         :param value: The new desired value for this property
         :raises exceptions.ValueError: if a property could not be changed
         """
-        assert isinstance(property_name, str)
+        assert isinstance(property_name, string_types)
         old_value = getattr(self, property_name)
         setattr(self, property_name, value)
 

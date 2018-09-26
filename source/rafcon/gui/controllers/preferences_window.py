@@ -17,7 +17,7 @@
    :synopsis: a module holding the controller for the configuration of GUI and Core
 
 """
-from past.builtins import str
+from future.utils import string_types
 from builtins import str
 import gtk
 import gobject
@@ -518,7 +518,7 @@ class PreferencesWindowController(ExtendedController):
         try:
             new_shortcuts = literal_eval(new_shortcuts)
             if not isinstance(new_shortcuts, list) and \
-               not all([isinstance(shortcut, str) for shortcut in new_shortcuts]):
+               not all([isinstance(shortcut, string_types) for shortcut in new_shortcuts]):
                 raise ValueError()
         except (ValueError, SyntaxError):
             logger.warn("Shortcuts must be a list of strings")

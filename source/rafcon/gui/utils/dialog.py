@@ -11,7 +11,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from past.builtins import str
+from future.utils import string_types
 from builtins import str
 import gtk
 import gobject
@@ -43,7 +43,7 @@ class RAFCONMessageDialog(gtk.MessageDialog):
 
         if parent:
             super(RAFCONMessageDialog, self).set_transient_for(parent)
-        if isinstance(markup_text, str):
+        if isinstance(markup_text, string_types):
             from cgi import escape
             super(RAFCONMessageDialog, self).set_markup(escape(str(markup_text)))
         else:
@@ -166,7 +166,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
 
         self.checkbox = None
 
-        if isinstance(checkbox_text, str):
+        if isinstance(checkbox_text, string_types):
             # If a checkbox_text is specified by the caller, we can assume that one should be used.
             self.checkbox = gtk.CheckButton(checkbox_text)
             hbox.pack_end(self.checkbox, True, True, 1)
@@ -272,12 +272,12 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
             toggled_callback = on_toggled
 
         # check if data is consistent
-        if not all(len(row) == len(table_header) or not isinstance(row[-1], (str, str, bool)) and
+        if not all(len(row) == len(table_header) or not isinstance(row[-1], (string_types, bool)) and
                 len(row) == 1 + len(table_header) for row in table_data):
             raise ValueError("All rows of the table_data list has to be the same length as the table_header list "
                              "(+1 data element), here length = {0}". format(len(table_header)))
 
-        if not all([isinstance(row_elem, (bool, str, str))
+        if not all([isinstance(row_elem, (bool, string_types))
                    for index, row_elem in enumerate(table_data[0]) if not index + 1 == len(table_data[0])]):
             raise TypeError("All row elements have to be of type boolean or string except of last one.")
 
@@ -311,7 +311,7 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
 
         # correct last list element if not boolean or string and table data length is +1 compared to table header
         if first_row_data_types and len(first_row_data_types) == len(table_header) + 1 and \
-                not isinstance(first_row_data_types[-1], (bool, str, str)):
+                not isinstance(first_row_data_types[-1], (bool, string_types)):
             first_row_data_types[-1] = gobject.TYPE_PYOBJECT
 
         # fill list store

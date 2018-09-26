@@ -20,6 +20,7 @@ initialized with consistent arguments.
 This general Action (one procedure for all possible edition) procedure is expansive and complex, therefore it is aimed
 to define specific _-Action-Classes for simple/specific edit actions.
 """
+from future.utils import string_types
 from builtins import object
 from builtins import str
 import copy
@@ -1435,7 +1436,7 @@ class StateAction(Action):
             assert self.parent_path == self.object_identifier._path
         self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
         self.after_arguments = None
-        if self.action_type == 'script_text' and isinstance(self.before_overview['args'][-1][1], str):
+        if self.action_type == 'script_text' and isinstance(self.before_overview['args'][-1][1], string_types):
             d = difflib.Differ()
             diff = list(d.compare(self.before_overview['args'][-1][0].script_text.split('\n'),
                                   self.before_overview['args'][-1][1].split('\n')))

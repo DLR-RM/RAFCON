@@ -11,6 +11,7 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from future.utils import string_types
 from builtins import str
 from math import pi
 
@@ -32,7 +33,7 @@ def limit_value_string_length(value):
     :param value: Value to limit string representation
     :return: String holding the value with a maximum length of MAX_VALUE_LABEL_TEXT_LENGTH + 3
     """
-    if isinstance(value, str) and len(value) > constants.MAX_VALUE_LABEL_TEXT_LENGTH:
+    if isinstance(value, string_types) and len(value) > constants.MAX_VALUE_LABEL_TEXT_LENGTH:
         value = value[:constants.MAX_VALUE_LABEL_TEXT_LENGTH] + "..."
         final_string = " " + value + " "
     elif isinstance(value, (dict, list)) and len(str(value)) > constants.MAX_VALUE_LABEL_TEXT_LENGTH:

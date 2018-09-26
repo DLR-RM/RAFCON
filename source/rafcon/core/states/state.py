@@ -23,8 +23,7 @@
 
 from future import standard_library
 standard_library.install_aliases()
-from past.builtins import str
-from builtins import str
+from future.utils import string_types
 import queue
 import copy
 import os
@@ -334,7 +333,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 default = value.default_value
             # if the user sets the default value to a string starting with $, try to retrieve the value
             # from the global variable manager
-            if isinstance(default, str) and len(default) > 0 and default[0] == '$':
+            if isinstance(default, string_types) and len(default) > 0 and default[0] == '$':
                 from rafcon.core.singleton import global_variable_manager as gvm
                 var_name = default[1:]
                 if not gvm.variable_exist(var_name):
@@ -601,8 +600,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param str file_system_path:
         :return:
         """
-        if not isinstance(file_system_path, str):
-            raise TypeError("file_system_path must be of type basestring")
+        if not isinstance(file_system_path, string_types):
+            raise TypeError("file_system_path must be a string")
         self._file_system_path = file_system_path
 
     def get_temp_file_system_path(self):
@@ -902,7 +901,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param key: The key of the new entry.
         :return:
         """
-        assert isinstance(key, str)
+        assert isinstance(key, string_types)
         target_dict = self.get_semantic_data(path_as_list)
         target_dict[key] = value
         return path_as_list + [key]
@@ -966,8 +965,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 raise ValueError("Name must not include the \"" + PATH_SEPARATOR + "\" character")
             # if ID_NAME_DELIMITER in name:
             #     raise ValueError("Name must not include the \"" + ID_NAME_DELIMITER + "\" character")
-            if not isinstance(name, str):
-                raise TypeError("Name must be of type str")
+            if not isinstance(name, string_types):
+                raise TypeError("Name must be a string")
             if len(name) < 1:
                 raise ValueError("Name must have at least one character")
 
@@ -1313,7 +1312,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self._description = None
             return
 
-        if not isinstance(description, str):
+        if not isinstance(description, string_types):
             raise TypeError("Description must be a string")
 
         self._description = description

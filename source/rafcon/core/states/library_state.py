@@ -17,7 +17,7 @@
    :synopsis: A module to represent a library state in the state machine
 
 """
-from past.builtins import str
+from future.utils import string_types
 from builtins import str
 from copy import copy, deepcopy
 
@@ -119,7 +119,7 @@ class LibraryState(State):
                 self.input_data_port_runtime_values[data_port_id] = data_port.default_value
                 self.use_runtime_value_input_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
-            elif isinstance(self.input_data_port_runtime_values[data_port_id], str):
+            elif isinstance(self.input_data_port_runtime_values[data_port_id], string_types):
                 try:
                     self.input_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
                         self.input_data_port_runtime_values[data_port_id], data_port.data_type)
@@ -147,7 +147,7 @@ class LibraryState(State):
                 self.output_data_port_runtime_values[data_port_id] = data_port.default_value
                 self.use_runtime_value_output_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
-            elif isinstance(self.output_data_port_runtime_values[data_port_id], str):
+            elif isinstance(self.output_data_port_runtime_values[data_port_id], string_types):
                 try:
                     self.output_data_port_runtime_values[data_port_id] = \
                         type_helpers.convert_string_value_to_type_value(
@@ -418,8 +418,8 @@ class LibraryState(State):
     @lock_state_machine
     @Observable.observed
     def library_path(self, library_path):
-        if not isinstance(library_path, str):
-            raise TypeError("library_path must be of type str")
+        if not isinstance(library_path, string_types):
+            raise TypeError("library_path must be a string")
 
         self._library_path = library_path
 
@@ -434,8 +434,8 @@ class LibraryState(State):
     @lock_state_machine
     @Observable.observed
     def library_name(self, library_name):
-        if not isinstance(library_name, str):
-            raise TypeError("library_name must be of type str")
+        if not isinstance(library_name, string_types):
+            raise TypeError("library_name must be a string")
 
         self._library_name = library_name
 
@@ -450,8 +450,8 @@ class LibraryState(State):
     @lock_state_machine
     @Observable.observed
     def version(self, version):
-        if version is not None and not isinstance(version, (str, int, float)):
-            raise TypeError("version must be of type str, got: {}, {}".format(type(version), version))
+        if version is not None and not isinstance(version, (string_types, int, float)):
+            raise TypeError("version must be a string, got: {}, {}".format(type(version), version))
 
         self._version = str(version)
 

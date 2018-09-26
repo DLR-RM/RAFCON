@@ -20,6 +20,7 @@
 
 """
 
+from future.utils import string_types
 from builtins import str
 import gobject
 import gtk
@@ -211,7 +212,7 @@ class LibraryTreeController(ExtendedController):
         :return:
         """
         _library_key = self.convert_if_human_readable(library_key)
-        tool_tip = library_item if isinstance(library_item, str) else ''
+        tool_tip = library_item if isinstance(library_item, string_types) else ''
         if not tool_tip and parent is None:
             library_root_path = tool_tip = self.model.library_manager._library_root_paths.get(library_key, '')
         if not tool_tip:
@@ -282,7 +283,7 @@ class LibraryTreeController(ExtendedController):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         (model, row) = self.view.get_selection().get_selected()
         physical_library_path = model[row][self.ITEM_STORAGE_ID]
-        assert isinstance(physical_library_path, str)
+        assert isinstance(physical_library_path, string_types)
 
         logger.debug("Opening library as state-machine from path '{0}'".format(physical_library_path))
         state_machine = gui_helper_state_machine.open_state_machine(physical_library_path)
@@ -388,7 +389,7 @@ class LibraryTreeController(ExtendedController):
         if isinstance(library_item, dict):  # sub-tree
             os_path = model[row][self.OS_PATH_STORAGE_ID]
             return os_path, None, None, tree_item_key  # relevant elements of sub-tree
-        assert isinstance(library_item, str)
+        assert isinstance(library_item, string_types)
         library_os_path = library_item
 
         library_name = library_os_path.split(os.path.sep)[-1]

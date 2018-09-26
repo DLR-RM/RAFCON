@@ -22,7 +22,7 @@
 
 """
 
-from past.builtins import str
+from future.utils import string_types
 from builtins import range
 from contextlib import contextmanager
 from copy import copy
@@ -317,8 +317,8 @@ class StateMachine(Observable, JSONObject, Hashable):
     @file_system_path.setter
     @Observable.observed
     def file_system_path(self, file_system_path):
-        if not isinstance(file_system_path, str):
-            raise AttributeError("file_system_path has to be of type str")
+        if not isinstance(file_system_path, string_types):
+            raise AttributeError("file_system_path has to be a string")
         self._file_system_path = file_system_path
 
     @property

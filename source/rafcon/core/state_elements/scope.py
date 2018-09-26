@@ -16,7 +16,7 @@
 
 """
 
-from past.builtins import str
+from future.utils import string_types
 import datetime
 import time
 
@@ -177,8 +177,8 @@ class ScopedData(StateElement):
     @lock_state_machine
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, str):
-            raise TypeError("key_name must be of type str")
+        if not isinstance(name, string_types):
+            raise TypeError("key_name must be a string")
         self._name = name
         # update key
         self._primary_key = self._name + self.from_state
@@ -233,8 +233,8 @@ class ScopedData(StateElement):
     @Observable.observed
     def from_state(self, from_state):
         if from_state is not None:
-            if not isinstance(from_state, str):
-                raise TypeError("from_state must be of type str")
+            if not isinstance(from_state, string_types):
+                raise TypeError("from_state must be a string")
             if self.name is not None:  # this will just happen in __init__ when key_name is not yet initialized
                 # update key
                 self._primary_key = self.name + self._from_state
