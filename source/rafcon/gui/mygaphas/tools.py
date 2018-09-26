@@ -202,7 +202,7 @@ class MoveItemTool(gaphas.tool.ItemTool):
         elif len(affected_models) > 1:
             # if more than one item has been moved, we need to call the meta_data_changed signal on a common parent
             common_parents = None
-            for change, affects_children, view in list(affected_models.values()):
+            for change, affects_children, view in affected_models.values():
                 parents_of_view = set(self.view.canvas.get_ancestors(view))
                 if common_parents is None:
                     common_parents = parents_of_view

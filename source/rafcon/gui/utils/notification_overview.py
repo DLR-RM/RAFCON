@@ -231,7 +231,7 @@ class NotificationOverview(dict):
                 s += "\n{0}'result': {1}".format(level, info['result'])
             # additional elements not created by gtkmvc or common function calls
             overview['others'].append({})
-            for key, value in list(info.items()):
+            for key, value in info.items():
                 if key in ['before', 'after', 'model', 'prop_name', 'instance', 'method_name', 'args', 'kwargs', 'result']:
                     pass
                 else:
@@ -254,7 +254,7 @@ class NotificationOverview(dict):
                 overview['kwargs'].append(info['arg'].kwargs)
                 # TODO check again this stuff
                 args = [info['arg'].action_parent_m.core_element, ]
-                args.extend(list(info['arg'].kwargs.values()))
+                args.extend(info['arg'].kwargs.values())
                 overview['args'].append(args)
                 s += "\n{0}'arg': ActionSignalMsg({1}".format(level,
                                                               get_nice_action_signal_msg_tuple_string(info['arg'],

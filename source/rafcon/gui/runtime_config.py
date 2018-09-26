@@ -88,7 +88,7 @@ class RuntimeConfig(ObservableConfig):
     def extend_recently_opened_by_current_open_state_machines(self):
         """ Update list with all in the state machine manager opened state machines """
         from rafcon.gui.singleton import state_machine_manager_model as state_machine_manager_m
-        for sm_m in list(state_machine_manager_m.state_machines.values()):
+        for sm_m in state_machine_manager_m.state_machines.values():
             self.update_recently_opened_state_machines_with(sm_m.state_machine)
 
     def prepare_recently_opened_state_machines_list_for_storage(self):

@@ -240,7 +240,7 @@ class LoggingConsoleView(View):
         self._stored_line_number, self._stored_line_offset = self.get_cursor_position()
         self._stored_text_of_line = self.get_text_of_line(self._stored_line_number)
         self._stored_relative_lines = []
-        for key in list(self._enables.keys()):
+        for key in self._enables.keys():
             if self._enables[key]:
                 checked_line_number, distance = self.get_line_number_next_to_cursor_with_string_within(key)
                 if checked_line_number is not None:

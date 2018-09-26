@@ -104,7 +104,7 @@ class MenuBarView(View):
         self.sub_menu_open_recently = gtk.Menu()
         self['open_recent'].set_submenu(self.sub_menu_open_recently)
 
-        for menu_item_name in list(self.buttons.keys()):
+        for menu_item_name in self.buttons:
             # set icon
             self.set_menu_item_icon(menu_item_name, self.buttons[menu_item_name])
             # set accelerator if in shortcuts dictionary with menu_item_name == key
