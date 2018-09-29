@@ -20,7 +20,7 @@
 """
 from gi.repository import GLib
 from gi.repository import Gtk
-from Gtk.gdk import keyval_name
+from gi.repository import Gdk
 from gtkmvc3 import Model
 
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
@@ -216,6 +216,6 @@ class StateOverviewController(ExtendedController):
         gui_helper_state_machine.change_state_type_with_error_handling_and_logger_messages(self.model, target_class)
 
     def check_for_enter(self, entry, event):
-        key_name = keyval_name(event.keyval)
+        key_name = Gdk.keyval_name(event.keyval)
         if key_name in ["Return", "KP_Enter"]:
             self.change_name(entry.get_text())

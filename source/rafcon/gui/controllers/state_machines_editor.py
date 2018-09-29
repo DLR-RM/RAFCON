@@ -24,6 +24,7 @@
 import collections
 import copy
 from gi.repository import Gtk
+from gi.repository import Gdk
 
 import rafcon.core.singleton
 from rafcon.core.states.hierarchy_state import HierarchyState
@@ -38,7 +39,6 @@ from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.graphical_editor import GraphicalEditorView
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
-from Gtk.gdk import SHIFT_MASK, CONTROL_MASK
 from rafcon.gui.helpers.label import create_image_menu_item
 from rafcon.utils import log
 
@@ -365,7 +365,7 @@ class StateMachinesEditorController(ExtendedController):
         """
         from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
         force = True if event is not None and hasattr(event, 'state') and \
-                        event.get_state() & SHIFT_MASK and event.get_state() & CONTROL_MASK else force
+                        event.get_state() & Gdk.ModifierType.SHIFT_MASK and event.get_state() & Gdk.ModifierType.CONTROL_MASK else force
 
         def remove_state_machine_m():
             state_machine_id = state_machine_m.state_machine.state_machine_id

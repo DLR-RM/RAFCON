@@ -20,7 +20,7 @@
 """
 
 from gi.repository import GObject
-from gtk import ListStore
+from gi.repository import Gtk
 
 from rafcon.core.state_elements.scope import ScopedVariable
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
@@ -71,7 +71,7 @@ class StateDataFlowsListController(LinkageListController):
         """
         # ListStore for: id, from-state, from-key, to-state, to-key, is_external,
         #                   name-color, to-state-color, data-flow-object, state-object, is_editable, data-flow-model
-        list_store = ListStore(int, str, str, str, str, bool, str, str,
+        list_store = Gtk.ListStore(int, str, str, str, str, bool, str, str,
                                GObject.TYPE_PYOBJECT, GObject.TYPE_PYOBJECT, bool, GObject.TYPE_PYOBJECT)
         self.view_dict = {'data_flows_internal': True, 'data_flows_external': True}
 
@@ -551,8 +551,8 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                                                                   'to_key': to_key_label}
 
             # ALL INTERNAL COMBOS
-            from_states_store = ListStore(str)
-            to_states_store = ListStore(str)
+            from_states_store = Gtk.ListStore(str)
+            to_states_store = Gtk.ListStore(str)
             if isinstance(model, ContainerStateModel):
                 if model.state.state_id in free_to_port_internal or model.state.state_id == data_flow.to_state:
                     to_states_store.append(['self.' + model.state.name + '.' + model.state.state_id])
@@ -566,7 +566,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                                     state_model.state.state_id == data_flow.from_state:
                         from_states_store.append([state_model.state.name + '.' + state_model.state.state_id])
 
-            from_keys_store = ListStore(str)
+            from_keys_store = Gtk.ListStore(str)
             if model.state.state_id == data_flow.from_state:
                 # print "input_ports", model.state.input_data_ports
                 # print type(model)
@@ -583,7 +583,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                 get_key_combos(model.state.states[data_flow.from_state].output_data_ports,
                                from_keys_store, data_flow.from_key)
 
-            to_keys_store = ListStore(str)
+            to_keys_store = Gtk.ListStore(str)
             if model.state.state_id == data_flow.to_state:
                 # print "output_ports", model.state.output_data_ports
                 # print type(model)
@@ -664,7 +664,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
             if model.state.state_id in [data_flow.from_state, data_flow.to_state]:
 
                 # only self-state
-                from_states_store = ListStore(str)
+                from_states_store = Gtk.ListStore(str)
                 for state_id in from_ports_external.keys():
                     if model.parent.state.state_id == state_id:
                         state_model = model.parent
@@ -677,7 +677,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                         # from_states_store.append(['self.' + model.state.name + '.' + model.state.state_id])
 
                 # only outports of self
-                from_keys_store = ListStore(str)
+                from_keys_store = Gtk.ListStore(str)
                 if model.parent.state.state_id == data_flow.from_state:
                     # print "output_ports", model.parent.states[data_flow.from_state].state.output_data_ports
                     combined_ports = {}
@@ -692,7 +692,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                         "---------------- FAILURE %s ------------- external from_state PARENT or STATES" % model.state.state_id)
 
                 # all states and parent-state
-                to_states_store = ListStore(str)
+                to_states_store = Gtk.ListStore(str)
                 for state_id in free_to_port_external.keys():
                     if model.parent.state.state_id == state_id:
                         state_model = model.parent
@@ -704,7 +704,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                         to_states_store.append([state_model.state.name + '.' + state_model.state.state_id])
 
                 # all keys of actual to-state
-                to_keys_store = ListStore(str)
+                to_keys_store = Gtk.ListStore(str)
                 if get_state_model(model.parent, data_flow.to_state):
                     to_state_model = get_state_model(model.parent, data_flow.to_state)
                     from_state_model = get_state_model(model.parent, data_flow.to_state)

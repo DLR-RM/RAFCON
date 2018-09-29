@@ -15,4 +15,4 @@
 def wait_for_gui():
     from gi.repository import Gtk
     while Gtk.events_pending():
-        Gtk.main_iteration(False)
+        Gtk.main_iteration()

@@ -22,8 +22,6 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
-from gtk import ListStore
-from gtk import TreeViewColumn, CellRendererToggle
 
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.states.library_state import LibraryState
@@ -89,8 +87,8 @@ class DataPortListController(ListViewController):
         self._apply_value_on_edited_and_focus_out(view['data_type_text'], self._apply_new_data_port_type)
 
         if isinstance(self.model.state, LibraryState):
-            view['use_runtime_value_toggle'] = CellRendererToggle()
-            view['use_runtime_value_col'] = TreeViewColumn("Use Runtime Value")
+            view['use_runtime_value_toggle'] = Gtk.CellRendererToggle()
+            view['use_runtime_value_col'] = Gtk.TreeViewColumn("Use Runtime Value")
             view['use_runtime_value_col'].set_property("sizing", "autosize")
             view.get_top_widget().append_column(view['use_runtime_value_col'])
             view['use_runtime_value_col'].pack_start(view['use_runtime_value_toggle'], True)
@@ -174,7 +172,7 @@ class DataPortListController(ListViewController):
 
     @staticmethod
     def _get_new_list_store():
-        return ListStore(str, str, str, int, bool, str, GObject.TYPE_PYOBJECT)
+        return Gtk.ListStore(str, str, str, int, bool, str, GObject.TYPE_PYOBJECT)
 
     def _default_value_cell_data_func(self, tree_view_column, cell, model, iter):
         """Function set renderer properties for every single cell independently
@@ -184,8 +182,8 @@ class DataPortListController(ListViewController):
 
         :param tree_view_column: the Gtk.TreeViewColumn to be rendered
         :param cell: the current CellRenderer
-        :param model: the ListStore or TreeStore that is the model for TreeView
-        :param iter: an iterator over the rows of the TreeStore/ListStore Model
+        :param model: the Gtk.ListStore or TreeStore that is the model for TreeView
+        :param iter: an iterator over the rows of the TreeStore/Gtk.ListStore Model
         """
         if isinstance(self.model.state, LibraryState):
             use_runtime_value = model.get_value(iter, self.USE_RUNTIME_VALUE_STORAGE_ID)

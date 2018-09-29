@@ -13,8 +13,7 @@
 
 from gi.repository import GLib
 from gi.repository import Gtk
-from Gtk.gdk import CONTROL_MASK, SHIFT_MASK
-from Gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
+from gi.repository import Gdk
 
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -484,7 +483,7 @@ class ListViewController(AbstractTreeViewController):
         if event.type == Gdk.EventType.BUTTON_PRESS:
             pthinfo = self.tree_view.get_path_at_pos(int(event.x), int(event.y))
 
-            if not bool(event.get_state() & CONTROL_MASK) and not bool(event.get_state() & SHIFT_MASK) and \
+            if not bool(event.get_state() & Gdk.ModifierMask.CONTROL_MASK) and not bool(event.get_state() & Gdk.ModifierMask.SHIFT_MASK) and \
                     event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
                 if pthinfo is not None:
                     model, paths = self._tree_selection.get_selected_rows()
@@ -499,11 +498,11 @@ class ListViewController(AbstractTreeViewController):
                     self.on_right_click_menu()
                     return True
 
-            if (bool(event.get_state() & CONTROL_MASK) or bool(event.get_state() & SHIFT_MASK)) and \
+            if (bool(event.get_state() & Gdk.ModifierMask.CONTROL_MASK) or bool(event.get_state() & Gdk.ModifierMask.SHIFT_MASK)) and \
                     event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
                 return True
 
-            if not bool(event.get_state() & SHIFT_MASK) and event.button == 1:
+            if not bool(event.get_state() & Gdk.ModifierMask.SHIFT_MASK) and event.button == 1:
                 if pthinfo is not None:
                     # self._logger.info("last select row {}".format(pthinfo[0]))
                     self._last_path_selection = pthinfo[0]
@@ -511,7 +510,7 @@ class ListViewController(AbstractTreeViewController):
                 #     self._logger.info("deselect rows")
                 #     self.tree_selection.unselect_all()
 
-            if bool(event.get_state() & SHIFT_MASK) and event.button == 1:
+            if bool(event.get_state() & Gdk.ModifierMask.SHIFT_MASK) and event.button == 1:
                 # self._logger.info("SHIFT adjust selection range")
                 model, paths = self._tree_selection.get_selected_rows()
                 # print model, paths, pthinfo[0]
@@ -530,7 +529,7 @@ class ListViewController(AbstractTreeViewController):
                     if pthinfo and pthinfo[0]:
                         self._last_path_selection = pthinfo[0]
 
-            if bool(event.get_state() & CONTROL_MASK) and event.button == 1:
+            if bool(event.get_state() & Gdk.ModifierMask.CONTROL_MASK) and event.button == 1:
                 # self._logger.info("CONTROL adjust selection range")
                 model, paths = self._tree_selection.get_selected_rows()
                 # print model, paths, pthinfo[0]
@@ -635,7 +634,7 @@ class ListViewController(AbstractTreeViewController):
         """
         # self._logger.info("key_value: " + str(event.keyval if event is not None else ''))
         if event and "GDK_KEY_PRESS" == event.type.value_name \
-                and (event.keyval == Key_Tab or event.keyval == ISO_Left_Tab):
+                and (event.keyval == Gdk.Key_Tab or event.keyval == Gdk.ISO_Left_Tab):
             [path, focus_column] = self.tree_view.get_cursor()
             if not path:
                 return False
@@ -649,7 +648,7 @@ class ListViewController(AbstractTreeViewController):
 
             # row could be updated by other call_backs caused by emitting 'edited' signal but selection stays an editable neighbor
             path = self.get_path_for_core_element(self.tree_view_keypress_callback.__func__.core_element_id)
-            if event.keyval == Key_Tab:
+            if event.keyval == Gdk.Key_Tab:
                 # logger.info("move right")
                 direction = +1
             else:
@@ -851,7 +850,7 @@ class TreeViewController(AbstractTreeViewController):
         # self._logger.info("key_value: " + str(event.keyval if event is not None else ''))
         # TODO works for root level or other single level of tree view but not for switching in between levels
         if event and "GDK_KEY_PRESS" == event.type.value_name \
-                and (event.keyval == Key_Tab or event.keyval == ISO_Left_Tab):
+                and (event.keyval == Gdk.Key_Tab or event.keyval == Gdk.ISO_Left_Tab):
             [path, focus_column] = self.tree_view.get_cursor()
             # print "cursor ", path, focus_column
             model, paths = self.tree_view.get_selection().get_selected_rows()
@@ -874,7 +873,7 @@ class TreeViewController(AbstractTreeViewController):
             if core_element_id in self._changed_id_to:
                 self.tree_view_keypress_callback.__func__.core_element_id = self._changed_id_to[core_element_id]
             path = self.get_path_for_core_element(self.tree_view_keypress_callback.__func__.core_element_id)
-            if event.keyval == Key_Tab:
+            if event.keyval == Gdk.Key_Tab:
                 # logger.info("move right")
                 direction = +1
             else:

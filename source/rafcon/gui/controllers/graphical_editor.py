@@ -21,15 +21,13 @@
 """
 
 from gi.repository import GObject
+from gi.repository import Gtk
+from gi.repository import Gdk
 import itertools
 import sys
 import time
 from copy import copy
 from functools import partial
-from gtk import DEST_DEFAULT_ALL
-from Gtk.gdk import ACTION_COPY, ModifierType
-from Gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
-from Gtk.gdk import keyval_name
 from math import sin, cos, atan2
 
 from rafcon.core.decorators import lock_state_machine
@@ -147,7 +145,7 @@ class GraphicalEditorController(ExtendedController):
         view.editor.connect('key-press-event', self._on_key_press)
         view.editor.connect('key-release-event', self._on_key_release)
 
-        view.editor.drag_dest_set(DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
+        view.editor.drag_dest_set(Gtk.DestDefaults.ALL, [('STRING', 0, 0)], Gdk.DragAction.COPY)
         view.editor.connect("drag-data-received", self.on_drag_data_received)
         view.editor.connect("drag-motion", self.on_drag_motion)
 
@@ -364,7 +362,7 @@ class GraphicalEditorController(ExtendedController):
 
     @lock_state_machine
     def _on_key_press(self, widget, event):
-        key_name = keyval_name(event.keyval)
+        key_name = Gdk.keyval_name(event.keyval)
         if key_name == "Control_L" or key_name == "Control_R":
             self.ctrl_modifier = True
         elif key_name == "Alt_L":
@@ -376,7 +374,7 @@ class GraphicalEditorController(ExtendedController):
 
     @lock_state_machine
     def _on_key_release(self, widget, event):
-        key_name = keyval_name(event.keyval)
+        key_name = Gdk.keyval_name(event.keyval)
         if key_name == "Control_L" or key_name == "Control_R":
             self.ctrl_modifier = False
         elif key_name == "Alt_L":
@@ -420,12 +418,12 @@ class GraphicalEditorController(ExtendedController):
 
         # Multi-selection is started when the user hold the shift key pressed while clicking the left mouse button,
         # and does this _not_ on a resize handler or waypoint
-        if event.button == 1 and event.get_state() & SHIFT_MASK == 1 and \
+        if event.button == 1 and event.get_state() & Gdk.ModifierType.SHIFT_MASK == 1 and \
                         self.selected_resizer is None and self.selected_waypoint is None:
             self.multi_selection_started = True
 
         # Left mouse button was clicked and no multi selection intended
-        if event.button == 1 and event.get_state() & SHIFT_MASK == 0:
+        if event.button == 1 and event.get_state() & Gdk.ModifierType.SHIFT_MASK == 0:
             if not self.mouse_move_redraw:
                 self.single_selection = new_selection
 
@@ -573,7 +571,7 @@ class GraphicalEditorController(ExtendedController):
 
         # If no mouse button is pressed while the mouse is moving, we only have to change whether another component
         # wants to redraw the editor on mouse move
-        if event.get_state() & (BUTTON1_MASK | BUTTON2_MASK | BUTTON3_MASK) == 0:
+        if event.get_state() & (Gdk.ModifierType.BUTTON1_MASK | Gdk.ModifierType.BUTTON2_MASK | Gdk.ModifierType.BUTTON3_MASK) == 0:
             if self.mouse_move_redraw:
                 mouse_current_coord = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
                 self.mouse_move_last_coords = mouse_current_coord
@@ -581,7 +579,7 @@ class GraphicalEditorController(ExtendedController):
             return
 
         # Move while middle button is clicked moves the view
-        if self.last_button_pressed == 2 or (self.space_bar and event.get_state() & BUTTON1_MASK > 0):
+        if self.last_button_pressed == 2 or (self.space_bar and event.get_state() & Gdk.ModifierType.BUTTON1_MASK > 0):
             delta_pos = subtract_pos((event.x, event.y), self.mouse_move_last_pos)
             self._move_view(delta_pos)
 
@@ -594,7 +592,7 @@ class GraphicalEditorController(ExtendedController):
             return
 
         # States and ports shell only be moved with the left mouse button clicked and the shift key not hold
-        if event.get_state() & SHIFT_MASK == 0 and self.last_button_pressed == 1:
+        if event.get_state() & Gdk.ModifierType.SHIFT_MASK == 0 and self.last_button_pressed == 1:
             # Move all selected states and data ports of thr multi-selection
             if len(self.model.selection) > 1 and self.selected_outcome is None and self.selected_resizer is None:
                 # When starting a move, two information are stored:
@@ -684,7 +682,7 @@ class GraphicalEditorController(ExtendedController):
                 self._last_meta_data_changed = "waypoint_position"
                 self.changes_affect_children = False
                 self.changed_models.append(connection_m)
-            snap = event.get_state() & SHIFT_MASK != 0
+            snap = event.get_state() & Gdk.ModifierType.SHIFT_MASK != 0
             self._move_waypoint(connection_m, waypoint_id, mouse_current_coord, snap)
 
         # Redraw to show the new transition/data flow the user is creating with drag and drop
@@ -703,8 +701,8 @@ class GraphicalEditorController(ExtendedController):
                 self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords, lower_right_corner)
             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
             modifier_keys = event.get_state()
-            keep_ratio = int(modifier_keys & SHIFT_MASK) > 0
-            resize_content = int(modifier_keys & CONTROL_MASK) > 0
+            keep_ratio = int(modifier_keys & Gdk.ModifierType.SHIFT_MASK) > 0
+            resize_content = int(modifier_keys & Gdk.ModifierType.CONTROL_MASK) > 0
             if resize_content:
                 self.changes_affect_children = True
             self._resize_state(state_m, new_pos, keep_ratio=keep_ratio, resize_content=resize_content)
@@ -1175,7 +1173,7 @@ class GraphicalEditorController(ExtendedController):
 
         def move_pos(pos, parent_size):
             scale_dist = 0.025
-            if modifier & SHIFT_MASK:
+            if modifier & Gdk.ModifierType.SHIFT_MASK:
                 scale_dist = 0.125
             if direction == Direction.left:
                 return pos[0] - parent_size[0] * scale_dist, pos[1]
@@ -1200,7 +1198,7 @@ class GraphicalEditorController(ExtendedController):
             self._move_data_port(port_m, new_pos, redraw, publish_changes)
 
         event = (key, modifier)
-        if react_to_event(self.view, self.view.editor, event) or (len(event) == 2 and not isinstance(event[1], ModifierType)):
+        if react_to_event(self.view, self.view.editor, event) or (len(event) == 2 and not isinstance(event[1], Gdk.ModifierType)):
             if self.model.selection:
                 for model in self.model.selection:
                     if isinstance(model, AbstractStateModel):
@@ -1494,8 +1492,8 @@ class GraphicalEditorController(ExtendedController):
         :param tuple pos: The mouse position at which the zoom occured
         :param direction: The scroll direction
         """
-        zoom_in = direction == SCROLL_DOWN
-        zoom_out = direction == SCROLL_UP
+        zoom_in = direction == Gdk.ScrollDirection.DOWN
+        zoom_out = direction == Gdk.ScrollDirection.UP
 
         if zoom_in or zoom_out:
             old_mouse_pos = self.view.editor.screen_to_opengl_coordinates(pos)

@@ -15,6 +15,7 @@
 
 import os
 from gi.repository import Gtk
+from gi.repository import Gdk
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
 
@@ -39,9 +40,9 @@ LETTER_SPACING_1PT = "1024"
 LETTER_SPACING_2PT = "2048"
 LETTER_SPACING_3PT = "3072"
 
-MOVE_CURSOR = Gdk.FLEUR
-SELECT_CURSOR = Gdk.HAND1
-CREATION_CURSOR = Gdk.CROSS
+MOVE_CURSOR = Gdk.CursorType.FLEUR
+SELECT_CURSOR = Gdk.CursorType.HAND1
+CREATION_CURSOR = Gdk.CursorType.CROSS
 
 KEYVALUE_CTRL_L = 65507
 KEYVALUE_CTRL_R = 65508

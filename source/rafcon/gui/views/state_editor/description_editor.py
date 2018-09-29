@@ -9,7 +9,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from rafcon.gui.views.utils.editor import EditorView, gtksourceview2
+from gi.repository import GtkSource
+from rafcon.gui.views.utils.editor import EditorView
 
 
 class DescriptionEditorView(EditorView):

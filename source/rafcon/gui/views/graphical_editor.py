@@ -22,8 +22,9 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
 from gi.repository import Gtk
-import Gtk.gtkgl
-import Gtk.gdkgl
+# old
+# import Gtk.gtkgl
+# import Gtk.gdkgl
 from gtkmvc3 import View
 
 from rafcon.gui.config import global_gui_config as gui_config
@@ -163,7 +164,9 @@ class GraphicalEditorView(View):
         self.top = 'main_frame'
 
 
-class GraphicalEditor(Gtk.DrawingArea, Gtk.gtkgl.Widget):
+# old; GTK TODO
+# class GraphicalEditor(Gtk.DrawingArea, Gtk.gtkgl.Widget):
+class GraphicalEditor(Gtk.DrawingArea, Gtk.Widget):
     # background_color = Color.from_hex(0x17242f)
     background_color = Color.from_hex_string(gui_config.colors['GLOBAL_BACKGROUND'])
     state_color = Color.from_hex(0xd7e0ec)  # Color(0.9, 0.9, 0.9, 0.8)

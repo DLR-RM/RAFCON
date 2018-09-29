@@ -13,9 +13,10 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
+from gi.repository import GtkSource
 
 from rafcon.gui.utils import constants
-from rafcon.gui.views.utils.editor import EditorView, gtksourceview2
+from rafcon.gui.views.utils.editor import EditorView
 
 
 class SourceEditorView(EditorView):

@@ -15,7 +15,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from gtk import Container, Button
+from gi.repository import Gdk
 
 from rafcon.gui.utils import constants
 from rafcon.gui.config import global_gui_config
@@ -125,10 +125,10 @@ def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
 
 def set_button_children_size_request(widget):
     try:
-        if not isinstance(widget, Container):
+        if not isinstance(widget, Gtk.Container):
             return
         for child in widget.get_children():
-            if isinstance(child, Button):
+            if isinstance(child, Gtk.Button):
                 child.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
             else:
                 set_button_children_size_request(child)
