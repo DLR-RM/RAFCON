@@ -17,7 +17,7 @@
 """
 import Queue
 
-from gtkmvc import Observable
+from gtkmvc3 import Observable
 
 import rafcon.core.singleton as singleton
 from rafcon.core.states.container_state import ContainerState

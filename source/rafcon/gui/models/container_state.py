@@ -14,7 +14,7 @@
 
 from copy import deepcopy
 
-from gtkmvc import ModelMT
+from gtkmvc3 import ModelMT
 
 from rafcon.core.states.container_state import ContainerState
 from rafcon.gui.models.abstract_state import AbstractStateModel, MetaSignalMsg

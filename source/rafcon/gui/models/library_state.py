@@ -106,7 +106,7 @@ class LibraryStateModel(AbstractStateModel):
             # The next lines are commented because not needed and create problems if used why it is an open to-do
             # for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
             #     if port.core_element is not None:
-            #         # TODO setting data ports None in a Library state cause gtkmvc attribute getter problems why?
+            #         # TODO setting data ports None in a Library state cause gtkmvc3 attribute getter problems why?
             #         port.prepare_destruction()
 
         del self.input_data_ports[:]

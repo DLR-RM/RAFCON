@@ -18,7 +18,7 @@
 """
 from os import path
 from copy import copy
-from gtkmvc import ModelMT
+from gtkmvc3 import ModelMT
 
 from rafcon.utils import log
 

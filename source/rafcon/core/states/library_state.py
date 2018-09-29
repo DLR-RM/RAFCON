@@ -19,7 +19,7 @@
 """
 from copy import copy, deepcopy
 
-from gtkmvc import Observable
+from gtkmvc3 import Observable
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.singleton import library_manager
 from rafcon.core.states.state import State, PATH_SEPARATOR
@@ -402,7 +402,7 @@ class LibraryState(State):
         return self.state_copy.get_number_of_transitions()
 
     #########################################################################
-    # Properties for all class fields that must be observed by gtkmvc
+    # Properties for all class fields that must be observed by gtkmvc3
     #########################################################################
 
     @property

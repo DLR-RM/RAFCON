@@ -14,7 +14,7 @@
 from gi.repository import Gtk
 from gi.repository import GObject
 
-from gtkmvc import View
+from gtkmvc3 import View
 
 from gaphas import tool
 from gaphas import painter

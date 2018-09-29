@@ -308,7 +308,7 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
             test_multithreading_lock.release()
 
     if unpatch_threading:
-        unpatch_gtkmvc_model_mt()
+        unpatch_gtkmvc3_model_mt()
     if e:
         raise e
 
@@ -367,7 +367,7 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
         gui_config['AUTO_BACKUP_ENABLED'] = False
 
     if patch_threading:
-        patch_gtkmvc_model_mt()
+        patch_gtkmvc3_model_mt()
     global gui_ready, gui_thread, gui_executed_once
     # IMPORTANT enforce Gtk.gtkgl import in the python main thread to avoid segfaults
     # noinspection PyUnresolvedReferences
@@ -420,19 +420,19 @@ used_gui_threads = []
 auto_backup_threads = []
 
 
-def patch_gtkmvc_model_mt():
+def patch_gtkmvc3_model_mt():
     print "patch"
     global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine,\
         used_gui_threads, auto_backup_threads
 
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
-    import gtkmvc
-    from gtkmvc.model_mt import Model, _threading, gobject
+    import gtkmvc3
+    from gtkmvc3.model_mt import Model, _threading, gobject
     from rafcon.core.states.state import run_id_generator, threading
     from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger, Queue
 
-    original_ModelMT_notify_observer = gtkmvc.model_mt.ModelMT.__notify_observer__
+    original_ModelMT_notify_observer = gtkmvc3.model_mt.ModelMT.__notify_observer__
     original_state_start = rafcon.core.states.state.State.start
     original_run_state_machine = rafcon.core.execution.execution_engine.ExecutionEngine._run_active_state_machine
     print original_ModelMT_notify_observer, original_run_state_machine, original_state_start
@@ -509,21 +509,21 @@ def patch_gtkmvc_model_mt():
                 # print "used_gui_threads", used_gui_threads
                 raise RuntimeError("This test should not have multi-threading constellations.")
 
-    gtkmvc.model_mt.ModelMT.__notify_observer__ = __patched__notify_observer__
+    gtkmvc3.model_mt.ModelMT.__notify_observer__ = __patched__notify_observer__
     rafcon.core.states.state.State.start = state_start
     rafcon.core.execution.execution_engine.ExecutionEngine._run_active_state_machine = _patched_run_active_state_machine
 
 
-def unpatch_gtkmvc_model_mt():
+def unpatch_gtkmvc3_model_mt():
     print "unpatch"
     global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine
 
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
-    import gtkmvc
+    import gtkmvc3
     if any([e is None for e in original_ModelMT_notify_observer, original_state_start, original_run_state_machine]):
         raise EnvironmentError("All methods to un-patch have to be set not None.")
-    gtkmvc.model_mt.ModelMT.__notify_observer__ = original_ModelMT_notify_observer
+    gtkmvc3.model_mt.ModelMT.__notify_observer__ = original_ModelMT_notify_observer
     rafcon.core.states.state.State.start = original_state_start
     rafcon.core.execution.execution_engine.ExecutionEngine._run_state_machine = original_run_state_machine
     original_ModelMT_notify_observer = original_state_start = original_run_state_machine = None

@@ -20,7 +20,7 @@ logger = log.get_logger(__name__)
 
 class AbstractExternalEditor(object):
     """ A class which enables the use of an external editor. Data can be passed to an external editor and loaded back
-    into RAFCON. This class expects the inheriting subclass being a gtkmvc model.
+    into RAFCON. This class expects the inheriting subclass being a gtkmvc3 model.
     This is currently used by the source editor and semantic data editor.
 
     """

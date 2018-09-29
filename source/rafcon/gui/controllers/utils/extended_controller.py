@@ -14,11 +14,11 @@
 
 """
 .. module:: extended_controller
-   :synopsis: A module that holds all extensions in respect to the gtkmvc.Controller that are used in rafcon.gui.
+   :synopsis: A module that holds all extensions in respect to the gtkmvc3.Controller that are used in rafcon.gui.
 
 """
 
-from gtkmvc import Controller
+from gtkmvc3 import Controller
 
 from rafcon.gui.shortcut_manager import ShortcutManager
 from rafcon.utils import log
@@ -205,7 +205,7 @@ class ExtendedController(Controller):
 
         The method also keeps track of all observed models, in order to be able to relieve them later on.
 
-        :param gtkmvc.Model model: The model to be observed
+        :param gtkmvc3.Model model: The model to be observed
         """
         self.__registered_models.add(model)
         return super(ExtendedController, self).observe_model(model)
@@ -215,7 +215,7 @@ class ExtendedController(Controller):
 
         The model is also removed from the internal set of tracked models.
 
-        :param gtkmvc.Model model: The model to be relieved
+        :param gtkmvc3.Model model: The model to be relieved
         """
         self.__registered_models.remove(model)
         return super(ExtendedController, self).relieve_model(model)

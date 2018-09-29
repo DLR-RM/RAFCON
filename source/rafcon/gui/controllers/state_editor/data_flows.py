@@ -41,7 +41,7 @@ PORT_TYPE_TAG = {InputDataPort: 'IP', OutputDataPort: 'OP', ScopedVariable: 'SV'
 class StateDataFlowsListController(LinkageListController):
     """Controller handling the view of transitions of the ContainerStateModel
 
-    This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
+    This :class:`gtkmvc3.Controller` class is the interface between the GTK widget view
     :class:`gui.views.data_flow.DataFlowListView` and the transitions of the
     :class:`gui.models.state.ContainerStateModel`. Changes made in
     the GUI are written back to the model and vice versa.

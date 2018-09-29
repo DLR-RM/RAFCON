@@ -282,7 +282,7 @@ class GlobalVariableManagerController(ListViewController):
 
     @ListViewController.observe("global_variable_manager", after=True)
     def assign_notification_from_gvm(self, model, prop_name, info):
-        """Handles gtkmvc notification from global variable manager
+        """Handles gtkmvc3 notification from global variable manager
 
         Calls update of whole list store in case new variable was added. Avoids to run updates without reasonable change.
         Holds tree store and updates row elements if is-locked or global variable value changes.

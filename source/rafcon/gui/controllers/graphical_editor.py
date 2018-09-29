@@ -785,7 +785,7 @@ class GraphicalEditorController(ExtendedController):
         given
         coordinates. If a waypoint is found, it is stored together with its current position.
 
-        :param gtkmvc.Model selected_model: The model that was clicked on
+        :param gtkmvc3.Model selected_model: The model that was clicked on
         :param tuple coords: Coordinates of the click to search for waypoints
         """
         if isinstance(selected_model, (TransitionModel, DataFlowModel)):
@@ -808,7 +808,7 @@ class GraphicalEditorController(ExtendedController):
         Checks whether the current selected_model is a state and if so looks for an outcome at the given coordinates.
         If an outcome is found, it is stored.
 
-        :param gtkmvc.Model selected_model: The model that was clicked on
+        :param gtkmvc3.Model selected_model: The model that was clicked on
         :param tuple coords: Coordinates to search for outcomes
         """
         if isinstance(selected_model, AbstractStateModel):  # and self.single_selection is not self.root_state_m:
@@ -832,7 +832,7 @@ class GraphicalEditorController(ExtendedController):
         we have to check the positions of all port connectors of that state. If it is a data port, we only have to
         look at the connector position of that port.
 
-        :param gtkmvc.Model selected_model: The selected_model that was clicked on
+        :param gtkmvc3.Model selected_model: The selected_model that was clicked on
         :param tuple coords: Coordinates to search for ports
         """
         if isinstance(selected_model, (DataPortModel, ScopedVariableModel)):
@@ -861,7 +861,7 @@ class GraphicalEditorController(ExtendedController):
         Checks whether the current selection is a state and if so looks the given coordinates are within the resizer
         of that state. If so, the resizer (or its state model) is stored.
 
-        :param gtkmvc.Model selected_model: The selected_model that was clicked on
+        :param gtkmvc3.Model selected_model: The selected_model that was clicked on
         :param tuple coords: Coordinates to check for the resizer
         """
         if isinstance(selected_model, AbstractStateModel):
@@ -2032,7 +2032,7 @@ class GraphicalEditorController(ExtendedController):
         :param bool find_transitions: Flag whether to find transitions
         :param bool find_data_flows: Flag whether to find data flows
         :param bool find_data_ports: Flag whether to find data ports
-        :return gtkmvc.Model: The uppermost model beneath the given position, None if nothing was found
+        :return gtkmvc3.Model: The uppermost model beneath the given position, None if nothing was found
         """
         # e.g. sets render mode to GL_SELECT
         self.view.editor.prepare_selection(pos_x, pos_y, width, height)
@@ -2074,7 +2074,7 @@ class GraphicalEditorController(ExtendedController):
         :param ids: The ids to search for
         :param rafcon.gui.models.abstract_state.AbstractStateModel search_state_m: The state to search in
         :param float search_state_depth: The depth the search state is in
-        :param gtkmvc.Model selection: The currently found object
+        :param gtkmvc3.Model selection: The currently found object
         :param float selection_depth: The depth of the currently found object
         :return: The selected object and its depth
         """

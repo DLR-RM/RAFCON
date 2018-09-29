@@ -14,7 +14,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from gtkmvc import View
+from gtkmvc3 import View
 
 from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label

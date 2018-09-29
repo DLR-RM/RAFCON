@@ -24,7 +24,7 @@ from OpenGL.GLUT import *
 from gi.repository import Gtk
 import Gtk.gtkgl
 import Gtk.gdkgl
-from gtkmvc import View
+from gtkmvc3 import View
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.utils.geometry import dist

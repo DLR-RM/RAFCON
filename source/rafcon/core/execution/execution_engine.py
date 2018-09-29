@@ -25,7 +25,7 @@ import Queue
 from threading import Lock, RLock
 import sys
 
-from gtkmvc import Observable
+from gtkmvc3 import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.utils import log
@@ -463,7 +463,7 @@ class ExecutionEngine(Observable):
             self._status.execution_condition_variable.release()
 
     #########################################################################
-    # Properties for all class fields that must be observed by gtkmvc
+    # Properties for all class fields that must be observed by gtkmvc3
     #########################################################################
 
     @property

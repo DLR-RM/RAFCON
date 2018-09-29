@@ -13,7 +13,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import View
+from gtkmvc3 import View
 
 from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label

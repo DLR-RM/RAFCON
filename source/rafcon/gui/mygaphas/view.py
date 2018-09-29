@@ -13,7 +13,7 @@
 
 from contextlib import contextmanager
 from weakref import ref
-from gtkmvc.observer import Observer
+from gtkmvc3.observer import Observer
 
 from gaphas.view import GtkView
 from gaphas.item import Element

@@ -21,7 +21,7 @@
 from gi.repository import GLib
 from gi.repository import Gtk
 from Gtk.gdk import keyval_name
-from gtkmvc import Model
+from gtkmvc3 import Model
 
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.core.states.execution_state import ExecutionState
@@ -43,7 +43,7 @@ logger = log.get_logger(__name__)
 class StateOverviewController(ExtendedController):
     """Controller handling the view of properties/attributes of the ContainerStateModel
 
-    This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
+    This :class:`gtkmvc3.Controller` class is the interface between the GTK widget view
     :class:`gui.views.source_editor.SourceEditorView` and the properties of the
     :class:`gui.models.state.StateModel`. Changes made in
     the GUI are written back to the model and vice versa.

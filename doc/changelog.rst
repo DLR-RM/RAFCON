@@ -288,7 +288,7 @@ Patch releases 0.12.\*
 
   - new log level "VERBOSE", intended for development purposes
   - state machines can now be baked (a snapshot of the state machine with all libraries can be saved)
-  - Graphviz can now be used to debug gtkmvc notifications and signals
+  - Graphviz can now be used to debug gtkmvc3 notifications and signals
 
 - Improvements:
 
@@ -525,7 +525,7 @@ Patch releases 0.11.\*
   - :issue:`369` Storage/Load module for state machines more flexible and robust
   - Storage module supports the user to store state machines without platform specific file system format conflicts
   - :issue:`365` substitute widget in now scrollable
-  - The gtkmvc version 1.99.2 is fully supported (:issue:`388` corrected version in older releases)
+  - The gtkmvc3 version 1.99.2 is fully supported (:issue:`388` corrected version in older releases)
 
 - Bug Fixes:
 

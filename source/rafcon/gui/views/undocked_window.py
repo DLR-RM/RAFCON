@@ -14,7 +14,7 @@
 
 import os
 from gi.repository import Gtk
-from gtkmvc import View
+from gtkmvc3 import View
 
 from rafcon.gui import glade
 from rafcon.gui.views.top_tool_bar import TopToolBarView

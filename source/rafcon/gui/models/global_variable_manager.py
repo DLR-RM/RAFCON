@@ -11,7 +11,7 @@
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import ModelMT
+from gtkmvc3 import ModelMT
 
 from rafcon.core.singleton import global_variable_manager
 

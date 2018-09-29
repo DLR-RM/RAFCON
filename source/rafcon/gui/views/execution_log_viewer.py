@@ -3,7 +3,7 @@
 # example basictreeview.py
 
 from gi.repository import Gtk
-from gtkmvc import View
+from gtkmvc3 import View
 
 
 class ExecutionLogTreeView(View):

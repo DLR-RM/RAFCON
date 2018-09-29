@@ -259,7 +259,7 @@ def react_to_event(view, widget, event):
     The function is intended for callback methods registering to shortcut actions. As several widgets can register to
     the same shortcut, only the one having the focus should react to it.
 
-    :param gtkmvc.View view: The view in which the widget is registered
+    :param gtkmvc3.View view: The view in which the widget is registered
     :param Gtk.Widget widget: The widget that subscribed to the shortcut action, should be the top widget of the view
     :param event: The event that caused the callback
     :return: Whether the widget is supposed to react to the event or not

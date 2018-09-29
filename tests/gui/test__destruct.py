@@ -2,7 +2,7 @@ import os
 import gc
 import time
 import shutil
-import gtkmvc
+import gtkmvc3
 from pprint import pprint
 
 import rafcon.core.singleton
@@ -34,11 +34,11 @@ old_state_element_model_init = None
 CTRL_FILES = ['extended_controller']
 old_extended_controller_init = None
 
-# store method of gtkmvc element classes
-GTKMVC_FILES = ['gtkmvc_view', 'gtkmvc_controller']
-old_gtkmvc_view_init = gtkmvc.View.__init__
-old_gtkmvc_model_mt_init = gtkmvc.ModelMT.__init__
-old_gtkmvc_controller_init = gtkmvc.Controller.__init__
+# store method of gtkmvc3 element classes
+GTKMVC_FILES = ['gtkmvc3_view', 'gtkmvc3_controller']
+old_gtkmvc3_view_init = gtkmvc3.View.__init__
+old_gtkmvc3_model_mt_init = gtkmvc3.ModelMT.__init__
+old_gtkmvc3_controller_init = gtkmvc3.Controller.__init__
 
 # store method of gaphas element classes
 GAPHAS_FILES = ['gaphas_state_view', 'gaphas_extended_view', 'gaphas_port_view', 'gaphas_connection_view']
@@ -197,8 +197,8 @@ def create_models():
     # global_gui_config.set_config_value('HISTORY_ENABLED', True)
     logger = log.get_logger(__name__)
     logger.setLevel(logging.VERBOSE)
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
+    for handler in logging.getLogger('gtkmvc3').handlers:
+        logging.getLogger('gtkmvc3').removeHandler(handler)
 
     state1 = ExecutionState('State1', state_id='STATE1')
     output_state1 = state1.add_output_data_port("output", "int")
@@ -627,7 +627,7 @@ def un_patch_model_classes_from_log():
 
 def patch_ctrl_classes_with_log():
 
-    # TODO maybe remove this again because the gtkmvc classes are covering this case
+    # TODO maybe remove this again because the gtkmvc3 classes are covering this case
     import rafcon.gui.controllers.utils.extended_controller
     global old_extended_controller_init
 
@@ -658,52 +658,52 @@ def un_patch_ctrl_classes_from_log():
     remove_log_files(CTRL_FILES)
 
 
-def patch_gtkmvc_classes_with_log():
+def patch_gtkmvc3_classes_with_log():
 
-    global old_gtkmvc_view_init, old_gtkmvc_controller_init, old_gtkmvc_model_mt_init
+    global old_gtkmvc3_view_init, old_gtkmvc3_controller_init, old_gtkmvc3_model_mt_init
 
     check_log_files(GTKMVC_FILES)
 
-    def gtkmvc_view_init(self, glade=None, top=None, parent=None, builder=None):
+    def gtkmvc3_view_init(self, glade=None, top=None, parent=None, builder=None):
         self.__gen_time_stamp = int(round(time.time() * 1000))
-        self.__kind = 'gtkmvc_view'
+        self.__kind = 'gtkmvc3_view'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
                                                                                    GENERATION_LOG_FILE_APPENDIX))
         with open(self.__gen_log_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
-        old_gtkmvc_view_init(self, glade, top, parent, builder)
+        old_gtkmvc3_view_init(self, glade, top, parent, builder)
 
-    def gtkmvc_controller_init(self, model, view, spurious=False, auto_adapt=False):
+    def gtkmvc3_controller_init(self, model, view, spurious=False, auto_adapt=False):
         self.__gen_time_stamp = int(round(time.time() * 1000))
-        self.__kind = 'gtkmvc_controller'
+        self.__kind = 'gtkmvc3_controller'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
                                                                                    GENERATION_LOG_FILE_APPENDIX))
         with open(self.__gen_log_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
-        old_gtkmvc_controller_init(self, model, view, spurious, auto_adapt)
+        old_gtkmvc3_controller_init(self, model, view, spurious, auto_adapt)
 
-    def gtkmvc_model_mt_init(self):
+    def gtkmvc3_model_mt_init(self):
         self.__gen_time_stamp = int(round(time.time() * 1000))
-        self.__kind = 'gtkmvc_model_mt'
+        self.__kind = 'gtkmvc3_model_mt'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
                                                                                    GENERATION_LOG_FILE_APPENDIX))
         with open(self.__gen_log_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
-        old_gtkmvc_model_mt_init(self)
+        old_gtkmvc3_model_mt_init(self)
 
-    gtkmvc.View.__init__ = gtkmvc_view_init
-    # gtkmvc.ModelMT.__init__ = gtkmvc_model_mt_init
-    gtkmvc.Controller.__init__ = gtkmvc_controller_init
+    gtkmvc3.View.__init__ = gtkmvc3_view_init
+    # gtkmvc3.ModelMT.__init__ = gtkmvc3_model_mt_init
+    gtkmvc3.Controller.__init__ = gtkmvc3_controller_init
 
 
-def un_patch_gtkmvc_classes_from_log():
-    global old_gtkmvc_view_init, old_gtkmvc_controller_init, old_gtkmvc_model_mt_init
-    gtkmvc.View.__init__ = old_gtkmvc_view_init
-    # gtkmvc.ModelMT.__init__ = old_gtkmvc_model_mt_init
-    gtkmvc.Controller.__init__ = old_gtkmvc_controller_init
+def un_patch_gtkmvc3_classes_from_log():
+    global old_gtkmvc3_view_init, old_gtkmvc3_controller_init, old_gtkmvc3_model_mt_init
+    gtkmvc3.View.__init__ = old_gtkmvc3_view_init
+    # gtkmvc3.ModelMT.__init__ = old_gtkmvc3_model_mt_init
+    gtkmvc3.Controller.__init__ = old_gtkmvc3_controller_init
     remove_log_files(GTKMVC_FILES)
 
 
@@ -813,12 +813,12 @@ def get_param_dict():
                       ('state_element_model', patch_model_classes_with_log, un_patch_model_classes_from_log),
                   rafcon.gui.controllers.utils.extended_controller.ExtendedController:
                       ('extended_controller', patch_ctrl_classes_with_log, un_patch_ctrl_classes_from_log),
-                  gtkmvc.View:
-                      ('gtkmvc_view', patch_gtkmvc_classes_with_log, un_patch_gtkmvc_classes_from_log),
-                  # gtkmvc.ModelMT:
-                  #     ('gtkmvc_model_mt', patch_gtkmvc_classes_with_log, un_patch_gtkmvc_classes_from_log),
-                  gtkmvc.Controller:
-                      ('gtkmvc_controller', patch_gtkmvc_classes_with_log, un_patch_gtkmvc_classes_from_log),
+                  gtkmvc3.View:
+                      ('gtkmvc3_view', patch_gtkmvc3_classes_with_log, un_patch_gtkmvc3_classes_from_log),
+                  # gtkmvc3.ModelMT:
+                  #     ('gtkmvc3_model_mt', patch_gtkmvc3_classes_with_log, un_patch_gtkmvc3_classes_from_log),
+                  gtkmvc3.Controller:
+                      ('gtkmvc3_controller', patch_gtkmvc3_classes_with_log, un_patch_gtkmvc3_classes_from_log),
                   rafcon.gui.mygaphas.view.ExtendedGtkView:
                       ('gaphas_extended_view', patch_gaphas_classes_with_log, un_patch_gaphas_classes_from_log),
                   rafcon.gui.mygaphas.items.state.StateView:
@@ -929,8 +929,8 @@ def test_simple_model_and_core_destruct_with_gui(caplog):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.View, True),
-                (gtkmvc.Controller, True),
+                (gtkmvc3.View, True),
+                (gtkmvc3.Controller, True),
                 (rafcon.gui.mygaphas.view.ExtendedGtkView, True),
                 (rafcon.gui.mygaphas.items.connection.ConnectionView, True),
                 (rafcon.gui.mygaphas.items.ports.PortView, True),
@@ -958,9 +958,9 @@ def test_simple_execution_model_and_core_destruct_with_gui(caplog):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.View, True),
-                # (gtkmvc.ModelMT, True),
-                (gtkmvc.Controller, True),
+                (gtkmvc3.View, True),
+                # (gtkmvc3.ModelMT, True),
+                (gtkmvc3.Controller, True),
                 # (searched_class, False),
                 ]
     run_setup_gui_destruct(caplog, elements, searched_class, run_simple_execution_controller_construction,
@@ -991,8 +991,8 @@ def test_model_and_core_modification_history_destruct_with_gui(caplog):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.View, True),
-                (gtkmvc.Controller, True),
+                (gtkmvc3.View, True),
+                (gtkmvc3.Controller, True),
                 (rafcon.gui.mygaphas.view.ExtendedGtkView, False),
                 (rafcon.gui.mygaphas.items.connection.ConnectionView, False),
                 (rafcon.gui.mygaphas.items.ports.PortView, False),
@@ -1141,8 +1141,8 @@ def test_copy_paste_with_modification_history_destruct_with_gui(caplog):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.View, True),
-                (gtkmvc.Controller, True),
+                (gtkmvc3.View, True),
+                (gtkmvc3.Controller, True),
                 (searched_class, False),
                 ]
     run_setup_gui_destruct(caplog, elements, searched_class, run_copy_cut_and_paste,
@@ -1168,8 +1168,8 @@ def test_complex_model_and_core_destruct_with_gui(caplog):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.View, True),
-                (gtkmvc.Controller, True),
+                (gtkmvc3.View, True),
+                (gtkmvc3.Controller, True),
                 (searched_class, False),
                 ]
     run_setup_gui_destruct(caplog, elements, searched_class, run_complex_controller_construction,

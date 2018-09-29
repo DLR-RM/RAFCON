@@ -66,7 +66,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
         lib_with_show_content = isinstance(model, LibraryStateModel) and not model.show_content()
         model = model.state_copy if lib_with_show_content else model
 
-        # unfortunately this cannot be down with super, as gtkmvc does not use super() consistently
+        # unfortunately this cannot be down with super, as gtkmvc3 does not use super() consistently
         EditorController.__init__(self, model, view, observed_method="script_text")
         AbstractExternalEditor.__init__(self)
         self.saved_initial = False

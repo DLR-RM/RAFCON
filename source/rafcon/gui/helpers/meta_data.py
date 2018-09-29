@@ -462,7 +462,7 @@ def scale_library_content(library_state_m, gaphas_editor=True):
     models_dict = {'state': library_state_m.state_copy}
     for state_element_key in library_state_m.state_copy.state.state_element_attrs:
         state_element_list = getattr(library_state_m.state_copy, state_element_key)
-        # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
+        # Some models are hold in a gtkmvc3.support.wrappers.ObsListWrapper, not a list
         if hasattr(state_element_list, 'keys'):
             state_element_list = state_element_list.values()
         models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}

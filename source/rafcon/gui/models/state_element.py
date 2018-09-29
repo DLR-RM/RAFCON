@@ -11,7 +11,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from weakref import ref
-from gtkmvc import ModelMT, Signal
+from gtkmvc3 import ModelMT, Signal
 
 from rafcon.gui.models.signals import Notification
 from rafcon.gui.models.meta import MetaModel

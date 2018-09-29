@@ -110,7 +110,7 @@ class NotificationOverview(dict):
         print self
 
     def get_nice_info_dict_string(self, info, level='\t', overview=None):
-        """ Inserts all elements of a notification info-dictionary of gtkmvc or a Signal into one string and indicates
+        """ Inserts all elements of a notification info-dictionary of gtkmvc3 or a Signal into one string and indicates
         levels of calls defined by 'kwargs'. Additionally, the elements get structured into a dict that holds all levels
         of the general notification key-value pairs in faster accessible lists. The dictionary has the element 'type'
         and the general elements {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'args': [],
@@ -227,7 +227,7 @@ class NotificationOverview(dict):
                                                                                    overview))
             if overview['type'] == 'after':
                 s += "\n{0}'result': {1}".format(level, info['result'])
-            # additional elements not created by gtkmvc or common function calls
+            # additional elements not created by gtkmvc3 or common function calls
             overview['others'].append({})
             for key, value in info.items():
                 if key in ['before', 'after', 'model', 'prop_name', 'instance', 'method_name', 'args', 'kwargs', 'result']:

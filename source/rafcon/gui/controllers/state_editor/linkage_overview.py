@@ -18,7 +18,7 @@
 
 """
 
-from gtkmvc import Model
+from gtkmvc3 import Model
 
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.container_state import ContainerState

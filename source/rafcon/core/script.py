@@ -19,7 +19,7 @@
 import os
 import imp
 import yaml
-from gtkmvc import Observable
+from gtkmvc3 import Observable
 
 from rafcon.core.id_generator import generate_script_id
 import rafcon.core.singleton
@@ -213,7 +213,7 @@ class Script(Observable, yaml.YAMLObject):
                 raise
 
 #########################################################################
-# Properties for all class fields that must be observed by gtkmvc
+# Properties for all class fields that must be observed by gtkmvc3
 #########################################################################
 
     @property

@@ -96,7 +96,7 @@ class MyCanvas(gaphas.canvas.Canvas):
     def get_view_for_model(self, model):
         """Searches and return the View for the given model
 
-        :param gtkmvc.ModelMT model: The model of the searched view
+        :param gtkmvc3.ModelMT model: The model of the searched view
         :return: The view for the given model or None if not found
         """
         return self._model_view_map.get(model)
@@ -148,8 +148,8 @@ class MyCanvas(gaphas.canvas.Canvas):
         from threading import Event
         event = Event()
 
-        # Handle all events from gaphas, but not from gtkmvc
-        # Make use of the priority, which is higher for gaphas then for gtkmvc
+        # Handle all events from gaphas, but not from gtkmvc3
+        # Make use of the priority, which is higher for gaphas then for gtkmvc3
         def priority_handled(event):
             event.set()
         priority = (GObject.PRIORITY_HIGH_IDLE + GObject.PRIORITY_DEFAULT_IDLE) / 2

@@ -16,7 +16,7 @@ import time
 import threading
 
 from gi.repository import Gtk
-from gtkmvc import ModelMT
+from gtkmvc3 import ModelMT
 
 from rafcon.core.storage import storage
 import rafcon.core.singleton as core_singletons

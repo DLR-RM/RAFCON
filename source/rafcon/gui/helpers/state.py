@@ -396,7 +396,7 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
 
             for state_element_key in state_m_to_insert.state.state_element_attrs:
                 state_element_list = getattr(state_m_to_insert, state_element_key)
-                # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
+                # Some models are hold in a gtkmvc3.support.wrappers.ObsListWrapper, not a list
                 if hasattr(state_element_list, 'keys'):
                     state_element_list = state_element_list.values()
                 models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}

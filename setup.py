@@ -160,7 +160,7 @@ def generate_data_files():
 
 
 global_requirements = ['pylint>=1.6,<2', 'pyyaml~=3.10', 'psutil', 'jsonconversion~=0.2', 'yaml_configuration~=0.0',
-                       'python-gtkmvc-dlr==1.99.2', 'gaphas>=0.7']
+                       'python-gtkmvc3-dlr==1.99.2', 'gaphas>=0.7']
 
 script_path = path.realpath(__file__)
 install_helper = path.join(path.dirname(script_path), "source", "rafcon", "gui", "helpers", "installation.py")
@@ -209,8 +209,8 @@ setup(
     install_requires=global_requirements,
 
     dependency_links=[
-        "https://github.com/DLR-RM/gtkmvc3/releases/download/gtkmvc_dlr_1.99.2/python-gtkmvc-dlr-1.99.2.tar.gz"
-        "#egg=python-gtkmvc-dlr-1.99.2"
+        "https://github.com/DLR-RM/gtkmvc33/releases/download/gtkmvc3_dlr_1.99.2/python-gtkmvc3-dlr-1.99.2.tar.gz"
+        "#egg=python-gtkmvc3-dlr-1.99.2"
     ],
 
     entry_points={

@@ -72,14 +72,14 @@ def setup_installation():
         installation.install_libraries(logger, overwrite=False)
 
 
-def setup_gtkmvc_logger():
-    # Apply defaults to logger of gtkmvc
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
+def setup_gtkmvc3_logger():
+    # Apply defaults to logger of gtkmvc3
+    for handler in logging.getLogger('gtkmvc3').handlers:
+        logging.getLogger('gtkmvc3').removeHandler(handler)
     stdout = logging.StreamHandler(sys.stdout)
     stdout.setFormatter(logging.Formatter("%(asctime)s: %(levelname)-8s - %(name)s:  %(message)s"))
     stdout.setLevel(logging.DEBUG)
-    logging.getLogger('gtkmvc').addHandler(stdout)
+    logging.getLogger('gtkmvc3').addHandler(stdout)
 
 
 def install_reactor():
@@ -299,7 +299,7 @@ def main():
     setup_installation()
 
     splash_screen.set_text("Setting up logger...")
-    setup_gtkmvc_logger()
+    setup_gtkmvc3_logger()
 
     splash_screen.set_text("Initializing plugins...")
     pre_setup_plugins()

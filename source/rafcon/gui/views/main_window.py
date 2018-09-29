@@ -18,7 +18,7 @@
 
 import os
 
-from gtkmvc import View
+from gtkmvc3 import View
 
 from rafcon.gui.config import global_gui_config
 import rafcon.gui.helpers.label as gui_helper_label

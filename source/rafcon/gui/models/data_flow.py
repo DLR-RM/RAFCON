@@ -11,7 +11,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from copy import copy, deepcopy
-from gtkmvc import ModelMT
+from gtkmvc3 import ModelMT
 
 from rafcon.gui.models.state_element import StateElementModel
 from rafcon.core.state_elements.data_flow import DataFlow

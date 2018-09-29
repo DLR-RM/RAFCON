@@ -18,7 +18,7 @@ import os
 import threading
 from copy import copy, deepcopy
 
-from gtkmvc import ModelMT, Signal
+from gtkmvc3 import ModelMT, Signal
 
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.container_state import ContainerState

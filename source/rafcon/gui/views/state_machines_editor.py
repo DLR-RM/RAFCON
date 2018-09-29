@@ -13,7 +13,7 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
-from gtkmvc import View
+from gtkmvc3 import View
 from rafcon.gui.utils import constants
 from rafcon.gui.config import global_gui_config as gui_config
 

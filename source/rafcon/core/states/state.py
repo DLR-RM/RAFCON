@@ -30,7 +30,7 @@ from weakref import ref
 import copy
 
 from enum import Enum
-from gtkmvc import Observable
+from gtkmvc3 import Observable
 from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
@@ -934,7 +934,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self.remove_outcome(outcome_key, force=True, destroy=recursive)
 
 #########################################################################
-# Properties for all class fields that must be observed by gtkmvc
+# Properties for all class fields that must be observed by gtkmvc3
 #########################################################################
 
     @property

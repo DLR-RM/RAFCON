@@ -13,7 +13,7 @@
 
 from copy import deepcopy
 
-from gtkmvc import Observable
+from gtkmvc3 import Observable
 
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.state_elements.scope import ScopedVariable

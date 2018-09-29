@@ -16,7 +16,7 @@ import copy
 import os
 from functools import partial
 
-from gtkmvc import ModelMT
+from gtkmvc3 import ModelMT
 
 from rafcon.core.id_generator import generate_semantic_data_key
 from rafcon.core.states.library_state import LibraryState
@@ -61,7 +61,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         # define tree store with the values in [key, value Is Dict]
         tree_store = Gtk.TreeStore(str, str, bool, GObject.TYPE_PYOBJECT)
 
-        # unfortunately this cannot be down with super, as gtkmvc does not use super() consistently
+        # unfortunately this cannot be down with super, as gtkmvc3 does not use super() consistently
         TreeViewController.__init__(self, model_to_observe, view,
                                     view["semantic_data_tree_view"], tree_store, logger)
         AbstractExternalEditor.__init__(self)
