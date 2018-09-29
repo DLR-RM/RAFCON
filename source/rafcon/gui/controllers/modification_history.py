@@ -19,8 +19,8 @@
 
 """
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
 
 from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -53,7 +53,7 @@ class ModificationHistoryTreeController(ExtendedController):
         self.tree_folded = False
 
         assert self._mode in ['trail', 'branch']
-        self.history_tree_store = gtk.TreeStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT, str, str)
+        self.history_tree_store = Gtk.TreeStore(str, str, str, str, str, str, GObject.TYPE_PYOBJECT, str, str)
         if view is not None:
             view['history_tree'].set_model(self.history_tree_store)
         view['history_tree'].set_tooltip_column(8)
@@ -217,7 +217,7 @@ class ModificationHistoryTreeController(ExtendedController):
 
     @ExtendedController.observe("modifications", after=True)
     def update(self, model, prop_name, info):
-        """ The method updates the history (a gtk.TreeStore) which is the model of respective TreeView.
+        """ The method updates the history (a Gtk.TreeStore) which is the model of respective TreeView.
         It functionality is strongly depends on a consistent history-tree hold by a ChangeHistory-Class.
         """
         # logger.debug("History changed %s\n%s\n%s" % (model, prop_name, info))

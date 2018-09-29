@@ -22,8 +22,8 @@
 """
 
 import os
-import glib
-import gtk
+from gi.repository import GLib
+from gi.repository import Gtk
 from functools import partial
 
 import rafcon.core.singleton as core_singletons
@@ -81,7 +81,7 @@ class MenuBarController(ExtendedController):
         # of the monitoring plugin
         self.state_machine_execution_engine = sm_execution_engine
         self.full_screen_flag = False
-        self.full_screen_window = gtk.Window(type=gtk.WINDOW_TOPLEVEL)
+        self.full_screen_window = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
         self.main_position = None
         self.sm_notebook = self.main_window_view.state_machines_editor['notebook']
         self.full_screen_window.add_accel_group(self.shortcut_manager.accel_group)
@@ -207,7 +207,7 @@ class MenuBarController(ExtendedController):
         menu_item = gui_helper_label.create_image_menu_item("remove invalid paths", constants.ICON_ERASE,
                                                             global_runtime_config.clean_recently_opened_state_machines)
         self.view.sub_menu_open_recently.append(menu_item)
-        self.view.sub_menu_open_recently.append(gtk.SeparatorMenuItem())
+        self.view.sub_menu_open_recently.append(Gtk.SeparatorMenuItem())
 
         for sm_path in global_runtime_config.get_config_value("recently_opened_state_machines", []):
             # define label string
@@ -250,8 +250,8 @@ class MenuBarController(ExtendedController):
         return True
 
     def on_key_press_event(self, widget, event):
-        keyname = gtk.gdk.keyval_name(event.keyval)
-        if keyname == "Escape" and self.full_screen_window.get_window().get_state() == gtk.gdk.WINDOW_STATE_FULLSCREEN:
+        keyname = Gdk.keyval_name(event.keyval)
+        if keyname == "Escape" and self.full_screen_window.get_window().get_state() == Gdk.WindowState.FULLSCREEN:
             self.view["full_screen"].set_active(False)
             return True
 
@@ -493,7 +493,7 @@ class MenuBarController(ExtendedController):
                 if sm.marked_dirty:
                     message_string = "%s\n#%s: %s " % (message_string, str(sm_id), sm.root_state.name)
             dialog = RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"],
-                                        message_type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+                                        message_type=Gtk.MessageType.WARNING, parent=self.get_root_window())
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:  # Close without saving - button pressed
@@ -512,7 +512,7 @@ class MenuBarController(ExtendedController):
 
             message_string = "The state machine is still running. Do you want to stop the execution before closing?"
             dialog = RAFCONButtonDialog(message_string, ["Stop execution", "Keep running"],
-                                        message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+                                        message_type=Gtk.MessageType.QUESTION, parent=self.get_root_window())
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:  # Stop execution
@@ -720,7 +720,7 @@ class MenuBarController(ExtendedController):
         about = AboutDialogView()
         gui_helper_label.set_button_children_size_request(about)
         response = about.run()
-        if response == gtk.RESPONSE_DELETE_EVENT or response == gtk.RESPONSE_CANCEL:
+        if response == Gtk.ResponseType.DELETE_EVENT or response == Gtk.ResponseType.CANCEL:
             about.destroy()
 
     def check_edit_menu_items_status(self, widget):

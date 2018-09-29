@@ -19,7 +19,7 @@ class DescriptionEditorView(EditorView):
                                                     editor_style="DESCRIPTION_EDITOR_STYLE")
 
         try:
-            if isinstance(self.textview, gtksourceview2.View):
+            if isinstance(self.textview, GtkSource.View):
                 self.textview.set_wrap_mode(True)
                 self.textview.set_tab_width(4)
                 self.textview.set_insert_spaces_instead_of_tabs(True)

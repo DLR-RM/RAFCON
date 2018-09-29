@@ -11,10 +11,10 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import glib
-import gtk
-from gtk.gdk import CONTROL_MASK, SHIFT_MASK
-from gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
+from gi.repository import GLib
+from gi.repository import Gtk
+from Gtk.gdk import CONTROL_MASK, SHIFT_MASK
+from Gtk.keysyms import Tab as Key_Tab, ISO_Left_Tab
 
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -26,14 +26,14 @@ module_logger = log.get_logger(__name__)
 
 
 class AbstractTreeViewController(ExtendedController):
-    """Abstract base class for controller having a gtk.Tree view with a gtk.ListStore or a gtk.TreeStore
+    """Abstract base class for controller having a Gtk.Tree view with a Gtk.ListStore or a Gtk.TreeStore
 
     The class implements methods for e.g. handling editable cells and offers default callback methods for various
     signals and the skeleton structure for the multi-selection methods so that those can be reused finally in ListViews
     and TreeViews.
 
     :ivar store: List/Tree store that set by inherit class
-    :ivar gtk.TreeView tree_view: Tree view that set by inherit class
+    :ivar Gtk.TreeView tree_view: Tree view that set by inherit class
     :ivar int ID_STORAGE_ID: Index of core element id represented by row in list store and
         used to select entries set by inherit class
     :ivar int MODEL_STORAGE_ID: Index of model represented by row in list store and
@@ -88,7 +88,7 @@ class AbstractTreeViewController(ExtendedController):
         self.tree_view.connect('button-release-event', self.tree_view_keypress_callback)
         # key press is needed for tab motion but needs to be registered already here TODO why?
         self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
-        self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
+        self._tree_selection.set_mode(Gtk.SelectionMode.MULTIPLE)
         self.update_selection_sm_prior()
 
     def get_view_selection(self):
@@ -220,10 +220,10 @@ class AbstractTreeViewController(ExtendedController):
         The default behaviour for the focus out event dismisses the changes in the renderer. Therefore we setup
         handlers for that event, applying the changes.
 
-        :param gtk.CellRendererText renderer: The cell renderer who's changes are to be applied on focus out events
+        :param Gtk.CellRendererText renderer: The cell renderer who's changes are to be applied on focus out events
         :param apply_method: The callback method applying the newly entered value
         """
-        assert isinstance(renderer, gtk.CellRenderer)
+        assert isinstance(renderer, Gtk.CellRenderer)
 
         def remove_all_handler(renderer):
             """Remove all handler for given renderer and its editable
@@ -233,7 +233,7 @@ class AbstractTreeViewController(ExtendedController):
             def remove_handler(widget, data_name):
                 """Remove handler from given widget
 
-                :param gtk.Widget widget: Widget from which a handler is to be removed
+                :param Gtk.Widget widget: Widget from which a handler is to be removed
                 :param data_name: Name of the data of the widget in which the handler id is stored
                 """
                 handler_id = widget.get_data(data_name)
@@ -250,15 +250,15 @@ class AbstractTreeViewController(ExtendedController):
         def on_focus_out(entry, event):
             """Applies the changes to the entry
 
-            :param gtk.Entry entry: The entry that was focused out
-            :param gtk.Event event: Event object with information about the event
+            :param Gtk.Entry entry: The entry that was focused out
+            :param Gtk.Event event: Event object with information about the event
             """
             renderer.remove_all_handler(renderer)
             if renderer.ctrl.get_path() is None:
                 return
             # We have to use idle_add to prevent core dumps:
             # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
-            glib.idle_add(apply_method, renderer.ctrl.get_path(), entry.get_text())
+            GLib.idle_add(apply_method, renderer.ctrl.get_path(), entry.get_text())
 
         def on_cursor_move_in_entry_widget(entry, step, count, extend_selection):
             """Trigger scroll bar adjustments according active entry widgets cursor change
@@ -268,8 +268,8 @@ class AbstractTreeViewController(ExtendedController):
         def on_editing_started(renderer, editable, path):
             """Connects the a handler for the focus-out-event of the current editable
 
-            :param gtk.CellRendererText renderer: The cell renderer who's editing was started
-            :param gtk.CellEditable editable: interface for editing the current TreeView cell
+            :param Gtk.CellRendererText renderer: The cell renderer who's editing was started
+            :param Gtk.CellEditable editable: interface for editing the current TreeView cell
             :param str path: the path identifying the edited cell
             """
             # secure scrollbar adjustments on active cell
@@ -296,7 +296,7 @@ class AbstractTreeViewController(ExtendedController):
         def on_edited(renderer, path, new_value_str):
             """Calls the apply method with the new value
 
-            :param gtk.CellRendererText renderer: The cell renderer that was edited
+            :param Gtk.CellRendererText renderer: The cell renderer that was edited
             :param str path: The path string of the renderer
             :param str new_value_str: The new value as string
             """
@@ -307,7 +307,7 @@ class AbstractTreeViewController(ExtendedController):
         def on_editing_canceled(renderer):
             """Disconnects the focus-out-event handler of cancelled editable
 
-            :param gtk.CellRendererText renderer: The cell renderer who's editing was cancelled
+            :param Gtk.CellRendererText renderer: The cell renderer who's editing was cancelled
             """
             remove_all_handler(renderer)
             renderer.ctrl.active_entry_widget = None
@@ -332,13 +332,13 @@ class AbstractTreeViewController(ExtendedController):
 
             Here the scrollbar motion to follow key cursor motions in editable is already in.
 
-        :param gtk.TreeView widget: The tree view the controller use
-        :param gtk.gdk.Event event: The key press event
+        :param Gtk.TreeView widget: The tree view the controller use
+        :param Gdk.Event event: The key press event
         :return:
         """
         current_row_path, current_focused_column = self.tree_view.get_cursor()
         # print current_row_path, current_focused_column
-        if isinstance(widget, gtk.TreeView) and not self.active_entry_widget:  # avoid jumps for active entry widget
+        if isinstance(widget, Gtk.TreeView) and not self.active_entry_widget:  # avoid jumps for active entry widget
             pass
             # cursor motion/selection changes (e.g. also by button release event)
             # if current_row_path is not None and len(current_row_path) == 1 and isinstance(current_row_path[0], int):
@@ -346,7 +346,7 @@ class AbstractTreeViewController(ExtendedController):
             # # else:
             # #     self._logger.debug("A ListViewController aspects a current_row_path of dimension 1 with integer but"
             # #                        " it is {0} and column is {1}".format(current_row_path, current_focused_column))
-        elif isinstance(widget, gtk.Entry) and self.view.scrollbar_widget is not None:
+        elif isinstance(widget, Gtk.Entry) and self.view.scrollbar_widget is not None:
             # calculate the position of the scrollbar to be always centered with the entry widget cursor
             # TODO check how to get sufficient the scroll-offset in the entry widget -> some times zero when not
             # TODO the scrollbar is one step behind cursor -> so jump from pos1 to end works not perfect
@@ -389,7 +389,7 @@ class AbstractTreeViewController(ExtendedController):
         horizontal_scroll_bar = self.view.scrollbar_widget.get_hscrollbar()
         adjustment = horizontal_scroll_bar.get_adjustment()
         value = int(float(adjustment.upper - adjustment.page_size)*rel_pos/float(adjustment.upper))
-        glib.idle_add(adjustment.set_value, value)
+        GLib.idle_add(adjustment.set_value, value)
 
     def _horizontal_scrollbar_stay_in_front_if_possible(self):
         if self.active_entry_widget:
@@ -413,13 +413,13 @@ class AbstractTreeViewController(ExtendedController):
 
 
 class ListViewController(AbstractTreeViewController):
-    """Base class for controller having a gtk.Tree view with a gtk.ListStore
+    """Base class for controller having a Gtk.Tree view with a Gtk.ListStore
 
     The class implements methods for e.g. handling (multi-)selection and offers default callback methods for various
     signals and includes a move and edit by tab-key feature.
 
-    :ivar gtk.ListStore list_store: List store that set by inherit class
-    :ivar gtk.TreeView tree_view: Tree view that set by inherit class
+    :ivar Gtk.ListStore list_store: List store that set by inherit class
+    :ivar Gtk.TreeView tree_view: Tree view that set by inherit class
     :ivar int ID_STORAGE_ID: Index of core element id represented by row in list store and
         used to select entries set by inherit class
     :ivar int MODEL_STORAGE_ID: Index of model represented by row in list store and
@@ -428,7 +428,7 @@ class ListViewController(AbstractTreeViewController):
     _logger = None
 
     def __init__(self, model, view, tree_view, list_store, logger=None):
-        assert isinstance(list_store, gtk.ListStore)
+        assert isinstance(list_store, Gtk.ListStore)
         super(ListViewController, self).__init__(model, view, tree_view, list_store, logger)
         self.list_store = list_store
 
@@ -476,16 +476,16 @@ class ListViewController(AbstractTreeViewController):
          TreeView and a ListStore as model. It avoid problems caused by special renderer types like the text combo
          renderer by stopping the callback handler to continue with notifications.
 
-        :param gtk.Object widget: Object which is the source of the event
-        :param gtk.Event event: Event generated by mouse click
+        :param Gtk.Object widget: Object which is the source of the event
+        :param Gtk.Event event: Event generated by mouse click
         :rtype: bool
         """
 
-        if event.type == gtk.gdk.BUTTON_PRESS:
+        if event.type == Gdk.EventType.BUTTON_PRESS:
             pthinfo = self.tree_view.get_path_at_pos(int(event.x), int(event.y))
 
-            if not bool(event.state & CONTROL_MASK) and not bool(event.state & SHIFT_MASK) and \
-                    event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
+            if not bool(event.get_state() & CONTROL_MASK) and not bool(event.get_state() & SHIFT_MASK) and \
+                    event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
                 if pthinfo is not None:
                     model, paths = self._tree_selection.get_selected_rows()
                     # print paths
@@ -499,11 +499,11 @@ class ListViewController(AbstractTreeViewController):
                     self.on_right_click_menu()
                     return True
 
-            if (bool(event.state & CONTROL_MASK) or bool(event.state & SHIFT_MASK)) and \
-                    event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
+            if (bool(event.get_state() & CONTROL_MASK) or bool(event.get_state() & SHIFT_MASK)) and \
+                    event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
                 return True
 
-            if not bool(event.state & SHIFT_MASK) and event.button == 1:
+            if not bool(event.get_state() & SHIFT_MASK) and event.button == 1:
                 if pthinfo is not None:
                     # self._logger.info("last select row {}".format(pthinfo[0]))
                     self._last_path_selection = pthinfo[0]
@@ -511,7 +511,7 @@ class ListViewController(AbstractTreeViewController):
                 #     self._logger.info("deselect rows")
                 #     self.tree_selection.unselect_all()
 
-            if bool(event.state & SHIFT_MASK) and event.button == 1:
+            if bool(event.get_state() & SHIFT_MASK) and event.button == 1:
                 # self._logger.info("SHIFT adjust selection range")
                 model, paths = self._tree_selection.get_selected_rows()
                 # print model, paths, pthinfo[0]
@@ -530,7 +530,7 @@ class ListViewController(AbstractTreeViewController):
                     if pthinfo and pthinfo[0]:
                         self._last_path_selection = pthinfo[0]
 
-            if bool(event.state & CONTROL_MASK) and event.button == 1:
+            if bool(event.get_state() & CONTROL_MASK) and event.button == 1:
                 # self._logger.info("CONTROL adjust selection range")
                 model, paths = self._tree_selection.get_selected_rows()
                 # print model, paths, pthinfo[0]
@@ -544,7 +544,7 @@ class ListViewController(AbstractTreeViewController):
                     self._tree_selection.select_path(pthinfo[0])
                     return True
 
-        elif event.type == gtk.gdk._2BUTTON_PRESS:
+        elif event.type == Gdk._2BUTTON_PRESS:
             self._handle_double_click(event)
 
     def _handle_double_click(self, event):
@@ -611,7 +611,7 @@ class ListViewController(AbstractTreeViewController):
         """Returns the list_store_row of the currently by cursor selected row entry
 
         :return: List store row, None if there is no selection
-        :rtype: gtk.TreeModelRow
+        :rtype: Gtk.TreeModelRow
         """
         path = self.get_path()
         if path is not None:
@@ -620,17 +620,17 @@ class ListViewController(AbstractTreeViewController):
     def tree_view_keypress_callback(self, widget, event):
         """Tab back and forward tab-key motion in list widget and the scrollbar motion to follow key cursor motions
 
-         The method introduce motion and edit functionality by using "tab"- or "shift-tab"-key for a gtk.TreeView.
-         It is designed to work with a gtk.TreeView which model is a gtk.ListStore and only uses text cell renderer.
+         The method introduce motion and edit functionality by using "tab"- or "shift-tab"-key for a Gtk.TreeView.
+         It is designed to work with a Gtk.TreeView which model is a Gtk.ListStore and only uses text cell renderer.
          Additional, the TreeView is assumed to be used as a list not as a tree.
          With the "tab"-key the cell on the right site of the actual focused cell is started to be edit. Changes in the
-         gtk.Entry-Widget are confirmed by emitting a 'edited'-signal. If the row ends the edit process continues
+         Gtk.Entry-Widget are confirmed by emitting a 'edited'-signal. If the row ends the edit process continues
          with the first cell of the next row. With the "shift-tab"-key the inverse functionality of the "tab"-key is
          provided.
          The Controller over steps not editable cells.
 
-        :param gtk.TreeView widget: The tree view the controller use
-        :param gtk.gdk.Event event: The key press event
+        :param Gtk.TreeView widget: The tree view the controller use
+        :param Gdk.Event event: The key press event
         :return:
         """
         # self._logger.info("key_value: " + str(event.keyval if event is not None else ''))
@@ -694,12 +694,12 @@ class ListViewController(AbstractTreeViewController):
 
 
 class TreeViewController(AbstractTreeViewController):
-    """Base class for controller having a gtk.Tree view with a gtk.TreeStore
+    """Base class for controller having a Gtk.Tree view with a Gtk.TreeStore
 
     The class implements methods for e.g. handling (multi-)selection.
 
-    :ivar gtk.TreeStore tree_store: Tree store that set by inherit class
-    :ivar gtk.TreeView tree_view: Tree view that set by inherit class
+    :ivar Gtk.TreeStore tree_store: Tree store that set by inherit class
+    :ivar Gtk.TreeView tree_view: Tree view that set by inherit class
     :ivar int ID_STORAGE_ID: Index of core element id represented by row in list store and
         used to select entries set by inherit class
     :ivar int MODEL_STORAGE_ID: Index of model represented by row in list store and
@@ -708,7 +708,7 @@ class TreeViewController(AbstractTreeViewController):
     _logger = None
 
     def __init__(self, model, view, tree_view, tree_store, logger=None):
-        assert isinstance(tree_store, gtk.TreeStore)
+        assert isinstance(tree_store, Gtk.TreeStore)
         super(TreeViewController, self).__init__(model, view, tree_view, tree_store, logger)
         self.tree_store = tree_store
         self._changed_id_to = {}
@@ -730,7 +730,7 @@ class TreeViewController(AbstractTreeViewController):
     def iter_tree_with_handed_function(self, function, *function_args):
         """Iterate tree view with condition check function"""
         def iter_all_children(row_iter, function, function_args):
-            if isinstance(row_iter, gtk.TreeIter):
+            if isinstance(row_iter, Gtk.TreeIter):
                 function(row_iter, *function_args)
                 for n in reversed(range(self.tree_store.iter_n_children(row_iter))):
                     child_iter = self.tree_store.iter_nth_child(row_iter, n)
@@ -835,17 +835,17 @@ class TreeViewController(AbstractTreeViewController):
     def tree_view_keypress_callback(self, widget, event):
         """Tab back and forward tab-key motion in list widget and the scrollbar motion to follow key cursor motions
 
-         The method introduce motion and edit functionality by using "tab"- or "shift-tab"-key for a gtk.TreeView.
-         It is designed to work with a gtk.TreeView which model is a gtk.ListStore and only uses text cell renderer.
+         The method introduce motion and edit functionality by using "tab"- or "shift-tab"-key for a Gtk.TreeView.
+         It is designed to work with a Gtk.TreeView which model is a Gtk.ListStore and only uses text cell renderer.
          Additional, the TreeView is assumed to be used as a list not as a tree.
          With the "tab"-key the cell on the right site of the actual focused cell is started to be edit. Changes in the
-         gtk.Entry-Widget are confirmed by emitting a 'edited'-signal. If the row ends the edit process continues
+         Gtk.Entry-Widget are confirmed by emitting a 'edited'-signal. If the row ends the edit process continues
          with the first cell of the next row. With the "shift-tab"-key the inverse functionality of the "tab"-key is
          provided.
          The Controller over steps not editable cells.
 
-        :param gtk.TreeView widget: The tree view the controller use
-        :param gtk.gdk.Event event: The key press event
+        :param Gtk.TreeView widget: The tree view the controller use
+        :param Gdk.Event event: The key press event
         :return:
         """
         # self._logger.info("key_value: " + str(event.keyval if event is not None else ''))

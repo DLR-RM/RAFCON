@@ -11,19 +11,19 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
+from gi.repository import Gtk
 from gtkmvc import View
 from rafcon.gui.utils import constants
 
 
-class StateIconView(View, gtk.IconView):
+class StateIconView(View, Gtk.IconView):
     icon_label = ["HS", "ES", "PS", "BS"]
     tooltips = {"HS": "Hierarchy State", "ES": "Execution State",
                 "PS": "Preemptive Concurrency State", "BS": "Barrier Concurrency State"}
 
     def __init__(self):
         View.__init__(self)
-        gtk.IconView.__init__(self)
+        GObject.GObject.__init__(self)
 
         self.set_columns(len(self.icon_label))
         self.set_margin(0)
@@ -31,7 +31,7 @@ class StateIconView(View, gtk.IconView):
         self.set_row_spacing(0)
         self.set_column_spacing(0)
 
-        liststore = gtk.ListStore(str, str)
+        liststore = Gtk.ListStore(str, str)
         self.set_model(liststore)
         self.set_markup_column(0)
         self.set_tooltip_column(1)

@@ -13,13 +13,13 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
+from gi.repository import Gtk
 import rafcon
 
 
-class AboutDialogView(gtk.AboutDialog):
+class AboutDialogView(Gtk.AboutDialog):
     def __init__(self):
-        gtk.AboutDialog.__init__(self)
+        GObject.GObject.__init__(self)
 
         self.set_program_name("RAFCON")
         self.set_version(rafcon.__version__)

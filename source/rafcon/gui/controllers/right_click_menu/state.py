@@ -17,7 +17,7 @@
 
 """
 
-import gtk
+from gi.repository import Gtk
 from functools import partial
 
 import rafcon.core.singleton as core_singletons
@@ -49,10 +49,10 @@ class StateMachineRightClickMenu(object):
         from rafcon.gui.singleton import main_window_controller
         shortcut_manager = main_window_controller.shortcut_manager
         self.shortcut_manager = shortcut_manager
-        self.accel_group = gtk.AccelGroup()
+        self.accel_group = Gtk.AccelGroup()
 
     def generate_right_click_menu_state(self):
-        menu = gtk.Menu()
+        menu = Gtk.Menu()
         accel_group = self.accel_group
         shortcuts_dict = global_gui_config.get_config_value('SHORTCUTS')
 
@@ -60,7 +60,7 @@ class StateMachineRightClickMenu(object):
 
         self.insert_execution_sub_menu_in_menu(menu, shortcuts_dict, accel_group)
 
-        menu.append(gtk.SeparatorMenuItem())
+        menu.append(Gtk.SeparatorMenuItem())
 
         add_sub_menu_item, add_sub_menu = append_sub_menu_to_parent_menu("Add", menu, constants.BUTTON_ADD)
 
@@ -84,7 +84,7 @@ class StateMachineRightClickMenu(object):
                                                          accel_code=shortcuts_dict['add_barrier_state'][0],
                                                          accel_group=accel_group))
 
-        add_sub_menu.append(gtk.SeparatorMenuItem())
+        add_sub_menu.append(Gtk.SeparatorMenuItem())
 
         add_sub_menu.append(create_image_menu_item("Outcome", constants.BUTTON_ADD, self.on_add_outcome,
                                                    accel_code=shortcuts_dict['add_outcome'][0], accel_group=accel_group))
@@ -95,7 +95,7 @@ class StateMachineRightClickMenu(object):
         add_sub_menu.append(create_image_menu_item("Scoped Variable", constants.BUTTON_ADD, self.on_add_scoped_variable,
                                                    accel_code=shortcuts_dict['add_scoped_variable'][0],
                                                    accel_group=accel_group))
-        menu.append(gtk.SeparatorMenuItem())
+        menu.append(Gtk.SeparatorMenuItem())
 
         self.insert_copy_cut_paste_in_menu(menu, shortcuts_dict, accel_group)
 
@@ -136,7 +136,7 @@ class StateMachineRightClickMenu(object):
                     if isinstance(selected_state_m.state, item['class']):
                         class_item.set_sensitive(False)
                     change_type_sub_menu.append(class_item)
-        menu.append(gtk.SeparatorMenuItem())
+        menu.append(Gtk.SeparatorMenuItem())
 
         # save state as but not for root state, therefore the user should use save state machine as
         if len(selection.states) == 1 and not selected_state_m.state.is_root_state:
@@ -224,7 +224,7 @@ class StateMachineRightClickMenu(object):
                                                accel_code=shortcuts_dict['cut'][0], accel_group=accel_group))
 
     def generate_right_click_menu_library(self):
-        menu = gtk.Menu()
+        menu = Gtk.Menu()
         accel_group = self.accel_group
         shortcuts_dict = global_gui_config.get_config_value('SHORTCUTS')
 
@@ -357,7 +357,7 @@ class StateMachineRightClickMenu(object):
         from rafcon.gui.models.library_state import LibraryStateModel
         # logger.info("Single right click -> selection is \n{0}"
         #             "".format(gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_all()))
-        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
             selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
             if len(selection) == 1 and len(selection.states) == 1 and \
                     isinstance(selection.get_selected_state(), LibraryStateModel):

@@ -1,5 +1,5 @@
 import logging
-import gtk
+from gi.repository import Gtk
 import threading
 import time
 

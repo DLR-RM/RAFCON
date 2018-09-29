@@ -18,9 +18,9 @@
      is-start-state flag and state-type.
 
 """
-import glib
-import gtk
-from gtk.gdk import keyval_name
+from gi.repository import GLib
+from gi.repository import Gtk
+from Gtk.gdk import keyval_name
 from gtkmvc import Model
 
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
@@ -98,10 +98,10 @@ class StateOverviewController(ExtendedController):
             view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
 
-        cell = gtk.CellRendererText()
+        cell = Gtk.CellRendererText()
         format_cell(cell, constants.BUTTON_MIN_HEIGHT, constants.GRID_SIZE)
-        l_store = gtk.ListStore(str)
-        combo = gtk.ComboBox()
+        l_store = Gtk.ListStore(str)
+        combo = Gtk.ComboBox()
         combo.set_name("state_type_combo")
         combo.set_focus_on_click(False)
         combo.set_model(l_store)
@@ -195,7 +195,7 @@ class StateOverviewController(ExtendedController):
     def on_focus_out(self, entry, event):
         # We have to use idle_add to prevent core dumps:
         # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
-        glib.idle_add(self.change_name, entry.get_text())
+        GLib.idle_add(self.change_name, entry.get_text())
 
     def change_name(self, new_name):
         if self.model.state.name != new_name:

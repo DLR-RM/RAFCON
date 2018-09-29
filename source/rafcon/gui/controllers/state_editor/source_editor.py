@@ -20,7 +20,7 @@
 
 import os
 import subprocess
-import gtk
+from gi.repository import Gtk
 import shlex
 import contextlib
 from pylint import lint
@@ -151,8 +151,8 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
         # Without the loop, this function would block the GTK main loop and the log message would appear after the
         # function has finished
         # TODO: run parser in separate thread
-        while gtk.events_pending():
-            gtk.main_iteration_do()
+        while Gtk.events_pending():
+            Gtk.main_iteration_do()
 
         # get script
         current_text = self.view.get_text()
@@ -209,7 +209,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
 
             RAFCONButtonDialog(message_string, ["Save with errors", "Do not save"],
                                on_message_dialog_response_signal,
-                               message_type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+                               message_type=Gtk.MessageType.WARNING, parent=self.get_root_window())
         else:
             self.set_script_text(current_text)
 

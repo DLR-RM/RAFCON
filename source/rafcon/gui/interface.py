@@ -12,8 +12,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import os
-import gtk
-import glib
+from gi.repository import Gtk
+from gi.repository import GLib
 
 from rafcon.core import interface as core_interface
 from rafcon.gui.runtime_config import global_runtime_config
@@ -26,7 +26,7 @@ def add_library_root_path_to_shortcut_folders_of_dialog(dialog):
     for library_key in library_keys:
         try:
             dialog.add_shortcut_folder(library_paths[library_key])
-        except glib.GError, e:
+        except GLib.GError, e:
             # this occurs if the shortcut file already exists
             # unfortunately dialog.list_shortcut_folders() does not work
             # that's why the error is caught
@@ -52,13 +52,13 @@ def open_folder(query, default_path=None):
     else:
         last_path = expanduser('~')
 
-    dialog = gtk.FileChooserDialog(query,
+    dialog = Gtk.FileChooserDialog(query,
                                    None,
-                                   gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
-                                   (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                    gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+                                   Gtk.FileChooserAction.SELECT_FOLDER,
+                                   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                    Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
     # Allows confirming with Enter and double-click
-    dialog.set_default_response(gtk.RESPONSE_OK)
+    dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_current_folder(last_path)
@@ -72,7 +72,7 @@ def open_folder(query, default_path=None):
 
     response = dialog.run()
 
-    if response != gtk.RESPONSE_OK:
+    if response != Gtk.ResponseType.OK:
         dialog.destroy()
         if default_path and os.path.isdir(default_path):
             return default_path
@@ -116,13 +116,13 @@ def create_folder(query, default_name=None, default_path=None):
     else:
         last_path = expanduser('~')
 
-    dialog = gtk.FileChooserDialog(query,
+    dialog = Gtk.FileChooserDialog(query,
                                    None,
-                                   gtk.FILE_CHOOSER_ACTION_CREATE_FOLDER,
-                                   (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                    gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+                                   Gtk.FileChooserAction.CREATE_FOLDER,
+                                   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                    Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
     # Allows confirming with Enter and double-click
-    dialog.set_default_response(gtk.RESPONSE_OK)
+    dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_current_folder(last_path)
@@ -135,7 +135,7 @@ def create_folder(query, default_name=None, default_path=None):
 
     response = dialog.run()
 
-    if response != gtk.RESPONSE_OK:
+    if response != Gtk.ResponseType.OK:
         dialog.destroy()
         if default_path and default_name:
             default = os.path.join(default_path, default_name)
@@ -180,13 +180,13 @@ def save_folder(query, default_name=None):
     else:
         last_path = expanduser('~')
 
-    dialog = gtk.FileChooserDialog(query,
+    dialog = Gtk.FileChooserDialog(query,
                                    None,
-                                   gtk.FILE_CHOOSER_ACTION_SAVE,
-                                   (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                    gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+                                   Gtk.FileChooserAction.SAVE,
+                                   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                    Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
     # Allows confirming with Enter and double-click
-    dialog.set_default_response(gtk.RESPONSE_OK)
+    dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_current_folder(last_path)
@@ -199,7 +199,7 @@ def save_folder(query, default_name=None):
 
     response = dialog.run()
 
-    if response != gtk.RESPONSE_OK:
+    if response != Gtk.ResponseType.OK:
         dialog.destroy()
         return None
 
@@ -219,7 +219,7 @@ core_interface.save_folder_func = save_folder
 def show_notice(query):
     from rafcon.gui.helpers.label import set_button_children_size_request
     from xml.sax.saxutils import escape
-    dialog = gtk.MessageDialog(flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
+    dialog = Gtk.MessageDialog(flags=Gtk.DialogFlags.MODAL, type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK)
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
     dialog.set_markup(escape(query))

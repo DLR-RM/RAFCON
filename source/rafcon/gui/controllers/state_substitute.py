@@ -17,7 +17,7 @@
 
 """
 
-import gtk
+from gi.repository import Gtk
 
 from rafcon.gui.views.library_tree import LibraryTreeView
 from rafcon.gui.controllers.library_tree import LibraryTreeController
@@ -41,7 +41,7 @@ class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
 
     def mouse_click(self, widget, event=None):
         # Double click with left mouse button
-        if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
+        if event.type == Gdk._2BUTTON_PRESS and event.button == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][1], dict):  # double click on folder, not library
                 state_row_path = self.tree_store.get_path(row)
@@ -55,7 +55,7 @@ class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
             if self.dialog_widget:
                 self.dialog_widget.destroy()
             return True
-        if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 3:
+        if event.type == Gdk._2BUTTON_PRESS and event.button == 3:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][1], dict):  # double click on folder, not library
                 return False
@@ -73,19 +73,19 @@ class StateSubstituteChooseLibraryDialog(RAFCONButtonDialog):
         super(StateSubstituteChooseLibraryDialog, self).__init__("Choose a Library to substitute the state with.",
                                                                  ['As library', 'As template', 'Cancel'],
                                                                  callback=self.check_for_library_path,
-                                                                 message_type=gtk.MESSAGE_INFO,
-                                                                 flags=gtk.DIALOG_MODAL, parent=parent)
+                                                                 message_type=Gtk.MessageType.INFO,
+                                                                 flags=Gtk.DialogFlags.MODAL, parent=parent)
 
         self.set_title('Library choose dialog')
         self.resize(width=width, height=height)
         if pos is not None:
             self.move(*pos)
 
-        self.scrollable = gtk.ScrolledWindow()
+        self.scrollable = Gtk.ScrolledWindow()
         self.widget_view = LibraryTreeView()
         self.widget_ctrl = StateSubstituteChooseLibraryDialogTreeController(self.model, self.widget_view,
                                                                             dialog_widget=self)
-        self.keep_name_check_box = gtk.CheckButton()
+        self.keep_name_check_box = Gtk.CheckButton()
         self.keep_name_check_box.set_active(self.widget_ctrl.keep_name)
         self.keep_name_check_box.set_label("Keep state name")
         self.vbox.pack_end(self.keep_name_check_box, True, True, 0)

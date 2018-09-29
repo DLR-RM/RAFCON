@@ -14,7 +14,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
+from gi.repository import Gtk
 from enum import Enum
 from gaphas.aspect import HandleFinder, InMotion
 from gaphas.item import NW, Item
@@ -48,7 +48,7 @@ class ToolChain(gaphas.tool.ToolChain):
         """
         # Allow to handle a subset of events while having a grabbed tool (between a button press & release event)
         suppressed_grabbed_tool = None
-        if event.type in (gtk.gdk.SCROLL, gtk.gdk.KEY_PRESS, gtk.gdk.KEY_RELEASE):
+        if event.type in (Gdk.SCROLL, Gdk.KEY_PRESS, Gdk.KEY_RELEASE):
             suppressed_grabbed_tool = self._grabbed_tool
             self._grabbed_tool = None
 
@@ -72,7 +72,7 @@ class PanTool(gaphas.tool.PanTool):
         self.zoom_with_control = global_gui_config.get_config_value("ZOOM_WITH_CTRL", False)
 
     def on_scroll(self, event):
-        ctrl_key_pressed = bool(event.state & gtk.gdk.CONTROL_MASK)
+        ctrl_key_pressed = bool(event.get_state() & Gdk.ModifierType.CONTROL_MASK)
         if (self.zoom_with_control and ctrl_key_pressed) or (not self.zoom_with_control and not ctrl_key_pressed):
             return False
         return super(PanTool, self).on_scroll(event)
@@ -85,9 +85,9 @@ class ZoomTool(gaphas.tool.ZoomTool):
         self.zoom_with_control = global_gui_config.get_config_value("ZOOM_WITH_CTRL", False)
 
     def on_scroll(self, event):
-        ctrl_key_pressed = bool(event.state & gtk.gdk.CONTROL_MASK)
+        ctrl_key_pressed = bool(event.get_state() & Gdk.ModifierType.CONTROL_MASK)
         if (self.zoom_with_control and ctrl_key_pressed) or (not self.zoom_with_control and not ctrl_key_pressed):
-            event.state |= gtk.gdk.CONTROL_MASK  # Set CONTROL_MASK
+            event.get_state() |= Gdk.ModifierType.CONTROL_MASK  # Set CONTROL_MASK
             return super(ZoomTool, self).on_scroll(event)
 
 
@@ -127,7 +127,7 @@ class MoveItemTool(gaphas.tool.ItemTool):
         if event.button not in self._buttons:
             return False  # Only handle events for registered buttons (left mouse clicks)
 
-        if event.state & constants.RUBBERBAND_MODIFIER:
+        if event.get_state() & constants.RUBBERBAND_MODIFIER:
             return False  # Mouse clicks with pressed shift key are handled in another tool
 
         # Special case: moving the NameView
@@ -137,7 +137,7 @@ class MoveItemTool(gaphas.tool.ItemTool):
         self._item = self.get_item()
         if isinstance(self._item, NameView):
             selected_items = self.view.selected_items
-            if event.state & gtk.gdk.CONTROL_MASK and len(selected_items) == 1 and next(iter(selected_items)) is \
+            if event.get_state() & Gdk.ModifierType.CONTROL_MASK and len(selected_items) == 1 and next(iter(selected_items)) is \
                     self._item.parent:
                 self._move_name_v = True
             else:
@@ -283,7 +283,7 @@ class HoverItemTool(gaphas.tool.HoverTool):
         """Filters out items that cannot be hovered
 
         :param list items: Sorted list of items beneath the cursor
-        :param gtk.Event event: Motion event
+        :param Gtk.Event event: Motion event
         :return: filtered items
         :rtype: list
         """
@@ -350,22 +350,22 @@ class HoverItemTool(gaphas.tool.HoverTool):
         pos = event.x, event.y
 
         # Reset cursor
-        self.view.window.set_cursor(gtk.gdk.Cursor(DEFAULT_CURSOR))
+        self.view.window.set_cursor(Gdk.Cursor.new(DEFAULT_CURSOR))
 
         def handle_hover_of_port(hovered_handle):
             view.hovered_handle = hovered_handle
             port_v = state_v.get_port_for_handle(hovered_handle)
             view.queue_draw_area(*port_v.get_port_area(view))
-            if event.state & constants.MOVE_PORT_MODIFIER:
-                self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
+            if event.get_state() & constants.MOVE_PORT_MODIFIER:
+                self.view.window.set_cursor(Gdk.Cursor.new(constants.MOVE_CURSOR))
             else:
-                self.view.window.set_cursor(gtk.gdk.Cursor(constants.CREATION_CURSOR))
+                self.view.window.set_cursor(Gdk.Cursor.new(constants.CREATION_CURSOR))
 
         if isinstance(view.hovered_item, PortView):
-            if event.state & constants.MOVE_PORT_MODIFIER:
-                self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
+            if event.get_state() & constants.MOVE_PORT_MODIFIER:
+                self.view.window.set_cursor(Gdk.Cursor.new(constants.MOVE_CURSOR))
             else:
-                self.view.window.set_cursor(gtk.gdk.Cursor(constants.CREATION_CURSOR))
+                self.view.window.set_cursor(Gdk.Cursor.new(constants.CREATION_CURSOR))
 
         elif isinstance(view.hovered_item, StateView):
             distance = view.hovered_item.border_width / 2.
@@ -404,10 +404,10 @@ class HoverItemTool(gaphas.tool.HoverTool):
             # If a handle is connection handle is hovered, show the move cursor
             item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos, split=False)
             if handle:
-                self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
+                self.view.window.set_cursor(Gdk.Cursor.new(constants.MOVE_CURSOR))
             # If no handle is hovered, indicate the option for selection with the selection cursor
             else:
-                self.view.window.set_cursor(gtk.gdk.Cursor(constants.SELECT_CURSOR))
+                self.view.window.set_cursor(Gdk.Cursor.new(constants.SELECT_CURSOR))
 
         if isinstance(self.view.hovered_item, StateView):
             self._prev_hovered_item = self.view.hovered_item
@@ -415,12 +415,12 @@ class HoverItemTool(gaphas.tool.HoverTool):
 
 class MultiSelectionTool(gaphas.tool.RubberbandTool):
     def on_button_press(self, event):
-        if event.state & constants.RUBBERBAND_MODIFIER:
+        if event.get_state() & constants.RUBBERBAND_MODIFIER:
             return super(MultiSelectionTool, self).on_button_press(event)
         return False
 
     def on_motion_notify(self, event):
-        if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & constants.RUBBERBAND_MODIFIER:
+        if event.get_state() & Gdk.EventMask.BUTTON_PRESS_MASK and event.get_state() & constants.RUBBERBAND_MODIFIER:
             view = self.view
             self.queue_draw(view)
             self.x1, self.y1 = event.x, event.y
@@ -471,7 +471,7 @@ class MoveHandleTool(gaphas.tool.HandleTool):
         # Only move ports when the MOVE_PORT_MODIFIER key is pressed
         if isinstance(item, (StateView, PortView)) and \
             handle in [port.handle for port in item.get_all_ports()] and \
-                not (event.state & constants.MOVE_PORT_MODIFIER):
+                not (event.get_state() & constants.MOVE_PORT_MODIFIER):
             return False
 
         # Do not move from/to handles of connections (only their waypoints)
@@ -488,11 +488,11 @@ class MoveHandleTool(gaphas.tool.HandleTool):
             return True
 
     def on_motion_notify(self, event):
-        if not self.grabbed_handle or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
+        if not self.grabbed_handle or not event.get_state() & Gdk.EventMask.BUTTON_PRESS_MASK:
             return
         item = self.grabbed_item
         resize_recursive = isinstance(item, StateView) and self.grabbed_handle in item.corner_handles and \
-                           event.state & constants.RECURSIVE_RESIZE_MODIFIER
+                           event.get_state() & constants.RECURSIVE_RESIZE_MODIFIER
 
         if resize_recursive:
             old_size = (item.width, item.height)
@@ -661,7 +661,7 @@ class ConnectionCreationTool(ConnectionTool):
 
         # Connection handle must belong to a port and the MOVE_PORT_MODIFIER must not be pressed
         if not isinstance(item, StateView) or handle not in [port.handle for port in item.get_all_ports()] or (
-                    event.state & constants.MOVE_PORT_MODIFIER):
+                    event.get_state() & constants.MOVE_PORT_MODIFIER):
             return False
 
         for port in item.get_all_ports():
@@ -679,7 +679,7 @@ class ConnectionCreationTool(ConnectionTool):
         return True
 
     def on_motion_notify(self, event):
-        if not self._parent_state_v or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
+        if not self._parent_state_v or not event.get_state() & Gdk.EventMask.BUTTON_PRESS_MASK:
             return False
 
         if not self._connection_v:
@@ -753,7 +753,7 @@ class ConnectionModificationTool(ConnectionTool):
         return True
 
     def on_motion_notify(self, event):
-        if not self._parent_state_v or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
+        if not self._parent_state_v or not event.get_state() & Gdk.EventMask.BUTTON_PRESS_MASK:
             return False
 
         modify_target = self._end_handle is self._connection_v.to_handle()

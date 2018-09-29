@@ -9,7 +9,7 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 
-import gtk
+from gi.repository import Gtk
 import threading
 
 from rafcon.gui.utils import wait_for_gui
@@ -86,9 +86,9 @@ class LoggingConsoleController(ExtendedController):
         self.print_filtered_buffer()
 
     def add_clear_menu_item(self, widget, menu):
-        clear_item = gtk.MenuItem("Clear Logging View")
+        clear_item = Gtk.MenuItem("Clear Logging View")
         clear_item.connect('activate', self._clear_buffer)
-        menu.append(gtk.SeparatorMenuItem())
+        menu.append(Gtk.SeparatorMenuItem())
         menu.append(clear_item)
         menu.show_all()
 

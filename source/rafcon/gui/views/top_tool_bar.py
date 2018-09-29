@@ -13,7 +13,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
+from gi.repository import Gtk
 from gtkmvc import View
 
 from rafcon.gui import glade
@@ -28,8 +28,8 @@ class TopToolBarView(View):
     def __init__(self):
         View.__init__(self)
 
-        self.get_top_widget().set_events(gtk.gdk.POINTER_MOTION_MASK | gtk.gdk.POINTER_MOTION_HINT_MASK |
-                                         gtk.gdk.BUTTON_PRESS_MASK)
+        self.get_top_widget().set_events(Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.POINTER_MOTION_HINT_MASK |
+                                         Gdk.EventMask.BUTTON_PRESS_MASK)
 
         close_label = gui_helper_label.create_button_label(constants.BUTTON_CLOSE)
         self['close_button'].set_label_widget(close_label)

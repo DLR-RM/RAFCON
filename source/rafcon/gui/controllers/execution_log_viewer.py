@@ -10,7 +10,7 @@
 
 # example basictreeview.py
 
-import gtk
+from gi.repository import Gtk
 import shelve
 
 import rafcon.utils.execution_log as log_helper
@@ -37,7 +37,7 @@ class ExecutionLogTreeController(ExtendedController):
                                                   throw_on_pickle_error=False,
                                                   include_erroneous_data_ports=True)
         # create a TreeStore with one string column to use as the model
-        self.tree_store = gtk.TreeStore(str, str)
+        self.tree_store = Gtk.TreeStore(str, str)
         self.item_iter = {}
         view.tree_view.set_model(self.tree_store)
 
@@ -120,7 +120,7 @@ class ExecutionLogTreeController(ExtendedController):
         self.view.text_view.get_buffer().set_text(pp.pformat(item))
 
     def mouse_click(self, widget, event=None):
-        if event.type == gtk.gdk._2BUTTON_PRESS:
+        if event.type == Gdk._2BUTTON_PRESS:
             return self._handle_double_click(event)
 
     def _handle_double_click(self, event):

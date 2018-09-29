@@ -14,7 +14,7 @@
 
 import os
 import re
-import gtk
+from gi.repository import Gtk
 import yaml
 from rafcon.utils.resources import resource_filename, resource_exists, resource_string
 from yaml_configuration.config import ConfigError
@@ -83,11 +83,11 @@ class GuiConfig(ObservableConfig):
         gtkrc_file_path = resource_filename(__name__, self.get_assets_path("gtk-2.0", "gtkrc"))
         filename = resource_filename(__name__, self.get_assets_path(
             "icons", "RAFCON_figurative_mark_negative.svg", for_theme=False))
-        gtk.window_set_default_icon_from_file(filename)
+        Gtk.window_set_default_icon_from_file(filename)
 
         # wait for all gtk events being processed before parsing the gtkrc file
         wait_for_gui()
-        gtk.rc_parse(gtkrc_file_path)
+        Gtk.rc_parse(gtkrc_file_path)
 
     def configure_colors(self):
         # Get colors from GTKrc file
@@ -104,7 +104,7 @@ class GuiConfig(ObservableConfig):
                 color = color[0]
                 color = color.split(':')
                 self.colors[color[0].upper()] = color[1]
-                self.gtk_colors[color[0].upper()] = gtk.gdk.Color(color[1])
+                self.gtk_colors[color[0].upper()] = Gdk.Color(color[1])
 
         # Get color definitions
         color_file_path = resource_filename(__name__, self.get_assets_path(filename="colors.json"))
@@ -115,7 +115,7 @@ class GuiConfig(ObservableConfig):
 
         # replace unicode strings with str strings
         colors = {str(key): str(value) for key, value in colors.iteritems()}
-        gtk_colors = {str(key): gtk.gdk.Color(str(value)) for key, value in colors.iteritems()}
+        gtk_colors = {str(key): Gdk.Color(str(value)) for key, value in colors.iteritems()}
         self.gtk_colors.update(gtk_colors)
         self.colors.update(colors)
 

@@ -49,7 +49,7 @@ def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypa
     from rafcon.gui.mygaphas.tools import MoveHandleTool
     from rafcon.gui.utils.constants import RECURSIVE_RESIZE_MODIFIER
     from gaphas.item import SE, NW
-    import gtk.gdk
+    import Gtk.gdk
 
     def get_resize_handle(x, y, distance=None):
         return state_v, state_v.handles()[SE]
@@ -60,21 +60,21 @@ def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypa
     start_pos_handle = get_state_handle_pos(view, state_v, state_v.handles()[SE])
 
     # Start resize: Press button
-    button_press_event = gtk.gdk.Event(type=gtk.gdk.BUTTON_PRESS)
+    button_press_event = Gdk.Event(type=Gdk.EventType.BUTTON_PRESS)
     button_press_event.button = 1
     call_gui_callback(resize_tool.on_button_press, button_press_event)
     # Do resize: Move mouse
-    motion_event = gtk.gdk.Event(type=gtk.gdk.MOTION_NOTIFY)
-    motion_event.state |= gtk.gdk.BUTTON_PRESS_MASK
+    motion_event = Gdk.Event(type=Gdk.MOTION_NOTIFY)
+    motion_event.get_state() |= Gdk.EventMask.BUTTON_PRESS_MASK
     if recursive:
-        motion_event.state |= RECURSIVE_RESIZE_MODIFIER
+        motion_event.get_state() |= RECURSIVE_RESIZE_MODIFIER
     for i in xrange(num_motion_events):
         motion_event.x = start_pos_handle[0] + rel_size[0] * (float(i + 1) / num_motion_events)
         motion_event.y = start_pos_handle[1] + rel_size[1] * (float(i + 1) / num_motion_events)
         call_gui_callback(resize_tool.on_motion_notify, motion_event)
 
     # Stop resize: Release button
-    button_release_event = gtk.gdk.Event(type=gtk.gdk.BUTTON_RELEASE)
+    button_release_event = Gdk.Event(type=Gdk.BUTTON_RELEASE)
     button_release_event.button = 1
     call_gui_callback(resize_tool.on_button_release, button_release_event)
 

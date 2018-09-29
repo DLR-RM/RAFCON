@@ -20,12 +20,12 @@
 
 """
 
-import gtk
+from gi.repository import Gtk
 import time
 from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
 from gaphas.item import Item
-from gtk.gdk import ACTION_COPY
+from Gtk.gdk import ACTION_COPY
 import math
 
 from rafcon.core.decorators import lock_state_machine
@@ -88,7 +88,7 @@ class GraphicalEditorController(ExtendedController):
         self._nested_action_already_in = {}
         view.setup_canvas(self.canvas, self.zoom)
 
-        view.editor.drag_dest_set(gtk.DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
+        view.editor.drag_dest_set(Gtk.DestDefaults.ALL, [('STRING', 0, 0)], ACTION_COPY)
         logger.verbose("Time spent in init {0} seconds for state machine {1}"
                        "".format(time.time() - start_time, self.model.state_machine_id))
 
@@ -792,7 +792,7 @@ class GraphicalEditorController(ExtendedController):
 
         # finally set the focus to the root state (needs to be idle add to be executed after gaphas drawing is finished)
         if rafcon.gui.singleton.global_gui_config.get_config_value('GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE', True):
-            gtk.idle_add(self.set_focus_to_state_model, self.root_state_m)
+            Gtk.idle_add(self.set_focus_to_state_model, self.root_state_m)
 
     @lock_state_machine
     def add_state_view_for_model(self, state_m, parent_v=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):

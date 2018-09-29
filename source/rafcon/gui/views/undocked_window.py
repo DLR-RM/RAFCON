@@ -13,7 +13,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import os
-import gtk
+from gi.repository import Gtk
 from gtkmvc import View
 
 from rafcon.gui import glade
@@ -29,12 +29,12 @@ class UndockedWindowView(View):
 
         self.top_tool_bar = TopToolBarView()
         self['top_menu_hbox'].remove(self['top_tool_bar_placeholder'])
-        self['top_menu_hbox'].pack_end(self.top_tool_bar.get_top_widget(), expand=True, fill=True, padding=0)
+        self['top_menu_hbox'].pack_end(self.top_tool_bar.get_top_widget(, True, True, 0), expand=True, fill=True, padding=0)
         self['top_menu_hbox'].reorder_child(self.top_tool_bar.get_top_widget(), 1)
 
         self.get_top_widget().set_decorated(False)
         if not ('3.0.101' in os.uname()[2] and 'kde' == os.environ.get('DESKTOP_SESSION')):
-            self.get_top_widget().set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+            self.get_top_widget().set_type_hint(Gdk.WindowTypeHint.UTILITY)
 
     def initialize_title(self, window_title):
         """Initialize the title of the un-docked window

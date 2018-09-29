@@ -20,8 +20,8 @@
 
 """
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
 
 from rafcon.gui.helpers.meta_data import insert_self_transition_meta_data
 from rafcon.core.state_elements.outcome import Outcome
@@ -60,12 +60,12 @@ class StateOutcomesListController(ListViewController):
         assert isinstance(model, AbstractStateModel)
         # initiate data base and tree
         # id, name, to-state, to-outcome, name-color, to-state-color, outcome, state, outcome_model
-        list_store = gtk.ListStore(int, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
-                                   gobject.TYPE_PYOBJECT)
+        list_store = Gtk.ListStore(int, str, str, str, GObject.TYPE_PYOBJECT, GObject.TYPE_PYOBJECT,
+                                   GObject.TYPE_PYOBJECT)
         super(StateOutcomesListController, self).__init__(model, view, view['tree_view'], list_store, logger)
 
-        self.to_state_combo_list = gtk.ListStore(str, str, str)
-        self.to_outcome_combo_list = gtk.ListStore(str, str, str)
+        self.to_state_combo_list = Gtk.ListStore(str, str, str)
+        self.to_outcome_combo_list = Gtk.ListStore(str, str, str)
         # key-outcome_id -> label,  to_state_id,  transition_id
         self.dict_to_other_state = {}
         # key-outcome_id ->  label,  to_outcome_id,  transition_id
@@ -120,7 +120,7 @@ class StateOutcomesListController(ListViewController):
     def on_to_state_edited(self, renderer, path, new_state_identifier):
         """Connects the outcome with a transition to the newly set state
 
-        :param gtk.CellRendererText renderer: The cell renderer that was edited
+        :param Gtk.CellRendererText renderer: The cell renderer that was edited
         :param str path: The path string of the renderer
         :param str new_state_identifier: An identifier for the new state that was selected
         """
@@ -168,7 +168,7 @@ class StateOutcomesListController(ListViewController):
     def on_to_outcome_edited(self, renderer, path, new_outcome_identifier):
         """Connects the outcome with a transition to the newly set outcome
 
-        :param gtk.CellRendererText renderer: The cell renderer that was edited
+        :param Gtk.CellRendererText renderer: The cell renderer that was edited
         :param str path: The path string of the renderer
         :param str new_outcome_identifier: An identifier for the new outcome that was selected
         """

@@ -1,4 +1,4 @@
-import gtk
+from gi.repository import Gtk
 import threading
 from os.path import join, exists
 

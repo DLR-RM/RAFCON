@@ -20,8 +20,8 @@
 
 """
 
-import gtk
-import gobject
+from gi.repository import Gtk
+from gi.repository import GObject
 from gtk import ListStore
 from gtk import TreeViewColumn, CellRendererToggle
 
@@ -174,7 +174,7 @@ class DataPortListController(ListViewController):
 
     @staticmethod
     def _get_new_list_store():
-        return ListStore(str, str, str, int, bool, str, gobject.TYPE_PYOBJECT)
+        return ListStore(str, str, str, int, bool, str, GObject.TYPE_PYOBJECT)
 
     def _default_value_cell_data_func(self, tree_view_column, cell, model, iter):
         """Function set renderer properties for every single cell independently
@@ -182,7 +182,7 @@ class DataPortListController(ListViewController):
         The function controls the editable and color scheme for every cell in the default value column according
         the use_runtime_value flag and whether the state is a library state.
 
-        :param tree_view_column: the gtk.TreeViewColumn to be rendered
+        :param tree_view_column: the Gtk.TreeViewColumn to be rendered
         :param cell: the current CellRenderer
         :param model: the ListStore or TreeStore that is the model for TreeView
         :param iter: an iterator over the rows of the TreeStore/ListStore Model
@@ -233,8 +233,8 @@ class DataPortListController(ListViewController):
                             data_port_m,
                             ])
 
-        tms = gtk.TreeModelSort(tmp)
-        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
+        tms = Gtk.TreeModelSort(tmp)
+        tms.set_sort_column_id(0, Gtk.SortType.ASCENDING)
         tms.set_sort_func(0, compare_variables)
         tms.sort_column_changed()
         tmp = tms

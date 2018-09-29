@@ -19,7 +19,7 @@
 
 """
 
-import gobject
+from gi.repository import GObject
 from gtk import ListStore
 
 from rafcon.core.state_elements.scope import ScopedVariable
@@ -72,7 +72,7 @@ class StateDataFlowsListController(LinkageListController):
         # ListStore for: id, from-state, from-key, to-state, to-key, is_external,
         #                   name-color, to-state-color, data-flow-object, state-object, is_editable, data-flow-model
         list_store = ListStore(int, str, str, str, str, bool, str, str,
-                               gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
+                               GObject.TYPE_PYOBJECT, GObject.TYPE_PYOBJECT, bool, GObject.TYPE_PYOBJECT)
         self.view_dict = {'data_flows_internal': True, 'data_flows_external': True}
 
         self.tree_dict_combos = {'internal': {},

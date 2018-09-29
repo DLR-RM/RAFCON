@@ -37,9 +37,9 @@ class NoHigherLevelFilter(logging.Filter):
 
 
 class LoggingViewHandler(logging.Handler):
-    """A LoggingHandler for gtk.TextViews
+    """A LoggingHandler for Gtk.TextViews
     
-    The `LoggingViewHandler` prints log messages in special `gtk.TextView`s that provide a `print_message` method. 
+    The `LoggingViewHandler` prints log messages in special `Gtk.TextView`s that provide a `print_message` method. 
     The views must register themselves to the handler. There can be multiple views registered for one handler.
     """
 

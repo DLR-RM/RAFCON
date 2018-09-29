@@ -10,7 +10,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
+from gi.repository import Gtk
 from gtkmvc import View
 
 from rafcon.utils import log
@@ -22,7 +22,7 @@ class SingleWidgetWindowView(View):
     def __init__(self, view_class, width=500, height=500, title=None, pos=None):
         View.__init__(self)
 
-        w = gtk.Window()
+        w = Gtk.Window()
         if title is None:
             w.set_title(str(view_class))
         else:

@@ -2,7 +2,7 @@
 # Example 1: execution_log_viewer.py your_execution_log.shelve xxxxxxx.run_id.00000000000000000003
 # Example 2: rafcon_execution_log_viewer your_execution_log.shelve xxxxxxx.run_id.00000000000000000003
 
-import gtk
+from gi.repository import Gtk
 import argparse
 
 from rafcon.gui.views.utils.single_widget_window import SingleWidgetWindowView
@@ -28,4 +28,4 @@ if __name__ == "__main__":
 
     # log_tree_ctrl = SingleWidgetWindowController(None, single_view, ExecutionLogTreeController, file, run_id)
 
-    gtk.main()
+    Gtk.main()

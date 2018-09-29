@@ -46,7 +46,7 @@ class KeepRectangleWithinConstraint(Constraint):
         self.parent_se = parent_se
         self.child_nw = child_nw
         self.child_se = child_se
-        self.child = child
+        self.get_child() = child
 
         self.enable = True
 
@@ -72,13 +72,13 @@ class KeepRectangleWithinConstraint(Constraint):
             child_width = self.child_se[0].value - self.child_nw[0].value
             if child_width > parent_width() - 2 * margin:
                 child_width = parent_width() - 2 * margin
-            return max(self.child.min_width, child_width)
+            return max(self.get_child().min_width, child_width)
 
         def child_height():
             child_height = self.child_se[1].value - self.child_nw[1].value
             if child_height > parent_height() - 2 * margin:
                 child_height = parent_height() - 2 * margin
-            return max(self.child.min_height, child_height)
+            return max(self.get_child().min_height, child_height)
 
         updated = False
         # Left edge (west)
@@ -107,8 +107,8 @@ class KeepRectangleWithinConstraint(Constraint):
             updated = True
 
         from rafcon.gui.mygaphas.items.state import StateView
-        if updated and isinstance(self.child, StateView):
-            self.child.update_minimum_size_of_children()
+        if updated and isinstance(self.get_child(), StateView):
+            self.get_child().update_minimum_size_of_children()
 
 
 class KeepPointWithinConstraint(Constraint):
@@ -125,7 +125,7 @@ class KeepPointWithinConstraint(Constraint):
                                                         child[0], child[1])
         self.parent_nw = parent_nw
         self.parent_se = parent_se
-        self.child = child
+        self.get_child() = child
 
         if not margin_method:
             margin_method = lambda: 0
@@ -136,17 +136,17 @@ class KeepPointWithinConstraint(Constraint):
         Ensure that the children is within its parent
         """
         margin = self.margin_method()
-        if self.parent_nw[0].value > self.child[0].value - margin:
-            _update(self.child[0], self.parent_nw[0].value + margin)
+        if self.parent_nw[0].value > self.get_child()[0].value - margin:
+            _update(self.get_child()[0], self.parent_nw[0].value + margin)
         # Right edge (east)
-        if self.parent_se[0].value < self.child[0].value + margin:
-            _update(self.child[0], self.parent_se[0].value - margin)
+        if self.parent_se[0].value < self.get_child()[0].value + margin:
+            _update(self.get_child()[0], self.parent_se[0].value - margin)
         # Upper edge (north)
-        if self.parent_nw[1].value > self.child[1].value - margin:
-            _update(self.child[1], self.parent_nw[1].value + margin)
+        if self.parent_nw[1].value > self.get_child()[1].value - margin:
+            _update(self.get_child()[1], self.parent_nw[1].value + margin)
         # Lower edge (south)
-        if self.parent_se[1].value < self.child[1].value + margin:
-            _update(self.child[1], self.parent_se[1].value - margin)
+        if self.parent_se[1].value < self.get_child()[1].value + margin:
+            _update(self.get_child()[1], self.parent_se[1].value - margin)
 
 
 class KeepRelativePositionConstraint(Constraint):

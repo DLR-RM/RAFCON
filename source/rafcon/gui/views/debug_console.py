@@ -31,7 +31,7 @@ class DebugConsoleView(View):
         # Logging text view
         ######################################################
         self.logging_console_view = LoggingConsoleView()
-        self['console'].pack_start(self.logging_console_view.get_top_widget(), True, True, 0)
+        self['console'].pack_start(self.logging_console_view.get_top_widget(, True, True, 0), True, True, 0)
         self.logging_console_view.get_top_widget().show()
 
         ######################################################

@@ -20,8 +20,8 @@
 
 """
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
 import os
 from functools import partial
 
@@ -51,13 +51,13 @@ class LibraryTreeController(ExtendedController):
 
     def __init__(self, model, view):
         assert isinstance(model, LibraryManagerModel)
-        assert isinstance(view, gtk.TreeView)
+        assert isinstance(view, Gtk.TreeView)
         ExtendedController.__init__(self, model, view)
-        self.tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str, str, str)
+        self.tree_store = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT, str, str, str)
         view.set_model(self.tree_store)
         view.set_tooltip_column(3)
 
-        view.drag_source_set(gtk.gdk.BUTTON1_MASK, [('STRING', 0, 0)], gtk.gdk.ACTION_COPY)
+        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [('STRING', 0, 0)], Gdk.DragAction.COPY)
 
         self.library_row_iter_dict_by_library_path = {}
         self.__expansion_state = None
@@ -72,16 +72,16 @@ class LibraryTreeController(ExtendedController):
         self.view.connect("drag-begin", self.on_drag_begin)
 
     def generate_right_click_menu(self, kind='library'):
-        menu = gtk.Menu()
+        menu = Gtk.Menu()
         if kind == 'library':
             menu.append(create_image_menu_item("Add as library (link)", constants.BUTTON_ADD,
                                                partial(self.insert_button_clicked, as_template=False)))
             menu.append(create_image_menu_item("Add as template (copy)", constants.BUTTON_COPY,
                                                partial(self.insert_button_clicked, as_template=True)))
-            menu.append(gtk.SeparatorMenuItem())
+            menu.append(Gtk.SeparatorMenuItem())
             menu.append(create_image_menu_item("Open", constants.BUTTON_OPEN, self.open_button_clicked))
             menu.append(create_image_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
-            menu.append(gtk.SeparatorMenuItem())
+            menu.append(Gtk.SeparatorMenuItem())
             menu.append(create_image_menu_item("Remove library", constants.BUTTON_DEL, self.delete_button_clicked))
 
             sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute as library", menu,
@@ -111,7 +111,7 @@ class LibraryTreeController(ExtendedController):
 
     def mouse_click(self, widget, event=None):
         # Double click with left mouse button
-        if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
+        if event.type == Gdk._2BUTTON_PRESS and event.button == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][self.ITEM_STORAGE_ID], dict):  # double click on folder, not library
                 state_row_path = self.tree_store.get_path(row)
@@ -125,7 +125,7 @@ class LibraryTreeController(ExtendedController):
             return True
 
         # Single right click
-        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
 
             x = int(event.x)
             y = int(event.y)
@@ -250,7 +250,7 @@ class LibraryTreeController(ExtendedController):
         :param widget:
         :param context:
         """
-        self.view.drag_source_set_icon_stock(gtk.STOCK_NEW)
+        self.view.drag_source_set_icon_stock(Gtk.STOCK_NEW)
 
     def insert_button_clicked(self, widget, as_template=False):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
@@ -338,7 +338,7 @@ class LibraryTreeController(ExtendedController):
                                        partial_message)
 
             width = 8*len("physical path:        " + library_file_system_path)
-            dialog = RAFCONButtonDialog(message_string, button_texts, message_type=gtk.MESSAGE_QUESTION,
+            dialog = RAFCONButtonDialog(message_string, button_texts, message_type=Gtk.MessageType.QUESTION,
                                         parent=self.get_root_window(), width=min(width, 1400))
             response_id = dialog.run()
             dialog.destroy()

@@ -21,9 +21,9 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import gtk
-import gtk.gtkgl
-import gtk.gdkgl
+from gi.repository import Gtk
+import Gtk.gtkgl
+import Gtk.gdkgl
 from gtkmvc import View
 
 from rafcon.gui.config import global_gui_config as gui_config
@@ -144,26 +144,26 @@ class GraphicalEditorView(View):
         # Configure OpenGL frame buffer.
         # Try to get a double-buffered frame buffer configuration,
         # if not successful then exit program
-        display_mode = (gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
+        display_mode = (Gtk.gdkgl.MODE_RGB | Gtk.gdkgl.MODE_DEPTH | Gtk.gdkgl.MODE_DOUBLE)
         try:
-            glconfig = gtk.gdkgl.Config(mode=display_mode)
-        except gtk.gdkgl.NoMatches:
+            glconfig = Gtk.gdkgl.Config(mode=display_mode)
+        except Gtk.gdkgl.NoMatches:
             raise SystemExit
 
-        self.v_box = gtk.VBox()
+        self.v_box = Gtk.VBox()
         self.editor = GraphicalEditor(glconfig)
-        self.editor.add_events(gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
-                               gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
+        self.editor.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.BUTTON_MOTION_MASK |
+                               Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK | Gdk.EventMask.POINTER_MOTION_MASK)
         self.editor.set_size_request(0, 0)
-        self.editor.set_flags(gtk.CAN_FOCUS)
+        self.editor.set_flags(Gtk.CAN_FOCUS)
 
-        self.v_box.pack_end(self.editor)
+        self.v_box.pack_end(self.editor, True, True, 0)
 
         self['main_frame'] = self.v_box
         self.top = 'main_frame'
 
 
-class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
+class GraphicalEditor(Gtk.DrawingArea, Gtk.gtkgl.Widget):
     # background_color = Color.from_hex(0x17242f)
     background_color = Color.from_hex_string(gui_config.colors['GLOBAL_BACKGROUND'])
     state_color = Color.from_hex(0xd7e0ec)  # Color(0.9, 0.9, 0.9, 0.8)
@@ -196,7 +196,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         :param glconfig: Configuration flags for OpenGl
         """
-        gtk.DrawingArea.__init__(self)
+        GObject.GObject.__init__(self)
 
         # default outer coordinate values which will later be overwritten by the controller
         self.left = -10
@@ -226,7 +226,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         # Query the GLX and OpenGL extension version.
         opengl_version = glGetString(GL_VERSION)
-        major, minor = gtk.gdkgl.query_version()
+        major, minor = Gtk.gdkgl.query_version()
         logger.info("OpenGL version: {0}".format(opengl_version))
         logger.info("GLX version: {0}.{1}".format(major, minor))
 

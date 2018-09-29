@@ -15,7 +15,7 @@ import os
 import time
 import threading
 
-import gtk
+from gi.repository import Gtk
 from gtkmvc import ModelMT
 
 from rafcon.core.storage import storage
@@ -254,7 +254,7 @@ def check_for_crashed_rafcon_instances():
                                            button_texts=("Apply", "Remind me Later.", "Ignore -> Remove all Notifications/Locks."),
                                            callback=on_message_dialog_response_signal, callback_args=[restorable_sm],
                                            table_header=table_header, table_data=table_data, toggled_callback=on_toggled,
-                                           message_type=gtk.MESSAGE_QUESTION,
+                                           message_type=Gtk.MessageType.QUESTION,
                                            parent=gui_singletons.main_window_controller.view.get_top_widget(),
                                            width=800, standalone=False)
         dialog.activate()

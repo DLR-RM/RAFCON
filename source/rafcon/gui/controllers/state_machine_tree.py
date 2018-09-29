@@ -19,8 +19,8 @@
 
 """
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
 from functools import partial
 
 from rafcon.core.states.state import State
@@ -59,7 +59,7 @@ class StateMachineTreeController(TreeViewController):
 
     def __init__(self, model, view):
         assert isinstance(model, StateMachineManagerModel)
-        tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT, str)
+        tree_store = Gtk.TreeStore(str, str, str, GObject.TYPE_PYOBJECT, str)
         super(StateMachineTreeController, self).__init__(model, view, view, tree_store)
 
         self.add_controller("state_right_click_ctrl", StateMachineTreeRightClickMenuController(model, view))
@@ -479,7 +479,7 @@ class StateMachineTreeController(TreeViewController):
             return None, set()
 
     def mouse_click(self, widget, event=None):
-        if event.type == gtk.gdk._2BUTTON_PRESS:
+        if event.type == Gdk._2BUTTON_PRESS:
             return self._handle_double_click(event)
 
     def _handle_double_click(self, event):

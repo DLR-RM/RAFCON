@@ -21,8 +21,8 @@
 import os
 import sys
 import logging
-import gtk
-import glib
+from gi.repository import Gtk
+from gi.repository import GLib
 import threading
 import signal
 from yaml_configuration.config import config_path
@@ -86,7 +86,7 @@ def install_reactor():
     from twisted.internet import gtk2reactor
     from twisted.internet.error import ReactorAlreadyInstalledError
     try:
-        # needed for glib.idle_add, and signals
+        # needed for GLib.idle_add, and signals
         gtk2reactor.install()
     except ReactorAlreadyInstalledError:
         pass
@@ -184,7 +184,7 @@ def setup_gui():
 
     # set the gravity of the main window controller to static to ignore window manager decorations and get
     # a correct position of the main window on the screen (else there are offsets for some window managers)
-    main_window_view.get_top_widget().set_gravity(gtk.gdk.GRAVITY_STATIC)
+    main_window_view.get_top_widget().set_gravity(Gdk.GRAVITY_STATIC)
 
     sm_manager_model = gui_singletons.state_machine_manager_model
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
@@ -199,7 +199,7 @@ def start_gtk():
         is_main_thread = isinstance(threading.current_thread(), threading._MainThread)
         reactor.run(installSignalHandlers=is_main_thread)
     else:
-        gtk.main()
+        Gtk.main()
 
 
 def stop_gtk():
@@ -210,10 +210,10 @@ def stop_gtk():
             reactor.callFromThread(reactor.stop)
         # Twisted can be imported without the reactor being used
         # => check if GTK main loop is running
-        elif gtk.main_level() > 0:
-            glib.idle_add(gtk.main_quit)
+        elif Gtk.main_level() > 0:
+            GLib.idle_add(Gtk.main_quit)
     else:
-        glib.idle_add(gtk.main_quit)
+        GLib.idle_add(Gtk.main_quit)
 
     # Run the GTK loop until no more events are being generated and thus the GUI is fully destroyed
     wait_for_gui()
@@ -293,8 +293,8 @@ def main():
     splash_screen = SplashScreen(contains_image=True, width=530, height=350)
     splash_screen.rotate_image(random_=True)
     splash_screen.set_text(_("Starting RAFCON..."))
-    while gtk.events_pending():
-        gtk.main_iteration()
+    while Gtk.events_pending():
+        Gtk.main_iteration()
 
     setup_installation()
 
@@ -336,7 +336,7 @@ def main():
     # initiate stored session # TODO think about a controller for this
     if not user_input.new and not user_input.state_machine_paths \
             and rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
-        glib.idle_add(backup_session.restore_session_from_runtime_config, priority=glib.PRIORITY_LOW)
+        GLib.idle_add(backup_session.restore_session_from_runtime_config, priority=GLib.PRIORITY_LOW)
 
     if state_machine and (user_input.start_state_machine_flag or state_machine.get_state_by_path(user_input.start_state_path)):
         start_state_machine(state_machine, user_input.start_state_path, user_input.quit_flag)

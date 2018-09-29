@@ -13,7 +13,7 @@
 #!/usr/bin/python
 
 import os
-import gtk
+from gi.repository import Gtk
 from os.path import join, expanduser
 import threading
 import time
@@ -51,7 +51,7 @@ logger = log.get_logger("Resave state machines script")
 
 
 def call_gui_callback(callback, *args):
-    import glib
+    from gi.repository import GLib
     import threading
     condition = threading.Condition()
 
@@ -65,7 +65,7 @@ def call_gui_callback(callback, *args):
             condition.notify()
             condition.release()
 
-    glib.idle_add(fun)
+    GLib.idle_add(fun)
     # Wait for the condition to be notified
     condition.acquire()
     condition.wait()
@@ -146,8 +146,8 @@ def convert(config_path, source_path, target_path=None):
             main_window.resize(size[0], size[1])
         if position:
             position = (max(0, position[0]), max(0, position[1]))
-            screen_width = gtk.gdk.screen_width()
-            screen_height = gtk.gdk.screen_height()
+            screen_width = Gdk.Screen.width()
+            screen_height = Gdk.Screen.height()
             if position[0] < screen_width and position[1] < screen_height:
                 main_window.move(position[0], position[1])
 
@@ -158,7 +158,7 @@ def convert(config_path, source_path, target_path=None):
                                                                 state_machine])
     thread.start()
 
-    gtk.main()
+    Gtk.main()
     logger.debug("Gtk main loop exited!")
     logger.debug("Conversion done")
 

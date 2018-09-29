@@ -44,11 +44,11 @@ def limit_value_string_length(value):
 
 
 def get_col_rgba(color, transparency=None, opacity=None):
-    """This class converts a gtk.gdk.Color into its r, g, b parts and adds an alpha according to needs
+    """This class converts a Gdk.Color into its r, g, b parts and adds an alpha according to needs
 
     If both transparency and opacity is None, alpha is set to 1 => opaque
 
-    :param gtk.gdk.Color color: Color to extract r, g and b from
+    :param Gdk.Color color: Color to extract r, g and b from
     :param float | None  transparency: Value between 0 (opaque) and 1 (transparent) or None if opacity is to be used
     :param float | None opacity: Value between 0 (transparent) and 1 (opaque) or None if transparency is to be used
     :return: Red, Green, Blue and Alpha value (all between 0.0 - 1.0)
@@ -145,7 +145,7 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
     label where the top part is filled and the bottom part isn't.
 
     :param context: Draw Context
-    :param gtk.gdk.Color color: Color to draw the label in (border and background fill color)
+    :param Gdk.Color color: Color to draw the label in (border and background fill color)
     :param name_size: Size of the name labels (scoped variable and port name) combined
     :param handle_pos: Position of port which label is connected to
     :param port_side: Side on which the label should be drawn

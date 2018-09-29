@@ -21,7 +21,7 @@
 
 """
 
-import gtk
+from gi.repository import Gtk
 
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -47,7 +47,7 @@ class GlobalVariableManagerController(ListViewController):
     :param rafcon.gui.views.global_variable_editor.GlobalVariableEditorView view: The GTK view showing the list of
         global variables.
     :ivar int global_variable_counter: Counter for global variables to ensure unique names for new global variables.
-    :ivar gtk.ListStore list_store: A gtk list store storing the rows of data of respective global variables in.
+    :ivar Gtk.ListStore list_store: A gtk list store storing the rows of data of respective global variables in.
     """
     ID_STORAGE_ID = 0
     MODEL_STORAGE_ID = 0
@@ -60,7 +60,7 @@ class GlobalVariableManagerController(ListViewController):
         # list store order -> gv_name, data_type, data_value, is_locked
         super(GlobalVariableManagerController, self).__init__(model, view,
                                                               view['global_variable_tree_view'],
-                                                              gtk.ListStore(str, str, str, str), logger)
+                                                              Gtk.ListStore(str, str, str, str), logger)
 
         self.global_variable_counter = 0
         self.list_store_iterators = {}
@@ -80,7 +80,7 @@ class GlobalVariableManagerController(ListViewController):
         view['delete_global_variable_button'].connect('clicked', self.on_remove)
         view['lock_global_variable_button'].connect('clicked', self.on_lock)
         view['unlock_global_variable_button'].connect('clicked', self.on_unlock)
-        self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
+        self._tree_selection.set_mode(Gtk.SelectionMode.MULTIPLE)
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions

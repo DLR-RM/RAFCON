@@ -21,7 +21,7 @@
 
 """
 
-import gtk
+from gi.repository import Gtk
 
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -87,13 +87,13 @@ class TopToolBarController(ExtendedController):
         if event.is_hint:
             x, y, state = event.window.get_pointer()
         else:
-            state = event.state
+            state = event.get_state()
 
-        if state & gtk.gdk.BUTTON1_MASK:
-            self.top_level_window.begin_move_drag(gtk.gdk.BUTTON1_MASK, int(event.x_root), int(event.y_root), 0)
+        if state & Gdk.ModifierType.BUTTON1_MASK:
+            self.top_level_window.begin_move_drag(Gdk.ModifierType.BUTTON1_MASK, int(event.x_root), int(event.y_root), 0)
 
     def button_pressed_event(self, widget, event=None):
-        if event.type == gtk.gdk._2BUTTON_PRESS:
+        if event.type == Gdk._2BUTTON_PRESS:
             self.on_maximize_button_clicked(None)
 
 

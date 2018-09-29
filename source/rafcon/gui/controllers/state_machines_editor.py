@@ -23,7 +23,7 @@
 
 import collections
 import copy
-import gtk
+from gi.repository import Gtk
 
 import rafcon.core.singleton
 from rafcon.core.states.hierarchy_state import HierarchyState
@@ -38,7 +38,7 @@ from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.graphical_editor import GraphicalEditorView
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
-from gtk.gdk import SHIFT_MASK, CONTROL_MASK
+from Gtk.gdk import SHIFT_MASK, CONTROL_MASK
 from rafcon.gui.helpers.label import create_image_menu_item
 from rafcon.utils import log
 
@@ -57,12 +57,12 @@ ROOT_STATE_NAME_MAX_CHARS = 25
 
 
 def create_tab_close_button(callback, *additional_parameters):
-    close_label = gtk.Label()
+    close_label = Gtk.Label()
     close_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, constants.FONT_SIZE_SMALL,
                                                                       constants.BUTTON_CLOSE))
-    close_button = gtk.Button()
+    close_button = Gtk.Button()
     close_button.set_size_request(width=constants.GRID_SIZE*3, height=constants.GRID_SIZE*3)
-    close_button.set_relief(gtk.RELIEF_NONE)
+    close_button.set_relief(Gtk.ReliefStyle.NONE)
     close_button.set_focus_on_click(True)
     close_button.add(close_label)
 
@@ -79,14 +79,14 @@ def create_tab_header(title, close_callback, right_click_callback, *additional_p
         if event.button == 3 and right_click_callback:
             right_click_callback(event, *additional_parameters)
 
-    label = gtk.Label(title)
+    label = Gtk.Label(label=title)
     close_button = create_tab_close_button(close_callback, *additional_parameters)
 
-    hbox = gtk.HBox()
+    hbox = Gtk.HBox()
     hbox.pack_start(label, expand=True, fill=True, padding=constants.GRID_SIZE)
     hbox.pack_start(close_button, expand=False, fill=False, padding=0)
 
-    event_box = gtk.EventBox()
+    event_box = Gtk.EventBox()
     event_box.set_name("tab_label")  # required for gtkrc
     event_box.connect('button-press-event', handle_click, *additional_parameters)
     event_box.tab_label = label
@@ -269,7 +269,7 @@ class StateMachinesEditorController(ExtendedController):
         for p in range(number_of_pages):
             page = self.view["notebook"].get_nth_page(p)
             label = self.view["notebook"].get_tab_label(page).get_child().get_children()[0]
-            old_label_colors[p] = label.get_style().fg[gtk.STATE_NORMAL]
+            old_label_colors[p] = label.get_style().fg[Gtk.StateType.NORMAL]
 
         if not self.view.notebook.get_current_page() == page_id:
             self.view.notebook.set_current_page(page_id)
@@ -278,8 +278,8 @@ class StateMachinesEditorController(ExtendedController):
         for p in range(number_of_pages):
             page = self.view["notebook"].get_nth_page(p)
             label = self.view["notebook"].get_tab_label(page).get_child().get_children()[0]
-            label.modify_fg(gtk.STATE_ACTIVE, old_label_colors[p])
-            label.modify_fg(gtk.STATE_INSENSITIVE, old_label_colors[p])
+            label.modify_fg(Gtk.StateType.ACTIVE, old_label_colors[p])
+            label.modify_fg(Gtk.StateType.INSENSITIVE, old_label_colors[p])
 
     def set_active_state_machine(self, state_machine_id):
         page_num = self.get_page_num(state_machine_id)
@@ -332,7 +332,7 @@ class StateMachinesEditorController(ExtendedController):
 
     def on_mouse_right_click(self, event, state_machine_m, result):
 
-        menu = gtk.Menu()
+        menu = Gtk.Menu()
         for sm_id, sm_m in self.model.state_machines.iteritems():
             menu_item = create_image_menu_item(sm_m.root_state.state.name, constants.BUTTON_EXCHANGE,
                                                callback=self.change_selected_state_machine_id, callback_args=[sm_id])
@@ -365,7 +365,7 @@ class StateMachinesEditorController(ExtendedController):
         """
         from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
         force = True if event is not None and hasattr(event, 'state') and \
-                        event.state & SHIFT_MASK and event.state & CONTROL_MASK else force
+                        event.get_state() & SHIFT_MASK and event.get_state() & CONTROL_MASK else force
 
         def remove_state_machine_m():
             state_machine_id = state_machine_m.state_machine.state_machine_id
@@ -376,7 +376,7 @@ class StateMachinesEditorController(ExtendedController):
 
             message_string = "The state machine is still running. Are you sure you want to close?"
             dialog = RAFCONButtonDialog(message_string, ["Stop and close", "Cancel"],
-                                        message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+                                        message_type=Gtk.MessageType.QUESTION, parent=self.get_root_window())
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:
@@ -395,7 +395,7 @@ class StateMachinesEditorController(ExtendedController):
             message_string = "There are unsaved changed in the state machine '{0}' with id {1}. Do you want to close " \
                              "the state machine anyway?".format(root_state_name, sm_id)
             dialog = RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"],
-                                        message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+                                        message_type=Gtk.MessageType.QUESTION, parent=self.get_root_window())
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:  # Close without saving pressed
@@ -481,11 +481,11 @@ class StateMachinesEditorController(ExtendedController):
         if active:
             draw_for_all_gtk_states(label,
                                     "modify_fg",
-                                    gtk.gdk.color_parse(global_gui_config.colors['STATE_MACHINE_ACTIVE']))
+                                    Gdk.color_parse(global_gui_config.colors['STATE_MACHINE_ACTIVE']))
         else:
             draw_for_all_gtk_states(label,
                                     "modify_fg",
-                                    gtk.gdk.color_parse(global_gui_config.colors['STATE_MACHINE_NOT_ACTIVE']))
+                                    Gdk.color_parse(global_gui_config.colors['STATE_MACHINE_NOT_ACTIVE']))
 
     def refresh_state_machines(self, state_machine_ids):
         """ Refresh list af state machine tabs

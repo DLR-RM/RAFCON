@@ -103,7 +103,7 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
 
 
 def call_gui_callback(callback, *args, **kwargs):
-    """Wrapper method for glib.idle_add
+    """Wrapper method for GLib.idle_add
 
     This method is intended as replacement for idle_add. It wraps the method with a callback option. The advantage is
     that this way, the call is blocking. The method return, when the callback method has been called and executed.
@@ -112,7 +112,7 @@ def call_gui_callback(callback, *args, **kwargs):
     :param args: The parameters to be passed to the callback method
     """
     global exception_info, result
-    import glib
+    from gi.repository import GLib
     condition = Condition()
     exception_info = None
 
@@ -136,9 +136,9 @@ def call_gui_callback(callback, *args, **kwargs):
     if "priority" in kwargs:
         priority = kwargs["priority"]
     else:
-        priority = glib.PRIORITY_LOW
+        priority = GLib.PRIORITY_LOW
 
-    glib.idle_add(fun, priority=priority)
+    GLib.idle_add(fun, priority=priority)
     # Wait for the condition to be notified
     condition.acquire()
     # TODO: implement timeout that raises an exception
@@ -322,20 +322,20 @@ def shutdown_environment_only_core(config=True, caplog=None, expected_warnings=0
 
 
 def wait_for_gui():
-    import gtk
-    while gtk.events_pending():
-        gtk.main_iteration(False)
+    from gi.repository import Gtk
+    while Gtk.events_pending():
+        Gtk.main_iteration(False)
 
 
 def run_gui_thread(gui_config=None, runtime_config=None):
-    import gobject
-    import gtk
+    from gi.repository import GObject
+    from gi.repository import Gtk
     from rafcon.core.start import reactor_required
     from rafcon.gui.start import start_gtk, install_reactor
     from rafcon.utils.i18n import setup_l10n
     global gui_ready
     # see https://stackoverflow.com/questions/35700140/pygtk-run-gtk-main-loop-in-a-seperate-thread
-    gobject.threads_init()
+    GObject.threads_init()
     if reactor_required():
         install_reactor()
     setup_l10n()
@@ -344,7 +344,7 @@ def run_gui_thread(gui_config=None, runtime_config=None):
 
     initialize_environment_gui(gui_config, runtime_config)
     main_window_view = MainWindowView()
-    main_window_view.get_top_widget().set_gravity(gtk.gdk.GRAVITY_STATIC)
+    main_window_view.get_top_widget().set_gravity(Gdk.GRAVITY_STATIC)
     MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
 
     print "run_gui thread: ", currentThread(), currentThread().ident, "gui.singleton thread ident:", \
@@ -353,7 +353,7 @@ def run_gui_thread(gui_config=None, runtime_config=None):
     # Wait for GUI to initialize
     wait_for_gui()
     # Set an event when the gtk loop is running
-    gobject.idle_add(gui_ready.set)
+    GObject.idle_add(gui_ready.set)
     start_gtk()
 
 
@@ -369,9 +369,9 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     if patch_threading:
         patch_gtkmvc_model_mt()
     global gui_ready, gui_thread, gui_executed_once
-    # IMPORTANT enforce gtk.gtkgl import in the python main thread to avoid segfaults
+    # IMPORTANT enforce Gtk.gtkgl import in the python main thread to avoid segfaults
     # noinspection PyUnresolvedReferences
-    import gtk.gtkgl
+    import Gtk.gtkgl
 
     print "WT thread: ", currentThread(), currentThread().ident
     gui_ready = Event()
@@ -467,7 +467,7 @@ def patch_gtkmvc_model_mt():
             self.set_execution_mode(StateMachineExecutionStatus.STOPPED)
 
     def __patched__notify_observer__(self, observer, method, *args, **kwargs):
-        """This makes a call either through the gtk.idle list or a
+        """This makes a call either through the Gtk.idle list or a
         direct method call depending whether the caller's thread is
         different from the observer's thread"""
 
@@ -488,7 +488,7 @@ def patch_gtkmvc_model_mt():
             # multi-threading call
             if _threading.currentThread() in state_threads or _threading.currentThread() in auto_backup_threads:
                 # print "Notification from state thread", _threading.currentThread()
-                gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
+                GObject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
                 return
             elif _threading.currentThread() in used_gui_threads \
                     and self._ModelMT__observer_threads[observer] in used_gui_threads:
@@ -498,7 +498,7 @@ def patch_gtkmvc_model_mt():
                 print "Both threads are former gui threads! Current thread {}, Observer thread {}".format(
                     _threading.currentThread(), self._ModelMT__observer_threads[observer])
                 return Model.__notify_observer__(self, observer, method, *args, **kwargs)
-                # gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
+                # GObject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
                 # return
             else:
                 print "{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \

@@ -13,19 +13,19 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
-import gobject
+from gi.repository import Gtk
+from gi.repository import GObject
 from gtkmvc import View
 from rafcon.gui.utils import constants
 
-gobject.signal_new("tab_close_event", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, (int,))
+GObject.signal_new("tab_close_event", Gtk.Notebook, GObject.SignalFlags.RUN_FIRST, None, (int,))
 
 
 class StatesEditorView(View):
 
     def __init__(self):
         View.__init__(self)
-        self.notebook = gtk.Notebook()
+        self.notebook = Gtk.Notebook()
         self.notebook.set_scrollable(True)
         self.notebook.set_name('states_editor_notebook')
         self.notebook.set_tab_hborder(constants.TAB_BORDER_WIDTH)

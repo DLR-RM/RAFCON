@@ -12,10 +12,10 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
+from gi.repository import Gtk
 import threading
 from gtkmvc import View
-import glib
+from gi.repository import GLib
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -27,7 +27,7 @@ class LoggingConsoleView(View):
 
         self._lock = threading.Lock()
 
-        self.text_view = gtk.TextView()
+        self.text_view = Gtk.TextView()
         self.text_view.set_property('editable', False)
 
         self.filtered_buffer = self.create_text_buffer()
@@ -39,8 +39,8 @@ class LoggingConsoleView(View):
         self._enables = {}
         self._auto_scroll_handler_id = None
 
-        scrollable = gtk.ScrolledWindow()
-        scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrollable = Gtk.ScrolledWindow()
+        scrollable.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         scrollable.set_name('console_scroller')
         scrollable.add(self.text_view)
         self.text_view.show()
@@ -50,7 +50,7 @@ class LoggingConsoleView(View):
         self.quit_flag = False
 
         from rafcon.gui.config import global_gui_config
-        self.logging_priority = global_gui_config.get_config_value("LOGGING_CONSOLE_GTK_PRIORITY", glib.PRIORITY_LOW)
+        self.logging_priority = global_gui_config.get_config_value("LOGGING_CONSOLE_GTK_PRIORITY", GLib.PRIORITY_LOW)
 
         self._stored_line_number = None
         self._stored_line_offset = None
@@ -66,19 +66,19 @@ class LoggingConsoleView(View):
     def print_message(self, message, log_level):
         self._lock.acquire()
         if log_level <= log.logging.VERBOSE and self._enables.get('VERBOSE', False):
-            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
-                          priority=glib.PRIORITY_LOW)
+            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
+                          priority=GLib.PRIORITY_LOW)
         if log.logging.VERBOSE < log_level <= log.logging.DEBUG and self._enables.get('DEBUG', True):
-            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
+            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
                           priority=self.logging_priority)
         elif log.logging.DEBUG < log_level <= log.logging.INFO and self._enables.get('INFO', True):
-            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_info_color",
+            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_info_color",
                           priority=self.logging_priority)
         elif log.logging.INFO < log_level <= log.logging.WARNING and self._enables.get('WARNING', True):
-            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_warning_color",
+            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_warning_color",
                           priority=self.logging_priority)
         elif log.logging.WARNING < log_level and self._enables.get('ERROR', True):
-            glib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_error_color",
+            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_error_color",
                           priority=self.logging_priority)
         self._lock.release()
 
@@ -117,7 +117,7 @@ class LoggingConsoleView(View):
 
     @staticmethod
     def create_text_buffer():
-        text_buffer = gtk.TextBuffer()
+        text_buffer = Gtk.TextBuffer()
         text_buffer.create_tag("default", font="Monospace 10")
         text_buffer.create_tag("set_warning_color", foreground="orange")
         text_buffer.create_tag("set_error_color", foreground="red")
@@ -178,7 +178,7 @@ class LoggingConsoleView(View):
 
     def get_text_of_line(self, line_number_or_iter):
         text_buffer = self.text_view.get_buffer()
-        if isinstance(line_number_or_iter, gtk.TextIter):
+        if isinstance(line_number_or_iter, Gtk.TextIter):
             line_iter = line_number_or_iter
             line_end_iter = text_buffer.get_iter_at_line(line_iter.get_line())
         else:

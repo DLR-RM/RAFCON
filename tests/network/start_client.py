@@ -9,7 +9,7 @@
 """
 
 import logging
-import gtk
+from gi.repository import Gtk
 import signal
 import sys
 from os.path import realpath, dirname, join
@@ -56,7 +56,7 @@ def start_client(interacting_function, queue_dict):
     # check if twisted is imported
     if "twisted" in sys.modules.keys():
         from twisted.internet import gtk2reactor
-        # needed for glib.idle_add, and signals
+        # needed for GLib.idle_add, and signals
         gtk2reactor.install()
         from twisted.internet import reactor
     else:

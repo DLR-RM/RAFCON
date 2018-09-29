@@ -18,7 +18,7 @@
 
 """
 
-import gtk
+from gi.repository import Gtk
 
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.execution_state import ExecutionState
@@ -39,7 +39,7 @@ class StateIconController(ExtendedController):
         ExtendedController.__init__(self, model, view)
 
         self.shortcut_manager = shortcut_manager
-        view.drag_source_set(gtk.gdk.BUTTON1_MASK, [('STRING', 0, 0)], gtk.gdk.ACTION_COPY)
+        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [('STRING', 0, 0)], Gdk.DragAction.COPY)
 
     def register_view(self, view):
         super(StateIconController, self).register_view(view)
@@ -68,7 +68,7 @@ class StateIconController(ExtendedController):
         :param widget:
         :param context:
         """
-        self.view.drag_source_set_icon_stock(gtk.STOCK_NEW)
+        self.view.drag_source_set_icon_stock(Gtk.STOCK_NEW)
 
     def on_drag_end(self, widget, context):
         """if the drag is finished, all icons are unselected
@@ -82,7 +82,7 @@ class StateIconController(ExtendedController):
         """state insertion on mouse click
 
         :param widget:
-        :param gtk.gdk.Event event: mouse click event
+        :param Gdk.Event event: mouse click event
         """
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         if self.view.get_path_at_pos(int(event.x), int(event.y)) is not None \
@@ -93,7 +93,7 @@ class StateIconController(ExtendedController):
         """selection on mouse over
 
         :param widget:
-        :param gtk.gdk.Event event: mouse motion event
+        :param Gdk.Event event: mouse motion event
         """
         path = self.view.get_path_at_pos(int(event.x), int(event.y))
         if path is not None:

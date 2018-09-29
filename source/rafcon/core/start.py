@@ -68,8 +68,8 @@ def setup_environment():
     """Ensures that the environmental variable RAFCON_LIB_PATH is existent
     """
     try:
-        import glib
-        user_data_folder = glib.get_user_data_dir()
+        from gi.repository import GLib
+        user_data_folder = GLib.get_user_data_dir()
     except ImportError:
         user_data_folder = join(os.path.expanduser("~"), ".local", "share")
     rafcon_root_path = dirname(realpath(rafcon.__file__))

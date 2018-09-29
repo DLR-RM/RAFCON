@@ -16,7 +16,7 @@
    :synopsis: Configuration for runtime parameters, such as window size and position
 
 """
-import gtk
+from gi.repository import Gtk
 
 from rafcon.core.config import ObservableConfig
 
@@ -50,7 +50,7 @@ class RuntimeConfig(ObservableConfig):
         :param widget_name: The window or widget name of the widget, which constitutes a part of its key in the
         configuration file.
         """
-        if isinstance(widget, gtk.Window):
+        if isinstance(widget, Gtk.Window):
             maximized = bool(widget.maximize_initially)
             self.set_config_value('{0}_MAXIMIZED'.format(widget_name), maximized)
             if maximized:

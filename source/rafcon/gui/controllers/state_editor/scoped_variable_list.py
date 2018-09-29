@@ -20,8 +20,8 @@
 
 """
 
-import gtk
-import gobject
+from gi.repository import Gtk
+from gi.repository import GObject
 
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.state_elements.scope import ScopedVariable
@@ -67,7 +67,7 @@ class ScopedVariableListController(ListViewController):
 
     @staticmethod
     def get_new_list_store():
-        return gtk.ListStore(str, str, str, int, gobject.TYPE_PYOBJECT)
+        return Gtk.ListStore(str, str, str, int, GObject.TYPE_PYOBJECT)
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -213,8 +213,8 @@ class ScopedVariableListController(ListViewController):
                     data_type_name = data_type_module + '.' + data_type_name
                 tmp.append([sv_model.scoped_variable.name, data_type_name,
                             sv_model.scoped_variable.default_value, sv_model.scoped_variable.data_port_id, sv_model])
-            tms = gtk.TreeModelSort(tmp)
-            tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
+            tms = Gtk.TreeModelSort(tmp)
+            tms.set_sort_column_id(0, Gtk.SortType.ASCENDING)
             tms.set_sort_func(0, compare_variables)
             tms.sort_column_changed()
             tmp = tms

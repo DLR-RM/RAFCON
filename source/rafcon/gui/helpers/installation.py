@@ -16,11 +16,11 @@ import subprocess
 import distutils.log
 
 try:
-    import gtk
+    from gi.repository import Gtk
 except ImportError:
     gtk = None
 try:
-    import glib
+    from gi.repository import GLib
 except ImportError:
     glib = None
 
@@ -37,7 +37,7 @@ def install_fonts(logger=None, restart=False):
         log.warn("No GTK found. Will not install fonts.")
         return
 
-    tv = gtk.TextView()
+    tv = Gtk.TextView()
     try:
         context = tv.get_pango_context()
     except Exception as e:
@@ -95,7 +95,7 @@ def install_gtk_source_view_styles(logger=None):
     else:
         log = distutils.log
     if glib:
-        user_data_folder = glib.get_user_data_dir()
+        user_data_folder = GLib.get_user_data_dir()
     else:
         user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
     user_source_view_style_path = os.path.join(user_data_folder, 'gtksourceview-2.0', 'styles')
@@ -126,7 +126,7 @@ def install_libraries(logger=None, overwrite=True):
     else:
         log = distutils.log
     if glib:
-        user_data_folder = glib.get_user_data_dir()
+        user_data_folder = GLib.get_user_data_dir()
     else:
         user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
     user_library_path = os.path.join(user_data_folder, 'rafcon', 'libraries')

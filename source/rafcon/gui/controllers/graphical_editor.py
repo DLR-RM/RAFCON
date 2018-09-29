@@ -20,16 +20,16 @@
 
 """
 
-import gobject
+from gi.repository import GObject
 import itertools
 import sys
 import time
 from copy import copy
 from functools import partial
 from gtk import DEST_DEFAULT_ALL
-from gtk.gdk import ACTION_COPY, ModifierType
-from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
-from gtk.gdk import keyval_name
+from Gtk.gdk import ACTION_COPY, ModifierType
+from Gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
+from Gtk.gdk import keyval_name
 from math import sin, cos, atan2
 
 from rafcon.core.decorators import lock_state_machine
@@ -358,7 +358,7 @@ class GraphicalEditorController(ExtendedController):
         else:
             # Only set the timer, if no timer is existing
             if self.timer_id is None:
-                self.timer_id = gobject.timeout_add(int(redraw_after * 1000), self._redraw, True)
+                self.timer_id = GObject.timeout_add(int(redraw_after * 1000), self._redraw, True)
             else:
                 return True  # Causes the periodic timer to continue
 
@@ -420,12 +420,12 @@ class GraphicalEditorController(ExtendedController):
 
         # Multi-selection is started when the user hold the shift key pressed while clicking the left mouse button,
         # and does this _not_ on a resize handler or waypoint
-        if event.button == 1 and event.state & SHIFT_MASK == 1 and \
+        if event.button == 1 and event.get_state() & SHIFT_MASK == 1 and \
                         self.selected_resizer is None and self.selected_waypoint is None:
             self.multi_selection_started = True
 
         # Left mouse button was clicked and no multi selection intended
-        if event.button == 1 and event.state & SHIFT_MASK == 0:
+        if event.button == 1 and event.get_state() & SHIFT_MASK == 0:
             if not self.mouse_move_redraw:
                 self.single_selection = new_selection
 
@@ -573,7 +573,7 @@ class GraphicalEditorController(ExtendedController):
 
         # If no mouse button is pressed while the mouse is moving, we only have to change whether another component
         # wants to redraw the editor on mouse move
-        if event.state & (BUTTON1_MASK | BUTTON2_MASK | BUTTON3_MASK) == 0:
+        if event.get_state() & (BUTTON1_MASK | BUTTON2_MASK | BUTTON3_MASK) == 0:
             if self.mouse_move_redraw:
                 mouse_current_coord = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
                 self.mouse_move_last_coords = mouse_current_coord
@@ -581,7 +581,7 @@ class GraphicalEditorController(ExtendedController):
             return
 
         # Move while middle button is clicked moves the view
-        if self.last_button_pressed == 2 or (self.space_bar and event.state & BUTTON1_MASK > 0):
+        if self.last_button_pressed == 2 or (self.space_bar and event.get_state() & BUTTON1_MASK > 0):
             delta_pos = subtract_pos((event.x, event.y), self.mouse_move_last_pos)
             self._move_view(delta_pos)
 
@@ -594,7 +594,7 @@ class GraphicalEditorController(ExtendedController):
             return
 
         # States and ports shell only be moved with the left mouse button clicked and the shift key not hold
-        if event.state & SHIFT_MASK == 0 and self.last_button_pressed == 1:
+        if event.get_state() & SHIFT_MASK == 0 and self.last_button_pressed == 1:
             # Move all selected states and data ports of thr multi-selection
             if len(self.model.selection) > 1 and self.selected_outcome is None and self.selected_resizer is None:
                 # When starting a move, two information are stored:
@@ -684,7 +684,7 @@ class GraphicalEditorController(ExtendedController):
                 self._last_meta_data_changed = "waypoint_position"
                 self.changes_affect_children = False
                 self.changed_models.append(connection_m)
-            snap = event.state & SHIFT_MASK != 0
+            snap = event.get_state() & SHIFT_MASK != 0
             self._move_waypoint(connection_m, waypoint_id, mouse_current_coord, snap)
 
         # Redraw to show the new transition/data flow the user is creating with drag and drop
@@ -702,7 +702,7 @@ class GraphicalEditorController(ExtendedController):
                                       state_m.get_meta_data_editor(for_gaphas=False)['size'][1])
                 self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords, lower_right_corner)
             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
-            modifier_keys = event.state
+            modifier_keys = event.get_state()
             keep_ratio = int(modifier_keys & SHIFT_MASK) > 0
             resize_content = int(modifier_keys & CONTROL_MASK) > 0
             if resize_content:

@@ -75,7 +75,7 @@ class MainWindowView(View):
         ######################################################
         self.state_icons = StateIconView()
         self.state_icons.show()
-        self["state_icons_box"].pack_start(self.state_icons.get_top_widget())
+        self["state_icons_box"].pack_start(self.state_icons.get_top_widget(, True, True, 0))
 
         ######################################################
         # State Machine Tree
@@ -118,7 +118,7 @@ class MainWindowView(View):
         ######################################################
         self.state_machines_editor = StateMachinesEditorView()
         self.state_machines_editor.show()
-        self['graphical_editor_vbox'].pack_start(self.state_machines_editor.get_top_widget(), True, True, 0)
+        self['graphical_editor_vbox'].pack_start(self.state_machines_editor.get_top_widget(, True, True, 0), True, True, 0)
         self['graphical_editor_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 0)
 
         self['graphical_editor_label_event_box'].remove(self['graphical_editor_label'])
@@ -163,19 +163,19 @@ class MainWindowView(View):
         self.top_tool_bar = TopToolBarView()
         self.top_tool_bar.show()
         self['top_menu_hbox'].remove(self['top_tool_bar_placeholder'])
-        self['top_menu_hbox'].pack_end(self.top_tool_bar.get_top_widget(), expand=True, fill=True, padding=0)
+        self['top_menu_hbox'].pack_end(self.top_tool_bar.get_top_widget(, True, True, 0), expand=True, fill=True, padding=0)
         self['top_menu_hbox'].reorder_child(self.top_tool_bar.get_top_widget(), 1)
 
         self.menu_bar = MenuBarView(self)
         self.menu_bar.show()
         self['top_menu_hbox'].remove(self['menu_bar_placeholder'])
-        self['top_menu_hbox'].pack_start(self.menu_bar.get_top_widget(), expand=False, fill=True, padding=0)
+        self['top_menu_hbox'].pack_start(self.menu_bar.get_top_widget(, True, True, 0), expand=False, fill=True, padding=0)
         self['top_menu_hbox'].reorder_child(self.menu_bar.get_top_widget(), 0)
 
         self.tool_bar = ToolBarView()
         self.tool_bar.show()
         self['top_level_vbox'].remove(self['tool_bar_placeholder'])
-        self['top_level_vbox'].pack_start(self.tool_bar.get_top_widget(), expand=False, fill=True, padding=0)
+        self['top_level_vbox'].pack_start(self.tool_bar.get_top_widget(, True, True, 0), expand=False, fill=True, padding=0)
         self['top_level_vbox'].reorder_child(self.tool_bar.get_top_widget(), 1)
 
         ################################################

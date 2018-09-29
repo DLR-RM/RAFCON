@@ -23,7 +23,7 @@
 
 import os
 import logging
-import gtk
+from gi.repository import Gtk
 from functools import partial
 
 import rafcon.core.config
@@ -454,7 +454,7 @@ class MainWindowController(ExtendedController):
         self.console_hidden = True
 
     def undock_window_callback(self, widget, event, undocked_window):
-        if event.new_window_state & gtk.gdk.WINDOW_STATE_WITHDRAWN or event.new_window_state & gtk.gdk.WINDOW_STATE_ICONIFIED:
+        if event.new_window_state & Gdk.WindowState.WITHDRAWN or event.new_window_state & Gdk.WindowState.ICONIFIED:
             undocked_window.iconify()
         else:
             undocked_window.deiconify()
@@ -585,32 +585,32 @@ class MainWindowController(ExtendedController):
     def _on_key_press(self, widget, event):
         """Updates the currently pressed keys
 
-        :param gtk.Widget widget: The main window
-        :param gtk.gdk.Event event: The key press event
+        :param Gtk.Widget widget: The main window
+        :param Gdk.Event event: The key press event
         """
         self.currently_pressed_keys.add(event.keyval)
 
     def _on_key_release(self, widget, event):
         """Updates the currently pressed keys
 
-        :param gtk.Widget widget: The main window
-        :param gtk.gdk.Event event: The key release event
+        :param Gtk.Widget widget: The main window
+        :param Gdk.Event event: The key release event
         """
         self.currently_pressed_keys.discard(event.keyval)
 
     def _on_key_press(self, widget, event):
         """Updates the currently pressed keys
 
-        :param gtk.Widget widget: The main window
-        :param gtk.gdk.Event event: The key press event
+        :param Gtk.Widget widget: The main window
+        :param Gdk.Event event: The key press event
         """
         self.currently_pressed_keys.add(event.keyval)
 
     def _on_key_release(self, widget, event):
         """Updates the currently pressed keys
 
-        :param gtk.Widget widget: The main window
-        :param gtk.gdk.Event event: The key release event
+        :param Gtk.Widget widget: The main window
+        :param Gdk.Event event: The key release event
         """
         self.currently_pressed_keys.discard(event.keyval)
         

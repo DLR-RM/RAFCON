@@ -19,8 +19,8 @@
 
 """
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
 
 from rafcon.core.state_elements.transition import Transition
 from rafcon.core.states.library_state import LibraryState
@@ -60,8 +60,8 @@ class StateTransitionsListController(LinkageListController):
     def __init__(self, model, view):
         # ListStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
         #                   name-color, to-state-color, transition-object, state-object, is_editable, transition-model
-        list_store = gtk.ListStore(int, str, str, str, str, bool,
-                                   gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
+        list_store = Gtk.ListStore(int, str, str, str, str, bool,
+                                   GObject.TYPE_PYOBJECT, GObject.TYPE_PYOBJECT, bool, GObject.TYPE_PYOBJECT)
 
         self.view_dict = {'transitions_internal': True, 'transitions_external': True}
         self.combo = {}
@@ -318,10 +318,10 @@ class StateTransitionsListController(LinkageListController):
         :param is_external:
         :return:
         """
-        from_state_combo = gtk.ListStore(str, str)
-        from_outcome_combo = gtk.ListStore(str)
-        to_state_combo = gtk.ListStore(str)
-        to_outcome_combo = gtk.ListStore(str)
+        from_state_combo = Gtk.ListStore(str, str)
+        from_outcome_combo = Gtk.ListStore(str)
+        to_state_combo = Gtk.ListStore(str)
+        to_outcome_combo = Gtk.ListStore(str)
 
         trans_dict = model.state.transitions
 
@@ -501,7 +501,7 @@ class StateTransitionsListController(LinkageListController):
                 self.combo['free_ext_from_outcomes_dict'] = free_from_outcomes_dict
 
     def _update_tree_store(self):
-        """ Updates TreeStore of the gtk.ListView according internal combo knowledge gained by
+        """ Updates TreeStore of the Gtk.ListView according internal combo knowledge gained by
         _update_internal_data_base function call.
         """
 

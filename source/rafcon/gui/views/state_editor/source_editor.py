@@ -12,7 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
+from gi.repository import Gtk
 
 from rafcon.gui.utils import constants
 from rafcon.gui.views.utils.editor import EditorView, gtksourceview2
@@ -25,7 +25,7 @@ class SourceEditorView(EditorView):
                                                editor_style="SOURCE_EDITOR_STYLE", run_with_spacer=True)
 
         try:
-            if isinstance(self.textview, gtksourceview2.View):
+            if isinstance(self.textview, GtkSource.View):
                 self.textview.set_tab_width(4)
                 self.textview.set_insert_spaces_instead_of_tabs(True)
                 self.textview.set_show_line_numbers(True)
@@ -33,24 +33,24 @@ class SourceEditorView(EditorView):
                 self.textview.set_highlight_current_line(True)
         except NameError:
             pass
-        hbox = gtk.HBox()
-        pylint_check_button = gtk.CheckButton("Validate")
+        hbox = Gtk.HBox()
+        pylint_check_button = Gtk.CheckButton("Validate")
         pylint_check_button.set_focus_on_click(False)
         # pylint_check_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         # print "size", pylint_check_button.get_allocation(), constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT
         # pylint_check_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
 
-        open_external_button = gtk.ToggleButton("Open externally")
+        open_external_button = Gtk.ToggleButton("Open externally")
         open_external_button.set_focus_on_click(False)
         # open_external_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         # open_external_button.set_size_request(130, constants.BUTTON_MIN_HEIGHT)
 
-        apply_button = gtk.Button("Apply")
+        apply_button = Gtk.Button("Apply")
         apply_button.set_focus_on_click(False)
         # apply_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         apply_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
 
-        cancel_button = gtk.Button("Reset")
+        cancel_button = Gtk.Button("Reset")
         cancel_button.set_focus_on_click(False)
         # cancel_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         cancel_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)

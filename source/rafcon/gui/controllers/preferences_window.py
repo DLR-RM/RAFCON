@@ -17,7 +17,7 @@
    :synopsis: a module holding the controller for the configuration of GUI and Core
 
 """
-import gtk
+from gi.repository import Gtk
 import yaml_configuration.config
 from os.path import dirname
 
@@ -45,14 +45,14 @@ class PreferencesWindowController(ExtendedController):
         self.observe_model(gui_config_model)
 
         # (config_key, config_value, text_visible, toggle_activatable, toggle_visible, text_editable, toggle_value)
-        self.core_list_store = gtk.ListStore(str, str, bool, bool, bool, bool, bool)
-        self.library_list_store = gtk.ListStore(str, str)
-        self.gui_list_store = gtk.ListStore(str, str, bool, bool, bool, bool, bool)
-        self.shortcut_list_store = gtk.ListStore(str, str)
+        self.core_list_store = Gtk.ListStore(str, str, bool, bool, bool, bool, bool)
+        self.library_list_store = Gtk.ListStore(str, str)
+        self.gui_list_store = Gtk.ListStore(str, str, bool, bool, bool, bool, bool)
+        self.shortcut_list_store = Gtk.ListStore(str, str)
 
         self._lib_counter = 0
-        self._gui_checkbox = gtk.CheckButton("GUI Config")
-        self._core_checkbox = gtk.CheckButton("Core Config")
+        self._gui_checkbox = Gtk.CheckButton("GUI Config")
+        self._core_checkbox = Gtk.CheckButton("Core Config")
         self._last_path = self.core_config_model.config.path
 
     def __destroy(self):
@@ -206,7 +206,7 @@ class PreferencesWindowController(ExtendedController):
     def _update_list_store_entry(list_store, config_key, config_value):
         """Helper method to update a list store
 
-        :param gtk.ListStore list_store: List store to be updated
+        :param Gtk.ListStore list_store: List store to be updated
         :param str config_key: Config key to search for
         :param config_value: New config value
         :returns: Row of list store that has been updated
@@ -223,7 +223,7 @@ class PreferencesWindowController(ExtendedController):
         """Generic method to create list store for a given config model
 
         :param ConfigModel config_m: Config model to read into list store
-        :param gtk.ListStore list_store: List store to be filled
+        :param Gtk.ListStore list_store: List store to be filled
         :param list ignore_keys: List of keys that should be ignored
         """
         list_store.clear()
@@ -271,8 +271,8 @@ class PreferencesWindowController(ExtendedController):
     def _select_row_by_column_value(tree_view, list_store, column, value):
         """Helper method to select a tree view row
 
-        :param gtk.TreeView tree_view: Tree view who's row is to be selected
-        :param gtk.ListStore list_store: List store of the tree view
+        :param Gtk.TreeView tree_view: Tree view who's row is to be selected
+        :param Gtk.ListStore list_store: List store of the tree view
         :param int column: Column in which the value is searched
         :param value: Value to search for
         :returns: Row of list store that has selected
@@ -317,10 +317,10 @@ class PreferencesWindowController(ExtendedController):
     def _on_checkbox_toggled(self, renderer, path, config_m, config_list_store):
         """Callback method handling a config toggle event
 
-        :param gtk.CellRenderer renderer: Cell renderer that has been toggled
+        :param Gtk.CellRenderer renderer: Cell renderer that has been toggled
         :param path: Path within the list store
         :param ConfigModel config_m: The config model related to the toggle option
-        :param gtk.ListStore config_list_store: The list store related to the toggle option
+        :param Gtk.ListStore config_list_store: The list store related to the toggle option
         """
         config_key = config_list_store[int(path)][0]
         config_value = bool(config_list_store[int(path)][6])
@@ -333,13 +333,13 @@ class PreferencesWindowController(ExtendedController):
         Shows a dialog allowing to import an existing configuration file
         """
         def handle_import(dialog_text, path_name):
-            chooser = gtk.FileChooserDialog(dialog_text, None,
-                                            gtk.FILE_CHOOSER_ACTION_SAVE,
-                                            (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                             gtk.STOCK_OPEN, gtk.RESPONSE_ACCEPT))
+            chooser = Gtk.FileChooserDialog(dialog_text, None,
+                                            Gtk.FileChooserAction.SAVE,
+                                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                             Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT))
             chooser.set_current_folder(path_name)
             response = chooser.run()
-            if response == gtk.RESPONSE_ACCEPT:
+            if response == Gtk.ResponseType.ACCEPT:
                 # get_filename() returns the whole file path inclusively the filename
                 config_file = chooser.get_filename()
                 config_path = dirname(config_file)
@@ -356,7 +356,7 @@ class PreferencesWindowController(ExtendedController):
                     logger.info("Imported GUI Config from {0}".format(config_file))
                 else:
                     logger.error("{0} is not a valid config file".format(config_file))
-            elif response == gtk.RESPONSE_CANCEL:
+            elif response == Gtk.ResponseType.CANCEL:
                 logger.info("Import of configuration cancelled")
             chooser.destroy()
 
@@ -372,17 +372,17 @@ class PreferencesWindowController(ExtendedController):
         """
         response = self._config_chooser_dialog("Export configuration",
                                                "Please select the configuration file(s) to be exported:")
-        if response == gtk.RESPONSE_REJECT:
+        if response == Gtk.ResponseType.REJECT:
             return
 
         def handle_export(dialog_text, path, config_m):
-            chooser = gtk.FileChooserDialog(dialog_text, None,
-                                            gtk.FILE_CHOOSER_ACTION_SAVE,
-                                            (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                             gtk.STOCK_SAVE_AS, gtk.RESPONSE_ACCEPT))
+            chooser = Gtk.FileChooserDialog(dialog_text, None,
+                                            Gtk.FileChooserAction.SAVE,
+                                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                             Gtk.STOCK_SAVE_AS, Gtk.ResponseType.ACCEPT))
             chooser.set_current_folder(path)
             response = chooser.run()
-            if response == gtk.RESPONSE_ACCEPT:
+            if response == Gtk.ResponseType.ACCEPT:
                 config_file = chooser.get_filename()
                 if not config_file:
                     logger.error("Configuration could not be exported! Invalid file name!")
@@ -402,7 +402,7 @@ class PreferencesWindowController(ExtendedController):
                         logger.info("Configuration exported to {}" .format(config_file))
                     except IOError:
                         logger.error("Cannot open file '{}' for writing".format(config_file))
-            elif response == gtk.RESPONSE_CANCEL:
+            elif response == Gtk.ResponseType.CANCEL:
                 logger.warning("Export Config canceled!")
             chooser.destroy()
 
@@ -445,8 +445,8 @@ class PreferencesWindowController(ExtendedController):
         changes_str = ''
         if self.core_config_model.changed_keys_requiring_restart or \
                 self.gui_config_model.changed_keys_requiring_restart:
-            message = gtk.MessageDialog(parent=self.view["preferences_window"], flags=gtk.DIALOG_MODAL,
-                                        type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
+            message = Gtk.MessageDialog(parent=self.view["preferences_window"], flags=Gtk.DialogFlags.MODAL,
+                                        type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK)
             message_string = "You must restart RAFCON to apply following changes: \n"
             for key in (self.core_config_model.changed_keys_requiring_restart |
                         self.gui_config_model.changed_keys_requiring_restart):
@@ -461,16 +461,16 @@ class PreferencesWindowController(ExtendedController):
 
         Hides the window.
 
-        :param gtk.Window window: The window
-        :param gtk.gdk.Event event: Event data
+        :param Gtk.Window window: The window
+        :param Gdk.Event event: Event data
         """
         window.hide()
-        return gtk.TRUE
+        return True
 
     def _on_library_name_changed(self, renderer, path, new_library_name):
         """Callback handling a change of a library name
 
-        :param gtk.CellRenderer renderer: Cell renderer showing the library name
+        :param Gtk.CellRenderer renderer: Cell renderer showing the library name
         :param path: Path of library within the list store
         :param str new_library_name: New library name
         """
@@ -489,7 +489,7 @@ class PreferencesWindowController(ExtendedController):
     def _on_library_path_changed(self, renderer, path, new_library_path):
         """Callback handling a change of a library path
 
-        :param gtk.CellRenderer renderer: Cell renderer showing the library path
+        :param Gtk.CellRenderer renderer: Cell renderer showing the library path
         :param path: Path of library within the list store
         :param str new_library_path: New library path
         """
@@ -504,7 +504,7 @@ class PreferencesWindowController(ExtendedController):
     def _on_shortcut_changed(self, renderer, path, new_shortcuts):
         """Callback handling a change of a shortcut
 
-        :param gtk.CellRenderer renderer: Cell renderer showing the shortcut
+        :param Gtk.CellRenderer renderer: Cell renderer showing the shortcut
         :param path: Path of shortcuts within the list store
         :param str new_shortcuts: New shortcuts
         """
@@ -530,10 +530,10 @@ class PreferencesWindowController(ExtendedController):
     def _on_config_value_changed(renderer, path, new_value, config_m, list_store):
         """Callback handling a change of a config value
 
-        :param gtk.CellRenderer renderer: Cell renderer showing the shortcut
+        :param Gtk.CellRenderer renderer: Cell renderer showing the shortcut
         :param path: Path of shortcuts within the list store
         :param ConfigModel config_m: The config model that is to be changed
-        :param gtk.ListStore list_store: The list store that is to be changed
+        :param Gtk.ListStore list_store: The list store that is to be changed
         """
         config_key = list_store[int(path)][0]
         old_value = config_m.get_current_config_value(config_key, use_preliminary=True)
@@ -568,20 +568,20 @@ class PreferencesWindowController(ExtendedController):
         :param title_text: Title text
         :param description: Description
         """
-        dialog = gtk.Dialog(title_text, self.view["preferences_window"],
+        dialog = Gtk.Dialog(title_text, self.view["preferences_window"],
                             flags=0, buttons=
-                            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        label = gtk.Label(description)
+                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                             Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+        label = Gtk.Label(label=description)
         label.set_padding(xpad=10, ypad=10)
-        dialog.vbox.pack_start(label)
+        dialog.vbox.pack_start(label, True, True, 0)
         label.show()
-        self._gui_checkbox = gtk.CheckButton("GUI Config")
-        dialog.vbox.pack_start(self._gui_checkbox)
+        self._gui_checkbox = Gtk.CheckButton("GUI Config")
+        dialog.vbox.pack_start(self._gui_checkbox, True, True, 0)
         self._gui_checkbox.show()
-        self._core_checkbox = gtk.CheckButton("Core Config")
+        self._core_checkbox = Gtk.CheckButton("Core Config")
         self._core_checkbox.show()
-        dialog.vbox.pack_start(self._core_checkbox)
+        dialog.vbox.pack_start(self._core_checkbox, True, True, 0)
         response = dialog.run()
         dialog.destroy()
         return response

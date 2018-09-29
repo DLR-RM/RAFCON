@@ -10,7 +10,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from cairo import ImageSurface, FORMAT_ARGB32, Context, Error
-from gtk.gdk import CairoContext
+from Gtk.gdk import CairoContext
 
 from math import ceil, sqrt
 

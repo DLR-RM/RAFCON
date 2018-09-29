@@ -12,7 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
+from gi.repository import Gtk
 from gtkmvc import View
 
 import rafcon.gui.helpers.label as gui_helper_label
@@ -23,7 +23,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 try:
-    import gtksourceview2
+    from gi.repository import GtkSource
 except ImportError:
     logger.warning("Python module 'gtksourceview2' not found!")
 
@@ -33,25 +33,25 @@ class EditorView(View):
     def __init__(self, name='SOURCE EDITOR', language='idl', editor_style="SOURCE_EDITOR_STYLE", run_with_spacer=False):
         View.__init__(self)
 
-        vbox = gtk.VBox()
+        vbox = Gtk.VBox()
 
         # create title view port widget
         source_label = gui_helper_label.create_label_with_text_and_spacing(name,
                                                                            letter_spacing=constants.LETTER_SPACING_1PT)
         source_label.set_alignment(0.0, 0.5)
-        source_box = gtk.EventBox()
+        source_box = Gtk.EventBox()
         source_box.set_name(name.replace(' ', '_').lower() + '_label_wrapper')
         source_box.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
         source_box.add(source_label)
         self.event_box = source_box
 
-        title_viewport = gtk.Viewport()
+        title_viewport = Gtk.Viewport()
         title_viewport.set_name(name.replace(' ', '_').lower() + "_title_wrapper")
         title_viewport.add(source_box)
         title_viewport.show_all()
 
         # prepare frame for the text editor
-        editor_frame = gtk.Frame()
+        editor_frame = Gtk.Frame()
 
         # create textview/sourceview2
         self.textview = None
@@ -59,41 +59,41 @@ class EditorView(View):
         self.language = language
         self.editor_style = editor_style
         try:
-            self.language_manager = gtksourceview2.LanguageManager()
+            self.language_manager = GtkSource.LanguageManager()
             if language in self.language_manager.get_language_ids():
 
-                self.textview = gtksourceview2.View(self.new_buffer())
+                self.textview = GtkSource.View(self.new_buffer())
                 self.textview.set_mark_category_pixbuf('INSTRUCTION',
-                                                       editor_frame.render_icon(gtk.STOCK_GO_FORWARD,
-                                                                                gtk.ICON_SIZE_MENU))
+                                                       editor_frame.render_icon(Gtk.STOCK_GO_FORWARD,
+                                                                                Gtk.IconSize.MENU))
                 self.using_source_view = True
             else:
                 logger.debug("Chosen language '{}' is not supported initiate simple TextView.".format(language))
-                self.textview = gtk.TextView()
+                self.textview = Gtk.TextView()
                 self.using_source_view = False
         except NameError:
-            self.textview = gtk.TextView()
+            self.textview = Gtk.TextView()
             self.using_source_view = False
 
         self.while_in_set_enabled = False
         self.register()
 
         # wrap text view with scroller window
-        scrollable = gtk.ScrolledWindow()
-        scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrollable = Gtk.ScrolledWindow()
+        scrollable.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         scrollable.add(self.textview)
         self.scrollable = scrollable
 
-        # wrap scroller window with gtk.Frame for proper viewing
+        # wrap scroller window with Gtk.Frame for proper viewing
         editor_frame.add(scrollable)
 
         # fill top widget vbox with title view port, source view and text view within
         vbox.pack_start(title_viewport, False, True, 0)
         self.spacer_frame = None
         if run_with_spacer:
-            # with spacer a gtk.Frame object is used as spacer and its is with the source view in one hbox
-            hbox_frame = gtk.HBox()
-            self.spacer_frame = gtk.Frame()
+            # with spacer a Gtk.Frame object is used as spacer and its is with the source view in one hbox
+            hbox_frame = Gtk.HBox()
+            self.spacer_frame = Gtk.Frame()
             hbox_frame.pack_end(self.spacer_frame, expand=False, fill=False)
             hbox_frame.pack_start(editor_frame, expand=True, fill=True)
             vbox.pack_start(hbox_frame, expand=True, fill=True)
@@ -104,8 +104,8 @@ class EditorView(View):
         self.top = 'editor_frame'
 
     def new_buffer(self):
-        style_scheme_manager = gtksourceview2.StyleSchemeManager()
-        b = gtksourceview2.Buffer()
+        style_scheme_manager = GtkSource.StyleSchemeManager()
+        b = GtkSource.Buffer()
         b.set_language(self.language_manager.get_language(self.language))
         b.set_highlight_syntax(True)
 

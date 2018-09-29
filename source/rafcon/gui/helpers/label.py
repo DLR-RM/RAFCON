@@ -14,7 +14,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
+from gi.repository import Gtk
 from gtk import Container, Button
 
 from rafcon.gui.utils import constants
@@ -30,9 +30,9 @@ def create_tab_header_label(tab_name, icons):
     :param icons: A dict mapping each tab_name to its corresponding icon
     :return: The GTK Eventbox holding the tab label
     """
-    tooltip_event_box = gtk.EventBox()
+    tooltip_event_box = Gtk.EventBox()
     tooltip_event_box.set_tooltip_text(tab_name)
-    tab_label = gtk.Label()
+    tab_label = Gtk.Label()
     if global_gui_config.get_config_value('USE_ICONS_AS_TAB_LABELS', True):
         tab_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
                             (constants.ICON_FONT,
@@ -50,23 +50,23 @@ def create_tab_header_label(tab_name, icons):
 
 def create_label_with_text_and_spacing(text, font=constants.INTERFACE_FONT, font_size=constants.FONT_SIZE_NORMAL,
                                        letter_spacing=constants.LETTER_SPACING_NONE):
-    label = gtk.Label()
+    label = Gtk.Label()
     set_label_markup(label, text, font, font_size, letter_spacing)
     label.show()
     return label
 
 
 def create_label_widget_with_icon(icon, text, tooltip=None):
-    hbox = gtk.HBox()
+    hbox = Gtk.HBox()
 
-    icon_label = gtk.Label()
+    icon_label = Gtk.Label()
     icon_label.set_markup('<span font_desc="{0} {1}">&#x{2};</span>'.format(constants.ICON_FONT,
                                                                             constants.FONT_SIZE_NORMAL,
                                                                             icon))
     icon_label.show()
     hbox.pack_start(icon_label, False, True, 2)
 
-    text_label = gtk.Label()
+    text_label = Gtk.Label()
     text_label.set_markup('<span font_desc="{0} {1}" letter_spacing="{2}">{3}</span>'.format(constants.INTERFACE_FONT,
                                                                                              constants.FONT_SIZE_NORMAL,
                                                                                              constants.LETTER_SPACING_075PT,
@@ -82,15 +82,15 @@ def create_label_widget_with_icon(icon, text, tooltip=None):
 
 def create_image_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=(),
                            accel_code=None, accel_group=None):
-    menu_item = gtk.ImageMenuItem()
+    menu_item = Gtk.ImageMenuItem()
     menu_item.set_image(create_label_widget_with_icon(icon_code, ""))
     menu_item.set_label(label_text)
     if callback is not None:
         menu_item.connect("activate", callback, *callback_args)
     menu_item.set_always_show_image(True)
     if accel_code is not None and accel_group is not None:
-        key, mod = gtk.accelerator_parse(accel_code)
-        menu_item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
+        key, mod = Gtk.accelerator_parse(accel_code)
+        menu_item.add_accelerator("activate", accel_group, key, mod, Gtk.AccelFlags.VISIBLE)
     return menu_item
 
 
@@ -105,7 +105,7 @@ def create_check_menu_item(label_text="", is_active=False, callback=None, callba
 def append_sub_menu_to_parent_menu(name, parent_menu, icon_code=None):
     sub_menu_item = create_image_menu_item(name, icon_code)
     parent_menu.append(sub_menu_item)
-    sub_menu = gtk.Menu()
+    sub_menu = Gtk.Menu()
     sub_menu_item.set_submenu(sub_menu)
     return sub_menu_item, sub_menu
 
@@ -117,7 +117,7 @@ def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
     :param font_size: The size of the icon
     :return: The created label
     """
-    label = gtk.Label()
+    label = Gtk.Label()
     set_label_markup(label, '&#x' + icon + ';', constants.ICON_FONT, font_size)
     label.show()
     return label
@@ -227,12 +227,12 @@ def set_window_size_and_position(window, window_key):
     window.resize(*size)
     if position:
         position = (max(0, position[0]), max(0, position[1]))
-        screen_width = gtk.gdk.screen_width()
-        screen_height = gtk.gdk.screen_height()
+        screen_width = Gdk.Screen.width()
+        screen_height = Gdk.Screen.height()
         if position[0] < screen_width and position[1] < screen_height:
             window.move(*position)
     else:
-        window.set_position(gtk.WIN_POS_MOUSE)
+        window.set_position(Gtk.WindowPosition.MOUSE)
     if maximized:
         window.maximize()
     window.show()
@@ -246,11 +246,11 @@ def draw_for_all_gtk_states(object, function_name, color):
     :param color: the color to use for drawing
     :return:
     """
-    getattr(object, function_name)(gtk.STATE_ACTIVE, color)
-    getattr(object, function_name)(gtk.STATE_INSENSITIVE, color)
-    getattr(object, function_name)(gtk.STATE_NORMAL, color)
-    getattr(object, function_name)(gtk.STATE_PRELIGHT, color)
-    getattr(object, function_name)(gtk.STATE_SELECTED, color)
+    getattr(object, function_name)(Gtk.StateType.ACTIVE, color)
+    getattr(object, function_name)(Gtk.StateType.INSENSITIVE, color)
+    getattr(object, function_name)(Gtk.StateType.NORMAL, color)
+    getattr(object, function_name)(Gtk.StateType.PRELIGHT, color)
+    getattr(object, function_name)(Gtk.StateType.SELECTED, color)
 
 
 def react_to_event(view, widget, event):
@@ -260,34 +260,34 @@ def react_to_event(view, widget, event):
     the same shortcut, only the one having the focus should react to it.
 
     :param gtkmvc.View view: The view in which the widget is registered
-    :param gtk.Widget widget: The widget that subscribed to the shortcut action, should be the top widget of the view
+    :param Gtk.Widget widget: The widget that subscribed to the shortcut action, should be the top widget of the view
     :param event: The event that caused the callback
     :return: Whether the widget is supposed to react to the event or not
     :rtype: bool
     """
     # See
-    # http://pygtk.org/pygtk2reference/class-gtkwidget.html#method-gtkwidget--is-focus and
-    # http://pygtk.org/pygtk2reference/class-gtkwidget.html#method-gtkwidget--has-focus
+    # http://pyGtk.org/pygtk2reference/class-gtkwidget.html#method-gtkwidget--is-focus and
+    # http://pyGtk.org/pygtk2reference/class-gtkwidget.html#method-gtkwidget--has-focus
     # for detailed information about the difference between is_focus() and has_focus()
     if not view:  # view needs to be initialized
         return False
-    # widget parameter must be set and a gtk.Widget
-    if not isinstance(widget, gtk.Widget):
+    # widget parameter must be set and a Gtk.Widget
+    if not isinstance(widget, Gtk.Widget):
         return False
     # Either the widget itself or one of its children must be the focus widget within their toplevel
-    child_is_focus = False if not isinstance(widget, gtk.Container) else bool(widget.get_focus_child())
+    child_is_focus = False if not isinstance(widget, Gtk.Container) else bool(widget.get_focus_child())
     if not child_is_focus and not widget.is_focus():
         return False
 
     def has_focus(widget):
         """Checks whether `widget` or one of its children ``has_focus()`` is ``True``
 
-        :param gtk.Widget widget: The widget to be checked
+        :param Gtk.Widget widget: The widget to be checked
         :return: If any (child) widget has the global input focus
         """
         if widget.has_focus():
             return True
-        if not isinstance(widget, gtk.Container):
+        if not isinstance(widget, Gtk.Container):
             return False
         return any(has_focus(child) for child in widget.get_children())
     # Either, for any of widget or its children, has_focus must be True, in this case the widget has the global focus.
@@ -295,8 +295,8 @@ def react_to_event(view, widget, event):
         return True
     # Or the callback was not triggered by a shortcut, but e.g. a mouse click or a call from a test.
     # If the callback was triggered by a shortcut action, the event has at least a length of two and the second
-    # element is a gtk.gdk.ModifierType
-    if len(event) < 2 or (len(event) >= 2 and not isinstance(event[1], gtk.gdk.ModifierType)):
+    # element is a Gdk.ModifierType
+    if len(event) < 2 or (len(event) >= 2 and not isinstance(event[1], Gdk.ModifierType)):
         return True
     return False
 
@@ -308,4 +308,4 @@ def is_event_of_key_string(event, key_string):
     :param tuple event: Event tuple generated by the ShortcutManager
     :param str key_string: Key string parsed to a key value and for condition check
     """
-    return len(event) >= 2 and not isinstance(event[1], gtk.gdk.ModifierType) and event[0] == gtk.accelerator_parse(key_string)[0]
+    return len(event) >= 2 and not isinstance(event[1], Gdk.ModifierType) and event[0] == Gtk.accelerator_parse(key_string)[0]
