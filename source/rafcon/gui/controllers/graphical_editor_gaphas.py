@@ -89,7 +89,7 @@ class GraphicalEditorController(ExtendedController):
         view.setup_canvas(self.canvas, self.zoom)
 
         view.editor.drag_dest_set(gtk.DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
-        logger.verbose("Time spent in init {0} seconds for state machine {1}"
+        logger.verbose("Time spent in 'init': {0:.3}s (state machine {1})"
                        "".format(time.time() - start_time, self.model.state_machine_id))
 
     def destroy(self):
@@ -787,7 +787,7 @@ class GraphicalEditorController(ExtendedController):
                 self._meta_data_changed(None, self.root_state_m, 'append_initial_change', True)
                 logger.info("Opening the state machine caused some meta data to be generated, which will be stored "
                             " when the state machine is being saved.")
-        logger.verbose("Time spent in setup canvas {0} state machine {1}".format(time.time() - start_time_view_generation,
+        logger.verbose("Time spent in 'setup_canvas': {0:.3}s (state machine {1})".format(time.time() - start_time_view_generation,
                                                                                  self.model.state_machine_id))
 
         # finally set the focus to the root state (needs to be idle add to be executed after gaphas drawing is finished)

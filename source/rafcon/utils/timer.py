@@ -10,7 +10,7 @@ def measure_time(func):
         start = timer()
         return_value = func(*args, **kwargs)
         end = timer()
-        logger.verbose("Method to profile: {0} (args: {1}; kwargs: {2}); Consumed time: {3}".format(func.__name__, str(args), str(kwargs), str((end - start))))
+        logger.verbose("Profiler: {0} (args: {1}; kwargs: {2}); duration: {3:.3}s".format(func.__name__, str(args), str(kwargs), end - start))
         return return_value
     return func_wrapper
 
