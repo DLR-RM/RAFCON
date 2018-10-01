@@ -15,6 +15,7 @@ Next release
 
     -
   - A `DataPort` with data type `object` can now be connected to any other `DataPort`
+  - :issue:`602` Hide menu entries without function
 
 - Bug Fixes:
 
