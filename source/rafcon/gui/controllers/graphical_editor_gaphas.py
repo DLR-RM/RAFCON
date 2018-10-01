@@ -139,7 +139,6 @@ class GraphicalEditorController(ExtendedController):
 
         shortcut_manager.add_callback_for_action('show_data_flows', self.update_view)
         shortcut_manager.add_callback_for_action('show_data_values', self.update_view)
-        shortcut_manager.add_callback_for_action('data_flow_mode', self.data_flow_mode)
         shortcut_manager.add_callback_for_action('show_aborted_preempted', self.update_view)
 
     @ExtendedController.observe('config', after=True)
@@ -209,11 +208,6 @@ class GraphicalEditorController(ExtendedController):
                 self.view.editor.handler_unblock(self.focus_changed_handler_id)
 
     def update_view(self, *args):
-        self.canvas.update_root_items()
-
-    @lock_state_machine
-    def data_flow_mode(self, *args):
-        self.handle_selected_states(self.model.selection.states)
         self.canvas.update_root_items()
 
     @lock_state_machine
