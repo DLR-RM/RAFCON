@@ -14,6 +14,7 @@ Next release
 - Improvements:
 
     -
+  - A `DataPort` with data type `object` can now be connected to any other `DataPort`
 
 - Bug Fixes:
 
