@@ -146,7 +146,7 @@ def restore_session_from_runtime_config():
 
         duration = time.time() - start_time
         stat = state_machine_m.state_machine.root_state.get_states_statistics(0)
-        logger.info("It took {0} seconds to restore {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
+        logger.info("It took {0:.3}s to restore {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
 
         open_sm[idx] = state_machine_m
 
