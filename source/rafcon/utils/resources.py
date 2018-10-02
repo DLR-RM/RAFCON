@@ -23,8 +23,8 @@ import pkg_resources
 
 paths_to_search_for_resource = [
     join(expanduser("~"), ".local", "share"),
-    join('usr', 'local', 'share'),
-    join('usr', 'share'),
+    join(os.sep, 'usr', 'local', 'share'),
+    join(os.sep, 'usr', 'share'),
 ]
 
 # Check for non-default PYTHONUSERBASE and add it to the seach path list
