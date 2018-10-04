@@ -278,7 +278,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, n)
                 store_tree_expansion(child_iter, expansion_state)
 
-        root_iter = self.history_tree_store.get_iter_root()
+        root_iter = self.history_tree_store.get_iter_first()
         if not root_iter:
             return
         current_expansion_state = {}

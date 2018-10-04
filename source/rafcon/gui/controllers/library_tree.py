@@ -22,6 +22,7 @@
 
 from gi.repository import GObject
 from gi.repository import Gtk
+from gi.repository import Gdk
 import os
 from functools import partial
 
@@ -57,7 +58,8 @@ class LibraryTreeController(ExtendedController):
         view.set_model(self.tree_store)
         view.set_tooltip_column(3)
 
-        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [('STRING', 0, 0)], Gdk.DragAction.COPY)
+        # Gtk TODO: solve via Gtk.TargetList? https://python-gtk-3-tutorial.readthedocs.io/en/latest/drag_and_drop.html
+        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [Gtk.TargetEntry('STRING', 0, 0)], Gdk.DragAction.COPY)
 
         self.library_row_iter_dict_by_library_path = {}
         self.__expansion_state = None

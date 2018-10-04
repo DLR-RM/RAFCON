@@ -19,6 +19,7 @@
 """
 
 from gi.repository import Gtk
+from gi.repository import Gdk
 
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.execution_state import ExecutionState
@@ -39,7 +40,8 @@ class StateIconController(ExtendedController):
         ExtendedController.__init__(self, model, view)
 
         self.shortcut_manager = shortcut_manager
-        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [('STRING', 0, 0)], Gdk.DragAction.COPY)
+
+        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [Gtk.TargetEntry('STRING', 0, 0)], Gdk.DragAction.COPY)
 
     def register_view(self, view):
         super(StateIconController, self).register_view(view)

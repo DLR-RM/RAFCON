@@ -186,7 +186,7 @@ class LoggingConsoleView(View):
             line_iter = text_buffer.get_iter_at_line(line_number)
             line_end_iter = text_buffer.get_iter_at_line(line_number)
         line_end_iter.forward_to_line_end()
-        text = text_buffer.get_text(line_iter, line_end_iter)
+        text = text_buffer.get_text(line_iter, line_end_iter, True)
         return text
 
     def set_cursor_on_line_with_string(self, s, line_offset=0):

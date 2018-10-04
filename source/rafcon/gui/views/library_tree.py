@@ -11,6 +11,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
+from gi.repository import GObject
+
 from gtkmvc3 import View
 
 
@@ -23,7 +25,7 @@ class LibraryTreeView(View, Gtk.TreeView):
         # self.set_grid_lines(Gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
 
         tvcolumn_name = Gtk.TreeViewColumn('Library Name')
-        tvcolumn_name.set_property("sizing", "autosize")
+        tvcolumn_name.set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)
         self.append_column(tvcolumn_name)
         cell_renderer_name = Gtk.CellRendererText()
         tvcolumn_name.pack_start(cell_renderer_name, True)

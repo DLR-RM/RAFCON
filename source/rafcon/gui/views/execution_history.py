@@ -12,6 +12,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
+from gi.repository import GObject
 from gtkmvc3 import View
 from rafcon.gui.utils import constants
 
@@ -24,7 +25,7 @@ class ExecutionHistoryTreeView(View, Gtk.TreeView):
         self.set_name("history_tree")
 
         tvcolumn = Gtk.TreeViewColumn('History', Gtk.CellRendererText(), text=0)
-        tvcolumn.set_property("sizing", "autosize")
+        tvcolumn.set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)
         self.append_column(tvcolumn)
 
         self['history_treeview'] = self

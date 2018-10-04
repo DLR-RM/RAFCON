@@ -22,6 +22,7 @@ import os
 import sys
 import logging
 from gi.repository import Gtk
+from gi.repository import Gdk
 from gi.repository import GLib
 import threading
 import signal
@@ -184,7 +185,7 @@ def setup_gui():
 
     # set the gravity of the main window controller to static to ignore window manager decorations and get
     # a correct position of the main window on the screen (else there are offsets for some window managers)
-    main_window_view.get_top_widget().set_gravity(Gdk.GRAVITY_STATIC)
+    main_window_view.get_top_widget().set_gravity(Gdk.Gravity.STATIC)
 
     sm_manager_model = gui_singletons.state_machine_manager_model
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)

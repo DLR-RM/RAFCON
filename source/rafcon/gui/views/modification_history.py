@@ -11,6 +11,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
+from gi.repository import GObject
 from gtkmvc3 import View
 from rafcon.gui.utils import constants
 
@@ -24,19 +25,19 @@ class HistoryTreeView(View, Gtk.TreeView):
         foreground = 5
 
         tvcolumn = Gtk.TreeViewColumn('Nr', Gtk.CellRendererText(), text=1, foreground=foreground)
-        tvcolumn.set_property("sizing", "autosize")
+        tvcolumn.set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)
         self.append_column(tvcolumn)
 
         tvcolumn = Gtk.TreeViewColumn('Action', Gtk.CellRendererText(), text=2, foreground=foreground)
-        tvcolumn.set_property("sizing", "autosize")
+        tvcolumn.set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)
         self.append_column(tvcolumn)
 
         tvcolumn = Gtk.TreeViewColumn('Parameters', Gtk.CellRendererText(), text=7, foreground=foreground)
-        tvcolumn.set_property("sizing", "autosize")
+        tvcolumn.set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)
         self.append_column(tvcolumn)
 
         tvcolumn = Gtk.TreeViewColumn('Affects', Gtk.CellRendererText(), text=3, foreground=foreground)
-        tvcolumn.set_property("sizing", "autosize")
+        tvcolumn.set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)
         # tvcolumn.set_min_width(150)
         self.append_column(tvcolumn)
 

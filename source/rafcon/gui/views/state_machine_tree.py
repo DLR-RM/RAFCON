@@ -11,6 +11,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
+from gi.repository import GObject
 from gtkmvc3 import View
 
 
@@ -22,7 +23,7 @@ class StateMachineTreeView(View, Gtk.TreeView):
         self.set_name('state_machine_tree')
 
         tvcolumn = Gtk.TreeViewColumn('Name')
-        tvcolumn.set_property("sizing", "autosize")
+        tvcolumn.set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)
         # tvcolumn.set_min_width(150)
         self.append_column(tvcolumn)
         cell = Gtk.CellRendererText()
@@ -31,7 +32,7 @@ class StateMachineTreeView(View, Gtk.TreeView):
         tvcolumn.set_sort_column_id(0)
 
         tvcolumn = Gtk.TreeViewColumn('ID')
-        tvcolumn.set_property("sizing", "autosize")
+        tvcolumn.set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)
         # tvcolumn.set_min_width(150)
         self.append_column(tvcolumn)
         cell = Gtk.CellRendererText()
@@ -40,7 +41,7 @@ class StateMachineTreeView(View, Gtk.TreeView):
         tvcolumn.set_sort_column_id(1)
 
         tvcolumn = Gtk.TreeViewColumn('Type')
-        tvcolumn.set_property("sizing", "autosize")
+        tvcolumn.set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)
         # tvcolumn.set_min_width(150)
         self.append_column(tvcolumn)
         cell = Gtk.CellRendererText()

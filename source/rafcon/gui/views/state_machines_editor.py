@@ -13,6 +13,7 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
+from gi.repository import GdkPixbuf
 from gtkmvc3 import View
 from rafcon.gui.utils import constants
 from rafcon.gui.config import global_gui_config as gui_config
@@ -23,8 +24,9 @@ class StateMachinesEditorView(View):
     def __init__(self):
         View.__init__(self)
         self.notebook = PlusAddNotebook()
-        self.notebook.set_tab_hborder(constants.TAB_BORDER_WIDTH)
-        self.notebook.set_tab_vborder(constants.TAB_BORDER_WIDTH)
+        # gtk TODO: the methods set_tab_hborder and set_tab_vborder do not exist any more, find replacement
+        # self.notebook.set_tab_hborder(constants.TAB_BORDER_WIDTH)
+        # self.notebook.set_tab_vborder(constants.TAB_BORDER_WIDTH)
         self.notebook.set_scrollable(True)
         self.notebook.set_name("state_machines_notebook")
         self.notebook.show()
@@ -61,7 +63,9 @@ class PlusAddNotebook(Gtk.Notebook):
 
         self.connect("button_release_event", self.on_button_release)
         self.connect('button_press_event', self.on_button_press)
-        self.connect('expose_event', self.on_expose_event)
+        # expose-event does not exist any more, use the 'draw' signal instead see:
+        # https://developer.gnome.org/gtk3/stable/ch26s02.html#id-1.6.3.4.11
+        self.connect('draw', self.on_expose_event)
         self.pixbuf = GdkPixbuf.Pixbuf.new_from_xpm_data(self.pixbuf_data)
 
         self.enable_add_button = True

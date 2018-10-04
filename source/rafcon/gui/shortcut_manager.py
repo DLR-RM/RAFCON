@@ -52,7 +52,7 @@ class ShortcutManager:
                     logger.warn("No valid shortcut for shortcut %s" % str(shortcut))
                     continue
                 callback = partial(self.__on_shortcut, action)  # Bind the action to the callback function
-                self.accel_group.connect_group(keyval, modifier_mask, Gtk.AccelFlags.VISIBLE, callback)
+                self.accel_group.connect(keyval, modifier_mask, Gtk.AccelFlags.VISIBLE, callback)
 
     def __on_shortcut(self, action, accel_group, window, key_value, modifier_mask):
         res = self.trigger_action(action, key_value, modifier_mask)

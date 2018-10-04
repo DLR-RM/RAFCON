@@ -12,6 +12,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
+from gi.repository import GObject
 from gtkmvc3 import View
 from rafcon.gui.utils import constants
 

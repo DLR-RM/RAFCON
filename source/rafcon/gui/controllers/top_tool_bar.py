@@ -22,6 +22,7 @@
 """
 
 from gi.repository import Gtk
+from gi.repository import Gdk
 
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
