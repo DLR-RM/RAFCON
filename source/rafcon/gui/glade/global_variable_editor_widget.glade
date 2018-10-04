@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.20.0 -->
 <interface>
-  <requires lib="gtk+" version="2.16"/>
-  <!-- interface-naming-policy project-wide -->
+  <requires lib="gtk+" version="3.20"/>
   <object class="GtkVBox" id="global_variable_vbox">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -9,18 +9,19 @@
       <object class="GtkScrolledWindow" id="scroller">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
-        <property name="hscrollbar_policy">automatic</property>
-        <property name="vscrollbar_policy">automatic</property>
         <child>
           <object class="GtkTreeView" id="global_variable_tree_view">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="headers_clickable">False</property>
+            <child internal-child="selection">
+              <object class="GtkTreeSelection"/>
+            </child>
             <child>
               <object class="GtkTreeViewColumn" id="name_col">
+                <property name="sizing">autosize</property>
                 <property name="title">Name</property>
                 <property name="expand">True</property>
-                <property name="sizing">autosize</property>
                 <child>
                   <object class="GtkCellRendererText" id="name_text"/>
                   <attributes>
@@ -31,9 +32,9 @@
             </child>
             <child>
               <object class="GtkTreeViewColumn" id="type_col1">
+                <property name="sizing">autosize</property>
                 <property name="title">Data Type</property>
                 <property name="expand">True</property>
-                <property name="sizing">autosize</property>
                 <child>
                   <object class="GtkCellRendererText" id="type_text"/>
                   <attributes>
@@ -44,9 +45,9 @@
             </child>
             <child>
               <object class="GtkTreeViewColumn" id="value_col">
+                <property name="sizing">autosize</property>
                 <property name="title">Value</property>
                 <property name="expand">True</property>
-                <property name="sizing">autosize</property>
                 <child>
                   <object class="GtkCellRendererText" id="value_text"/>
                   <attributes>
@@ -57,9 +58,9 @@
             </child>
             <child>
               <object class="GtkTreeViewColumn" id="locked_col">
+                <property name="sizing">autosize</property>
                 <property name="title">Locked</property>
                 <property name="expand">True</property>
-                <property name="sizing">autosize</property>
                 <child>
                   <object class="GtkCellRendererText" id="locked_text"/>
                   <attributes>

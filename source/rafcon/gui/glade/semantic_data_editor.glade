@@ -1,22 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.20.0 -->
 <interface>
-  <requires lib="gtk+" version="2.16"/>
-  <!-- interface-naming-policy project-wide -->
+  <requires lib="gtk+" version="3.20"/>
   <object class="GtkVBox" id="semantic_data_vbox">
     <property name="visible">True</property>
+    <property name="can_focus">False</property>
     <child>
       <object class="GtkViewport" id="semantic_data_title_wrapper">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="resize_mode">queue</property>
         <child>
           <object class="GtkEventBox" id="semantic_data_label_wrapper">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="border_width">10</property>
             <child>
               <object class="GtkLabel" id="semantic_data_label">
                 <property name="visible">True</property>
-                <property name="xalign">0</property>
+                <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Semantic Data</property>
+                <property name="xalign">0</property>
               </object>
             </child>
           </object>
@@ -24,6 +28,7 @@
       </object>
       <packing>
         <property name="expand">False</property>
+        <property name="fill">True</property>
         <property name="position">0</property>
       </packing>
     </child>
@@ -31,18 +36,20 @@
       <object class="GtkScrolledWindow" id="semantic_data_scroller">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
-        <property name="hscrollbar_policy">automatic</property>
-        <property name="vscrollbar_policy">automatic</property>
         <child>
           <object class="GtkTreeView" id="semantic_data_tree_view">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="headers_clickable">False</property>
+            <child internal-child="selection">
+              <object class="GtkTreeSelection"/>
+            </child>
           </object>
         </child>
       </object>
       <packing>
         <property name="expand">True</property>
+        <property name="fill">True</property>
         <property name="position">1</property>
       </packing>
     </child>
@@ -117,6 +124,7 @@
       </object>
       <packing>
         <property name="expand">False</property>
+        <property name="fill">True</property>
         <property name="position">2</property>
       </packing>
     </child>

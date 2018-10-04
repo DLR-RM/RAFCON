@@ -1,12 +1,14 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.20.0 -->
 <interface>
-  <requires lib="gtk+" version="2.16"/>
-  <!-- interface-naming-policy project-wide -->
+  <requires lib="gtk+" version="3.20"/>
   <object class="GtkEventBox" id="properties_widget_bg">
     <property name="visible">True</property>
+    <property name="can_focus">False</property>
     <child>
       <object class="GtkTable" id="properties_widget">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="n_rows">4</property>
         <property name="n_columns">5</property>
         <property name="column_spacing">5</property>
@@ -14,9 +16,10 @@
         <child>
           <object class="GtkLabel" id="type_label">
             <property name="visible">True</property>
-            <property name="xalign">0</property>
+            <property name="can_focus">False</property>
             <property name="ypad">6</property>
             <property name="label" translatable="yes">Type</property>
+            <property name="xalign">0</property>
           </object>
           <packing>
             <property name="top_attach">3</property>
@@ -26,6 +29,7 @@
         <child>
           <object class="GtkViewport" id="type_viewport">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="resize_mode">queue</property>
             <child>
               <placeholder/>
@@ -41,6 +45,7 @@
         <child>
           <object class="GtkLabel" id="id_label">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="label" translatable="yes">ID</property>
           </object>
           <packing>
@@ -53,6 +58,7 @@
         <child>
           <object class="GtkLabel" id="label_id_value">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="ypad">5</property>
             <property name="label" translatable="yes">xyz</property>
             <property name="selectable">True</property>
@@ -69,9 +75,9 @@
             <property name="label" translatable="yes">is start state</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="focus_on_click">False</property>
             <property name="receives_default">False</property>
             <property name="border_width">5</property>
-            <property name="focus_on_click">False</property>
             <property name="draw_indicator">True</property>
           </object>
           <packing>
@@ -84,8 +90,9 @@
         <child>
           <object class="GtkLabel" id="label_library_path">
             <property name="visible">True</property>
-            <property name="xalign">0</property>
+            <property name="can_focus">False</property>
             <property name="label" translatable="yes">Library Path/Name</property>
+            <property name="xalign">0</property>
           </object>
           <packing>
             <property name="top_attach">1</property>
@@ -97,7 +104,7 @@
             <property name="visible">True</property>
             <property name="sensitive">False</property>
             <property name="can_focus">True</property>
-            <property name="invisible_char">&#x2022;</property>
+            <property name="invisible_char">•</property>
             <property name="shadow_type">none</property>
           </object>
           <packing>
@@ -110,8 +117,9 @@
         <child>
           <object class="GtkLabel" id="label_show_content">
             <property name="visible">True</property>
-            <property name="xalign">0</property>
+            <property name="can_focus">False</property>
             <property name="label" translatable="yes">Library content</property>
+            <property name="xalign">0</property>
           </object>
           <packing>
             <property name="top_attach">2</property>
@@ -123,9 +131,9 @@
             <property name="label" translatable="yes">show</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="focus_on_click">False</property>
             <property name="receives_default">False</property>
             <property name="border_width">5</property>
-            <property name="focus_on_click">False</property>
             <property name="draw_indicator">True</property>
           </object>
           <packing>
@@ -138,11 +146,13 @@
         <child>
           <object class="GtkEventBox" id="eventbox2">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <child>
               <object class="GtkLabel" id="label_state_name">
                 <property name="visible">True</property>
-                <property name="xalign">0</property>
+                <property name="can_focus">False</property>
                 <property name="label" translatable="yes">State Name</property>
+                <property name="xalign">0</property>
               </object>
             </child>
           </object>
@@ -151,7 +161,7 @@
           <object class="GtkEntry" id="entry_name">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="invisible_char">&#x2022;</property>
+            <property name="invisible_char">•</property>
           </object>
           <packing>
             <property name="left_attach">1</property>
