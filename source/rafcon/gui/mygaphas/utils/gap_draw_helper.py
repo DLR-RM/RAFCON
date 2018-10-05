@@ -353,7 +353,7 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
     if show_additional_value:
         value_text = limit_value_string_length(additional_value)
         value_layout = PangoCairo.create_layout(cairo_context)
-        value_layout.set_text(value_text)
+        value_layout.set_text(value_text, -1)
         value_layout.set_font_description(font)
 
         ink_extents, logical_extents = value_layout.get_extents()
@@ -446,7 +446,7 @@ def draw_label_path(context, width, height, arrow_height, distance_to_port, port
 def get_text_layout(cairo_context, text, size):
     c = cairo_context
     layout = PangoCairo.create_layout(c)
-    layout.set_text(text)
+    layout.set_text(text, -1)
 
     font_name = constants.INTERFACE_FONT
 

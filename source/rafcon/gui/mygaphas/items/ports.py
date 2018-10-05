@@ -780,7 +780,7 @@ class ScopedVariablePortView(PortView):
         font_size = gap_draw_helper.FONT_SIZE
         font = FontDescription(font_name + " " + str(font_size))
         layout.set_font_description(font)
-        layout.set_text(self.name)
+        layout.set_text(self.name, -1)
 
         ink_extents, logical_extents = layout.get_extents()
         extents = [extent / float(SCALE) for extent in [logical_extents.x, logical_extents.y,
