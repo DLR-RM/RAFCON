@@ -20,6 +20,7 @@ from gi.repository import PangoCairo
 
 from gaphas.state import observed
 from gaphas.connector import Handle
+from gaphas.painter import CairoBoundingBoxContext
 import cairo
 
 from rafcon.gui.utils import constants
@@ -767,11 +768,14 @@ class ScopedVariablePortView(PortView):
         :rtype: float, float
         """
         c = context
+        cairo_context = c
+        if isinstance(c, CairoBoundingBoxContext):
+            cairo_context = c._cairo
         # c.set_antialias(Antialias.GOOD)
 
         side_length = self.port_side_size
 
-        layout = PangoCairo.create_layout(c)
+        layout = PangoCairo.create_layout(cairo_context)
         font_name = constants.INTERFACE_FONT
         font_size = gap_draw_helper.FONT_SIZE
         font = FontDescription(font_name + " " + str(font_size))
@@ -802,8 +806,8 @@ class ScopedVariablePortView(PortView):
         c.rel_move_to(-extents[0], -extents[1])
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(self.text_color, transparency))
-        PangoCairo.update_layout(c, layout)
-        PangoCairo.show_layout(c, layout)
+        PangoCairo.update_layout(cairo_context, layout)
+        PangoCairo.show_layout(cairo_context, layout)
         c.restore()
 
         return name_size_with_margin

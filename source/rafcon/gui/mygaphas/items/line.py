@@ -13,6 +13,7 @@
 from math import atan2, pi
 
 from gaphas.item import Line, NW, SE
+from gaphas.painter import CairoBoundingBoxContext
 # from cairo import Antialias, LINE_CAP_ROUND, LINE_CAP_BUTT
 from cairo import LINE_CAP_ROUND, LINE_CAP_BUTT
 from gi.repository.Pango import SCALE
@@ -221,6 +222,9 @@ class PerpLine(Line):
 
     def _draw_name(self, context):
         c = context.cairo
+        cairo_context = c
+        if isinstance(c, CairoBoundingBoxContext):
+            cairo_context = c._cairo
 
         if len(self._handles) % 2:
             index = len(self._handles) / 2
@@ -265,7 +269,7 @@ class PerpLine(Line):
         # Parameters have changed or nothing in cache => redraw
         else:
             # First retrieve pango layout to determine and store size of label
-            layout = get_text_layout(c, self.name, FONT_SIZE)
+            layout = get_text_layout(cairo_context, self.name, FONT_SIZE)
 
             ink_extents, logical_extents = layout.get_extents()
             extents = [extent / float(SCALE) for extent in logical_extents]

@@ -259,6 +259,9 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
     :param only_extent_calculations: Calculate only the extends and do not actually draw
     """
     c = context
+    cairo_context = c
+    if isinstance(c, CairoBoundingBoxContext):
+        cairo_context = c._cairo
 
     # Gtk TODO
     # c.set_antialias(Antialias.GOOD)
@@ -269,10 +272,6 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
     port_height = port.port_size[1]
 
     port_position = c.get_current_point()
-
-    cairo_context = c
-    if isinstance(c, CairoBoundingBoxContext):
-        cairo_context = c._cairo
 
     layout = PangoCairo.create_layout(cairo_context)
     layout.set_text(text, -1)
@@ -353,7 +352,7 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
 
     if show_additional_value:
         value_text = limit_value_string_length(additional_value)
-        value_layout = PangoCairo.create_layout(c)
+        value_layout = PangoCairo.create_layout(cairo_context)
         value_layout.set_text(value_text)
         value_layout.set_font_description(font)
 

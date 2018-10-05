@@ -24,6 +24,7 @@ from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
 from gaphas.matrix import Matrix
 from gaphas.solver import Variable
+from gaphas.painter import CairoBoundingBoxContext
 
 from rafcon.core.states.state import StateExecutionStatus
 
@@ -492,12 +493,15 @@ class StateView(Element):
 
     def _draw_symbol(self, context, symbol, color, transparency=0.):
         c = context.cairo
+        cairo_context = c
+        if isinstance(c, CairoBoundingBoxContext):
+            cairo_context = c._cairo
         width = self.width
         height = self.height
 
         # c.set_antialias(Antialias.GOOD)
 
-        layout = PangoCairo.create_layout(c)
+        layout = PangoCairo.create_layout(cairo_context)
 
         font_name = constants.ICON_FONT
 
@@ -528,8 +532,8 @@ class StateView(Element):
                   height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
-        PangoCairo.update_layout(c, layout)
-        PangoCairo.show_layout(c, layout)
+        PangoCairo.update_layout(cairo_context, layout)
+        PangoCairo.show_layout(cairo_context, layout)
 
     def get_transitions(self):
         transitions = []
@@ -983,6 +987,9 @@ class NameView(Element):
         font_transparency = self.transparency
 
         c = context.cairo
+        cairo_context = c
+        if isinstance(c, CairoBoundingBoxContext):
+            cairo_context = c._cairo
         parameters = {
             'name': self.name,
             'selected': context.selected,
@@ -1010,9 +1017,7 @@ class NameView(Element):
 
             # c.set_antialias(Antialias.GOOD)
 
-            # Gtk TODO
-            layout = PangoCairo.create_layout(c)
-            # layout = c.create_layout()
+            layout = PangoCairo.create_layout(cairo_context)
             layout.set_wrap(WrapMode.WORD)
             layout.set_width(int(round(BASE_WIDTH * SCALE)))
             layout.set_text(self.name, -1)
@@ -1078,8 +1083,8 @@ class NameView(Element):
             # c.scale(1. / zoom_scale, 1. / zoom_scale)
             c.scale(1. / zoom_scale, 1. / zoom_scale)
 
-            PangoCairo.update_layout(c, layout)
-            PangoCairo.show_layout(c, layout)
+            PangoCairo.update_layout(cairo_context, layout)
+            PangoCairo.show_layout(cairo_context, layout)
             c.restore()
 
             # Copy image surface to current cairo context
