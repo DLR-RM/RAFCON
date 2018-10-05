@@ -84,7 +84,7 @@ class PlusAddNotebook(Gtk.Notebook):
         right_row_end_x = self.get_allocation().x + self.get_allocation().width - arrow_icon_width
         if pb_x - constants.ICON_MARGIN <= event.x <= right_row_end_x and \
                 pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN and \
-                event.type == Gdk.EventType._2BUTTON_PRESS and event.button == 1:
+                event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
             self.emit("add_clicked")
             return True
 

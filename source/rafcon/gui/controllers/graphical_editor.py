@@ -396,7 +396,7 @@ class GraphicalEditorController(ExtendedController):
         # Set the focus on the graphical editor, as this is not done automatically
         self.view.editor.grab_focus()
 
-        self.last_button_pressed = event.button
+        self.last_button_pressed = event.get_button()[1]
         self.selected_waypoint = None  # reset
         self.selected_resizer = None  # reset
         self.multi_selection_started = False  # reset
@@ -418,12 +418,12 @@ class GraphicalEditorController(ExtendedController):
 
         # Multi-selection is started when the user hold the shift key pressed while clicking the left mouse button,
         # and does this _not_ on a resize handler or waypoint
-        if event.button == 1 and event.get_state()[1] & Gdk.ModifierType.SHIFT_MASK == 1 and \
+        if event.get_button()[1] == 1 and event.get_state()[1] & Gdk.ModifierType.SHIFT_MASK == 1 and \
                         self.selected_resizer is None and self.selected_waypoint is None:
             self.multi_selection_started = True
 
         # Left mouse button was clicked and no multi selection intended
-        if event.button == 1 and event.get_state()[1] & Gdk.ModifierType.SHIFT_MASK == 0:
+        if event.get_button()[1] == 1 and event.get_state()[1] & Gdk.ModifierType.SHIFT_MASK == 0:
             if not self.mouse_move_redraw:
                 self.single_selection = new_selection
 
@@ -490,7 +490,7 @@ class GraphicalEditorController(ExtendedController):
             self._redraw()
 
         # Right mouse button was clicked on
-        elif event.button == 3:
+        elif event.get_button()[1] == 3:
             # Check if something was selected
             click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
             clicked_model = self._find_selection(event.x, event.y)
@@ -522,7 +522,7 @@ class GraphicalEditorController(ExtendedController):
         # Check if something was selected
         new_selection = self._find_selection(event.x, event.y)
 
-        if event.button == 1:
+        if event.get_button()[1] == 1:
             # We do not want to change the current selection while creating a new transition or data flow
             if not self.mouse_move_redraw:
                 # In the case of multi selection, the user can add/remove elements to/from the selection

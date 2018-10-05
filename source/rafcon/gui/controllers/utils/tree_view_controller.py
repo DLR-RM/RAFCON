@@ -486,7 +486,7 @@ class ListViewController(AbstractTreeViewController):
 
             if not bool(event.get_state() & Gdk.ModifierType.CONTROL_MASK) \
                     and not bool(event.get_state() & Gdk.ModifierType.SHIFT_MASK) and \
-                    event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
+                    event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 3:
                 if pthinfo is not None:
                     model, paths = self._tree_selection.get_selected_rows()
                     # print paths
@@ -502,10 +502,10 @@ class ListViewController(AbstractTreeViewController):
 
             if (bool(event.get_state() & Gdk.ModifierType.CONTROL_MASK) or \
                 bool(event.get_state() & Gdk.ModifierType.SHIFT_MASK)) and \
-                    event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
+                    event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 3:
                 return True
 
-            if not bool(event.get_state() & Gdk.ModifierType.SHIFT_MASK) and event.button == 1:
+            if not bool(event.get_state() & Gdk.ModifierType.SHIFT_MASK) and event.get_button()[1] == 1:
                 if pthinfo is not None:
                     # self._logger.info("last select row {}".format(pthinfo[0]))
                     self._last_path_selection = pthinfo[0]
@@ -513,7 +513,7 @@ class ListViewController(AbstractTreeViewController):
                 #     self._logger.info("deselect rows")
                 #     self.tree_selection.unselect_all()
 
-            if bool(event.get_state() & Gdk.ModifierType.SHIFT_MASK) and event.button == 1:
+            if bool(event.get_state() & Gdk.ModifierType.SHIFT_MASK) and event.get_button()[1] == 1:
                 # self._logger.info("SHIFT adjust selection range")
                 model, paths = self._tree_selection.get_selected_rows()
                 # print model, paths, pthinfo[0]
@@ -532,7 +532,7 @@ class ListViewController(AbstractTreeViewController):
                     if pthinfo and pthinfo[0]:
                         self._last_path_selection = pthinfo[0]
 
-            if bool(event.get_state() & Gdk.ModifierType.CONTROL_MASK) and event.button == 1:
+            if bool(event.get_state() & Gdk.ModifierType.CONTROL_MASK) and event.get_button()[1] == 1:
                 # self._logger.info("CONTROL adjust selection range")
                 model, paths = self._tree_selection.get_selected_rows()
                 # print model, paths, pthinfo[0]
@@ -551,7 +551,7 @@ class ListViewController(AbstractTreeViewController):
 
     def _handle_double_click(self, event):
         """ Double click with left mouse button focuses the element"""
-        if event.button == 1:  # Left mouse button
+        if event.get_button()[1] == 1:  # Left mouse button
             path_info = self.tree_view.get_path_at_pos(int(event.x), int(event.y))
             if path_info:  # Valid entry was clicked on
                 path = path_info[0]

@@ -358,7 +358,7 @@ class StateMachineRightClickMenu(object):
         from rafcon.gui.models.library_state import LibraryStateModel
         # logger.info("Single right click -> selection is \n{0}"
         #             "".format(gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_all()))
-        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 3:
             selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
             if len(selection) == 1 and len(selection.states) == 1 and \
                     isinstance(selection.get_selected_state(), LibraryStateModel):
@@ -370,7 +370,7 @@ class StateMachineRightClickMenu(object):
 
     def activate_menu(self, event, menu):
         # logger.info("activate_menu by " + self.__class__.__name__)
-        menu.popup(None, None, None, event.button, event.time)
+        menu.popup(None, None, None, event.get_button()[1], event.time)
         return True
 
 
@@ -399,7 +399,7 @@ class StateMachineTreeRightClickMenuController(StateMachineRightClickMenuControl
             self.view.grab_focus()
             self.view.set_cursor(path, col, 0)
 
-            menu.popup(None, None, None, event.button, event.time)
+            menu.popup(None, None, None, event.get_button()[1], event.time)
         return True
 
 
@@ -415,7 +415,7 @@ class StateRightClickMenuControllerOpenGLEditor(StateMachineRightClickMenuContro
         # logger.info("activate_menu by " + self.__class__.__name__)
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) > 0 or len(selection.scoped_variables) > 0:
-            menu.popup(None, None, None, event.button, event.time)
+            menu.popup(None, None, None, event.get_button()[1], event.time)
             return True
         else:
             return False
@@ -439,7 +439,7 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
         # logger.info("activate_menu by " + self.__class__.__name__)
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) > 0 or len(selection.scoped_variables) > 0:
-            menu.popup(None, None, None, event.button, event.time)
+            menu.popup(None, None, None, event.get_button()[1], event.time)
             return True
         else:
             return False

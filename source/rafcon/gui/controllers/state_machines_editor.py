@@ -75,9 +75,9 @@ def create_tab_close_button(callback, *additional_parameters):
 def create_tab_header(title, close_callback, right_click_callback, *additional_parameters):
     def handle_click(widget, event, *additional_parameters):
         """Calls `callback` in case the mouse button was pressed"""
-        if event.button == 2 and close_callback:
+        if event.get_button()[1] == 2 and close_callback:
             close_callback(event, *additional_parameters)
-        if event.button == 3 and right_click_callback:
+        if event.get_button()[1] == 3 and right_click_callback:
             right_click_callback(event, *additional_parameters)
 
     label = Gtk.Label(label=title)
@@ -354,7 +354,7 @@ class StateMachinesEditorController(ExtendedController):
             menu.append(menu_item)
 
         menu.show_all()
-        menu.popup(None, None, None, event.button, event.time)
+        menu.popup(None, None, None, event.get_button()[1], event.time)
         return True
 
     def change_selected_state_machine_id(self, widget, new_selected_state_machine_id):

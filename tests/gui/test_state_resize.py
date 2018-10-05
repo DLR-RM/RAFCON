@@ -60,6 +60,7 @@ def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypa
     start_pos_handle = get_state_handle_pos(view, state_v, state_v.handles()[SE])
 
     # Start resize: Press button
+    # Gtk TODO: Check if button can be set like this
     button_press_event = Gdk.Event(type=Gdk.EventType.BUTTON_PRESS)
     button_press_event.button = 1
     call_gui_callback(resize_tool.on_button_press, button_press_event)
@@ -74,6 +75,7 @@ def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypa
         call_gui_callback(resize_tool.on_motion_notify, motion_event)
 
     # Stop resize: Release button
+    # Gtk TODO: Check if button can be set like this
     button_release_event = Gdk.Event(type=Gdk.BUTTON_RELEASE)
     button_release_event.button = 1
     call_gui_callback(resize_tool.on_button_release, button_release_event)

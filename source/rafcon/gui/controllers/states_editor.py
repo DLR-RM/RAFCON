@@ -81,7 +81,7 @@ def create_sticky_button(callback, *additional_parameters):
 def create_tab_header(title, close_callback, sticky_callback, *additional_parameters):
     def handle_middle_click(widget, event, callback, *additional_parameters):
         """Calls `callback` in case the middle mouse button was pressed"""
-        if event.button == 2 and callback:
+        if event.get_button()[1] == 2 and callback:
             callback(event, *additional_parameters)
 
     sticky_button = None

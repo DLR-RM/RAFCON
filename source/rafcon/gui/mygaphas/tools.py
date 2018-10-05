@@ -92,12 +92,13 @@ class ZoomTool(gaphas.tool.ZoomTool):
             # event.get_state() |= Gdk.ModifierType.CONTROL_MASK  # Set CONTROL_MASK
             # return super(ZoomTool, self).on_scroll(event)
             view = self.view
+            event_coords =  event.get_coords()[1:]
             sx = view._matrix[0]
             sy = view._matrix[3]
-            ox = (view._matrix[4] - event.x) / sx
-            oy = (view._matrix[5] - event.y) / sy
+            ox = (view._matrix[4] - event_coords[0]) / sx
+            oy = (view._matrix[5] - event_coords[1]) / sy
             factor = 0.9
-            if event.direction == Gdk.ScrollDirection.UP:
+            if event.get_scroll_direction()[1] == Gdk.ScrollDirection.UP:
                 factor = 1. / factor
             view._matrix.translate(-ox, -oy)
             view._matrix.scale(factor, factor)
@@ -140,7 +141,7 @@ class MoveItemTool(gaphas.tool.ItemTool):
 
         :param event: The button event
         """
-        if event.button not in self._buttons:
+        if event.get_button()[1] not in self._buttons:
             return False  # Only handle events for registered buttons (left mouse clicks)
 
         if event.get_state()[1] & constants.RUBBERBAND_MODIFIER:
@@ -473,7 +474,7 @@ class MoveHandleTool(gaphas.tool.HandleTool):
         If the (mouse) button is pressed on top of a Handle (item.Handle), that handle is grabbed and can be
         dragged around.
         """
-        if not event.button == 1:  # left mouse button
+        if not event.get_button()[1] == 1:  # left mouse button
             return False
         view = self.view
 
@@ -668,7 +669,7 @@ class ConnectionCreationTool(ConnectionTool):
         If the (mouse) button is pressed on top of a Handle (item.Handle), that handle is grabbed and can be
         dragged around.
         """
-        if not event.button == 1:  # left mouse button
+        if not event.get_button()[1] == 1:  # left mouse button
             return False
         view = self.view
 
@@ -747,7 +748,7 @@ class ConnectionModificationTool(ConnectionTool):
         If the (mouse) button is pressed on top of a Handle (item.Handle), that handle is grabbed and can be
         dragged around.
         """
-        if not event.button == 1:  # left mouse button
+        if not event.get_button()[1] == 1:  # left mouse button
             return False
         view = self.view
 

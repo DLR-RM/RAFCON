@@ -113,7 +113,7 @@ class LibraryTreeController(ExtendedController):
 
     def mouse_click(self, widget, event=None):
         # Double click with left mouse button
-        if event.type == Gdk.EventType._2BUTTON_PRESS and event.button == 1:
+        if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][self.ITEM_STORAGE_ID], dict):  # double click on folder, not library
                 state_row_path = self.tree_store.get_path(row)
@@ -127,7 +127,7 @@ class LibraryTreeController(ExtendedController):
             return True
 
         # Single right click
-        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 3:
 
             x = int(event.x)
             y = int(event.y)
@@ -149,7 +149,7 @@ class LibraryTreeController(ExtendedController):
             else:
                 menu = self.generate_right_click_menu('library tree')
             menu.show_all()
-            menu.popup(None, None, None, event.button, time)
+            menu.popup(None, None, None, event.get_button()[1], time)
             return True
 
     @ExtendedController.observe("library_manager", after=True)

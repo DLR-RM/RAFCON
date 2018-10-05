@@ -145,7 +145,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         step as tooltip or fold and unfold the tree by double-click and select respective state for double clicked
         element.
         """
-        if event.type == Gdk.EventType._2BUTTON_PRESS and event.button == 1:
+        if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
 
             (model, row) = self.history_tree.get_selection().get_selected()
             if row is not None:
@@ -175,7 +175,7 @@ class ExecutionHistoryTreeController(ExtendedController):
 
             return True
 
-        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 2:
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 2:
             x = int(event.x)
             y = int(event.y)
             pthinfo = self.history_tree.get_path_at_pos(x, y)
@@ -185,7 +185,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 self.history_tree.set_cursor(path, col, 0)
                 self.open_selected_history_separately(None)
 
-        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 3:
             x = int(event.x)
             y = int(event.y)
             time = event.time
@@ -235,7 +235,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.append_string_to_menu(popup_menu, "------------------------")
 
                 popup_menu.show()
-                popup_menu.popup(None, None, None, None, event.button, time)
+                popup_menu.popup(None, None, None, None, event.get_button()[1], time)
 
             return True
 

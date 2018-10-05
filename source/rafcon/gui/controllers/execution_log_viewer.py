@@ -125,7 +125,7 @@ class ExecutionLogTreeController(ExtendedController):
 
     def _handle_double_click(self, event):
         """ Double click with left mouse button focuses the state and toggles the collapse status"""
-        if event.button == 1:  # Left mouse button
+        if event.get_button()[1] == 1:  # Left mouse button
             path_info = self.view.tree_view.get_path_at_pos(int(event.x), int(event.y))
             if path_info:  # Valid entry was clicked on
                 path = path_info[0]
