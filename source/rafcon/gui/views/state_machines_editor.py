@@ -66,7 +66,7 @@ class PlusAddNotebook(Gtk.Notebook):
         self.connect('button_press_event', self.on_button_press)
         # expose-event does not exist any more, use the 'draw' signal instead see:
         # https://developer.gnome.org/gtk3/stable/ch26s02.html#id-1.6.3.4.11
-        self.connect('draw', self.on_expose_event)
+        self.connect('draw', self.on_draw)
         self.pixbuf = GdkPixbuf.Pixbuf.new_from_xpm_data(self.pixbuf_data)
 
         self.enable_add_button = True
@@ -106,7 +106,7 @@ class PlusAddNotebook(Gtk.Notebook):
             self.emit("add_clicked")
             return True
 
-    def on_expose_event(self, widget, event):
+    def on_draw(self, widget, event):
         if self.get_n_pages() > 0 and self.enable_add_button:
             self.update_add_button()
 

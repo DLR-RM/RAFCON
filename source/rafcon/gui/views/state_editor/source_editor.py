@@ -79,7 +79,9 @@ class SourceEditorView(EditorView):
         if self.spacer_frame is not None:
             self.textview.connect("key-press-event", self.on_text_view_event)
 
-    def on_expose_event(self, widget, event):
+    def on_draw(self, widget, event):
+        # Gtk TODO: https://developer.gnome.org/gtk3/stable/ch26s02.html#id-1.6.3.4.11
+        return
         right_bar_width_of_all = self.button_container_min_width + self.tab_width + self.line_numbers_width
         if right_bar_width_of_all > event.area[2]:
             spacer_width = right_bar_width_of_all - event.area[2]
