@@ -120,7 +120,7 @@ class ExecutionLogTreeController(ExtendedController):
         self.view.text_view.get_buffer().set_text(pp.pformat(item))
 
     def mouse_click(self, widget, event=None):
-        if event.type == Gdk._2BUTTON_PRESS:
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
             return self._handle_double_click(event)
 
     def _handle_double_click(self, event):

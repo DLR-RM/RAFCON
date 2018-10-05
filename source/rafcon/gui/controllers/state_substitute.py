@@ -41,7 +41,7 @@ class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
 
     def mouse_click(self, widget, event=None):
         # Double click with left mouse button
-        if event.type == Gdk._2BUTTON_PRESS and event.button == 1:
+        if event.type == Gdk.EventType._2BUTTON_PRESS and event.button == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][1], dict):  # double click on folder, not library
                 state_row_path = self.tree_store.get_path(row)
@@ -55,7 +55,7 @@ class StateSubstituteChooseLibraryDialogTreeController(LibraryTreeController):
             if self.dialog_widget:
                 self.dialog_widget.destroy()
             return True
-        if event.type == Gdk._2BUTTON_PRESS and event.button == 3:
+        if event.type == Gdk.EventType._2BUTTON_PRESS and event.button == 3:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][1], dict):  # double click on folder, not library
                 return False

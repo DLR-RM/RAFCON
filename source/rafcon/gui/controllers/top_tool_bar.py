@@ -86,7 +86,7 @@ class TopToolBarController(ExtendedController):
 
     def motion_detected(self, widget, event=None):
         if event.is_hint:
-            window_containing_pointer, x, y, state = event.window.get_pointer()
+            window_containing_pointer, x, y, state = event.get_window().get_pointer()
         else:
             state = event.get_state()
 

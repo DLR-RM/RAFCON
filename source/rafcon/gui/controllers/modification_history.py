@@ -394,7 +394,7 @@ class ModificationHistoryTreeController(ExtendedController):
         if parent_tree_item is not None:
             used_func = self.history_tree_store.append
         history_row_iter = used_func(parent_tree_item, ('',
-                                                        version_id,  # '',  # version
+                                                        str(version_id),  # '',  # version
                                                         method_name,
                                                         instance,
                                                         info,

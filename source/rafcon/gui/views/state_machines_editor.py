@@ -12,6 +12,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
+from gi.repository import Gdk
 from gi.repository import GObject
 from gi.repository import GdkPixbuf
 from gtkmvc3 import View
@@ -83,7 +84,7 @@ class PlusAddNotebook(Gtk.Notebook):
         right_row_end_x = self.get_allocation().x + self.get_allocation().width - arrow_icon_width
         if pb_x - constants.ICON_MARGIN <= event.x <= right_row_end_x and \
                 pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN and \
-                event.type == Gdk._2BUTTON_PRESS and event.button == 1:
+                event.type == Gdk.EventType._2BUTTON_PRESS and event.button == 1:
             self.emit("add_clicked")
             return True
 
@@ -101,7 +102,7 @@ class PlusAddNotebook(Gtk.Notebook):
 
         if pb_x - constants.ICON_MARGIN <= event.x <= pb_x + pb_width + constants.ICON_MARGIN and \
                 pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN \
-                and self._add_button_drawn and event.get_state() & Gdk.ModifierType.BUTTON1_MASK:
+                and self._add_button_drawn and event.get_state()[1] & Gdk.ModifierType.BUTTON1_MASK:
             self.emit("add_clicked")
             return True
 
@@ -118,7 +119,11 @@ class PlusAddNotebook(Gtk.Notebook):
 
         self._add_button_drawn = self.is_there_space_for_a_button()
         if self._add_button_drawn:
-            self.window.draw_pixbuf(None, self.pixbuf, 0, 0, x, y, -1, -1, Gdk.RGB_DITHER_NONE, 0, 0)
+            # Gtk TODO
+            # self.get_window().draw_pixbuf(None, self.pixbuf, 0, 0, x, y, -1, -1, Gdk.RGB_DITHER_NONE, 0, 0)
+            context = self.get_window().cairo_create()
+            Gdk.cairo_set_source_pixbuf(context, self.pixbuf, x, y)
+            context.paint()
 
     def get_pixbuf_xy(self):
         pb_width = self.pixbuf.get_width()
@@ -131,7 +136,7 @@ class PlusAddNotebook(Gtk.Notebook):
         return x, y
 
     def get_pixbuf_xy_root(self):
-        root_x, root_y = self.window.get_root_origin()
+        root_x, root_y = self.get_window().get_root_origin()
         x, y = self.get_pixbuf_xy()
 
         x += root_x

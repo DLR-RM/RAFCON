@@ -157,7 +157,7 @@ class MyCanvas(gaphas.canvas.Canvas):
         # while gaphas is redrawing
         GObject.idle_add(priority_handled, event, priority=priority)
         while not event.is_set():
-            Gtk.main_iteration(False)
+            Gtk.main_iteration()
 
     def resolve_constraint(self, constraints):
         constraints = constraints if hasattr(constraints, "__iter__") else [constraints]

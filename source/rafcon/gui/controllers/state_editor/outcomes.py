@@ -298,14 +298,14 @@ class StateOutcomesListController(ListViewController):
                                     outcome, self.model.state, self.model.get_outcome_m(outcome.outcome_id)])
 
         if isinstance(self.view, StateOutcomesTreeView):
-            for cell_renderer in self.view['to_state_col'].get_cell_renderers():
+            for cell_renderer in self.view['to_state_col'].get_cells():
                 if self.model.state.get_next_upper_library_root_state() is None:
                     cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_state_combo_list)
                 cell_renderer.set_property("text-column", self.ID_STORAGE_ID)
                 cell_renderer.set_property("has-entry", False)
         if self.view and isinstance(self.view, StateOutcomesTreeView):
-            for cell_renderer in self.view['to_outcome_col'].get_cell_renderers():
+            for cell_renderer in self.view['to_outcome_col'].get_cells():
                 if self.model.state.get_next_upper_library_root_state() is None:
                     cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_outcome_combo_list)

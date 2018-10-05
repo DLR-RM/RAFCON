@@ -128,7 +128,7 @@ class ExtendedGtkView(GtkView, Observer):
         return None
 
     def redraw_complete_screen(self):
-        self.queue_draw_area(0, 0, self.allocation[2], self.allocation[3])
+        self.queue_draw_area(0, 0, self.get_allocation().width, self.get_allocation().height)
 
     def get_zoom_factor(self):
         """Returns the current zoom factor of the view

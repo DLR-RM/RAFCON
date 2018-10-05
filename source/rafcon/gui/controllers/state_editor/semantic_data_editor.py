@@ -85,9 +85,9 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         view['new_entry'].connect('clicked', self.on_add, False)
         view['new_dict_entry'].connect('clicked', self.on_add, True)
         view['delete_entry'].connect('clicked', self.on_remove)
-        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.KEY_COLUMN_ID].get_cell_renderers()[0],
+        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.KEY_COLUMN_ID].get_cells()[0],
                                                   self.key_edited)
-        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.VALUE_COLUMN_ID].get_cell_renderers()[0],
+        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.VALUE_COLUMN_ID].get_cells()[0],
                                                   self.value_edited)
         self.reload_tree_store_data()
 
@@ -100,7 +100,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         # self.view['open_externally'].set_sensitive(not locked)
 
         for current_column in self.view['semantic_data_tree_view'].get_columns():
-            current_column.get_cell_renderers()[0].set_property('editable', not locked)
+            current_column.get_cells()[0].set_property('editable', not locked)
 
     def register_actions(self, shortcut_manager):
         shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)

@@ -12,17 +12,17 @@ class ExecutionLogTreeView(View):
 
         View.__init__(self)
         # Create a new window
-        # self.window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
+        # self.get_window() = Gtk.Window(Gtk.WindowType.TOPLEVEL)
 
-        # self.window.set_title("Execution Log Viewer")
+        # self.get_window().set_title("Execution Log Viewer")
 
-        # self.window.set_default_size(1024, 786)
+        # self.get_window().set_default_size(1024, 786)
 
-        # self.window.connect("delete_event", self.delete_event)
+        # self.get_window().connect("delete_event", self.delete_event)
 
         # Setting up the self.grid in which the elements are to be positioned
         self.paned = Gtk.HPaned()
-        # self.window.add(self.paned)
+        # self.get_window().add(self.paned)
 
         # setting up the layout, putting the tree_view in a scrollwindow, and the buttons in a row
         self.scrollable_treelist = Gtk.ScrolledWindow()

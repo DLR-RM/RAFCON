@@ -113,7 +113,7 @@ class LibraryTreeController(ExtendedController):
 
     def mouse_click(self, widget, event=None):
         # Double click with left mouse button
-        if event.type == Gdk._2BUTTON_PRESS and event.button == 1:
+        if event.type == Gdk.EventType._2BUTTON_PRESS and event.button == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][self.ITEM_STORAGE_ID], dict):  # double click on folder, not library
                 state_row_path = self.tree_store.get_path(row)

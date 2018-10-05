@@ -10,7 +10,11 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from cairo import ImageSurface, FORMAT_ARGB32, Context, Error
-from Gtk.gdk import CairoContext
+from gi.repository import Gtk
+from gi.repository import Gdk
+# Gtk TODO
+# from Gtk.gdk import CairoContext
+
 
 from math import ceil, sqrt
 
@@ -110,9 +114,19 @@ class ImageCache(object):
         :return: Cairo context to draw on
         """
         cairo_context = Context(self.__image)
-        c = CairoContext(cairo_context)
-        c.scale(zoom * self.multiplicator, zoom * self.multiplicator)
-        return c
+        # c = CairoContext(cairo_context)
+        # from gi.repository import PangoCairo
+        # https://lazka.github.io/pgi-docs/PangoCairo-1.0/functions.html#PangoCairo.create_context
+        # pango_context = PangoCairo.create_context(cairo_context)
+        # https://lazka.github.io/pgi-docs/Gdk-3.0/classes/DrawingContext.html#Gdk.DrawingContext.get_cairo_context
+        # from gi.repository import Gdk
+        # c = Gdk.DrawingContext.get_cairo_context(cairo_context)
+        # c = Gdk.cairo_get_drawing_context(cairo_context)  # not before versin 3.22
+        # new_matrix = pango_context.get_matrix().copy()
+        # new_matrix.scale(zoom * self.multiplicator, zoom * self.multiplicator)
+        # pango_context.set_matrix(new_matrix)
+        cairo_context.scale(zoom * self.multiplicator, zoom * self.multiplicator)
+        return cairo_context
 
     def __set_cached_image(self, image, width, height, zoom, parameters):
         self.__image = image

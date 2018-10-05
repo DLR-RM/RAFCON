@@ -13,8 +13,9 @@
 from math import atan2, pi
 
 from gaphas.item import Line, NW, SE
-from cairo import ANTIALIAS_SUBPIXEL, LINE_CAP_ROUND, LINE_CAP_BUTT
-from pango import SCALE
+# from cairo import Antialias, LINE_CAP_ROUND, LINE_CAP_BUTT
+from cairo import LINE_CAP_ROUND, LINE_CAP_BUTT
+from gi.repository.Pango import SCALE
 
 from rafcon.gui.config import global_gui_config
 
@@ -242,7 +243,7 @@ class PerpLine(Line):
             else:
                 angle = 0
 
-        c.set_antialias(ANTIALIAS_SUBPIXEL)
+        # c.set_antialias(Antialias.GOOD)
 
         parameters = {
             'name': self.name,
@@ -282,8 +283,8 @@ class PerpLine(Line):
 
             c.set_source_rgba(*self._arrow_color)
             c.scale(1. / scale_factor, 1. / scale_factor)
-            c.update_layout(layout)
-            c.show_layout(layout)
+            PangoCairo.update_layout(c, layout)
+            PangoCairo.show_layout(c, layout)
 
             self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, angle, zoom=current_zoom)
 

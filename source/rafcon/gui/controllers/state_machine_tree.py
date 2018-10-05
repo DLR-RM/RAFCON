@@ -479,7 +479,7 @@ class StateMachineTreeController(TreeViewController):
             return None, set()
 
     def mouse_click(self, widget, event=None):
-        if event.type == Gdk._2BUTTON_PRESS:
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
             return self._handle_double_click(event)
 
     def _handle_double_click(self, event):
@@ -508,6 +508,6 @@ class StateMachineTreeController(TreeViewController):
         if state_machine_m is None and self._selected_sm_model and \
                 self._selected_sm_model.selection.get_selected_state():
             self.update_selection_sm_prior()
-        elif signal_msg and self.tree_store.get_iter_root():
+        elif signal_msg and self.tree_store.get_iter_first():
             if any(issubclass(cls, self.CORE_ELEMENT_CLASS) for cls in signal_msg.arg.affected_core_element_classes):
                 self.update_selection_sm_prior()

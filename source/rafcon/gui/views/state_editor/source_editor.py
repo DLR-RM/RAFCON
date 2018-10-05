@@ -61,7 +61,7 @@ class SourceEditorView(EditorView):
         hbox.pack_end(cancel_button, False, True, constants.PADDING)
         hbox.pack_end(apply_button, False, True, constants.PADDING)
         hbox.set_border_width(constants.BORDER_WIDTH)
-        self['editor_frame'].pack_start(hbox, expand=False, fill=True)
+        self['editor_frame'].pack_start(hbox, expand=False, fill=True, padding=0)
         self['pylint_check_button'] = pylint_check_button
         self['apply_button'] = apply_button
         self['open_external_button'] = open_external_button
@@ -89,8 +89,8 @@ class SourceEditorView(EditorView):
 
     @property
     def button_container_min_width(self):
-        return self['pylint_check_button'].get_allocation()[2] + self['apply_button'].get_size_request()[0] + \
-               self['open_external_button'].get_allocation()[2] + self['cancel_button'].get_size_request()[0]
+        return self['pylint_check_button'].get_allocation().width + self['apply_button'].get_size_request()[0] + \
+               self['open_external_button'].get_allocation().width + self['cancel_button'].get_size_request()[0]
 
     def on_text_view_event(self, *args):
         self.pane_position_check()

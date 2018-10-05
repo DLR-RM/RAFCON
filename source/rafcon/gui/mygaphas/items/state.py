@@ -14,7 +14,9 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from weakref import ref
-from pango import SCALE, FontDescription, WRAP_WORD
+from gi.repository.Pango import SCALE, FontDescription, WrapMode
+from gi.repository import PangoCairo
+# from cairo import Antialias
 from copy import copy
 import cairo
 
@@ -493,9 +495,9 @@ class StateView(Element):
         width = self.width
         height = self.height
 
-        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+        # c.set_antialias(Antialias.GOOD)
 
-        layout = c.create_layout()
+        layout = PangoCairo.create_layout(c)
 
         font_name = constants.ICON_FONT
 
@@ -526,8 +528,8 @@ class StateView(Element):
                   height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
-        c.update_layout(layout)
-        c.show_layout(layout)
+        PangoCairo.update_layout(c, layout)
+        PangoCairo.show_layout(c, layout)
 
     def get_transitions(self):
         transitions = []
@@ -1006,12 +1008,14 @@ class NameView(Element):
                 c.set_source_rgba(0, 0, 0, 0)
                 c.stroke()
 
-            c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+            # c.set_antialias(Antialias.GOOD)
 
-            layout = c.create_layout()
-            layout.set_wrap(WRAP_WORD)
+            # Gtk TODO
+            layout = PangoCairo.create_layout(c)
+            # layout = c.create_layout()
+            layout.set_wrap(WrapMode.WORD)
             layout.set_width(int(round(BASE_WIDTH * SCALE)))
-            layout.set_text(self.name)
+            layout.set_text(self.name, -1)
 
             def set_font_description(font_size):
                 font = FontDescription(font_name + " " + str(font_size))
@@ -1071,9 +1075,11 @@ class NameView(Element):
             c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
             c.save()
             # The pango layout has a fixed width and needs to be fitted to the context size
+            # c.scale(1. / zoom_scale, 1. / zoom_scale)
             c.scale(1. / zoom_scale, 1. / zoom_scale)
-            c.update_layout(layout)
-            c.show_layout(layout)
+
+            PangoCairo.update_layout(c, layout)
+            PangoCairo.show_layout(c, layout)
             c.restore()
 
             # Copy image surface to current cairo context

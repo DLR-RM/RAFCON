@@ -14,7 +14,9 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from weakref import ref
-from pango import SCALE, FontDescription
+from gi.repository.Pango import SCALE, FontDescription
+from gi.repository import PangoCairo
+# from cairo import Antialias
 
 from gaphas.state import observed
 from gaphas.connector import Handle
@@ -252,9 +254,9 @@ class PortView(object):
         center = (position.x.value, position.y.value)
         view_center = matrix_i2v.transform_point(*center)
         if view_center[0] + view_length / 2. < 0 or \
-                view_center[0] - view_length / 2. > view.allocation[2] or \
+                view_center[0] - view_length / 2. > view.get_allocation().width or \
                 view_center[1] + view_length / 2. < 0 or \
-                view_center[1] - view_length / 2. > view.allocation[3]:
+                view_center[1] - view_length / 2. > view.get_allocation().height:
             if not context.draw_all:
                 return
 
@@ -406,7 +408,7 @@ class PortView(object):
         if self.connected:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgb(*gui_config.gtk_colors['BLACK'].to_floats())
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -438,7 +440,7 @@ class PortView(object):
         if self.connected_incoming:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgb(*gui_config.gtk_colors['BLACK'].to_floats())
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -453,7 +455,7 @@ class PortView(object):
         if self.connected_outgoing:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgb(*gui_config.gtk_colors['BLACK'].to_floats())
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -765,11 +767,11 @@ class ScopedVariablePortView(PortView):
         :rtype: float, float
         """
         c = context
-        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+        # c.set_antialias(Antialias.GOOD)
 
         side_length = self.port_side_size
 
-        layout = c.create_layout()
+        layout = PangoCairo.create_layout(c)
         font_name = constants.INTERFACE_FONT
         font_size = gap_draw_helper.FONT_SIZE
         font = FontDescription(font_name + " " + str(font_size))
@@ -800,8 +802,8 @@ class ScopedVariablePortView(PortView):
         c.rel_move_to(-extents[0], -extents[1])
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(self.text_color, transparency))
-        c.update_layout(layout)
-        c.show_layout(layout)
+        PangoCairo.update_layout(c, layout)
+        PangoCairo.show_layout(c, layout)
         c.restore()
 
         return name_size_with_margin

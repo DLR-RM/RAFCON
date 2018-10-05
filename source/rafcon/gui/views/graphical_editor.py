@@ -256,7 +256,7 @@ class GraphicalEditor(Gtk.DrawingArea, Gtk.Widget):
             return False
 
         # Draw on the full viewport
-        glViewport(0, 0, self.allocation.width, self.allocation.height)
+        glViewport(0, 0, self.get_allocation().width, self.get_allocation().height)
 
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
@@ -294,7 +294,7 @@ class GraphicalEditor(Gtk.DrawingArea, Gtk.Widget):
         """
         left, right, _, _ = self.get_view_coordinates()
         width = right - left
-        display_width = self.allocation.width
+        display_width = self.get_allocation().width
         return display_width / float(width)
 
     def expose_init(self, *args):
@@ -992,7 +992,7 @@ class GraphicalEditor(Gtk.DrawingArea, Gtk.Widget):
         top = self.top
         bottom = self.bottom
 
-        aspect = self.allocation.width / float(self.allocation.height)
+        aspect = self.get_allocation().width / float(self.get_allocation().height)
 
         if aspect < 1:
             bottom /= aspect

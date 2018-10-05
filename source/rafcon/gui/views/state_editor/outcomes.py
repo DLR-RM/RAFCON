@@ -51,8 +51,8 @@ class StateOutcomesEditorView(View):
         self['remove_button'] = remove_button
 
         self.Hbox = Gtk.HBox()
-        self.Hbox.pack_end(self['remove_button'], expand=False, fill=True)
-        self.Hbox.pack_end(self['add_button'], expand=False, fill=True)
+        self.Hbox.pack_end(self['remove_button'], False, True, 0)
+        self.Hbox.pack_end(self['add_button'], False, True, 0)
 
         scrollable = Gtk.ScrolledWindow()
         scrollable.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
@@ -72,7 +72,7 @@ class StateOutcomesEditorView(View):
 
         self.vbox.pack_start(title_viewport, False, True, 0)
         self.vbox.pack_start(scrollable, True, True, 0)
-        self.vbox.pack_start(self.Hbox, expand=False, fill=True)
+        self.vbox.pack_start(self.Hbox, expand=False, fill=True, padding=0)
         self.vbox.show_all()
 
         self['main_frame'] = self.vbox

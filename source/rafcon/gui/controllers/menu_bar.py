@@ -251,7 +251,7 @@ class MenuBarController(ExtendedController):
 
     def on_key_press_event(self, widget, event):
         keyname = Gdk.keyval_name(event.keyval)
-        if keyname == "Escape" and self.full_screen_window.get_window().get_state() == Gdk.WindowState.FULLSCREEN:
+        if keyname == "Escape" and self.full_screen_window.get_window().get_state()[1] == Gdk.WindowState.FULLSCREEN:
             self.view["full_screen"].set_active(False)
             return True
 

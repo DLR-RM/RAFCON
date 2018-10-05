@@ -21,11 +21,12 @@
 """
 
 from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GLib
 import time
 from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
 from gaphas.item import Item
-from Gtk.gdk import ACTION_COPY
 import math
 
 from rafcon.core.decorators import lock_state_machine
@@ -88,7 +89,8 @@ class GraphicalEditorController(ExtendedController):
         self._nested_action_already_in = {}
         view.setup_canvas(self.canvas, self.zoom)
 
-        view.editor.drag_dest_set(Gtk.DestDefaults.ALL, [('STRING', 0, 0)], ACTION_COPY)
+        # Gtk TODO: solve via Gtk.TargetList? https://python-gtk-3-tutorial.readthedocs.io/en/latest/drag_and_drop.html
+        view.editor.drag_dest_set(Gtk.DestDefaults.ALL, [Gtk.TargetEntry('STRING', 0, 0)], Gdk.DragAction.COPY)
         logger.verbose("Time spent in init {0} seconds for state machine {1}"
                        "".format(time.time() - start_time, self.model.state_machine_id))
 
@@ -281,7 +283,7 @@ class GraphicalEditorController(ExtendedController):
             state_v = self.canvas.get_parent(item)
         else:
             state_v = item
-        viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
+        viewport_size = self.view.editor.get_allocation().width, self.view.editor.get_allocation().height
         state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
         min_relative_size = min(viewport_size[i] / state_size[i] for i in [HORIZONTAL, VERTICAL])
 
@@ -299,7 +301,7 @@ class GraphicalEditorController(ExtendedController):
 
         state_pos = self.view.editor.get_matrix_i2v(state_v).transform_point(0, 0)
         state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
-        viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
+        viewport_size = self.view.editor.get_allocation().width, self.view.editor.get_allocation().height
 
         # Calculate offset around state so that the state is centered in the viewport
         padding_offset_horizontal = (viewport_size[HORIZONTAL] - state_size[HORIZONTAL]) / 2.
@@ -768,7 +770,7 @@ class GraphicalEditorController(ExtendedController):
         # check_relative size in view and call it again if the state is still very small
         state_v = self.canvas.get_view_for_model(state_machine_m.root_state)
         state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
-        viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
+        viewport_size = self.view.editor.get_allocation().width, self.view.editor.get_allocation().height
         if state_size[0] < ratio_requested*viewport_size[0] and state_size[1] < ratio_requested*viewport_size[1]:
             self.set_focus_to_state_model(state_m, ratio_requested)
 
@@ -792,7 +794,7 @@ class GraphicalEditorController(ExtendedController):
 
         # finally set the focus to the root state (needs to be idle add to be executed after gaphas drawing is finished)
         if rafcon.gui.singleton.global_gui_config.get_config_value('GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE', True):
-            Gtk.idle_add(self.set_focus_to_state_model, self.root_state_m)
+            GLib.idle_add(self.set_focus_to_state_model, self.root_state_m)
 
     @lock_state_machine
     def add_state_view_for_model(self, state_m, parent_v=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):

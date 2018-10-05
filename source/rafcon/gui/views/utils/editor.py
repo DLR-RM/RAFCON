@@ -62,10 +62,11 @@ class EditorView(View):
             self.language_manager = GtkSource.LanguageManager()
             if language in self.language_manager.get_language_ids():
 
-                self.textview = GtkSource.View(self.new_buffer())
-                self.textview.set_mark_category_pixbuf('INSTRUCTION',
-                                                       editor_frame.render_icon(Gtk.STOCK_GO_FORWARD,
-                                                                                Gtk.IconSize.MENU))
+                self.textview = GtkSource.View()
+                # Gtk TODO
+                # self.textview.set_mark_category_pixbuf('INSTRUCTION',
+                #                                        editor_frame.render_icon(Gtk.STOCK_GO_FORWARD,
+                #                                                                 Gtk.IconSize.MENU))
                 self.using_source_view = True
             else:
                 logger.debug("Chosen language '{}' is not supported initiate simple TextView.".format(language))
@@ -94,11 +95,11 @@ class EditorView(View):
             # with spacer a Gtk.Frame object is used as spacer and its is with the source view in one hbox
             hbox_frame = Gtk.HBox()
             self.spacer_frame = Gtk.Frame()
-            hbox_frame.pack_end(self.spacer_frame, expand=False, fill=False)
-            hbox_frame.pack_start(editor_frame, expand=True, fill=True)
-            vbox.pack_start(hbox_frame, expand=True, fill=True)
+            hbox_frame.pack_end(self.spacer_frame, expand=False, fill=False, padding=0)
+            hbox_frame.pack_start(editor_frame, expand=True, fill=True, padding=0)
+            vbox.pack_start(hbox_frame, expand=True, fill=True, padding=0)
         else:
-            vbox.pack_start(editor_frame, expand=True, fill=True)
+            vbox.pack_start(editor_frame, expand=True, fill=True, padding=0)
 
         self['editor_frame'] = vbox
         self.top = 'editor_frame'
@@ -136,7 +137,7 @@ class EditorView(View):
         return self.textview.get_buffer()
 
     def get_text(self):
-        return self.get_buffer().get_text(self.get_buffer().get_start_iter(), self.get_buffer().get_end_iter())
+        return self.get_buffer().get_text(self.get_buffer().get_start_iter(), self.get_buffer().get_end_iter(), True)
 
     def set_text(self, text):
         """ The method insert text into the text buffer of the text view and preserves the cursor location.

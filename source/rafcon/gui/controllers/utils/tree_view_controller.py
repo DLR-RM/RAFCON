@@ -72,7 +72,7 @@ class AbstractTreeViewController(ExtendedController):
         self.signal_handlers = []
         # GTK Todo: check if necessary and search for replacement
         # for column in self.widget_columns:
-        #     renderers = column.get_cell_renderers()
+        #     renderers = column.get_cells()
         #     for r in renderers:
         #         r.ctrl = None
         #         r.destroy()
@@ -484,7 +484,8 @@ class ListViewController(AbstractTreeViewController):
         if event.type == Gdk.EventType.BUTTON_PRESS:
             pthinfo = self.tree_view.get_path_at_pos(int(event.x), int(event.y))
 
-            if not bool(event.get_state() & Gdk.ModifierMask.CONTROL_MASK) and not bool(event.get_state() & Gdk.ModifierMask.SHIFT_MASK) and \
+            if not bool(event.get_state() & Gdk.ModifierType.CONTROL_MASK) \
+                    and not bool(event.get_state() & Gdk.ModifierType.SHIFT_MASK) and \
                     event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
                 if pthinfo is not None:
                     model, paths = self._tree_selection.get_selected_rows()
@@ -499,11 +500,12 @@ class ListViewController(AbstractTreeViewController):
                     self.on_right_click_menu()
                     return True
 
-            if (bool(event.get_state() & Gdk.ModifierMask.CONTROL_MASK) or bool(event.get_state() & Gdk.ModifierMask.SHIFT_MASK)) and \
+            if (bool(event.get_state() & Gdk.ModifierType.CONTROL_MASK) or \
+                bool(event.get_state() & Gdk.ModifierType.SHIFT_MASK)) and \
                     event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
                 return True
 
-            if not bool(event.get_state() & Gdk.ModifierMask.SHIFT_MASK) and event.button == 1:
+            if not bool(event.get_state() & Gdk.ModifierType.SHIFT_MASK) and event.button == 1:
                 if pthinfo is not None:
                     # self._logger.info("last select row {}".format(pthinfo[0]))
                     self._last_path_selection = pthinfo[0]
@@ -511,7 +513,7 @@ class ListViewController(AbstractTreeViewController):
                 #     self._logger.info("deselect rows")
                 #     self.tree_selection.unselect_all()
 
-            if bool(event.get_state() & Gdk.ModifierMask.SHIFT_MASK) and event.button == 1:
+            if bool(event.get_state() & Gdk.ModifierType.SHIFT_MASK) and event.button == 1:
                 # self._logger.info("SHIFT adjust selection range")
                 model, paths = self._tree_selection.get_selected_rows()
                 # print model, paths, pthinfo[0]
@@ -530,7 +532,7 @@ class ListViewController(AbstractTreeViewController):
                     if pthinfo and pthinfo[0]:
                         self._last_path_selection = pthinfo[0]
 
-            if bool(event.get_state() & Gdk.ModifierMask.CONTROL_MASK) and event.button == 1:
+            if bool(event.get_state() & Gdk.ModifierType.CONTROL_MASK) and event.button == 1:
                 # self._logger.info("CONTROL adjust selection range")
                 model, paths = self._tree_selection.get_selected_rows()
                 # print model, paths, pthinfo[0]
@@ -544,7 +546,7 @@ class ListViewController(AbstractTreeViewController):
                     self._tree_selection.select_path(pthinfo[0])
                     return True
 
-        elif event.type == Gdk._2BUTTON_PRESS:
+        elif event.type == Gdk.EventType._2BUTTON_PRESS:
             self._handle_double_click(event)
 
     def _handle_double_click(self, event):
@@ -645,7 +647,7 @@ class ListViewController(AbstractTreeViewController):
             if self.active_entry_widget is not None:
                 text = self.active_entry_widget.get_buffer().get_text()
                 if focus_column in self.widget_columns:
-                    focus_column.get_cell_renderers()[0].emit('edited', path[0], text)
+                    focus_column.get_cells()[0].emit('edited', path[0], text)
 
             # row could be updated by other call_backs caused by emitting 'edited' signal but selection stays an editable neighbor
             path = self.get_path_for_core_element(self.tree_view_keypress_callback.__func__.core_element_id)
@@ -678,7 +680,7 @@ class ListViewController(AbstractTreeViewController):
                         if next_row < 0 or next_row > len(self.tree_view.get_model()) - 1:
                             return False
 
-                    if self.widget_columns[next_focus_column_id].get_cell_renderers()[0].get_property('editable'):
+                    if self.widget_columns[next_focus_column_id].get_cells()[0].get_property('editable'):
                         break
             else:
                 return False
@@ -867,7 +869,7 @@ class TreeViewController(AbstractTreeViewController):
                 text = self.active_entry_widget.get_buffer().get_text()
                 if focus_column in self.widget_columns:
                     # print "path", ':'.join([str(elem) for elem in path])
-                    focus_column.get_cell_renderers()[0].emit('edited', ':'.join([str(elem) for elem in path]), text)
+                    focus_column.get_cells()[0].emit('edited', ':'.join([str(elem) for elem in path]), text)
 
             # row could be updated by other call_backs caused by emitting 'edited' signal but selection stays an editable neighbor
             core_element_id = ':'.join([str(key) for key in self.tree_view_keypress_callback.__func__.core_element_id])
@@ -909,7 +911,7 @@ class TreeViewController(AbstractTreeViewController):
                         if next_row < 0 or next_row > len(self.tree_store[path[:-1]] if len(path) > 1 else self.tree_store) - 1:
                             return False
 
-                    if self.widget_columns[next_focus_column_id].get_cell_renderers()[0].get_property('editable'):
+                    if self.widget_columns[next_focus_column_id].get_cells()[0].get_property('editable'):
                         break
             else:
                 return False

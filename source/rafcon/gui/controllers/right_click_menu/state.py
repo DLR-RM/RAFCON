@@ -18,6 +18,7 @@
 """
 
 from gi.repository import Gtk
+from gi.repository import Gdk
 from functools import partial
 
 import rafcon.core.singleton as core_singletons

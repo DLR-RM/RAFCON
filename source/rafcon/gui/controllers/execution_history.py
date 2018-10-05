@@ -23,6 +23,7 @@
 
 from os import path
 from gi.repository import Gtk
+from gi.repository import Gdk
 from gi.repository import GObject
 from threading import RLock
 
@@ -144,7 +145,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         step as tooltip or fold and unfold the tree by double-click and select respective state for double clicked
         element.
         """
-        if event.type == Gdk._2BUTTON_PRESS and event.button == 1:
+        if event.type == Gdk.EventType._2BUTTON_PRESS and event.button == 1:
 
             (model, row) = self.history_tree.get_selection().get_selected()
             if row is not None:
@@ -234,7 +235,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.append_string_to_menu(popup_menu, "------------------------")
 
                 popup_menu.show()
-                popup_menu.popup(None, None, None, event.button, time)
+                popup_menu.popup(None, None, None, None, event.button, time)
 
             return True
 
@@ -307,7 +308,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, n)
                 restore_tree_expansion(child_iter, expansion_state)
 
-        root_iter = self.history_tree_store.get_iter_root()
+        root_iter = self.history_tree_store.get_iter_first()
         if not root_iter:
             return
         state_machine = self.get_history_item_for_tree_iter(root_iter).state_reference.get_state_machine()

@@ -13,8 +13,11 @@
 
 from math import pi
 
-from pango import SCALE, FontDescription
-from cairo import ANTIALIAS_SUBPIXEL
+from gi.repository.Pango import SCALE, FontDescription
+# from cairo import Antialias
+from gi.repository import PangoCairo
+
+from gaphas.painter import CairoBoundingBoxContext
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.utils import constants
@@ -131,7 +134,7 @@ def draw_data_value_rect(cairo_context, color, value_size, name_size, pos, port_
 
     c.set_source_rgba(*color)
     c.fill_preserve()
-    c.set_source_color(gui_config.gtk_colors['BLACK'])
+    c.set_source_rgb(*gui_config.gtk_colors['BLACK'].to_floats())
     c.stroke()
 
     return rot_angle, move_x, move_y
@@ -157,7 +160,7 @@ def draw_connected_scoped_label(context, color, name_size, handle_pos, port_side
     c = context.cairo
     c.set_line_width(port_side_size * .03)
 
-    c.set_source_color(color)
+    c.set_source_rgb(*color.to_floats())
 
     rot_angle = .0
     move_x = 0.
@@ -256,7 +259,9 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
     :param only_extent_calculations: Calculate only the extends and do not actually draw
     """
     c = context
-    c.set_antialias(ANTIALIAS_SUBPIXEL)
+
+    # Gtk TODO
+    # c.set_antialias(Antialias.GOOD)
 
     text = port.name
     label_color = get_col_rgba(port.fill_color, transparency)
@@ -265,15 +270,20 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
 
     port_position = c.get_current_point()
 
-    layout = c.create_layout()
-    layout.set_text(text)
+    cairo_context = c
+    if isinstance(c, CairoBoundingBoxContext):
+        cairo_context = c._cairo
+
+    layout = PangoCairo.create_layout(cairo_context)
+    layout.set_text(text, -1)
 
     font_name = constants.INTERFACE_FONT
     font = FontDescription(font_name + " " + str(FONT_SIZE))
     layout.set_font_description(font)
 
     ink_extents, logical_extents = layout.get_extents()
-    extents = [extent / float(SCALE) for extent in logical_extents]
+    extents = [extent / float(SCALE) for extent in [logical_extents.x, logical_extents.y, logical_extents.width,
+                                                    logical_extents.height]]
     real_text_size = extents[2], extents[3]
     desired_height = port_height
     scale_factor = real_text_size[1] / desired_height
@@ -337,13 +347,13 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
         if label_position is SnappedSide.RIGHT:
             c.rel_move_to(-real_text_size[0], -real_text_size[1])
         c.set_source_rgba(*get_col_rgba(text_color, transparency))
-        c.update_layout(layout)
-        c.show_layout(layout)
+        PangoCairo.update_layout(cairo_context, layout)
+        PangoCairo.show_layout(cairo_context, layout)
         c.restore()
 
     if show_additional_value:
         value_text = limit_value_string_length(additional_value)
-        value_layout = c.create_layout()
+        value_layout = PangoCairo.create_layout(c)
         value_layout.set_text(value_text)
         value_layout.set_font_description(font)
 
@@ -371,7 +381,7 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
             # Draw filled outline
             c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['DATA_VALUE_BACKGROUND']))
             c.fill_preserve()
-            c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgb(*gui_config.gtk_colors['BLACK'].to_floats())
             c.stroke()
 
             # Move to the upper left corner of the desired text position
@@ -391,8 +401,8 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
             if label_position is SnappedSide.RIGHT:
                 c.rel_move_to(-value_text_size[0] - margin * scale_factor, -real_text_size[1])
             c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['SCOPED_VARIABLE_TEXT']))
-            c.update_layout(value_layout)
-            c.show_layout(value_layout)
+            PangoCairo.update_layout(cairo_context, value_layout)
+            PangoCairo.show_layout(cairo_context, value_layout)
             c.restore()
 
         label_extents = min(label_extents[0], value_extents[0]), min(label_extents[1], value_extents[1]), \
@@ -435,7 +445,7 @@ def draw_label_path(context, width, height, arrow_height, distance_to_port, port
 
 def get_text_layout(cairo_context, text, size):
     c = cairo_context
-    layout = c.create_layout()
+    layout = PangoCairo.create_layout(c)
     layout.set_text(text)
 
     font_name = constants.INTERFACE_FONT

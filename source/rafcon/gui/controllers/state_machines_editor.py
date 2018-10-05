@@ -50,6 +50,7 @@ try:
     from rafcon.gui.controllers.graphical_editor_gaphas import GraphicalEditorController as \
         GraphicalEditorGaphasController
 except ImportError as e:
+    raise
     logger.warn("The Gaphas graphical editor is not supported due to missing libraries: {0}".format(e.message))
     GAPHAS_AVAILABLE = False
 
@@ -269,7 +270,9 @@ class StateMachinesEditorController(ExtendedController):
         for p in range(number_of_pages):
             page = self.view["notebook"].get_nth_page(p)
             label = self.view["notebook"].get_tab_label(page).get_child().get_children()[0]
-            old_label_colors[p] = label.get_style().fg[Gtk.StateType.NORMAL]
+
+            # old_label_colors[p] = label.get_style().fg[Gtk.StateType.NORMAL]
+            old_label_colors[p] = label.get_style_context().get_color(Gtk.StateType.NORMAL)
 
         if not self.view.notebook.get_current_page() == page_id:
             self.view.notebook.set_current_page(page_id)
@@ -278,8 +281,10 @@ class StateMachinesEditorController(ExtendedController):
         for p in range(number_of_pages):
             page = self.view["notebook"].get_nth_page(p)
             label = self.view["notebook"].get_tab_label(page).get_child().get_children()[0]
-            label.modify_fg(Gtk.StateType.ACTIVE, old_label_colors[p])
-            label.modify_fg(Gtk.StateType.INSENSITIVE, old_label_colors[p])
+            # Gtk TODO
+            style = label.get_style_context()
+            # label.modify_fg(Gtk.StateType.ACTIVE, old_label_colors[p])
+            # label.modify_fg(Gtk.StateType.INSENSITIVE, old_label_colors[p])
 
     def set_active_state_machine(self, state_machine_id):
         page_num = self.get_page_num(state_machine_id)
@@ -365,7 +370,7 @@ class StateMachinesEditorController(ExtendedController):
         """
         from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
         force = True if event is not None and hasattr(event, 'state') and \
-                        event.get_state() & Gdk.ModifierType.SHIFT_MASK and event.get_state() & Gdk.ModifierType.CONTROL_MASK else force
+                        event.get_state()[1] & Gdk.ModifierType.SHIFT_MASK and event.get_state() & Gdk.ModifierType.CONTROL_MASK else force
 
         def remove_state_machine_m():
             state_machine_id = state_machine_m.state_machine.state_machine_id

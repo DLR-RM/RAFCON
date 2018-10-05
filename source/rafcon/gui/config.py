@@ -105,7 +105,7 @@ class GuiConfig(ObservableConfig):
                 color = color[0]
                 color = color.split(':')
                 self.colors[color[0].upper()] = color[1]
-                self.gtk_colors[color[0].upper()] = Gdk.Color.parse(color[1])
+                self.gtk_colors[color[0].upper()] = Gdk.Color.parse(color[1])[1]
 
         # Get color definitions
         color_file_path = resource_filename(__name__, self.get_assets_path(filename="colors.json"))
@@ -116,7 +116,7 @@ class GuiConfig(ObservableConfig):
 
         # replace unicode strings with str strings
         colors = {str(key): str(value) for key, value in colors.iteritems()}
-        gtk_colors = {str(key): Gdk.Color.parse(str(value)) for key, value in colors.iteritems()}
+        gtk_colors = {str(key): Gdk.Color.parse(str(value))[1] for key, value in colors.iteritems()}
         self.gtk_colors.update(gtk_colors)
         self.colors.update(colors)
 
