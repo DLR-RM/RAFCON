@@ -84,7 +84,7 @@ class StateTransitionsListController(LinkageListController):
         format_cell(view['from_outcome_combo'], None, 0)
         format_cell(view['to_outcome_combo'], None, 0)
 
-        def cell_text(column, cell_renderer, model, iter):
+        def cell_text(column, cell_renderer, model, iter, data):
             t_id = model.get_value(iter, self.ID_STORAGE_ID)
             in_external = 'external' if model.get_value(iter, self.IS_EXTERNAL_STORAGE_ID) else 'internal'
             # print t_id, in_external, self.combo[in_external]
