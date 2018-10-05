@@ -783,7 +783,8 @@ class ScopedVariablePortView(PortView):
         layout.set_text(self.name)
 
         ink_extents, logical_extents = layout.get_extents()
-        extents = [extent / float(SCALE) for extent in logical_extents]
+        extents = [extent / float(SCALE) for extent in [logical_extents.x, logical_extents.y,
+                                                        logical_extents.width, logical_extents.height]]
         real_name_size = extents[2], extents[3]
         desired_height = side_length * 0.75
         scale_factor = real_name_size[1] / desired_height

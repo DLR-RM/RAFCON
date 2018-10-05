@@ -272,7 +272,8 @@ class PerpLine(Line):
             layout = get_text_layout(cairo_context, self.name, FONT_SIZE)
 
             ink_extents, logical_extents = layout.get_extents()
-            extents = [extent / float(SCALE) for extent in logical_extents]
+            extents = [extent / float(SCALE) for extent in [logical_extents.x, logical_extents.y,
+                                                            logical_extents.width, logical_extents.height]]
             real_label_size = extents[2], extents[3]
             desired_height = self.line_width * 2.5
             scale_factor = real_label_size[1] / desired_height

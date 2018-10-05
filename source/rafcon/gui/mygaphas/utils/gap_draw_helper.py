@@ -281,8 +281,8 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
     layout.set_font_description(font)
 
     ink_extents, logical_extents = layout.get_extents()
-    extents = [extent / float(SCALE) for extent in [logical_extents.x, logical_extents.y, logical_extents.width,
-                                                    logical_extents.height]]
+    extents = [extent / float(SCALE) for extent in [logical_extents.x, logical_extents.y,
+                                                    logical_extents.width, logical_extents.height]]
     real_text_size = extents[2], extents[3]
     desired_height = port_height
     scale_factor = real_text_size[1] / desired_height
@@ -357,7 +357,8 @@ def draw_port_label(context, port, transparency, fill, label_position, show_addi
         value_layout.set_font_description(font)
 
         ink_extents, logical_extents = value_layout.get_extents()
-        extents = [extent / float(SCALE) for extent in logical_extents]
+        extents = [extent / float(SCALE) for extent in [logical_extents.x, logical_extents.y,
+                                                        logical_extents.width, logical_extents.height]]
         value_text_size = extents[2], real_text_size[1]
 
         # Move to the upper left corner of the additional value box
