@@ -218,13 +218,13 @@ class DataPortListController(ListViewController):
                 default_value = data_port_m.data_port.default_value
 
             if not isinstance(self.model.state, LibraryState):
-                tmp.append([data_port_m.data_port.name, data_type_name, default_value, data_port_id,
+                tmp.append([data_port_m.data_port.name, data_type_name, str(default_value), data_port_id,
                             None, None, data_port_m])
             else:
                 use_runtime_value, runtime_value = self.get_data_port_runtime_configuration(data_port_id)
                 tmp.append([data_port_m.data_port.name,
                             data_type_name,
-                            default_value,
+                            str(default_value),
                             data_port_id,
                             use_runtime_value,
                             runtime_value,

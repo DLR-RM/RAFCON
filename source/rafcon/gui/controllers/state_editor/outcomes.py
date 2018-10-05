@@ -255,7 +255,7 @@ class StateOutcomesListController(ListViewController):
             # check for "to outcome combos" -> so all outcomes of parent
             for outcome in model.parent.state.outcomes.values():
                 self.to_outcome_combo_list.append(['parent.' + outcome.name + '.' + str(outcome.outcome_id),
-                                                   outcome.outcome_id, parent_id])
+                                                   str(outcome.outcome_id), parent_id])
             for transition_id, transition in model.parent.state.transitions.items():
                 # check for "to other state" connections -> so from self-state and self-outcome "external" transitions
                 if transition.from_state == model.state.state_id and transition.from_outcome in model.state.outcomes.keys():

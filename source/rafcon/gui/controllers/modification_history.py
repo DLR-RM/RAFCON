@@ -396,11 +396,11 @@ class ModificationHistoryTreeController(ExtendedController):
         history_row_iter = used_func(parent_tree_item, ('',
                                                         str(version_id),  # '',  # version
                                                         method_name,
-                                                        instance,
-                                                        info,
+                                                        str(instance),
+                                                        str(info),
                                                         foreground,
-                                                        model,
-                                                        parameters,
+                                                        str(model),
+                                                        str(parameters),
                                                         tool_tip))
 
         # handle expand-mode
