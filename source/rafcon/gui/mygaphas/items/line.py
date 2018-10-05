@@ -17,6 +17,7 @@ from gaphas.painter import CairoBoundingBoxContext
 # from cairo import Antialias, LINE_CAP_ROUND, LINE_CAP_BUTT
 from cairo import LINE_CAP_ROUND, LINE_CAP_BUTT
 from gi.repository.Pango import SCALE
+from gi.repository import PangoCairo
 
 from rafcon.gui.config import global_gui_config
 
@@ -288,8 +289,8 @@ class PerpLine(Line):
 
             c.set_source_rgba(*self._arrow_color)
             c.scale(1. / scale_factor, 1. / scale_factor)
-            PangoCairo.update_layout(c, layout)
-            PangoCairo.show_layout(c, layout)
+            PangoCairo.update_layout(cairo_context, layout)
+            PangoCairo.show_layout(cairo_context, layout)
 
             self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, angle, zoom=current_zoom)
 
