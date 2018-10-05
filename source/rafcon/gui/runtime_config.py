@@ -51,7 +51,9 @@ class RuntimeConfig(ObservableConfig):
         configuration file.
         """
         if isinstance(widget, Gtk.Window):
-            maximized = bool(widget.maximize_initially)
+            # Gtk TODO: originally
+            #maximized = bool(widget.maximize_initially)
+            maximized = bool(widget.is_maximized())
             self.set_config_value('{0}_MAXIMIZED'.format(widget_name), maximized)
             if maximized:
                 return

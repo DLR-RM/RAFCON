@@ -14,6 +14,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
+from gi.repository import GObject
 import rafcon
 
 

@@ -70,11 +70,12 @@ class AbstractTreeViewController(ExtendedController):
             widget.disconnect(handler_id)
             # widget.destroy() # creates problems with selection update notification
         self.signal_handlers = []
-        for column in self.widget_columns:
-            renderers = column.get_cell_renderers()
-            for r in renderers:
-                r.ctrl = None
-                r.destroy()
+        # GTK Todo: check if necessary and search for replacement
+        # for column in self.widget_columns:
+        #     renderers = column.get_cell_renderers()
+        #     for r in renderers:
+        #         r.ctrl = None
+        #         r.destroy()
 
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
@@ -738,7 +739,7 @@ class TreeViewController(AbstractTreeViewController):
                 self._logger.warning("Iter has to be TreeIter -> handed argument is: {0}".format(row_iter))
 
         # iter on root level of tree
-        next_iter = self.tree_store.get_iter_root()
+        next_iter = self.tree_store.get_iter_first()
         while next_iter:
             iter_all_children(next_iter, function, function_args)
             next_iter = self.tree_store.iter_next(next_iter)

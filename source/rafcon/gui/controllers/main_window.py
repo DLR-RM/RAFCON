@@ -24,6 +24,7 @@
 import os
 import logging
 from gi.repository import Gtk
+from gi.repository import Gdk
 from functools import partial
 
 import rafcon.core.config
@@ -638,16 +639,18 @@ class MainWindowController(ExtendedController):
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
         rafcon.core.singleton.library_manager.prepare_destruction()
 
-        # gtkmvc3 installs a global glade custom handler that holds a reference to the last created View class,
+        # gtkmvc installs a global glade custom handler that holds a reference to the last created View class,
         # preventing it from being destructed. By installing a dummy callback handler, after all views have been
         # created, the old handler is being removed and with it the reference, allowing all Views to be destructed.
-        try:
-            from gtk import glade
-            def dummy(*args, **kwargs):
-                pass
-            glade.set_custom_handler(dummy)
-        except ImportError:
-            pass
+
+        # Gtk TODO: check if necessary and search for replacement
+        # try:
+        #     from gtk import glade
+        #     def dummy(*args, **kwargs):
+        #         pass
+        #     glade.set_custom_handler(dummy)
+        # except ImportError:
+        #     pass
 
         # Recursively destroys the main window
         self.destroy()

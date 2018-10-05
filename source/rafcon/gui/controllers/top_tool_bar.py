@@ -86,7 +86,7 @@ class TopToolBarController(ExtendedController):
 
     def motion_detected(self, widget, event=None):
         if event.is_hint:
-            x, y, state = event.window.get_pointer()
+            window_containing_pointer, x, y, state = event.window.get_pointer()
         else:
             state = event.get_state()
 
@@ -94,7 +94,7 @@ class TopToolBarController(ExtendedController):
             self.top_level_window.begin_move_drag(Gdk.ModifierType.BUTTON1_MASK, int(event.x_root), int(event.y_root), 0)
 
     def button_pressed_event(self, widget, event=None):
-        if event.type == Gdk._2BUTTON_PRESS:
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
             self.on_maximize_button_clicked(None)
 
 
