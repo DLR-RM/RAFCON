@@ -236,11 +236,11 @@ class AbstractTreeViewController(ExtendedController):
                 :param Gtk.Widget widget: Widget from which a handler is to be removed
                 :param data_name: Name of the data of the widget in which the handler id is stored
                 """
-                handler_id = widget.get_data(data_name)
+                handler_id = getattr(widget, data_name)
                 if widget.handler_is_connected(handler_id):
                     widget.disconnect(handler_id)
 
-            editable = renderer.get_data("editable")
+            editable = getattr(renderer, "editable")
             remove_handler(editable, "focus_out_handler_id")
             remove_handler(editable, "cursor_move_handler_id")
             remove_handler(editable, "insert_at_cursor_handler_id")
@@ -283,14 +283,18 @@ class AbstractTreeViewController(ExtendedController):
             focus_out_handler_id = editable.connect('focus-out-event', on_focus_out)
             cursor_move_handler_id = editable.connect('move-cursor', on_cursor_move_in_entry_widget)
             insert_at_cursor_handler_id = editable.connect("insert-at-cursor", on_cursor_move_in_entry_widget)
-            entry_widget_expose_event_handler_id = editable.connect("expose-event", self.on_entry_widget_expose_event)
+            entry_widget_expose_event_handler_id = editable.connect("draw", self.on_entry_widget_draw_event)
             # Store reference to editable and signal handler ids for later access when removing the handlers
-            renderer.set_data("editable", editable)
-            renderer.set_data("editing_cancelled_handler_id", editing_cancelled_handler_id)
-            editable.set_data("focus_out_handler_id", focus_out_handler_id)
-            editable.set_data("cursor_move_handler_id", cursor_move_handler_id)
-            editable.set_data("insert_at_cursor_handler_id", insert_at_cursor_handler_id)
-            editable.set_data("entry_widget_expose_event_handler_id", entry_widget_expose_event_handler_id)
+            # see https://gitlab.gnome.org/GNOME/accerciser/commit/036689e70304a9e98ce31238dfad2432ad4c78ea
+            # originally with renderer.set_data()
+            # renderer.set_data("editable", editable)
+            setattr(renderer, "editable", editable)
+            setattr(renderer, "editing_cancelled_handler_id", editing_cancelled_handler_id)
+            # editable
+            setattr(editable, "focus_out_handler_id", focus_out_handler_id)
+            setattr(editable, "cursor_move_handler_id", cursor_move_handler_id)
+            setattr(editable, "insert_at_cursor_handler_id", insert_at_cursor_handler_id)
+            setattr(editable, "entry_widget_expose_event_handler_id", entry_widget_expose_event_handler_id)
             ctrl.active_entry_widget = editable
 
         def on_edited(renderer, path, new_value_str):
@@ -373,22 +377,23 @@ class AbstractTreeViewController(ExtendedController):
                         return True
                 else:
                     # try to stay long at the beginning of the columns if the columns fully fit in
-                    rel_space = adjustment.page_size - cell_rect_of_entry_widget.x
-                    if cell_rect_of_entry_widget.x + widget.get_layout().get_pixel_size()[0] < adjustment.page_size:
+                    rel_space = adjustment.get_page_size() - cell_rect_of_entry_widget.x
+                    if cell_rect_of_entry_widget.x + widget.get_layout().get_pixel_size()[0] < \
+                            adjustment.get_page_size():
                         rel_pos = 0.
                     elif rel_space and rel_pos <= rel_space:
                         # accelerate the showing of the first columns
-                        rel_pos = rel_pos + rel_pos*3.*(rel_pos - rel_space)/adjustment.page_size
+                        rel_pos = rel_pos + rel_pos*3.*(rel_pos - rel_space)/adjustment.get_page_size()
                         rel_pos = 0. if rel_pos <= 0 else rel_pos
                     else:
                         # and jump to the end of the scroller space if close to the upper limit
-                        rel_pos = adjustment.upper if rel_pos + 2*entry_widget_scroll_offset > adjustment.upper else rel_pos
+                        rel_pos = adjustment.get_upper() if rel_pos + 2*entry_widget_scroll_offset > adjustment.get_upper() else rel_pos
                 self._put_horizontal_scrollbar_onto_rel_pos(rel_pos)
 
     def _put_horizontal_scrollbar_onto_rel_pos(self, rel_pos):
         horizontal_scroll_bar = self.view.scrollbar_widget.get_hscrollbar()
         adjustment = horizontal_scroll_bar.get_adjustment()
-        value = int(float(adjustment.upper - adjustment.page_size)*rel_pos/float(adjustment.upper))
+        value = int(float(adjustment.get_upper() - adjustment.get_page_size())*rel_pos/float(adjustment.get_upper()))
         GLib.idle_add(adjustment.set_value, value)
 
     def _horizontal_scrollbar_stay_in_front_if_possible(self):
@@ -396,7 +401,7 @@ class AbstractTreeViewController(ExtendedController):
             horizontal_scroll_bar = self.view.scrollbar_widget.get_hscrollbar()
             adjustment = horizontal_scroll_bar.get_adjustment()
             cell_rect_of_entry_widget = self.active_entry_widget.get_allocation()
-            rel_space = adjustment.page_size - cell_rect_of_entry_widget.x
+            rel_space = adjustment.get_page_size() - cell_rect_of_entry_widget.x
             if rel_space > 20:
                 self._put_horizontal_scrollbar_onto_rel_pos(0.)
                 return True
@@ -405,7 +410,7 @@ class AbstractTreeViewController(ExtendedController):
         self.expose_event_count_after_key_release = 0
         # self.tree_view_keypress_callback(widget, event)
 
-    def on_entry_widget_expose_event(self, widget, event):
+    def on_entry_widget_draw_event(self, widget, event):
         # take three signals because sometimes expose events come before cursor is set
         if self.expose_event_count_after_key_release < 3:
             AbstractTreeViewController.tree_view_keypress_callback(self, widget, event)
