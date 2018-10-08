@@ -174,7 +174,7 @@ class DataPortListController(ListViewController):
     def _get_new_list_store():
         return Gtk.ListStore(str, str, str, int, bool, str, GObject.TYPE_PYOBJECT)
 
-    def _default_value_cell_data_func(self, tree_view_column, cell, model, iter):
+    def _default_value_cell_data_func(self, tree_view_column, cell, model, iter, data=None):
         """Function set renderer properties for every single cell independently
 
         The function controls the editable and color scheme for every cell in the default value column according
@@ -184,6 +184,7 @@ class DataPortListController(ListViewController):
         :param cell: the current CellRenderer
         :param model: the Gtk.ListStore or TreeStore that is the model for TreeView
         :param iter: an iterator over the rows of the TreeStore/Gtk.ListStore Model
+        :param data: optional data to be passed: see http://dumbmatter.com/2012/02/some-notes-on-porting-from-pygtk-to-pygobject/
         """
         if isinstance(self.model.state, LibraryState):
             use_runtime_value = model.get_value(iter, self.USE_RUNTIME_VALUE_STORAGE_ID)
@@ -238,7 +239,7 @@ class DataPortListController(ListViewController):
         tmp = tms
         self.list_store.clear()
         for elem in tmp:
-            self.list_store.append(elem)
+            self.list_store.append(elem[:])
 
     def _apply_new_data_port_name(self, path, new_name):
         """Applies the new name of the data port defined by path
