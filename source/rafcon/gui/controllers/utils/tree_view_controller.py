@@ -575,9 +575,9 @@ class ListViewController(AbstractTreeViewController):
             for path, row in enumerate(self.list_store):
                 model = row[self.MODEL_STORAGE_ID]
                 if model not in sm_selected_model_list and model in selected_model_list:
-                    tree_selection.unselect_path(path)
+                    tree_selection.unselect_path(Gtk.TreePath.new_from_indices([path]))
                 if model in sm_selected_model_list and model not in selected_model_list:
-                    tree_selection.select_path(path)
+                    tree_selection.select_path(Gtk.TreePath.new_from_indices([path]))
 
         self._do_selection_update = False
 
@@ -642,7 +642,7 @@ class ListViewController(AbstractTreeViewController):
         """
         # self._logger.info("key_value: " + str(event.keyval if event is not None else ''))
         if event and "GDK_KEY_PRESS" == event.type.value_name \
-                and (event.keyval == Gdk.Key_Tab or event.keyval == Gdk.ISO_Left_Tab):
+                and (event.keyval == Gdk.KEY_Tab or event.keyval == Gdk.KEY_ISO_Left_Tab):
             [path, focus_column] = self.tree_view.get_cursor()
             if not path:
                 return False
@@ -656,7 +656,7 @@ class ListViewController(AbstractTreeViewController):
 
             # row could be updated by other call_backs caused by emitting 'edited' signal but selection stays an editable neighbor
             path = self.get_path_for_core_element(self.tree_view_keypress_callback.__func__.core_element_id)
-            if event.keyval == Gdk.Key_Tab:
+            if event.keyval == Gdk.KEY_Tab:
                 # logger.info("move right")
                 direction = +1
             else:
@@ -694,7 +694,8 @@ class ListViewController(AbstractTreeViewController):
             # self._logger.info("self.tree_view.scroll_to_cell(next_row={0}, self.widget_columns[{1}] , use_align={2})"
             #              "".format(next_row, next_focus_column_id, False))
             # self.tree_view.scroll_to_cell(next_row, self.widget_columns[next_focus_column_id], use_align=False)
-            self.tree_view.set_cursor_on_cell(next_row, self.widget_columns[next_focus_column_id], start_editing=True)
+            self.tree_view.set_cursor_on_cell(Gtk.TreePath.new_from_indices([next_row]), self.widget_columns[
+                next_focus_column_id], focus_cell=None, start_editing=True)
             return True
         else:
             super(ListViewController, self).tree_view_keypress_callback(widget, event)
@@ -858,7 +859,7 @@ class TreeViewController(AbstractTreeViewController):
         # self._logger.info("key_value: " + str(event.keyval if event is not None else ''))
         # TODO works for root level or other single level of tree view but not for switching in between levels
         if event and "GDK_KEY_PRESS" == event.type.value_name \
-                and (event.keyval == Gdk.Key_Tab or event.keyval == Gdk.ISO_Left_Tab):
+                and (event.keyval == Gdk.KEY_Tab or event.keyval == Gdk.KEY_ISO_Left_Tab):
             [path, focus_column] = self.tree_view.get_cursor()
             # print "cursor ", path, focus_column
             model, paths = self.tree_view.get_selection().get_selected_rows()
@@ -881,7 +882,7 @@ class TreeViewController(AbstractTreeViewController):
             if core_element_id in self._changed_id_to:
                 self.tree_view_keypress_callback.__func__.core_element_id = self._changed_id_to[core_element_id]
             path = self.get_path_for_core_element(self.tree_view_keypress_callback.__func__.core_element_id)
-            if event.keyval == Gdk.Key_Tab:
+            if event.keyval == Gdk.KEY_Tab:
                 # logger.info("move right")
                 direction = +1
             else:
@@ -926,7 +927,8 @@ class TreeViewController(AbstractTreeViewController):
             # self._logger.info("self.tree_view.scroll_to_cell(next_row={0}, self.widget_columns[{1}] , use_align={2})"
             #              "".format(next_row, next_focus_column_id, False))
             # self.tree_view.scroll_to_cell(new_path, self.widget_columns[next_focus_column_id], use_align=False)
-            self.tree_view.set_cursor_on_cell(new_path, self.widget_columns[next_focus_column_id], start_editing=True)
+            self.tree_view.set_cursor_on_cell(Gtk.TreePath.new_from_indices([new_path]), self.widget_columns[
+                next_focus_column_id], focus_cell=None, start_editing=True)
             return True
         else:
             super(TreeViewController, self).tree_view_keypress_callback(widget, event)
