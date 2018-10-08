@@ -19,6 +19,7 @@ Next release
 - Bug Fixes:
 
   - no more GtkWarning in stdout
+  - `GitHub Issue #4 <https://github.com/DLR-RM/RAFCON/issues/4>`__ GTK theme does not exist
 
 
 Patch releases 0.12.\*
