@@ -11,6 +11,7 @@
 # example basictreeview.py
 
 from gi.repository import Gtk
+from gi.repository import Gdk
 import shelve
 
 import rafcon.utils.execution_log as log_helper
