@@ -62,8 +62,8 @@ class EditorView(View):
             self.language_manager = GtkSource.LanguageManager()
             if language in self.language_manager.get_language_ids():
 
-                self.textview = GtkSource.View()
-                # Gtk TODO
+                self.textview = GtkSource.View.new_with_buffer(self.new_buffer())
+                # Gtk TODO: what is this for?
                 # self.textview.set_mark_category_pixbuf('INSTRUCTION',
                 #                                        editor_frame.render_icon(Gtk.STOCK_GO_FORWARD,
                 #                                                                 Gtk.IconSize.MENU))
