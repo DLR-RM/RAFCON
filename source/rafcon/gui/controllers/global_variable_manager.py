@@ -296,7 +296,7 @@ class GlobalVariableManagerController(ListViewController):
             if key in self.list_store_iterators:
                 gv_row_path = self.list_store.get_path(self.list_store_iterators[key])
                 self.list_store[gv_row_path][self.IS_LOCKED_AS_STRING_STORAGE_ID] = \
-                    self.model.global_variable_manager.is_locked(key)
+                    str(self.model.global_variable_manager.is_locked(key))
         elif info['method_name'] in ['set_variable', 'delete_variable']:
             if info['method_name'] == 'set_variable':
                 key = info.kwargs.get('key', info.args[1]) if len(info.args) > 1 else info.kwargs['key']
@@ -325,6 +325,6 @@ class GlobalVariableManagerController(ListViewController):
             iter = self.list_store.append([key,
                                            self.model.global_variable_manager.get_data_type(key).__name__,
                                            str(self.model.global_variable_manager.get_representation(key)),
-                                           self.model.global_variable_manager.is_locked(key),
+                                           str(self.model.global_variable_manager.is_locked(key)),
                                            ])
             self.list_store_iterators[key] = iter
