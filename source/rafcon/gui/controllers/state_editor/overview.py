@@ -30,7 +30,6 @@ from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrenc
 from rafcon.core.states.state import StateType
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-from rafcon.gui.helpers.label import format_cell
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel
 from rafcon.gui.views.state_editor.overview import StateOverviewView
@@ -98,15 +97,11 @@ class StateOverviewController(ExtendedController):
             view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
 
-        cell = Gtk.CellRendererText()
-        format_cell(cell, constants.BUTTON_MIN_HEIGHT, constants.GRID_SIZE)
         l_store = Gtk.ListStore(str)
-        combo = Gtk.ComboBox()
+        combo = Gtk.ComboBoxText()
         combo.set_name("state_type_combo")
         combo.set_focus_on_click(False)
         combo.set_model(l_store)
-        combo.pack_start(cell, True)
-        combo.add_attribute(cell, 'text', 0)
         combo.show_all()
         view['type_viewport'].add(combo)
         view['type_viewport'].show()
