@@ -214,7 +214,7 @@ class PreferencesWindowController(ExtendedController):
         """
         for row_num, entry in enumerate(list_store):
             if entry[0] == config_key:
-                entry[1] = config_value
+                entry[1] = str(config_value)
                 entry[6] = config_value
                 return row_num
 
@@ -233,9 +233,9 @@ class PreferencesWindowController(ExtendedController):
             config_value = config_m.get_current_config_value(config_key)
             # (config_key, text, text_visible, toggle_activatable, toggle_visible, text_editable, toggle_state)
             if isinstance(config_value, bool):
-                list_store.append((config_key, config_value, False, True, True, False, config_value))
+                list_store.append((str(config_key), str(config_value), False, True, True, False, config_value))
             else:
-                list_store.append((config_key, config_value, True, False, False, True, config_value))
+                list_store.append((str(config_key), str(config_value), True, False, False, True, config_value))
 
     def update_core_config_list_store(self):
         """Create list store for the core configuration
@@ -265,7 +265,7 @@ class PreferencesWindowController(ExtendedController):
         actions = sorted(shortcuts.keys())
         for action in actions:
             keys = shortcuts[action]
-            self.shortcut_list_store.append((action, keys))
+            self.shortcut_list_store.append((str(action), str(keys)))
 
     @staticmethod
     def _select_row_by_column_value(tree_view, list_store, column, value):
