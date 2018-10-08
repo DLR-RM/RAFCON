@@ -221,7 +221,7 @@ class ScopedVariableListController(ListViewController):
             tmp = tms
             self.list_store.clear()
             for elem in tmp:
-                self.list_store.append(elem)
+                self.list_store.append(elem[:])
         else:
             raise RuntimeError("The reload_scoped_variables_list_store function should be never called for "
                                "a non Container State Model")
