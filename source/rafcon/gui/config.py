@@ -124,8 +124,9 @@ class GuiConfig(ObservableConfig):
         self.gtk_colors.update(gtk_colors)
         self.colors.update(colors)
 
-    def get_assets_path(self, folder=None, filename=None, for_theme=True):
-        theme = "share/themes/{}/".format(self.get_config_value('THEME', 'dark')) if for_theme else ""
+    @staticmethod
+    def get_assets_path(folder=None, filename=None, for_theme=True):
+        theme = "share/themes/RAFCON/" if for_theme else ""
         folder = folder + "/" if folder else ""
         filename = filename if filename else ""
         return "assets/{theme}{folder}{filename}".format(theme=theme, folder=folder, filename=filename)
