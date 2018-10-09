@@ -413,9 +413,10 @@ class HoverItemTool(gaphas.tool.HoverTool):
                 name_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos)
                 # Hover over corner/resize handles => show with cursor
                 if name_v:
-                    index = name_v.handles().index(hovered_handle)
                     cursors = ElementHandleSelection.CURSORS
-                    self.view.get_window().set_cursor(cursors[index])
+                    index = name_v.handles().index(hovered_handle)
+                    display = self.view.get_display()
+                    self.view.get_window().set_cursor(Gdk.Cursor.new_from_name(display, cursors[index]))
 
         # Change mouse cursor to indicate option to move connection
         elif isinstance(view.hovered_item, ConnectionView):
