@@ -125,7 +125,7 @@ def generate_data_files():
     :rtype: list(tuple(str, [str]))
     """
     assets_folder = path.join('source', 'rafcon', 'gui', 'assets')
-    themes_folder = path.join(assets_folder, 'themes')
+    themes_folder = path.join(assets_folder, 'share', 'themes')
     examples_folder = path.join('share', 'examples')
     libraries_folder = path.join('share', 'libraries')
 
@@ -134,7 +134,7 @@ def generate_data_files():
         get_data_files_tuple(assets_folder, 'splashscreens'),
         get_data_files_tuple(assets_folder, path.join('fonts', 'FontAwesome')),
         get_data_files_tuple(assets_folder, path.join('fonts', 'DIN Next LT Pro')),
-        get_data_files_tuple(themes_folder, 'dark', 'gtk-2.0', 'gtkrc', path_to_file=True),
+        get_data_files_tuple(themes_folder, 'RAFCON', 'gtk-3.0'),
         get_data_files_tuple(themes_folder, 'dark', 'colors.json', path_to_file=True),
         get_data_files_tuple(themes_folder, 'dark', 'gtk-sourceview'),
     ]

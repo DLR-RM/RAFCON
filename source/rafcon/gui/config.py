@@ -79,27 +79,20 @@ class GuiConfig(ObservableConfig):
                     shortcuts_dict[shortcut_name] = shortcuts_list if isinstance(shortcuts_list, list) else [shortcuts_list]
 
     def configure_gtk(self):
-        if not resource_exists(__name__, self.get_assets_path("gtk-2.0", "gtkrc")):
-            raise ValueError("GTK theme does not exist")
-        gtkrc_file_path = resource_filename(__name__, self.get_assets_path("gtk-2.0", "gtkrc"))
+        if not resource_exists(__name__, self.get_assets_path()):
+            raise ValueError("GTK theme 'RAFCON' does not exist")
+
         filename = resource_filename(__name__, self.get_assets_path(
             "icons", "RAFCON_figurative_mark_negative.svg", for_theme=False))
         Gtk.Window.set_default_icon_from_file(filename)
 
-        # wait for all gtk events being processed before parsing the gtkrc file
-        wait_for_gui()
-
-        # Gtk TODO: use the resource_filename function
-        config_dir, file = os.path.split(__file__)
-        gtk_theme_path = os.path.join(config_dir, "assets")
-        # os.environ['GTK_DATA_PREFIX'] = "/volume/USERSTORE/brun_sb/playgrounds/custom_themes"
-        #
-        os.environ['GTK_DATA_PREFIX'] = gtk_theme_path
+        data_dir = resource_filename(__name__, self.get_assets_path(for_theme=False))
+        os.environ['GTK_DATA_PREFIX'] = data_dir
 
         settings = Gtk.Settings.get_default()
         settings.set_property("gtk-theme-name", "RAFCON")
-        settings.set_property("gtk-application-prefer-dark-theme", True)  # if you want use dark theme, set second
-
+        dark_theme = self.get_config_value('THEME', 'dark') == 'dark'
+        settings.set_property("gtk-application-prefer-dark-theme", dark_theme)
 
     def configure_colors(self):
         # Get colors from GTKrc file
@@ -132,7 +125,7 @@ class GuiConfig(ObservableConfig):
         self.colors.update(colors)
 
     def get_assets_path(self, folder=None, filename=None, for_theme=True):
-        theme = "themes/{}/".format(self.get_config_value('THEME', 'dark')) if for_theme else ""
+        theme = "share/themes/{}/".format(self.get_config_value('THEME', 'dark')) if for_theme else ""
         folder = folder + "/" if folder else ""
         filename = filename if filename else ""
         return "assets/{theme}{folder}{filename}".format(theme=theme, folder=folder, filename=filename)
