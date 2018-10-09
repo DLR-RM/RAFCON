@@ -370,7 +370,7 @@ class StateMachineRightClickMenu(object):
 
     def activate_menu(self, event, menu):
         # logger.info("activate_menu by " + self.__class__.__name__)
-        menu.popup(None, None, None, event.get_button()[1], event.time)
+        menu.popup(None, None, None, None, event.get_button()[1], event.time)
         return True
 
 
@@ -399,7 +399,7 @@ class StateMachineTreeRightClickMenuController(StateMachineRightClickMenuControl
             self.view.grab_focus()
             self.view.set_cursor(path, col, 0)
 
-            menu.popup(None, None, None, event.get_button()[1], event.time)
+            menu.popup(None, None, None, None, event.get_button()[1], event.time)
         return True
 
 
@@ -415,7 +415,7 @@ class StateRightClickMenuControllerOpenGLEditor(StateMachineRightClickMenuContro
         # logger.info("activate_menu by " + self.__class__.__name__)
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) > 0 or len(selection.scoped_variables) > 0:
-            menu.popup(None, None, None, event.get_button()[1], event.time)
+            menu.popup(None, None, None, None, event.get_button()[1], event.time)
             return True
         else:
             return False
@@ -439,7 +439,7 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
         # logger.info("activate_menu by " + self.__class__.__name__)
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) > 0 or len(selection.scoped_variables) > 0:
-            menu.popup(None, None, None, event.get_button()[1], event.time)
+            menu.popup(None, None, None, None, event.get_button()[1], event.time)
             return True
         else:
             return False

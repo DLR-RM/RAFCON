@@ -149,7 +149,7 @@ class LibraryTreeController(ExtendedController):
             else:
                 menu = self.generate_right_click_menu('library tree')
             menu.show_all()
-            menu.popup(None, None, None, event.get_button()[1], time)
+            menu.popup(None, None, None, None, event.get_button()[1], time)
             return True
 
     @ExtendedController.observe("library_manager", after=True)

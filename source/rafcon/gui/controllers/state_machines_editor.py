@@ -354,7 +354,7 @@ class StateMachinesEditorController(ExtendedController):
             menu.append(menu_item)
 
         menu.show_all()
-        menu.popup(None, None, None, event.get_button()[1], event.time)
+        menu.popup(None, None, None, None, event.get_button()[1], event.time)
         return True
 
     def change_selected_state_machine_id(self, widget, new_selected_state_machine_id):

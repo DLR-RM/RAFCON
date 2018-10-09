@@ -92,7 +92,7 @@ class ZoomTool(gaphas.tool.ZoomTool):
             # event.get_state() |= Gdk.ModifierType.CONTROL_MASK  # Set CONTROL_MASK
             # return super(ZoomTool, self).on_scroll(event)
             view = self.view
-            event_coords =  event.get_coords()[1:]
+            event_coords = event.get_coords()[1:]
             sx = view._matrix[0]
             sy = view._matrix[3]
             ox = (view._matrix[4] - event_coords[0]) / sx
