@@ -18,11 +18,11 @@ import distutils.log
 try:
     from gi.repository import Gtk
 except ImportError:
-    gtk = None
+    Gtk = None
 try:
     from gi.repository import GLib
 except ImportError:
-    glib = None
+    GLib = None
 
 assets_folder = os.path.join('source', 'rafcon', 'gui', 'assets')
 share_folder = "share"
@@ -33,7 +33,7 @@ def install_fonts(logger=None, restart=False):
         log = logger
     else:
         log = distutils.log
-    if not gtk:
+    if not Gtk:
         log.warn("No GTK found. Will not install fonts.")
         return
 
@@ -94,7 +94,7 @@ def install_gtk_source_view_styles(logger=None):
         log = logger
     else:
         log = distutils.log
-    if glib:
+    if GLib:
         user_data_folder = GLib.get_user_data_dir()
     else:
         user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
@@ -125,7 +125,7 @@ def install_libraries(logger=None, overwrite=True):
         log = logger
     else:
         log = distutils.log
-    if glib:
+    if GLib:
         user_data_folder = GLib.get_user_data_dir()
     else:
         user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
