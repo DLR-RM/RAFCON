@@ -1080,8 +1080,7 @@ class NameView(Element):
             c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
             c.save()
             # The pango layout has a fixed width and needs to be fitted to the context size
-            # c.scale(1. / zoom_scale, 1. / zoom_scale)
-            c.scale(1. / zoom_scale, 1. / zoom_scale)
+            cairo_context.scale(1. / zoom_scale, 1. / zoom_scale)
 
             PangoCairo.update_layout(cairo_context, layout)
             PangoCairo.show_layout(cairo_context, layout)
