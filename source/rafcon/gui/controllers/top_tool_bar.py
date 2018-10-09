@@ -88,7 +88,12 @@ class TopToolBarController(ExtendedController):
         if event.is_hint:
             window_containing_pointer, x, y, state = event.get_window().get_pointer()
         else:
-            state = event.get_state()[1]
+            # Gtk TODO: is this a work around ?? or can the get_state method return list or Gdk.ModifierType object
+            event_state = event.get_state()
+            if isinstance(event_state, list):
+                state = event_state[1]
+            else:
+                state = event_state
 
         if state & Gdk.ModifierType.BUTTON1_MASK:
             self.top_level_window.begin_move_drag(Gdk.ModifierType.BUTTON1_MASK, int(event.x_root), int(event.y_root), 0)
