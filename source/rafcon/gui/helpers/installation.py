@@ -105,7 +105,7 @@ def install_gtk_source_view_styles(logger=None):
             os.makedirs(user_source_view_style_path)
 
         # Copy all .xml source view style files from all themes to local user styles folder
-        themes_path = os.path.join(assets_folder, "themes", "share")
+        themes_path = os.path.join(assets_folder, "share", "themes")
         for theme in os.listdir(themes_path):
             theme_source_view_path = os.path.join(themes_path, theme, "gtk-sourceview")
             if not os.path.isdir(theme_source_view_path):
