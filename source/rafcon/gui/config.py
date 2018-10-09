@@ -88,7 +88,18 @@ class GuiConfig(ObservableConfig):
 
         # wait for all gtk events being processed before parsing the gtkrc file
         wait_for_gui()
-        Gtk.rc_parse(gtkrc_file_path)
+
+        # Gtk TODO: use the resource_filename function
+        config_dir, file = os.path.split(__file__)
+        gtk_theme_path = os.path.join(config_dir, "assets")
+        # os.environ['GTK_DATA_PREFIX'] = "/volume/USERSTORE/brun_sb/playgrounds/custom_themes"
+        #
+        os.environ['GTK_DATA_PREFIX'] = gtk_theme_path
+
+        settings = Gtk.Settings.get_default()
+        settings.set_property("gtk-theme-name", "RAFCON")
+        settings.set_property("gtk-application-prefer-dark-theme", True)  # if you want use dark theme, set second
+
 
     def configure_colors(self):
         # Get colors from GTKrc file
