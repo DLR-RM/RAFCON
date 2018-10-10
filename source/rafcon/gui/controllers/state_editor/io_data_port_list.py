@@ -227,8 +227,8 @@ class DataPortListController(ListViewController):
                             data_type_name,
                             str(default_value),
                             data_port_id,
-                            use_runtime_value,
-                            runtime_value,
+                            bool(use_runtime_value),
+                            str(runtime_value),
                             data_port_m,
                             ])
 
