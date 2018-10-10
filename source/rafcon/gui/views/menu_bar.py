@@ -139,18 +139,13 @@ class MenuBarView(View):
                 box.set_border_width(0)
                 icon_label = Gtk.Label()
                 label = Gtk.AccelLabel(label_text)
+                label.set_xalign(0)
 
                 box.pack_start(icon_label, False, False, 0)
-                box.pack_start(label, False, False, 0)
+                box.pack_start(label, True, True, 0)
                 menu_item.add(box)
 
-                # Gtk TODO: both version do not show the Accel Keys
-                # Version 1
-                label.set_accel(*Gtk.accelerator_parse("<Control>Q"))
-                label.refetch()
-                label.show()
-                # Version 2
-                # label.set_accel_widget(menu_item)
+                label.set_accel_widget(menu_item)
             else:
                 box = menu_item_child
                 icon_label = box.get_children()[0]
