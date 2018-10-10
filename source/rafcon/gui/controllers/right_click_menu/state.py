@@ -129,7 +129,7 @@ class StateMachineRightClickMenu(object):
                                                                                                  menu,
                                                                                                  constants.BUTTON_EXCHANGE)
                 for class_key, item in state_type_class_dict.iteritems():
-                    callback_function = partial(self.on_type_change_activate, target_class=item['class']),
+                    callback_function = partial(self.on_type_change_activate, target_class=item['class'])
                     class_item = create_menu_item(class_key, constants.SIGN_LIB,
                                                   callback_function,
                                                   accel_code=None, accel_group=accel_group)
