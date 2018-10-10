@@ -24,6 +24,7 @@
 import os
 from gi.repository import GLib
 from gi.repository import Gtk
+from gi.repository import Gdk
 from functools import partial
 
 import rafcon.core.singleton as core_singletons
@@ -230,18 +231,13 @@ class MenuBarController(ExtendedController):
         self.view.sub_menu_open_recently.show_all()
 
     def on_toggle_full_screen_mode(self, *args):
-        if self.view["full_screen"].get_active():
-            self.view["full_screen"].toggle()
-            self.view["full_screen"].set_active(False)  # because toggle is not always working
-        else:
-            self.view["full_screen"].toggle()  # because set active is not always working
-            self.view["full_screen"].set_active(True)
+            self.view["full_screen"].set_active(False if self.view["full_screen"].get_active() else True)
 
     def on_full_screen_mode_toggled(self, *args):
-        if self.full_screen_flag == self.view["full_screen"].active:
+        if self.full_screen_flag == self.view["full_screen"].get_active():
             return False
 
-        if self.view["full_screen"].active and not self.full_screen_flag:
+        if self.view["full_screen"].get_active and not self.full_screen_flag:
             self.full_screen_flag = True
             self.on_full_screen_activate()
         else:
