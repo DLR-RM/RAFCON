@@ -664,7 +664,7 @@ def patch_gtkmvc3_classes_with_log():
 
     check_log_files(GTKMVC_FILES)
 
-    def gtkmvc3_view_init(self, glade=None, top=None, parent=None, builder=None):
+    def gtkmvc3_view_init(self, top=None, parent=None, builder=None):
         self.__gen_time_stamp = int(round(time.time() * 1000))
         self.__kind = 'gtkmvc3_view'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
@@ -672,7 +672,7 @@ def patch_gtkmvc3_classes_with_log():
         with open(self.__gen_log_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
-        old_gtkmvc3_view_init(self, glade, top, parent, builder)
+        old_gtkmvc3_view_init(self, top, parent, builder)
 
     def gtkmvc3_controller_init(self, model, view, spurious=False, auto_adapt=False):
         self.__gen_time_stamp = int(round(time.time() * 1000))
@@ -920,8 +920,9 @@ def test_simple_model_and_core_destruct_with_gui(caplog):
     import rafcon.gui.mygaphas.items.state
     import rafcon.gui.mygaphas.items.connection
     import rafcon.gui.mygaphas.items.ports
+    import rafcon.gui.controllers.global_variable_manager
 
-    searched_class = rafcon.core.states.hierarchy_state.HierarchyState
+    searched_class = rafcon.gui.controllers.global_variable_manager.GlobalVariableManagerController
 
     elements = [
                 (rafcon.core.states.state.State, True),
@@ -1181,7 +1182,7 @@ def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, l
     import rafcon.gui.singleton
     rafcon.gui.singleton.main_window_controller = None
     already_existing_objects = check_existing_objects_of_kind([(c, False) for c, check_it in elements],
-                                                              print_func, log_file=False)
+                                                              print_func, log_file=False, searched_type=searched_class.__name__)
 
     # TODO make it fully working and later activate modification history and auto backup
     testing_utils.run_gui(gui_config=gui_config, libraries=libraries)
