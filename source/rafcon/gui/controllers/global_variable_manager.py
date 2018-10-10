@@ -303,7 +303,7 @@ class GlobalVariableManagerController(ListViewController):
                 if key in self.list_store_iterators:
                     gv_row_path = self.list_store.get_path(self.list_store_iterators[key])
                     self.list_store[gv_row_path][self.VALUE_AS_STRING_STORAGE_ID] = \
-                        self.model.global_variable_manager.get_representation(key)
+                        str(self.model.global_variable_manager.get_representation(key))
                     self.list_store[gv_row_path][self.DATA_TYPE_AS_STRING_STORAGE_ID] = \
                         self.model.global_variable_manager.get_data_type(key).__name__
                     return
