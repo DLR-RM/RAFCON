@@ -987,9 +987,6 @@ class NameView(Element):
         font_transparency = self.transparency
 
         c = context.cairo
-        cairo_context = c
-        if isinstance(c, CairoBoundingBoxContext):
-            cairo_context = c._cairo
         parameters = {
             'name': self.name,
             'selected': context.selected,
@@ -1016,6 +1013,10 @@ class NameView(Element):
                 c.stroke()
 
             # c.set_antialias(Antialias.GOOD)
+
+            cairo_context = c
+            if isinstance(c, CairoBoundingBoxContext):
+                cairo_context = c._cairo
 
             layout = PangoCairo.create_layout(cairo_context)
             layout.set_wrap(WrapMode.WORD)
@@ -1087,4 +1088,4 @@ class NameView(Element):
             c.restore()
 
             # Copy image surface to current cairo context
-            self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
+            self._image_cache.copy_image_to_context(c, upper_left_corner, zoom=current_zoom)
