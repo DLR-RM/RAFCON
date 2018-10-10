@@ -17,27 +17,34 @@
 from math import sin, cos, pi, atan2
 from enum import Enum
 
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
-
 import gtk
-import gtk.gtkgl
-import gtk.gdkgl
+import gobject
 from gtkmvc import View
+
+# careful import
+try:
+    import gtk.gtkgl
+    import gtk.gdkgl
+    from OpenGL.GL import *
+    from OpenGL.GLU import *
+    from OpenGL.GLUT import *
+
+    # Activate the following line in the production code th increase speed
+    # http://pyopengl.sourceforge.net/documentation/opengl_diffs.html:
+    # OpenGL.ERROR_CHECKING = False
+    OpenGL.FULL_LOGGING = True
+    # Also in productive code, set the previous statement to false and activate the next one
+    # OpenGL.ERROR_LOGGING = False
+    GL_ENABLED = True
+except (ImportError, RuntimeError):
+    GL_ENABLED = False
+
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.utils.geometry import dist
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-
-# Activate the following line in the production code th increase speed
-# http://pyopengl.sourceforge.net/documentation/opengl_diffs.html:
-# OpenGL.ERROR_CHECKING = False
-OpenGL.FULL_LOGGING = True
-# Also in productive code, set the previous statement to false and activate the next one
-# OpenGL.ERROR_LOGGING = False
 
 
 class Direction(Enum):

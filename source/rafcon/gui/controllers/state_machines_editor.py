@@ -36,7 +36,7 @@ from rafcon.gui.models.state_machine import StateMachineModel, StateMachine
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
-from rafcon.gui.views.graphical_editor import GraphicalEditorView
+from rafcon.gui.views.graphical_editor import GraphicalEditorView, GL_ENABLED
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
 from gtk.gdk import SHIFT_MASK, CONTROL_MASK
 from rafcon.gui.helpers.label import create_image_menu_item
@@ -224,7 +224,10 @@ class StateMachinesEditorController(ExtendedController):
         sm_id = state_machine_m.state_machine.state_machine_id
         logger.debug("Create new graphical editor for state machine with id %s" % str(sm_id))
 
-        if global_gui_config.get_config_value('GAPHAS_EDITOR', False) and GAPHAS_AVAILABLE:
+        if global_gui_config.get_config_value('GAPHAS_EDITOR', False) and GAPHAS_AVAILABLE or not GL_ENABLED:
+            if not GL_ENABLED:
+                logger.info("Gaphas editor is used. "
+                            "The gui-config is set to use OpenGL editor but not all libraries needed are provided.")
             graphical_editor_view = GraphicalEditorGaphasView(state_machine_m)
             graphical_editor_ctrl = GraphicalEditorGaphasController(state_machine_m, graphical_editor_view)
         else:
