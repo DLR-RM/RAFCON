@@ -66,6 +66,9 @@ class StateView(Element):
         self.width = size[0]
         self.height = size[1]
 
+        self._c_min_w = self._constraints[0]
+        self._c_min_h = self._constraints[1]
+
         self.is_root_state_of_library = state_m.state.is_root_state_of_library
 
         self._state_m = ref(state_m)
