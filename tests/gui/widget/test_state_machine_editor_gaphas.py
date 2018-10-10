@@ -66,7 +66,7 @@ def trigger_copy_delete_bug_signals():
 
     graphical_editor_ctrl = state_machines_ctrl.get_controller(first_sm_id)
 
-    if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR'):
+    if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR', True):
         assert isinstance(graphical_editor_ctrl, graphical_editor_gaphas.GraphicalEditorController)
         assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
 
@@ -76,7 +76,7 @@ def trigger_copy_delete_bug_signals():
 
     call_gui_callback(sm_m.selection.set, new_estate_m)
     call_gui_callback(menubar_ctrl.on_delete_activate, None)
-    if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR'):
+    if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR', True):
         assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
 
     print "TEST FINISHED"

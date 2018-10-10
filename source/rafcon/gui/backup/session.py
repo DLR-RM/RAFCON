@@ -152,7 +152,7 @@ def restore_session_from_runtime_config():
 
     global_runtime_config.extend_recently_opened_by_current_open_state_machines()
 
-    if global_gui_config.get_config_value('GAPHAS_EDITOR'):
+    if global_gui_config.get_config_value('GAPHAS_EDITOR', True):
         wait_for_gui()
 
     # restore all state machine selections separate to avoid states-editor and state editor creation problems
