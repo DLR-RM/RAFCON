@@ -19,7 +19,7 @@ from gtkmvc3 import View
 
 from rafcon.gui import glade
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.helpers.label import set_label_markup
+from rafcon.gui.helpers.label import set_label_markup, create_menu_box_with_icon_and_label
 from rafcon.gui.utils import constants
 
 
@@ -85,7 +85,7 @@ class MenuBarView(View):
         'about':                constants.BUTTON_ABOUT
         }
 
-    sebmenus = ['submenu_file', 'submenu_edit', 'submenu_view', 'submenu_execution', 'submenu_help']
+    sub_menus = ['submenu_file', 'submenu_edit', 'submenu_view', 'submenu_execution', 'submenu_help']
 
     def __init__(self, top_window):
         View.__init__(self)
@@ -119,9 +119,9 @@ class MenuBarView(View):
                     main_shortcut = shortcuts[0] if isinstance(shortcuts, list) else shortcuts
                     self.set_menu_item_accelerator(menu_item_name, main_shortcut)
 
-        for submenu_name in self.sebmenus:
-            submenu = self[submenu_name]
-            submenu.set_reserve_toggle_size(False)
+        for sub_menu_name in self.sub_menus:
+            sub_menu = self[sub_menu_name]
+            sub_menu.set_reserve_toggle_size(False)
 
     def set_menu_item_icon(self, menu_item_name, uni_code=None):
         menu_item = self[menu_item_name]
@@ -135,17 +135,11 @@ class MenuBarView(View):
 
                 menu_item.remove(menu_item_child)
 
-                box = Gtk.Box(Gtk.Orientation.HORIZONTAL, 10)
-                box.set_border_width(0)
-                icon_label = Gtk.Label()
-                label = Gtk.AccelLabel(label_text)
-                label.set_xalign(0)
+                menu_box, icon_label, text_label = create_menu_box_with_icon_and_label(label_text)
+                menu_item.add(menu_box)
+                menu_box.show()
 
-                box.pack_start(icon_label, False, False, 0)
-                box.pack_start(label, True, True, 0)
-                menu_item.add(box)
-
-                label.set_accel_widget(menu_item)
+                text_label.set_accel_widget(menu_item)
             else:
                 box = menu_item_child
                 icon_label = box.get_children()[0]

@@ -186,6 +186,24 @@ def set_notebook_title(notebook, page_num, title_label):
     return text
 
 
+def create_menu_box_with_icon_and_label(label_text):
+    """ Creates a MenuItem box, which is a replacement for the former ImageMenuItem. The box contains, a label
+        for the icon and one for the text.
+
+    :param label_text: The text, which is displayed for the text label
+    :return:
+    """
+    box = Gtk.Box(Gtk.Orientation.HORIZONTAL, 10)
+    box.set_border_width(0)
+    icon_label = Gtk.Label()
+    text_label = Gtk.AccelLabel(label_text)
+    text_label.set_xalign(0)
+
+    box.pack_start(icon_label, False, False, 0)
+    box.pack_start(text_label, True, True, 0)
+    return box, icon_label, text_label
+
+
 def set_label_markup(label, text, font=constants.INTERFACE_FONT, font_size=constants.FONT_SIZE_NORMAL,
                      letter_spacing=constants.LETTER_SPACING_NONE):
     label.set_markup('<span font_desc="{0} {1}" letter_spacing="{2}">{3}</span>'.format(font, font_size,
