@@ -29,7 +29,7 @@ from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-from rafcon.gui.helpers.label import create_image_menu_item, create_check_menu_item, append_sub_menu_to_parent_menu
+from rafcon.gui.helpers.label import create_menu_item, create_check_menu_item, append_sub_menu_to_parent_menu
 from rafcon.gui.models import AbstractStateModel, ContainerStateModel, LibraryStateModel, ScopedVariableModel, \
     TransitionModel, DataFlowModel
 from rafcon.gui.utils import constants
@@ -68,34 +68,34 @@ class StateMachineRightClickMenu(object):
         add_state_sub_menu_item, add_state_sub_menu = append_sub_menu_to_parent_menu("State", add_sub_menu,
                                                                                      constants.BUTTON_ADD)
 
-        add_state_sub_menu.append(create_image_menu_item("Execution State", constants.BUTTON_ADD,
-                                                         self.on_add_execution_state_activate,
-                                                         accel_code=shortcuts_dict['add_execution_state'][0],
-                                                         accel_group=accel_group))
-        add_state_sub_menu.append(create_image_menu_item("Hierarchy State", constants.BUTTON_ADD,
-                                                         self.on_add_hierarchy_state_activate,
-                                                         accel_code=shortcuts_dict['add_hierarchy_state'][0],
-                                                         accel_group=accel_group))
-        add_state_sub_menu.append(create_image_menu_item("Preemptive State", constants.BUTTON_ADD,
-                                                         self.on_add_preemptive_state_activate,
-                                                         accel_code=shortcuts_dict['add_preemptive_state'][0],
-                                                         accel_group=accel_group))
-        add_state_sub_menu.append(create_image_menu_item("Barrier State", constants.BUTTON_ADD,
-                                                         self.on_add_barrier_state_activate,
-                                                         accel_code=shortcuts_dict['add_barrier_state'][0],
-                                                         accel_group=accel_group))
+        add_state_sub_menu.append(create_menu_item("Execution State", constants.BUTTON_ADD,
+                                                   self.on_add_execution_state_activate,
+                                                   accel_code=shortcuts_dict['add_execution_state'][0],
+                                                   accel_group=accel_group))
+        add_state_sub_menu.append(create_menu_item("Hierarchy State", constants.BUTTON_ADD,
+                                                   self.on_add_hierarchy_state_activate,
+                                                   accel_code=shortcuts_dict['add_hierarchy_state'][0],
+                                                   accel_group=accel_group))
+        add_state_sub_menu.append(create_menu_item("Preemptive State", constants.BUTTON_ADD,
+                                                   self.on_add_preemptive_state_activate,
+                                                   accel_code=shortcuts_dict['add_preemptive_state'][0],
+                                                   accel_group=accel_group))
+        add_state_sub_menu.append(create_menu_item("Barrier State", constants.BUTTON_ADD,
+                                                   self.on_add_barrier_state_activate,
+                                                   accel_code=shortcuts_dict['add_barrier_state'][0],
+                                                   accel_group=accel_group))
 
         add_sub_menu.append(Gtk.SeparatorMenuItem())
 
-        add_sub_menu.append(create_image_menu_item("Outcome", constants.BUTTON_ADD, self.on_add_outcome,
-                                                   accel_code=shortcuts_dict['add_outcome'][0], accel_group=accel_group))
-        add_sub_menu.append(create_image_menu_item("Output Port", constants.BUTTON_ADD, self.on_add_output,
-                                                   accel_code=shortcuts_dict['add_output'][0], accel_group=accel_group))
-        add_sub_menu.append(create_image_menu_item("Input Port", constants.BUTTON_ADD, self.on_add_input,
-                                                   accel_code=shortcuts_dict['add_input'][0], accel_group=accel_group))
-        add_sub_menu.append(create_image_menu_item("Scoped Variable", constants.BUTTON_ADD, self.on_add_scoped_variable,
-                                                   accel_code=shortcuts_dict['add_scoped_variable'][0],
-                                                   accel_group=accel_group))
+        add_sub_menu.append(create_menu_item("Outcome", constants.BUTTON_ADD, self.on_add_outcome,
+                                             accel_code=shortcuts_dict['add_outcome'][0], accel_group=accel_group))
+        add_sub_menu.append(create_menu_item("Output Port", constants.BUTTON_ADD, self.on_add_output,
+                                             accel_code=shortcuts_dict['add_output'][0], accel_group=accel_group))
+        add_sub_menu.append(create_menu_item("Input Port", constants.BUTTON_ADD, self.on_add_input,
+                                             accel_code=shortcuts_dict['add_input'][0], accel_group=accel_group))
+        add_sub_menu.append(create_menu_item("Scoped Variable", constants.BUTTON_ADD, self.on_add_scoped_variable,
+                                             accel_code=shortcuts_dict['add_scoped_variable'][0],
+                                             accel_group=accel_group))
         menu.append(Gtk.SeparatorMenuItem())
 
         self.insert_copy_cut_paste_in_menu(menu, shortcuts_dict, accel_group)
@@ -109,18 +109,18 @@ class StateMachineRightClickMenu(object):
                 all([isinstance(elem, (AbstractStateModel, ScopedVariableModel, TransitionModel, DataFlowModel))
                      for elem in all_m_list]) and \
                 all([not state_m.state.is_root_state for state_m in selection.states]):
-            menu.append(create_image_menu_item("Group states", constants.BUTTON_GROUP, self.on_group_states_activate,
-                                               accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
+            menu.append(create_menu_item("Group states", constants.BUTTON_GROUP, self.on_group_states_activate,
+                                         accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
         if len(selection.states) == 1:
             if isinstance(selected_state_m, ContainerStateModel) and not selected_state_m.state.is_root_state:
-                menu.append(create_image_menu_item("Ungroup states", constants.BUTTON_UNGR,
-                                                   self.on_ungroup_state_activate,
-                                                   accel_code=shortcuts_dict['ungroup'][0], accel_group=accel_group))
+                menu.append(create_menu_item("Ungroup states", constants.BUTTON_UNGR,
+                                             self.on_ungroup_state_activate,
+                                             accel_code=shortcuts_dict['ungroup'][0], accel_group=accel_group))
             if not isinstance(selected_state_m.state, DeciderState) and not selected_state_m.state.is_root_state:
-                menu.append(create_image_menu_item("Substitute state", constants.BUTTON_REFR,
-                                                   self.on_substitute_state_activate,
-                                                   accel_code=shortcuts_dict['substitute_state'][0],
-                                                   accel_group=accel_group))
+                menu.append(create_menu_item("Substitute state", constants.BUTTON_REFR,
+                                             self.on_substitute_state_activate,
+                                             accel_code=shortcuts_dict['substitute_state'][0],
+                                             accel_group=accel_group))
 
             from rafcon.gui.controllers.state_editor.overview import StateOverviewController
             state_type_class_dict = StateOverviewController.change_state_type_class_dict(selected_state_m.state)
@@ -129,11 +129,11 @@ class StateMachineRightClickMenu(object):
                                                                                                  menu,
                                                                                                  constants.BUTTON_EXCHANGE)
                 for class_key, item in state_type_class_dict.iteritems():
-                    class_item = create_image_menu_item(class_key, constants.SIGN_LIB,
-                                                        partial(self.on_type_change_activate,
-                                                                target_class=item['class']),
-                                                                accel_code=None,
-                                                                accel_group=accel_group)
+                    callback_function = partial(self.on_type_change_activate, target_class=item['class']),
+                    class_item = create_menu_item(class_key, constants.SIGN_LIB,
+                                                  callback_function,
+                                                  accel_code=None, accel_group=accel_group)
+
                     if isinstance(selected_state_m.state, item['class']):
                         class_item.set_sensitive(False)
                     change_type_sub_menu.append(class_item)
@@ -145,10 +145,10 @@ class StateMachineRightClickMenu(object):
                                                                                      constants.BUTTON_SAVE)
             callback_function = partial(self.on_save_as_activate,
                                         save_as_function=gui_helper_state_machine.save_selected_state_as)
-            save_as_sub_menu.append(create_image_menu_item("State machine", constants.BUTTON_SAVE,
-                                                           callback_function,
-                                                           accel_code=shortcuts_dict['save_state_as'][0],
-                                                           accel_group=accel_group))
+            save_as_sub_menu.append(create_menu_item("State machine", constants.BUTTON_SAVE,
+                                                     callback_function,
+                                                     accel_code=shortcuts_dict['save_state_as'][0],
+                                                     accel_group=accel_group))
             save_as_library_sub_menu_item, save_as_library_sub_menu = append_sub_menu_to_parent_menu("Library",
                                                                                                      save_as_sub_menu,
                                                                                                      constants.SIGN_LIB)
@@ -157,19 +157,19 @@ class StateMachineRightClickMenu(object):
                 callback_function = partial(self.on_save_as_activate,
                                             path=library_root_paths[library_root_key],
                                             save_as_function=gui_helper_state_machine.save_selected_state_as)
-                save_as_library_sub_menu.append(create_image_menu_item(library_root_key, constants.SIGN_LIB,
-                                                                       callback_function,
-                                                                       accel_code=None, accel_group=accel_group))
+                save_as_library_sub_menu.append(create_menu_item(library_root_key, constants.SIGN_LIB,
+                                                                 callback_function,
+                                                                 accel_code=None, accel_group=accel_group))
         else:
             save_as_sub_menu_item, save_as_sub_menu = append_sub_menu_to_parent_menu("Save state machine as", menu,
                                                                                      constants.BUTTON_SAVE)
 
             callback_function = partial(self.on_save_as_activate,
                                         save_as_function=gui_helper_state_machine.save_state_machine_as)
-            save_as_sub_menu.append(create_image_menu_item("State machine", constants.BUTTON_SAVE,
-                                                           callback_function,
-                                                           accel_code=shortcuts_dict['save_as'][0],
-                                                           accel_group=accel_group))
+            save_as_sub_menu.append(create_menu_item("State machine", constants.BUTTON_SAVE,
+                                                     callback_function,
+                                                     accel_code=shortcuts_dict['save_as'][0],
+                                                     accel_group=accel_group))
             save_as_library_sub_menu_item, save_as_library_sub_menu = append_sub_menu_to_parent_menu("Library",
                                                                                                      save_as_sub_menu,
                                                                                                      constants.SIGN_LIB)
@@ -178,9 +178,9 @@ class StateMachineRightClickMenu(object):
                 callback_function = partial(self.on_save_as_activate,
                                             path=library_root_paths[library_root_key],
                                             save_as_function=gui_helper_state_machine.save_state_machine_as)
-                save_as_library_sub_menu.append(create_image_menu_item(library_root_key, constants.SIGN_LIB,
-                                                                       callback_function,
-                                                                       accel_code=None, accel_group=accel_group))
+                save_as_library_sub_menu.append(create_menu_item(library_root_key, constants.SIGN_LIB,
+                                                                 callback_function,
+                                                                 accel_code=None, accel_group=accel_group))
 
         return menu
 
@@ -206,23 +206,23 @@ class StateMachineRightClickMenu(object):
     def insert_execution_sub_menu_in_menu(self, menu, shortcuts_dict, accel_group):
         execution_sub_menu_item, execution_sub_menu = append_sub_menu_to_parent_menu("Execution", menu,
                                                                                  constants.BUTTON_EXP)
-        execution_sub_menu.append(create_image_menu_item("from here", constants.BUTTON_START_FROM_SELECTED_STATE,
-                                                         self.on_run_from_selected_state_activate,
-                                                         accel_code=shortcuts_dict['start_from_selected'][0],
-                                                         accel_group=accel_group))
-        execution_sub_menu.append(create_image_menu_item("stop here", constants.BUTTON_RUN_TO_SELECTED_STATE,
-                                                         self.on_run_to_selected_state_activate,
-                                                         accel_code=shortcuts_dict['run_to_selected'][0],
-                                                         accel_group=accel_group))
+        execution_sub_menu.append(create_menu_item("from here", constants.BUTTON_START_FROM_SELECTED_STATE,
+                                                   self.on_run_from_selected_state_activate,
+                                                   accel_code=shortcuts_dict['start_from_selected'][0],
+                                                   accel_group=accel_group))
+        execution_sub_menu.append(create_menu_item("stop here", constants.BUTTON_RUN_TO_SELECTED_STATE,
+                                                   self.on_run_to_selected_state_activate,
+                                                   accel_code=shortcuts_dict['run_to_selected'][0],
+                                                   accel_group=accel_group))
 
     def insert_copy_cut_paste_in_menu(self, menu, shortcuts_dict, accel_group, no_paste=False):
-        menu.append(create_image_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate,
-                                           accel_code=shortcuts_dict['copy'][0], accel_group=accel_group))
-        menu.append(create_image_menu_item("Paste selection", constants.BUTTON_PASTE, self.on_paste_activate,
-                                           accel_code=shortcuts_dict['paste'][0], accel_group=accel_group))
+        menu.append(create_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate,
+                                     accel_code=shortcuts_dict['copy'][0], accel_group=accel_group))
+        menu.append(create_menu_item("Paste selection", constants.BUTTON_PASTE, self.on_paste_activate,
+                                     accel_code=shortcuts_dict['paste'][0], accel_group=accel_group))
         if not no_paste:
-            menu.append(create_image_menu_item("Cut selection", constants.BUTTON_CUT, self.on_cut_activate,
-                                               accel_code=shortcuts_dict['cut'][0], accel_group=accel_group))
+            menu.append(create_menu_item("Cut selection", constants.BUTTON_CUT, self.on_cut_activate,
+                                         accel_code=shortcuts_dict['cut'][0], accel_group=accel_group))
 
     def generate_right_click_menu_library(self):
         menu = Gtk.Menu()
@@ -237,25 +237,25 @@ class StateMachineRightClickMenu(object):
 
         self.insert_copy_cut_paste_in_menu(menu, shortcuts_dict, accel_group, no_paste=True)
 
-        menu.append(create_image_menu_item("Group states", constants.BUTTON_GROUP, self.on_group_states_activate,
-                                           accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
+        menu.append(create_menu_item("Group states", constants.BUTTON_GROUP, self.on_group_states_activate,
+                                     accel_code=shortcuts_dict['group'][0], accel_group=accel_group))
 
-        menu.append(create_image_menu_item("Open separately", constants.BUTTON_OPEN,
-                                           self.on_open_library_state_separately_activate,
-                                           accel_code=shortcuts_dict['open_library_state_separately'][0],
-                                           accel_group=accel_group))
+        menu.append(create_menu_item("Open separately", constants.BUTTON_OPEN,
+                                     self.on_open_library_state_separately_activate,
+                                     accel_code=shortcuts_dict['open_library_state_separately'][0],
+                                     accel_group=accel_group))
 
-        menu.append(create_image_menu_item("Substitute state with library", constants.BUTTON_REFR,
-                                           self.on_substitute_state_activate,
-                                           accel_code=shortcuts_dict['substitute_state'][0], accel_group=accel_group))
+        menu.append(create_menu_item("Substitute state with library", constants.BUTTON_REFR,
+                                     self.on_substitute_state_activate,
+                                     accel_code=shortcuts_dict['substitute_state'][0], accel_group=accel_group))
 
         sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute library with template", menu,
                                                                  constants.BUTTON_REFR)
-        sub_menu.append(create_image_menu_item("Keep state name", constants.BUTTON_LEFTA,
-                        partial(self.on_substitute_library_with_template_activate, keep_name=True)))
+        sub_menu.append(create_menu_item("Keep state name", constants.BUTTON_LEFTA,
+                                         partial(self.on_substitute_library_with_template_activate, keep_name=True)))
 
-        sub_menu.append(create_image_menu_item("Take name from library", constants.BUTTON_EXCHANGE,
-                        partial(self.on_substitute_library_with_template_activate, keep_name=False)))
+        sub_menu.append(create_menu_item("Take name from library", constants.BUTTON_EXCHANGE,
+                                         partial(self.on_substitute_library_with_template_activate, keep_name=False)))
 
         return menu
 

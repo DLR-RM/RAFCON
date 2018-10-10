@@ -19,7 +19,7 @@ from gtkmvc3 import View
 
 from rafcon.gui import glade
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.helpers.label import set_label_markup, create_menu_box_with_icon_and_label
+from rafcon.gui.helpers.label import set_icon_of_menu_item
 from rafcon.gui.utils import constants
 
 
@@ -127,27 +127,7 @@ class MenuBarView(View):
         menu_item = self[menu_item_name]
         # do not touch e.g. CheckMenuItems, only Gtk.MenuItem
         if type(menu_item) == Gtk.MenuItem:
-            menu_item_child = menu_item.get_child()
-            # per default MenuItems created through the glade file have a AccelLabel as child
-            # this we have to delete at first, as we want a Box, with two labels
-            if isinstance(menu_item_child, Gtk.AccelLabel):
-                label_text = menu_item_child.get_text()
-
-                menu_item.remove(menu_item_child)
-
-                menu_box, icon_label, text_label = create_menu_box_with_icon_and_label(label_text)
-                menu_item.add(menu_box)
-                menu_box.show()
-
-                text_label.set_accel_widget(menu_item)
-            else:
-                box = menu_item_child
-                icon_label = box.get_children()[0]
-
-            # now add the awesome icon to the icon_label
-            if uni_code is not None:
-                set_label_markup(icon_label, '&#x' + uni_code + ';',
-                                 font=constants.ICON_FONT, font_size=constants.FONT_SIZE_BIG)
+            set_icon_of_menu_item(menu_item, uni_code)
 
     def set_menu_item_sensitive(self, menu_item_name, sensitive):
         self[menu_item_name].set_sensitive(sensitive)

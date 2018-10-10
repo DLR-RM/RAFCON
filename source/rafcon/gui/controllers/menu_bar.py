@@ -204,8 +204,8 @@ class MenuBarController(ExtendedController):
         for item in self.view.sub_menu_open_recently.get_children():
             self.view.sub_menu_open_recently.remove(item)
 
-        menu_item = gui_helper_label.create_image_menu_item("remove invalid paths", constants.ICON_ERASE,
-                                                            global_runtime_config.clean_recently_opened_state_machines)
+        menu_item = gui_helper_label.create_menu_item("remove invalid paths", constants.ICON_ERASE,
+                                                      global_runtime_config.clean_recently_opened_state_machines)
         self.view.sub_menu_open_recently.append(menu_item)
         self.view.sub_menu_open_recently.append(Gtk.SeparatorMenuItem())
 
@@ -224,7 +224,7 @@ class MenuBarController(ExtendedController):
             sm_open_function = partial(self.on_open_activate, path=sm_path)
 
             # create and insert new menu item
-            menu_item = gui_helper_label.create_image_menu_item(label_string, button_image, sm_open_function)
+            menu_item = gui_helper_label.create_menu_item(label_string, button_image, sm_open_function)
             self.view.sub_menu_open_recently.append(menu_item)
 
         self.view.sub_menu_open_recently.show_all()

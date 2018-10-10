@@ -80,14 +80,37 @@ def create_label_widget_with_icon(icon, text, tooltip=None):
     return hbox
 
 
-def create_image_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=(),
-                           accel_code=None, accel_group=None):
-    menu_item = Gtk.ImageMenuItem()
-    menu_item.set_image(create_label_widget_with_icon(icon_code, ""))
+def set_icon_of_menu_item(menu_item, uni_code):
+    menu_item_child = menu_item.get_child()
+    # per default MenuItems created through the glade file have a AccelLabel as child
+    # this we have to delete at first, as we want a Box, with two labels
+    if isinstance(menu_item_child, Gtk.AccelLabel):
+        label_text = menu_item_child.get_text()
+
+        menu_item.remove(menu_item_child)
+
+        menu_box, icon_label, text_label = create_menu_box_with_icon_and_label(label_text)
+        menu_item.add(menu_box)
+        menu_box.show()
+
+        text_label.set_accel_widget(menu_item)
+    else:
+        box = menu_item_child
+        icon_label = box.get_children()[0]
+
+    # now add the awesome icon to the icon_label
+    if uni_code is not None:
+        set_label_markup(icon_label, '&#x' + uni_code + ';',
+                         font=constants.ICON_FONT, font_size=constants.FONT_SIZE_NORMAL)
+
+
+def create_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=(),
+                     accel_code=None, accel_group=None):
+    menu_item = Gtk.MenuItem()
     menu_item.set_label(label_text)
+    set_icon_of_menu_item(menu_item, icon_code)
     if callback is not None:
         menu_item.connect("activate", callback, *callback_args)
-    menu_item.set_always_show_image(True)
     if accel_code is not None and accel_group is not None:
         key, mod = Gtk.accelerator_parse(accel_code)
         menu_item.add_accelerator("activate", accel_group, key, mod, Gtk.AccelFlags.VISIBLE)
@@ -97,13 +120,13 @@ def create_image_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callb
 def create_check_menu_item(label_text="", is_active=False, callback=None, callback_args=(), is_sensitive=True,
                            accel_code=None, accel_group=None):
     icon_code = constants.BUTTON_CHECK if is_active else constants.BUTTON_SQUARE
-    menu_item = create_image_menu_item(label_text, icon_code, callback, callback_args, accel_code, accel_group)
+    menu_item = create_menu_item(label_text, icon_code, callback, callback_args, accel_code, accel_group)
     menu_item.set_sensitive(is_sensitive)
     return menu_item
 
 
 def append_sub_menu_to_parent_menu(name, parent_menu, icon_code=None):
-    sub_menu_item = create_image_menu_item(name, icon_code)
+    sub_menu_item = create_menu_item(name, icon_code)
     parent_menu.append(sub_menu_item)
     sub_menu = Gtk.Menu()
     sub_menu_item.set_submenu(sub_menu)

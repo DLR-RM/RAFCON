@@ -39,7 +39,7 @@ from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.graphical_editor import GraphicalEditorView, GL_ENABLED
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
-from rafcon.gui.helpers.label import create_image_menu_item
+from rafcon.gui.helpers.label import create_menu_item
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -343,18 +343,18 @@ class StateMachinesEditorController(ExtendedController):
 
         menu = Gtk.Menu()
         for sm_id, sm_m in self.model.state_machines.iteritems():
-            menu_item = create_image_menu_item(sm_m.root_state.state.name, constants.BUTTON_EXCHANGE,
-                                               callback=self.change_selected_state_machine_id, callback_args=[sm_id])
+            menu_item = create_menu_item(sm_m.root_state.state.name, constants.BUTTON_EXCHANGE,
+                                         callback=self.change_selected_state_machine_id, callback_args=[sm_id])
             menu.append(menu_item)
 
-        menu_item = create_image_menu_item("New State Machine", constants.BUTTON_ADD,
-                                           callback=add_state_machine, callback_args=[])
+        menu_item = create_menu_item("New State Machine", constants.BUTTON_ADD,
+                                     callback=add_state_machine, callback_args=[])
         menu.append(menu_item)
 
         if self.model.state_machines:
-            menu_item = create_image_menu_item("Close State Machine", constants.BUTTON_CLOSE,
-                                               callback=self.on_close_clicked,
-                                               callback_args=[state_machine_m, None])
+            menu_item = create_menu_item("Close State Machine", constants.BUTTON_CLOSE,
+                                         callback=self.on_close_clicked,
+                                         callback_args=[state_machine_m, None])
             menu.append(menu_item)
 
         menu.show_all()

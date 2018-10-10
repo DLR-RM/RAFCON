@@ -31,7 +31,7 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.library_manager import LibraryManagerModel
-from rafcon.gui.helpers.label import create_image_menu_item, append_sub_menu_to_parent_menu
+from rafcon.gui.helpers.label import create_menu_item, append_sub_menu_to_parent_menu
 from rafcon.gui.helpers.text_formatting import format_folder_name_human_readable
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.utils import constants
@@ -76,38 +76,38 @@ class LibraryTreeController(ExtendedController):
     def generate_right_click_menu(self, kind='library'):
         menu = Gtk.Menu()
         if kind == 'library':
-            menu.append(create_image_menu_item("Add as library (link)", constants.BUTTON_ADD,
-                                               partial(self.insert_button_clicked, as_template=False)))
-            menu.append(create_image_menu_item("Add as template (copy)", constants.BUTTON_COPY,
-                                               partial(self.insert_button_clicked, as_template=True)))
+            menu.append(create_menu_item("Add as library (link)", constants.BUTTON_ADD,
+                                         partial(self.insert_button_clicked, as_template=False)))
+            menu.append(create_menu_item("Add as template (copy)", constants.BUTTON_COPY,
+                                         partial(self.insert_button_clicked, as_template=True)))
             menu.append(Gtk.SeparatorMenuItem())
-            menu.append(create_image_menu_item("Open", constants.BUTTON_OPEN, self.open_button_clicked))
-            menu.append(create_image_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
+            menu.append(create_menu_item("Open", constants.BUTTON_OPEN, self.open_button_clicked))
+            menu.append(create_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
             menu.append(Gtk.SeparatorMenuItem())
-            menu.append(create_image_menu_item("Remove library", constants.BUTTON_DEL, self.delete_button_clicked))
+            menu.append(create_menu_item("Remove library", constants.BUTTON_DEL, self.delete_button_clicked))
 
             sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute as library", menu,
                                                                      constants.BUTTON_REFR)
 
-            sub_menu.append(create_image_menu_item("Keep state name", constants.BUTTON_LEFTA,
-                            partial(self.substitute_as_library_clicked, keep_name=True)))
-            sub_menu.append(create_image_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
-                            partial(self.substitute_as_library_clicked, keep_name=False)))
+            sub_menu.append(create_menu_item("Keep state name", constants.BUTTON_LEFTA,
+                                             partial(self.substitute_as_library_clicked, keep_name=True)))
+            sub_menu.append(create_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
+                                             partial(self.substitute_as_library_clicked, keep_name=False)))
 
             sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute as template", menu,
                                                                      constants.BUTTON_REFR)
 
-            sub_menu.append(create_image_menu_item("Keep state name", constants.BUTTON_LEFTA,
-                            partial(self.substitute_as_template_clicked, keep_name=True)))
-            sub_menu.append(create_image_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
-                            partial(self.substitute_as_template_clicked, keep_name=False)))
+            sub_menu.append(create_menu_item("Keep state name", constants.BUTTON_LEFTA,
+                                             partial(self.substitute_as_template_clicked, keep_name=True)))
+            sub_menu.append(create_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
+                                             partial(self.substitute_as_template_clicked, keep_name=False)))
         elif kind == 'library root':
-            menu.append(create_image_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
-            menu.append(create_image_menu_item("Remove library root", constants.BUTTON_DEL, self.delete_button_clicked))
+            menu.append(create_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
+            menu.append(create_menu_item("Remove library root", constants.BUTTON_DEL, self.delete_button_clicked))
         elif kind == 'libraries':
-            menu.append(create_image_menu_item("Remove libraries", constants.BUTTON_DEL, self.delete_button_clicked))
+            menu.append(create_menu_item("Remove libraries", constants.BUTTON_DEL, self.delete_button_clicked))
         elif kind == 'library tree':
-            menu.append(create_image_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
+            menu.append(create_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
 
         return menu
 
