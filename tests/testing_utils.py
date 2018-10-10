@@ -323,14 +323,13 @@ def shutdown_environment_only_core(config=True, caplog=None, expected_warnings=0
 
 
 def wait_for_gui():
-    from gi.repository import Gtk
-    while Gtk.events_pending():
-        Gtk.main_iteration(False)
+    import rafcon.gui.utils
+    rafcon.gui.utils.wait_for_gui()
 
 
 def run_gui_thread(gui_config=None, runtime_config=None):
     from gi.repository import GObject
-    from gi.repository import Gtk
+    from gi.repository import Gdk
     from rafcon.core.start import reactor_required
     from rafcon.gui.start import start_gtk, install_reactor
     from rafcon.utils.i18n import setup_l10n
@@ -345,7 +344,7 @@ def run_gui_thread(gui_config=None, runtime_config=None):
 
     initialize_environment_gui(gui_config, runtime_config)
     main_window_view = MainWindowView()
-    main_window_view.get_top_widget().set_gravity(Gdk.GRAVITY_STATIC)
+    main_window_view.get_top_widget().set_gravity(Gdk.Gravity.STATIC)
     MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
 
     print "run_gui thread: ", currentThread(), currentThread().ident, "gui.singleton thread ident:", \
@@ -370,9 +369,10 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     if patch_threading:
         patch_gtkmvc3_model_mt()
     global gui_ready, gui_thread, gui_executed_once
-    # IMPORTANT enforce Gtk.gtkgl import in the python main thread to avoid segfaults
+    # IMPORTANT enforce Gtk.gtkgl import in the python main thread to avoid segfaults -> GL_ENBALED shows success
     # noinspection PyUnresolvedReferences
-    import Gtk.gtkgl
+    from gi.repository import Gtk
+    from rafcon.gui.views.graphical_editor import GraphicalEditorView, GL_ENABLED
 
     print "WT thread: ", currentThread(), currentThread().ident
     gui_ready = Event()
@@ -429,7 +429,7 @@ def patch_gtkmvc3_model_mt():
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
     import gtkmvc3
-    from gtkmvc3.model_mt import Model, _threading, gobject
+    from gtkmvc3.model_mt import Model, _threading, GObject
     from rafcon.core.states.state import run_id_generator, threading
     from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger, Queue
 

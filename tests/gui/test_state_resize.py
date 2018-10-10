@@ -66,9 +66,9 @@ def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypa
     call_gui_callback(resize_tool.on_button_press, button_press_event)
     # Do resize: Move mouse
     motion_event = Gdk.Event(type=Gdk.MOTION_NOTIFY)
-    motion_event.get_state() |= Gdk.EventMask.BUTTON_PRESS_MASK
+    motion_event.set_state(motion_event.get_state() or Gdk.EventMask.BUTTON_PRESS_MASK)
     if recursive:
-        motion_event.get_state() |= RECURSIVE_RESIZE_MODIFIER
+        motion_event.set_state(motion_event.get_state() or RECURSIVE_RESIZE_MODIFIER)
     for i in xrange(num_motion_events):
         motion_event.x = start_pos_handle[0] + rel_size[0] * (float(i + 1) / num_motion_events)
         motion_event.y = start_pos_handle[1] + rel_size[1] * (float(i + 1) / num_motion_events)
