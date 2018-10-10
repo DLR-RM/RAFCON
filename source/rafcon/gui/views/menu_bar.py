@@ -104,6 +104,9 @@ class MenuBarView(View):
         self.sub_menu_open_recently = Gtk.Menu()
         self['open_recent'].set_submenu(self.sub_menu_open_recently)
 
+        # Gtk TODO: Unfortunately does not help against not showing Accel Keys
+        # self.win.add_accel_group(self['accelgroup1'])
+
         for menu_item_name in self.buttons.iterkeys():
             # set icon
             self.set_menu_item_icon(menu_item_name, self.buttons[menu_item_name])
@@ -116,22 +119,55 @@ class MenuBarView(View):
 
     def set_menu_item_icon(self, menu_item_name, uni_code=None):
         menu_item = self[menu_item_name]
+        # print menu_item_name
+        # print type(menu_item)
 
-        if uni_code is not None:
-            label = Gtk.Label()
-            set_label_markup(label, '&#x' + uni_code + ';',
-                             font=constants.ICON_FONT, font_size=constants.FONT_SIZE_BIG)
-            menu_item.set_image(label)
-            menu_item.set_always_show_image(True)
+        if type(menu_item) == Gtk.MenuItem:
+
+            menu_item_child = menu_item.get_child()
+
+            replace_accel_label = False
+            if isinstance(menu_item_child, Gtk.AccelLabel):
+                replace_accel_label = True
+                label_text = menu_item_child.get_text()
+
+                menu_item.remove(menu_item_child)
+
+                box = Gtk.Box(Gtk.Orientation.HORIZONTAL, 10)
+                box.set_border_width(0)
+                icon_label = Gtk.Label()
+                label = Gtk.AccelLabel(label_text)
+
+                box.pack_start(icon_label, False, False, 0)
+                box.pack_start(label, False, False, 0)
+                menu_item.add(box)
+
+                # Gtk TODO: both version do not show the Accel Keys
+                # Version 1
+                label.set_accel(*Gtk.accelerator_parse("<Control>Q"))
+                label.refetch()
+                label.show()
+                # Version 2
+                # label.set_accel_widget(menu_item)
+            else:
+                box = menu_item_child
+                icon_label = box.get_children()[0]
+
+            if uni_code is not None:
+                set_label_markup(icon_label, '&#x' + uni_code + ';',
+                                 font=constants.ICON_FONT, font_size=constants.FONT_SIZE_BIG)
+            menu_item.show()
 
     def set_menu_item_sensitive(self, menu_item_name, sensitive):
         self[menu_item_name].set_sensitive(sensitive)
 
-    def set_menu_item_accelerator(self, menu_item_name, accel_code):
+    def set_menu_item_accelerator(self, menu_item_name, accel_code, remove_old=False):
         menu_item = self[menu_item_name]
-        if menu_item_name in self.insert_accelerators:
-            key, mod = self.insert_accelerators[menu_item_name]
-            menu_item.remove_accelerator(self['accelgroup1'], key, mod)
+        # the accelerator group is not defined any more in the glade file
+        if remove_old:
+            if menu_item_name in self.insert_accelerators:
+                key, mod = self.insert_accelerators[menu_item_name]
+                menu_item.remove_accelerator(self['accelgroup1'], key, mod)
 
         key, mod = Gtk.accelerator_parse(accel_code)
         menu_item.add_accelerator("activate", self['accelgroup1'], key, mod, Gtk.AccelFlags.VISIBLE)

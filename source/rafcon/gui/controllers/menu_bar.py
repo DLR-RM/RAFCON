@@ -480,7 +480,7 @@ class MenuBarController(ExtendedController):
         self.shortcut_manager.update_shortcuts()
         for item_name, shortcuts in global_gui_config.get_config_value('SHORTCUTS', {}).iteritems():
             if shortcuts and item_name in self.view.buttons:
-                self.view.set_menu_item_accelerator(item_name, shortcuts[0])
+                self.view.set_menu_item_accelerator(item_name, shortcuts[0], remove_old=True)
         self.create_logger_warning_if_shortcuts_are_overwritten_by_menu_bar()
 
     def on_delete_check_sm_modified(self):
