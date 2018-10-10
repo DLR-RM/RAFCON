@@ -302,7 +302,8 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
         finally:
             rewind_and_set_libraries()
             reload_config(config, gui_config)
-            wait_for_gui()  # is needed to empty the idle add queue and not party destroy elements in next test
+            if gui_config:
+                wait_for_gui()  # is needed to empty the idle add queue and not party destroy elements in next test
             GUI_INITIALIZED = GUI_SIGNAL_INITIALIZED = False
             gui_thread = gui_ready = None
             test_multithreading_lock.release()
