@@ -46,15 +46,6 @@ def create_state_machine(*args, **kargs):
     return StateMachine(ctr_state)
 
 
-def focus_graphical_editor_in_page(page):
-    from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
-    from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
-    graphical_controller = page.children()[0]
-    if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
-        graphical_controller = graphical_controller.children()[0]
-    graphical_controller.grab_focus()
-
-
 def check_order_and_consistency_of_menu(menubar_ctrl):
     import rafcon.gui.singleton
     from rafcon.gui.controllers.main_window import MenuBarController

@@ -45,7 +45,6 @@ def trigger_gvm_signals():
     call_gui_callback(run_gvm_method1, gvm.get_data_type, 'changed_global_0', return_list)
     assert return_list[-1] is float
 
-
     call_gui_callback(run_gvm_method1, gvm.lock_variable, 'changed_global_0', return_list)
     access_key = return_list[-1]
     assert not gvm_controller.global_variable_is_editable('changed_global_0', 'testing...')

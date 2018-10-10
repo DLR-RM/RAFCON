@@ -3,7 +3,7 @@ from rafcon.utils import log
 
 # test environment elements
 import testing_utils
-from testing_utils import call_gui_callback
+from testing_utils import call_gui_callback, focus_graphical_editor_in_page
 
 import pytest
 
@@ -41,15 +41,6 @@ def create_state_machine():
     ctr_state.name = "Container"
 
     return StateMachine(ctr_state)
-
-
-def focus_graphical_editor_in_page(page):
-    from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
-    from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
-    graphical_controller = page.children()[0]
-    if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
-        graphical_controller = graphical_controller.children()[0]
-    graphical_controller.grab_focus()
 
 
 def select_and_paste_state(state_machine_model, source_state_model, target_state_model, menu_bar_ctrl, operation,

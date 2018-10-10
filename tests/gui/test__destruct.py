@@ -1017,7 +1017,7 @@ def run_copy_cut_and_paste():
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     from rafcon.gui.singleton import main_window_controller
     import rafcon.gui.singleton as gui_singletons
-    from gui.widget.test_menu_bar import focus_graphical_editor_in_page
+    from testing_utils import focus_graphical_editor_in_page
     menu_bar_controller = main_window_controller.get_controller("menu_bar_controller")
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
 

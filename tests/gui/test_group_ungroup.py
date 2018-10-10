@@ -1,10 +1,9 @@
-
 from os.path import join
 
 from rafcon.utils import log
 # test environment elements
 import testing_utils
-from testing_utils import call_gui_callback
+from testing_utils import call_gui_callback, focus_graphical_editor_in_page
 
 import pytest
 
@@ -43,15 +42,6 @@ def create_state_machine():
 
     state_machine = StateMachine(ctr_state)
     return state_machine
-
-
-def focus_graphical_editor_in_page(page):
-    from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
-    from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
-    graphical_controller = page.children()[0]
-    if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
-        graphical_controller = graphical_controller.children()[0]
-    graphical_controller.grab_focus()
 
 
 def trigger_ungroup_signals():
