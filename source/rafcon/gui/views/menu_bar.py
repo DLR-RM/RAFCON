@@ -119,16 +119,12 @@ class MenuBarView(View):
 
     def set_menu_item_icon(self, menu_item_name, uni_code=None):
         menu_item = self[menu_item_name]
-        # print menu_item_name
-        # print type(menu_item)
-
+        # do not touch e.g. CheckMenuItems, only Gtk.MenuItem
         if type(menu_item) == Gtk.MenuItem:
-
             menu_item_child = menu_item.get_child()
-
-            replace_accel_label = False
+            # per default MenuItems created through the glade file have a AccelLabel as child
+            # this we have to delete at first, as we want a Box, with two labels
             if isinstance(menu_item_child, Gtk.AccelLabel):
-                replace_accel_label = True
                 label_text = menu_item_child.get_text()
 
                 menu_item.remove(menu_item_child)
@@ -153,10 +149,10 @@ class MenuBarView(View):
                 box = menu_item_child
                 icon_label = box.get_children()[0]
 
+            # now add the awesome icon to the icon_label
             if uni_code is not None:
                 set_label_markup(icon_label, '&#x' + uni_code + ';',
                                  font=constants.ICON_FONT, font_size=constants.FONT_SIZE_BIG)
-            menu_item.show()
 
     def set_menu_item_sensitive(self, menu_item_name, sensitive):
         self[menu_item_name].set_sensitive(sensitive)
