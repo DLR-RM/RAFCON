@@ -95,7 +95,7 @@ def test_gui_open_folder(monkeypatch):
     print "execute test_gui_open_folder"
     import rafcon.gui.interface as gui_interface
     # prepare FileChooserDialog for monkey-patching
-    monkeypatch.setattr(gtk, "FileChooserDialog", PatchedFileChooserDialog)
+    monkeypatch.setattr(Gtk, "FileChooserDialog", PatchedFileChooserDialog)
     # replaces run by an expression that returns Gtk.ResponseType.OK
     monkeypatch.setattr(Gtk.FileChooserDialog, 'run', lambda _: Gtk.ResponseType.OK)
     # replaces get_filename by an expression that returns "/tmp"
@@ -123,7 +123,7 @@ def test_gui_create_folder(monkeypatch):
     print "execute test_gui_create_folder"
     import rafcon.gui.interface as gui_interface
     # prepare FileChooserDialog for monkey-patching
-    monkeypatch.setattr(gtk, "FileChooserDialog", PatchedFileChooserDialog)
+    monkeypatch.setattr(Gtk, "FileChooserDialog", PatchedFileChooserDialog)
     # replaces run by an expression that returns Gtk.ResponseType.OK
     monkeypatch.setattr(Gtk.FileChooserDialog, 'run', lambda _: Gtk.ResponseType.OK)
     # replaces get_filename by an expression that returns "/tmp"
