@@ -1088,4 +1088,4 @@ class NameView(Element):
             c.restore()
 
             # Copy image surface to current cairo context
-            self._image_cache.copy_image_to_context(c, upper_left_corner, zoom=current_zoom)
+            self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
