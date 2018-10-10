@@ -225,7 +225,7 @@ class StateMachinesEditorController(ExtendedController):
         logger.debug("Create new graphical editor for state machine with id %s" % str(sm_id))
 
         if global_gui_config.get_config_value('GAPHAS_EDITOR', False) and GAPHAS_AVAILABLE or not GL_ENABLED:
-            if not GL_ENABLED:
+            if not GL_ENABLED and not global_gui_config.get_config_value('GAPHAS_EDITOR', False):
                 logger.info("Gaphas editor is used. "
                             "The gui-config is set to use OpenGL editor but not all libraries needed are provided.")
             graphical_editor_view = GraphicalEditorGaphasView(state_machine_m)
