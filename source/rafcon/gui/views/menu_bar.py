@@ -85,6 +85,8 @@ class MenuBarView(View):
         'about':                constants.BUTTON_ABOUT
         }
 
+    sebmenus = ['submenu_file', 'submenu_edit', 'submenu_view', 'submenu_execution', 'submenu_help']
+
     def __init__(self, top_window):
         View.__init__(self)
 
@@ -116,6 +118,10 @@ class MenuBarView(View):
                 if shortcuts:
                     main_shortcut = shortcuts[0] if isinstance(shortcuts, list) else shortcuts
                     self.set_menu_item_accelerator(menu_item_name, main_shortcut)
+
+        for submenu_name in self.sebmenus:
+            submenu = self[submenu_name]
+            submenu.set_reserve_toggle_size(False)
 
     def set_menu_item_icon(self, menu_item_name, uni_code=None):
         menu_item = self[menu_item_name]

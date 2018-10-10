@@ -13,7 +13,7 @@
         <property name="label" translatable="yes">_File</property>
         <property name="use_underline">True</property>
         <child type="submenu">
-          <object class="GtkMenu" id="menuitem_file">
+          <object class="GtkMenu" id="submenu_file">
             <property name="can_focus">False</property>
             <property name="accel_group">accelgroup1</property>
             <child>
@@ -126,7 +126,7 @@
         <property name="label" translatable="yes">_Edit</property>
         <property name="use_underline">True</property>
         <child type="submenu">
-          <object class="GtkMenu" id="menuitem_edit">
+          <object class="GtkMenu" id="submenu_edit">
             <property name="can_focus">False</property>
             <property name="accel_group">accelgroup1</property>
             <child>
@@ -262,7 +262,7 @@
         <property name="label" translatable="yes">_View</property>
         <property name="use_underline">True</property>
         <child type="submenu">
-          <object class="GtkMenu" id="menuitem_view">
+          <object class="GtkMenu" id="submenu_view">
             <property name="can_focus">False</property>
             <property name="accel_group">accelgroup1</property>
             <child>
@@ -330,7 +330,7 @@
         <property name="label" translatable="yes">E_xecution</property>
         <property name="use_underline">True</property>
         <child type="submenu">
-          <object class="GtkMenu" id="menuitem_execution">
+          <object class="GtkMenu" id="submenu_execution">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="accel_group">accelgroup1</property>
@@ -431,7 +431,7 @@
         <property name="label">_Help</property>
         <property name="use_underline">True</property>
         <child type="submenu">
-          <object class="GtkMenu" id="menuitem_help">
+          <object class="GtkMenu" id="submenu_help">
             <property name="can_focus">False</property>
             <property name="accel_group">accelgroup1</property>
             <child>
