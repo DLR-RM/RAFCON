@@ -237,7 +237,7 @@ class MenuBarController(ExtendedController):
         if self.full_screen_flag == self.view["full_screen"].get_active():
             return False
 
-        if self.view["full_screen"].get_active and not self.full_screen_flag:
+        if self.view["full_screen"].get_active() and not self.full_screen_flag:
             self.full_screen_flag = True
             self.on_full_screen_activate()
         else:
