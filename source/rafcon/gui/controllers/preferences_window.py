@@ -35,6 +35,14 @@ class PreferencesWindowController(ExtendedController):
     """Controller handling the configuration GUI
     """
 
+    KEY_STORAGE_ID = 0
+    VALUE_STORAGE_ID = 1
+    TEXT_VISIBLE_STORAGE_ID = 2
+    TOGGLE_ACTIVATABLE_STORAGE_ID = 3
+    TOGGLE_VISIBLE_STORAGE_ID = 4
+    TEXT_EDITABLE_STORAGE_ID = 5
+    TOGGLE_VALUE_STORAGE_ID = 6
+
     def __init__(self, core_config_model, view, gui_config_model):
         assert isinstance(view, PreferencesWindowView)
         assert isinstance(core_config_model, ConfigModel)
@@ -116,9 +124,8 @@ class PreferencesWindowController(ExtendedController):
         :param str prop_name: Should always be 'config'
         :param dict info: Information e.g. about the changed config key
         """
-        config_key = info['args'][1]
-        # config_value = info['args'][2]
-
+        config_key = info['args'][1] if "key" not in info['kwargs'] else info['kwargs']['key']
+        # config_value = info['args'][-1] if "value" not in info['kwargs'] else info['kwargs']['value']
         self._handle_config_update(config_m, config_key)
 
     @ExtendedController.observe('preliminary_config', after=True)
@@ -202,8 +209,7 @@ class PreferencesWindowController(ExtendedController):
             return
         self._update_list_store_entry(list_store, config_key, config_value)
 
-    @staticmethod
-    def _update_list_store_entry(list_store, config_key, config_value):
+    def _update_list_store_entry(self, list_store, config_key, config_value):
         """Helper method to update a list store
 
         :param Gtk.ListStore list_store: List store to be updated
@@ -212,20 +218,21 @@ class PreferencesWindowController(ExtendedController):
         :returns: Row of list store that has been updated
         :rtype: int
         """
-        for row_num, entry in enumerate(list_store):
-            if entry[0] == config_key:
-                entry[1] = str(config_value)
-                entry[6] = config_value
+        for row_num, row in enumerate(list_store):
+            if row[self.KEY_STORAGE_ID] == config_key:
+                row[self.VALUE_STORAGE_ID] = str(config_value)
+                row[self.TOGGLE_VALUE_STORAGE_ID] = config_value
                 return row_num
 
     @staticmethod
-    def _update_list_store(config_m, list_store, ignore_keys=[]):
+    def _update_list_store(config_m, list_store, ignore_keys=None):
         """Generic method to create list store for a given config model
 
         :param ConfigModel config_m: Config model to read into list store
         :param Gtk.ListStore list_store: List store to be filled
         :param list ignore_keys: List of keys that should be ignored
         """
+        ignore_keys = [] if ignore_keys is None else ignore_keys
         list_store.clear()
         for config_key in sorted(config_m.config.keys):
             if config_key in ignore_keys:
@@ -240,12 +247,12 @@ class PreferencesWindowController(ExtendedController):
     def update_core_config_list_store(self):
         """Create list store for the core configuration
         """
-        self._update_list_store(self.core_config_model, self.core_list_store, ['TYPE', 'LIBRARY_PATHS'])
+        self._update_list_store(self.core_config_model, self.core_list_store, ignore_keys=['TYPE', 'LIBRARY_PATHS'])
 
     def update_gui_config_list_store(self):
         """Create list store for the GUI configuration
         """
-        self._update_list_store(self.gui_config_model, self.gui_list_store, ['TYPE', 'SHORTCUTS'])
+        self._update_list_store(self.gui_config_model, self.gui_list_store, ignore_keys=['TYPE', 'SHORTCUTS'])
 
     def update_libraries_list_store(self):
         """Creates the list store for the libraries
@@ -294,8 +301,8 @@ class PreferencesWindowController(ExtendedController):
                                                                              default={})
             library_config[temp_library_name] = "<LIB_PATH>"
             self.core_config_model.set_preliminary_config_value("LIBRARY_PATHS", library_config)
-            self._select_row_by_column_value(self.view['library_tree_view'], self.library_list_store, 0,
-                                             temp_library_name)
+            self._select_row_by_column_value(self.view['library_tree_view'], self.library_list_store,
+                                             self.KEY_STORAGE_ID, temp_library_name)
             return True
 
     def _on_remove_library(self, *event):
@@ -322,8 +329,8 @@ class PreferencesWindowController(ExtendedController):
         :param ConfigModel config_m: The config model related to the toggle option
         :param Gtk.ListStore config_list_store: The list store related to the toggle option
         """
-        config_key = config_list_store[int(path)][0]
-        config_value = bool(config_list_store[int(path)][6])
+        config_key = config_list_store[int(path)][self.KEY_STORAGE_ID]
+        config_value = bool(config_list_store[int(path)][self.TOGGLE_VALUE_STORAGE_ID])
         config_value ^= True
         config_m.set_preliminary_config_value(config_key, config_value)
 
@@ -474,17 +481,18 @@ class PreferencesWindowController(ExtendedController):
         :param path: Path of library within the list store
         :param str new_library_name: New library name
         """
-        old_library_name = self.library_list_store[int(path)][0]
+        old_library_name = self.library_list_store[int(path)][self.KEY_STORAGE_ID]
         if old_library_name == new_library_name:
             return
-        library_path = self.library_list_store[int(path)][1]
+        library_path = self.library_list_store[int(path)][self.VALUE_STORAGE_ID]
 
         library_config = self.core_config_model.get_current_config_value("LIBRARY_PATHS", use_preliminary=True,
                                                                          default={})
         del library_config[old_library_name]
         library_config[new_library_name] = library_path
         self.core_config_model.set_preliminary_config_value("LIBRARY_PATHS", library_config)
-        self._select_row_by_column_value(self.view['library_tree_view'], self.library_list_store, 0, new_library_name)
+        self._select_row_by_column_value(self.view['library_tree_view'], self.library_list_store,
+                                         self.KEY_STORAGE_ID, new_library_name)
 
     def _on_library_path_changed(self, renderer, path, new_library_path):
         """Callback handling a change of a library path
@@ -493,13 +501,14 @@ class PreferencesWindowController(ExtendedController):
         :param path: Path of library within the list store
         :param str new_library_path: New library path
         """
-        library_name = self.library_list_store[int(path)][0]
+        library_name = self.library_list_store[int(path)][self.KEY_STORAGE_ID]
 
         library_config = self.core_config_model.get_current_config_value("LIBRARY_PATHS", use_preliminary=True,
                                                                          default={})
         library_config[library_name] = new_library_path
         self.core_config_model.set_preliminary_config_value("LIBRARY_PATHS", library_config)
-        self._select_row_by_column_value(self.view['library_tree_view'], self.library_list_store, 0, library_name)
+        self._select_row_by_column_value(self.view['library_tree_view'], self.library_list_store,
+                                         self.KEY_STORAGE_ID, library_name)
 
     def _on_shortcut_changed(self, renderer, path, new_shortcuts):
         """Callback handling a change of a shortcut
@@ -508,7 +517,7 @@ class PreferencesWindowController(ExtendedController):
         :param path: Path of shortcuts within the list store
         :param str new_shortcuts: New shortcuts
         """
-        action = self.shortcut_list_store[int(path)][0]
+        action = self.shortcut_list_store[int(path)][self.KEY_STORAGE_ID]
         old_shortcuts = self.gui_config_model.get_current_config_value("SHORTCUTS", use_preliminary=True)[action]
 
         from ast import literal_eval
@@ -524,10 +533,10 @@ class PreferencesWindowController(ExtendedController):
         shortcuts = self.gui_config_model.get_current_config_value("SHORTCUTS", use_preliminary=True,  default={})
         shortcuts[action] = new_shortcuts
         self.gui_config_model.set_preliminary_config_value("SHORTCUTS", shortcuts)
-        self._select_row_by_column_value(self.view['shortcut_tree_view'], self.shortcut_list_store, 0, action)
+        self._select_row_by_column_value(self.view['shortcut_tree_view'], self.shortcut_list_store,
+                                         self.KEY_STORAGE_ID, action)
 
-    @staticmethod
-    def _on_config_value_changed(renderer, path, new_value, config_m, list_store):
+    def _on_config_value_changed(self, renderer, path, new_value, config_m, list_store):
         """Callback handling a change of a config value
 
         :param Gtk.CellRenderer renderer: Cell renderer showing the shortcut
@@ -535,7 +544,7 @@ class PreferencesWindowController(ExtendedController):
         :param ConfigModel config_m: The config model that is to be changed
         :param Gtk.ListStore list_store: The list store that is to be changed
         """
-        config_key = list_store[int(path)][0]
+        config_key = list_store[int(path)][self.KEY_STORAGE_ID]
         old_value = config_m.get_current_config_value(config_key, use_preliminary=True)
 
         if old_value == new_value:
