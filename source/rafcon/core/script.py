@@ -36,7 +36,7 @@ DEFAULT_SCRIPT = filesystem.read_file(os.path.dirname(__file__), DEFAULT_SCRIPT_
 
 
 class Script(Observable, yaml.YAMLObject):
-    """A class for representing the script file for each state in a state machine
+    """A class for representing the script file for all execution states in a state machine.
 
     It inherits from Observable to make a change of its fields observable.
 
