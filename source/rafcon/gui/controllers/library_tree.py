@@ -59,7 +59,7 @@ class LibraryTreeController(ExtendedController):
         view.set_tooltip_column(3)
 
         # Gtk TODO: solve via Gtk.TargetList? https://python-gtk-3-tutorial.readthedocs.io/en/latest/drag_and_drop.html
-        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [Gtk.TargetEntry('STRING', 0, 0)], Gdk.DragAction.COPY)
+        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [Gtk.TargetEntry.new('STRING', 0, 0)], Gdk.DragAction.COPY)
 
         self.library_row_iter_dict_by_library_path = {}
         self.__expansion_state = None

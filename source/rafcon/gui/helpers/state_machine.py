@@ -818,7 +818,7 @@ def add_state_by_drag_and_drop(state, data):
     state_machine_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller_by_path(ctrl_path)
     state_machine_editor_ctrl.perform_drag_and_drop = True
     if insert_state_into_selected_state(state, False):
-        data.set_text(state.state_id)
+        data.set_text(state.state_id, -1)
     state_machine_editor_ctrl.perform_drag_and_drop = False
 
 

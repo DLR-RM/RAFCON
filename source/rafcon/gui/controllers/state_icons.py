@@ -42,7 +42,7 @@ class StateIconController(ExtendedController):
         self.shortcut_manager = shortcut_manager
 
         # Gtk TODO: solve via Gtk.TargetList? https://python-gtk-3-tutorial.readthedocs.io/en/latest/drag_and_drop.html
-        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [Gtk.TargetEntry('STRING', 0, 0)], Gdk.DragAction.COPY)
+        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [Gtk.TargetEntry.new('STRING', 0, 0)], Gdk.DragAction.COPY)
 
     def register_view(self, view):
         super(StateIconController, self).register_view(view)
