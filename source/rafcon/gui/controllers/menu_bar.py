@@ -167,7 +167,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('step_out', 'activate', self.on_step_out_activate)
         self.connect_button_to_function('backward_step', 'activate', self.on_backward_step_activate)
         self.connect_button_to_function('about', 'activate', self.on_about_activate)
-        self.full_screen_window.connect('key_press_event', self.on_key_press_event)
+        self.full_screen_window.connect('key_press_event', self.on_escape_key_press_event_leave_full_screen)
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
         self.registered_view = True
         self._update_recently_opened_state_machines()
@@ -245,9 +245,9 @@ class MenuBarController(ExtendedController):
             self.on_full_screen_deactivate()
         return True
 
-    def on_key_press_event(self, widget, event):
+    def on_escape_key_press_event_leave_full_screen(self, widget, event):
         keyname = Gdk.keyval_name(event.keyval)
-        if keyname == "Escape" and self.full_screen_window.get_window().get_state()[1] == Gdk.WindowState.FULLSCREEN:
+        if keyname == "Escape" and 'fullscreen' in self.full_screen_window.get_window().get_state().value_nicks:
             self.view["full_screen"].set_active(False)
             return True
 
