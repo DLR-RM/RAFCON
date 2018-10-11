@@ -121,10 +121,12 @@ def add_transitions_to_closest_sibling_state_from_selected_state():
     parent_state = state.parent
 
     # find closest other state to connect to -> to_state
-    closest_sibling_state = gui_helper_meta_data.get_closest_sibling_state(selected_state_m, 'outcome')
-    if closest_sibling_state is None:
+    closest_sibling_state_tuple = gui_helper_meta_data.get_closest_sibling_state(selected_state_m, 'outcome')
+    if closest_sibling_state_tuple is None:
         logger.info("Can not {0} {1}: There is no other sibling state.".format(task_string, sub_task_string))
-    to_state = closest_sibling_state[1].state
+        return
+    distance, sibling_state_m = closest_sibling_state_tuple
+    to_state = sibling_state_m.state
 
     # find all possible from outcomes
     from_outcomes = get_all_outcomes_except_of_abort_and_preempt(state)
@@ -172,10 +174,12 @@ def add_transitions_from_closest_sibling_state_to_selected_state():
     parent_state = state.parent
 
     # find closest other state to connect from -> from_state
-    closest_sibling_state = gui_helper_meta_data.get_closest_sibling_state(selected_state_m, 'income')
-    if closest_sibling_state is None:
+    closest_sibling_state_tuple = gui_helper_meta_data.get_closest_sibling_state(selected_state_m, 'income')
+    if closest_sibling_state_tuple is None:
         logger.info("Can not {0} {1}: There is no other sibling state.".format(task_string, sub_task_string))
-    from_state = closest_sibling_state[1].state
+        return
+    distance, sibling_state_m = closest_sibling_state_tuple
+    from_state = sibling_state_m.state
 
     # find all possible from outcomes
     from_outcomes = get_all_outcomes_except_of_abort_and_preempt(from_state)
