@@ -18,6 +18,7 @@
 
 """
 from gi.repository import Gtk
+from gi.repository import Gdk
 import yaml_configuration.config
 from os.path import dirname
 
@@ -76,10 +77,10 @@ class PreferencesWindowController(ExtendedController):
         self.view['add_library_button'].connect('clicked', self._on_add_library)
         self.view["remove_library_button"].connect('clicked', self._on_remove_library)
 
-        self.view['core_config_toggle_renderer'].connect('toggled', self._on_checkbox_toggled,
-                                                         self.core_config_model, self.core_list_store)
-        self.view['gui_config_toggle_renderer'].connect('toggled', self._on_checkbox_toggled, self.gui_config_model,
-                                                        self.gui_list_store)
+        self.view['config_tree_view'].connect("button_press_event", self._on_row_clicked_trigger_toggle_of_boolean,
+                                              self.core_config_model, self.core_list_store)
+        self.view['gui_tree_view'].connect("button_press_event", self._on_row_clicked_trigger_toggle_of_boolean,
+                                           self.gui_config_model, self.gui_list_store)
 
         self.view['core_config_value_renderer'].set_property('editable', True)
         self.view['core_config_value_renderer'].connect('edited', self._on_config_value_changed, self.core_config_model,
@@ -333,6 +334,19 @@ class PreferencesWindowController(ExtendedController):
         config_value = bool(config_list_store[int(path)][self.TOGGLE_VALUE_STORAGE_ID])
         config_value ^= True
         config_m.set_preliminary_config_value(config_key, config_value)
+
+    def _on_row_clicked_trigger_toggle_of_boolean(self, widget, event, config_model, list_store):
+        # click with left mouse button
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 1:
+            x = int(event.x)
+            y = int(event.y)
+            pthinfo = widget.get_path_at_pos(x, y)
+            if pthinfo is not None:
+                path, col, _, _ = pthinfo
+                widget.grab_focus()
+                widget.set_cursor(path, col, 0)
+                if list_store[path][self.TOGGLE_VISIBLE_STORAGE_ID]:
+                    self._on_checkbox_toggled(None, path[0], config_model, list_store)
 
     def _on_import_config(self, *args):
         """Callback method the the import button was clicked
