@@ -82,9 +82,9 @@ class TopToolBarUndockedWindowController(TopToolBarController):
     In this controller, the close button in the top tool bar is hidden.
     """
 
-    def __init__(self, state_machine_manager_model, view, top_level_window, redock_method):
+    def __init__(self, state_machine_manager_model, view, redock_method):
         super(TopToolBarUndockedWindowController, self).__init__(state_machine_manager_model, view,
-                                                                 top_level_window['undock_window'])
+                                                                 view['undock_window'])
         self.redock_method = redock_method
 
     def register_view(self, view):
