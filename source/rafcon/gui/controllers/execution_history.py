@@ -462,7 +462,11 @@ class ExecutionHistoryTreeController(ExtendedController):
                     if next_history_item and next_history_item.call_type is CallType.CONTAINER:
                         current_parent = tree_item
                         self.insert_history_item(current_parent, next_history_item, "Enter")
-                        next(execution_history_iterator)  # skips the next history item in the iterator
+                        try:
+                            next(execution_history_iterator)  # skips the next history item in the iterator
+                        except StopIteration as e:
+                            # the execution engine does not have another item
+                            return
 
             else:  # history_item is ReturnItem
                 if current_parent is None:
