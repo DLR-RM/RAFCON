@@ -13,31 +13,55 @@ Next release
 
 - Improvements:
 
-  - All menu accelerators are installed
-  - A `DataPort` with data type `object` can now be connected to any other `DataPort`
-  - :issue:`602` Hide menu entries without function
+  -
 
 - Bug Fixes:
 
-  - no more GtkWarning in stdout
-  - `GitHub Issue #4 <https://github.com/DLR-RM/RAFCON/issues/4>`__ GTK theme does not exist
-
+  - 
 
 Patch releases 0.12.\*
 ----------------------
+
+0.12.25
+-------
+
+- Improvements:
+
+  - A ``DataPort`` with data type ``object`` can now be connected to any other ``DataPort`` (:issue:`422`, :issue:`525`)
+  - :issue:`602` Hide menu entries without function
+  - Handle exceptions of the OpenGL graphical editor gracefully => do not depend on ``gtkglext``
+
+- Bug Fixes:
+
+  - no more ``GtkWarning`` in stdout
+  - `GitHub Issue #4 <https://github.com/DLR-RM/RAFCON/issues/4>`__ GTK theme does not exist
+
+
+0.12.24
+-------
+
+- Improvements:
+
+    - Update documentation regarding installation
+
+- Bug Fixes:
+
+    - Installation of mo-files (for language support) works
+
 
 0.12.23
 -------
 
 - Improvements:
 
-  - Update documenation regarding installation
+  - Update documentation regarding installation
   - Update rafcon dependencies in setup.py
 
 - Bug Fixes:
 
   - API: ``AttributeError`` when passing ``DeciderState`` to constructor of ``BarrierConcurrencyState``
   - Installation of mo-files (for language support) works
+
 
 0.12.22
 """""""
@@ -52,7 +76,7 @@ Patch releases 0.12.\*
   - extend German RAFCON translation
   - extend Developer's Guide by how-to on translating RAFCON
   - API: ``add_state`` is adapting the passed ``state.state_id`` automatically in case of conflicts
-      instead of raising an ``AttributeError``
+    instead of raising an ``AttributeError``
 
 - Bug Fixes:
 
@@ -68,6 +92,7 @@ Patch releases 0.12.\*
   - stepping works inside library and concurrency states
   - :issue:`589` decider state can be deleted
   - make i18n work
+
 
 0.12.21
 """""""
