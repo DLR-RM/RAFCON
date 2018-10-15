@@ -18,6 +18,8 @@
 
 import os
 
+from gi.repository import Gtk
+
 from gtkmvc3 import View
 
 from rafcon.gui.config import global_gui_config
@@ -35,7 +37,6 @@ from rafcon.gui.views.state_machine_tree import StateMachineTreeView
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
 from rafcon.gui.views.states_editor import StatesEditorView
 from rafcon.gui.views.tool_bar import ToolBarView
-from rafcon.gui.views.top_tool_bar import TopToolBarView
 from rafcon.gui.views.undocked_window import UndockedWindowView
 
 
@@ -158,25 +159,24 @@ class MainWindowView(View):
         self['console'] = self.debug_console_view['console']
 
         ##################################################
-        # menu bar view
+        # HeaderBar with MenuBar
         ##################################################
-        self.top_tool_bar = TopToolBarView()
-        self.top_tool_bar.show()
-        self['top_menu_hbox'].remove(self['top_tool_bar_placeholder'])
-        self['top_menu_hbox'].pack_end(self.top_tool_bar.get_top_widget(), expand=True, fill=True, padding=0)
-        self['top_menu_hbox'].reorder_child(self.top_tool_bar.get_top_widget(), 1)
 
         self.menu_bar = MenuBarView(self)
         self.menu_bar.show()
-        self['top_menu_hbox'].remove(self['menu_bar_placeholder'])
-        self['top_menu_hbox'].pack_start(self.menu_bar.get_top_widget(), expand=False, fill=True, padding=0)
-        self['top_menu_hbox'].reorder_child(self.menu_bar.get_top_widget(), 0)
+
+        headerbar = Gtk.HeaderBar()
+        headerbar.set_show_close_button(True)
+        headerbar.props.title = "RAFCON"
+        headerbar.pack_start(self.menu_bar.get_top_widget())
+        headerbar.show()
+        self.get_top_widget().set_titlebar(headerbar)
 
         self.tool_bar = ToolBarView()
         self.tool_bar.show()
         self['top_level_vbox'].remove(self['tool_bar_placeholder'])
         self['top_level_vbox'].pack_start(self.tool_bar.get_top_widget(), expand=False, fill=True, padding=0)
-        self['top_level_vbox'].reorder_child(self.tool_bar.get_top_widget(), 1)
+        self['top_level_vbox'].reorder_child(self.tool_bar.get_top_widget(), 0)
 
         ################################################
         # Hide Buttons
@@ -228,8 +228,6 @@ class MainWindowView(View):
         button_step_backward_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_BACKW))
 
         # --------------------------------------------------------------------------
-
-        self.get_top_widget().set_decorated(False)
 
         # Gtk TODO: find replacement for methods set_tab_hborder and set_tab_vborder
         # self['upper_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)

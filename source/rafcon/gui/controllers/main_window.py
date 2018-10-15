@@ -43,7 +43,6 @@ from rafcon.gui.controllers.state_machine_tree import StateMachineTreeController
 from rafcon.gui.controllers.state_machines_editor import StateMachinesEditorController
 from rafcon.gui.controllers.states_editor import StatesEditorController
 from rafcon.gui.controllers.tool_bar import ToolBarController
-from rafcon.gui.controllers.top_tool_bar import TopToolBarMainWindowController
 from rafcon.gui.controllers.undocked_window import UndockedWindowController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.views.main_window import MainWindowView
@@ -159,13 +158,6 @@ class MainWindowController(ExtendedController):
         ######################################################
         tool_bar_controller = ToolBarController(state_machine_manager_model, view.tool_bar)
         self.add_controller('tool_bar_controller', tool_bar_controller)
-
-        ######################################################
-        # top tool bar
-        ######################################################
-        top_tool_bar_controller = TopToolBarMainWindowController(state_machine_manager_model, view.top_tool_bar,
-                                                                 view['main_window'])
-        self.add_controller('top_tool_bar_controller', top_tool_bar_controller)
 
         ######################################################
         # Undocked Windows Controllers
