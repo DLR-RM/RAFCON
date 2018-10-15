@@ -373,8 +373,9 @@ class StateMachinesEditorController(ExtendedController):
         :param state_machine_m: The selected state machine model.
         """
         from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
-        force = True if event is not None and hasattr(event, 'state') and \
-                        event.get_state()[1] & Gdk.ModifierType.SHIFT_MASK and event.get_state() & Gdk.ModifierType.CONTROL_MASK else force
+        force = True if event is not None and hasattr(event, 'state') \
+                        and event.get_state() & Gdk.ModifierType.SHIFT_MASK \
+                        and event.get_state() & Gdk.ModifierType.CONTROL_MASK else force
 
         def remove_state_machine_m():
             state_machine_id = state_machine_m.state_machine.state_machine_id
