@@ -80,7 +80,15 @@ def create_label_widget_with_icon(icon, text, tooltip=None):
     return hbox
 
 
-def set_icon_of_menu_item(menu_item, uni_code):
+def get_label_of_menu_item_box(menu_item):
+    return menu_item.get_child().get_children()[-1].get_text()
+
+
+def set_label_of_menu_item_box(menu_item, new_label_text):
+    return menu_item.get_child().get_children()[-1].set_text(new_label_text)
+
+
+def set_icon_and_text_box_of_menu_item(menu_item, uni_code):
     menu_item_child = menu_item.get_child()
     # per default MenuItems created through the glade file have a AccelLabel as child
     # this we have to delete at first, as we want a Box, with two labels
@@ -108,7 +116,7 @@ def create_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=No
                      accel_code=None, accel_group=None):
     menu_item = Gtk.MenuItem()
     menu_item.set_label(label_text)
-    set_icon_of_menu_item(menu_item, icon_code)
+    set_icon_and_text_box_of_menu_item(menu_item, icon_code)
     if callback is not None:
         menu_item.connect("activate", callback, *callback_args)
     if accel_code is not None and accel_group is not None:

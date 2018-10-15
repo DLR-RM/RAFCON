@@ -19,7 +19,7 @@ from gtkmvc3 import View
 
 from rafcon.gui import glade
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.helpers.label import set_icon_of_menu_item
+from rafcon.gui.helpers.label import set_icon_and_text_box_of_menu_item
 from rafcon.gui.utils import constants
 
 
@@ -127,7 +127,7 @@ class MenuBarView(View):
         menu_item = self[menu_item_name]
         # do not touch e.g. CheckMenuItems, only Gtk.MenuItem
         if type(menu_item) == Gtk.MenuItem:
-            set_icon_of_menu_item(menu_item, uni_code)
+            set_icon_and_text_box_of_menu_item(menu_item, uni_code)
 
     def set_menu_item_sensitive(self, menu_item_name, sensitive):
         self[menu_item_name].set_sensitive(sensitive)
