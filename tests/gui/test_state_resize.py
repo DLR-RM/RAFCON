@@ -46,13 +46,14 @@ def get_state_handle_pos(view, state_v, handle):
 
 
 def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypatch):
+    from gi.repository import Gdk
     from rafcon.gui.mygaphas.tools import MoveHandleTool
     from rafcon.gui.utils.constants import RECURSIVE_RESIZE_MODIFIER
     from gaphas.item import SE, NW
-    import Gtk.gdk
 
     def get_resize_handle(x, y, distance=None):
         return state_v, state_v.handles()[SE]
+
     monkeypatch.setattr("rafcon.gui.mygaphas.aspect.StateHandleFinder.get_handle_at_point", get_resize_handle)
     monkeypatch.setattr("rafcon.gui.mygaphas.aspect.ItemHandleFinder.get_handle_at_point", get_resize_handle)
 
@@ -61,14 +62,15 @@ def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypa
 
     # Start resize: Press button
     # Gtk TODO: Check if button can be set like this
-    button_press_event = Gdk.Event(type=Gdk.EventType.BUTTON_PRESS)
+    button_press_event = Gdk.Event.new(type=Gdk.EventType.BUTTON_PRESS)
     button_press_event.button = 1
     call_gui_callback(resize_tool.on_button_press, button_press_event)
     # Do resize: Move mouse
-    motion_event = Gdk.Event(type=Gdk.MOTION_NOTIFY)
-    motion_event.set_state(motion_event.get_state() or Gdk.EventMask.BUTTON_PRESS_MASK)
+    motion_event = Gdk.Event.new(Gdk.EventType.MOTION_NOTIFY)
+    motion_event.state = motion_event.get_state()[1] | Gdk.EventMask.BUTTON_PRESS_MASK
     if recursive:
-        motion_event.set_state(motion_event.get_state() or RECURSIVE_RESIZE_MODIFIER)
+        motion_event.state = motion_event.get_state()[1] | RECURSIVE_RESIZE_MODIFIER
+    print "sent motion_event.state", motion_event.get_state()
     for i in xrange(num_motion_events):
         motion_event.x = start_pos_handle[0] + rel_size[0] * (float(i + 1) / num_motion_events)
         motion_event.y = start_pos_handle[1] + rel_size[1] * (float(i + 1) / num_motion_events)
@@ -76,7 +78,7 @@ def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypa
 
     # Stop resize: Release button
     # Gtk TODO: Check if button can be set like this
-    button_release_event = Gdk.Event(type=Gdk.BUTTON_RELEASE)
+    button_release_event = Gdk.Event.new(type=Gdk.EventType.BUTTON_RELEASE)
     button_release_event.button = 1
     call_gui_callback(resize_tool.on_button_release, button_release_event)
 
@@ -177,3 +179,8 @@ def test_simple_state_size_resize(state_path, recursive, rel_size, caplog, monke
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
+
+
+if __name__ == '__main__':
+    import pytest
+    pytest.main([__file__, '-xs'])
