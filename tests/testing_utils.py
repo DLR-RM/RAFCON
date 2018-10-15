@@ -371,6 +371,10 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     global gui_ready, gui_thread, gui_executed_once
     # IMPORTANT enforce Gtk.gtkgl import in the python main thread to avoid segfaults -> GL_ENBALED shows success
     # noinspection PyUnresolvedReferences
+    import gi
+    gi.require_version('Gtk', '3.0')
+    gi.require_version('PangoCairo', '1.0')
+    gi.require_version('GtkSource', '3.0')
     from gi.repository import Gtk
     # careful import
     try:
