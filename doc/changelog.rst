@@ -23,6 +23,17 @@ Patch releases 0.12.\*
   - no more ``GtkWarning`` in stdout
   - `GitHub Issue #4 <https://github.com/DLR-RM/RAFCON/issues/4>`__ GTK theme does not exist
 
+0.12.24
+-------
+
+- Improvements:
+
+    - Update documentation regarding installation
+
+- Bug Fixes:
+
+    - Installation of mo-files (for language support) works
+
 
 0.12.24
 -------
