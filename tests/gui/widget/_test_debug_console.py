@@ -1,3 +1,5 @@
+import time
+
 # general tool elements
 from rafcon.utils import log
 
@@ -16,12 +18,12 @@ def trigger_logging_view_gui_signals():
 
     At the moment those functions are tested:
     - in general:
-        - the cursor position is constant the logging view is updated no madder if the follow mode is enabled or not
+        - the cursor position is constant while logging view is updated no matter if the follow mode is enabled or not
         - if the old cursor line disappears because of disabling of logging levels the cursor recovers on neighbour line
           (TODO #1)
     - for the follow mode:
         - the scrollbar is positioned to see the last logs if follow mode is enabled
-        - if the follow mode is disabled the cursor is on it last position and the focus jumps back (TODO #2)
+        - if the follow mode is disabled the cursor is on its last position and the focus jumps back (TODO #2)
     """
     import rafcon.core.singleton
     import rafcon.gui.singleton
@@ -37,7 +39,19 @@ def trigger_logging_view_gui_signals():
     def check_scrollbar_adjustment_to_be_at_bottom():
         testing_utils.wait_for_gui()
         call_gui_callback(testing_utils.wait_for_gui)
-        adj = logging_console_ctrl.view['scrollable'].get_vadjustment()
+        # waiting for the gui is not sufficient
+        # calling show(), show_now(), show_all(), realize() or reset_style() on the scrollbar does not work either
+        scrolled_down = False
+        counter = 0
+        while (not scrolled_down) and counter < 10:
+            adj = logging_console_ctrl.view['scrollable'].get_vadjustment()
+            if not int(adj.get_value()) == int(adj.get_upper() - adj.get_page_size()):
+                testing_utils.wait_for_gui()
+                time.sleep(0.1)
+            else:
+                scrolled_down = False
+            counter += 1
+
         if not int(adj.get_value()) == int(adj.get_upper() - adj.get_page_size()):
             logger.warning('The scroller seems not to be at the end of the page {0} == {1}'
                            ''.format(int(adj.get_value()), int(adj.get_upper() - adj.get_page_size())))
@@ -123,5 +137,5 @@ def test_logging_view_widget(caplog):
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
 if __name__ == '__main__':
-    # test_gui(None)
+    # test_logging_view_widget(None)
     pytest.main(['-s', __file__])
