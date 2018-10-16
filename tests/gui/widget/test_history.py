@@ -1,5 +1,4 @@
 import logging
-from gi.repository import Gtk
 import threading
 import time
 
@@ -1840,11 +1839,13 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
         state_machines_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('state_machines_editor_ctrl')
         state_machines_editor_ctrl.get_controller(sm_id).view.get_top_widget().grab_focus()
         state_machines_editor_ctrl.get_controller(sm_id).view.editor.grab_focus()
-        press_key([keyboard.control_l_key, 'a'], duration=0.8)
-        time.sleep(0.1)  # wait that last add is fully done
+        press_key([keyboard.control_l_key, 'a'], duration=0.6)
+        call_gui_callback(testing_utils.wait_for_gui)  # wait that last add is fully done
         assert sm_m.history.modifications.single_trail_history()
-        press_key([keyboard.control_l_key, 'z'], duration=0.8)
-        press_key([keyboard.control_l_key, keyboard.shift_l_key, 'z'], duration=0.8)
+        press_key([keyboard.control_l_key, 'z'], duration=1.2)
+        call_gui_callback(testing_utils.wait_for_gui)  # wait that last undo is fully done
+        press_key([keyboard.control_l_key, keyboard.shift_l_key, 'z'], duration=1.2)
+        call_gui_callback(testing_utils.wait_for_gui)  # wait that last redo is fully done
     except ImportError as e:
         print "ERROR: ", e
         # TODO finish this test and make a better raise or error here
@@ -1863,8 +1864,8 @@ if __name__ == '__main__':
     # test_scoped_variable_modify_notification(None)
     # test_data_flow_property_modifications_history(None)
 
-    test_state_machine_modifications_with_gui(with_gui=True, caplog=None)
+    # test_state_machine_modifications_with_gui(with_gui=True, caplog=None)
     # test_state_type_change_bugs_with_gui(with_gui=False, caplog=None)
     # test_state_type_change_bugs_with_gui(with_gui=True, caplog=None)
-    # test_multiple_undo_redo_bug_with_gui(None)
+    test_multiple_undo_redo_bug_with_gui(None)
     # pytest.main(['-xs', __file__])
