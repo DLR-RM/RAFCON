@@ -57,8 +57,8 @@ def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypa
     monkeypatch.setattr("rafcon.gui.mygaphas.aspect.StateHandleFinder.get_handle_at_point", get_resize_handle)
     monkeypatch.setattr("rafcon.gui.mygaphas.aspect.ItemHandleFinder.get_handle_at_point", get_resize_handle)
 
-    resize_tool = MoveHandleTool(view)
-    start_pos_handle = get_state_handle_pos(view, state_v, state_v.handles()[SE])
+    resize_tool = call_gui_callback(MoveHandleTool, view)
+    start_pos_handle = call_gui_callback(get_state_handle_pos, view, state_v, state_v.handles()[SE])
 
     # Start resize: Press button
     # Gtk TODO: Check if button can be set like this
@@ -182,5 +182,21 @@ def test_simple_state_size_resize(state_path, recursive, rel_size, caplog, monke
 
 
 if __name__ == '__main__':
+    # if you wanna run this, replace monkeypatching via monkeypatch module above via manual assignments
+    # params = [
+    #     (state_path_root, False, (40, 40)),
+    #     (state_path_root, True, (40, 40)),
+    #     (state_path_P, False, (20, 20)),
+    #     (state_path_P, True, (20, 20)),
+    #     (state_path_Hi, False, (20, 20)),
+    #     (state_path_Hi, True, (20, 20)),
+    #     (state_path_Ex, False, (20, 20)),
+    #     (state_path_Ex, True, (20, 20)),
+    #     (state_path_PC, False, (10, 10)),
+    #     (state_path_PC, True, (10, 10))
+    # ]
+    # for elem in params:
+    #     state_path, recursive, rel_size = elem
+    #     test_simple_state_size_resize(state_path, recursive, rel_size, None, None)
     import pytest
     pytest.main([__file__, '-xs'])
