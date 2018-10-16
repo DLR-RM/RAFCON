@@ -59,7 +59,12 @@ class MyCanvas(gaphas.canvas.Canvas):
         if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
             # print "remove", item
             self._remove_view_maps(item)
-        super(MyCanvas, self).remove(item)
+
+        # Gtk TODO: fix destruct of gaphas
+        try:
+            super(MyCanvas, self).remove(item)
+        except KeyError as e:
+            logger.info("The destruct of gaphas items has to be fixed!")
 
     def add_port(self, port_v):
         # The LibraryState and its state_copy share the same port core_elements
