@@ -16,17 +16,21 @@ from gi.repository import GObject
 from gtkmvc3 import View
 from rafcon.gui.utils import constants
 
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+
 
 class StateIconView(View, Gtk.IconView):
-    icon_label = ["HS", "ES", "PS", "BS"]
-    tooltips = {"HS": "Hierarchy State", "ES": "Execution State",
-                "PS": "Preemptive Concurrency State", "BS": "Barrier Concurrency State"}
+    states = [("HS", HierarchyState), ("ES", ExecutionState),
+              ("PS", PreemptiveConcurrencyState), ("BS", BarrierConcurrencyState)]
 
     def __init__(self):
         View.__init__(self)
         GObject.GObject.__init__(self)
 
-        self.set_columns(len(self.icon_label))
+        self.set_columns(len(self.states))
         self.set_margin(0)
         self.set_spacing(0)
         self.set_row_spacing(0)
@@ -37,10 +41,10 @@ class StateIconView(View, Gtk.IconView):
         self.set_markup_column(0)
         self.set_tooltip_column(1)
 
-        for state in self.icon_label:
+        for shorthand, state_class in self.states:
             liststore.append(['<span font_desc="%s %s">&#x%s; ' % (constants.ICON_FONT, constants.FONT_SIZE_NORMAL,
-                                                                   constants.BUTTON_ADD) + state + '</span>',
-                              "Add/Drag and Drop " + self.tooltips[state]])
+                                                                   constants.BUTTON_ADD) + shorthand + '</span>',
+                              "Add/Drag and Drop " + state_class.__name__])
 
         self['state_icon_view'] = self
         self.top = 'state_icon_view'

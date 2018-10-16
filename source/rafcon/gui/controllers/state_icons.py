@@ -33,16 +33,13 @@ logger = log.get_logger(__name__)
 
 class StateIconController(ExtendedController):
 
-    icon_label_to_state_class_dict = {"ES": ExecutionState, "HS": HierarchyState,
-                                      "PS": PreemptiveConcurrencyState, "BS": BarrierConcurrencyState}
-
     def __init__(self, model=None, view=None, shortcut_manager=None):
         ExtendedController.__init__(self, model, view)
 
         self.shortcut_manager = shortcut_manager
 
-        # Gtk TODO: solve via Gtk.TargetList? https://python-gtk-3-tutorial.readthedocs.io/en/latest/drag_and_drop.html
-        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [Gtk.TargetEntry.new('STRING', 0, 0)], Gdk.DragAction.COPY)
+        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, None, Gdk.DragAction.COPY)
+        view.drag_source_add_text_targets()
 
     def register_view(self, view):
         super(StateIconController, self).register_view(view)
@@ -114,6 +111,5 @@ class StateIconController(ExtendedController):
         selected = self.view.get_selected_items()
         if not selected:
             return
-        icon_label = self.view.icon_label[selected[0][0]]
-        state_class = self.icon_label_to_state_class_dict[icon_label]
+        shorthand, state_class = self.view.states[selected[0][0]]
         return state_class()
