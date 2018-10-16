@@ -266,7 +266,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
 
 
 def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0,
-                         unpatch_threading=True):
+                         unpatch_threading=True, core_only=False):
     """ Reset Config object classes of singletons and release multi threading lock and optional do the log-msg test
 
      The function reloads the default config files optional and release the multi threading lock. This function is
@@ -302,7 +302,7 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
         finally:
             rewind_and_set_libraries()
             reload_config(config, gui_config)
-            if gui_config:
+            if core_only:
                 wait_for_gui()  # is needed to empty the idle add queue and not party destroy elements in next test
             GUI_INITIALIZED = GUI_SIGNAL_INITIALIZED = False
             gui_thread = gui_ready = None
@@ -319,7 +319,8 @@ def shutdown_environment_only_core(config=True, caplog=None, expected_warnings=0
     # in the gui case, the state machines have to be deleted while the gui is still running with add_gui_callback
     # if add_gui_callback is not used, then a multi threading RuntimeError will be raised by the PatchedModelMT
     state_machine_manager.delete_all_state_machines()
-    shutdown_environment(config, False, caplog, expected_warnings, expected_errors, unpatch_threading=False)
+    shutdown_environment(config, False, caplog, expected_warnings, expected_errors, unpatch_threading=False,
+                         core_only=True)
 
 
 def wait_for_gui():
@@ -516,9 +517,9 @@ def patch_gtkmvc3_model_mt():
                       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
                                 _threading.currentThread(), self._ModelMT__observer_threads[observer], (args, kwargs))
 
-                print "state threads", state_threads
-                print "used_gui_threads", used_gui_threads
-                # raise RuntimeError("This test should not have multi-threading constellations.")
+                # print "state threads", state_threads
+                # print "used_gui_threads", used_gui_threads
+                raise RuntimeError("This test should not have multi-threading constellations.")
 
     gtkmvc3.model_mt.ModelMT.__notify_observer__ = __patched__notify_observer__
     rafcon.core.states.state.State.start = state_start
