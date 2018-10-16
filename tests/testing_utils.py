@@ -16,8 +16,6 @@ test_multithreading_lock = Lock()
 gui_thread = None
 gui_ready = None
 gui_executed_once = False
-exception_info = None
-result = None
 
 
 RAFCON_TEMP_PATH_TEST_BASE = join(constants.RAFCON_TEMP_PATH_BASE, 'unit_tests')
@@ -103,50 +101,9 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
 
 
 def call_gui_callback(callback, *args, **kwargs):
-    """Wrapper method for GLib.idle_add
-
-    This method is intended as replacement for idle_add. It wraps the method with a callback option. The advantage is
-    that this way, the call is blocking. The method return, when the callback method has been called and executed.
-
-    :param callback: The callback method, e.g. on_open_activate
-    :param args: The parameters to be passed to the callback method
-    """
-    global exception_info, result
-    from gi.repository import GLib
-    condition = Condition()
-    exception_info = None
-
-    @log.log_exceptions()
-    def fun():
-        """Call callback and notify condition variable
-        """
-        global exception_info, result
-        result = None
-        try:
-            result = callback(*args)
-        except:
-            # Exception within this asynchronously called function won't reach pytest. This is why we have to store
-            # the information about the exception to re-raise it at the end of the synchronous call.
-            exception_info = sys.exc_info()
-        finally:  # Finally is also executed in the case of exceptions
-            condition.acquire()
-            condition.notify()
-            condition.release()
-
-    if "priority" in kwargs:
-        priority = kwargs["priority"]
-    else:
-        priority = GLib.PRIORITY_LOW
-
-    GLib.idle_add(fun, priority=priority)
-    # Wait for the condition to be notified
-    condition.acquire()
-    # TODO: implement timeout that raises an exception
-    condition.wait()
-    condition.release()
-    if exception_info:
-        raise exception_info[0], exception_info[1], exception_info[2]
-    return result
+    print "call_gui_callback test: ", callback, ", args: ", args, ", kwargs: ", kwargs
+    import rafcon.utils.gui_functions
+    return rafcon.utils.gui_functions.call_gui_callback(callback, *args)
 
 
 def rewind_and_set_libraries(libraries=None):

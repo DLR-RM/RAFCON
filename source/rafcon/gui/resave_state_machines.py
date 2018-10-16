@@ -19,13 +19,14 @@ import threading
 import time
 
 from rafcon.utils import log
-from rafcon.gui.utils import wait_for_gui
+from rafcon.utils.gui_functions import call_gui_callback
 
 from rafcon.core.config import global_config
 import rafcon.core.singleton as core_singletons
 
 import rafcon.gui.start
 import rafcon.gui.singleton as gui_singletons
+from rafcon.gui.utils import wait_for_gui
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
@@ -48,28 +49,6 @@ def setup_logger():
 
 setup_logger()
 logger = log.get_logger("Resave state machines script")
-
-
-def call_gui_callback(callback, *args):
-    from gi.repository import GLib
-    import threading
-    condition = threading.Condition()
-
-    def fun():
-        """Call callback and notify condition variable
-        """
-        try:
-            callback(*args)
-        finally:  # Finally is also executed in the case of exceptions and reraises the exception at the end
-            condition.acquire()
-            condition.notify()
-            condition.release()
-
-    GLib.idle_add(fun)
-    # Wait for the condition to be notified
-    condition.acquire()
-    condition.wait()
-    condition.release()
 
 
 def trigger_gui_signals(*args):
