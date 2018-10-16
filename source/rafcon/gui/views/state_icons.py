@@ -29,6 +29,7 @@ class StateIconView(View, Gtk.IconView):
     def __init__(self):
         View.__init__(self)
         GObject.GObject.__init__(self)
+        self.props.item_orientation = Gtk.Orientation.HORIZONTAL
 
         self.set_columns(len(self.states))
         self.set_margin(0)
