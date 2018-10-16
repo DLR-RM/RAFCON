@@ -256,9 +256,10 @@ class AbstractTreeViewController(ExtendedController):
             renderer.remove_all_handler(renderer)
             if renderer.ctrl.get_path() is None:
                 return
-            # We have to use idle_add to prevent core dumps:
+            # Originally we had to use idle_add to prevent core dumps:
             # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
-            GLib.idle_add(apply_method, renderer.ctrl.get_path(), entry.get_text())
+            # Gtk TODO: use idle_add if there are problems
+            apply_method(renderer.ctrl.get_path(), entry.get_text())
 
         def on_cursor_move_in_entry_widget(entry, step, count, extend_selection):
             """Trigger scroll bar adjustments according active entry widgets cursor change
@@ -394,7 +395,8 @@ class AbstractTreeViewController(ExtendedController):
         horizontal_scroll_bar = self.view.scrollbar_widget.get_hscrollbar()
         adjustment = horizontal_scroll_bar.get_adjustment()
         value = int(float(adjustment.get_upper() - adjustment.get_page_size())*rel_pos/float(adjustment.get_upper()))
-        GLib.idle_add(adjustment.set_value, value)
+        # Gtk TODO: evtl. use idle_add if problems occur
+        adjustment.set_value(value)
 
     def _horizontal_scrollbar_stay_in_front_if_possible(self):
         if self.active_entry_widget:
