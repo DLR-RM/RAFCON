@@ -6,7 +6,8 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <child>
-      <object class="GtkVBox" id="vbox1">
+      <object class="GtkBox" id="vbox1">
+        <property name="orientation">vertical</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
@@ -42,7 +43,8 @@
             <property name="can_focus">False</property>
             <property name="homogeneous">True</property>
             <child>
-              <object class="GtkVBox" id="input_box">
+              <object class="GtkBox" id="input_box">
+                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
@@ -80,7 +82,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="output_box">
+              <object class="GtkBox" id="output_box">
+                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
@@ -118,7 +121,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="scoped_box">
+              <object class="GtkBox" id="scoped_box">
+                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
@@ -170,7 +174,8 @@
       </packing>
     </child>
     <child>
-      <object class="GtkVBox" id="vbox2">
+      <object class="GtkBox" id="vbox2">
+        <property name="orientation">vertical</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
@@ -201,7 +206,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkVBox" id="outcomes_box">
+          <object class="GtkBox" id="outcomes_box">
+            <property name="orientation">vertical</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>

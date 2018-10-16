@@ -12,7 +12,8 @@
     <property name="default_width">300</property>
     <property name="default_height">400</property>
     <child>
-      <object class="GtkVBox" id="vbox1">
+      <object class="GtkBox" id="vbox1">
+        <property name="orientation">vertical</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
@@ -22,7 +23,8 @@
             <property name="expanded">True</property>
             <property name="label_fill">True</property>
             <child>
-              <object class="GtkVBox" id="input_port_vbox">
+              <object class="GtkBox" id="input_port_vbox">
+                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
@@ -102,7 +104,8 @@
             <property name="can_focus">True</property>
             <property name="label_fill">True</property>
             <child>
-              <object class="GtkVBox" id="output_port_vbox">
+              <object class="GtkBox" id="output_port_vbox">
+                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
@@ -181,7 +184,8 @@
             <property name="can_focus">True</property>
             <property name="label_fill">True</property>
             <child>
-              <object class="GtkVBox" id="scoped_variable_vbox">
+              <object class="GtkBox" id="scoped_variable_vbox">
+                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>

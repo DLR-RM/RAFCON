@@ -2,7 +2,8 @@
 <!-- Generated with glade 3.20.0 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
-  <object class="GtkVBox" id="main_frame_vbox">
+  <object class="GtkBox" id="main_frame_vbox">
+    <property name="orientation">vertical</property>
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <child>
@@ -25,11 +26,13 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
-          <object class="GtkVPaned" id="vpaned">
+          <object class="GtkPaned" id="vpaned">
+            <property name="orientation">vertical</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <child>
-              <object class="GtkVBox" id="upper_right_sidebar">
+              <object class="GtkBox" id="upper_right_sidebar">
+                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
@@ -63,7 +66,8 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkVPaned" id="logic_vpaned">
+                      <object class="GtkPaned" id="logic_vpaned">
+                        <property name="orientation">vertical</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="position">1</property>
@@ -115,7 +119,8 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkVPaned" id="data_vpaned">
+                      <object class="GtkPaned" id="data_vpaned">
+                        <property name="orientation">vertical</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <child>
@@ -123,7 +128,8 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <child>
-                              <object class="GtkVBox" id="vbox3">
+                              <object class="GtkBox" id="vbox3">
+                                <property name="orientation">vertical</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <child>
@@ -167,7 +173,8 @@
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <child>
-                                              <object class="GtkVBox" id="input_port_vbox">
+                                              <object class="GtkBox" id="input_port_vbox">
+                                                <property name="orientation">vertical</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                                 <child>
@@ -250,7 +257,8 @@
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <child>
-                                              <object class="GtkVBox" id="output_port_vbox">
+                                              <object class="GtkBox" id="output_port_vbox">
+                                                <property name="orientation">vertical</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                                 <child>
@@ -337,7 +345,8 @@
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <child>
-                                              <object class="GtkVBox" id="scoped_variable_vbox">
+                                              <object class="GtkBox" id="scoped_variable_vbox">
+                                                <property name="orientation">vertical</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                                 <child>
@@ -483,7 +492,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="vbox2">
+              <object class="GtkBox" id="vbox2">
+                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>

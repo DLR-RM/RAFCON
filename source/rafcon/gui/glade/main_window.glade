@@ -10,7 +10,8 @@
     <property name="default_width">1800</property>
     <property name="default_height">900</property>
     <child>
-      <object class="GtkVBox" id="top_level_vbox">
+      <object class="GtkBox" id="top_level_vbox">
+        <property name="orientation">vertical</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="receives_default">True</property>
@@ -53,13 +54,15 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkVPaned" id="left_bar">
+                      <object class="GtkPaned" id="left_bar">
+                        <property name="orientation">vertical</property>
                         <property name="width_request">38</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <child>
-                          <object class="GtkVBox" id="upper_left_sidebar">
+                          <object class="GtkBox" id="upper_left_sidebar">
+                            <property name="orientation">vertical</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <child>
@@ -265,7 +268,8 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkVBox" id="lower_left_sidebar">
+                          <object class="GtkBox" id="lower_left_sidebar">
+                            <property name="orientation">vertical</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <child>
@@ -449,13 +453,15 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkVPaned" id="central_v_pane">
+                      <object class="GtkPaned" id="central_v_pane">
+                        <property name="orientation">vertical</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="position">2</property>
                         <property name="position_set">True</property>
                         <child>
-                          <object class="GtkVBox" id="graphical_editor_outer_vbox">
+                          <object class="GtkBox" id="graphical_editor_outer_vbox">
+                            <property name="orientation">vertical</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <child>
@@ -488,7 +494,8 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <child>
-                                  <object class="GtkVBox" id="graphical_editor_vbox">
+                                  <object class="GtkBox" id="graphical_editor_vbox">
+                                    <property name="orientation">vertical</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <child>
@@ -831,7 +838,8 @@
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkVBox" id="state_icons_box">
+                                          <object class="GtkBox" id="state_icons_box">
+                                            <property name="orientation">vertical</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <property name="homogeneous">True</property>
@@ -937,7 +945,8 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkVBox" id="right_bar">
+                      <object class="GtkBox" id="right_bar">
+                        <property name="orientation">vertical</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <child>
