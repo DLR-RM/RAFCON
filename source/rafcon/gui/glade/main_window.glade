@@ -11,10 +11,10 @@
     <property name="default_height">900</property>
     <child>
       <object class="GtkBox" id="top_level_vbox">
-        <property name="orientation">vertical</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="receives_default">True</property>
+        <property name="orientation">vertical</property>
         <child>
           <object class="GtkLabel" id="tool_bar_placeholder">
             <property name="visible">True</property>
@@ -32,6 +32,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="position_set">True</property>
+            <property name="wide_handle">True</property>
             <child>
               <object class="GtkBox" id="left_bar_container">
                 <property name="visible">True</property>
@@ -55,16 +56,16 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkPaned" id="left_bar">
-                        <property name="orientation">vertical</property>
                         <property name="width_request">38</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkBox" id="upper_left_sidebar">
-                            <property name="orientation">vertical</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkEventBox" id="eventbox3">
                                 <property name="visible">True</property>
@@ -89,11 +90,11 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkEventBox" id="undock_left_bar">
+                                      <object class="GtkEventBox" id="collapse_tree">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <child>
-                                          <object class="GtkButton" id="undock_left_bar_button">
+                                          <object class="GtkButton" id="collapse_tree_button">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -108,11 +109,11 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkEventBox" id="collapse_tree">
+                                      <object class="GtkEventBox" id="undock_left_bar">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <child>
-                                          <object class="GtkButton" id="collapse_tree_button">
+                                          <object class="GtkButton" id="undock_left_bar_button">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -269,9 +270,9 @@
                         </child>
                         <child>
                           <object class="GtkBox" id="lower_left_sidebar">
-                            <property name="orientation">vertical</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkEventBox" id="eventbox6">
                                 <property name="visible">True</property>
@@ -423,6 +424,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="position_set">True</property>
+                <property name="wide_handle">True</property>
                 <child>
                   <object class="GtkBox" id="hbox1">
                     <property name="visible">True</property>
@@ -454,16 +456,17 @@
                     </child>
                     <child>
                       <object class="GtkPaned" id="central_v_pane">
-                        <property name="orientation">vertical</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="orientation">vertical</property>
                         <property name="position">2</property>
                         <property name="position_set">True</property>
+                        <property name="wide_handle">True</property>
                         <child>
                           <object class="GtkBox" id="graphical_editor_outer_vbox">
-                            <property name="orientation">vertical</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkViewport" id="graphical_editor_title_wrapper">
                                 <property name="visible">True</property>
@@ -495,9 +498,9 @@
                                 <property name="can_focus">False</property>
                                 <child>
                                   <object class="GtkBox" id="graphical_editor_vbox">
-                                    <property name="orientation">vertical</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
+                                    <property name="orientation">vertical</property>
                                     <child>
                                       <placeholder/>
                                     </child>
@@ -839,9 +842,9 @@
                                         </child>
                                         <child>
                                           <object class="GtkBox" id="state_icons_box">
-                                            <property name="orientation">vertical</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
+                                            <property name="orientation">vertical</property>
                                             <property name="homogeneous">True</property>
                                             <child>
                                               <placeholder/>
@@ -946,9 +949,9 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkBox" id="right_bar">
-                        <property name="orientation">vertical</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkEventBox" id="eventbox1">
                             <property name="visible">True</property>
