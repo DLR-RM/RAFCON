@@ -27,12 +27,12 @@
           </packing>
         </child>
         <child>
-          <object class="GtkHPaned" id="top_level_h_pane">
+          <object class="GtkPaned" id="top_level_h_pane">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="position_set">True</property>
             <child>
-              <object class="GtkHBox" id="left_bar_container">
+              <object class="GtkBox" id="left_bar_container">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
@@ -67,7 +67,7 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <child>
-                                  <object class="GtkHBox" id="state_editor_label_hbox1">
+                                  <object class="GtkBox" id="state_editor_label_hbox1">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="border_width">5</property>
@@ -273,7 +273,7 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <child>
-                                  <object class="GtkHBox" id="hbox4">
+                                  <object class="GtkBox" id="hbox4">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="border_width">10</property>
@@ -415,12 +415,12 @@
               </packing>
             </child>
             <child>
-              <object class="GtkHPaned" id="right_h_pane">
+              <object class="GtkPaned" id="right_h_pane">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="position_set">True</property>
                 <child>
-                  <object class="GtkHBox" id="hbox1">
+                  <object class="GtkBox" id="hbox1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
@@ -495,7 +495,7 @@
                                       <placeholder/>
                                     </child>
                                     <child>
-                                      <object class="GtkHBox" id="hbox2">
+                                      <object class="GtkBox" id="hbox2">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <child>
@@ -932,7 +932,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkHBox" id="right_bar_container">
+                  <object class="GtkBox" id="right_bar_container">
                     <property name="width_request">53</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -945,7 +945,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <child>
-                              <object class="GtkHBox" id="state_editor_top_bar">
+                              <object class="GtkBox" id="state_editor_top_bar">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <child>

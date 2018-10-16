@@ -46,7 +46,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkHBox" id="hbox4">
+      <object class="GtkBox" id="hbox4">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
