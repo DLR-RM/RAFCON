@@ -102,7 +102,9 @@ class ModificationHistoryTreeController(ExtendedController):
                                          self._selected_sm_model.state_machine.file_system_path))
         else:
             if self.__my_selected_sm_id is not None:
+                self.doing_update = True
                 self.history_tree_store.clear()
+                self.doing_update = False
             self.__my_selected_sm_id = None
             self._selected_sm_model = None
 
