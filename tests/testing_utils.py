@@ -101,9 +101,8 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
 
 
 def call_gui_callback(callback, *args, **kwargs):
-    print "call_gui_callback test: ", callback, ", args: ", args, ", kwargs: ", kwargs
     import rafcon.utils.gui_functions
-    return rafcon.utils.gui_functions.call_gui_callback(callback, *args)
+    return rafcon.utils.gui_functions.call_gui_callback(*((callback, ) + args), **kwargs)
 
 
 def rewind_and_set_libraries(libraries=None):

@@ -30,9 +30,6 @@ def call_gui_callback(callback, *args, **kwargs):
     :param callback: The callback method, e.g. on_open_activate
     :param args: The parameters to be passed to the callback method
     """
-
-    print "call_gui_callback: ", callback, ", args: ", args, ", kwargs: ", kwargs
-
     from threading import Lock, Condition, Event, Thread
     import sys
     from rafcon.utils import log
