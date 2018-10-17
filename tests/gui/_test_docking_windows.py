@@ -96,7 +96,7 @@ def undock_sidebars():
 
         logger.info("docking...")
         undocked_window_view = getattr(main_window_controller.view, attribute_name_of_undocked_window_view)
-        redock_button = getattr(undocked_window_view, "top_tool_bar")['redock_button']
+        redock_button = undocked_window_view['redock_button']
         time.sleep(debug_sleep_time)
         ready.clear()
         call_gui_callback(redock_button.emit, "clicked")
@@ -165,7 +165,7 @@ def check_pane_positions():
         ready.clear()
         attribute_name_of_undocked_window_view = window_key.lower() + "_window"
         undocked_window_view = getattr(main_window_controller.view, attribute_name_of_undocked_window_view)
-        redock_button = getattr(undocked_window_view, "top_tool_bar")['redock_button']
+        redock_button = undocked_window_view['redock_button']
         call_gui_callback(redock_button.emit, "clicked")
         wait_for_event_notification()
 
