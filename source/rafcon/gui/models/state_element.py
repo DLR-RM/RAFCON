@@ -116,6 +116,7 @@ class StateElementModel(MetaModel, Hashable):
             self.unregister_observer(self)
         except KeyError:  # Might happen if the observer was already unregistered
             pass
+        super(StateElementModel, self).prepare_destruction()
 
     def model_changed(self, model, prop_name, info):
         """This method notifies the parent state about changes made to the state element

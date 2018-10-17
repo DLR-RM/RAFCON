@@ -122,6 +122,7 @@ class ContainerStateModel(StateModel):
         Recursively un-registers all observers and removes references to child models. Extends the destroy method of
         the base class by child elements of a container state.
         """
+        logger.verbose("Prepare destruction container state ...")
         super(ContainerStateModel, self).prepare_destruction(recursive)
         if recursive:
             for scoped_variable in self.scoped_variables:
@@ -134,6 +135,10 @@ class ContainerStateModel(StateModel):
         del self.transitions[:]
         del self.data_flows[:]
         self.states.clear()
+        self.scoped_variables = None
+        self.transitions = None
+        self.data_flows = None
+        self.states = None
 
     def update_hash(self, obj_hash):
         super(ContainerStateModel, self).update_hash(obj_hash)

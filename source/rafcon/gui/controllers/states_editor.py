@@ -212,8 +212,9 @@ class StatesEditorController(ExtendedController):
         # TODO check if some models are the same in the new model - but only if widgets update if parent has changed
         def close_all_tabs_of_related_state_models_recursively(parent_state_m):
             if isinstance(parent_state_m, ContainerStateModel):
-                for child_state_m in parent_state_m.states.values():
-                    close_all_tabs_of_related_state_models_recursively(child_state_m)
+                if parent_state_m.states:  # maybe empty if the states editor is under destruction
+                    for child_state_m in parent_state_m.states.values():
+                        close_all_tabs_of_related_state_models_recursively(child_state_m)
             state_identifier = self.get_state_identifier(parent_state_m)
             self.close_page(state_identifier, delete=True)
 

@@ -201,10 +201,7 @@ class ExtendedController(Controller):
             self.view = None
             self._Observer__PROP_TO_METHS.clear()  # prop name --> set of observing methods
             self._Observer__METH_TO_PROPS.clear()  # method --> set of observed properties
-
-            # like __PROP_TO_METHS but only for pattern names (to optimize search)
-            self._Observer__PAT_TO_METHS.clear()
-
+            self._Observer__PAT_TO_METHS.clear() # like __PROP_TO_METHS but only for pattern names (to optimize search)
             self._Observer__METH_TO_PAT.clear()  # method --> pattern
             self._Observer__PAT_METH_TO_KWARGS.clear()  # (pattern, method) --> info
             self.observe = None
