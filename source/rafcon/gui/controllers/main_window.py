@@ -343,40 +343,6 @@ class MainWindowController(ExtendedController):
         pane_id = constants.PANE_ID[config_id]
         self.view[pane_id].set_position(position)
 
-        # debug code:
-
-        # get sizing and allocation information:
-        # minimum_width, natural_width = self.view[pane_id].get_preferred_width()
-        # minimum_height, natural_height = self.view[pane_id].get_preferred_height()
-        # allocation = self.view[pane_id].get_allocation()
-        # h = allocation.height
-        # w = allocation.width
-        # x = allocation.x
-        # y = allocation.y
-        # width = self.view[pane_id].get_preferred_width_for_height(h)
-
-        ### try to set size request of child1, to circumvent the call of "set_position()" ###
-        # if type(self.view[pane_id]) == Gtk.HPaned:
-        #     self.view[pane_id].get_child1().set_size_request(position, h)
-
-        ###  set allocation before setting position ###
-        # self.view[pane_id].size_allocate(allocation)
-        # self.view[pane_id].set_allocation(allocation)
-        # self.view[pane_id].set_position(position)
-        # allocation = self.view[pane_id].get_allocation()
-        # self.view[pane_id].size_allocate(allocation)
-        # self.view[pane_id].set_allocation(allocation)
-
-        # debug information:
-        # https://stackoverflow.com/questions/2675514/totally-fed-up-with-get-gtk-widget-height-and-width
-        # https://github.com/gnunn1/tilix/issues/697
-        # https://github.com/solus-project/budgie-desktop/issues/532
-        # https://gitlab.gnome.org/GNOME/gtk/issues/650
-
-        # actually it seems to be a bug! People try to circumvent it:
-        # https://gitlab.gnome.org/GNOME/gtk/commit/eb01ba8573bec47e02c8fc4eaf10e2f7cff522dd
-        # https://gitlab.gnome.org/GNOME/gtk/commit/3e3f17576e07334e6c5be12fee9ed78f13f0cc24
-
     @ExtendedController.observe("execution_engine", after=True)
     def model_changed(self, model, prop_name, info):
         """ Highlight buttons according actual execution status. Furthermore it triggers the label redraw of the active
