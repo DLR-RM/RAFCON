@@ -9,6 +9,4 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import rafcon.gui.config
-import rafcon.gui.singleton
 import rafcon.gui.interface

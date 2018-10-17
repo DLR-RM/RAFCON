@@ -12,25 +12,24 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import os
-from gi.repository import Gtk
-from gi.repository import GLib
 
 from rafcon.core import interface as core_interface
-from rafcon.gui.runtime_config import global_runtime_config
-from rafcon.gui.singleton import main_window_controller, library_manager
 
 
 def add_library_root_path_to_shortcut_folders_of_dialog(dialog):
+    from gi.repository import GLib
+    from rafcon.gui.singleton import library_manager
     library_paths = library_manager.library_root_paths
     library_keys = sorted(library_paths)
     for library_key in library_keys:
         try:
             dialog.add_shortcut_folder(library_paths[library_key])
-        except GLib.GError, e:
+        except GLib.GError:
             # this occurs if the shortcut file already exists
             # unfortunately dialog.list_shortcut_folders() does not work
             # that's why the error is caught
             pass
+
 
 def open_folder(query, default_path=None):
     """Shows a user dialog for folder selection
@@ -43,7 +42,10 @@ def open_folder(query, default_path=None):
     :return: Path selected by the user or `default_path` if no path was specified or None if none of the paths is valid
     :rtype: str
     """
+    from gi.repository import Gtk
     from os.path import expanduser, pathsep, dirname, isdir
+    from rafcon.gui.singleton import main_window_controller
+    from rafcon.gui.runtime_config import global_runtime_config
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', "")
     selected_filename = None
     if last_path and isdir(last_path):
@@ -105,8 +107,11 @@ def create_folder(query, default_name=None, default_path=None):
       paths is valid
     :rtype: str
     """
+    from gi.repository import Gtk
     from os.path import expanduser, dirname, join, exists, isdir
     from rafcon.core.storage.storage import STATEMACHINE_FILE
+    from rafcon.gui.singleton import main_window_controller
+    from rafcon.gui.runtime_config import global_runtime_config
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', "")
 
     if last_path and isdir(last_path) and not exists(join(last_path, STATEMACHINE_FILE)):
@@ -151,6 +156,7 @@ def create_folder(query, default_name=None, default_path=None):
         return path
     return None
 
+
 # overwrite the create_folder_func of the interface: thus the user input is now retrieved from a dialog box and not
 # from raw input any more
 core_interface.create_folder_func = create_folder
@@ -170,7 +176,10 @@ def save_folder(query, default_name=None):
     :rtype: str
     """
     from os.path import expanduser, dirname, join, exists, isdir
+    from gi.repository import Gtk
     from rafcon.core.storage.storage import STATEMACHINE_FILE
+    from rafcon.gui.singleton import main_window_controller
+    from rafcon.gui.runtime_config import global_runtime_config
     last_path = global_runtime_config.get_config_value('LAST_PATH_OPEN_SAVE', "")
 
     if last_path and isdir(last_path) and not exists(join(last_path, STATEMACHINE_FILE)):
@@ -211,13 +220,16 @@ def save_folder(query, default_name=None):
         return None
     return path
 
+
 # overwrite the save_folder_func of the interface: thus the user input is now retrieved from a dialog box and not
 # from raw input any more
 core_interface.save_folder_func = save_folder
 
 
 def show_notice(query):
+    from gi.repository import Gtk
     from rafcon.gui.helpers.label import set_button_children_size_request
+    from rafcon.gui.singleton import main_window_controller
     from xml.sax.saxutils import escape
     dialog = Gtk.MessageDialog(flags=Gtk.DialogFlags.MODAL, type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK)
     if main_window_controller:
@@ -226,6 +238,7 @@ def show_notice(query):
     set_button_children_size_request(dialog)
     dialog.run()
     dialog.destroy()
+
 
 # overwrite the show_notice_func of the interface: thus the user input is now retrieved from a dialog box and not
 # from raw input any more
