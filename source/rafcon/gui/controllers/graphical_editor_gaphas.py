@@ -89,8 +89,8 @@ class GraphicalEditorController(ExtendedController):
         self._nested_action_already_in = {}
         view.setup_canvas(self.canvas, self.zoom)
 
-        # Gtk TODO: solve via Gtk.TargetList? https://python-gtk-3-tutorial.readthedocs.io/en/latest/drag_and_drop.html
-        view.editor.drag_dest_set(Gtk.DestDefaults.ALL, [Gtk.TargetEntry.new('STRING', 0, 0)], Gdk.DragAction.COPY)
+        view.editor.drag_dest_set(Gtk.DestDefaults.ALL, None, Gdk.DragAction.COPY)
+        view.editor.drag_dest_add_text_targets()
         logger.verbose("Time spent in init {0} seconds for state machine {1}"
                        "".format(time.time() - start_time, self.model.state_machine_id))
 

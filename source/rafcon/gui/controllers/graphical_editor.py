@@ -145,7 +145,8 @@ class GraphicalEditorController(ExtendedController):
         view.editor.connect('key-press-event', self._on_key_press)
         view.editor.connect('key-release-event', self._on_key_release)
 
-        view.editor.drag_dest_set(Gtk.DestDefaults.ALL, [Gtk.TargetEntry.new('STRING', 0, 0)], Gdk.DragAction.COPY)
+        view.editor.drag_dest_set(Gtk.DestDefaults.ALL, None, Gdk.DragAction.COPY)
+        view.editor.drag_dest_add_text_targets()
         view.editor.connect("drag-data-received", self.on_drag_data_received)
         view.editor.connect("drag-motion", self.on_drag_motion)
 
