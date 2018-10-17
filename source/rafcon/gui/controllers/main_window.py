@@ -539,6 +539,19 @@ class MainWindowController(ExtendedController):
         global_runtime_config.set_config_value(config_parameter_undocked, False)
         return True
 
+    def toggle_sidebars(self):
+        # If any sidebar is shown, hide both
+        if not self.left_bar_hidden or not self.right_bar_hidden:
+            if not self.left_bar_hidden:
+                self.on_left_bar_hide_clicked(None)
+            if not self.right_bar_hidden:
+                self.on_right_bar_hide_clicked(None)
+        else:
+            if self.left_bar_hidden:
+                self.on_left_bar_return_clicked(None)
+            if self.right_bar_hidden:
+                self.on_right_bar_return_clicked(None)
+
     # Shortcut buttons
     def on_button_start_shortcut_toggled(self, widget, event=None):
         if self.view['button_start_shortcut'].get_active():
@@ -628,10 +641,14 @@ class MainWindowController(ExtendedController):
     def _on_key_press(self, widget, event):
         """Updates the currently pressed keys
 
+        In addition, the sidebars are toggled if <Ctrl><Tab> is pressed.
+
         :param Gtk.Widget widget: The main window
         :param Gdk.Event event: The key press event
         """
         self.currently_pressed_keys.add(event.keyval)
+        if event.keyval in [Gdk.KEY_Tab, Gdk.KEY_ISO_Left_Tab] and event.state & Gdk.ModifierType.CONTROL_MASK:
+            self.toggle_sidebars()
 
     def _on_key_release(self, widget, event):
         """Updates the currently pressed keys
