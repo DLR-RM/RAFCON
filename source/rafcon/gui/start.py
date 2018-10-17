@@ -21,15 +21,6 @@
 import os
 import sys
 import logging
-
-import gi
-gi.require_version('Gtk', '3.0')
-gi.require_version('PangoCairo', '1.0')
-gi.require_version('GtkSource', '3.0')
-from gi.repository import Gtk
-from gi.repository import Gdk
-from gi.repository import GLib
-
 import threading
 import signal
 from yaml_configuration.config import config_path
@@ -51,7 +42,6 @@ from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.hierarchy_state import HierarchyState
 import rafcon.core.singleton as core_singletons
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
-from rafcon.core.config import global_config
 
 # utils
 from rafcon.gui.utils import wait_for_gui
@@ -59,6 +49,11 @@ import rafcon.utils.filesystem as filesystem
 from rafcon.utils import plugins
 from rafcon.utils.i18n import setup_l10n
 from rafcon.utils import log
+
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GLib
+
 
 logger = log.get_logger("rafcon.start.gui")
 
