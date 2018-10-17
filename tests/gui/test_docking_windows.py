@@ -147,7 +147,7 @@ def check_pane_positions():
     from rafcon.gui.singleton import main_window_controller
     from rafcon.gui.runtime_config import global_runtime_config
     from rafcon.gui.utils import constants
-    debug_sleep_time = 0
+    debug_sleep_time = 0.1
 
     stored_pane_positions = {}
     for config_id, pan_id in constants.PANE_ID.iteritems():
@@ -228,9 +228,9 @@ def test_window_positions(caplog):
 def test_pane_positions(caplog):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
                           runtime_config={
-                              'LEFT_BAR_DOCKED_POS': 500,
-                              'RIGHT_BAR_DOCKED_POS': 950,
-                              'CONSOLE_DOCKED_POS': 700,
+                              'LEFT_BAR_DOCKED_POS': 376,
+                              'RIGHT_BAR_DOCKED_POS': 719,
+                              'CONSOLE_DOCKED_POS': 181,
                               'LEFT_BAR_WINDOW_UNDOCKED': False,
                               'RIGHT_BAR_WINDOW_UNDOCKED': False,
                               'CONSOLE_WINDOW_UNDOCKED': False,
