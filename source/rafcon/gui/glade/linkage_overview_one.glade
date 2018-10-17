@@ -7,9 +7,9 @@
     <property name="can_focus">False</property>
     <child>
       <object class="GtkBox" id="vbox1">
-        <property name="orientation">vertical</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
         <child>
           <object class="GtkViewport" id="data_linkage_title_wrapper">
             <property name="visible">True</property>
@@ -44,14 +44,14 @@
             <property name="homogeneous">True</property>
             <child>
               <object class="GtkBox" id="input_box">
-                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkLabel" id="input_label">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Input ports</property>
+                    <property name="label" translatable="yes">Input</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -83,14 +83,14 @@
             </child>
             <child>
               <object class="GtkBox" id="output_box">
-                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkLabel" id="output_label">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Output ports</property>
+                    <property name="label" translatable="yes">Output</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -122,14 +122,14 @@
             </child>
             <child>
               <object class="GtkBox" id="scoped_box">
-                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkLabel" id="scoped_label">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Scoped variables</property>
+                    <property name="label" translatable="yes">Scope</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -175,9 +175,9 @@
     </child>
     <child>
       <object class="GtkBox" id="vbox2">
-        <property name="orientation">vertical</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
         <child>
           <object class="GtkViewport" id="logical_linkage_title_wrapper">
             <property name="visible">True</property>
@@ -207,9 +207,9 @@
         </child>
         <child>
           <object class="GtkBox" id="outcomes_box">
-            <property name="orientation">vertical</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
             <child>
               <object class="GtkLabel" id="outcomes_label">
                 <property name="visible">True</property>
