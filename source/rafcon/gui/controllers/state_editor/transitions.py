@@ -118,10 +118,10 @@ class StateTransitionsListController(LinkageListController):
             view['to_state_combo'].set_property("editable", False)
             view['to_outcome_combo'].set_property("editable", False)
         else:
-            view['from_state_combo'].connect("edited", self.on_combo_changed_from_state)
-            view['from_outcome_combo'].connect("edited", self.on_combo_changed_from_outcome)
-            view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
-            view['to_outcome_combo'].connect("edited", self.on_combo_changed_to_outcome)
+            self.connect_signal(view['from_state_combo'], "edited", self.on_combo_changed_from_state)
+            self.connect_signal(view['from_outcome_combo'], "edited", self.on_combo_changed_from_outcome)
+            self.connect_signal(view['to_state_combo'], "edited", self.on_combo_changed_to_state)
+            self.connect_signal(view['to_outcome_combo'], "edited", self.on_combo_changed_to_outcome)
 
         view.tree_view.connect("grab-focus", self.on_focus)
         self.update(initiator='"register view"')
