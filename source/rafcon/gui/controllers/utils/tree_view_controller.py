@@ -59,6 +59,7 @@ class AbstractTreeViewController(ExtendedController):
         self.widget_columns = self.tree_view.get_columns()
         self.signal_handlers = []
         self.expose_event_count_after_key_release = 0
+        self.__attached_renderers = list()
 
     def destroy(self):
         super(AbstractTreeViewController, self).destroy()
@@ -76,6 +77,9 @@ class AbstractTreeViewController(ExtendedController):
         #     for r in renderers:
         #         r.ctrl = None
         #         r.destroy()
+        # delete reference to the controllers of renderers
+        for renderer in self.__attached_renderers:
+            renderer.ctrl = None
 
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
@@ -319,8 +323,11 @@ class AbstractTreeViewController(ExtendedController):
 
         renderer.remove_all_handler = remove_all_handler
         renderer.ctrl = self
-        renderer.connect('editing-started', on_editing_started)
-        renderer.connect('edited', on_edited)
+        # renderer.connect('editing-started', on_editing_started)
+        # renderer.connect('edited', on_edited)
+        self.__attached_renderers.append(renderer)
+        self.connect_signal(renderer, 'editing-started', on_editing_started)
+        self.connect_signal(renderer, 'edited', on_edited)
 
     def get_path_for_core_element(self, core_element_id):
         """Get path to the row representing core element described by handed core_element_id
