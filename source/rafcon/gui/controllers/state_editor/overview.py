@@ -59,26 +59,15 @@ class StateOverviewController(ExtendedController):
         super(StateOverviewController, self).__init__(model, view)
 
         self._external_update = False
-        self.state_types_dict = {}
+        self.allowed_state_classes = []
         self.with_is_start_state_check_box = with_is_start_state_check_box
 
     @staticmethod
-    def change_state_type_class_dict(state):
-        state_types_dict = {}
+    def get_allowed_state_classes(state):
         if isinstance(state, DeciderState):
-            # logger.info(str(StateType))
-            state_types_dict[str(StateType.DECIDER_STATE).split('.')[1]] = {
-                'Enum': StateType.DECIDER_STATE, 'class': DeciderState}
+            return [DeciderState]
         else:
-            state_types_dict[str(StateType.EXECUTION).split('.')[1]] = {
-                'Enum': StateType.EXECUTION, 'class': ExecutionState}
-            state_types_dict[str(StateType.HIERARCHY).split('.')[1]] = {
-                'Enum': StateType.HIERARCHY, 'class': HierarchyState}
-            state_types_dict[str(StateType.BARRIER_CONCURRENCY).split('.')[1]] = {
-                'Enum': StateType.BARRIER_CONCURRENCY, 'class': BarrierConcurrencyState}
-            state_types_dict[str(StateType.PREEMPTION_CONCURRENCY).split('.')[1]] = {
-                'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
-        return state_types_dict
+            return [ExecutionState, HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
 
     def register_view(self, view):
         """Called when the View was registered
@@ -89,7 +78,7 @@ class StateOverviewController(ExtendedController):
         """
         # prepare State Type Change ComboBox
         super(StateOverviewController, self).register_view(view)
-        self.state_types_dict = self.change_state_type_class_dict(self.model.state)
+        self.allowed_state_classes = self.get_allowed_state_classes(self.model.state)
 
         view['entry_name'].connect('focus-out-event', self.on_focus_out)
         view['entry_name'].connect('key-press-event', self.check_for_enter)
@@ -124,11 +113,11 @@ class StateOverviewController(ExtendedController):
             self.view['properties_widget'].remove(self.view['show_content_checkbutton'])
             self.view['properties_widget'].resize(2, 5)
 
-            for key, value in self.state_types_dict.iteritems():
-                if isinstance(self.model.state, value['class']):
-                    l_store.prepend([key])
+            for state_class in self.allowed_state_classes:
+                if isinstance(self.model.state, state_class):
+                    l_store.prepend([state_class.__name__])
                 else:
-                    l_store.append([key])
+                    l_store.append([state_class.__name__])
 
         combo.set_active(0)
         view['type_combobox'] = combo
@@ -204,13 +193,14 @@ class StateOverviewController(ExtendedController):
             self.view['entry_name'].set_text(self.model.state.name)
 
     def change_type(self, widget, model=None, info=None):
-        type_text = widget.get_active_text()
-        if type_text not in self.state_types_dict:
+        state_class_name = widget.get_active_text()
+        for state_class in self.allowed_state_classes:
+            if state_class.__name__ == state_class_name:
+                break
+        else:
             logger.error("The desired state type does not exist")
-            return
 
-        target_class = self.state_types_dict[type_text]['class']
-        gui_helper_state_machine.change_state_type_with_error_handling_and_logger_messages(self.model, target_class)
+        gui_helper_state_machine.change_state_type_with_error_handling_and_logger_messages(self.model, state_class)
 
     def check_for_enter(self, entry, event):
         key_name = Gdk.keyval_name(event.keyval)

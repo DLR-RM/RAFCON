@@ -123,18 +123,18 @@ class StateMachineRightClickMenu(object):
                                              accel_group=accel_group))
 
             from rafcon.gui.controllers.state_editor.overview import StateOverviewController
-            state_type_class_dict = StateOverviewController.change_state_type_class_dict(selected_state_m.state)
-            if len(state_type_class_dict) > 1:
+            allowed_state_classes = StateOverviewController.get_allowed_state_classes(selected_state_m.state)
+            if len(allowed_state_classes) > 1:
                 change_type_sub_menu_item, change_type_sub_menu = append_sub_menu_to_parent_menu("Change state type",
                                                                                                  menu,
                                                                                                  constants.BUTTON_EXCHANGE)
-                for class_key, item in state_type_class_dict.iteritems():
-                    callback_function = partial(self.on_type_change_activate, target_class=item['class'])
-                    class_item = create_menu_item(class_key, constants.SIGN_LIB,
+                for state_class in allowed_state_classes:
+                    callback_function = partial(self.on_type_change_activate, target_class=state_class)
+                    class_item = create_menu_item(state_class.__name__, constants.SIGN_LIB,
                                                   callback_function,
                                                   accel_code=None, accel_group=accel_group)
 
-                    if isinstance(selected_state_m.state, item['class']):
+                    if isinstance(selected_state_m.state, state_class):
                         class_item.set_sensitive(False)
                     change_type_sub_menu.append(class_item)
         menu.append(Gtk.SeparatorMenuItem())
