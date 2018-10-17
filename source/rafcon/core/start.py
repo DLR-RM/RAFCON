@@ -239,10 +239,8 @@ def signal_handler(signal, frame):
 
 
 def register_signal_handlers(callback):
-    signal.signal(signal.SIGINT, callback)
-    signal.signal(signal.SIGHUP, callback)
-    signal.signal(signal.SIGQUIT, callback)
-    signal.signal(signal.SIGTERM, callback)
+    for signal_code in [signal.SIGHUP, signal.SIGINT, signal.SIGTERM]:
+        signal.signal(signal_code, callback)
 
 
 def main():

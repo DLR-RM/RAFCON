@@ -46,7 +46,7 @@ import rafcon.gui.backup.session as backup_session
 
 # state machine
 from rafcon.core.start import parse_state_machine_path, setup_environment, reactor_required, \
-    setup_configuration, post_setup_plugins, register_signal_handlers
+    setup_configuration, post_setup_plugins
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.hierarchy_state import HierarchyState
 import rafcon.core.singleton as core_singletons
@@ -255,11 +255,11 @@ def create_new_state_machine():
 SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n) for n in dir(signal) if n.startswith('SIG') and '_' not in n)
 
 
-def signal_handler(signal, frame):
+def signal_handler(signal, frame=None):
     state_machine_execution_engine = core_singletons.state_machine_execution_engine
     core_singletons.shut_down_signal = signal
 
-    # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
+    # in this case the print is on purpose to see more easily if the interrupt signal reached the thread
     print _("Signal '{}' received.\nExecution engine will be stopped and program will be shutdown!").format(
         SIGNALS_TO_NAMES_DICT.get(signal, "[unknown]"))
 
@@ -283,7 +283,29 @@ def signal_handler(signal, frame):
 
     # Do not use sys.exit() in signal handler:
     # http://thushw.blogspot.de/2010/12/python-dont-use-sysexit-inside-signal.html
+    # noinspection PyProtectedMember
     os._exit(0)
+
+def register_signal_handlers(callback):
+    # When using plain signal.signal to install a signal handler, the GUI will not shutdown until it receives the
+    # focus again. The following logic (inspired from https://stackoverflow.com/a/26457317) fixes this
+    def install_glib_handler(sig):
+        unix_signal_add = None
+
+        if hasattr(GLib, "unix_signal_add"):
+            unix_signal_add = GLib.unix_signal_add
+        elif hasattr(GLib, "unix_signal_add_full"):
+            unix_signal_add = GLib.unix_signal_add_full
+
+        if unix_signal_add:
+            unix_signal_add(GLib.PRIORITY_HIGH, sig, callback, sig)
+
+    def idle_handler(*args):
+        GLib.idle_add(callback, *args, priority=GLib.PRIORITY_HIGH)
+
+    for signal_code in [signal.SIGHUP, signal.SIGINT, signal.SIGTERM]:
+        signal.signal(signal_code, idle_handler)
+        GLib.idle_add(install_glib_handler, signal_code, priority=GLib.PRIORITY_HIGH)
 
 
 def main():
