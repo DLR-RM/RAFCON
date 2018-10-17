@@ -3,13 +3,14 @@
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkBox" id="main_frame_vbox">
-    <property name="orientation">vertical</property>
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="orientation">vertical</property>
     <child>
       <object class="GtkViewport" id="properties_viewport">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="vexpand">False</property>
         <property name="resize_mode">queue</property>
         <child>
           <placeholder/>
@@ -25,16 +26,17 @@
       <object class="GtkEventBox" id="lower_right_sidebar">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="vexpand">True</property>
         <child>
           <object class="GtkPaned" id="vpaned">
-            <property name="orientation">vertical</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="orientation">vertical</property>
             <child>
               <object class="GtkBox" id="upper_right_sidebar">
-                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkNotebook" id="main_notebook_1">
                     <property name="visible">True</property>
@@ -67,9 +69,9 @@
                     </child>
                     <child>
                       <object class="GtkPaned" id="logic_vpaned">
-                        <property name="orientation">vertical</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="orientation">vertical</property>
                         <property name="position">1</property>
                         <child>
                           <object class="GtkViewport" id="outcomes_viewport">
@@ -120,18 +122,18 @@
                     </child>
                     <child>
                       <object class="GtkPaned" id="data_vpaned">
-                        <property name="orientation">vertical</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkEventBox" id="data_ports_box">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <child>
                               <object class="GtkBox" id="vbox3">
-                                <property name="orientation">vertical</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
+                                <property name="orientation">vertical</property>
                                 <child>
                                   <object class="GtkViewport" id="data_ports_title_wrapper">
                                     <property name="visible">True</property>
@@ -174,9 +176,9 @@
                                             <property name="can_focus">False</property>
                                             <child>
                                               <object class="GtkBox" id="input_port_vbox">
-                                                <property name="orientation">vertical</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
+                                                <property name="orientation">vertical</property>
                                                 <child>
                                                   <object class="GtkScrolledWindow" id="input_ports_scroller">
                                                     <property name="visible">True</property>
@@ -258,9 +260,9 @@
                                             <property name="can_focus">False</property>
                                             <child>
                                               <object class="GtkBox" id="output_port_vbox">
-                                                <property name="orientation">vertical</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
+                                                <property name="orientation">vertical</property>
                                                 <child>
                                                   <object class="GtkScrolledWindow" id="output_ports_scroller">
                                                     <property name="visible">True</property>
@@ -346,9 +348,9 @@
                                             <property name="can_focus">False</property>
                                             <child>
                                               <object class="GtkBox" id="scoped_variable_vbox">
-                                                <property name="orientation">vertical</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
+                                                <property name="orientation">vertical</property>
                                                 <child>
                                                   <object class="GtkScrolledWindow" id="scoped_variables_scroller">
                                                     <property name="visible">True</property>
@@ -493,9 +495,9 @@
             </child>
             <child>
               <object class="GtkBox" id="vbox2">
-                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
                   <placeholder/>
                 </child>
