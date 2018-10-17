@@ -21,14 +21,14 @@ def get_stored_window_size(window_name):
 
 
 def notify_on_event(window, event=None):
-    logger.info("event: {}".format(event))
+    logger.info("show/hide event: type={}".format(event.type if event else "None"))
     ready.set()
     return True
 
 
 def notify_on_resize_event(window, event=None):
     global event_size
-    logger.info("event: {}".format(event))
+    logger.info("resize event: type={} size=({}, {})".format(event.type, event.width, event.height))
     ready.set()
     event_size = (event.width, event.height)
 
@@ -40,9 +40,13 @@ def wait_for_event_notification():
     call_gui_callback(wait_for_gui)
 
 
-def assert_size_equality(size1, size2):
-    assert abs(size1[0] - size2[0]) <= 10
-    assert abs(size1[1] - size2[1]) <= 10
+def assert_pos_equality(pos1, pos2, allow_delta=10):
+    assert abs(pos1 - pos2) <= allow_delta
+
+
+def assert_size_equality(size1, size2, allow_delta=10):
+    assert_pos_equality(size1[0], size2[0], allow_delta)
+    assert_pos_equality(size1[1], size2[1], allow_delta)
 
 
 def connect_window(window, event, method):
@@ -71,7 +75,7 @@ def undock_sidebars():
         new_size = window.get_size()
         # print dir(window)
         if not bool(window.is_maximized()):
-            assert_size_equality(new_size, expected_size)
+            assert_size_equality(new_size, expected_size, 90)
         else:
             maximized_parameter_name = window_key + "_WINDOW_MAXIMIZED"
             assert bool(window.is_maximized()) and global_runtime_config.get_config_value(maximized_parameter_name)
@@ -80,18 +84,23 @@ def undock_sidebars():
         time.sleep(debug_sleep_time)
         ready.clear()
         target_size = (800, 800)
-        if new_size == target_size:
+        try:
+            assert_size_equality(new_size, target_size, 90)
+            # Change target size if if it is similar to the current size
             target_size = (900, 900)
+        except AssertionError:
+            pass
+
         logger.debug("target size: {}".format(target_size))
-        call_gui_callback(window.resize,*target_size)
+        call_gui_callback(window.resize, *target_size)
         wait_for_event_notification()
         try:
-            assert_size_equality(event_size, target_size)
+            assert_size_equality(event_size, target_size, 90)
         except AssertionError:
             # For unknown reasons, there are two configure events and only the latter one if for the new window size
             ready.clear()
             wait_for_event_notification()
-            assert_size_equality(event_size, target_size)
+            assert_size_equality(event_size, target_size, 90)
             logger.info("got additional configure-event")
 
         logger.info("docking...")
@@ -112,7 +121,7 @@ def undock_sidebars():
         call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key.lower())].emit, "clicked")
         wait_for_event_notification()
         assert window.get_property('visible') is True
-        assert_size_equality(window.get_size(), target_size)
+        assert_size_equality(window.get_size(), target_size, 90)
 
         logger.info("docking...")
         time.sleep(debug_sleep_time)
@@ -183,8 +192,7 @@ def check_pane_positions():
     print "check if pane positions are still like in runtime_config.yaml"
     for config_id, pane_id in constants.PANE_ID.iteritems():
         print "check pos of ", config_id, pane_id
-        assert main_window_controller.view[pane_id].get_position() < (stored_pane_positions[config_id] + 5) and \
-               main_window_controller.view[pane_id].get_position() > (stored_pane_positions[config_id] - 5)
+        assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 90)
 
 
 def test_window_positions(caplog):
@@ -196,6 +204,9 @@ def test_window_positions(caplog):
                               'LEFT_BAR_WINDOW_POS': (10, 10),
                               'RIGHT_BAR_WINDOW_POS': (10, 10),
                               'CONSOLE_WINDOW_POS': (10, 10),
+                              'LEFT_BAR_HIDDEN': False,
+                              'RIGHT_BAR_HIDDEN': False,
+                              'CONSOLE_HIDDEN': False,
                               'LEFT_BAR_WINDOW_UNDOCKED': False,
                               'RIGHT_BAR_WINDOW_UNDOCKED': False,
                               'CONSOLE_WINDOW_UNDOCKED': False
@@ -222,7 +233,10 @@ def test_pane_positions(caplog):
                               'CONSOLE_DOCKED_POS': 700,
                               'LEFT_BAR_WINDOW_UNDOCKED': False,
                               'RIGHT_BAR_WINDOW_UNDOCKED': False,
-                              'CONSOLE_WINDOW_UNDOCKED': False
+                              'CONSOLE_WINDOW_UNDOCKED': False,
+                              'LEFT_BAR_HIDDEN': False,
+                              'RIGHT_BAR_HIDDEN': False,
+                              'CONSOLE_HIDDEN': False,
                           })
     from rafcon.gui.runtime_config import global_runtime_config
     original_runtime_config = global_runtime_config.as_dict()
