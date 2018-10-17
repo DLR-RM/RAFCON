@@ -90,11 +90,11 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkEventBox" id="undock_left_bar">
+                                      <object class="GtkEventBox" id="collapse_tree">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <child>
-                                          <object class="GtkButton" id="undock_left_bar_button">
+                                          <object class="GtkButton" id="collapse_tree_button">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -109,11 +109,11 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkEventBox" id="collapse_tree">
+                                      <object class="GtkEventBox" id="undock_left_bar">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <child>
-                                          <object class="GtkButton" id="collapse_tree_button">
+                                          <object class="GtkButton" id="undock_left_bar_button">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -264,8 +264,8 @@
                             </child>
                           </object>
                           <packing>
-                            <property name="resize">False</property>
-                            <property name="shrink">True</property>
+                            <property name="resize">True</property>
+                            <property name="shrink">False</property>
                           </packing>
                         </child>
                         <child>
@@ -401,7 +401,7 @@
                           </object>
                           <packing>
                             <property name="resize">True</property>
-                            <property name="shrink">True</property>
+                            <property name="shrink">False</property>
                           </packing>
                         </child>
                       </object>
@@ -885,8 +885,8 @@
                             </child>
                           </object>
                           <packing>
-                            <property name="resize">False</property>
-                            <property name="shrink">True</property>
+                            <property name="resize">True</property>
+                            <property name="shrink">False</property>
                           </packing>
                         </child>
                         <child>
@@ -899,7 +899,7 @@
                             </child>
                           </object>
                           <packing>
-                            <property name="resize">True</property>
+                            <property name="resize">False</property>
                             <property name="shrink">False</property>
                           </packing>
                         </child>
