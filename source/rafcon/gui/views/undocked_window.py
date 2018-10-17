@@ -48,9 +48,6 @@ class UndockedWindowView(View):
         self['headerbar'].show_all()
         self.get_top_widget().set_titlebar(self['headerbar'])
 
-        if not ('3.0.101' in os.uname()[2] and 'kde' == os.environ.get('DESKTOP_SESSION')):
-            self.get_top_widget().set_type_hint(Gdk.WindowTypeHint.UTILITY)
-
     def initialize_title(self, window_title):
         """Initialize the title of the un-docked window
 
