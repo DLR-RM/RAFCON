@@ -45,9 +45,9 @@ def assert_size_equality(size1, size2):
     assert abs(size1[1] - size2[1]) <= 10
 
 
-def connect_window(window, event, method, output_list):
-    handler_id = window.connect(event, method)
-    output_list.append(handler_id)
+def connect_window(window, event, method):
+    handler_id = call_gui_callback(window.connect, event, method)
+    return handler_id
 
 
 def undock_sidebars():
@@ -58,12 +58,8 @@ def undock_sidebars():
     def test_bar(window, window_key):
         attribute_name_of_undocked_window_view = window_name = window_key.lower() + "_window"
 
-        output_list = list()
-        call_gui_callback(connect_window, window, 'configure-event', notify_on_resize_event, output_list)
-        configure_handler_id = output_list[0]
-        output_list = list()
-        call_gui_callback(connect_window, window, 'hide', notify_on_event, output_list)
-        hide_handler_id = output_list[0]
+        configure_handler_id = connect_window(window, 'configure-event', notify_on_resize_event)
+        hide_handler_id = connect_window(window, 'hide', notify_on_event)
 
         logger.info("undocking...")
         time.sleep(debug_sleep_time)
@@ -111,9 +107,7 @@ def undock_sidebars():
         time.sleep(debug_sleep_time)
         ready.clear()
 
-        output_list = list()
-        call_gui_callback(connect_window, window, 'show', notify_on_event, output_list)
-        show_handler_id = output_list[0]
+        show_handler_id = connect_window(window, 'show', notify_on_event)
 
         call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key.lower())].emit, "clicked")
         wait_for_event_notification()
@@ -157,12 +151,8 @@ def check_pane_positions():
 
     def test_bar(window, window_key):
 
-        output_list = list()
-        call_gui_callback(connect_window, window, 'configure-event', notify_on_event, output_list)
-        configure_handler_id = output_list[0]
-        output_list = list()
-        call_gui_callback(connect_window, window, 'hide', notify_on_event, output_list)
-        hide_handler_id = output_list[0]
+        configure_handler_id = connect_window(window, 'configure-event', notify_on_event)
+        hide_handler_id = connect_window(window, 'hide', notify_on_event)
 
         print "undocking..."
         time.sleep(debug_sleep_time)
