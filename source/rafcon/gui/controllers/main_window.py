@@ -457,7 +457,7 @@ class MainWindowController(ExtendedController):
 
     def on_right_bar_return_clicked(self, widget, event=None):
         self.view['right_bar_return_button'].hide()
-        self.view['right_h_pane'].pack2(self.right_bar_child, resize=True, shrink=False)
+        self.view['right_h_pane'].pack2(self.right_bar_child, resize=False, shrink=False)
         self.right_bar_hidden = False
 
     def on_console_return_clicked(self, widget, event=None):

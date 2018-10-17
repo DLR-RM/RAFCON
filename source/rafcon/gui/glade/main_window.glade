@@ -943,13 +943,14 @@
                 </child>
                 <child>
                   <object class="GtkBox" id="right_bar_container">
-                    <property name="width_request">53</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkBox" id="right_bar">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="hexpand">True</property>
+                        <property name="vexpand">True</property>
                         <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkEventBox" id="eventbox1">
