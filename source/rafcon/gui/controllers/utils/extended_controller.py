@@ -36,6 +36,8 @@ class ExtendedController(Controller):
         self.__child_controllers = dict()
         self.__shortcut_manager = None
         self.__parent = None
+        self.__connected_signals = dict()
+        self.__signal_counter = 0
 
     def register_view(self, view):
         """Called when the View was registered
@@ -170,12 +172,23 @@ class ExtendedController(Controller):
             if hasattr(register_function, '__call__'):
                 register_function(self.__shortcut_manager)
 
+    def connect_signal(self, widget, signal, callback):
+        widget.connect(signal, callback)
+        self.__signal_counter += 1
+        self.__connected_signals["signal" + str(self.__signal_counter)] = (callback, widget)
+
+    def disconnect_all_signals(self):
+        # logger.verbose("Disconnect all signals of the class {}".format(str(self.__class__.__name__)))
+        for signal_id, (callback, widget) in self.__connected_signals.iteritems():
+            widget.disconnect_by_func(callback)
+
     def destroy(self):
         """Recursively destroy all Controllers
 
         The method remove all controllers, which calls the destroy method of the child controllers. Then,
         all registered models are relieved and and the widget hand by the initial view argument is destroyed.
         """
+        self.disconnect_all_signals()
         controller_names = [key for key in self.__child_controllers]
         for controller_name in controller_names:
             self.remove_controller(controller_name)
