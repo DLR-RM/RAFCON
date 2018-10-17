@@ -165,12 +165,8 @@ class MainWindowView(View):
         self.menu_bar = MenuBarView(self)
         self.menu_bar.show()
 
-        headerbar = Gtk.HeaderBar()
-        headerbar.set_show_close_button(True)
-        headerbar.props.title = "RAFCON"
-        headerbar.pack_start(self.menu_bar.get_top_widget())
-        headerbar.show()
-        self.get_top_widget().set_titlebar(headerbar)
+        self['headerbar'].pack_start(self.menu_bar.get_top_widget())
+        self['headerbar'].show()
 
         self.tool_bar = ToolBarView()
         self.tool_bar.show()

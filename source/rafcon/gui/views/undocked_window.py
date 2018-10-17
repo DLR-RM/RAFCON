@@ -29,11 +29,6 @@ class UndockedWindowView(View):
     def __init__(self, title):
         View.__init__(self)
 
-
-        self['headerbar'] = Gtk.HeaderBar()
-        self['headerbar'].set_show_close_button(False)
-        self['headerbar'].props.title = title
-
         toolbar = Gtk.Toolbar()
         fullscreen_icon = label.create_button_label(constants.BUTTON_EXP)
         self['maximize_button'] = Gtk.ToolButton()
@@ -44,8 +39,11 @@ class UndockedWindowView(View):
         self['redock_button'].set_tooltip_text("Redock")
         toolbar.insert(self['maximize_button'], 0)
         toolbar.insert(self['redock_button'], 1)
+
+        self['headerbar'].props.title = title
         self['headerbar'].pack_end(toolbar)
         self['headerbar'].show_all()
+
         self.get_top_widget().set_titlebar(self['headerbar'])
 
     def initialize_title(self, window_title):
