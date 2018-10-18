@@ -14,15 +14,12 @@
 
 import os
 import re
-from gi.repository import Gtk
-from gi.repository import Gdk
 import yaml
-from rafcon.utils.resources import resource_filename, resource_exists, resource_string
+
 from yaml_configuration.config import ConfigError
 
-import rafcon.gui
-from rafcon.gui.utils import wait_for_gui
 from rafcon.core.config import ObservableConfig
+from rafcon.utils.resources import resource_filename, resource_exists, resource_string
 from rafcon.utils import storage_utils
 from rafcon.utils import log
 
@@ -82,19 +79,26 @@ class GuiConfig(ObservableConfig):
         if not resource_exists(__name__, self.get_assets_path()):
             raise ValueError("GTK theme 'RAFCON' does not exist")
 
+        theme_name = "RAFCON"
+        dark_theme = self.get_config_value('THEME', 'dark') == 'dark'
+
+        data_dir = resource_filename(__name__, self.get_assets_path(for_theme=False))
+        os.environ['GTK_DATA_PREFIX'] = data_dir
+        os.environ['GTK_THEME'] = "{}{}".format(theme_name, ":dark" if dark_theme else "")
+
+        # The env vars GTK_DATA_PREFIX and GTK_THEME must be set before Gtk is imported first to prevent GTK warnings
+        # from other themes
+        from gi.repository import Gtk
+        settings = Gtk.Settings.get_default()
+        settings.set_property("gtk-theme-name", theme_name)
+        settings.set_property("gtk-application-prefer-dark-theme", dark_theme)
+
         filename = resource_filename(__name__, self.get_assets_path(
             "icons", "RAFCON_figurative_mark_negative.svg", for_theme=False))
         Gtk.Window.set_default_icon_from_file(filename)
 
-        data_dir = resource_filename(__name__, self.get_assets_path(for_theme=False))
-        os.environ['GTK_DATA_PREFIX'] = data_dir
-
-        settings = Gtk.Settings.get_default()
-        settings.set_property("gtk-theme-name", "RAFCON")
-        dark_theme = self.get_config_value('THEME', 'dark') == 'dark'
-        settings.set_property("gtk-application-prefer-dark-theme", dark_theme)
-
     def configure_colors(self):
+        from gi.repository import Gdk
         # Get colors from GTKrc file
         if not resource_exists(__name__, self.get_assets_path("gtk-2.0", "gtkrc")):
             raise ValueError("GTK theme does not exist")
