@@ -165,3 +165,14 @@ class ShortcutManager:
         logger.info("Updating Shortcuts")
         self.__action_to_shortcuts = global_gui_config.get_config_value('SHORTCUTS', {})
         self.register_shortcuts()
+
+    def destroy(self):
+        self.remove_shortcuts()
+        self.__controller_action_callbacks.clear()
+        self.main_window.remove_accel_group(self.accel_group)
+        self.main_window = None
+        self.accel_group = None
+
+        self.__action_to_callbacks.clear()
+        self.__action_to_shortcuts.clear()
+

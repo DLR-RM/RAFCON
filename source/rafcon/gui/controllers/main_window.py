@@ -196,6 +196,7 @@ class MainWindowController(ExtendedController):
         super(MainWindowController, self).destroy()
         # The sidebars have no corresponding controller that could destroy the views what cause the connected methods
         # to stay connected to (hold references on) the main window controller. So, we do this here. TODO D-solve it
+        self.shortcut_manager.destroy()
         self.left_bar_child.destroy()
         self.right_bar_child.destroy()
         self.console_child.destroy()
