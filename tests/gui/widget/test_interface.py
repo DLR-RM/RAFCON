@@ -1,5 +1,4 @@
 import os
-from gi.repository import Gtk
 
 import testing_utils
 from testing_utils import RAFCON_TEMP_PATH_TEST_BASE
@@ -58,14 +57,6 @@ def test_core_create_folder(monkeypatch):
     assert core_interface.create_folder_cmd_line("query", "new_folder") is None
 
 
-class PatchedFileChooserDialog(Gtk.FileChooserDialog):
-    """Subclass for FileChooserDialog
-    
-    FileChooserDialog cannot be monkey-patched directly. It must first be replaced by a subclass, which is this one.
-    """
-    pass
-
-
 def test_gui_tests(monkeypatch, caplog):
     # let the gui thread create the gui singletons by opening and closing an empty gui
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
@@ -94,6 +85,15 @@ def test_gui_open_folder(monkeypatch):
     testing_utils.dummy_gui(None)
     print "execute test_gui_open_folder"
     import rafcon.gui.interface as gui_interface
+    from gi.repository import Gtk
+
+    class PatchedFileChooserDialog(Gtk.FileChooserDialog):
+        """Subclass for FileChooserDialog
+
+        FileChooserDialog cannot be monkey-patched directly. It must first be replaced by a subclass, which is this one.
+        """
+        pass
+
     # prepare FileChooserDialog for monkey-patching
     monkeypatch.setattr(Gtk, "FileChooserDialog", PatchedFileChooserDialog)
     # replaces run by an expression that returns Gtk.ResponseType.OK

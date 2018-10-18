@@ -1,4 +1,3 @@
-from gi.repository import Gtk
 import threading
 import testing_utils
 
@@ -16,6 +15,7 @@ def xor(_list):
 
 def trigger_dialog_tests():
     test_text = "test_text"
+    from gi.repository import Gtk
     from rafcon.gui.utils import dialog
 
     def on_ok_clicked(widget, response_id):
