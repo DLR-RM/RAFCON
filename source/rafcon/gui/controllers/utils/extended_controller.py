@@ -181,6 +181,7 @@ class ExtendedController(Controller):
         # logger.verbose("Disconnect all signals of the class {}".format(str(self.__class__.__name__)))
         for signal_id, (callback, widget) in self.__connected_signals.iteritems():
             widget.disconnect_by_func(callback)
+        self.__connected_signals.clear()
 
     def destroy(self):
         """Recursively destroy all Controllers

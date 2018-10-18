@@ -80,6 +80,7 @@ class AbstractTreeViewController(ExtendedController):
         # delete reference to the controllers of renderers
         for renderer in self.__attached_renderers:
             renderer.ctrl = None
+        del self.__attached_renderers[:]
 
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
