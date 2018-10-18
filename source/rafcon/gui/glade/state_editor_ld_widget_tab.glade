@@ -32,6 +32,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="orientation">vertical</property>
+            <property name="wide_handle">True</property>
             <child>
               <object class="GtkBox" id="upper_right_sidebar">
                 <property name="visible">True</property>
