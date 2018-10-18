@@ -13,7 +13,8 @@
 import os.path
 from copy import copy, deepcopy
 from weakref import ref
-from gtkmvc3 import ModelMT, Signal
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Signal
 
 from rafcon.gui.models.signals import MetaSignalMsg, Notification
 from rafcon.gui.models.meta import MetaModel

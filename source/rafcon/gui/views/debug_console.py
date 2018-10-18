@@ -9,7 +9,7 @@
 # Rico Belder <rico.belder@dlr.de>
 
 import threading
-from gtkmvc3 import View
+from gtkmvc3.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.config import global_gui_config

@@ -10,7 +10,7 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc3 import View
+from gtkmvc3.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.utils import constants

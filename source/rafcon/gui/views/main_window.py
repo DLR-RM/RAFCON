@@ -20,7 +20,7 @@ import os
 
 from gi.repository import Gtk
 
-from gtkmvc3 import View
+from gtkmvc3.view import View
 
 from rafcon.gui.config import global_gui_config
 import rafcon.gui.helpers.label as gui_helper_label

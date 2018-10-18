@@ -23,7 +23,7 @@ import sys
 import os
 from copy import copy, deepcopy
 
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.states.state import State
 from rafcon.core.decorators import lock_state_machine

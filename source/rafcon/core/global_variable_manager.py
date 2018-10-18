@@ -22,7 +22,7 @@
 
 import time
 import copy
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
 from threading import Lock, currentThread, RLock
 from rafcon.core.id_generator import *
 

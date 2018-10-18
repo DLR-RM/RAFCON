@@ -19,7 +19,8 @@
 
 import yaml
 from os.path import split
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
+
 from rafcon.utils.resources import resource_string, resource_filename
 from yaml_configuration.config import DefaultConfig, ConfigError
 

@@ -10,7 +10,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc3 import ModelMT
+from gtkmvc3.model_mt import ModelMT
 from rafcon.utils.vividict import Vividict
 from rafcon.core.library_manager import LibraryManager
 

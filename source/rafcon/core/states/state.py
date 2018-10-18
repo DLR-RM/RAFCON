@@ -30,7 +30,7 @@ from weakref import ref
 import copy
 
 from enum import Enum
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
 from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 

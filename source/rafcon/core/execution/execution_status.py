@@ -16,7 +16,7 @@
 
 """
 from enum import Enum
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
 from threading import _Condition
 
 from execution_history import ExecutionHistory

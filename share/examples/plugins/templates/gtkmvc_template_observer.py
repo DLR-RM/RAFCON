@@ -1,5 +1,5 @@
 import rafcon.gui.singleton
-from gtkmvc3 import Observer
+from gtkmvc3.observer import Observer
 from rafcon.gui.utils.notification_overview import NotificationOverview
 
 from rafcon.utils import log

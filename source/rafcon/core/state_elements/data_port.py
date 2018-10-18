@@ -18,7 +18,7 @@
 
 """
 from enum import Enum
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.id_generator import generate_data_port_id
 from rafcon.core.state_elements.state_element import StateElement

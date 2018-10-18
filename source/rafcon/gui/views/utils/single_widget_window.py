@@ -11,7 +11,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from gtkmvc3 import View
+from gtkmvc3.view import View
 
 from rafcon.utils import log
 

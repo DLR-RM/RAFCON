@@ -20,7 +20,7 @@
 import os
 import shutil
 import copy
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core import interface
 from rafcon.core.storage import storage

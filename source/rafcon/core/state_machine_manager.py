@@ -19,7 +19,7 @@
 
 """
 
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.state_machine import StateMachine
 

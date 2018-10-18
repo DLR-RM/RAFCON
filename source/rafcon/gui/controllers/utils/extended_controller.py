@@ -18,7 +18,7 @@
 
 """
 
-from gtkmvc3 import Controller
+from gtkmvc3.controller import Controller
 
 from rafcon.gui.shortcut_manager import ShortcutManager
 from rafcon.utils import log

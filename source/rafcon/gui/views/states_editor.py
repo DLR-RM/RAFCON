@@ -15,7 +15,7 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
-from gtkmvc3 import View
+from gtkmvc3.view import View
 from rafcon.gui.utils import constants
 
 GObject.signal_new("tab_close_event", Gtk.Notebook, GObject.SignalFlags.RUN_FIRST, None, (int,))

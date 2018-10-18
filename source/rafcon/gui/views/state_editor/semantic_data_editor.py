@@ -11,7 +11,7 @@
 
 from gi.repository import Gtk
 from rafcon.gui import glade
-from gtkmvc3 import View
+from gtkmvc3.view import View
 import rafcon.gui.helpers.label as gui_helper_label
 
 from rafcon.gui.utils import constants

@@ -21,7 +21,7 @@
 
 import traceback
 
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.custom_exceptions import RecoveryModeException
 from rafcon.core.state_elements.outcome import Outcome

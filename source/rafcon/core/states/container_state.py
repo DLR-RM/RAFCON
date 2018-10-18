@@ -23,7 +23,7 @@ import traceback
 from copy import copy, deepcopy
 from threading import Condition
 
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.custom_exceptions import RecoveryModeException
 from rafcon.core.decorators import lock_state_machine

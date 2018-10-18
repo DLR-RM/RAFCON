@@ -25,7 +25,7 @@ import Queue
 from threading import Lock, RLock
 import sys
 
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.utils import log

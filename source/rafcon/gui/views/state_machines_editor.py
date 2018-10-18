@@ -15,7 +15,7 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GObject
 from gi.repository import GdkPixbuf
-from gtkmvc3 import View
+from gtkmvc3.view import View
 from rafcon.gui.utils import constants
 from rafcon.gui.config import global_gui_config as gui_config
 

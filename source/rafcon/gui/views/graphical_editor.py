@@ -38,7 +38,7 @@ try:
 except (ImportError, RuntimeError):
     GL_ENABLED = False
 
-from gtkmvc3 import View
+from gtkmvc3.view import View
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.utils.geometry import dist

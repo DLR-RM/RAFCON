@@ -11,7 +11,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import hashlib
-from gtkmvc3 import ModelMT, Signal
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Signal
 
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict

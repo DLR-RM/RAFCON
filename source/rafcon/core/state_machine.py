@@ -27,7 +27,7 @@ from copy import copy
 from threading import RLock
 from datetime import datetime
 
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
 from jsonconversion.jsonobject import JSONObject
 
 import rafcon

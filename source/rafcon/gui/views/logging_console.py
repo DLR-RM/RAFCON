@@ -14,7 +14,7 @@
 
 from gi.repository import Gtk
 import threading
-from gtkmvc3 import View
+from gtkmvc3.view import View
 from gi.repository import GLib
 from rafcon.utils import log
 logger = log.get_logger(__name__)

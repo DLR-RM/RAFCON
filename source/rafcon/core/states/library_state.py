@@ -19,7 +19,7 @@
 """
 from copy import copy, deepcopy
 
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.singleton import library_manager
 from rafcon.core.states.state import State, PATH_SEPARATOR

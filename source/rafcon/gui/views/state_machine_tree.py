@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
-from gtkmvc3 import View
+from gtkmvc3.view import View
 
 
 class StateMachineTreeView(View, Gtk.TreeView):

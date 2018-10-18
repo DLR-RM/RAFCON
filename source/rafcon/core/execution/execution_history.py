@@ -27,7 +27,7 @@ from jsonconversion.encoder import JSONObjectEncoder
 import shelve
 from threading import Lock
 from enum import Enum
-from gtkmvc3 import Observable
+from gtkmvc3.observable import Observable
 import traceback
 
 from rafcon.core.id_generator import history_item_id_generator

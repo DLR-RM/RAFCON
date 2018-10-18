@@ -15,7 +15,7 @@
 import os
 from gi.repository import Gtk
 from gi.repository import Gdk
-from gtkmvc3 import View
+from gtkmvc3.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.utils import constants
