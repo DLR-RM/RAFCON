@@ -644,7 +644,7 @@ class MainWindowController(ExtendedController):
 
         global_runtime_config.save_configuration()
         
-        # close all tabs
+        # state-editor will relieve it's model => it won't observe the state machine manager any more
         self.get_controller('states_editor_ctrl').prepare_destruction()  # avoid new state editor TODO tbd (deleted)
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
         rafcon.core.singleton.library_manager.prepare_destruction()

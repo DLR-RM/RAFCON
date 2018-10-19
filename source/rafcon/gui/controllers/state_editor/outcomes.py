@@ -81,6 +81,10 @@ class StateOutcomesListController(ListViewController):
         else:
             logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
 
+    def destroy(self):
+        self.relieve_all_models()
+        super(StateOutcomesListController, self).destroy()
+
     def register_view(self, view):
         """Called when the View was registered
 
@@ -317,7 +321,12 @@ class StateOutcomesListController(ListViewController):
             self.update_internal_data_base()
             self.update_list_store()
         except Exception as e:
-            logger.exception("Unexpected failure while update of outcomes of {0} with path {1} "
+            # TODO this is connected to the destruction_signal TODO some lines below
+            # normally this is the case when some of the sibling states are already destroyed i.e. sibling = None
+            # and the code line to access the state_id of a sibling state cannot be done any more
+            # actually this should be solved by connecting to the destruction_signal and relieve all models upon
+            # receiving it, but the TODO below prevents this
+            logger.debug("Error: Unexpected failure while update of outcomes of {0} with path {1} "
                              "with initiator {2}".format(self.model.state, self.model.state.get_path(), initiator))
 
     @ListViewController.observe("parent", after=True)
@@ -326,10 +335,10 @@ class StateOutcomesListController(ListViewController):
     def outcomes_changed(self, model, prop_name, info):
         self.update(initiator=str(info))
 
-    # TODO D-Find out why the observation of the destruction_signal cause threading problems
+    # TODO Find out why the observation of the destruction_signal cause threading problems
     # @ExtendedController.observe("destruction_signal", signal=True)
     # def get_destruction_signal(self, model, prop_name, info):
-    #     """ Relieve models if the parent state model """
+    #     """ Relieve models if the parent state model is destroyed"""
     #     # this is necessary because the controller use data of its parent model and would try to adapt to
     #     # transition changes before the self.model is destroyed, too
     #     if not self.model.state.is_root_state and self.model.parent is model:

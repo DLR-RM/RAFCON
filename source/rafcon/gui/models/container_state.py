@@ -123,7 +123,6 @@ class ContainerStateModel(StateModel):
         the base class by child elements of a container state.
         """
         logger.verbose("Prepare destruction container state ...")
-        super(ContainerStateModel, self).prepare_destruction(recursive)
         if recursive:
             for scoped_variable in self.scoped_variables:
                 scoped_variable.prepare_destruction()
@@ -139,6 +138,7 @@ class ContainerStateModel(StateModel):
         self.transitions = None
         self.data_flows = None
         self.states = None
+        super(ContainerStateModel, self).prepare_destruction(recursive)
 
     def update_hash(self, obj_hash):
         super(ContainerStateModel, self).update_hash(obj_hash)
