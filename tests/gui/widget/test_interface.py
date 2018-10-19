@@ -85,6 +85,8 @@ def test_gui_open_folder(monkeypatch):
     testing_utils.dummy_gui(None)
     print "execute test_gui_open_folder"
     import rafcon.gui.interface as gui_interface
+    import gi
+    gi.require_version('Gtk', '3.0')
     from gi.repository import Gtk
 
     class PatchedFileChooserDialog(Gtk.FileChooserDialog):
@@ -122,6 +124,17 @@ def test_gui_create_folder(monkeypatch):
     testing_utils.dummy_gui(None)
     print "execute test_gui_create_folder"
     import rafcon.gui.interface as gui_interface
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk
+
+    class PatchedFileChooserDialog(Gtk.FileChooserDialog):
+        """Subclass for FileChooserDialog
+
+        FileChooserDialog cannot be monkey-patched directly. It must first be replaced by a subclass, which is this one.
+        """
+        pass
+
     # prepare FileChooserDialog for monkey-patching
     monkeypatch.setattr(Gtk, "FileChooserDialog", PatchedFileChooserDialog)
     # replaces run by an expression that returns Gtk.ResponseType.OK
