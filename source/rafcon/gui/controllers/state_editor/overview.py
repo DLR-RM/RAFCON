@@ -21,7 +21,6 @@
 from gi.repository import GLib
 from gi.repository import Gtk
 from gi.repository import Gdk
-from gtkmvc3.model import Model
 
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.core.states.execution_state import ExecutionState
