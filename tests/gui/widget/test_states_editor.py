@@ -128,12 +128,9 @@ def check_state_editor_models(sm_m, parent_state_m, logger=None):
     state_identifier = states_editor_controller.get_state_identifier(parent_state_m)
     parent_state_m.get_state_machine_m()
     print "try to select", parent_state_m
+    # create state editor
     sm_m.selection.set([parent_state_m])
     [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, state_identifier, sleep_time_max)
-    # logger.debug("wait for state's state editor %s" % time_waited)
-    # logger.debug("models are: \n ctrl  %s path: %s\n model %s path: %s" %
-    #              (state_editor_ctrl.model, state_editor_ctrl.model.state.get_path(),
-    #               parent_state_m, parent_state_m.state.get_path()))
     assert state_editor_ctrl.model is parent_state_m
 
 
@@ -141,6 +138,10 @@ def check_state_editor_models(sm_m, parent_state_m, logger=None):
 def trigger_state_type_change_tests(with_gui=True):
     import rafcon.core.singleton
     import rafcon.gui.singleton
+    from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
     main_window_controller = rafcon.gui.singleton.main_window_controller
 
     state_dict, sm = create_state_machine()
@@ -177,16 +178,16 @@ def trigger_state_type_change_tests(with_gui=True):
     # HS -> BCS
     input_and_return_list = [state_m]
     call_gui_callback(sm_m.selection.set, input_and_return_list)
-    call_gui_callback(change_state_type, input_and_return_list, 'BARRIER_CONCURRENCY', state_of_type_change)
+    call_gui_callback(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, state_of_type_change)
 
     # BCS -> HS
-    call_gui_callback(change_state_type, input_and_return_list, 'HIERARCHY', state_of_type_change)
+    call_gui_callback(change_state_type, input_and_return_list, HierarchyState.__name__, state_of_type_change)
 
     # HS -> PCS
-    call_gui_callback(change_state_type, input_and_return_list, 'PREEMPTION_CONCURRENCY', state_of_type_change)
+    call_gui_callback(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, state_of_type_change)
 
     # PCS -> ES
-    call_gui_callback(change_state_type, input_and_return_list, 'EXECUTION', state_of_type_change)
+    call_gui_callback(change_state_type, input_and_return_list, ExecutionState.__name__, state_of_type_change)
 
     # TODO all test that are not root_state-test have to be performed with Preemptive and Barrier Concurrency States as parents too
 
@@ -196,16 +197,16 @@ def trigger_state_type_change_tests(with_gui=True):
 
     # HS -> BCS
     call_gui_callback(sm_m.selection.set, input_and_return_list)
-    call_gui_callback(change_state_type, input_and_return_list, 'BARRIER_CONCURRENCY', state_of_type_change)
+    call_gui_callback(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, state_of_type_change)
 
     # BCS -> HS
-    call_gui_callback(change_state_type, input_and_return_list, 'HIERARCHY', state_of_type_change)
+    call_gui_callback(change_state_type, input_and_return_list, HierarchyState.__name__, state_of_type_change)
 
     # HS -> PCS
-    call_gui_callback(change_state_type, input_and_return_list, 'PREEMPTION_CONCURRENCY', state_of_type_change)
+    call_gui_callback(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, state_of_type_change)
 
     # PCS -> ES
-    call_gui_callback(change_state_type, input_and_return_list, 'EXECUTION', state_of_type_change)
+    call_gui_callback(change_state_type, input_and_return_list, ExecutionState.__name__, state_of_type_change)
 
     # simple type change of root_state -> still could be extended
 
@@ -223,4 +224,5 @@ def test_state_type_change_test(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main(['-s', __file__])
+    test_state_type_change_test(None)
+    # pytest.main(['-s', __file__])
