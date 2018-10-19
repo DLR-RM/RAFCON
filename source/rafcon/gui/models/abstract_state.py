@@ -213,9 +213,10 @@ class AbstractStateModel(MetaModel, Hashable):
         self.input_data_ports = None
         self.output_data_ports = None
         self.outcomes = None
-        self.meta_signal = None
-        self.action_signal = None
-        self.destruction_signal = None
+        # History TODO: these are needed by the modification history
+        # self.action_signal = None
+        # self.meta_signal = None
+        # self.destruction_signal = None
         self.observe = None
         super(AbstractStateModel, self).prepare_destruction()
 
