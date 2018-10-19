@@ -83,10 +83,10 @@ class StateDataFlowsListController(LinkageListController):
         super(StateDataFlowsListController, self).__init__(model, view, view.get_top_widget(), list_store, logger)
 
     def destroy(self):
-        self.view['from_state_col'].set_cell_data_func(self.view['from_state_combo'], None, self.model)
-        self.view['to_state_col'].set_cell_data_func(self.view['to_state_combo'], None, self.model)
-        self.view['from_key_col'].set_cell_data_func(self.view['from_key_combo'], None, self.model)
-        self.view['to_key_col'].set_cell_data_func(self.view['to_key_combo'], None, self.model)
+        self.view['from_state_col'].set_cell_data_func(self.view['from_state_combo'], None)
+        self.view['to_state_col'].set_cell_data_func(self.view['to_state_combo'], None)
+        self.view['from_key_col'].set_cell_data_func(self.view['from_key_combo'], None)
+        self.view['to_key_col'].set_cell_data_func(self.view['to_key_combo'], None)
         super(StateDataFlowsListController, self).destroy()
 
     def register_view(self, view):
