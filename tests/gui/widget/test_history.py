@@ -1301,7 +1301,7 @@ def trigger_state_type_change_tests(with_gui):
     # - do state type change
     logger.info("HS -> BCS")
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, state_m, 'BARRIER_CONCURRENCY', logger)
+        call_gui_callback(do_type_change, sm_m, state_m, BarrierConcurrencyState.__name__, logger)
     else:
         gui_helper_state.change_state_type(state_m, BarrierConcurrencyState)
         # state_dict[parent_of_type_change].change_state_type(state_m.state, BarrierConcurrencyState)
@@ -1355,7 +1355,7 @@ def trigger_state_type_change_tests(with_gui):
     logger.info("BCS -> HS 2")
     if with_gui:
         call_gui_callback(sm_m.state_machine.__setattr__, "file_system_path", state_machine_path)
-        call_gui_callback(do_type_change, sm_m, new_state_m, 'HIERARCHY', logger)
+        call_gui_callback(do_type_change, sm_m, new_state_m, HierarchyState.__name__, logger)
     else:
         sm_m.state_machine.file_system_path = state_machine_path
         gui_helper_state.change_state_type(new_state_m, HierarchyState)
@@ -1413,7 +1413,7 @@ def trigger_state_type_change_tests(with_gui):
     save_state_machine(sm_m, state_machine_path + '_before3', logger, with_gui, menubar_ctrl)
     logger.info("HS -> PCS")
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, 'PREEMPTION_CONCURRENCY', logger)
+        call_gui_callback(do_type_change, sm_m, new_state_m, PreemptiveConcurrencyState.__name__, logger)
     else:
         gui_helper_state.change_state_type(new_state_m, PreemptiveConcurrencyState)
         # state_dict[parent_of_type_change].change_state_type(new_state_m.state, PreemptiveConcurrencyState)
@@ -1468,7 +1468,7 @@ def trigger_state_type_change_tests(with_gui):
     save_state_machine(sm_m, state_machine_path + '_before4', logger, with_gui, menubar_ctrl)
     logger.info("PCS -> ES")
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, 'EXECUTION', logger)
+        call_gui_callback(do_type_change, sm_m, new_state_m, ExecutionState.__name__, logger)
     else:
         gui_helper_state.change_state_type(new_state_m, ExecutionState)
         # state_dict[parent_of_type_change].change_state_type(new_state_m.state, ExecutionState)
@@ -1530,7 +1530,7 @@ def trigger_state_type_change_tests(with_gui):
     # HS -> BCS
     logger.info("HS -> BCS root")
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, state_m, 'BARRIER_CONCURRENCY', logger)
+        call_gui_callback(do_type_change, sm_m, state_m, BarrierConcurrencyState.__name__, logger)
     else:
         gui_helper_state.change_state_type(sm_m.root_state, BarrierConcurrencyState)
         # sm_m.state_machine.change_root_state_type(BarrierConcurrencyState)
@@ -1575,7 +1575,7 @@ def trigger_state_type_change_tests(with_gui):
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
     logger.info("BCS -> HS root 2")
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, 'HIERARCHY', logger)
+        call_gui_callback(do_type_change, sm_m, new_state_m, HierarchyState.__name__, logger)
     else:
         gui_helper_state.change_state_type(sm_m.root_state, HierarchyState)
         # sm_m.state_machine.change_root_state_type(HierarchyState)
@@ -1615,7 +1615,7 @@ def trigger_state_type_change_tests(with_gui):
     logger.info("HS -> PCS")
     # - do state type change
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, 'PREEMPTION_CONCURRENCY', logger)
+        call_gui_callback(do_type_change, sm_m, new_state_m, PreemptiveConcurrencyState.__name__, logger)
     else:
         gui_helper_state.change_state_type(sm_m.root_state, PreemptiveConcurrencyState)
         # sm_m.state_machine.change_root_state_type(PreemptiveConcurrencyState)
@@ -1654,7 +1654,7 @@ def trigger_state_type_change_tests(with_gui):
     logger.info("PCS -> ES")
     # - do state type change
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, 'EXECUTION', logger)
+        call_gui_callback(do_type_change, sm_m, new_state_m, ExecutionState.__name__, logger)
     else:
         gui_helper_state.change_state_type(sm_m.root_state, ExecutionState)
         # sm_m.state_machine.change_root_state_type(ExecutionState)
@@ -1784,7 +1784,7 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
     if with_gui:
         print h_state1.get_path()
         h_state1_m = sm_m.get_state_model_by_path(h_state1.get_path())
-        call_gui_callback(do_type_change, sm_m, h_state1_m, 'EXECUTION', logger)
+        call_gui_callback(do_type_change, sm_m, h_state1_m, ExecutionState.__name__, logger)
         # call_gui_callback(sm_m.state_machine.root_state.change_state_type, h_state1, ExecutionState)
     else:
         sm_m.state_machine.root_state.change_state_type(h_state1, ExecutionState)
