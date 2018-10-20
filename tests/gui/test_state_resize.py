@@ -133,6 +133,7 @@ def print_state_sizes(state_m, canvas, state_names=None):
 ])
 def test_simple_state_size_resize(state_path, recursive, rel_size, caplog, monkeypatch):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True})
+    testing_utils.wait_for_gui()
 
     try:
         from rafcon.gui.helpers.meta_data import check_gaphas_state_meta_data_consistency
@@ -179,6 +180,7 @@ def test_simple_state_size_resize(state_path, recursive, rel_size, caplog, monke
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
+        testing_utils.wait_for_gui()
 
 
 if __name__ == '__main__':
