@@ -128,7 +128,8 @@ class MainWindowView(View):
                                                                                      font_size=constants.FONT_SIZE_BIG,
                                                                                      letter_spacing=constants.
                                                                                      LETTER_SPACING_1PT)
-        graphical_editor_label.set_alignment(0, .5)
+        graphical_editor_label.xalign = 0.0
+        graphical_editor_label.yalign = 0.5
         self['graphical_editor_label_event_box'].add(graphical_editor_label)
 
         ######################################################
@@ -143,7 +144,8 @@ class MainWindowView(View):
         state_editor_label = gui_helper_label.create_label_with_text_and_spacing(_('STATE EDITOR'),
                                                                                  font_size=constants.FONT_SIZE_BIG,
                                                                                  letter_spacing=constants.LETTER_SPACING_1PT)
-        state_editor_label.set_alignment(0., 0.)
+        graphical_editor_label.xalign = 0.0
+        graphical_editor_label.yalign = 0.0
         self['state_editor_label_hbox'].add(state_editor_label)
 
         ######################################################

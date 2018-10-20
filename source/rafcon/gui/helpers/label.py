@@ -224,10 +224,10 @@ def create_menu_box_with_icon_and_label(label_text):
     :param label_text: The text, which is displayed for the text label
     :return:
     """
-    box = Gtk.Box(Gtk.Orientation.HORIZONTAL, 10)
+    box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 10)
     box.set_border_width(0)
     icon_label = Gtk.Label()
-    text_label = Gtk.AccelLabel(label_text)
+    text_label = Gtk.AccelLabel.new(label_text)
     text_label.set_xalign(0)
 
     box.pack_start(icon_label, False, False, 0)
