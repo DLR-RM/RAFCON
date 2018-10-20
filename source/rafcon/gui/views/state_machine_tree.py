@@ -11,7 +11,6 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from gi.repository import GObject
 from gtkmvc3.view import View
 
 
@@ -19,7 +18,7 @@ class StateMachineTreeView(View, Gtk.TreeView):
 
     def __init__(self):
         View.__init__(self)
-        GObject.GObject.__init__(self)
+        Gtk.TreeView.__init__(self)
         self.set_name('state_machine_tree')
 
         tvcolumn = Gtk.TreeViewColumn('Name')

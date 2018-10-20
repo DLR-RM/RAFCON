@@ -20,7 +20,7 @@ class LibraryTreeView(View, Gtk.TreeView):
 
     def __init__(self):
         View.__init__(self)
-        GObject.GObject.__init__(self)
+        Gtk.TreeView.__init__(self)
         self.set_name('library_tree')
         # self.set_grid_lines(Gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
 
