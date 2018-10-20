@@ -229,8 +229,8 @@ def test_pane_positions(caplog):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
                           runtime_config={
                               'LEFT_BAR_DOCKED_POS': 376,
-                              'RIGHT_BAR_DOCKED_POS': 719,
-                              'CONSOLE_DOCKED_POS': 181,
+                              'RIGHT_BAR_DOCKED_POS': 800,
+                              'CONSOLE_DOCKED_POS': 500,
                               'LEFT_BAR_WINDOW_UNDOCKED': False,
                               'RIGHT_BAR_WINDOW_UNDOCKED': False,
                               'CONSOLE_WINDOW_UNDOCKED': False,
