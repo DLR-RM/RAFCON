@@ -40,11 +40,11 @@ class ExecutionHistoryView(View, Gtk.ScrolledWindow):
 
         history_tree = ExecutionHistoryTreeView()
 
-        reload_button = Gtk.Button("Reload history")
+        reload_button = Gtk.Button.new_with_label("Reload history")
         reload_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        clean_button = Gtk.Button("Clean history")
+        clean_button = Gtk.Button.new_with_label("Clean history")
         clean_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        open_separately_button = Gtk.Button("Open separately")
+        open_separately_button = Gtk.Button.new_with_label("Open separately")
         open_separately_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
         button_box = Gtk.HBox()
