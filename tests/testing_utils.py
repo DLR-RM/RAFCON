@@ -292,7 +292,9 @@ def run_gui_thread(gui_config=None, runtime_config=None):
     from rafcon.utils.i18n import setup_l10n
     global gui_ready
     # see https://stackoverflow.com/questions/35700140/pygtk-run-gtk-main-loop-in-a-seperate-thread
-    GObject.threads_init()
+    # not needed any more:
+    # https://pygobject.readthedocs.io/en/latest/guide/threading.html?highlight=threads_init#threads-faq
+    # GObject.threads_init()
     if reactor_required():
         install_reactor()
     setup_l10n()
