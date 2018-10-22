@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.1 -->
+<!-- Generated with glade 3.20.0 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkWindow" id="main_window">
@@ -8,18 +8,6 @@
     <property name="window_position">center</property>
     <property name="default_width">1800</property>
     <property name="default_height">900</property>
-    <child type="titlebar">
-      <object class="GtkHeaderBar" id="headerbar">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="title">RAFCON</property>
-        <property name="has_subtitle">False</property>
-        <property name="show_close_button">True</property>
-        <child>
-          <placeholder/>
-        </child>
-      </object>
-    </child>
     <child>
       <object class="GtkBox" id="top_level_vbox">
         <property name="visible">True</property>
@@ -74,6 +62,7 @@
                         <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkBox" id="upper_left_sidebar">
+                            <property name="height_request">300</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="orientation">vertical</property>
@@ -101,11 +90,11 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkEventBox" id="collapse_tree">
+                                      <object class="GtkEventBox" id="undock_left_bar">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <child>
-                                          <object class="GtkButton" id="collapse_tree_button">
+                                          <object class="GtkButton" id="undock_left_bar_button">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -120,11 +109,11 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkEventBox" id="undock_left_bar">
+                                      <object class="GtkEventBox" id="collapse_tree">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <child>
-                                          <object class="GtkButton" id="undock_left_bar_button">
+                                          <object class="GtkButton" id="collapse_tree_button">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -1073,6 +1062,18 @@
             <property name="fill">True</property>
             <property name="position">2</property>
           </packing>
+        </child>
+      </object>
+    </child>
+    <child type="titlebar">
+      <object class="GtkHeaderBar" id="headerbar">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="title">RAFCON</property>
+        <property name="has_subtitle">False</property>
+        <property name="show_close_button">True</property>
+        <child>
+          <placeholder/>
         </child>
       </object>
     </child>
