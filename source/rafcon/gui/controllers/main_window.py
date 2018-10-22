@@ -280,6 +280,8 @@ class MainWindowController(ExtendedController):
         view.get_top_widget().unmaximize()
         gui_helper_label.set_window_size_and_position(view.get_top_widget(), 'MAIN')
 
+        wait_for_gui()
+
         # Initializing Pane positions
         for config_id in constants.PANE_ID.keys():
             self.set_pane_position(config_id)
