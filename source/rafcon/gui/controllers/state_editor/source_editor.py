@@ -152,7 +152,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
         # function has finished
         # TODO: run parser in separate thread
         while Gtk.events_pending():
-            Gtk.main_iteration_do()
+            Gtk.main_iteration_do(False)
 
         # get script
         current_text = self.view.get_text()

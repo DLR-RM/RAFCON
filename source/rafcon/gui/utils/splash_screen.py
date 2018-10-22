@@ -61,7 +61,7 @@ class SplashScreen(Gtk.Window):
         # import time
         # time.sleep(1)
         while Gtk.events_pending():
-            Gtk.main_iteration_do(True)
+            Gtk.main_iteration_do(False)
         return
 
     def load_image(self, image_path):
@@ -69,7 +69,7 @@ class SplashScreen(Gtk.Window):
             pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(image_path, self.get_size()[0] - 50, self.get_size()[1] - 50)
             self.image.set_from_pixbuf(pixbuf)
             while Gtk.events_pending():
-                Gtk.main_iteration_do(True)
+                Gtk.main_iteration_do(False)
         else:
             logger.debug("Splash screen image path is None")
 
