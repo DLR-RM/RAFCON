@@ -56,6 +56,8 @@ def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypa
 
     monkeypatch.setattr("rafcon.gui.mygaphas.aspect.StateHandleFinder.get_handle_at_point", get_resize_handle)
     monkeypatch.setattr("rafcon.gui.mygaphas.aspect.ItemHandleFinder.get_handle_at_point", get_resize_handle)
+    # Deactivate guides (snapping)
+    monkeypatch.setattr("rafcon.gui.mygaphas.guide.GuidedStateMixin.MARGIN", 0)
 
     resize_tool = call_gui_callback(MoveHandleTool, view)
     start_pos_handle = call_gui_callback(get_state_handle_pos, view, state_v, state_v.handles()[SE])
@@ -82,6 +84,7 @@ def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypa
     button_release_event.button = 1
     call_gui_callback(resize_tool.on_button_release, button_release_event)
 
+    monkeypatch.undo()
     monkeypatch.undo()
     monkeypatch.undo()
 
@@ -133,7 +136,6 @@ def print_state_sizes(state_m, canvas, state_names=None):
 ])
 def test_simple_state_size_resize(state_path, recursive, rel_size, caplog, monkeypatch):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True})
-    testing_utils.wait_for_gui()
 
     try:
         from rafcon.gui.helpers.meta_data import check_gaphas_state_meta_data_consistency
@@ -180,7 +182,6 @@ def test_simple_state_size_resize(state_path, recursive, rel_size, caplog, monke
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
-        testing_utils.wait_for_gui()
 
 
 if __name__ == '__main__':
