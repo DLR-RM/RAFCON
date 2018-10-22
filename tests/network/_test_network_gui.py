@@ -14,7 +14,7 @@ import threading
 import time
 import os
 import pytest
-from test_multi_clients import reset_global_variable_manager
+from test_single_client import reset_global_variable_manager
 from test_single_client import launch_client
 from test_single_client import launch_server
 
