@@ -157,6 +157,7 @@ def test_simple_state_size_resize(state_path, recursive, rel_size, caplog, monke
         # TODO: find the reason and fix it
         for elem in new_state_size:
             if elem > 1000:
+                print "TODO Fix: wrong initialization of gaphas!"
                 return
 
         print "\nfirst resize:"
