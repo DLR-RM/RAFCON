@@ -2,6 +2,8 @@
   @return unquote("alpha(#{$c},#{$a})");
 }
 
+$paned_separator_width: 5px;
+$paned_separator_wide_width: 15px;
 $ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 $backdrop_transition: 200ms ease-out;
 $asset_suffix: if($variant=='dark', '-dark', ''); // use dark assets in dark variant
@@ -194,7 +196,7 @@ entry {
   padding: 2px 8px;
 
   caret-color: currentColor;
-  border-radius: 3px;
+  border-radius: 0px;
   transition: all 200ms $ease-out-quad;
 
   &.search { border-radius: 20px; }
@@ -2751,57 +2753,20 @@ placesview {
 //
 paned {
   > separator {
-    min-width: 1px;
-    min-height: 1px;
+    min-width: $paned_separator_width;
+    min-height: $paned_separator_width;
     -gtk-icon-source: none;
     border-style: none;
-    background-color: transparent;
-    background-image: _solid($borders_color);
-    background-size: 1px 1px;
+    background-color: $borders_color;
+    background-image: none;
+    background-size: 0, 0;
 
     &:selected { background-image: _solid($selected_bg_color); }
 
     &.wide {
-      min-width: 5px;
-      min-height: 5px;
-      background-color: $bg_color;
-      background-image: _solid($borders_color), _solid($borders_color);
-      background-size: 1px 1px, 1px 1px;
-    }
-  }
-
-  &.horizontal > separator {
-    background-repeat: repeat-y;
-    &:dir(ltr) {
-      margin: 0 -8px 0 0;
-      padding: 0 8px 0 0;
-      background-position: left;
-    }
-    &:dir(rtl) {
-      margin: 0 0 0 -8px;
-      padding: 0 0 0 8px;
-      background-position: right;
-    }
-
-    &.wide {
-      margin: 0;
-      padding: 0;
-      background-repeat: repeat-y, repeat-y;
-      background-position: left, right;
-    }
-  }
-
-  &.vertical > separator {
-    margin: 0 0 -8px 0;
-    padding: 0 0 8px 0;
-    background-repeat: repeat-x;
-    background-position: top;
-
-    &.wide {
-      margin: 0;
-      padding: 0;
-      background-repeat: repeat-x, repeat-x;
-      background-position: bottom, top;
+      min-width: $paned_separator_wide_width;
+      min-height: $paned_separator_wide_width;
+      background-color: $borders_color;
     }
   }
 }
