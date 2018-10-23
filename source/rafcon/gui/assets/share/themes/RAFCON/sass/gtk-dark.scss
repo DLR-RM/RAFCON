@@ -1,13 +1,13 @@
 $variant: 'dark';
 $darker: 'true';
-$transparency: 'true';
+$transparency: 'false';
 
 @import 'colors';
 @import 'drawing';
 @import 'common';
-@import 'applications';
-@import 'unity';
-@import 'granite';
-@import 'lightdm';
-@import 'transparent_widgets';
+//@import 'applications';
+//@import 'unity';
+//@import 'granite';
+//@import 'lightdm';
+//@import 'transparent_widgets';
 @import 'colors-public';
