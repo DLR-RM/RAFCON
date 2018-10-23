@@ -69,7 +69,7 @@ class MainWindowView(View):
         ######################################################
         self.library_tree = LibraryTreeView()
         self.library_tree.show()
-        self['libraries_alignment'].add(self.library_tree)
+        self['libraries_scrolledwindow'].add(self.library_tree)
 
         ######################################################
         # State Icons
@@ -83,14 +83,14 @@ class MainWindowView(View):
         ######################################################
         self.state_machine_tree = StateMachineTreeView()
         self.state_machine_tree.show()
-        self['states_tree_alignment'].add(self.state_machine_tree)
+        self['states_tree_scrolledwindow'].add(self.state_machine_tree)
 
         ######################################################
         # Global Variable Manager
         ######################################################
         self.global_var_editor = GlobalVariableEditorView()
         self.global_var_editor.show()
-        self['global_variables_alignment'].add(self.global_var_editor.get_top_widget())
+        self['global_variables_scrolledwindow'].add(self.global_var_editor.get_top_widget())
 
         ######################################################
         # State Machine History

@@ -150,22 +150,7 @@
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <child>
-                                      <object class="GtkViewport" id="libraries_viewport">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="resize_mode">queue</property>
-                                        <child>
-                                          <object class="GtkAlignment" id="libraries_alignment">
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">False</property>
-                                            <property name="xalign">0</property>
-                                            <property name="yalign">0</property>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                          </object>
-                                        </child>
-                                      </object>
+                                      <placeholder/>
                                     </child>
                                   </object>
                                 </child>
@@ -185,21 +170,7 @@
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <child>
-                                      <object class="GtkViewport" id="states_tree_viewport">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <child>
-                                          <object class="GtkAlignment" id="states_tree_alignment">
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">False</property>
-                                            <property name="xalign">0</property>
-                                            <property name="yalign">0</property>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                          </object>
-                                        </child>
-                                      </object>
+                                      <placeholder/>
                                     </child>
                                   </object>
                                   <packing>
@@ -223,21 +194,7 @@
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <child>
-                                      <object class="GtkViewport" id="global_variables_viewport">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <child>
-                                          <object class="GtkAlignment" id="global_variables_alignment">
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">False</property>
-                                            <property name="xalign">0</property>
-                                            <property name="yalign">0</property>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                          </object>
-                                        </child>
-                                      </object>
+                                      <placeholder/>
                                     </child>
                                   </object>
                                   <packing>
