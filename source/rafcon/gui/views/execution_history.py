@@ -21,7 +21,7 @@ class ExecutionHistoryTreeView(View, Gtk.TreeView):
 
     def __init__(self):
         View.__init__(self)
-        GObject.GObject.__init__(self)
+        Gtk.TreeView.__init__(self)
         self.set_name("history_tree")
 
         tvcolumn = Gtk.TreeViewColumn('History', Gtk.CellRendererText(), text=0)
@@ -36,7 +36,7 @@ class ExecutionHistoryView(View, Gtk.ScrolledWindow):
 
     def __init__(self):
         View.__init__(self)
-        GObject.GObject.__init__(self)
+        Gtk.ScrolledWindow.__init__(self)
 
         history_tree = ExecutionHistoryTreeView()
 

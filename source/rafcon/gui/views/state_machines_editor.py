@@ -60,7 +60,7 @@ class PlusAddNotebook(Gtk.Notebook):
     ]
 
     def __init__(self):
-        GObject.GObject.__init__(self)
+        super(PlusAddNotebook, self).__init__()
 
         self.connect("button_release_event", self.on_button_release)
         self.connect('button_press_event', self.on_button_press)

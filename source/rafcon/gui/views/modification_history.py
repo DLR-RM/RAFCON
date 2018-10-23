@@ -20,7 +20,7 @@ class HistoryTreeView(View, Gtk.TreeView):
 
     def __init__(self):
         View.__init__(self)
-        GObject.GObject.__init__(self)
+        Gtk.TreeView.__init__(self)
 
         foreground = 5
 
@@ -49,7 +49,7 @@ class ModificationHistoryView(View, Gtk.ScrolledWindow):
 
     def __init__(self):
         View.__init__(self)
-        GObject.GObject.__init__(self)
+        Gtk.ScrolledWindow.__init__(self)
 
         history_tree = HistoryTreeView()
         history_tree.set_name('history_tree')

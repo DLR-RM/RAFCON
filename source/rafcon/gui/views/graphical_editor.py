@@ -205,7 +205,7 @@ class GraphicalEditor(Gtk.DrawingArea, Gtk.Widget):
 
         :param glconfig: Configuration flags for OpenGl
         """
-        GObject.GObject.__init__(self)
+        Gtk.DrawingArea.__init__(self)
 
         # default outer coordinate values which will later be overwritten by the controller
         self.left = -10

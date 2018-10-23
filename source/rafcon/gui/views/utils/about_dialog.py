@@ -20,7 +20,7 @@ import rafcon
 
 class AboutDialogView(Gtk.AboutDialog):
     def __init__(self):
-        GObject.GObject.__init__(self)
+        super(AboutDialogView, self).__init__()
 
         self.set_program_name("RAFCON")
         self.set_version(rafcon.__version__)
