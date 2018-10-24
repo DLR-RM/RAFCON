@@ -72,8 +72,8 @@ If you are not using Ubuntu 16.04 or 18.04, please make sure that the following 
 * pylint
 
 
-Installing RAFCON (from PyPi)
------------------------------
+Installing RAFCON
+-----------------
 
 .. code-block:: bash
 
@@ -81,9 +81,7 @@ Installing RAFCON (from PyPi)
 
 The ``--user`` flag is optional. If not set, RAFCON is installed globally.
 
-
-Download RAFCON sources
------------------------
+Of course you can also directly use the RAFCON sources from GitHub.
 
 .. code-block:: bash
 
