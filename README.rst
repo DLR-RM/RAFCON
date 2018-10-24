@@ -79,7 +79,7 @@ Installing RAFCON
 
    pip2 install rafcon --user
 
-The ``--user`` flag is optional. If not set, RAFCON is installed globally.
+The ``--user`` flag is optional. If not set, RAFCON is installed globally (in this case you normaly need to have root priviledges).
 
 Of course you can also directly use the RAFCON sources from GitHub.
 
