@@ -68,6 +68,7 @@ class ModificationHistoryView(View, Gtk.ScrolledWindow):
         folded_checkbox.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
         button_hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+        button_hbox.get_style_context().add_class("widget-toolbar")
         button_hbox.pack_end(folded_checkbox, False, True, 0)
         button_hbox.pack_end(branch_checkbox, False, True, 0)
         button_hbox.pack_end(reset_button, False, True, 0)

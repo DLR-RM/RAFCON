@@ -40,8 +40,8 @@ class StateDataFlowsEditorView(View):
         View.__init__(self)
 
         self.data_flows_listView = StateDataFlowsListView()
-        self['dataflows_scroller'].add(self.data_flows_listView.get_top_widget())
-        self.data_flows_listView.scrollbar_widget = self['dataflows_scroller']
+        self['data_flows_scroller'].add(self.data_flows_listView.get_top_widget())
+        self.data_flows_listView.scrollbar_widget = self['data_flows_scroller']
 
         self['internal_d_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['connected_to_d_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)

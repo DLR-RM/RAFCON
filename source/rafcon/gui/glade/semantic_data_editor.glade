@@ -3,9 +3,9 @@
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkBox" id="semantic_data_vbox">
-    <property name="orientation">vertical</property>
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="orientation">vertical</property>
     <child>
       <object class="GtkViewport" id="semantic_data_title_wrapper">
         <property name="visible">True</property>
@@ -55,7 +55,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkBox" id="button_hbox">
+      <object class="GtkBox" id="semantic_data_toolbar">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
@@ -122,6 +122,9 @@
             <property name="position">3</property>
           </packing>
         </child>
+        <style>
+          <class name="widget-toolbar"/>
+        </style>
       </object>
       <packing>
         <property name="expand">False</property>

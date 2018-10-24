@@ -16,9 +16,18 @@
     background-color: $bg_color;
 }
 
+.widget-toolbar {
+    background-color: $base_color;
+    border-top: 1px solid $borders_color_light;
+
+    toolbar, iconview {
+        background-color: $base_color;
+    }
+}
+
 // Add margin to the toolbar to have a spacer below it following the style of the paned spaces
 #toolbar {
-	margin-bottom:15px;
+	margin-bottom: $paned_separator_wide_width;
 }
 
 // Color for the margin of the #toolbar

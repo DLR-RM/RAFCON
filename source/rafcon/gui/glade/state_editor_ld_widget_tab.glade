@@ -190,7 +190,7 @@
                                                   </packing>
                                                 </child>
                                                 <child>
-                                                  <object class="GtkBox" id="hbox">
+                                                  <object class="GtkBox" id="input_port_toolbar">
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">False</property>
                                                     <child>
@@ -229,6 +229,9 @@
                                                         <property name="position">1</property>
                                                       </packing>
                                                     </child>
+                                                    <style>
+                                                      <class name="widget-toolbar"/>
+                                                    </style>
                                                   </object>
                                                   <packing>
                                                     <property name="expand">False</property>
@@ -274,7 +277,7 @@
                                                   </packing>
                                                 </child>
                                                 <child>
-                                                  <object class="GtkBox" id="hbox2">
+                                                  <object class="GtkBox" id="output_ports_toolbar">
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">False</property>
                                                     <child>
@@ -313,6 +316,9 @@
                                                         <property name="position">1</property>
                                                       </packing>
                                                     </child>
+                                                    <style>
+                                                      <class name="widget-toolbar"/>
+                                                    </style>
                                                   </object>
                                                   <packing>
                                                     <property name="expand">False</property>
@@ -362,7 +368,7 @@
                                                   </packing>
                                                 </child>
                                                 <child>
-                                                  <object class="GtkBox" id="hbox3">
+                                                  <object class="GtkBox" id="scoped_variables_ports_toolbar">
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">False</property>
                                                     <child>
@@ -401,6 +407,9 @@
                                                         <property name="position">1</property>
                                                       </packing>
                                                     </child>
+                                                    <style>
+                                                      <class name="widget-toolbar"/>
+                                                    </style>
                                                   </object>
                                                   <packing>
                                                     <property name="expand">False</property>

@@ -51,6 +51,7 @@ class StateOutcomesEditorView(View):
         self['remove_button'] = remove_button
 
         self.Hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+        self.Hbox.get_style_context().add_class("widget-toolbar")
         self.Hbox.pack_end(self['remove_button'], False, True, 0)
         self.Hbox.pack_end(self['add_button'], False, True, 0)
 

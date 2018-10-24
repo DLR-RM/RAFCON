@@ -48,6 +48,7 @@ class ExecutionHistoryView(View, Gtk.ScrolledWindow):
         open_separately_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
         button_box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+        button_box.get_style_context().add_class("widget-toolbar")
         button_box.pack_end(reload_button, False, True, 0)
         button_box.pack_end(clean_button, False, True, 0)
         button_box.pack_end(open_separately_button, False, True, 0)

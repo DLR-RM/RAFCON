@@ -449,7 +449,7 @@
                                   <placeholder/>
                                 </child>
                                 <child>
-                                  <object class="GtkBox" id="hbox2">
+                                  <object class="GtkBox" id="graphical_editor_toolbar">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <child>
@@ -799,6 +799,9 @@
                                         <property name="position">3</property>
                                       </packing>
                                     </child>
+                                    <style>
+                                      <class name="widget-toolbar"/>
+                                    </style>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>

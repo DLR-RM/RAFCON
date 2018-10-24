@@ -43,7 +43,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkBox" id="hbox4">
+      <object class="GtkBox" id="transitions_toolbar">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
@@ -116,6 +116,9 @@
             <property name="position">3</property>
           </packing>
         </child>
+        <style>
+          <class name="widget-toolbar"/>
+        </style>
       </object>
       <packing>
         <property name="expand">False</property>
