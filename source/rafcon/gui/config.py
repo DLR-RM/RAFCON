@@ -125,11 +125,20 @@ class GuiConfig(ObservableConfig):
         except IOError:
             raise ValueError("No color definitions found")
 
-        # replace unicode strings with str strings
-        colors = {str(key): str(value) for key, value in colors.iteritems()}
-        gtk_colors = {str(key): Gdk.Color.parse(str(value))[1] for key, value in colors.iteritems()}
-        self.gtk_colors.update(gtk_colors)
-        self.colors.update(colors)
+        for color_name, color_code in colors.items():
+            # replace unicode strings with str strings
+            color_name = str(color_name)
+            color_code = str(color_code)
+            if color_code.startswith("#"):
+                color = Gdk.Color.parse(color_code)[1]
+            elif color_code in self.colors:
+                color = self.gtk_colors[color_code]
+                color_code = self.gtk_colors[color_code]
+            else:
+                logger.warn("Undefined color alias '{}' for color name '{}'".format(color_code, color_name))
+                continue
+            self.gtk_colors[color_name] = color
+            self.colors[color_name] = color_code
 
     @staticmethod
     def get_assets_path(folder=None, filename=None, for_theme=True):
