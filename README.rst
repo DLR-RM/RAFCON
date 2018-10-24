@@ -91,28 +91,6 @@ Download RAFCON sources
    git clone https://github.com/DLR-RM/RAFCON rafcon
 
 
-Installing RAFCON (non-editable from source)
---------------------------------------------
-
-If you don't want to edit the source code of RAFCON, it can be installed directly from source:
-
-.. code-block:: bash
-
-   pip2 install /install/directory/rafcon/ --user
-
-
-Installing RAFCON (editable from source)
-----------------------------------------
-
-If you want to be able to change the source code, you can install RAFCON in editable mode.
-
-.. code-block:: bash
-
-   pip2 install --editable /install/directory/rafcon/ --user
-
-Any changes in ``/install/directory/rafcon/source`` will take effect when launching RAFCON.
-
-
 Start RAFCON
 ------------
 
@@ -124,18 +102,6 @@ No matter which installation option you choose, RAFCON can be started from any l
    rafcon
 
 
-Building the documentation
---------------------------
-
-The documentation is build with sphinx:
-
-.. code-block:: bash
-
-   sphinx-build -b html /install/directory/rafcon/doc /install/directory/rafcon/build_doc
-
-This will build the documentation in the /install/directory/rafcon/build_doc folder. Pass ``-b pdf`` to generate a PDF instead of a HTML page.
-
-
 Uninstallation
 --------------
 
@@ -144,15 +110,3 @@ If you want to uninstall RAFCON, all you need to do is call
 .. code-block:: bash
 
    pip2 uninstall rafcon
-
-
-Clean RAFCON directory
-----------------------
-
-If you want to clean the RAFCON directory /install/directory/rafcon from any build/installation artifacts, you can do so with:
-
-.. code-block:: bash
-
-   cd /install/directory/rafcon
-   rm -r build/ build_doc/ .eggs/ .cache/
-
