@@ -136,25 +136,20 @@
                                 <property name="can_focus">False</property>
                                 <property name="orientation">vertical</property>
                                 <child>
-                                  <object class="GtkViewport" id="data_ports_title_wrapper">
+                                  <object class="GtkEventBox" id="data_ports_label_eventbox">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="resize_mode">queue</property>
                                     <child>
-                                      <object class="GtkEventBox" id="label_wrapper">
+                                      <object class="GtkLabel" id="data_ports_label">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="border_width">10</property>
-                                        <child>
-                                          <object class="GtkLabel" id="data_ports_label">
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">False</property>
-                                            <property name="label" translatable="yes">Data Ports</property>
-                                            <property name="xalign">0</property>
-                                          </object>
-                                        </child>
+                                        <property name="label" translatable="yes">DATA PORTS</property>
+                                        <property name="xalign">0</property>
                                       </object>
                                     </child>
+                                    <style>
+                                      <class name="widget-title"/>
+                                    </style>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>

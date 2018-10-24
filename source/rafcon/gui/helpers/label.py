@@ -141,6 +141,18 @@ def append_sub_menu_to_parent_menu(name, parent_menu, icon_code=None):
     return sub_menu_item, sub_menu
 
 
+def create_widget_title(title, widget_name=None):
+    widget_name = widget_name if widget_name else title.lower()
+    label = Gtk.Label.new(title)
+    label.set_name("{}_title".format(widget_name))
+    label.set_xalign(0.0)
+    eventbox = Gtk.EventBox()
+    eventbox.set_name("{}_title_eventbox".format(widget_name))
+    eventbox.get_style_context().add_class("widget-title")
+    eventbox.add(label)
+    return eventbox
+
+
 def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
     """Create a button label with a chosen icon.
 

@@ -122,31 +122,12 @@ class MainWindowView(View):
         self['graphical_editor_vbox'].pack_start(self.state_machines_editor.get_top_widget(), True, True, 0)
         self['graphical_editor_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 0)
 
-        self['graphical_editor_label_event_box'].remove(self['graphical_editor_label'])
-        self['graphical_editor_label_event_box'].set_border_width(constants.GRID_SIZE)
-        graphical_editor_label = gui_helper_label.create_label_with_text_and_spacing(_('GRAPHICAL EDITOR'),
-                                                                                     font_size=constants.FONT_SIZE_BIG,
-                                                                                     letter_spacing=constants.
-                                                                                     LETTER_SPACING_1PT)
-        graphical_editor_label.xalign = 0.0
-        graphical_editor_label.yalign = 0.5
-        self['graphical_editor_label_event_box'].add(graphical_editor_label)
-
         ######################################################
         # States-editor
         ######################################################
         self.states_editor = StatesEditorView()
         self['state_editor_eventbox'].add(self.states_editor.get_top_widget())
         self.states_editor.show()
-
-        self['state_editor_label_hbox'].remove(self['state_editor_label'])
-        self['state_editor_label_hbox'].set_border_width(constants.GRID_SIZE)
-        state_editor_label = gui_helper_label.create_label_with_text_and_spacing(_('STATE EDITOR'),
-                                                                                 font_size=constants.FONT_SIZE_BIG,
-                                                                                 letter_spacing=constants.LETTER_SPACING_1PT)
-        graphical_editor_label.xalign = 0.0
-        graphical_editor_label.yalign = 0.0
-        self['state_editor_label_hbox'].add(state_editor_label)
 
         ######################################################
         # Debug Console

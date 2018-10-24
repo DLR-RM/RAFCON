@@ -54,6 +54,3 @@ class SemanticDataEditorView(View):
         is_dict_renderer = Gtk.CellRendererText()
         col = Gtk.TreeViewColumn('Is Dict', is_dict_renderer, text=self.IS_DICT_STORAGE_ID)
         tree_view.append_column(col)
-
-        gui_helper_label.set_label_markup(self['semantic_data_label'], 'SEMANTIC DATA',
-                                          letter_spacing=constants.LETTER_SPACING_1PT)

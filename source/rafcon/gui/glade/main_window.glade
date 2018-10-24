@@ -75,12 +75,10 @@
                                   <object class="GtkBox" id="state_editor_label_hbox1">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="border_width">5</property>
                                     <child>
                                       <object class="GtkLabel" id="upper_notebook_title">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="xpad">50</property>
                                         <property name="label">upper_notebook_title</property>
                                         <property name="xalign">0</property>
                                       </object>
@@ -88,25 +86,6 @@
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
                                         <property name="position">0</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkEventBox" id="undock_left_bar">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <child>
-                                          <object class="GtkButton" id="undock_left_bar_button">
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">True</property>
-                                            <property name="receives_default">True</property>
-                                          </object>
-                                        </child>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="pack_type">end</property>
-                                        <property name="position">1</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -128,6 +107,28 @@
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
+                                    <child>
+                                      <object class="GtkEventBox" id="undock_left_bar">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <child>
+                                          <object class="GtkButton" id="undock_left_bar_button">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">True</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="pack_type">end</property>
+                                        <property name="position">1</property>
+                                      </packing>
+                                    </child>
+                                    <style>
+                                      <class name="widget-title"/>
+                                    </style>
                                   </object>
                                 </child>
                               </object>
@@ -232,30 +233,20 @@
                             <property name="can_focus">False</property>
                             <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkEventBox" id="eventbox6">
+                              <object class="GtkEventBox" id="lower_notebook_title_eventbox">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <child>
-                                  <object class="GtkBox" id="hbox4">
+                                  <object class="GtkLabel" id="lower_notebook_title">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="border_width">10</property>
-                                    <child>
-                                      <object class="GtkLabel" id="lower_notebook_title">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="xpad">50</property>
-                                        <property name="label">lower_notebook_title</property>
-                                        <property name="xalign">0</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">0</property>
-                                      </packing>
-                                    </child>
+                                    <property name="label">lower_notebook_title</property>
+                                    <property name="xalign">0</property>
                                   </object>
                                 </child>
+                                <style>
+                                  <class name="widget-title"/>
+                                </style>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -428,23 +419,20 @@
                             <property name="can_focus">False</property>
                             <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkViewport" id="graphical_editor_title_wrapper">
+                              <object class="GtkEventBox" id="graphical_editor_label_event_box">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <child>
-                                  <object class="GtkEventBox" id="graphical_editor_label_event_box">
+                                  <object class="GtkLabel" id="graphical_editor_label">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <child>
-                                      <object class="GtkLabel" id="graphical_editor_label">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">GRAPHICAL EDITOR</property>
-                                        <property name="xalign">0</property>
-                                      </object>
-                                    </child>
+                                    <property name="label" translatable="yes">GRAPHICAL EDITOR</property>
+                                    <property name="xalign">0</property>
                                   </object>
                                 </child>
+                                <style>
+                                  <class name="widget-title"/>
+                                </style>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -921,20 +909,16 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <child>
-                                  <object class="GtkEventBox" id="state_editor_label_hbox">
+                                  <object class="GtkLabel" id="state_editor_label">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <child>
-                                      <object class="GtkLabel" id="state_editor_label">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">STATE EDITOR</property>
-                                        <property name="xalign">0</property>
-                                      </object>
-                                    </child>
+                                    <property name="label" translatable="yes">STATE EDITOR</property>
+                                    <style>
+                                      <class name="widget-title"/>
+                                    </style>
                                   </object>
                                   <packing>
-                                    <property name="expand">True</property>
+                                    <property name="expand">False</property>
                                     <property name="fill">True</property>
                                     <property name="position">0</property>
                                   </packing>
@@ -958,6 +942,9 @@
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
+                                <style>
+                                  <class name="widget-title"/>
+                                </style>
                               </object>
                             </child>
                           </object>

@@ -51,9 +51,6 @@ class StateEditorView(View):
         self.page_dict = {}
         self.notebook_names = ['main_notebook_1', 'main_notebook_2']
 
-        gui_helper_label.set_label_markup(self['data_ports_label'], 'DATA PORTS',
-                                          letter_spacing=constants.LETTER_SPACING_1PT)
-
         self.properties_view = StateOverviewView()
         self.inputs_view = InputPortsListView()
         self.outputs_view = OutputPortsListView()

@@ -3,29 +3,28 @@
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkBox" id="main_frame_vbox">
-    <property name="orientation">vertical</property>
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="resize_mode">queue</property>
+    <property name="orientation">vertical</property>
     <child>
       <object class="GtkEventBox" id="debug_eventbox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
           <object class="GtkBox" id="console_container">
-            <property name="orientation">vertical</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
             <child>
               <object class="GtkBox" id="console">
-                <property name="orientation">vertical</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkBox" id="debug_label_hbox">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="border_width">5</property>
                     <child>
                       <object class="GtkLabel" id="debug_console_label">
                         <property name="visible">True</property>
@@ -170,6 +169,9 @@
                         <property name="position">2</property>
                       </packing>
                     </child>
+                    <style>
+                      <class name="widget-title"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>

@@ -62,8 +62,3 @@ class LinkageOverviewView(View):
         self.outputs_view.scrollbar_widget = self['outputs_scroller']
         self.scope_view.scrollbar_widget = self['scoped_scroller']
         self.outcomes_view.scrollbar_widget = self['outcomes_scroller']
-
-        gui_helper_label.set_label_markup(self['data_linkage_label'], 'DATA PORTS',
-                                          letter_spacing=constants.LETTER_SPACING_1PT)
-        gui_helper_label.set_label_markup(self['logical_linkage_label'], 'LOGICAL PORTS',
-                                          letter_spacing=constants.LETTER_SPACING_1PT)

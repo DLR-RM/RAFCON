@@ -36,6 +36,20 @@ $darker_asset_suffix: if($darker=='true', '-dark', $asset_suffix);
 //
 // Base States
 //
+
+.widget-title {
+    > label {
+        color: $fg_color_transparent;
+        font-family: DINNextLTPro;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 1.1px;
+        min-height:40px;
+        padding-left:20px;
+    }
+    background-color: $bg_color;
+}
+
 .background {
   color: $fg_color;
   background-color: if($transparency == 'true', transparentize($bg_color, 0.001), $bg_color); // without this headerbar transparency doesn't seem to work
