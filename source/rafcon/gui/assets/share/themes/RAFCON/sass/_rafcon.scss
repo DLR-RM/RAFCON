@@ -1,0 +1,17 @@
+
+//
+// RAFCON specific styles
+//
+
+.widget-title {
+    > label {
+        color: $fg_color_transparent;
+        font-family: DINNextLTPro;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 1.1px;
+        min-height:40px;
+        padding-left:20px;
+    }
+    background-color: $bg_color;
+}
