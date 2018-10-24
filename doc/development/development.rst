@@ -19,6 +19,12 @@ Getting Started
 .. include:: includes/getting_started.rst
 
 
+Install RAFCON from Sources
+---------------------------
+
+.. include:: includes/install_from_sources.rst
+
+
 Code of Conduct
 ---------------
 

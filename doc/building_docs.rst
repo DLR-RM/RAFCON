@@ -14,3 +14,10 @@ provided PyCharm run configuration `Build Documentation` or manually in the cons
 
 This will build the documentation in the `build_doc` folder. Pass `-b pdf` to generate a PDF instead of a HTML page.
 
+
+If you want to clean the RAFCON directory /install/directory/rafcon from any build/installation artifacts, you can do so with:
+
+.. code-block:: bash
+
+   cd /install/directory/rafcon
+   rm -r build/ build_doc/ .eggs/ .cache/
