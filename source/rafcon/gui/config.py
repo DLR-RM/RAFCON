@@ -99,26 +99,27 @@ class GuiConfig(ObservableConfig):
 
     def configure_colors(self):
         from gi.repository import Gdk
+        dark_theme = self.get_config_value('THEME', 'dark') == 'dark'
+        css_filename = "gtk-dark.css" if dark_theme else "gtk.css"
         # Get colors from GTKrc file
-        if not resource_exists(__name__, self.get_assets_path("gtk-2.0", "gtkrc")):
+        if not resource_exists(__name__, self.get_assets_path("gtk-3.0", css_filename)):
             raise ValueError("GTK theme does not exist")
 
-        gtkrc_file_path = resource_filename(__name__, self.get_assets_path("gtk-2.0", "gtkrc"))
+        gtkrc_file_path = resource_filename(__name__, self.get_assets_path("gtk-3.0", css_filename))
         with open(gtkrc_file_path) as f:
             lines = f.readlines()
 
         for line in lines:
-            if re.match("\s*gtk_color_scheme", line):
-                color = re.findall(r'"(.*?)"', line)
-                color = color[0]
-                color = color.split(':')
-                self.colors[color[0].upper()] = color[1]
-                self.gtk_colors[color[0].upper()] = Gdk.Color.parse(color[1])[1]
+            match = re.match("\s*@define-color (\w*) (#[\w]{3,6})", line)
+            if match:
+                color_name = match.group(1).upper()
+                color_code = match.group(2)
+                self.colors[color_name] = color_code
+                self.gtk_colors[color_name] = Gdk.Color.parse(color_code)[1]
 
         # Get color definitions
-        dark_theme = self.get_config_value('THEME', 'dark') == 'dark'
-        filename = "colors-dark.json" if dark_theme else "colors.json"
-        color_file_path = resource_filename(__name__, self.get_assets_path(filename=filename))
+        colors_filename = "colors-dark.json" if dark_theme else "colors.json"
+        color_file_path = resource_filename(__name__, self.get_assets_path(filename=colors_filename))
         try:
             colors = storage_utils.load_objects_from_json(color_file_path)
         except IOError:
