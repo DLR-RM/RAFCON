@@ -409,7 +409,7 @@ class PortView(object):
         if self.connected:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_rgb(*gui_config.gtk_colors['BLACK'].to_floats())
+            c.set_source_rgb(*gui_config.gtk_colors['PORT_UNCONNECTED'].to_floats())
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -441,7 +441,7 @@ class PortView(object):
         if self.connected_incoming:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_rgb(*gui_config.gtk_colors['BLACK'].to_floats())
+            c.set_source_rgb(*gui_config.gtk_colors['PORT_UNCONNECTED'].to_floats())
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -456,7 +456,7 @@ class PortView(object):
         if self.connected_outgoing:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_rgb(*gui_config.gtk_colors['BLACK'].to_floats())
+            c.set_source_rgb(*gui_config.gtk_colors['PORT_UNCONNECTED'].to_floats())
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -614,6 +614,9 @@ class IncomeView(LogicPortView):
     def __init__(self, parent):
         super(IncomeView, self).__init__(in_port=True, parent=parent, side=SnappedSide.LEFT)
 
+        self.text_color = gui_config.gtk_colors['OUTCOME_PORT']
+        self.fill_color = gui_config.gtk_colors['OUTCOME_PORT']
+
     def draw(self, context, state, highlight=False):
         self.draw_port(context, self.fill_color, state.transparency)
 
@@ -657,7 +660,7 @@ class OutcomeView(LogicPortView):
         elif self.outcome_id == -1:
             fill_color = gui_config.gtk_colors['ABORTED']
         else:
-            fill_color = gui_config.gtk_colors['LABEL']
+            fill_color = gui_config.gtk_colors['OUTCOME_PORT']
 
         self.draw_port(context, fill_color, state.transparency)
 
