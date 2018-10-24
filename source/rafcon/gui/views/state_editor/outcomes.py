@@ -34,7 +34,7 @@ class StateOutcomesEditorView(View):
     def __init__(self):
         super(StateOutcomesEditorView, self).__init__()
 
-        self.vbox = Gtk.VBox()
+        self.vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.treeView = StateOutcomesTreeView()
 
         add_button = Gtk.Button('Add')
@@ -50,7 +50,7 @@ class StateOutcomesEditorView(View):
         self['add_button'] = add_button
         self['remove_button'] = remove_button
 
-        self.Hbox = Gtk.HBox()
+        self.Hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
         self.Hbox.pack_end(self['remove_button'], False, True, 0)
         self.Hbox.pack_end(self['add_button'], False, True, 0)
 

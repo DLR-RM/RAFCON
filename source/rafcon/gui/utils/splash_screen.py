@@ -37,7 +37,7 @@ class SplashScreen(Gtk.Window):
         self.set_default_size(width, height)
         self.set_position(Gtk.WindowPosition.CENTER)
 
-        main_vbox = Gtk.VBox(False, 1)
+        main_vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.add(main_vbox)
         self.image = Gtk.Image()
         # If an img path was defined, create a gtk img and fill it from a pixelbuffer which is created from the

@@ -34,7 +34,7 @@ class SourceEditorView(EditorView):
                 self.textview.set_highlight_current_line(True)
         except NameError:
             pass
-        hbox = Gtk.HBox()
+        hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
         pylint_check_button = Gtk.CheckButton("Validate")
         pylint_check_button.set_focus_on_click(False)
         # pylint_check_button.set_border_width(constants.BUTTON_BORDER_WIDTH)

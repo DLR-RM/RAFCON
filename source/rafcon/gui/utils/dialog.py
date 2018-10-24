@@ -100,7 +100,7 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
         vbox = self.get_action_area().get_parent()
         vbox.remove(self.get_action_area())
 
-        self.hbox = Gtk.HBox(homogeneous=False, spacing=constants.GRID_SIZE)
+        self.hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, constants.GRID_SIZE)
         if button_texts:
             for index, button in enumerate(button_texts, 1):
                     button = Gtk.Button(button)
@@ -147,7 +147,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
                                                 message_type, flags, parent, width)
 
         # Create a new Gtk.Hbox to put in the checkbox and entry
-        hbox = Gtk.HBox(homogeneous=False, spacing=constants.GRID_SIZE)
+        hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, constants.GRID_SIZE)
         self.get_content_area().add(hbox)
 
         # Setup new text entry line
@@ -205,7 +205,7 @@ class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
         super(RAFCONColumnCheckboxDialog, self).__init__(markup_text, button_texts, callback, callback_args,
                                                          message_type, flags, parent, width)
 
-        checkbox_vbox = Gtk.VBox(homogeneous=False, spacing=constants.GRID_SIZE)
+        checkbox_vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, constants.GRID_SIZE)
         self.get_content_area().add(checkbox_vbox)
         # this is not really needed i guess if I can get the checkboxes over the content area anyway
         # TODO change this to a solution without the list.

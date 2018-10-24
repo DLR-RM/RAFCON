@@ -83,7 +83,7 @@ def create_tab_header(title, close_callback, right_click_callback, *additional_p
     label = Gtk.Label(label=title)
     close_button = create_tab_close_button(close_callback, *additional_parameters)
 
-    hbox = Gtk.HBox()
+    hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
     hbox.pack_start(label, expand=True, fill=True, padding=constants.GRID_SIZE)
     hbox.pack_start(close_button, expand=False, fill=False, padding=0)
 

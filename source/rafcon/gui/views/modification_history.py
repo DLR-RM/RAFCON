@@ -67,14 +67,14 @@ class ModificationHistoryView(View, Gtk.ScrolledWindow):
         folded_checkbox.set_tooltip_text('Fold branches')
         folded_checkbox.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
-        button_hbox = Gtk.HBox()
+        button_hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
         button_hbox.pack_end(folded_checkbox, False, True, 0)
         button_hbox.pack_end(branch_checkbox, False, True, 0)
         button_hbox.pack_end(reset_button, False, True, 0)
         button_hbox.pack_end(redo_button, False, True, 0)
         button_hbox.pack_end(undo_button, False, True, 0)
 
-        history_vbox = Gtk.VBox()
+        history_vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         history_vbox.pack_start(self, True, True, 0)
         history_vbox.pack_start(button_hbox, False, True, 0)
 

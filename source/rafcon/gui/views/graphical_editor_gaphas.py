@@ -41,7 +41,7 @@ class GraphicalEditorView(View, GObject.GObject):
         GObject.GObject.__init__(self)
         View.__init__(self)
 
-        self.v_box = Gtk.VBox()
+        self.v_box = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.scroller = Gtk.ScrolledWindow()
         self.scroller.set_name('graphical_editor_scroller')
         self.editor = ExtendedGtkView(self, selection_m)

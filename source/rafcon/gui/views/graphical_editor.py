@@ -157,7 +157,7 @@ class GraphicalEditorView(View):
         except Gtk.gdkgl.NoMatches:
             raise SystemExit
 
-        self.v_box = Gtk.VBox()
+        self.v_box = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.editor = GraphicalEditor(glconfig)
         self.editor.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.BUTTON_MOTION_MASK |
                                Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK | Gdk.EventMask.POINTER_MOTION_MASK)

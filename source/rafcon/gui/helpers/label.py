@@ -57,7 +57,7 @@ def create_label_with_text_and_spacing(text, font=constants.INTERFACE_FONT, font
 
 
 def create_label_widget_with_icon(icon, text, tooltip=None):
-    hbox = Gtk.HBox()
+    hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
 
     icon_label = Gtk.Label()
     icon_label.set_markup('<span font_desc="{0} {1}">&#x{2};</span>'.format(constants.ICON_FONT,
