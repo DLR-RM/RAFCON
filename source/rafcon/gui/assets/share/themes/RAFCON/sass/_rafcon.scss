@@ -15,3 +15,18 @@
     }
     background-color: $bg_color;
 }
+
+// Add margin to the toolbar to have a spacer below it following the style of the paned spaces
+#toolbar {
+	margin-bottom:15px;
+}
+
+// Color for the margin of the #toolbar
+#top_level_vbox {
+	background-color: $borders_color;
+}
+
+// Proper background color when no state is loaded
+#graphical_editor_vbox, #state_editor_eventbox {
+    background-color: $base_color;
+}
