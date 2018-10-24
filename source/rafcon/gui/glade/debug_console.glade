@@ -193,6 +193,9 @@
                 <property name="can_focus">True</property>
                 <property name="focus_on_click">False</property>
                 <property name="receives_default">True</property>
+                <style>
+                  <class name="sidebar-toggle"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">False</property>
