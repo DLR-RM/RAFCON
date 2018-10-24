@@ -116,7 +116,9 @@ class GuiConfig(ObservableConfig):
                 self.gtk_colors[color[0].upper()] = Gdk.Color.parse(color[1])[1]
 
         # Get color definitions
-        color_file_path = resource_filename(__name__, self.get_assets_path(filename="colors.json"))
+        dark_theme = self.get_config_value('THEME', 'dark') == 'dark'
+        filename = "colors-dark.json" if dark_theme else "colors.json"
+        color_file_path = resource_filename(__name__, self.get_assets_path(filename=filename))
         try:
             colors = storage_utils.load_objects_from_json(color_file_path)
         except IOError:

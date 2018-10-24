@@ -137,6 +137,7 @@ def generate_data_files():
         get_data_files_tuple(themes_folder, 'RAFCON', 'gtk-2.0', 'gtkrc', path_to_file=True),
         get_data_files_tuple(themes_folder, 'RAFCON', 'gtk-3.0'),
         get_data_files_tuple(themes_folder, 'RAFCON', 'colors.json', path_to_file=True),
+        get_data_files_tuple(themes_folder, 'RAFCON', 'colors-dark.json', path_to_file=True),
         get_data_files_tuple(themes_folder, 'RAFCON', 'gtk-sourceview'),
     ]
 
