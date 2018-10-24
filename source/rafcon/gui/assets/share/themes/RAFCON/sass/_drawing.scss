@@ -331,7 +331,7 @@
   $_dash_bg_size: 10px 1px;
   $_gradient_repeat: repeat-x;
   $_bg_pos: center $p;
-
+  /*
   background-color: transparent; // shouldn't be needed, but better to be sure;
 
   @if ($p == left) or ($p == right) {
@@ -350,5 +350,5 @@
   background-repeat: $_gradient_repeat;
   background-origin: content-box;
   background-position: $_bg_pos;
-  border: none;
+  border: none;*/
 }
