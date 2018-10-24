@@ -26,7 +26,6 @@ from rafcon.core.state_elements.transition import Transition
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.controllers.state_editor.linkage_list import LinkageListController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers.label import format_cell
 from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
@@ -79,10 +78,6 @@ class StateTransitionsListController(LinkageListController):
         """Called when the View was registered
         """
         super(StateTransitionsListController, self).register_view(view)
-        format_cell(view['from_state_combo'], None, 0)
-        format_cell(view['to_state_combo'], None, 0)
-        format_cell(view['from_outcome_combo'], None, 0)
-        format_cell(view['to_outcome_combo'], None, 0)
 
         def cell_text(column, cell_renderer, model, iter, data):
             t_id = model.get_value(iter, self.ID_STORAGE_ID)

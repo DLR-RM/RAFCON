@@ -253,19 +253,6 @@ def set_label_markup(label, text, font=constants.INTERFACE_FONT, font_size=const
                                                                                         letter_spacing, text))
 
 
-def format_cell(cell, height=None, padding=None):
-    cell.set_property("cell-background-set", True)
-    cell.set_property("cell-background-gdk", global_gui_config.gtk_colors['INPUT_BACKGROUND'])
-    cell.set_property("background-set", True)
-    cell.set_property("background-gdk", global_gui_config.gtk_colors['INPUT_BACKGROUND'])
-    cell.set_property("foreground-set", True)
-    cell.set_property("foreground-gdk", global_gui_config.gtk_colors['TEXT_DEFAULT'])
-    if height:
-        cell.set_property("height", height)
-    if padding:
-        cell.set_padding(padding, padding)
-
-
 def set_window_size_and_position(window, window_key):
     """Adjust GTK Window's size, position and maximized state according to the corresponding values in the
     runtime_config file. The maximize method is triggered last to restore also the last stored size and position of the

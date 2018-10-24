@@ -45,7 +45,6 @@ class GraphicalEditorView(View, GObject.GObject):
         self.scroller = Gtk.ScrolledWindow()
         self.scroller.set_name('graphical_editor_scroller')
         self.editor = ExtendedGtkView(self, selection_m)
-        self.editor.modify_bg(Gtk.StateType.NORMAL, global_gui_config.gtk_colors['INPUT_BACKGROUND'])
         self.editor.tool = ToolChain(self.editor). \
             append(HoverItemTool()). \
             append(MoveHandleTool()). \
