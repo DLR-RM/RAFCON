@@ -4,6 +4,9 @@
 //
 
 .widget-title {
+    background-color: $bg_color;
+    border-top: 1px solid $borders_color;
+    border-bottom: 1px solid $borders_color;
     > label {
         color: $fg_color_transparent;
         font-family: DINNextLTPro;
@@ -13,7 +16,6 @@
         min-height:40px;
         padding-left:20px;
     }
-    background-color: $bg_color;
 }
 
 .widget-toolbar {
