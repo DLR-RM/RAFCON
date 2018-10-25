@@ -497,10 +497,14 @@ class MainWindowController(ExtendedController):
         config_parameter_undocked = window_key + '_WINDOW_UNDOCKED'
         undocked_window_name = window_key.lower() + '_window'
         widget_name = window_key.lower()
+        undocked_window_view = getattr(self.view, undocked_window_name)
 
         self.view['main_window'].disconnect(self.handler_ids[undocked_window_name]['state'])
         getattr(self, 'on_{}_return_clicked'.format(widget_name))(None)
-        self.view[widget_name].reparent(self.view[sidebar_name])
+
+        undocked_window_view['central_eventbox'].remove(self.view[widget_name])
+        self.view[sidebar_name].pack_start(self.view[widget_name], True, True, 0)
+
         self.get_controller(controller_name).hide_window()
         self.view['undock_{}_button'.format(widget_name)].show()
         if replacement_name:
