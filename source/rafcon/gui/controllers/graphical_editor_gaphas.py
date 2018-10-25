@@ -215,8 +215,7 @@ class GraphicalEditorController(ExtendedController):
 
     @lock_state_machine
     def data_flow_mode(self, *args):
-        self.handle_selected_states(self.model.selection.states)
-        self.canvas.update_root_items()
+        pass
 
     @lock_state_machine
     def _add_new_state(self, *event, **kwargs):
