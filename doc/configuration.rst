@@ -123,6 +123,7 @@ A typical config file looks like this:
     GAPHAS_EDITOR: True
     GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE: True
     ENABLE_CACHING: True    # Affects only Gaphas editor
+    THEME_DARK_VARIANT: True
     DRAG_N_DROP_WITH_FOCUS: False
 
     WAYPOINT_SNAP_ANGLE: 45
@@ -300,6 +301,10 @@ GAPHAS\_EDITOR\_AUTO\_FOCUS\_OF\_ROOT\_STATE
 ENABLE\_CACHING:
   | Default: ``True``
   | Affects only Gaphas editor and enables a accelerating caching feature.
+
+THEME\_DARK\_VARIANT:
+  | Default: ``True``
+  | If ``True``, a dark theme will be used, else a light theme
 
 WAYPOINT\_SNAP\_ANGLE
   | Default: ``45``
