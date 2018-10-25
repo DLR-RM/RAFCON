@@ -19,8 +19,6 @@ Core Features
     Data Flows + Data Ports                             x               For explicit data modeling
     Default Values for Data Ports                       x
     Scoped Variable Concept                             x               Private, scoped and global data
-    Default Values for Libraries                        x               Defined by the library creator
-    Runtime Values for Libraries                        x               Defined by the user
     Every State Machine can be used as Library          x               Without any overhead
     Execution Capabilities:                             x               IDE like debugging mechanism
     - Start, Stop, Pause                                x
@@ -33,8 +31,8 @@ Core Features
     - Execution Signals and Preemptive Waits            x
     Remote Monitoring                                   x               Via Monitoring-Plugin
     Dynamic Modifications Possible                      x
-    API for Programmatic Behavior Generation            x
-    Logging Library incl. Different Logging Levels      x
+    API for Programmatic State Machine Generation       x
+    Customizable Logging Features                       x
     ==============================================      ===========     ========================
 
 
@@ -48,7 +46,7 @@ GUI Features
     ===============================================     ===========     ========================
     Features                                            Unit Tested     Notes
     ===============================================     ===========     ========================
-    State Machine Visualizer                            x               OpenGL and Gaphas support
+    State Machine Visualizer                            x               Using Gaphas
     State Machine Editor                                x
     - Creation of State Machines Elements               x
     - Navigation inside State Machine incl. Zoom        x
@@ -62,13 +60,12 @@ GUI Features
     Embedded Source Code Editor                         x
     Code Syntax Check                                   x
     Library Tree                                        x
-    State Machine Tree                                  x               Next to graphical editor for easy state
-    selection
+    State Machine Tree                                  x               Next to graphical editor for easy state selection
     Modification History                                x
     Online Execution History                            x
     State Description                                   x               Name, ID, type, link to library
     Logging Console View                                x
-    Proper CSS-like Design                              x               In GTK3, css will be used
+    Design by Professional Interface Designers          x               In GTK3, css will be used
     Resizeable, Detachable and Foldable Widgets         x
     Restoring of User Specific GUI Layout               x
     Library Relocation Support Mechanism                x
@@ -83,8 +80,7 @@ GUI Features
     - Grouping and Ungrouping of States                 x
     - Drag and Drop of States                           x
     - State Type Change                                 x
-    - Right Click Menus                                 x
-    - Intelligent State Connector                       x               e.g. connect income/outcome with closest sibling
+    - Intelligent Auto State Connector                  x               e.g. connect income/outcome with closest sibling
     ===============================================     ===========     ========================
 
 
@@ -117,21 +113,16 @@ Misc Features
     Features                                            Unit Tested     Notes
     ==============================================      ===========     ========================
     State Machine Versioning                            _               Via git
-    State Machine Deployment                            _               Via git, rmpm, conan
     Human Readable File Format                          _               json and yaml
     Programmable in Python                              x               Python 2 (Python 3 in progress)
     Middleware Independent                              x               Tested with: ros, links and nodes, sensornet, and DDS
     Core and GUI Separated                              x               Core can run on micro-controller with slim Python setup
-    Documentation via Sphinx                            _               Via Restructured Text (rst)
-    Plugin Concept                                      _               Custom plugin concept
+    Extensive Documentation                             _               Via Restructured Text (rst) and Sphinx
+    Plugin Concept                                      _               Several plugins available
     Backward Compatibility                              x               Breaking changes are clearly outlined
     No Memory Leaks                                     x               See test_destruct.py in tests folder
     Continuous Integration                              x               Buildbot / Jenkins
     Usable in Different Robotic Domains                 x               Used in: Space, Industry, Service
-    Scalability:                                        x
-    - Examples up to 700 States                         x               Year: 2015
-    - Examples up to 1500 States                        x               Year: 2017
-    - Examples up to 4000 States                        x               Year: 2018
-    Example States Available                            x               See GitHub
+    Scalability: Tested with >4000 states               x
     Video Tutorials                                     x               Youtube (only one available, more to come)
     ==============================================      ===========     ========================
