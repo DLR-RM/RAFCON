@@ -47,7 +47,6 @@ class GuiConfig(ObservableConfig):
 
     def __init__(self, logger_object=None):
         super(GuiConfig, self).__init__(DEFAULT_CONFIG, logger_object)
-        self.load()
         if self.get_config_value("TYPE") != "GUI_CONFIG":
             raise ConfigError("Type should be GUI_CONFIG for GUI configuration. "
                               "Please add \"TYPE: GUI_CONFIG\" to your gui_config.yaml file.")
