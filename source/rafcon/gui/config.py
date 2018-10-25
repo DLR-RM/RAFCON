@@ -82,7 +82,7 @@ class GuiConfig(ObservableConfig):
             raise ValueError("GTK theme 'RAFCON' does not exist")
 
         theme_name = "RAFCON"
-        dark_theme = self.get_config_value('THEME', 'dark') == 'dark'
+        dark_theme = self.get_config_value('THEME_DARK_VARIANT', True)
 
         data_dir = resource_filename(__name__, self.get_assets_path(for_theme=False))
         os.environ['GTK_DATA_PREFIX'] = data_dir
@@ -101,7 +101,7 @@ class GuiConfig(ObservableConfig):
 
     def configure_colors(self):
         from gi.repository import Gdk
-        dark_theme = self.get_config_value('THEME', 'dark') == 'dark'
+        dark_theme = self.get_config_value('THEME_DARK_VARIANT', True)
         css_filename = "gtk-dark.css" if dark_theme else "gtk.css"
         # Get colors from GTKrc file
         if not resource_exists(__name__, self.get_assets_path("gtk-3.0", css_filename)):
