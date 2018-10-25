@@ -93,7 +93,7 @@ WINDOW_SIZE = {'MAIN_WINDOW': (1800, 900), 'LEFT_BAR_WINDOW': (300, 800), 'RIGHT
 PANE_ID = {'LEFT_BAR_DOCKED_POS': 'top_level_h_pane',
            'RIGHT_BAR_DOCKED_POS': 'right_h_pane',
            'CONSOLE_DOCKED_POS': 'central_v_pane',
-           'LEFT_BAR_INNER_PANE_POS': 'left_bar'}
+           'LEFT_BAR_INNER_PANE_POS': 'left_bar_paned'}
 
 # a mapping of runtime config values for the hidden status of all three main bars (left, right and console)
 # to hide functions (located in the main_window controller)

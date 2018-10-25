@@ -163,7 +163,7 @@ class MainWindowController(ExtendedController):
         # Undocked Windows Controllers
         ######################################################
         for window_key in constants.UNDOCKABLE_WINDOW_KEYS:
-            widget_name = "left_sidebar_viewport" if window_key == 'LEFT_BAR' else window_key.lower() + "_container"
+            widget_name = window_key.lower() + "_container"
             replacement_name = None if window_key == 'CONSOLE' else window_key.lower() + "_replacement"
             window_ctrl_name = window_key.lower() + "_window_controller"
             undocked_window_view = getattr(view, window_key.lower() + "_window")

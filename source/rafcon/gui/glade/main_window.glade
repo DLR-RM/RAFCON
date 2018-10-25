@@ -53,11 +53,11 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkViewport" id="left_sidebar_viewport">
+                  <object class="GtkViewport" id="left_bar">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkPaned" id="left_bar">
+                      <object class="GtkPaned" id="left_bar_paned">
                         <property name="width_request">38</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -92,11 +92,11 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkEventBox" id="collapse_tree">
+                                      <object class="GtkEventBox" id="undock_left_bar">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <child>
-                                          <object class="GtkButton" id="collapse_tree_button">
+                                          <object class="GtkButton" id="undock_left_bar_button">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -114,11 +114,11 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkEventBox" id="undock_left_bar">
+                                      <object class="GtkEventBox" id="collapse_tree">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <child>
-                                          <object class="GtkButton" id="undock_left_bar_button">
+                                          <object class="GtkButton" id="collapse_tree_button">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
