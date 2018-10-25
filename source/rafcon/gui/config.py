@@ -64,6 +64,9 @@ class GuiConfig(ObservableConfig):
                 config_file = CONFIG_FILE
         super(GuiConfig, self).load(config_file, path)
 
+        self.configure_gtk()
+        self.configure_colors()
+
         # fill up shortcuts
         if not using_default_config:
             default_gui_config = yaml.load(self.default_config) if self.default_config else {}
