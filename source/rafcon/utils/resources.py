@@ -21,18 +21,18 @@ from os.path import expanduser, isfile, join
 import pkg_resources
 
 
-paths_to_search_for_resource = [
+share_folder_paths = [
     join(expanduser("~"), ".local", "share"),
-    join('usr', 'local', 'share'),
-    join('usr', 'share'),
+    join(os.sep, 'usr', 'local', 'share'),
+    join(os.sep, 'usr', 'share'),
 ]
 
 # Check for non-default PYTHONUSERBASE and add it to the seach path list
 pythonuserbase = os.getenv("PYTHONUSERBASE")
 if pythonuserbase:
     pythonuserbase = join(pythonuserbase, "share")
-    if pythonuserbase not in paths_to_search_for_resource:
-        paths_to_search_for_resource.append(pythonuserbase)
+    if pythonuserbase not in share_folder_paths:
+        share_folder_paths.append(pythonuserbase)
 
 
 def resource_filename(package_or_requirement, resource_name):
@@ -48,24 +48,10 @@ def resource_filename(package_or_requirement, resource_name):
     if pkg_resources.resource_exists(package_or_requirement, resource_name):
         return pkg_resources.resource_filename(package_or_requirement, resource_name)
 
-    package_or_requirement_os = os.path.join(package_or_requirement.split("."))
+    path = _search_in_share_folders(package_or_requirement, resource_name)
 
-    # go up the whole module path and search for the module
-    # i.e. if a resource "r" is searched in rafcon.gui.controllers,
-    # the resource "r" residing in rafcon.gui may also be returned
-    while not package_or_requirement_os == []:
-        paths = map(
-            lambda path: os.path.join(os.path.join(path, *package_or_requirement_os), resource_name),
-            paths_to_search_for_resource,
-        )
-
-        for path in paths:
-            if os.path.isfile(path):
-                return path
-            if os.path.isdir(path):
-                return path
-
-        package_or_requirement_os = package_or_requirement_os[:-1]
+    if path:
+        return path
 
     raise RuntimeError("Resource {} not found in {}".format(package_or_requirement, resource_name))
 
@@ -83,25 +69,9 @@ def resource_exists(package_or_requirement, resource_name):
     if pkg_resources.resource_exists(package_or_requirement, resource_name):
         return True
 
-    package_or_requirement_os = os.path.join(package_or_requirement.split("."))
+    path = _search_in_share_folders(package_or_requirement, resource_name)
 
-    # go up the whole module path and search for the module
-    # i.e. if a resource "r" is searched in rafcon.gui.controllers,
-    # the resource "r" residing in rafcon.gui may also be returned
-    while not package_or_requirement_os == []:
-        paths = map(
-            lambda path: os.path.join(os.path.join(path, *package_or_requirement_os), resource_name),
-            paths_to_search_for_resource,
-        )
-
-        for path in paths:
-            if os.path.isfile(path):
-                return True
-            if os.path.isdir(path):
-                return True
-        package_or_requirement_os = package_or_requirement_os[:-1]
-
-    return False
+    return True if path else False
 
 
 def resource_string(package_or_requirement, resource_name):
@@ -132,3 +102,23 @@ def resource_listdir(package_or_requirement, relative_path):
     only_files = [f for f in listdir(path) if isfile(join(path, f))]
     return only_files
 
+
+def _search_in_share_folders(package_or_requirement, resource_name):
+    package_or_requirement_segments = package_or_requirement.split(".")
+
+    # go up the whole module path and search for the module
+    # i.e. if a resource "r" is searched in rafcon.gui.controllers,
+    # the resource "r" residing in rafcon.gui may also be returned
+    while package_or_requirement_segments:
+        paths = map(
+            lambda path: os.path.join(os.path.join(path, *package_or_requirement_segments), resource_name),
+            share_folder_paths,
+        )
+
+        for path in paths:
+            if os.path.isfile(path) or os.path.isdir(path):
+                return path
+
+        package_or_requirement_segments.pop()
+
+    return None

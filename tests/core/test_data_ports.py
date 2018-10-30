@@ -229,6 +229,29 @@ def test_runtime_checks_for_data_port_data_types(caplog):
     testing_utils.shutdown_environment_only_core(caplog=caplog, expected_errors=6)
 
 
+def test_connections_from_object_type(caplog):
+    parent_state = HierarchyState("parent")
+    child_state = ExecutionState("child")
+    parent_state.add_state(child_state)
+
+    parent_obj_port_id = parent_state.add_input_data_port("obj", data_type=object, default_value=None)
+    parent_int_port_id = parent_state.add_input_data_port("int", data_type=int, default_value=None)
+    child_obj_port_id = child_state.add_input_data_port("obj", data_type=object, default_value=0)
+    child_int_port_id = child_state.add_input_data_port("int", data_type=int, default_value=0)
+
+    # Connection from specific type int to generic type object
+    parent_state.add_data_flow(parent_state.state_id, parent_int_port_id,
+                               child_state.state_id, child_obj_port_id)
+
+    # Connection from generic type object to specific type int
+    parent_state.add_data_flow(parent_state.state_id, parent_obj_port_id,
+                               child_state.state_id, child_int_port_id)
+
+    testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_errors=0)
+
+
+
+
 if __name__ == '__main__':
     test_default_values_of_data_ports(None)
     test_last_wins_value_collection_for_data_ports(None)

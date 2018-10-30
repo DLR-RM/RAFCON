@@ -1886,6 +1886,9 @@ class ContainerState(State):
         # Check whether the data types or origin and target fit
         from_data_port = self.get_data_port(check_data_flow.from_state, check_data_flow.from_key)
         to_data_port = self.get_data_port(check_data_flow.to_state, check_data_flow.to_key)
+        # Connections from the data port type "object" are always allowed
+        if from_data_port.data_type is object:
+            return True, "valid"
         if not type_inherits_of_type(from_data_port.data_type, to_data_port.data_type):
             return False, "Data flow (id: {0}) origin ({1}) and target ({2}) do not have matching data types " \
                           "(from '{3}' to '{4}')".format(check_data_flow.data_flow_id,

@@ -121,6 +121,10 @@ class MenuBarController(ExtendedController):
 
         if not global_gui_config.get_config_value('GAPHAS_EDITOR', True):
             view["data_flow_mode"].hide()
+        view["expert_view"].hide()
+        view["grid"].hide()
+
+        if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
             view["show_data_values"].hide()
 
         # use dedicated function to connect the buttons to be able to access the handler id later on

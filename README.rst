@@ -116,7 +116,8 @@ Any changes in ``/install/directory/rafcon/source`` will take effect when launch
 Start RAFCON
 ------------
 
-No matter which installation option you choose, RAFCON can be started from any location using (make sure ``~/.local/bin`` is in your ``PATH`` environment variable):
+No matter which installation option you choose, RAFCON can be started from any location using (make sure
+``/usr/local/bin`` or ``~/.local/bin`` is in your ``PATH`` environment variable):
 
 .. code-block:: bash
 
