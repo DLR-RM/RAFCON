@@ -83,12 +83,13 @@ class SourceEditorView(EditorView):
         # Gtk TODO: Produces warnings and does not work properly
         # Warnings probably are related to the flickering of the spacer_frame
         # https://developer.gnome.org/gtk3/stable/ch26s02.html#id-1.6.3.4.11
-        right_bar_width_of_all = self.button_container_min_width + self.tab_width + self.line_numbers_width
-        if right_bar_width_of_all > event.clip_extents()[2]:
-            spacer_width = right_bar_width_of_all - event.clip_extents()[2]
-            self.spacer_frame.set_size_request(width=spacer_width, height=-1)
-        else:
-            self.spacer_frame.set_size_request(width=-1, height=-1)
+        if self.run_with_spacer:
+            right_bar_width_of_all = self.button_container_min_width + self.tab_width + self.line_numbers_width
+            if right_bar_width_of_all > event.clip_extents()[2]:
+                spacer_width = right_bar_width_of_all - event.clip_extents()[2]
+                self.spacer_frame.set_size_request(width=spacer_width, height=-1)
+            else:
+                self.spacer_frame.set_size_request(width=-1, height=-1)
 
     @property
     def button_container_min_width(self):

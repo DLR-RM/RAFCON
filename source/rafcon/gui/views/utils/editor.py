@@ -33,6 +33,8 @@ class EditorView(View):
     def __init__(self, name='SOURCE EDITOR', language='idl', editor_style="SOURCE_EDITOR_STYLE", run_with_spacer=False):
         View.__init__(self)
 
+        self.run_with_spacer = run_with_spacer
+
         vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, constants.GRID_SIZE)
 
         # create title view port widget
@@ -91,7 +93,7 @@ class EditorView(View):
         # fill top widget vbox with title view port, source view and text view within
         vbox.pack_start(title_viewport, False, True, 0)
         self.spacer_frame = None
-        if run_with_spacer:
+        if self.run_with_spacer:
             # with spacer a Gtk.Frame object is used as spacer and its is with the source view in one hbox
             hbox_frame = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
             self.spacer_frame = Gtk.Frame()
