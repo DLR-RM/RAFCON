@@ -142,7 +142,7 @@ def append_sub_menu_to_parent_menu(name, parent_menu, icon_code=None):
 
 
 def create_widget_title(title, widget_name=None):
-    widget_name = widget_name if widget_name else title.lower()
+    widget_name = widget_name if widget_name else title.replace(' ', '_').lower()
     label = Gtk.Label.new(title)
     label.set_name("{}_title".format(widget_name))
     label.set_xalign(0.0)
