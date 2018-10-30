@@ -18,7 +18,7 @@
               <object class="GtkLabel" id="data_linkage_label">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Data Linkage</property>
+                <property name="label" translatable="yes">DATA LINKAGE</property>
                 <property name="xalign">0</property>
               </object>
             </child>
@@ -181,7 +181,7 @@
               <object class="GtkLabel" id="logical_linkage_label">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Logical Linkage</property>
+                <property name="label" translatable="yes">LOGICAL LINKAGE</property>
                 <property name="xalign">0</property>
               </object>
             </child>

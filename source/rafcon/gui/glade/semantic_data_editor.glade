@@ -19,7 +19,7 @@
               <object class="GtkLabel" id="semantic_data_label">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Semantic Data</property>
+                <property name="label" translatable="yes">SEMANTIC DATA</property>
                 <property name="xalign">0</property>
               </object>
             </child>
