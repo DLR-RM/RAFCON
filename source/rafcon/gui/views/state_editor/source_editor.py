@@ -23,7 +23,7 @@ class SourceEditorView(EditorView):
 
     def __init__(self):
         super(SourceEditorView, self).__init__(name='SOURCE EDITOR', language='python',
-                                               editor_style="SOURCE_EDITOR_STYLE", run_with_spacer=True)
+                                               editor_style="SOURCE_EDITOR_STYLE", run_with_spacer=False)
 
         try:
             if isinstance(self.textview, GtkSource.View):
@@ -81,7 +81,7 @@ class SourceEditorView(EditorView):
 
     def on_draw(self, widget, event):
         # Gtk TODO: Produces warnings and does not work properly
-        # Warnings probably are related to the flickering of the spacer_frame
+        # Warnings should not be related to the flickering of the spacer_frame
         # https://developer.gnome.org/gtk3/stable/ch26s02.html#id-1.6.3.4.11
         if self.run_with_spacer:
             right_bar_width_of_all = self.button_container_min_width + self.tab_width + self.line_numbers_width
