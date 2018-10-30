@@ -38,19 +38,8 @@ class EditorView(View):
         vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, constants.GRID_SIZE)
 
         # create title view port widget
-        source_label = gui_helper_label.create_label_with_text_and_spacing(name,
-                                                                           letter_spacing=constants.LETTER_SPACING_1PT)
-        source_label.set_alignment(0.0, 0.5)
-        source_box = Gtk.EventBox()
-        source_box.set_name(name.replace(' ', '_').lower() + '_label_wrapper')
-        source_box.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
-        source_box.add(source_label)
-        self.event_box = source_box
-
-        title_viewport = Gtk.Viewport()
-        title_viewport.set_name(name.replace(' ', '_').lower() + "_title_wrapper")
-        title_viewport.add(source_box)
-        title_viewport.show_all()
+        source_title = gui_helper_label.create_widget_title(name)
+        source_title.show_all()
 
         # prepare frame for the text editor
         editor_frame = Gtk.Frame()
@@ -91,7 +80,7 @@ class EditorView(View):
         editor_frame.add(scrollable)
 
         # fill top widget vbox with title view port, source view and text view within
-        vbox.pack_start(title_viewport, False, True, 0)
+        vbox.pack_start(source_title, False, True, 0)
         self.spacer_frame = None
         if self.run_with_spacer:
             # with spacer a Gtk.Frame object is used as spacer and its is with the source view in one hbox
