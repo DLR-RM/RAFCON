@@ -15,7 +15,6 @@
           <object class="GtkEventBox" id="semantic_data_label_wrapper">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="border_width">10</property>
             <child>
               <object class="GtkLabel" id="semantic_data_label">
                 <property name="visible">True</property>
@@ -24,6 +23,9 @@
                 <property name="xalign">0</property>
               </object>
             </child>
+            <style>
+              <class name="widget-title"/>
+            </style>
           </object>
         </child>
       </object>
