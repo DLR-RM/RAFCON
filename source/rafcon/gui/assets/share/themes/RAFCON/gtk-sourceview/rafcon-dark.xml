@@ -1,39 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <style-scheme id="rafcon-dark" _name="RAFCON Dark" version="1.0">
-  <author>Matthias Buettner</author>
+  <author>Martin Glückler, Franz Steinmetz</author>
 
-  <style name="bracket-match"  background="#33333c" bold="true"/> <!-- done -->
-  <style name="bracket-mismatch"  background="#33333c" underline="true"/> <!-- done -->
-  <style name="current-line"  background="#33333c"/> <!-- done -->
-  <style name="cursor" foreground="#5b5b60"/> <!-- done -->
-  <style name="def:base-n-integer" foreground="#64afb3"/> <!-- done -->
-  <style name="def:boolean" foreground="#52708b"/> <!-- done -->
-  <style name="def:builtin" foreground="#64afb3"/> <!-- done -->
-  <style name="def:character" foreground="#64afb3"/> <!-- done -->
-  <style name="def:comment" foreground="#394458"/> <!-- done -->
-  <style name="def:complex" foreground="#64afb3"/> <!-- done -->
-  <style name="def:decimal" foreground="#64afb3"/> <!-- done -->
-  <style name="def:floating-point" foreground="#64afb3"/> <!-- done -->
-  <style name="def:function" foreground="#64afb3"/> <!-- done -->
-  <style name="def:keyword" foreground="#508baa"/> <!-- def, pass, return -->
-  <style name="def:number" foreground="#64afb3"/> <!-- done -->
-  <style name="def:operator" foreground="#508baa"/> <!-- done -->
-  <style name="def:reserved" foreground="#508baa"/> <!-- done -->
-  <style name="def:special-constant" foreground="#64afb3"/> <!-- done -->
-  <style name="def:statement" foreground="#508baa"/> <!-- done -->
-  <style name="def:string" foreground="#64afb3"/> <!-- done -->
-  <style name="def:type" foreground="#66d9ef" italic="true"/>
-  <style name="diff:added-line" foreground="#64afb3"/> <!-- done -->
-  <style name="diff:changed-line" foreground="#64afb3"/> <!-- done -->
-  <style name="diff:removed-line" foreground="#508baa"/> <!-- done -->
-  <style name="line-numbers" foreground="#6c7076" background="#272c36"/> <!-- done -->
-  <style name="python:builtin-constant" foreground="#508baa"/> <!-- done -->
-  <style name="python:builtin-function" foreground="#64afb3"/> <!-- done -->
-  <style name="python:module-handler" foreground="#508baa"/> <!-- done -->
-  <style name="python:special-variable" foreground="#288cff"/> <!-- self -->
-  <style name="selection"  background="#47969A"/> <!-- done -->
-  <style name="text" foreground="#ffffff" background="#181D26"/> <!-- done -->
+  <color name="rafcon" value="#2896ff"/>
+  <color name="text" value="#ffffff"/>
+  <color name="content-bg" value="#2d323c"/>
+  <color name="highlight-bg" value="#2d323c"/>
+  <color name="special-fg" value="#3490fb"/>
+  <color name="number-fg" value="#f5a623"/>
+  <color name="string-fg" value="#43d88f"/>
+
+  <style name="bracket-match"  background="highlight-bg" bold="true"/>
+  <style name="bracket-mismatch"  background="highlight-bg" underline="true"/>
+  <style name="current-line"  background="highlight-bg"/>
+  <style name="cursor" foreground="#5b5b60"/>
+  <style name="def:base-n-integer" foreground="number-fg"/>
+  <style name="def:boolean" foreground="special-fg"/>
+  <style name="def:builtin" foreground="#57a4c6"/>
+  <style name="def:character" foreground="string-fg"/>
+  <style name="def:comment" foreground="#c3c3c3"/>
+  <style name="def:complex" foreground="number-fg"/>
+  <style name="def:decimal" foreground="number-fg"/>
+  <style name="def:floating-point" foreground="number-fg"/>
+  <style name="def:function" foreground="#64afb3"/>
+  <style name="def:keyword" foreground="#57a4c6"/> <!-- def, pass, return -->
+  <style name="def:number" foreground="number-fg"/>
+  <style name="def:operator" foreground="text"/>
+  <style name="def:special-constant" foreground="#64afb3"/>
+  <style name="def:statement" foreground="#508baa"/>
+  <style name="def:string" foreground="string-fg"/>
+  <style name="line-numbers" foreground="#6c7076" background="#2d323c"/>
+  <style name="python:class-name" foreground="text"/>
+  <style name="python:builtin-constant" foreground="special-fg"/>
+  <style name="python:builtin-function" foreground="special-fg"/>
+  <style name="python:builtin-object" foreground="special-fg"/>
+  <style name="python:module-handler" foreground="text"/>
+  <style name="python:boolean" foreground="special-fg"/>
+  <style name="python:decorator" foreground="numbers"/>
+  <style name="python:special-variable" foreground="special-fg"/> <!-- self -->
+  <style name="selection" background="rafcon"/>
+  <style name="text" foreground="text" background="content-bg"/>
 
   <!-- NOT USED
   <style name="def:note" foreground="#75715e"/>
