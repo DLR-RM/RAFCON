@@ -100,6 +100,7 @@ class StateMachineTreeController(TreeViewController):
 
     def register(self):
         """Change the state machine that is observed for new selected states to the selected state machine."""
+        self._do_selection_update = True
         # relieve old model
         if self.__my_selected_sm_id is not None:  # no old models available
             self.relieve_model(self._selected_sm_model)
@@ -113,6 +114,7 @@ class StateMachineTreeController(TreeViewController):
         else:
             self._selected_sm_model = None
             self.tree_store.clear()
+        self._do_selection_update = False
 
     def paste_action_callback(self, *event):
         """Callback method for paste action"""

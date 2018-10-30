@@ -790,11 +790,11 @@ class TreeViewController(AbstractTreeViewController):
         selected_model_list = list(reduce_to_parent_states(set(selected_model_list)))
         if not ((all([model in selected_model_list for model in sm_selected_model_list]) or not sm_check) and
                 (all([model in sm_selected_model_list for model in selected_model_list]) or not tree_check)):
-            # Gtk TODO: remove this work around after the sorting out the problem
+            # Gtk TODO: remove this work around after the sorting out the problem -> check now again after fix
             from rafcon.gui.models.library_state import LibraryStateModel
             if any([isinstance(m, LibraryStateModel) for m in sm_selected_model_list]):
                 self._logger.info("DO NOT WARN because LIBRARY\ntree: {0}\nsm:   {1}"
-                                     "".format(selected_model_list, sm_selected_model_list))
+                                  "".format(selected_model_list, sm_selected_model_list))
             else:
                 self._logger.warning("Elements of sm and tree selection are not identical: \ntree: {0}\nsm:   {1}"
                                      "".format(selected_model_list, sm_selected_model_list))
