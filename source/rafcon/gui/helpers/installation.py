@@ -98,7 +98,7 @@ def install_gtk_source_view_styles(logger=None):
         user_data_folder = GLib.get_user_data_dir()
     else:
         user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
-    user_source_view_style_path = os.path.join(user_data_folder, 'gtksourceview-2.0', 'styles')
+    user_source_view_style_path = os.path.join(user_data_folder, 'gtksourceview-3.0', 'styles')
 
     try:
         if not os.path.exists(user_source_view_style_path):
