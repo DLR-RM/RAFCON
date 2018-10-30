@@ -17,7 +17,7 @@ class DescriptionEditorView(EditorView):
 
     def __init__(self):
         super(DescriptionEditorView, self).__init__(name='DESCRIPTION', language='idl',
-                                                    editor_style="DESCRIPTION_EDITOR_STYLE")
+                                                    editor_style="SOURCE_EDITOR_STYLE")
 
         try:
             if isinstance(self.textview, GtkSource.View):
