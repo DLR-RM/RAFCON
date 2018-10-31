@@ -40,7 +40,7 @@ class GuiConfig(ObservableConfig):
                                             'AUTO_BACKUP_FORCED_STORAGE_INTERVAL',
                                             'AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL',
                                             'AUTO_RECOVERY_CHECK', 'AUTO_RECOVERY_LOCK_ENABLED')
-    keys_requiring_restart = ('USE_ICONS_AS_TAB_LABELS',)
+    keys_requiring_restart = ('USE_ICONS_AS_TAB_LABELS', 'THEME_DARK_VARIANT')
 
     colors = {}
     gtk_colors = {}
