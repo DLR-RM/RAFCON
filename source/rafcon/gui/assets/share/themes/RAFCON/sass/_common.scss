@@ -30,6 +30,8 @@ $darker_asset_suffix: if($darker=='true', '-dark', $asset_suffix);
   outline-offset: -3px;
   outline-width: 1px;
   -gtk-outline-radius: 2px;
+
+  font-family: DINNextLTPro;
 }
 
 
