@@ -1434,6 +1434,7 @@ headerbar {
 treeview.view {
   @at-root * {
     -GtkTreeView-horizontal-separator: 4;
+    -GtkTreeView-vertical-separator: 6;
     -GtkTreeView-grid-line-width: 1;
     -GtkTreeView-grid-line-pattern: '';
     -GtkTreeView-tree-line-width: 1;
