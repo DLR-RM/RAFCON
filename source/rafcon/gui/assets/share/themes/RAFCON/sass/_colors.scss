@@ -2,6 +2,7 @@
 // it gets @if ed depending on $variant
 
 $rafcon_color: #2896ff;
+$rafcon_fg_color: #ffffff;
 
 $base_color: if($variant =='light', #ffffff, #2d323c);
 $text_color: if($variant == 'light', #2a2a2a, #FFFFFF);

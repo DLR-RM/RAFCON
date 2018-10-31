@@ -1823,7 +1823,7 @@ notebook {
     &.right > tabs > tab:hover:not(:checked) { box-shadow: inset 1px 0 $borders_color; }
 
     > tabs > tab {
-      color: $text_color;
+      color: $fg_color_transparent;
       background-color: $bg_color;
 
       &:hover:not(:checked) {
@@ -1831,7 +1831,7 @@ notebook {
         background-color: $rafcon_color;
       }
       &:checked {
-        color: $fg_color;
+        color: $rafcon_fg_color;
         background-color: $rafcon_color;
       }
       // close button
