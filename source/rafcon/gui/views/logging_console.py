@@ -121,7 +121,7 @@ class LoggingConsoleView(View):
     def create_text_buffer():
         text_buffer = Gtk.TextBuffer()
         text_buffer.create_tag("default", font="Monospace 10")
-        text_buffer.create_tag("warning", forseground=global_gui_config.colors["WARNING_COLOR"])
+        text_buffer.create_tag("warning", foreground=global_gui_config.colors["WARNING_COLOR"])
         text_buffer.create_tag("error", foreground=global_gui_config.colors["ERROR_COLOR"])
         text_buffer.create_tag("debug", foreground=global_gui_config.colors["RAFCON_COLOR"])
         text_buffer.create_tag("info", foreground=global_gui_config.colors["SUCCESS_COLOR"])
