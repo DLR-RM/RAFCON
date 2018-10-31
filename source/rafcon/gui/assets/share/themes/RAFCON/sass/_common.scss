@@ -1825,7 +1825,7 @@ notebook {
     &.right > tabs > tab:hover:not(:checked) { box-shadow: inset 1px 0 $borders_color; }
 
     > tabs > tab {
-      color: $fg_color_transparent;
+      color: $secondary_text_color;
       background-color: $bg_color;
 
       &:hover:not(:checked) {

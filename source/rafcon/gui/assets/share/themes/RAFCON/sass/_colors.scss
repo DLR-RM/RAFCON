@@ -9,7 +9,8 @@ $text_color: if($variant == 'light', #2a2a2a, #FFFFFF);
 $bg_color: if($variant =='light', #f8f8fa, #1e232d);
 $fg_color: if($variant =='light', #2a2a2a, #FFFFFF);
 
-$fg_color_transparent: transparentize($fg_color, 0.3);
+$secondary_text_color: if($variant =='light', #5c5c5d, #ffffff);
+$tertiary_text_color: if($variant =='light', #a8a8a8, #83868c);
 
 $selected_fg_color: #ffffff;
 $selected_bg_color: $rafcon_color;
