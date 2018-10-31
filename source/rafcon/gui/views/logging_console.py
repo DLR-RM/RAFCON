@@ -86,11 +86,11 @@ class LoggingConsoleView(View):
 
     def print_to_text_view(self, text, text_buf, use_tag=None):
         time, source, message = self.split_text(text)
-        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), time + " ", "tertiary_text")
-        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), source + ": ", "text")
+        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), time + " ", "tertiary_text", "default")
+        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), source + ": ", "text", "default")
         if use_tag:
             if self.text_view.get_buffer().get_tag_table().lookup(use_tag) is not None:
-                text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), message + "\n", use_tag)
+                text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), message + "\n", use_tag, "default")
             else:
                 text_buf.insert(text_buf.get_end_iter(), message + "\n")
         else:
@@ -120,7 +120,7 @@ class LoggingConsoleView(View):
     @staticmethod
     def create_text_buffer():
         text_buffer = Gtk.TextBuffer()
-        text_buffer.create_tag("default", font="Monospace 10")
+        text_buffer.create_tag("default", font="Monospace 10", pixels_below_lines=2)
         text_buffer.create_tag("warning", foreground=global_gui_config.colors["WARNING_COLOR"])
         text_buffer.create_tag("error", foreground=global_gui_config.colors["ERROR_COLOR"])
         text_buffer.create_tag("debug", foreground=global_gui_config.colors["RAFCON_COLOR"])
