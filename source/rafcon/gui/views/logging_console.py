@@ -12,10 +12,13 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gi.repository import Gtk
 import threading
+
 from gtkmvc3.view import View
+from gi.repository import Gtk
 from gi.repository import GLib
+
+from rafcon.gui.config import global_gui_config
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -49,7 +52,6 @@ class LoggingConsoleView(View):
         self.top = 'scrollable'
         self.quit_flag = False
 
-        from rafcon.gui.config import global_gui_config
         self.logging_priority = global_gui_config.get_config_value("LOGGING_CONSOLE_GTK_PRIORITY", GLib.PRIORITY_LOW)
 
         self._stored_line_number = None
@@ -66,26 +68,26 @@ class LoggingConsoleView(View):
     def print_message(self, message, log_level):
         self._lock.acquire()
         if log_level <= log.logging.VERBOSE and self._enables.get('VERBOSE', False):
-            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
+            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "debug",
                           priority=GLib.PRIORITY_LOW)
         if log.logging.VERBOSE < log_level <= log.logging.DEBUG and self._enables.get('DEBUG', True):
-            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_debug_color",
+            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "debug",
                           priority=self.logging_priority)
         elif log.logging.DEBUG < log_level <= log.logging.INFO and self._enables.get('INFO', True):
-            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_info_color",
+            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "info",
                           priority=self.logging_priority)
         elif log.logging.INFO < log_level <= log.logging.WARNING and self._enables.get('WARNING', True):
-            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_warning_color",
+            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "warning",
                           priority=self.logging_priority)
         elif log.logging.WARNING < log_level and self._enables.get('ERROR', True):
-            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "set_error_color",
+            GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "error",
                           priority=self.logging_priority)
         self._lock.release()
 
     def print_to_text_view(self, text, text_buf, use_tag=None):
         time, source, message = self.split_text(text)
-        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), time + " ", "set_gray_text")
-        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), source + ": ", "set_white_text")
+        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), time + " ", "tertiary_text")
+        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), source + ": ", "text")
         if use_tag:
             if self.text_view.get_buffer().get_tag_table().lookup(use_tag) is not None:
                 text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), message + "\n", use_tag)
@@ -119,12 +121,12 @@ class LoggingConsoleView(View):
     def create_text_buffer():
         text_buffer = Gtk.TextBuffer()
         text_buffer.create_tag("default", font="Monospace 10")
-        text_buffer.create_tag("set_warning_color", foreground="orange")
-        text_buffer.create_tag("set_error_color", foreground="red")
-        text_buffer.create_tag("set_debug_color", foreground="#00baf8")
-        text_buffer.create_tag("set_info_color", foreground="#39af57")
-        text_buffer.create_tag("set_gray_text", foreground="#93959a")
-        text_buffer.create_tag("set_white_text", foreground="#ffffff")
+        text_buffer.create_tag("warning", forseground=global_gui_config.colors["WARNING_COLOR"])
+        text_buffer.create_tag("error", foreground=global_gui_config.colors["ERROR_COLOR"])
+        text_buffer.create_tag("debug", foreground=global_gui_config.colors["RAFCON_COLOR"])
+        text_buffer.create_tag("info", foreground=global_gui_config.colors["SUCCESS_COLOR"])
+        text_buffer.create_tag("tertiary_text", foreground=global_gui_config.colors["TERTIARY_TEXT_COLOR"])
+        text_buffer.create_tag("text", foreground=global_gui_config.colors["TEXT_COLOR"])
         return text_buffer
 
     def set_enables(self, enables):
