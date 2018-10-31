@@ -63,7 +63,7 @@ SHORTCUTS:
     up:
     - <Control>Up
     - <Control><Shift>Up
-SOURCE_EDITOR_STYLE: rafcon-dark
+SOURCE_EDITOR_STYLE: rafcon
 TYPE: GUI_CONFIG
 USE_ICONS_AS_TAB_LABELS: true
 WAYPOINT_SNAP_ANGLE: 45

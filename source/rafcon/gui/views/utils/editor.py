@@ -102,6 +102,11 @@ class EditorView(View):
         b.set_highlight_syntax(True)
 
         user_editor_style = global_gui_config.get_config_value(self.editor_style, "classic")
+        if user_editor_style.startswith("rafcon"):
+            user_editor_style = "rafcon"
+            dark_theme = global_gui_config.get_config_value('THEME_DARK_VARIANT', True)
+            if dark_theme:
+                user_editor_style = "rafcon-dark"
         scheme = style_scheme_manager.get_scheme(user_editor_style)
         if scheme:
             self.style_scheme = scheme

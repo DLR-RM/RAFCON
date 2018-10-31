@@ -118,7 +118,7 @@ A typical config file looks like this:
 
     TYPE: GUI_CONFIG
 
-    SOURCE_EDITOR_STYLE: rafcon-dark
+    SOURCE_EDITOR_STYLE: rafcon
 
     GAPHAS_EDITOR: True
     GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE: True
@@ -273,14 +273,14 @@ TYPE
 
 SOURCE\_EDITOR\_STYLE
   | Type: string
-  | Default: ``rafcon-dark``
+  | Default: ``rafcon``
   | The gtk source view style used in the script editor. Note: You can
     download different styles at
     `https://wiki.gnome.org/Projects/GtkSourceView/StyleSchemes GTK
     Source View
     Styles <https://wiki.gnome.org/Projects/GtkSourceView/StyleSchemes_GTK_Source_View_Styles>`__.
     The scripts have to be downloaded to
-    ~/.local/share/gtksourceview-2.0/styles. "rafcon-dark" is a style
+    ~/.local/share/gtksourceview-2.0/styles. "rafcon" is a style
     created to fit to the design of RAFCON.
 
 GAPHAS\_EDITOR
