@@ -20,7 +20,7 @@
   //
     color: $text_color;
     border-color: $entry_border;
-    background-color: $entry_bg;
+    background-color: $form_bg_color;
   }
 
   @if $t==focus {

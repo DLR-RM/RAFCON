@@ -197,9 +197,9 @@ spinner {
 // Text Entries
 //
 entry {
-  min-height: 22px;
+  min-height: 28px;
   border: 1px solid;
-  padding: 2px 8px;
+  padding: 0px 8px;
 
   caret-color: currentColor;
   border-radius: 0px;
@@ -337,7 +337,7 @@ button {
   min-width: 20px;
   transition: $button_transition;
   border: 1px solid;
-  border-radius: 3px;
+  border-radius: 0px;
   padding: 2px 6px;
 
   @include button(normal);
@@ -688,16 +688,16 @@ toolbar.inline-toolbar toolbutton {
 %linked {
   @extend %linked_middle;
   &:first-child {
-    border-top-left-radius: 3px;
-    border-bottom-left-radius: 3px;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
   }
   &:last-child {
-    border-top-right-radius: 3px;
-    border-bottom-right-radius: 3px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
     border-right-style: solid;
   }
   &:only-child {
-    border-radius: 3px;
+    border-radius: 0px;
     border-style: solid;
   }
 }
@@ -862,13 +862,18 @@ spinbutton {
 combobox {
   button.combo {
     min-width: 0;       // otherwise the arrow placement is unsymmetric
-    padding-left: 8px;  //
-    padding-right: 8px  //
+    padding: 0;
+    padding-left: 8px;
+    background-color: $form_bg_color;
+    border: none;
   }
+
   arrow {
     -gtk-icon-source: -gtk-icontheme('pan-down-symbolic');
-    min-height: 16px;
-    min-width: 16px;
+    -gtk-icon-transform: scale(0.5);
+    min-height: 30px;
+    min-width: 30px;
+    background-color: $borders_color;
   }
 
   &:drop(active) button.combo { @extend button:drop(active); }
@@ -1226,7 +1231,7 @@ headerbar {
   // Reset buttons
   .linked:not(.vertical):not(.path-bar) > button {
     &, &:hover, &:active, &:checked, &:disabled {
-      border-radius: 3px;
+      border-radius: 0px;
       border-style: solid;
     }
   }
