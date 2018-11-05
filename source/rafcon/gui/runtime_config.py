@@ -30,7 +30,7 @@ class RuntimeConfig(ObservableConfig):
     """Class to hold and load the runtime configuration"""
 
     def __init__(self):
-        super(RuntimeConfig, self).__init__("")
+        super(RuntimeConfig, self).__init__("", logger_object=logger)
 
     def load(self, config_file=None, path=None):
         if config_file is None:
