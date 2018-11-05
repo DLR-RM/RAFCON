@@ -43,10 +43,10 @@ def post_init(setup_config):
     # Example 2: initiate observer execution status
     core_template_observer.ExecutionStatusObserver()
 
-    import gtkmvc3_template_observer
-    # Example 3: gtkmvc3 generale modification observer
+    import gtkmvc_template_observer
+    # Example 3: gtkmvc3 general modification observer
     # initiate observer of root_state model-object which already implements a power full recursive notification pattern
-    gtkmvc3_template_observer.RootStateModificationObserver()
+    gtkmvc_template_observer.RootStateModificationObserver()
 
     # Example 4: gtkmvc3 meta signal observer
-    gtkmvc3_template_observer.MetaSignalModificationObserver()
+    gtkmvc_template_observer.MetaSignalModificationObserver()
