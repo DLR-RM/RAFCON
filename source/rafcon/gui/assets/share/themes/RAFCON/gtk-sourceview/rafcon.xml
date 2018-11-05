@@ -10,10 +10,13 @@
   <color name="special-fg" value="#3490fb"/>
   <color name="number-fg" value="#f5a623"/>
   <color name="string-fg" value="#43d88f"/>
+  <color name="error" value="#ff3300"/>
 
-  <style name="bracket-match"  background="highlight-bg" bold="true"/>
-  <style name="bracket-mismatch"  background="highlight-bg" underline="true"/>
-  <style name="current-line"  background="highlight-bg"/>
+  <style name="bracket-match" foreground="special-fg" bold="true"/>
+  <style name="bracket-mismatch" background="error" underline="true"/>
+  <style name="line-numbers" foreground="#a8a8a8"/>
+  <style name="current-line" background="highlight-bg"/>
+  <style name="current-line-number" background="highlight-bg"/>
   <style name="cursor" foreground="#5b5b60"/>
   <style name="def:base-n-integer" foreground="number-fg"/>
   <style name="def:boolean" foreground="special-fg"/>
@@ -30,7 +33,6 @@
   <style name="def:special-constant" foreground="#64afb3"/>
   <style name="def:statement" foreground="#508baa"/>
   <style name="def:string" foreground="string-fg"/>
-  <style name="line-numbers" foreground="#c3c3c3" background="content-bg"/>
   <style name="python:class-name" foreground="text"/>
   <style name="python:builtin-constant" foreground="special-fg"/>
   <style name="python:builtin-function" foreground="special-fg"/>
@@ -44,7 +46,7 @@
 
   <!-- NOT USED
   <style name="def:note" foreground="#75715e"/>
-  <style name="search-match"  background="#33333c" bold="true" underline="true"/>
+  <style name="search-match" background="#33333c" bold="true" underline="true"/>
   <style name="draw-spaces" foreground="#3b3a32"/>
   <style name="diff:location" foreground="#75715e"/>
   <style name="def:shebang" foreground="#75715e"/>

@@ -87,9 +87,12 @@ textview {
 
     selection { &:focus, & { @extend %selected_items; }}
   }
+
+  &.sourceview {
+    font-family: Monospace;
+  }
 }
 
-textview border { background-color: mix($bg_color, $base_color, 50%); }
 
 iconview { @extend .view; }
 

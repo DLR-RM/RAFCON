@@ -6,14 +6,17 @@
   <color name="rafcon" value="#2896ff"/>
   <color name="text" value="#ffffff"/>
   <color name="content-bg" value="#2d323c"/>
-  <color name="highlight-bg" value="#2d323c"/>
+  <color name="highlight-bg" value="#1e232d"/>
   <color name="special-fg" value="#3490fb"/>
   <color name="number-fg" value="#f5a623"/>
   <color name="string-fg" value="#43d88f"/>
+  <color name="error" value="#ff3300"/>
 
-  <style name="bracket-match"  background="highlight-bg" bold="true"/>
-  <style name="bracket-mismatch"  background="highlight-bg" underline="true"/>
-  <style name="current-line"  background="highlight-bg"/>
+  <style name="bracket-match" foreground="special-fg" bold="true"/>
+  <style name="bracket-mismatch" background="error" underline="true"/>
+  <style name="line-numbers" foreground="#83868c" />
+  <style name="current-line" background="highlight-bg"/>
+  <style name="current-line-number" background="highlight-bg"/>
   <style name="cursor" foreground="#5b5b60"/>
   <style name="def:base-n-integer" foreground="number-fg"/>
   <style name="def:boolean" foreground="special-fg"/>
@@ -30,7 +33,6 @@
   <style name="def:special-constant" foreground="#64afb3"/>
   <style name="def:statement" foreground="#508baa"/>
   <style name="def:string" foreground="string-fg"/>
-  <style name="line-numbers" foreground="#6c7076" background="content-bg"/>
   <style name="python:class-name" foreground="text"/>
   <style name="python:builtin-constant" foreground="special-fg"/>
   <style name="python:builtin-function" foreground="special-fg"/>
@@ -42,18 +44,18 @@
   <style name="selection" background="rafcon"/>
   <style name="text" foreground="text" background="content-bg"/>
 
-  <!-- NOT USED
-  <style name="def:note" foreground="#75715e"/>
-  <style name="search-match"  background="#33333c" bold="true" underline="true"/>
-  <style name="draw-spaces" foreground="#3b3a32"/>
-  <style name="diff:location" foreground="#75715e"/>
-  <style name="def:shebang" foreground="#75715e"/>
-  <style name="def:special-char" foreground="#66d9ef"/>
-  <style name="def:preprocessor" foreground="#66d9ef"/>
-  <style name="def:identifier" foreground="#ff0000"/>
-  <style name="def:doc-comment" foreground="#75715e"/>
-  <style name="def:doc-comment-element" foreground="#75715e"/>
-  <style name="def:error" foreground="#f8f8f0" background="#f92672"/>
-  -->
+ <!-- NOT USED
+ <style name="def:note" foreground="#75715e"/>
+ <style name="search-match" background="#33333c" bold="true" underline="true"/>
+ <style name="draw-spaces" foreground="#3b3a32"/>
+ <style name="diff:location" foreground="#75715e"/>
+ <style name="def:shebang" foreground="#75715e"/>
+ <style name="def:special-char" foreground="#66d9ef"/>
+ <style name="def:preprocessor" foreground="#66d9ef"/>
+ <style name="def:identifier" foreground="#ff0000"/>
+ <style name="def:doc-comment" foreground="#75715e"/>
+ <style name="def:doc-comment-element" foreground="#75715e"/>
+ <style name="def:error" foreground="#f8f8f0" background="#f92672"/>
+ -->
 
 </style-scheme> 
