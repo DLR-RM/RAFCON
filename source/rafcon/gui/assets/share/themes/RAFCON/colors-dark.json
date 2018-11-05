@@ -30,11 +30,5 @@
     "NAME_RESIZE_HANDLE_FILL": "#ddd",
     "NAME_RESIZE_HANDLE_BORDER": "#333",
     "STATE_MACHINE_ACTIVE": "#39af57",
-    "STATE_MACHINE_NOT_ACTIVE": "#fefefe",
-    "WARNING_COLOR": "orange",
-    "ERROR_COLOR": "red",
-    "RAFCON_COLOR": "#00baf8",
-    "SUCCESS_COLOR": "#39af57",
-    "TERTIARY_TEXT_COLOR": "#93959a",
-    "TEXT_COLOR": "#ffffff"
+    "STATE_MACHINE_NOT_ACTIVE": "#fefefe"
 }
