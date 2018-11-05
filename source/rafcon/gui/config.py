@@ -137,7 +137,7 @@ class GuiConfig(ObservableConfig):
                 color = self.gtk_colors[color_code]
                 color_code = self.gtk_colors[color_code]
             else:
-                logger.warn("Undefined color alias '{}' for color name '{}'".format(color_code, color_name))
+                self.logger.warn("Undefined color alias '{}' for color name '{}'".format(color_code, color_name))
                 continue
             self.gtk_colors[color_name] = color
             self.colors[color_name] = color_code
