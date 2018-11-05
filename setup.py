@@ -206,9 +206,17 @@ setup(
 
     data_files=generate_data_files(),
 
-    setup_requires=['Sphinx>=1.4'] + global_requirements,
+    setup_requires=['Sphinx>=1.4', 'libsass >= 0.15.0'] + global_requirements,
     tests_require=['pytest', 'pytest-catchlog', 'graphviz', 'pymouse'] + global_requirements,
     install_requires=global_requirements,
+
+    sass_manifests={
+        'rafcon': {
+            'sass_path': 'gui/assets/share/themes/RAFCON/sass',
+            'css_path': 'gui/assets/share/themes/RAFCON/gtk-3.0',
+            'strip_extension': True
+        }
+    },
 
     dependency_links=[
         "https://github.com/DLR-RM/gtkmvc3/releases/download/gtkmvc_dlr_1.99.2/python-gtkmvc-dlr-1.99.2.tar.gz"
