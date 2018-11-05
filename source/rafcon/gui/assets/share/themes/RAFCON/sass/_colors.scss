@@ -39,7 +39,7 @@ $suggested_fg_color: white;
 $drop_target_color: #F08437;
 
 //insensitive state derived colors
-$insensitive_fg_color: if($variant == 'light', #676767, #313131);
+$insensitive_fg_color: if($variant == 'light', #c2c2c2, #62666d);
 $insensitive_bg_color: if($variant == 'light', #f3f3f5, $bg_color);
 
 $header_bg: red;
