@@ -173,6 +173,8 @@ class GraphicalEditorController(ExtendedController):
         """
         state_id_insert = data.get_text()
         parent_m = self.model.selection.get_selected_state()
+        if not isinstance(parent_m, ContainerStateModel):
+            return
         state_v = self.canvas.get_view_for_model(parent_m.states[state_id_insert])
         pos_start = state_v.model.get_meta_data_editor()['rel_pos']
         motion = InMotion(state_v, self.view.editor)
