@@ -35,32 +35,27 @@ class SourceEditorView(EditorView):
         except NameError:
             pass
         hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+        hbox.get_style_context().add_class("widget-toolbar")
         pylint_check_button = Gtk.CheckButton("Validate")
         pylint_check_button.set_focus_on_click(False)
-        # pylint_check_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        # print "size", pylint_check_button.get_allocation(), constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT
-        # pylint_check_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
+        pylint_check_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
         open_external_button = Gtk.ToggleButton("Open externally")
         open_external_button.set_focus_on_click(False)
-        # open_external_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        # open_external_button.set_size_request(130, constants.BUTTON_MIN_HEIGHT)
+        open_external_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
         apply_button = Gtk.Button("Apply")
         apply_button.set_focus_on_click(False)
-        # apply_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        apply_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
+        apply_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
         cancel_button = Gtk.Button("Reset")
         cancel_button.set_focus_on_click(False)
-        # cancel_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        cancel_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
+        cancel_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
-        hbox.pack_start(pylint_check_button, False, False, constants.PADDING)
-        hbox.pack_end(open_external_button, False, True, constants.PADDING)
-        hbox.pack_end(cancel_button, False, True, constants.PADDING)
-        hbox.pack_end(apply_button, False, True, constants.PADDING)
-        hbox.set_border_width(constants.BORDER_WIDTH)
+        hbox.pack_start(pylint_check_button, False, False, 0)
+        hbox.pack_end(open_external_button, False, True, 0)
+        hbox.pack_end(cancel_button, False, True, 0)
+        hbox.pack_end(apply_button, False, True, 0)
         self['editor_frame'].pack_start(hbox, expand=False, fill=True, padding=0)
         self['pylint_check_button'] = pylint_check_button
         self['apply_button'] = apply_button
