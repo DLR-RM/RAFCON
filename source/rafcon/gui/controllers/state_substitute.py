@@ -81,18 +81,21 @@ class StateSubstituteChooseLibraryDialog(RAFCONButtonDialog):
         if pos is not None:
             self.move(*pos)
 
+        self.set_resizable(True)
+
         self.scrollable = Gtk.ScrolledWindow()
         self.widget_view = LibraryTreeView()
         self.widget_ctrl = StateSubstituteChooseLibraryDialogTreeController(self.model, self.widget_view,
                                                                             dialog_widget=self)
+        self.scrollable.add(self.widget_view)
+
         self.keep_name_check_box = Gtk.CheckButton()
         self.keep_name_check_box.set_active(self.widget_ctrl.keep_name)
         self.keep_name_check_box.set_label("Keep state name")
-        self.vbox.pack_end(self.keep_name_check_box, True, True, 0)
-        self.scrollable.add(self.widget_view)
-        self.widget_view.set_size_request(width, height)
-        self.vbox.pack_start(self.scrollable, True, True, 0)
         self.keep_name_check_box.connect('toggled', self.on_toggle_keep_name)
+
+        self.vbox.pack_end(self.keep_name_check_box, False, False, 0)
+        self.vbox.pack_start(self.scrollable, True, True, 0)
 
         self.vbox.show_all()
         self.grab_focus()
