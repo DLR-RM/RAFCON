@@ -223,9 +223,6 @@ class PerpLine(Line):
 
     def _draw_name(self, context):
         c = context.cairo
-        cairo_context = c
-        if isinstance(c, CairoBoundingBoxContext):
-            cairo_context = c._cairo
 
         if len(self._handles) % 2:
             index = len(self._handles) / 2
@@ -270,6 +267,9 @@ class PerpLine(Line):
         # Parameters have changed or nothing in cache => redraw
         else:
             # First retrieve pango layout to determine and store size of label
+            cairo_context = c
+            if isinstance(c, CairoBoundingBoxContext):
+                cairo_context = c._cairo
             layout = get_text_layout(cairo_context, self.name, FONT_SIZE)
 
             ink_extents, logical_extents = layout.get_extents()
@@ -286,6 +286,8 @@ class PerpLine(Line):
             # surface of the correct size
             self._label_image_cache.get_cached_image(label_size[0], label_size[1], current_zoom, parameters, clear=True)
             c = self._label_image_cache.get_context_for_image(current_zoom)
+            cairo_context = c
+            layout = get_text_layout(cairo_context, self.name, FONT_SIZE)
 
             c.set_source_rgba(*self._arrow_color)
             c.scale(1. / scale_factor, 1. / scale_factor)
