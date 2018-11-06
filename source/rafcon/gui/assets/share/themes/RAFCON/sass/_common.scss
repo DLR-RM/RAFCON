@@ -866,15 +866,26 @@ combobox {
     padding: 0;
     padding-left: 8px;
     background-color: $form_bg_color;
-    border: none;
+
+    @if $variant =='light' {
+        border: 1px solid $entry_border;
+    } @else {
+        border: none;
+    }
   }
 
   arrow {
     -gtk-icon-source: -gtk-icontheme('pan-down-symbolic');
     -gtk-icon-transform: scale(0.5);
-    min-height: 30px;
     min-width: 30px;
-    background-color: $borders_color;
+
+    @if $variant =='light' {
+        background-color: transparent;
+        min-height: 28px;
+    } @else {
+        background-color: $borders_color;
+        min-height: 30px;
+    }
   }
 
   &:drop(active) button.combo { @extend button:drop(active); }
