@@ -402,7 +402,7 @@ class StateMachinesEditorController(ExtendedController):
 
             sm_id = state_machine_m.state_machine.state_machine_id
             root_state_name = state_machine_m.root_state.state.name
-            message_string = "There are unsaved changed in the state machine '{0}' with id {1}. Do you want to close " \
+            message_string = "There are unsaved changes in the state machine '{0}' with id {1}. Do you want to close " \
                              "the state machine anyway?".format(root_state_name, sm_id)
             dialog = RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"],
                                         message_type=Gtk.MessageType.QUESTION, parent=self.get_root_window())
@@ -412,7 +412,7 @@ class StateMachinesEditorController(ExtendedController):
                 remove_state_machine_m()
                 return True
             else:
-                logger.debug("Closing of state machine model canceled")
+                logger.debug("Closing of state machine canceled")
             return False
 
         # sm running

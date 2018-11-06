@@ -227,7 +227,7 @@ def check_for_crashed_rafcon_instances():
     #     print "Restorable state machines: \n" + '\n'.join([elem[0] for elem in restorable_sm if elem[0] is not None])
 
     if restorable_sm and any([path is not None for path, pid, lock_file, m_time, full_path_dirty_lock in restorable_sm]):
-        message_string = "There have been found state machines of not correctly closed rafcon instances?\n\n" \
+        message_string = "State machines of not correctly closed RAFCON instances have been found.\n\n" \
                          "This check and dialog can be disabled by setting 'AUTO_RECOVERY_CHECK': False " \
                          "in the GUI configuration file.\n\n" \
                          "The following state machines have been modified and not saved: \n"

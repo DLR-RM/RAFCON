@@ -180,8 +180,8 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
 
     for dirty_source_editor_ctrl in dirty_source_editor_ctrls:
         state = dirty_source_editor_ctrl.model.state
-        message_string = "The source code of the state '{}' (path: {}) has net been applied yet and would " \
-                         "therefore not be stored.\n\nDo you want to apply the changes now?" \
+        message_string = "The source code of the state '{}' (path: {}) has not been applied yet and would " \
+                         "therefore not be saved.\n\nDo you want to apply the changes now?" \
                          "".format(state.name, state.get_path())
         if global_gui_config.get_config_value("AUTO_APPLY_SOURCE_CODE_CHANGES", False):
             dirty_source_editor_ctrl.apply_clicked(None)
@@ -388,7 +388,7 @@ def is_state_machine_stopped_to_proceed(selected_sm_id=None, root_window=None):
         if selected_sm_id is None or selected_sm_id == state_machine_manager.active_state_machine_id:
 
             message_string = "A state machine is still running. This state machine can only be refreshed" \
-                             "if not running any more."
+                             "when not longer running."
             dialog = RAFCONButtonDialog(message_string, ["Stop execution and refresh",
                                                          "Keep running and do not refresh"],
                                         message_type=Gtk.MessageType.QUESTION,
