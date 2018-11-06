@@ -125,6 +125,7 @@ class AbstractTreeViewController(ExtendedController):
 
     @ExtendedController.observe("sm_selection_changed_signal", signal=True)
     def state_machine_selection_changed(self, state_machine_m, signal_name, signal_msg):
+        """Notify tree view about state machine selection"""
         if self.CORE_ELEMENT_CLASS in signal_msg.arg.affected_core_element_classes:
             self.update_selection_sm_prior()
 
@@ -133,8 +134,8 @@ class AbstractTreeViewController(ExtendedController):
         raise NotImplementedError
 
     def selection_changed(self, widget, event=None):
-        """Notify tree view about state machine selection"""
-        # print type(self).__name__, self._do_selection_update, "select changed", widget, event, self
+        """Notify state machine about tree view selection"""
+        # print "self prior", type(self).__name__, self._do_selection_update, "select changed", widget, event, self
         self.update_selection_self_prior()
 
     def on_right_click_menu(self):
