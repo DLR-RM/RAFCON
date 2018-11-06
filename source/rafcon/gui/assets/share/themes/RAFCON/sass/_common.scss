@@ -1826,11 +1826,6 @@ notebook {
 
     // tab colors
 
-    &.top > tabs > tab:hover:not(:checked) { box-shadow: inset 0 -1px $borders_color; }
-    &.bottom > tabs > tab:hover:not(:checked) { box-shadow: inset 0 1px $borders_color; }
-    &.left > tabs > tab:hover:not(:checked) { box-shadow: inset -1px 0 $borders_color; }
-    &.right > tabs > tab:hover:not(:checked) { box-shadow: inset 1px 0 $borders_color; }
-
     > tabs > tab {
       color: $secondary_text_color;
       background-color: $bg_color;

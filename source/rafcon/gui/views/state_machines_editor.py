@@ -30,6 +30,7 @@ class StateMachinesEditorView(View):
         # self.notebook.set_tab_vborder(constants.TAB_BORDER_WIDTH)
         self.notebook.set_scrollable(True)
         self.notebook.set_name("state_machines_notebook")
+        self.notebook.get_style_context().add_class("secondary")
         self.notebook.show()
 
         self['notebook'] = self.notebook

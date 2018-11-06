@@ -435,6 +435,9 @@
                                             <property name="tab_fill">False</property>
                                           </packing>
                                         </child>
+                                        <style>
+                                          <class name="secondary"/>
+                                        </style>
                                       </object>
                                     </child>
                                   </object>
