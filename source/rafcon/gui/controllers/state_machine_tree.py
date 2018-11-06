@@ -76,6 +76,8 @@ class StateMachineTreeController(TreeViewController):
 
         self._ongoing_complex_actions = []
 
+        self._state_which_is_updated = None
+
         self.register()
 
     def register_view(self, view):
@@ -140,6 +142,14 @@ class StateMachineTreeController(TreeViewController):
     def _delete_selection(self, *event):
         if react_to_event(self.view, self.view['state_machine_tree_view'], event):
             return gui_helper_state_machine.delete_selected_elements(self._selected_sm_model)
+
+    def selection_changed(self, widget, event=None):
+        """Notify state machine about tree view selection"""
+        # do not forward cursor selection updates if state update is running
+        # TODO maybe make this generic for respective abstract controller
+        if self._state_which_is_updated:
+            return
+        super(StateMachineTreeController, self).selection_changed(widget, event)
 
     @TreeViewController.observe("state_machine", after=True)
     def states_update(self, model, prop_name, info):
@@ -391,6 +401,9 @@ class StateMachineTreeController(TreeViewController):
         else:
             _state_model = state_model
 
+        if self._state_which_is_updated is None:
+            self._state_which_is_updated = _state_model
+
         # TODO remove this workaround for removing LibraryStateModel or there root states by default
         if isinstance(_state_model, LibraryStateModel) and _state_model.state_copy_initialized:
             state_row_iter = None
@@ -461,6 +474,9 @@ class StateMachineTreeController(TreeViewController):
                 self.remove_tree_children(child_iter)
                 del self.state_row_iter_dict_by_state_path[self.tree_store.get_value(child_iter, self.STATE_PATH_STORAGE_ID)]
                 self.tree_store.remove(child_iter)
+
+        if self._state_which_is_updated is _state_model:
+            self._state_which_is_updated = None
 
     def remove_tree_children(self, child_tree_iter):
         for n in reversed(range(self.tree_store.iter_n_children(child_tree_iter))):
