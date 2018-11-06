@@ -14,7 +14,7 @@
         font-weight: 500;
         letter-spacing: 1.1px;
         min-height:40px;
-        padding-left:20px;
+        padding-left: $padding_left;
     }
 }
 
@@ -49,4 +49,13 @@ box {
 // Proper background color when no state is loaded
 #graphical_editor_vbox, #state_editor_eventbox {
     background-color: $base_color;
+}
+
+// Make labels above columns look like column headers
+#linkage_container {
+    #input_box > label, #output_box > label, #scoped_box > label, #outcomes_box > label {
+        color: $tertiary_text_color;
+        margin-left: $padding_left;
+        font-weight: 500;
+    }
 }

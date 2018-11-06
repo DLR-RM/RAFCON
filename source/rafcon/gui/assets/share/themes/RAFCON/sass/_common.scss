@@ -2,8 +2,9 @@
   @return unquote("alpha(#{$c},#{$a})");
 }
 
+$padding_left: 15px;
 $paned_separator_width: 5px;
-$paned_separator_wide_width: 15px;
+$paned_separator_wide_width: $padding_left;
 $ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 $backdrop_transition: 200ms ease-out;
 $asset_suffix: if($variant=='dark', '-dark', ''); // use dark assets in dark variant
@@ -1441,14 +1442,16 @@ headerbar {
 //
 treeview.view {
   @at-root * {
-    -GtkTreeView-horizontal-separator: 4;
-    -GtkTreeView-vertical-separator: 6;
+    -GtkTreeView-horizontal-separator: 25;
+    -GtkTreeView-vertical-separator: 8;
     -GtkTreeView-grid-line-width: 1;
     -GtkTreeView-grid-line-pattern: '';
     -GtkTreeView-tree-line-width: 1;
     -GtkTreeView-tree-line-pattern: '';
     -GtkTreeView-expander-size: 16;
   }
+
+  color: $secondary_text_color;
 
   border-left-color: transparentize($fg_color, 0.85);   // this is actually the tree lines color,
   border-top-color: transparentize(black, 0.9);         // while this is the grid lines color, better then nothing
@@ -1533,23 +1536,18 @@ treeview.view {
 
   header {
     button {
-      $_column_header_color: mix($fg_color,$base_color,80%);
+      $_column_header_color: $tertiary_text_color;
 
       min-height: 0;
       min-width: 0;
-      padding: 3px 6px;
-      font-weight: bold;
+      padding: 13px 2px 13px ($padding_left - 1);
+      font-weight: 500;
 
       color: $_column_header_color;
       background-color: $base_color;
       background-image: none;
-      border-style: none solid none none;
+      border: none;
       border-radius: 0;
-      border-image: linear-gradient(to bottom,
-                                    $base_color 20%,
-                                    transparentize(if($variant == 'light', black, white), 0.89) 20%,
-                                    transparentize(if($variant == 'light', black, white), 0.89) 80%,
-                                    $base_color 80%) 0 1 0 0 / 0 1px 0 0 stretch;
 
       &:hover { color: $selected_bg_color; }
       &:active { color: $fg_color; }
@@ -1787,7 +1785,7 @@ notebook {
         padding-#{$_bpos}: 0;
 
         > tabs > tab {
-          padding: 6px 13px;
+          padding: 6px $padding_left;
           min-width: 20px;
           min-height: 20px;
 
