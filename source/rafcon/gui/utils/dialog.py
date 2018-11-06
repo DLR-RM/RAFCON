@@ -37,13 +37,13 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
                  message_type=Gtk.MessageType.INFO, flags=Gtk.DialogFlags.MODAL, parent=None,
                  width=None, standalone=False):
 
-        super(RAFCONMessageDialog, self).__init__(type=message_type, buttons=Gtk.ButtonsType.OK, flags=flags)
+        super(RAFCONMessageDialog, self).__init__(type=message_type, flags=flags)
 
         if parent:
-            super(RAFCONMessageDialog, self).set_transient_for(parent)
+            self.set_transient_for(parent)
         if isinstance(markup_text, (str, unicode, basestring)):
             from cgi import escape
-            super(RAFCONMessageDialog, self).set_markup(escape(str(markup_text)))
+            self.set_markup(escape(str(markup_text)))
         else:
             logger.debug("The specified message text is not a String is type {1} -> {0}".format(markup_text,
                                                                                                 type(markup_text)))
@@ -51,12 +51,9 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
             self.add_callback(callback, *callback_args)
 
         if isinstance(width, int):
-            hbox = self.get_action_area()
-            vbox = hbox.parent
-            msg_ctr = vbox.get_children()[0]
-            text_ctr = msg_ctr.get_children()[1]
-            text_ctr.get_children()[0].set_size_request(width, -1)
-            text_ctr.get_children()[1].set_size_request(width, -1)
+            message_area = self.get_message_area()
+            message_area.get_children()[0].set_size_request(width, -1)
+            message_area.get_children()[1].set_size_request(width, -1)
 
         self.show_grab_focus_and_run(standalone)
 
@@ -96,24 +93,11 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
         super(RAFCONButtonDialog, self).__init__(markup_text, callback, callback_args, message_type,
                                                  flags, parent, width)
 
-        # remove the button box as it is no longer needed
-        vbox = self.get_action_area().get_parent()
-        vbox.remove(self.get_action_area())
-
-        self.hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, constants.GRID_SIZE)
         if button_texts:
             for index, button in enumerate(button_texts, 1):
-                    button = Gtk.Button(button)
-                    button.connect('clicked', self.forward_response, index)
-                    self.hbox.pack_start(button, True, True, 1)
+                self.add_button(button, index)
         else:
             logger.debug("No buttons where specified for the dialog from type or inheriting from RAFCONButtonDialog")
-
-        # alignment area to resize the buttons to their label size
-        align_action_area = Gtk.Alignment.new(xalign=1, yalign=0.0, xscale=0.0, yscale=0.0)
-
-        align_action_area.add(self.hbox)
-        vbox.pack_end(align_action_area, True, True, 0)
 
         self.show_grab_focus_and_run(standalone)
 
