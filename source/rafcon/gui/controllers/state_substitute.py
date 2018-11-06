@@ -18,6 +18,7 @@
 """
 
 from gi.repository import Gtk
+from gi.repository import Gdk
 
 from rafcon.gui.views.library_tree import LibraryTreeView
 from rafcon.gui.controllers.library_tree import LibraryTreeController
