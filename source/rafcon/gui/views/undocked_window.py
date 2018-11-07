@@ -30,6 +30,7 @@ class UndockedWindowView(View):
         View.__init__(self)
 
         toolbar = Gtk.Toolbar()
+        toolbar.props.show_arrow = False
         fullscreen_icon = label.create_button_label(constants.BUTTON_EXP)
         self['maximize_button'] = Gtk.ToolButton()
         self['maximize_button'].set_icon_widget(fullscreen_icon)
