@@ -60,13 +60,35 @@ box {
     }
 }
 
-notebook.secondary > header > tabs > tab {
-    &:hover:not(:checked) {
-        //color: mix($fg_color, $insensitive_fg_color, 50%);
-        background-color: $base_color;
+notebook.secondary > header {
+
+    @each $_pos, $_bpos in (top, bottom), (bottom, top), (right, left), (left, right) {
+      // sizing and borders
+      &.#{$_pos} {
+
+        > tabs > tab {
+          border: none;
+          border-#{$_bpos}: 1px solid $borders_color;
+          &:checked {
+              border: 1px solid $borders_color;
+              border-#{$_pos}: none;
+              border-#{$_bpos}: none;
+          }
+        }
+      }
     }
-    &:checked {
-        //color: $rafcon_fg_color;
-        background-color: $base_color;
+
+    > tabs > tab {
+        color: $tertiary_text_color;
+
+
+        &:hover:not(:checked) {
+            //color: mix($fg_color, $insensitive_fg_color, 50%);
+            background-color: $base_color;
+        }
+        &:checked {
+            color: $secondary_text_color;
+            background-color: $base_color;
+        }
     }
 }
