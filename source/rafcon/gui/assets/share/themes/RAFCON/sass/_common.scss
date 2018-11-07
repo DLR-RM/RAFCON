@@ -1456,7 +1456,7 @@ treeview.view {
     -GtkTreeView-horizontal-separator: 25;
     -GtkTreeView-vertical-separator: 8;
     -GtkTreeView-grid-line-width: 1;
-    -GtkTreeView-grid-line-pattern: '';
+    -GtkTreeView-grid-line-pattern: '-';
     -GtkTreeView-tree-line-width: 1;
     -GtkTreeView-tree-line-pattern: '';
     -GtkTreeView-expander-size: 16;
@@ -1464,8 +1464,8 @@ treeview.view {
 
   color: $secondary_text_color;
 
-  border-left-color: transparentize($fg_color, 0.85);   // this is actually the tree lines color,
-  border-top-color: transparentize(black, 0.9);         // while this is the grid lines color, better then nothing
+  border-left-color: $borders_color_light;  // this is actually the tree lines color,
+  border-top-color: $borders_color_light;   // while this is the grid lines color, better then nothing
 
   rubberband { @extend rubberband; }                    // to avoid borders being overridden by the previously set props
 

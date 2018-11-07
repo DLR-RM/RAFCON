@@ -44,6 +44,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="headers_clickable">False</property>
+            <property name="enable_grid_lines">horizontal</property>
             <child internal-child="selection">
               <object class="GtkTreeSelection"/>
             </child>
