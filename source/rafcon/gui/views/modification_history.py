@@ -14,6 +14,7 @@ from gi.repository import Gtk
 from gi.repository import GObject
 from gtkmvc3.view import View
 from rafcon.gui.utils import constants
+from rafcon.gui.helpers import label
 
 
 class HistoryTreeView(View, Gtk.TreeView):
@@ -60,11 +61,11 @@ class ModificationHistoryView(View, Gtk.ScrolledWindow):
         redo_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         reset_button = Gtk.Button.new_with_label("Reset")
         reset_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        branch_checkbox = Gtk.CheckButton.new_with_label("B")
+        branch_checkbox = Gtk.CheckButton.new_with_label("Branches")
         branch_checkbox.set_tooltip_text('Show branches')
         branch_checkbox.set_border_width(constants.BUTTON_BORDER_WIDTH)
         branch_checkbox.get_style_context().add_class("secondary")
-        folded_checkbox = Gtk.CheckButton.new_with_label("F")
+        folded_checkbox = Gtk.CheckButton.new_with_label("Fold")
         folded_checkbox.set_tooltip_text('Fold branches')
         folded_checkbox.set_border_width(constants.BUTTON_BORDER_WIDTH)
         folded_checkbox.get_style_context().add_class("secondary")
@@ -76,6 +77,8 @@ class ModificationHistoryView(View, Gtk.ScrolledWindow):
         button_hbox.pack_end(reset_button, False, True, 0)
         button_hbox.pack_end(redo_button, False, True, 0)
         button_hbox.pack_end(undo_button, False, True, 0)
+
+        label.ellipsize_labels_recursively(button_hbox)
 
         history_vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         history_vbox.pack_start(self, True, True, 0)
@@ -93,4 +96,4 @@ class ModificationHistoryView(View, Gtk.ScrolledWindow):
         self['reset_button'] = reset_button
         self['branch_checkbox'] = branch_checkbox
         self['folded_checkbox'] = folded_checkbox
-        self.top = 'history_view'
+        self.top = 'history_vbox'

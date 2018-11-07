@@ -49,3 +49,5 @@ class DebugConsoleView(View):
         self['undock_console_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
         self['undock_console_button'].set_tooltip_text("Undock debug console widget")
         self['console_hide_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_DOWNA))
+
+        gui_helper_label.ellipsize_labels_recursively(self['debug_console_button_hbox'])

@@ -47,3 +47,5 @@ class StateTransitionsEditorView(View):
         self['connected_to_t_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['add_t_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['remove_t_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+
+        gui_helper_label.ellipsize_labels_recursively(self['transitions_toolbar'])

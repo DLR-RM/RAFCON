@@ -16,6 +16,7 @@ from gi.repository import Gtk
 from gi.repository import GtkSource
 
 from rafcon.gui.utils import constants
+from rafcon.gui.helpers import label
 from rafcon.gui.views.utils.editor import EditorView
 
 
@@ -57,6 +58,9 @@ class SourceEditorView(EditorView):
         hbox.pack_end(open_external_button, False, True, 0)
         hbox.pack_end(cancel_button, False, True, 0)
         hbox.pack_end(apply_button, False, True, 0)
+
+        label.ellipsize_labels_recursively(hbox)
+
         self['editor_frame'].pack_start(hbox, expand=False, fill=True, padding=0)
         self['pylint_check_button'] = pylint_check_button
         self['apply_button'] = apply_button

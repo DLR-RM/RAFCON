@@ -14,6 +14,7 @@ from gtkmvc3.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.utils import constants
+from rafcon.gui.helpers import label
 
 
 class GlobalVariableEditorView(View):
@@ -28,3 +29,5 @@ class GlobalVariableEditorView(View):
         self['lock_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['unlock_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self.scrollbar_widget = self['scroller']
+
+        label.ellipsize_labels_recursively(self['global_variables_toolbar'])

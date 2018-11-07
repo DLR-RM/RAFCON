@@ -15,6 +15,7 @@ from gi.repository import Gtk
 from gi.repository import GObject
 from gtkmvc3.view import View
 from rafcon.gui.utils import constants
+from rafcon.gui.helpers import label
 
 
 class ExecutionHistoryTreeView(View, Gtk.TreeView):
@@ -53,6 +54,8 @@ class ExecutionHistoryView(View, Gtk.ScrolledWindow):
         button_box.pack_end(clean_button, False, True, 0)
         button_box.pack_end(open_separately_button, False, True, 0)
 
+        label.ellipsize_labels_recursively(button_box)
+
         history_vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         history_vbox.pack_end(button_box, False, True, 0)
         history_vbox.pack_end(self, True, True, 0)
@@ -67,4 +70,4 @@ class ExecutionHistoryView(View, Gtk.ScrolledWindow):
         self['reload_button'] = reload_button
         self['clean_button'] = clean_button
         self['open_separately_button'] = open_separately_button
-        self.top = 'history_view'
+        self.top = 'history_vbox'
