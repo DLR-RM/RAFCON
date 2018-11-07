@@ -15,6 +15,7 @@ from gi.repository import Gtk
 from gi.repository import GObject
 from gtkmvc3.view import View
 from rafcon.gui.utils import constants
+from rafcon.gui.config import global_gui_config
 
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.execution_state import ExecutionState
@@ -43,9 +44,13 @@ class StateIconView(View, Gtk.IconView):
         self.set_tooltip_column(1)
 
         for shorthand, state_class in self.states:
-            liststore.append(['<span font_desc="%s %s">&#x%s; ' % (constants.ICON_FONT, constants.FONT_SIZE_NORMAL,
-                                                                   constants.BUTTON_ADD) + shorthand + '</span>',
-                              "Add/Drag and Drop " + state_class.__name__])
+            liststore.append(['<span font_desc="{font} {size}" color="{color}">&#x{icon};</span> {text}'.format(
+                font=constants.ICON_FONT,
+                size=11,
+                color=global_gui_config.colors['BUTTON_TEXT_COLOR'],
+                icon=constants.BUTTON_ADD,
+                text=shorthand
+            ), "Add/Drag and Drop " + state_class.__name__])
 
         self['state_icon_view'] = self
         self.top = 'state_icon_view'
