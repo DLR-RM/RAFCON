@@ -41,6 +41,16 @@ label.secondary, checkbutton.secondary label {
     font-weight: 500;
 }
 
+// Square buttons for execution buttons
+#graphical_editor_toolbar button {
+    padding: 5px 6px;
+}
+
+// Align add-state buttons vertically in the middle
+#state_icons_box {
+	margin:5px 5px 0 0;
+}
+
 // Add margin to the toolbar to have a spacer below it following the style of the paned spaces
 #toolbar {
 	margin-bottom: $paned_separator_wide_width;

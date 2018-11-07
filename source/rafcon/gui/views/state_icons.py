@@ -34,6 +34,7 @@ class StateIconView(View, Gtk.IconView):
 
         self.set_columns(len(self.states))
         self.set_margin(0)
+        self.set_item_width(20)
         self.set_spacing(0)
         self.set_row_spacing(0)
         self.set_column_spacing(0)
@@ -46,7 +47,7 @@ class StateIconView(View, Gtk.IconView):
         for shorthand, state_class in self.states:
             liststore.append(['<span font_desc="{font} {size}" color="{color}">&#x{icon};</span> {text}'.format(
                 font=constants.ICON_FONT,
-                size=11,
+                size=constants.FONT_SIZE_NORMAL,
                 color=global_gui_config.colors['BUTTON_TEXT_COLOR'],
                 icon=constants.BUTTON_ADD,
                 text=shorthand
