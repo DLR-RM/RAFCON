@@ -39,6 +39,7 @@ class SourceEditorView(EditorView):
         pylint_check_button = Gtk.CheckButton("Validate")
         pylint_check_button.set_focus_on_click(False)
         pylint_check_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
+        pylint_check_button.get_style_context().add_class("secondary")
 
         open_external_button = Gtk.ToggleButton("Open externally")
         open_external_button.set_focus_on_click(False)

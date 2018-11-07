@@ -20,6 +20,9 @@
             <property name="ypad">6</property>
             <property name="label" translatable="yes">Type</property>
             <property name="xalign">0</property>
+            <style>
+              <class name="secondary"/>
+            </style>
           </object>
           <packing>
             <property name="top_attach">3</property>
@@ -47,6 +50,9 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">ID</property>
+            <style>
+              <class name="secondary"/>
+            </style>
           </object>
           <packing>
             <property name="left_attach">3</property>
@@ -93,6 +99,9 @@
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">Library Path/Name</property>
             <property name="xalign">0</property>
+            <style>
+              <class name="secondary"/>
+            </style>
           </object>
           <packing>
             <property name="top_attach">1</property>
@@ -120,6 +129,9 @@
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">Library content</property>
             <property name="xalign">0</property>
+            <style>
+              <class name="secondary"/>
+            </style>
           </object>
           <packing>
             <property name="top_attach">2</property>
@@ -153,6 +165,9 @@
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">State Name</property>
                 <property name="xalign">0</property>
+                <style>
+                  <class name="secondary"/>
+                </style>
               </object>
             </child>
           </object>

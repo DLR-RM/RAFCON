@@ -56,6 +56,9 @@
             <property name="border_width">5</property>
             <property name="active">True</property>
             <property name="draw_indicator">True</property>
+            <style>
+              <class name="secondary"/>
+            </style>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -73,6 +76,9 @@
             <property name="border_width">5</property>
             <property name="active">True</property>
             <property name="draw_indicator">True</property>
+            <style>
+              <class name="secondary"/>
+            </style>
           </object>
           <packing>
             <property name="expand">False</property>

@@ -36,6 +36,11 @@ box {
     }
 }
 
+label.secondary, checkbutton.secondary label {
+    color: $tertiary_text_color;
+    font-weight: 500;
+}
+
 // Add margin to the toolbar to have a spacer below it following the style of the paned spaces
 #toolbar {
 	margin-bottom: $paned_separator_wide_width;
