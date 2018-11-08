@@ -2593,6 +2593,10 @@ messagedialog { // Message Dialog styling
     border-bottom: 1px solid darken($header_bg, 7%);
   }
 
+  .dialog-vbox {
+    padding-top:10px;
+  }
+
   .dialog-action-area button { padding: 8px; min-height: 0; }
 
   &.csd { // rounded bottom border styling for csd version
