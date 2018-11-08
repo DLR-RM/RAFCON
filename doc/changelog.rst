@@ -17,7 +17,7 @@ Next release
 
 - Bug Fixes:
 
-  - 
+  - :issue:`617` Invalid DataFlow by DataFlowWidget
 
 Patch releases 0.12.\*
 ----------------------
