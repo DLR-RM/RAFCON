@@ -173,7 +173,7 @@ def set_button_children_size_request(widget):
             return
         for child in widget.get_children():
             if isinstance(child, Gtk.Button):
-                child.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
+                child.set_size_request(constants.BUTTON_MIN_WIDTH, -1)
             else:
                 set_button_children_size_request(child)
     except AttributeError:

@@ -209,7 +209,6 @@
             </child>
             <child>
               <object class="GtkButton" id="console_hide_button">
-                <property name="height_request">15</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="focus_on_click">False</property>

@@ -90,7 +90,6 @@
           <object class="GtkButton" id="remove_t_button">
             <property name="label" translatable="yes">Remove</property>
             <property name="width_request">90</property>
-            <property name="height_request">40</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="focus_on_click">False</property>
@@ -108,7 +107,6 @@
           <object class="GtkButton" id="add_t_button">
             <property name="label" translatable="yes">Add</property>
             <property name="width_request">90</property>
-            <property name="height_request">40</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="focus_on_click">False</property>

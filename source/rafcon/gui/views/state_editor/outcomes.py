@@ -40,12 +40,12 @@ class StateOutcomesEditorView(View):
         add_button = Gtk.Button('Add')
         add_button.set_focus_on_click(False)
         add_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        add_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
+        add_button.set_size_request(constants.BUTTON_MIN_WIDTH, -1)
 
         remove_button = Gtk.Button('Remove')
         remove_button.set_focus_on_click(False)
         remove_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        remove_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
+        remove_button.set_size_request(constants.BUTTON_MIN_WIDTH, -1)
 
         self['add_button'] = add_button
         self['remove_button'] = remove_button

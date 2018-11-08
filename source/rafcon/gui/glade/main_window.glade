@@ -38,7 +38,6 @@
                 <property name="can_focus">False</property>
                 <child>
                   <object class="GtkButton" id="left_bar_hide_button">
-                    <property name="width_request">15</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
@@ -58,7 +57,6 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkPaned" id="left_bar_paned">
-                        <property name="width_request">38</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -365,7 +363,6 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkButton" id="left_bar_return_button">
-                        <property name="width_request">15</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <style>
@@ -380,7 +377,6 @@
                     </child>
                     <child>
                       <object class="GtkButton" id="left_bar_replacement">
-                        <property name="width_request">10</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">False</property>
                         <property name="receives_default">False</property>
@@ -669,7 +665,6 @@
                                 </child>
                                 <child>
                                   <object class="GtkButton" id="console_return_button">
-                                    <property name="height_request">15</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <style>
@@ -718,7 +713,6 @@
                     </child>
                     <child>
                       <object class="GtkButton" id="right_bar_return_button">
-                        <property name="width_request">15</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <style>
@@ -733,7 +727,6 @@
                     </child>
                     <child>
                       <object class="GtkButton" id="right_bar_replacement">
-                        <property name="width_request">10</property>
                         <property name="sensitive">False</property>
                         <property name="can_focus">False</property>
                         <property name="receives_default">False</property>
@@ -838,7 +831,6 @@
                     </child>
                     <child>
                       <object class="GtkButton" id="right_bar_hide_button">
-                        <property name="width_request">15</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>

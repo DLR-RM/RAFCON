@@ -62,7 +62,7 @@ def create_tab_close_button(callback, *additional_parameters):
     close_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' % (constants.ICON_FONT, constants.FONT_SIZE_SMALL,
                                                                       constants.BUTTON_CLOSE))
     close_button = Gtk.Button()
-    close_button.set_size_request(width=constants.GRID_SIZE*3, height=constants.GRID_SIZE*3)
+    close_button.set_size_request(width=constants.GRID_SIZE*3, height=-1)
     close_button.set_relief(Gtk.ReliefStyle.NONE)
     close_button.set_focus_on_click(True)
     close_button.add(close_label)

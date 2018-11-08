@@ -119,7 +119,6 @@
                                 <property name="can_focus">False</property>
                                 <child>
                                   <object class="GtkScrolledWindow" id="input_ports_scroller">
-                                    <property name="height_request">130</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <child>
@@ -200,7 +199,6 @@
                                 <property name="can_focus">False</property>
                                 <child>
                                   <object class="GtkScrolledWindow" id="output_ports_scroller">
-                                    <property name="height_request">150</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <child>
@@ -280,7 +278,6 @@
                                 <property name="can_focus">False</property>
                                 <child>
                                   <object class="GtkScrolledWindow" id="scoped_variables_scroller">
-                                    <property name="height_request">150</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <child>
