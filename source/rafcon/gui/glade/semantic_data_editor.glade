@@ -64,7 +64,6 @@
         <child>
           <object class="GtkButton" id="delete_entry">
             <property name="label" translatable="yes">Remove</property>
-            <property name="width_request">90</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>
@@ -80,7 +79,6 @@
         <child>
           <object class="GtkButton" id="new_dict_entry">
             <property name="label" translatable="yes">Add Dict</property>
-            <property name="width_request">90</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>
@@ -96,7 +94,6 @@
         <child>
           <object class="GtkButton" id="new_entry">
             <property name="label" translatable="yes">Add</property>
-            <property name="width_request">90</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>
@@ -112,7 +109,6 @@
         <child>
           <object class="GtkToggleButton" id="open_externally">
             <property name="label" translatable="yes">Open externally</property>
-            <property name="width_request">140</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>

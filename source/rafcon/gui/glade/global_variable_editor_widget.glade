@@ -87,7 +87,6 @@
         <child>
           <object class="GtkButton" id="unlock_global_variable_button">
             <property name="label" translatable="yes">Unlock</property>
-            <property name="width_request">90</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>
@@ -103,7 +102,6 @@
         <child>
           <object class="GtkButton" id="lock_global_variable_button">
             <property name="label" translatable="yes">Lock</property>
-            <property name="width_request">90</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>
@@ -119,7 +117,6 @@
         <child>
           <object class="GtkButton" id="delete_global_variable_button">
             <property name="label" translatable="yes">Remove</property>
-            <property name="width_request">90</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>
@@ -135,7 +132,6 @@
         <child>
           <object class="GtkButton" id="new_global_variable_button">
             <property name="label" translatable="yes">Add</property>
-            <property name="width_request">90</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>

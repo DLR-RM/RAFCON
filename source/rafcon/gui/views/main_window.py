@@ -90,7 +90,7 @@ class MainWindowView(View):
         ######################################################
         self.global_var_editor = GlobalVariableEditorView()
         self.global_var_editor.show()
-        self['global_variables_scrolledwindow'].add(self.global_var_editor.get_top_widget())
+        self['global_variables_eventbox'].add(self.global_var_editor.get_top_widget())
 
         ######################################################
         # State Machine History
@@ -220,6 +220,7 @@ class MainWindowView(View):
         self.left_bar_window = UndockedWindowView('left_bar_window')
         self.right_bar_window = UndockedWindowView('right_bar_window')
         self.console_window = UndockedWindowView('console_window')
+
 
     def rotate_and_detach_tab_labels(self):
         """Rotates tab labels of a given notebook by 90 degrees and makes them detachable.

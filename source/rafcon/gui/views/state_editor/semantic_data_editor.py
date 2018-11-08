@@ -54,3 +54,5 @@ class SemanticDataEditorView(View):
         is_dict_renderer = Gtk.CellRendererText()
         col = Gtk.TreeViewColumn('Is Dict', is_dict_renderer, text=self.IS_DICT_STORAGE_ID)
         tree_view.append_column(col)
+
+        gui_helper_label.ellipsize_labels_recursively(self['semantic_data_toolbar'])

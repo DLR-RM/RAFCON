@@ -47,3 +47,5 @@ class StateDataFlowsEditorView(View):
         self['connected_to_d_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['add_d_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['remove_d_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+
+        gui_helper_label.ellipsize_labels_recursively(self['data_flows_toolbar'])

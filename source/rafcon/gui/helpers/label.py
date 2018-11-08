@@ -16,6 +16,7 @@
 
 from gi.repository import Gtk
 from gi.repository import Gdk
+from gi.repository import Pango
 
 from rafcon.gui.utils import constants
 from rafcon.gui.config import global_gui_config
@@ -357,3 +358,12 @@ def is_event_of_key_string(event, key_string):
     :param str key_string: Key string parsed to a key value and for condition check
     """
     return len(event) >= 2 and not isinstance(event[1], Gdk.ModifierType) and event[0] == Gtk.accelerator_parse(key_string)[0]
+
+
+def ellipsize_labels_recursively(widget, ellipsize=Pango.EllipsizeMode.END, width_chars=1):
+    if isinstance(widget, Gtk.Label):
+        widget.set_ellipsize(ellipsize)
+        widget.set_width_chars(width_chars)
+    elif isinstance(widget, Gtk.Container):
+        for child_widget in widget.get_children():
+            ellipsize_labels_recursively(child_widget, ellipsize, width_chars)
