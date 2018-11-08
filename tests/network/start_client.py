@@ -31,7 +31,9 @@ def setup_logger():
 def start_client(interacting_function, queue_dict):
     from rafcon.gui.config import global_gui_config
     import os
-    
+
+    from rafcon.utils.i18n import setup_l10n
+    setup_l10n()
     from rafcon.gui.controllers.main_window import MainWindowController
     from rafcon.gui.views.main_window import MainWindowView
     import rafcon.gui.singleton as gui_singletons

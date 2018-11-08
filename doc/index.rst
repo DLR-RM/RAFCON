@@ -31,6 +31,7 @@ Have a look at our `website <https://dlr-rm.github.io/RAFCON/getting_started.htm
 
    concepts.rst
    changelog.rst
+   feature_list.rst
    breaking_changes.rst
    tutorials.rst
    building_docs.rst

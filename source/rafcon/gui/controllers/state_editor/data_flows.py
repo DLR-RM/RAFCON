@@ -139,6 +139,29 @@ class StateDataFlowsListController(LinkageListController):
     def find_free_and_valid_data_flows(self, depend_to_state_id=None):
         # print "\n internal from %s \n\n internal to %s" % (self.free_to_port_internal, self.from_port_internal)
         internal_data_flows = []
+
+        def add_if_valid(future_data_flow_parent, from_port, to_port, data_flow_list):
+            from_state_id = from_port.parent.state_id
+            to_state_id = to_port.parent.state_id
+            # check that possible data flow would have consistent data types
+            if not (type_helpers.type_inherits_of_type(from_port.data_type, to_port.data_type)):
+                return
+            # check that possible data flow depend to right state
+            if not (depend_to_state_id is None or depend_to_state_id in [from_state_id, to_state_id]):
+                return
+            # check that possible data port is not loop
+            if not (from_state_id != to_state_id or
+                    from_state_id == to_state_id and from_port.data_port_id != to_port.data_port_id):
+                return
+            # check if data flow already exists
+            exists = any([from_state_id == df.from_state and from_port.data_port_id == df.from_key
+                          and to_state_id == df.to_state and to_port.data_port_id == df.to_key
+                          for df in future_data_flow_parent.data_flows.itervalues()])
+            if exists:
+                return
+            # add valid data flow
+            data_flow_list.append((from_state_id, from_port.data_port_id, to_state_id, to_port.data_port_id))
+
         if self.free_to_port_internal and self.from_port_internal:
             for from_state_id, elems in self.from_port_internal.iteritems():
                 # print "\n\nfrom_state %s and ports %s" % (from_state_id, [(elem.name, elem.data_type) for elem in elems])
@@ -146,10 +169,8 @@ class StateDataFlowsListController(LinkageListController):
                     for to_state_id, elems in self.free_to_port_internal.iteritems():
                         # print "\nto_state %s and ports %s" % (to_state_id, [(elem.name, elem.data_type) for elem in elems])
                         for to_port in elems:
-                            if type_helpers.type_inherits_of_type(from_port.data_type, to_port.data_type):
-                                if depend_to_state_id is None or depend_to_state_id in [from_state_id, to_state_id]:
-                                    internal_data_flows.append((from_state_id, from_port.data_port_id,
-                                                                to_state_id, to_port.data_port_id))
+                            if from_state_id == from_port.parent.state_id and to_state_id == to_port.parent.state_id:
+                                add_if_valid(self.model.state, from_port, to_port, internal_data_flows)
 
         # print "\n\n\n" + 60*"-" + "\n external from %s \n\n external to %s" % (self.free_to_port_external, self.from_port_external)
         external_data_flows = []
@@ -160,10 +181,8 @@ class StateDataFlowsListController(LinkageListController):
                     for to_state_id, elems in self.free_to_port_external.iteritems():
                         # print "\nto_state %s and ports %s" % (to_state_id, [(elem.name, elem.data_type) for elem in elems])
                         for to_port in elems:
-                            if type_helpers.type_inherits_of_type(from_port.data_type, to_port.data_type):
-                                if depend_to_state_id is None or depend_to_state_id in [from_state_id, to_state_id]:
-                                    external_data_flows.append((from_state_id, from_port.data_port_id,
-                                                                to_state_id, to_port.data_port_id))
+                            if from_state_id == from_port.parent.state_id and to_state_id == to_port.parent.state_id:
+                                add_if_valid(self.model.state.parent, from_port, to_port, external_data_flows)
 
         return internal_data_flows, external_data_flows
 
@@ -212,7 +231,7 @@ class StateDataFlowsListController(LinkageListController):
                 logger.error("Data Flow couldn't be added: {0}".format(e))
                 return
         else:
-            logger.warning("NO OPTION TO ADD DATA FLOW")
+            logger.warning("NO OPTION TO ADD A UNIQUE NEW DATA FLOW")
             return
 
         # set focus on this new element
@@ -761,9 +780,10 @@ def find_free_keys(model):
         if model.state.output_data_ports:
             port_keys = model.state.output_data_ports.keys()
             # print "actual keys: ", port_keys
-            for data_flow in model.state.data_flows.values():
-                port_keys = filter(lambda port_id: not (model.state.state_id == data_flow.to_state and
-                                                        port_id == data_flow.to_key), port_keys)
+            # TODO check if the filter can be made valid -> at the moment it is not fully valid because multiple data-flows  for IO are allowed
+            # for data_flow in model.state.data_flows.values():
+            #     port_keys = filter(lambda port_id: not (model.state.state_id == data_flow.to_state and
+            #                                             port_id == data_flow.to_key), port_keys)
                 # print "actual keys: ", port_keys
             # print "found free prots: ", port_keys
             free_container_ports.extend([model.state.output_data_ports[i] for i in port_keys])
@@ -784,9 +804,10 @@ def find_free_keys(model):
             if state_model.state.input_data_ports:
                 port_keys = state_model.state.input_data_ports.keys()
                 # print "actual keys: ", port_keys
-                for data_flow in model.state.data_flows.values():
-                    port_keys = filter(lambda port_id: not (state_model.state.state_id == data_flow.to_state and
-                                                            port_id == data_flow.to_key), port_keys)
+                # TODO check if the filter can be made valid -> at the moment it is not fully valid because multiple data-flows  for IO are allowed
+                # for data_flow in model.state.data_flows.values():
+                #     port_keys = filter(lambda port_id: not (state_model.state.state_id == data_flow.to_state and
+                #                                             port_id == data_flow.to_key), port_keys)
                     # print "actual keys: ", port_keys
 
                 # print "found free prots: ", port_keys

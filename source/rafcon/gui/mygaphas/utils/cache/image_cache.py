@@ -158,7 +158,19 @@ class ImageCache(object):
 
         # Changed drawing parameter
         for key in parameters:
-            if key not in self.__last_parameters or self.__last_parameters[key] != parameters[key]:
+            try:
+                if key not in self.__last_parameters or self.__last_parameters[key] != parameters[key]:
+                    return False
+            except (AttributeError, ValueError):
+                # Some values cannot be compared and raise an exception on comparison (e.g. numpy.ndarray). In this
+                # case, just return False and do not cache.
+                try:
+                    # Catch at least the ndarray-case, as this could occure relatively often
+                    import numpy
+                    if isinstance(self.__last_parameters[key], numpy.ndarray):
+                        return numpy.array_equal(self.__last_parameters[key], parameters[key])
+                except ImportError:
+                    return False
                 return False
 
         return True
