@@ -34,7 +34,7 @@ class StateIconView(View, Gtk.IconView):
 
         self.set_columns(len(self.states))
         self.set_margin(0)
-        self.set_item_width(20)
+        self.set_item_width(23)
         self.set_spacing(0)
         self.set_row_spacing(0)
         self.set_column_spacing(0)
