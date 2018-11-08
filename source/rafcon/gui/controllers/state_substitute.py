@@ -73,6 +73,7 @@ class StateSubstituteChooseLibraryDialog(RAFCONButtonDialog):
 
         super(StateSubstituteChooseLibraryDialog, self).__init__("Choose a Library to substitute the state with.",
                                                                  ['As library', 'As template', 'Cancel'],
+                                                                 title='Library choose dialog',
                                                                  callback=self.check_for_library_path,
                                                                  message_type=Gtk.MessageType.INFO,
                                                                  flags=Gtk.DialogFlags.MODAL, parent=parent)

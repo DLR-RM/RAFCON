@@ -34,10 +34,12 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
 
     def __init__(self, markup_text=None,
                  callback=None, callback_args=(),
-                 message_type=Gtk.MessageType.INFO, flags=Gtk.DialogFlags.MODAL, parent=None,
-                 width=None, standalone=False):
+                 message_type=Gtk.MessageType.WARNING, flags=Gtk.DialogFlags.MODAL, parent=None,
+                 width=None, standalone=False, title="RAFCON"):
 
         super(RAFCONMessageDialog, self).__init__(type=message_type, flags=flags)
+
+        self.set_title(title)
 
         if parent:
             self.set_transient_for(parent)
@@ -88,10 +90,10 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
     def __init__(self, markup_text=None, button_texts=None,
                  callback=None, callback_args=(),
                  message_type=Gtk.MessageType.INFO, flags=Gtk.DialogFlags.MODAL, parent=None,
-                 width=None, standalone=False):
+                 width=None, standalone=False, title="RAFCON"):
 
         super(RAFCONButtonDialog, self).__init__(markup_text, callback, callback_args, message_type,
-                                                 flags, parent, width)
+                                                 flags, parent, width, standalone, title)
 
         if button_texts:
             for index, button in enumerate(button_texts, 1):
@@ -125,10 +127,10 @@ class RAFCONInputDialog(RAFCONButtonDialog):
     def __init__(self, markup_text=None, button_texts=None, checkbox_text=None,
                  callback=None, callback_args=(),
                  message_type=Gtk.MessageType.INFO, flags=Gtk.DialogFlags.MODAL, parent=None,
-                 width=None, standalone=False):
+                 width=None, standalone=False, title="RAFCON"):
 
         super(RAFCONInputDialog, self).__init__(markup_text, button_texts, callback, callback_args,
-                                                message_type, flags, parent, width)
+                                                message_type, flags, parent, width, standalone, title)
 
         # Create a new Gtk.Hbox to put in the checkbox and entry
         hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, constants.GRID_SIZE)
@@ -184,10 +186,10 @@ class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
     def __init__(self, markup_text=None, button_texts=None, checkbox_texts=None,
                  callback=None, callback_args=(),
                  message_type=Gtk.MessageType.INFO, flags=Gtk.DialogFlags.MODAL, parent=None,
-                 width=None, standalone=False):
+                 width=None, standalone=False, title="RAFCON"):
 
         super(RAFCONColumnCheckboxDialog, self).__init__(markup_text, button_texts, callback, callback_args,
-                                                         message_type, flags, parent, width)
+                                                         message_type, flags, parent, width, standalone, title)
 
         checkbox_vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, constants.GRID_SIZE)
         self.get_content_area().add(checkbox_vbox)
@@ -236,12 +238,13 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
     """
 
     def __init__(self, markup_text, button_texts, callback=None, callback_args=(), table_header=None, table_data=None,
-                 toggled_callback=None, message_type=Gtk.MessageType.INFO, parent=None, width=None, standalone=True):
+                 toggled_callback=None, message_type=Gtk.MessageType.INFO, parent=None, width=None, standalone=True,
+                 title="RAFCON"):
 
         super(RAFCONCheckBoxTableDialog, self).__init__(markup_text, button_texts,
                                                         callback=callback, callback_args=callback_args,
                                                         message_type=message_type, parent=parent,
-                                                        width=width, standalone=False)
+                                                        width=width, standalone=standalone, title=title)
         if table_header is None:
             table_header = ["CheckBox", "Description"]
         if table_data is None:
