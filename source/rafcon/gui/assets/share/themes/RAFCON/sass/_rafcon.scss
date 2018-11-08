@@ -27,12 +27,15 @@
     }
 }
 
+// Custom button styling for sidebar toggle buttons
 box {
     .sidebar-toggle {
         border-color: $borders_color;
         border-radius: 0;
         padding: 0px 0px;
-        background-color:$bg_color;
+        background-color: $bg_color;
+        min-width: 20px;
+        min-height: 20px;
     }
 }
 
