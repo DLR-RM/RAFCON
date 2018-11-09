@@ -41,6 +41,7 @@ def wait_for_event_notification():
 
 
 def assert_pos_equality(pos1, pos2, allow_delta=10):
+    # print "assert_pos_equality: abs(pos1 - pos2)", abs(pos1 - pos2)
     assert abs(pos1 - pos2) <= allow_delta
 
 
@@ -86,7 +87,7 @@ def undock_sidebars():
         target_size = (800, 800)
         try:
             assert_size_equality(new_size, target_size, 90)
-            # Change target size if if it is similar to the current size
+            # Change target size if it is similar to the current size
             target_size = (900, 900)
         except AssertionError:
             pass
@@ -130,9 +131,9 @@ def undock_sidebars():
         wait_for_event_notification()
         assert window.get_property('visible') is False
 
-        window.disconnect(configure_handler_id)
-        window.disconnect(show_handler_id)
-        window.disconnect(hide_handler_id)
+        call_gui_callback(window.disconnect, configure_handler_id)
+        call_gui_callback(window.disconnect, show_handler_id)
+        call_gui_callback(window.disconnect, hide_handler_id)
 
     print "=> test left_bar_window"
     test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR")
@@ -147,7 +148,7 @@ def check_pane_positions():
     from rafcon.gui.singleton import main_window_controller
     from rafcon.gui.runtime_config import global_runtime_config
     from rafcon.gui.utils import constants
-    debug_sleep_time = 0.1
+    debug_sleep_time = 0.0
 
     stored_pane_positions = {}
     for config_id, pan_id in constants.PANE_ID.iteritems():
@@ -178,21 +179,40 @@ def check_pane_positions():
         call_gui_callback(redock_button.emit, "clicked")
         wait_for_event_notification()
 
-        window.disconnect(configure_handler_id)
-        window.disconnect(hide_handler_id)
+        time.sleep(debug_sleep_time)
+        call_gui_callback(window.disconnect, configure_handler_id)
+        call_gui_callback(window.disconnect, hide_handler_id)
 
-    print "=> test left_bar_window"
-    test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR")
+    # Info: un- and redocking the left bar will change the right bar position;
+    # thus, the equality check has to be done directly after un- and redocking the right bar
     print "=> test right_bar_window"
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
+    testing_utils.wait_for_gui()
+    config_id = 'RIGHT_BAR_DOCKED_POS'
+    pane_id = constants.PANE_ID['RIGHT_BAR_DOCKED_POS']
+    print "check pos of ", config_id, pane_id
+    assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 10)
+
     print "=> test console_window"
     test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
     testing_utils.wait_for_gui()
+    config_id = 'CONSOLE_DOCKED_POS'
+    pane_id = constants.PANE_ID['CONSOLE_DOCKED_POS']
+    print "check pos of ", config_id, pane_id
+    assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 10)
 
-    print "check if pane positions are still like in runtime_config.yaml"
-    for config_id, pane_id in constants.PANE_ID.iteritems():
-        print "check pos of ", config_id, pane_id
-        assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 95)
+    print "=> test left_bar_window"
+    test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR")
+    testing_utils.wait_for_gui()
+    config_id = 'LEFT_BAR_DOCKED_POS'
+    pane_id = constants.PANE_ID['LEFT_BAR_DOCKED_POS']
+    print "check pos of ", config_id, pane_id
+    assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 10)
+
+    # print "check if pane positions are still like in runtime_config.yaml"
+    # for config_id, pane_id in constants.PANE_ID.iteritems():
+    #     print "check pos of ", config_id, pane_id
+    #     assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 95)
 
 
 def test_window_positions(caplog):
@@ -226,11 +246,13 @@ def test_window_positions(caplog):
 
 
 def test_pane_positions(caplog):
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
+    testing_utils.run_gui(core_config=None,
+                          gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
                           runtime_config={
-                              'LEFT_BAR_DOCKED_POS': 376,
+                              'LEFT_BAR_DOCKED_POS': 400,
                               'RIGHT_BAR_DOCKED_POS': 800,
-                              'CONSOLE_DOCKED_POS': 500,
+                              'CONSOLE_DOCKED_POS': 600,
+                              'MAIN_WINDOW_SIZE': (1500, 800),
                               'LEFT_BAR_WINDOW_UNDOCKED': False,
                               'RIGHT_BAR_WINDOW_UNDOCKED': False,
                               'CONSOLE_WINDOW_UNDOCKED': False,
@@ -250,7 +272,8 @@ def test_pane_positions(caplog):
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
+
 if __name__ == '__main__':
-    # test_window_positions(None)
-    # test_pane_positions(None)
-    pytest.main([__file__, '-xs'])
+    test_window_positions(None)
+    test_pane_positions(None)
+    # pytest.main([__file__, '-xs'])

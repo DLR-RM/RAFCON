@@ -272,6 +272,11 @@ class MainWindowController(ExtendedController):
         view.right_bar_window.get_top_widget().connect("configure-event", self.configure_event, "RIGHT_BAR_WINDOW")
         view.console_window.get_top_widget().connect("configure-event", self.configure_event, "CONSOLE_WINDOW")
 
+        # save pane positions in the runtime config on every change
+        view['top_level_h_pane'].connect("button-release-event", self.configure_event, "LEFT_BAR_WINDOW")
+        view['right_h_pane'].connect("button-release-event", self.configure_event, "RIGHT_BAR_WINDOW")
+        view['central_v_pane'].connect("button-release-event", self.configure_event, "CONSOLE_WINDOW")
+
         # hide not usable buttons
         self.view['step_buttons'].hide()
 
@@ -495,6 +500,7 @@ class MainWindowController(ExtendedController):
         to the main-window, and the left-bar window is hidden. The undock button of the bar is made visible again.
         """
         config_parameter_undocked = window_key + '_WINDOW_UNDOCKED'
+        config_id_for_pane_position = window_key + '_DOCKED_POS'
         undocked_window_name = window_key.lower() + '_window'
         widget_name = window_key.lower()
         undocked_window_view = getattr(self.view, undocked_window_name)
@@ -509,6 +515,10 @@ class MainWindowController(ExtendedController):
         self.view['undock_{}_button'.format(widget_name)].show()
         # if replacement_name:
         #     self.view[replacement_name].hide()
+
+        # restore the position of the pane
+        self.set_pane_position(config_id_for_pane_position)
+
         global_runtime_config.set_config_value(config_parameter_undocked, False)
         return True
 
