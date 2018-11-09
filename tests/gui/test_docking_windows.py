@@ -192,7 +192,7 @@ def check_pane_positions():
     print "check if pane positions are still like in runtime_config.yaml"
     for config_id, pane_id in constants.PANE_ID.iteritems():
         print "check pos of ", config_id, pane_id
-        assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 90)
+        assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 95)
 
 
 def test_window_positions(caplog):
