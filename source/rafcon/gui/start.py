@@ -85,11 +85,11 @@ def setup_gtkmvc3_logger():
 
 
 def install_reactor():
-    from twisted.internet import gtk2reactor
+    from twisted.internet import gtk3reactor
     from twisted.internet.error import ReactorAlreadyInstalledError
     try:
         # needed for GLib.idle_add, and signals
-        gtk2reactor.install()
+        gtk3reactor.install()
     except ReactorAlreadyInstalledError:
         pass
 
@@ -97,7 +97,7 @@ def install_reactor():
 def pre_setup_plugins():
     """Loads plugins and calls the pre init hooks
 
-    If twisted has been imported by a plugin, the gtk2reactor is installed
+    If twisted has been imported by a plugin, the gtk3reactor is installed
     """
     # load all plugins specified in the RAFCON_PLUGIN_PATH
     plugins.load_plugins()
