@@ -9,7 +9,6 @@
 """
 
 import logging
-from gi.repository import Gtk
 import signal
 import sys
 from os.path import realpath, dirname, join
