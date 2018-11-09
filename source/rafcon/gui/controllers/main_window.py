@@ -478,8 +478,8 @@ class MainWindowController(ExtendedController):
         self.view['undock_{}_button'.format(widget_name)].hide()
         getattr(self, 'on_{}_hide_clicked'.format(widget_name))(None)
         self.view['{}_return_button'.format(widget_name)].hide()
-        if replacement_name:
-            self.view[replacement_name].show()
+        # if replacement_name:
+        #     self.view[replacement_name].show()
 
         main_window = self.view.get_top_widget()
         state_handler = main_window.connect('window-state-event', self.undock_window_callback, undocked_window)
@@ -507,8 +507,8 @@ class MainWindowController(ExtendedController):
 
         self.get_controller(controller_name).hide_window()
         self.view['undock_{}_button'.format(widget_name)].show()
-        if replacement_name:
-            self.view[replacement_name].hide()
+        # if replacement_name:
+        #     self.view[replacement_name].hide()
         global_runtime_config.set_config_value(config_parameter_undocked, False)
         return True
 
