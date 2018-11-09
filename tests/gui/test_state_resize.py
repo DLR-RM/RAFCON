@@ -135,7 +135,17 @@ def print_state_sizes(state_m, canvas, state_names=None):
     (state_path_PC, True, (10, 10))
 ])
 def test_simple_state_size_resize(state_path, recursive, rel_size, caplog, monkeypatch):
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True})
+    # If the GUI widget becomes too small, the resize tests will fail; thus, all sidebars are hidden in order
+    # that the gui will have enough space
+    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True},
+                          runtime_config={
+                              'LEFT_BAR_HIDDEN': True,
+                              'RIGHT_BAR_HIDDEN': True,
+                              'CONSOLE_HIDDEN': True,
+                              'MAIN_WINDOW_MAXIMIZED': False,
+                              'MAIN_WINDOW_SIZE': (1000.0, 800.0)
+                          }
+                          )
 
     try:
         from rafcon.gui.helpers.meta_data import check_gaphas_state_meta_data_consistency
