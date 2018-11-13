@@ -34,8 +34,8 @@ class CustomCondition(Condition):
     A class which inherits from Condition but can tell the outside world on how many threads are currently waiting.
     """
 
-    def __init__(self, lock=None, verbose=None):
-        super(CustomCondition, self).__init__(lock, verbose)
+    def __init__(self, lock=None):
+        super(CustomCondition, self).__init__(lock)
 
     def get_number_of_waiting_threads(self):
         """
