@@ -128,7 +128,7 @@ def test_drag_and_drop_test(caplog):
                                     rafcon.gui.singleton.main_window_controller)
     finally:
         testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=1, expected_errors=0)
 
 
 if __name__ == '__main__':
