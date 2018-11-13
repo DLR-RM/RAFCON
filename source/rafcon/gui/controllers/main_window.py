@@ -203,10 +203,8 @@ class MainWindowController(ExtendedController):
         self.console_child.destroy()
 
     @staticmethod
-    def configure_event(widget, event, name):
-        # print "configure event", widget, event, name
+    def update_widget_runtime_config(widget, event, name):
         global_runtime_config.store_widget_properties(widget, name)
-        global_runtime_config.save_configuration()
 
     def register_view(self, view):
         super(MainWindowController, self).register_view(view)
@@ -269,15 +267,15 @@ class MainWindowController(ExtendedController):
         view['lower_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['lower_notebook_title'],
                                        view.left_bar_window, 'lower')
 
-        view.get_top_widget().connect("configure-event", self.configure_event, "MAIN_WINDOW")
-        view.left_bar_window.get_top_widget().connect("configure-event", self.configure_event, "LEFT_BAR_WINDOW")
-        view.right_bar_window.get_top_widget().connect("configure-event", self.configure_event, "RIGHT_BAR_WINDOW")
-        view.console_window.get_top_widget().connect("configure-event", self.configure_event, "CONSOLE_WINDOW")
+        view.get_top_widget().connect("configure-event", self.update_widget_runtime_config, "MAIN_WINDOW")
+        view.left_bar_window.get_top_widget().connect("configure-event", self.update_widget_runtime_config, "LEFT_BAR_WINDOW")
+        view.right_bar_window.get_top_widget().connect("configure-event", self.update_widget_runtime_config, "RIGHT_BAR_WINDOW")
+        view.console_window.get_top_widget().connect("configure-event", self.update_widget_runtime_config, "CONSOLE_WINDOW")
 
         # save pane positions in the runtime config on every change
-        view['top_level_h_pane'].connect("button-release-event", self.configure_event, "LEFT_BAR_DOCKED")
-        view['right_h_pane'].connect("button-release-event", self.configure_event, "RIGHT_BAR_DOCKED")
-        view['central_v_pane'].connect("button-release-event", self.configure_event, "CONSOLE_DOCKED")
+        view['top_level_h_pane'].connect("button-release-event", self.update_widget_runtime_config, "LEFT_BAR_DOCKED")
+        view['right_h_pane'].connect("button-release-event", self.update_widget_runtime_config, "RIGHT_BAR_DOCKED")
+        view['central_v_pane'].connect("button-release-event", self.update_widget_runtime_config, "CONSOLE_DOCKED")
 
         # hide not usable buttons
         self.view['step_buttons'].hide()
