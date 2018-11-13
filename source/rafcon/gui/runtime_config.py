@@ -51,16 +51,17 @@ class RuntimeConfig(ObservableConfig):
         configuration file.
         """
         if isinstance(widget, Gtk.Window):
-            # Gtk TODO: originally
-            #maximized = bool(widget.maximize_initially)
             maximized = bool(widget.is_maximized())
             self.set_config_value('{0}_MAXIMIZED'.format(widget_name), maximized)
             if maximized:
                 return
             size = widget.get_size()
-            self.set_config_value('{0}_SIZE'.format(widget_name), size)
-        position = widget.get_position()
-        self.set_config_value('{0}_POS'.format(widget_name), position)
+            self.set_config_value('{0}_SIZE'.format(widget_name), tuple(size))
+            position = widget.get_position()
+            self.set_config_value('{0}_POS'.format(widget_name), tuple(position))
+        else:  # Gtk.Paned
+            position = widget.get_position()
+            self.set_config_value('{0}_POS'.format(widget_name), position)
 
     def save_configuration(self):
         # if the runtime_config was not loaded in some startup routine then load it explicitly (= create it)
