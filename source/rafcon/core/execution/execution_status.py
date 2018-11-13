@@ -17,15 +17,19 @@
 """
 from builtins import str
 from enum import Enum
-from gtkmvc3.observable import Observable
-from threading import _Condition
+import sys
+if sys.version_info[0] == 2:
+    from threading import _Condition as Condition
+else:
+    from threading import Condition
 
+from gtkmvc3.observable import Observable
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
 
-class CustomCondition(_Condition):
+class CustomCondition(Condition):
     """
     A class which inherits from Condition but can tell the outside world on how many threads are currently waiting.
     """
