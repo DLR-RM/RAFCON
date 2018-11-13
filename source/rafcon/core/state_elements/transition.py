@@ -18,7 +18,7 @@
 """
 
 from future.utils import string_types
-from gtkmvc import Observable
+from gtkmvc3 import Observable
 
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.decorators import lock_state_machine
