@@ -1,6 +1,7 @@
+from __future__ import print_function
+
 from gtkmvc3.observable import Observable
 from builtins import object
-from __future__ import print_function
 import testing_utils
 import pytest
 

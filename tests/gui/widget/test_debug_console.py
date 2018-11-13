@@ -1,6 +1,7 @@
-import time
 from __future__ import print_function
 from __future__ import absolute_import
+
+import time
 
 # general tool elements
 from rafcon.utils import log
