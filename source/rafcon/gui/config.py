@@ -12,6 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import str
 import os
 import re
 import yaml
@@ -71,7 +72,7 @@ class GuiConfig(ObservableConfig):
         if not using_default_config:
             default_gui_config = yaml.load(self.default_config) if self.default_config else {}
             shortcuts_dict = self.get_config_value('SHORTCUTS')
-            for shortcut_name, shortcuts_list in default_gui_config.get('SHORTCUTS', {}).iteritems():
+            for shortcut_name, shortcuts_list in default_gui_config.get('SHORTCUTS', {}).items():
                 if shortcut_name not in shortcuts_dict:
                     self.logger.info("Shortcut for '{0}' is {1}, now, and was taken from default config."
                                      "".format(shortcut_name, shortcuts_list))

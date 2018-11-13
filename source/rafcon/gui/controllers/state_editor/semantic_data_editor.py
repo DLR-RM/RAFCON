@@ -12,6 +12,7 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
+from future.utils import string_types
 import copy
 import os
 from functools import partial
@@ -59,7 +60,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
             model_to_observe = model
 
         # define tree store with the values in [key, value Is Dict]
-        tree_store = Gtk.TreeStore(str, str, bool, GObject.TYPE_PYOBJECT)
+        tree_store = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_STRING, bool, GObject.TYPE_PYOBJECT)
 
         # unfortunately this cannot be down with super, as gtkmvc3 does not use super() consistently
         TreeViewController.__init__(self, model_to_observe, view,
@@ -156,7 +157,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
 
         # generate key
         target_dict = self.model.state.get_semantic_data(target_dict_path_as_list)
-        new_key_string = generate_semantic_data_key(target_dict.keys())
+        new_key_string = generate_semantic_data_key(list(target_dict.keys()))
         self.model.state.add_semantic_data(target_dict_path_as_list, value, new_key_string)
 
         self.reload_tree_store_data()
@@ -311,7 +312,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         :param str new_key_str: The new value of the target cell
         :return:
         """
-        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, str) else path
+        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, string_types) else path
         if self.tree_store[tree_store_path][self.KEY_STORAGE_ID] == new_key_str:
             return
 
@@ -323,7 +324,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
             target_dict = self.model.state.semantic_data
             for element in dict_path[0:-1]:
                 target_dict = target_dict[element]
-            new_key_str = generate_semantic_data_key(target_dict.keys())
+            new_key_str = generate_semantic_data_key(list(target_dict.keys()))
 
         new_dict_path = self.model.state.add_semantic_data(dict_path[0:-1], old_value, key=new_key_str)
         self._changed_id_to = {':'.join(dict_path): new_dict_path}  # use hashable key (workaround for tree view ctrl)
@@ -336,7 +337,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         :param str new_value_str: The new value of the target cell
         :return:
         """
-        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, str) else path
+        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, string_types) else path
         if self.tree_store[tree_store_path][self.VALUE_STORAGE_ID] == new_value_str:
             return
 

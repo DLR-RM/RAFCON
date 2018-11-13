@@ -16,6 +16,7 @@
 
 """
 
+from builtins import str
 import traceback
 
 from rafcon.core.state_elements.outcome import Outcome
@@ -61,10 +62,10 @@ class PreemptiveConcurrencyState(ConcurrencyState):
 
             # preempt all child states
             if not self.backward_execution:
-                for state_id, state in self.states.iteritems():
+                for state_id, state in self.states.items():
                     state.recursively_preempt_states()
             # join all states
-            for history_index, state in enumerate(self.states.itervalues()):
+            for history_index, state in enumerate(self.states.values()):
                 self.join_state(state, history_index, concurrency_history_item)
                 self.add_state_execution_output_to_scoped_data(state.output_data, state)
                 self.update_scoped_variables_with_output_dictionary(state.output_data, state)
@@ -99,7 +100,7 @@ class PreemptiveConcurrencyState(ConcurrencyState):
 
             return self.finalize_concurrency_state(self.final_outcome)
 
-        except Exception, e:
+        except Exception as e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE

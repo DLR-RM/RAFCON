@@ -1,4 +1,6 @@
 
+from past.builtins import str
+from builtins import str
 def on_dialog_key_press(dialog, event, key_mapping, buttons):
     from gtk.gdk import keyval_name
     key_name = str.lower(str(keyval_name(event.keyval)))
@@ -40,7 +42,7 @@ def show_dialog(event, text, subtext, options, key_mapping, result):
     align_action_area.show()
     hbox.reparent(new_parent=align_action_area)
     
-    if isinstance(subtext, basestring) and len(subtext) > 0:
+    if isinstance(subtext, str) and len(subtext) > 0:
         subtext = "<span size='20000'>" + subtext + "</span>"
         dialog.format_secondary_markup(subtext)
         

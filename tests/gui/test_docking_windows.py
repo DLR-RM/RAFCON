@@ -1,3 +1,4 @@
+from __future__ import print_function
 import threading
 import pytest
 import time
@@ -135,11 +136,11 @@ def undock_sidebars():
         call_gui_callback(window.disconnect, show_handler_id)
         call_gui_callback(window.disconnect, hide_handler_id)
 
-    print "=> test left_bar_window"
+    print("=> test left_bar_window")
     test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR")
-    print "=> test right_bar_window"
+    print("=> test right_bar_window")
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
-    print "=> test console_window"
+    print("=> test console_window")
     test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
     testing_utils.call_gui_callback(wait_for_gui)
 
@@ -151,7 +152,7 @@ def check_pane_positions():
     debug_sleep_time = 0.0
 
     stored_pane_positions = {}
-    for config_id, pan_id in constants.PANE_ID.iteritems():
+    for config_id, pan_id in constants.PANE_ID.items():
         default_pos = constants.DEFAULT_PANE_POS[config_id]
         stored_pane_positions[config_id] = global_runtime_config.get_config_value(config_id, default_pos)
         if stored_pane_positions[config_id] is None:
@@ -164,13 +165,13 @@ def check_pane_positions():
         configure_handler_id = connect_window(window, 'configure-event', notify_on_event)
         hide_handler_id = connect_window(window, 'hide', notify_on_event)
 
-        print "undocking..."
+        print("undocking...")
         time.sleep(debug_sleep_time)
         ready.clear()
         call_gui_callback(main_window_controller.view["undock_{}_button".format(window_key.lower())].emit, "clicked")
         wait_for_event_notification()
 
-        print "docking..."
+        print("docking...")
         time.sleep(debug_sleep_time)
         ready.clear()
         attribute_name_of_undocked_window_view = window_key.lower() + "_window"
@@ -185,28 +186,28 @@ def check_pane_positions():
 
     # Info: un- and redocking the left bar will change the right bar position;
     # thus, the equality check has to be done directly after un- and redocking the right bar
-    print "=> test right_bar_window"
+    print("=> test right_bar_window")
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
     testing_utils.wait_for_gui()
     config_id = 'RIGHT_BAR_DOCKED_POS'
     pane_id = constants.PANE_ID['RIGHT_BAR_DOCKED_POS']
-    print "check pos of ", config_id, pane_id
+    print("check pos of ", config_id, pane_id)
     assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 10)
 
-    print "=> test console_window"
+    print("=> test console_window")
     test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
     testing_utils.wait_for_gui()
     config_id = 'CONSOLE_DOCKED_POS'
     pane_id = constants.PANE_ID['CONSOLE_DOCKED_POS']
-    print "check pos of ", config_id, pane_id
+    print("check pos of ", config_id, pane_id)
     assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 10)
 
-    print "=> test left_bar_window"
+    print("=> test left_bar_window")
     test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR")
     testing_utils.wait_for_gui()
     config_id = 'LEFT_BAR_DOCKED_POS'
     pane_id = constants.PANE_ID['LEFT_BAR_DOCKED_POS']
-    print "check pos of ", config_id, pane_id
+    print("check pos of ", config_id, pane_id)
     assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 10)
 
     # print "check if pane positions are still like in runtime_config.yaml"
@@ -238,7 +239,7 @@ def test_window_positions(caplog):
     try:
         undock_sidebars()
     finally:
-        for key, value in original_runtime_config.iteritems():
+        for key, value in original_runtime_config.items():
             call_gui_callback(global_runtime_config.set_config_value, key, value)
 
         testing_utils.close_gui()
@@ -266,7 +267,7 @@ def test_pane_positions(caplog):
     try:
         check_pane_positions()
     finally:
-        for key, value in original_runtime_config.iteritems():
+        for key, value in original_runtime_config.items():
             call_gui_callback(global_runtime_config.set_config_value, key, value)
 
         testing_utils.close_gui()

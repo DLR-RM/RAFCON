@@ -16,6 +16,8 @@
 
 """
 
+from future.utils import string_types
+from builtins import str
 import os
 import re
 import math
@@ -267,7 +269,7 @@ def save_state_recursively(state, base_path, parent_path, as_copy=False):
     # create yaml files for all children
     if isinstance(state, ContainerState):
         remove_obsolete_folders(state.states.values(), os.path.join(base_path, state_path))
-        for state in state.states.itervalues():
+        for state in state.states.values():
             save_state_recursively(state, base_path, state_path, as_copy)
 
 
@@ -413,10 +415,10 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
 
     try:
         state_info = load_data_file(path_core_data)
-    except ValueError, e:
+    except ValueError as e:
         logger.exception("Error while loading state data: {0}".format(e))
         return
-    except LibraryNotFoundException, e:
+    except LibraryNotFoundException as e:
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(str(e.message)))
         state_info = storage_utils.load_objects_from_json(path_core_data, as_dict=True)
@@ -454,7 +456,7 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     try:
         semantic_data = load_data_file(os.path.join(state_path, SEMANTIC_DATA_FILE))
         state.semantic_data = semantic_data
-    except Exception, e:
+    except Exception as e:
         # semantic data file does not have to be there
         pass
 
@@ -509,7 +511,7 @@ def limit_text_max_length(text, max_length, separator='_'):
     :return: the shortened input string
     """
     if max_length is not None:
-        if isinstance(text, basestring) and len(text) > max_length:
+        if isinstance(text, string_types) and len(text) > max_length:
             max_length = int(max_length)
             half_length = float(max_length - 1) / 2
             return text[:int(math.ceil(half_length))] + separator + text[-int(math.floor(half_length)):]
@@ -525,7 +527,7 @@ def clean_path_element(text, max_length=None, separator='_'):
     :return:
     """
     elements_to_replace = REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION
-    for elem, replace_with in elements_to_replace.iteritems():
+    for elem, replace_with in elements_to_replace.items():
         text = text.replace(elem, replace_with)
     if max_length is not None:
         text = limit_text_max_length(text, max_length, separator)
@@ -542,7 +544,7 @@ def limit_text_to_be_path_element(text, max_length=None, separator='_'):
     """
     # TODO: Should there not only be one method i.e. either this one or "clean_path_element"
     elements_to_replace = {' ': '_', '*': '_'}
-    for elem, replace_with in elements_to_replace.iteritems():
+    for elem, replace_with in elements_to_replace.items():
         text = text.replace(elem, replace_with)
     text = re.sub('[^a-zA-Z0-9-_]', '', text)
     if max_length is not None:

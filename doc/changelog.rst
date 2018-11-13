@@ -9,7 +9,7 @@ Next release
 
 - Features:
 
-  -
+  - RAFCON is now compatible to Python 3
 
 - Improvements:
 

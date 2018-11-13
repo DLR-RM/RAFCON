@@ -15,7 +15,9 @@
    :synopsis: A module to represent a concurrency state for the state machine
 
 """
-import Queue
+from future import standard_library
+standard_library.install_aliases()
+import queue
 
 from gtkmvc3.observable import Observable
 
@@ -86,9 +88,9 @@ class ConcurrencyState(ContainerState):
         self.state_execution_status = StateExecutionStatus.EXECUTE_CHILDREN
         # actually the queue is not needed in the barrier concurrency case
         # to avoid code duplication both concurrency states have the same start child function
-        concurrency_queue = Queue.Queue(maxsize=0)  # infinite Queue size
+        concurrency_queue = queue.Queue(maxsize=0)  # infinite Queue size
 
-        for index, state in enumerate(self.states.itervalues()):
+        for index, state in enumerate(self.states.values()):
             if state is not do_not_start_state:
 
                 state.input_data = self.get_inputs_for_state(state)

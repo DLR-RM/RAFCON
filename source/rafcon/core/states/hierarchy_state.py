@@ -17,6 +17,7 @@
    :synopsis: A module to represent a hierarchy state for the state machine
 
 """
+from builtins import str
 import traceback
 import copy
 
@@ -135,7 +136,7 @@ class HierarchyState(ContainerState):
                 # print "hs6", self.name
             return self._finalize_hierarchy()
 
-        except Exception, e:
+        except Exception as e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE

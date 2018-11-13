@@ -10,6 +10,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import str
 import os.path
 from copy import copy, deepcopy
 from weakref import ref
@@ -128,8 +129,8 @@ class AbstractStateModel(MetaModel, Hashable):
                 elements = getattr(self, attr)
                 other_elements = getattr(other, attr)
             else:  # elements are stored in a dict (ObsMapWrapper)
-                elements = getattr(self, attr).items()
-                other_elements = getattr(other, attr).items()
+                elements = list(getattr(self, attr).items())
+                other_elements = list(getattr(other, attr).items())
             if len(elements) != len(other_elements):
                 return False
             if not all([element in other_elements for element in other_elements]):

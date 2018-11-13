@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import range
 import os
 import time
 
@@ -50,7 +52,7 @@ def execute_library_state_forwards_backwards():
     sm = state_machine_manager.get_active_state_machine()
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
-    for key, sd in sm.root_state.scoped_data.iteritems():
+    for key, sd in sm.root_state.scoped_data.items():
         if sd.name == "beer_count":
             assert sd.value == 100
 
@@ -186,29 +188,29 @@ def execute_barrier_state_forwards_backwards():
         call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
-    print "cp1"
+    print("cp1")
 
     for i in range(4):
         call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(3, logger)
 
-    print "cp2"
+    print("cp2")
 
     call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
-    print "cp3"
+    print("cp3")
 
     sm = state_machine_manager.get_active_state_machine()
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
 
-    print "cp4"
+    print("cp4")
 
     testing_utils.wait_for_gui()
 
-    print "cp5"
+    print("cp5")
 
-    for key, sd in sm.root_state.scoped_data.iteritems():
+    for key, sd in sm.root_state.scoped_data.items():
         if sd.name == "beer_number":
             assert sd.value == 100
         elif sd.name == "wine_number":
@@ -224,7 +226,7 @@ def test_backward_stepping_barrier_state(caplog):
     call_gui_callback(initialize_global_variables)
     try:
         execute_barrier_state_forwards_backwards()
-    except Exception,e:
+    except Exception as e:
         raise
     finally:
         testing_utils.close_gui()

@@ -12,5 +12,5 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from state_icons import StateIconController
+from rafcon.gui.controllers.state_icons import StateIconController
 

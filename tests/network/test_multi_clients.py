@@ -7,7 +7,11 @@
 
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
 
+from future import standard_library
+standard_library.install_aliases()
 from multiprocessing import Process, Queue
 
 import multiprocessing
@@ -81,7 +85,7 @@ def synchronize_with_client_threads(queue_dict, execution_engine):
 
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put("state machine executed successfully")  # synchronize with client1
     queue_dict[SERVER_TO_CLIENT2_QUEUE].put("state machine executed successfully")  # synchronize with client2
-    print "server: start pause resume test successful\n\n"
+    print("server: start pause resume test successful\n\n")
 
     execution_engine.stop()
     execution_engine.join()
@@ -93,7 +97,7 @@ def interacting_function_server(queue_dict):
     # from rafcon.utils import log
     # logger = log.get_logger("Interacting server")
 
-    for id, queue in queue_dict.iteritems():
+    for id, queue in queue_dict.items():
         assert isinstance(queue, multiprocessing.queues.Queue)
 
     import rafcon.core.singleton as core_singletons
@@ -101,7 +105,7 @@ def interacting_function_server(queue_dict):
 
     active_sm = core_singletons.state_machine_manager.get_active_state_machine()
     # root state is a hierarchy state
-    for key, sv in active_sm.root_state.scoped_variables.iteritems():
+    for key, sv in active_sm.root_state.scoped_variables.items():
         if sv.name == "bottles":
             sv.default_value = 8
 
@@ -110,13 +114,13 @@ def interacting_function_server(queue_dict):
 
 
 def interacting_function_client1(main_window_controller, global_monitoring_manager, queue_dict):
-    import Queue
+    import queue
     from rafcon.utils import log
     logger = log.get_logger("Interacting client1")
 
     logger.info("Start interacting with server\n\n")
 
-    for id, queue in queue_dict.iteritems():
+    for id, queue in queue_dict.items():
         assert isinstance(queue, multiprocessing.queues.Queue)
 
     while not global_monitoring_manager.endpoint_initialized:
@@ -135,7 +139,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     try:
         # Wait for client2 to pause the state machine
         queue_dict[CLIENT2_TO_CLIENT1].get(timeout=10)  # get paused signal from client2
-    except Queue.Empty:
+    except queue.Empty:
         queue_dict[MAIN_QUEUE].put(TEST_ERROR)
         logger.exception("Client2 did not respond")
         os._exit(0)
@@ -153,7 +157,7 @@ def interacting_function_client2(main_window_controller, global_monitoring_manag
     from rafcon.utils import log
     logger = log.get_logger("Interacting client2")
 
-    for id, queue in queue_dict.iteritems():
+    for id, queue in queue_dict.items():
         assert isinstance(queue, multiprocessing.queues.Queue)
 
     while not global_monitoring_manager.endpoint_initialized:
@@ -178,9 +182,9 @@ def interacting_function_client2(main_window_controller, global_monitoring_manag
 def test_multi_clients():
     from network.test_single_client import launch_client
     from network.test_single_client import launch_server
-    from test_single_client import check_if_ports_are_open
+    from .test_single_client import check_if_ports_are_open
     if not check_if_ports_are_open():
-        print "Address already in use by another server!"
+        print("Address already in use by another server!")
         assert True == False
 
     test_successful = True
@@ -219,16 +223,16 @@ def test_multi_clients():
         raise
     try:
         assert data == START_PAUSE_RESUME_SUCCESSFUL
-        print "Test successful"
-    except AssertionError, e:
-        print "Test not successful"
+        print("Test successful")
+    except AssertionError as e:
+        print("Test not successful")
         test_successful = False
 
     queue_dict[KILL_SERVER_QUEUE].put("Kill", timeout=10)
     queue_dict[KILL_CLIENT1_QUEUE].put("Kill", timeout=10)
     queue_dict[KILL_CLIENT2_QUEUE].put("Kill", timeout=10)
 
-    print "Joining processes"
+    print("Joining processes")
     server.join(timeout=10)
     client1.join(timeout=10)
     client2.join(timeout=10)

@@ -10,6 +10,8 @@
 # Michael Vilzmann <michael.vilzmann@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import object
+from builtins import str
 import hashlib
 
 

@@ -17,6 +17,7 @@
 
 """
 
+from builtins import input
 import os
 
 
@@ -28,7 +29,7 @@ def open_folder_cmd_line(query, default_path=None):
     :return: Input path from the user or `default_path` if nothing is specified or None if path does not exist
     :rtype: str
     """
-    user_input = raw_input(query + ': ')
+    user_input = input(query + ': ')
     if len(user_input) == 0:
         user_input = default_path
     if not user_input or not os.path.isdir(user_input):
@@ -50,7 +51,7 @@ def create_folder_cmd_line(query, default_name=None, default_path=None):
     default = None
     if default_name and default_path:
         default = os.path.join(default_path, default_name)
-    user_input = raw_input(query + ' [default {}]: '.format(default))
+    user_input = input(query + ' [default {}]: '.format(default))
     if len(user_input) == 0:
         user_input = default
 
@@ -81,7 +82,7 @@ def save_folder_cmd_line(query, default_name=None, default_path=None):
     default = None
     if default_name and default_path:
         default = os.path.join(default_path, default_name)
-    user_input = raw_input(query + ' [default {}]: '.format(default))
+    user_input = input(query + ' [default {}]: '.format(default))
     if len(user_input) == 0:
         user_input = default
 
@@ -97,6 +98,6 @@ def show_notice(notice):
     
     :param str notice: Notice to show to the user 
     """
-    raw_input(notice)
+    input(notice)
 
 show_notice_func = show_notice

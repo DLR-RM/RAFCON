@@ -13,6 +13,8 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
+from future.utils import string_types
+from builtins import str
 
 from rafcon.gui.utils import constants
 from rafcon.utils import log
@@ -43,12 +45,12 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
 
         if parent:
             self.set_transient_for(parent)
-        if isinstance(markup_text, (str, unicode, basestring)):
+        if isinstance(markup_text, string_types):
             from cgi import escape
             self.set_markup(escape(str(markup_text)))
         else:
-            logger.debug("The specified message text is not a String is type {1} -> {0}".format(markup_text,
-                                                                                                type(markup_text)))
+            logger.debug("The specified message '{1}' text is not a string, but {0}".format(markup_text,
+                                                                                            type(markup_text)))
         if callback:
             self.add_callback(callback, *callback_args)
 
@@ -150,7 +152,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
 
         self.checkbox = None
 
-        if isinstance(checkbox_text, str):
+        if isinstance(checkbox_text, string_types):
             # If a checkbox_text is specified by the caller, we can assume that one should be used.
             self.checkbox = Gtk.CheckButton(checkbox_text)
             hbox.pack_end(self.checkbox, True, True, 1)
@@ -257,12 +259,12 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
             toggled_callback = on_toggled
 
         # check if data is consistent
-        if not all(len(row) == len(table_header) or not isinstance(row[-1], (str, basestring, bool)) and
+        if not all(len(row) == len(table_header) or not isinstance(row[-1], (string_types, bool)) and
                 len(row) == 1 + len(table_header) for row in table_data):
             raise ValueError("All rows of the table_data list has to be the same length as the table_header list "
                              "(+1 data element), here length = {0}". format(len(table_header)))
 
-        if not all([isinstance(row_elem, (bool, str, basestring))
+        if not all([isinstance(row_elem, (bool, string_types))
                    for index, row_elem in enumerate(table_data[0]) if not index + 1 == len(table_data[0])]):
             raise TypeError("All row elements have to be of type boolean or string except of last one.")
 
@@ -285,7 +287,7 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
                     check_box_renderer.connect("toggled", toggled_callback, index)
                 checkbox_column = Gtk.TreeViewColumn(table_header[index], check_box_renderer, active=index)
                 self.tree_view.append_column(checkbox_column)
-            elif column_type in (str, basestring):
+            elif column_type in (str, str):
                 text_renderer = Gtk.CellRendererText()
                 text_column = Gtk.TreeViewColumn(table_header[index], text_renderer, text=index)
                 self.tree_view.append_column(text_column)
@@ -296,7 +298,7 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
 
         # correct last list element if not boolean or string and table data length is +1 compared to table header
         if first_row_data_types and len(first_row_data_types) == len(table_header) + 1 and \
-                not isinstance(first_row_data_types[-1], (bool, str, basestring)):
+                not isinstance(first_row_data_types[-1], (bool, string_types)):
             first_row_data_types[-1] = GObject.TYPE_PYOBJECT
 
         # fill list store

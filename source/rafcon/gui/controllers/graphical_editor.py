@@ -23,6 +23,11 @@
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Gdk
+
+from builtins import range
+from builtins import filter
+from past.builtins import map
+
 import itertools
 import sys
 import time
@@ -1253,7 +1258,7 @@ class GraphicalEditorController(ExtendedController):
                 def find_closest_snap_angle(angle):
                     multiple = angle // snap_angle
                     multiple = [multiple - 1, multiple, multiple + 1]
-                    diff = map(lambda mul: abs(abs(snap_angle * mul) - abs(angle)), multiple)
+                    diff = [abs(abs(snap_angle * mul) - abs(angle)) for mul in multiple]
                     min_index = diff.index(min(diff))
                     return snap_angle * multiple[min_index]
 
@@ -1341,7 +1346,7 @@ class GraphicalEditorController(ExtendedController):
         # minimum size of our state
         if not resize_content and isinstance(state_m, ContainerStateModel):
             # Check lower right corner of all child states
-            for child_state_m in state_m.states.itervalues():
+            for child_state_m in state_m.states.values():
                 _, child_right_edge, child_bottom_edge, _ = self.get_boundaries(child_state_m)
                 if child_right_edge is not None and child_bottom_edge is not None:
                     min_right_edge = child_right_edge if min_right_edge < child_right_edge else min_right_edge
@@ -1365,8 +1370,8 @@ class GraphicalEditorController(ExtendedController):
                     max_bottom_edge = port_bottom_edge if max_bottom_edge > port_bottom_edge else max_bottom_edge
 
         # Check for parent size limitation
-        max_right_edge = sys.maxint
-        min_bottom_edge = -sys.maxint - 1
+        max_right_edge = sys.maxsize
+        min_bottom_edge = -sys.maxsize - 1
         if not state_m.state.is_root_state:
             if state_m.state.is_root_state_of_library:
                 parent_state_m = state_m.parent.parent
@@ -1440,7 +1445,7 @@ class GraphicalEditorController(ExtendedController):
                         port_m.set_meta_data_editor('inner_rel_pos', new_rel_pos, from_gaphas=False)
 
                     # Resize all child states
-                    for child_state_m in state_m.states.itervalues():
+                    for child_state_m in state_m.states.values():
                         old_rel_pos = child_state_m.get_meta_data_editor(for_gaphas=False)['rel_pos']
                         new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
                         child_state_m.set_meta_data_editor('rel_pos', new_rel_pos, from_gaphas=False)
@@ -1664,7 +1669,7 @@ class GraphicalEditorController(ExtendedController):
             width = size[0]
             height = size[1]
 
-            for child_state in state_m.states.itervalues():
+            for child_state in state_m.states.values():
                 # Calculate default positions for the child states
                 # Make the inset from the top left corner
 
@@ -2051,8 +2056,8 @@ class GraphicalEditorController(ExtendedController):
             return None
 
         try:
-            selected_ids = map(get_id, hits)  # Get the OpenGL ids for the hits
-            selected_ids = filter(lambda opengl_id: opengl_id is not None, selected_ids)  # Filter out Nones
+            selected_ids = list(map(get_id, hits))  # Get the OpenGL ids for the hits
+            selected_ids = [opengl_id for opengl_id in selected_ids if opengl_id is not None]  # Filter out Nones
             (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.root_state_m, 1, None, 0,
                                                                         all,
                                                                         find_states, find_transitions,
@@ -2107,7 +2112,7 @@ class GraphicalEditorController(ExtendedController):
         # If it is a container state, check its transitions, data flows and child states
         if isinstance(search_state_m, ContainerStateModel):
 
-            for state in search_state_m.states.itervalues():
+            for state in search_state_m.states.values():
                 if len(ids) > 0:
                     (selection, selection_depth) = self._selection_ids_to_model(ids, state, search_state_depth + 1,
                                                                                 selection, selection_depth, all,

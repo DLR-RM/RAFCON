@@ -12,4 +12,4 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from state_icons import StateIconView
+from rafcon.gui.views.state_icons import StateIconView

@@ -21,6 +21,7 @@
 
 from gi.repository import GObject
 from gi.repository import Gtk
+from builtins import str
 
 from rafcon.core.state_elements.transition import Transition
 from rafcon.core.states.library_state import LibraryState
@@ -30,6 +31,7 @@ from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.utils import log
+from functools import reduce
 
 logger = log.get_logger(__name__)
 
@@ -59,7 +61,7 @@ class StateTransitionsListController(LinkageListController):
     def __init__(self, model, view):
         # ListStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
         #                   name-color, to-state-color, transition-object, state-object, is_editable, transition-model
-        list_store = Gtk.ListStore(int, str, str, str, str, bool,
+        list_store = Gtk.ListStore(int, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, bool,
                                    GObject.TYPE_PYOBJECT, GObject.TYPE_PYOBJECT, bool, GObject.TYPE_PYOBJECT)
 
         self.view_dict = {'transitions_internal': True, 'transitions_external': True}
@@ -135,7 +137,7 @@ class StateTransitionsListController(LinkageListController):
         free_outcomes = None
 
         if self.view_dict['transitions_internal'] and self.combo['free_from_outcomes_dict']:
-            from_state_id = self.combo['free_from_outcomes_dict'].keys()[0]
+            from_state_id = list(self.combo['free_from_outcomes_dict'].keys())[0]
             free_outcomes = self.combo['free_from_outcomes_dict'][from_state_id]
             responsible_parent = self.model.state
         elif self.view_dict['transitions_external'] and self.combo['free_ext_from_outcomes_dict'] and \
@@ -150,7 +152,7 @@ class StateTransitionsListController(LinkageListController):
 
         from_outcome = None if free_outcomes[0] is None else free_outcomes[0].outcome_id
         to_state_id = responsible_parent.state_id
-        to_outcomes = responsible_parent.outcomes.values()
+        to_outcomes = list(responsible_parent.outcomes.values())
         if len(to_outcomes) == 0:
             logger.warning("No more options to add a transition")
             return
@@ -211,7 +213,7 @@ class StateTransitionsListController(LinkageListController):
             free_outcomes = self.combo['free_from_outcomes_dict'][new_from_state_id]
 
         current_from_outcome = responsible_state_m.state.transitions[t_id].from_outcome
-        free_outcome_ids = map(lambda outcome_m: None if outcome_m is None else outcome_m.outcome_id, free_outcomes)
+        free_outcome_ids = [None if outcome_m is None else outcome_m.outcome_id for outcome_m in free_outcomes]
         if len(free_outcomes) == 0:
             logger.warning('There is no free outcome for the chosen state')
             return
@@ -313,10 +315,10 @@ class StateTransitionsListController(LinkageListController):
         :param is_external:
         :return:
         """
-        from_state_combo = Gtk.ListStore(str, str)
-        from_outcome_combo = Gtk.ListStore(str)
-        to_state_combo = Gtk.ListStore(str)
-        to_outcome_combo = Gtk.ListStore(str)
+        from_state_combo = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
+        from_outcome_combo = Gtk.ListStore(GObject.TYPE_STRING)
+        to_state_combo = Gtk.ListStore(GObject.TYPE_STRING)
+        to_outcome_combo = Gtk.ListStore(GObject.TYPE_STRING)
 
         trans_dict = model.state.transitions
 
@@ -335,8 +337,8 @@ class StateTransitionsListController(LinkageListController):
             # print [o.outcome_id for o in from_o_combo], state_model.state.state_id
             for transition in trans_dict.values():
                 # print transition, [[o.outcome_id == transition.from_outcome, transition.from_state == state_model.state.state_id] for o in from_o_combo]
-                from_o_combo = filter(lambda o: not (o.outcome_id == transition.from_outcome and
-                                                     transition.from_state == state.state_id), from_o_combo)
+                from_o_combo = [o for o in from_o_combo if not (o.outcome_id == transition.from_outcome and
+                                                     transition.from_state == state.state_id)]
                 # print [o.outcome_id for o in from_o_combo]
             if len(from_o_combo) > 0:
                 free_from_outcomes_dict[state.state_id] = from_o_combo
@@ -347,7 +349,7 @@ class StateTransitionsListController(LinkageListController):
         # for from-state-combo use all states with free outcomes and from_state
         combined_states = [model.state] if is_external else [self_model.state]
         combined_states.extend(model.state.states.values())
-        free_from_states = filter(lambda state: state.state_id in free_from_outcomes_dict.keys(), combined_states)
+        free_from_states = [state for state in combined_states if state.state_id in free_from_outcomes_dict]
 
         if trans is None:
             return None, None, None, None, free_from_states, free_from_outcomes_dict

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 import pytest
 from pytest import raises
@@ -64,7 +65,7 @@ def test_library_relocation(caplog):
 def test_library_relocation_exception():
     logger.info("Load not existing library, expect exception to be raised...")
     with raises(LibraryNotFoundException):
-        print LibraryState('aasdasd', 'basdasd', allow_user_interaction=False)
+        print(LibraryState('aasdasd', 'basdasd', allow_user_interaction=False))
 
 
 if __name__ == '__main__':

@@ -14,6 +14,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gtkmvc3.view import View
+from builtins import range
 
 from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label
@@ -118,7 +119,7 @@ class StateEditorView(View):
     def prepare_the_labels(self):
         for notebook_name in self.notebook_names:
             notebook = self[notebook_name]
-            for i in xrange(notebook.get_n_pages()):
+            for i in range(notebook.get_n_pages()):
                 child = notebook.get_nth_page(i)
                 tab_label = notebook.get_tab_label(child)
                 if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):

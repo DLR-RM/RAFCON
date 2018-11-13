@@ -9,6 +9,8 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import object
+from builtins import str
 from decimal import Context, Decimal
 from hashlib import sha256
 from rafcon.utils.hashable import Hashable
@@ -80,6 +82,6 @@ class ValueCache(object):
 
     def _normalize_number_values(self, parameters):
         """Assures equal precision for all number values"""
-        for key, value in parameters.iteritems():
-            if isinstance(value, (int, float, long)):
+        for key, value in parameters.items():
+            if isinstance(value, (int, float)):
                 parameters[key] = str(Decimal(value).normalize(self._context))

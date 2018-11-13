@@ -16,7 +16,8 @@
 
 """
 
-
+from future.utils import string_types
+from builtins import str
 from yaml import YAMLObject
 from jsonconversion.jsonobject import JSONObject
 
@@ -42,8 +43,17 @@ class Vividict(dict, YAMLObject, JSONObject):
         :param key: the missing key for a value to be stored
         :return: the new value for the specified key
         """
+        assert isinstance(key, string_types), "Vividict keys must be strings"
+        key = str(key)
         value = self[key] = type(self)()
         return value
+
+    def __setitem__(self, key, value):
+        assert isinstance(key, string_types), "Vividict keys must be strings"
+        key = str(key)
+        if type(value) is dict:
+            value = Vividict(value)
+        super(Vividict, self).__setitem__(key, value)
 
     def set_dict(self, new_dict):
         """Sets the dictionary of the Vividict
@@ -52,7 +62,7 @@ class Vividict(dict, YAMLObject, JSONObject):
 
         :param new_dict: The dict that will be added to the own dict
         """
-        for key, value in new_dict.iteritems():
+        for key, value in new_dict.items():
             if isinstance(value, dict):
                 self[str(key)] = Vividict(value)
             else:
@@ -100,7 +110,7 @@ class Vividict(dict, YAMLObject, JSONObject):
             :return: value as native Python value
             """
             if isinstance(np_val, dict):
-                for key, value in np_val.iteritems():
+                for key, value in np_val.items():
                     np_val[key] = np_to_native(value)
             if isinstance(np_val, ndarray):
                 np_val = np_val.tolist()
@@ -113,11 +123,12 @@ class Vividict(dict, YAMLObject, JSONObject):
                 return np_val
             return np_val.item()  # Get the gloat/int etc value
 
-        for key, value in vividict.iteritems():
+        for key, value in vividict.items():
             # Convert numpy values to native Python values
             value = np_to_native(value)
             if isinstance(value, Vividict):
                 value = Vividict.vividict_to_dict(value)
+            print key, type(key), type(value)
             dictionary[key] = value
 
         return dictionary

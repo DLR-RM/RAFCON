@@ -39,7 +39,7 @@ class StateIconView(View, Gtk.IconView):
         self.set_row_spacing(0)
         self.set_column_spacing(0)
 
-        liststore = Gtk.ListStore(str, str)
+        liststore = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
         self.set_model(liststore)
         self.set_markup_column(0)
         self.set_tooltip_column(1)

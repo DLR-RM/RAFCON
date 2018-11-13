@@ -22,6 +22,7 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
+from builtins import str
 
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.state_elements.scope import ScopedVariable
@@ -67,7 +68,7 @@ class ScopedVariableListController(ListViewController):
 
     @staticmethod
     def get_new_list_store():
-        return Gtk.ListStore(str, str, str, int, GObject.TYPE_PYOBJECT)
+        return Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, int, GObject.TYPE_PYOBJECT)
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -209,7 +210,7 @@ class ScopedVariableListController(ListViewController):
                 # get module of type, e.g. numpy
                 data_type_module = data_type.__module__
                 # if the type is not a builtin type, also show the module
-                if data_type_module != '__builtin__':
+                if data_type_module not in ['__builtin__', 'builtins']:
                     data_type_name = data_type_module + '.' + data_type_name
                 tmp.append([sv_model.scoped_variable.name, data_type_name,
                             str(sv_model.scoped_variable.default_value), sv_model.scoped_variable.data_port_id,

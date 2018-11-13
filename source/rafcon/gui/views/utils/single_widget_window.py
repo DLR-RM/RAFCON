@@ -12,6 +12,7 @@
 
 from gi.repository import Gtk
 from gtkmvc3.view import View
+from builtins import str
 
 from rafcon.utils import log
 

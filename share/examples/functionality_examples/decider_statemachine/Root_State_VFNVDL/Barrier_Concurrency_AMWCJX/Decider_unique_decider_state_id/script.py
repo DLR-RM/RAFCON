@@ -1,3 +1,4 @@
+from builtins import str
 from exceptions import ZeroDivisionError
 
 def execute(self, inputs, outputs, gvm):

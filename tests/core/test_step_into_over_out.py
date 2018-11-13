@@ -139,7 +139,7 @@ def test_step_through_library(caplog):
 
     try:
         from rafcon.core.state_elements.scope import ScopedVariable
-        for s in state_machine.root_state.scoped_data.itervalues():
+        for s in state_machine.root_state.scoped_data.values():
             if s.name == 'bottles' and s.data_port_type == ScopedVariable:
                 assert s.value == 4
     finally:

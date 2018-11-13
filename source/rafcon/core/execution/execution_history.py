@@ -17,6 +17,10 @@
    :synopsis: A module for the history of one thread during state machine execution
 
 """
+from future.utils import native_str
+from builtins import object
+from builtins import range
+from builtins import str
 import time
 import copy
 from collections import Iterable, Sized
@@ -55,7 +59,7 @@ class ExecutionHistoryStorage(object):
     def store_item(self, key, value):
         self.store_lock.acquire()
         try:
-            self.store[key] = value
+            self.store[native_str(key)] = value
         except Exception as e:
             logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
@@ -316,7 +320,7 @@ class HistoryItem(object):
 
         # semantic data
         semantic_data_dict = {}
-        for k, v in target_state.semantic_data.iteritems():
+        for k, v in target_state.semantic_data.items():
             try:
                 semantic_data_dict[k] = pickle.dumps(v)
             except Exception as e:
@@ -383,7 +387,7 @@ class ScopedDataItem(HistoryItem):
     def to_dict(self):
         record = HistoryItem.to_dict(self)
         scoped_data_dict = {}
-        for k, v in self.scoped_data.iteritems():
+        for k, v in self.scoped_data.items():
             try:
                 scoped_data_dict[v.name] = pickle.dumps(v.value)
             except Exception as e:
@@ -394,7 +398,7 @@ class ScopedDataItem(HistoryItem):
         record['scoped_data'] = scoped_data_dict
 
         child_state_input_output_dict = {}
-        for k, v in self.child_state_input_output_data.iteritems():
+        for k, v in self.child_state_input_output_data.items():
             try:
                 child_state_input_output_dict[k] = pickle.dumps(v)
             except Exception as e:

@@ -17,8 +17,10 @@
 
 """
 
+from builtins import object
 from gi.repository import Gtk
 from gi.repository import Gdk
+from gi.repository import GObject
 from functools import partial
 
 import rafcon.core.singleton as core_singletons
@@ -153,7 +155,7 @@ class StateMachineRightClickMenu(object):
                                                                                                      save_as_sub_menu,
                                                                                                      constants.SIGN_LIB)
             library_root_paths = core_singletons.library_manager.library_root_paths
-            for library_root_key in library_root_paths.iterkeys():
+            for library_root_key in library_root_paths.keys():
                 callback_function = partial(self.on_save_as_activate,
                                             path=library_root_paths[library_root_key],
                                             save_as_function=gui_helper_state_machine.save_selected_state_as)
@@ -174,7 +176,7 @@ class StateMachineRightClickMenu(object):
                                                                                                      save_as_sub_menu,
                                                                                                      constants.SIGN_LIB)
             library_root_paths = core_singletons.library_manager.library_root_paths
-            for library_root_key in library_root_paths.iterkeys():
+            for library_root_key in library_root_paths.keys():
                 callback_function = partial(self.on_save_as_activate,
                                             path=library_root_paths[library_root_key],
                                             save_as_function=gui_helper_state_machine.save_state_machine_as)

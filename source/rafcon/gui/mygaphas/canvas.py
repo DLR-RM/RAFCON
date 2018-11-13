@@ -12,6 +12,9 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import object
+from builtins import next
+from past.builtins import map
 import gaphas.canvas
 from gaphas.item import Item
 
@@ -42,7 +45,7 @@ class MyCanvas(gaphas.canvas.Canvas):
         model = view.model
         del self._model_view_map[model]
         # Do not retrieve core element from model, as the model could have already been destroyed
-        core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
+        core_element = list(self._core_view_map.keys())[list(self._core_view_map.values()).index(view)]
         del self._core_view_map[core_element]
 
     def add(self, item, parent=None, index=None):
@@ -215,9 +218,9 @@ class ItemProjection(object):
                                                                     self._item_target).transform_point(x, y)
         return self._px, self._py
 
-    pos = property(lambda self: map(gaphas.canvas.VariableProjection,
+    pos = property(lambda self: list(map(gaphas.canvas.VariableProjection,
                                     self._point, self._get_value(),
-                                    (self._on_change_x, self._on_change_y)))
+                                    (self._on_change_x, self._on_change_y))))
 
     def __getitem__(self, key):
         # Note: we can not use bound methods as callbacks, since that will

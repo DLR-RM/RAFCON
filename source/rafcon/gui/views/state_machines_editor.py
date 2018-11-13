@@ -41,10 +41,11 @@ GObject.signal_new("add_clicked", Gtk.Notebook, GObject.SignalFlags.RUN_FIRST, N
 
 
 class PlusAddNotebook(Gtk.Notebook):
+    from past.builtins import str as py2str
     pixbuf_data = [
         "13 13 2 1",
         "  c None",
-        "x c %s" % gui_config.colors['TEXT'],
+        py2str("x c %s" % gui_config.colors['TEXT']),
         "     xxx     ",
         "     xxx     ",
         "     xxx     ",

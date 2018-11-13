@@ -67,7 +67,7 @@ class ConfigModel(ModelMT):
         config_path = path.dirname(config_file)
         self.config.config_file_path = config_file
         self.config.path = config_path
-        for config_key, config_value in config_dict.iteritems():
+        for config_key, config_value in config_dict.items():
             if config_value != self.config.get_config_value(config_key):
                 self.set_preliminary_config_value(config_key, config_value)
 
@@ -106,7 +106,7 @@ class ConfigModel(ModelMT):
         :rtype: bool
         """
         state_machine_refresh_required = False
-        for config_key, config_value in self.preliminary_config.iteritems():
+        for config_key, config_value in self.preliminary_config.items():
             self.config.set_config_value(config_key, config_value)
             if config_key in self.config.keys_requiring_state_machine_refresh:
                 state_machine_refresh_required = True

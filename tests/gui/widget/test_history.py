@@ -1,3 +1,7 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from future.utils import string_types
+from builtins import str
 import logging
 import threading
 import time
@@ -18,11 +22,11 @@ from rafcon.utils import log
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
-from test_state_type_change import store_state_elements, check_state_elements, \
+from .test_state_type_change import store_state_elements, check_state_elements, \
      check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
      check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
      get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
-from test_states_editor import check_state_editor_models
+from .test_states_editor import check_state_editor_models
 import pytest
 
 NO_SAVE = False
@@ -48,22 +52,22 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
 
     def print_states(state):
         if isinstance(state, ContainerState):
-            for state_id, child_state in state.states.iteritems():
-                print child_state.get_path()
+            for state_id, child_state in state.states.items():
+                print(child_state.get_path())
                 print_states(child_state)
     print_states(sm_model.state_machine.root_state)
 
-    print "do SAVING OF STATEMACHINE"
+    print("do SAVING OF STATEMACHINE")
     if with_gui:
         call_gui_callback(sm_model.state_machine.__setattr__, "file_system_path", path)
-        print "by Menubar_ctrl"
+        print("by Menubar_ctrl")
         call_gui_callback(menubar_ctrl.on_save_activate, None)
     else:
         sm_model.state_machine.file_system_path = path
-        print "by Function"
+        print("by Function")
         on_save_activate(sm_model, logger)
 
-    from test_storage import check_that_all_files_are_there
+    from .test_storage import check_that_all_files_are_there
 
     if with_gui:
         call_gui_callback(check_that_all_files_are_there, sm_model.state_machine, path, False, True)
@@ -147,7 +151,7 @@ def prepare_state_machine_model(state_machine):
 
     sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
     sm_m.history.fake = False
-    print "with_verbose is: ", sm_m.history.with_verbose
+    print("with_verbose is: ", sm_m.history.with_verbose)
     sm_m.history.with_verbose = False
     # return ctr_state, sm_m, state_dict
 
@@ -163,16 +167,16 @@ def create_sm_model(with_gui=False, add_state_machine=False):
     else:
         [logger, sm, state_dict] = create_state_machine()
         if add_state_machine:
-            print "sm model 1"
+            print("sm model 1")
             prepare_state_machine_model(sm)
-            print "sm model 2"
+            print("sm model 2")
             sm_model = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
-            print "sm model 3"
+            print("sm model 3")
         else:
             from rafcon.gui.models.state_machine import StateMachineModel
             sm_model = StateMachineModel(sm)
-            print "sm model 4"
-    print "sm model 5"
+            print("sm model 4")
+    print("sm model 5")
     return logger, sm_model, state_dict
 
 
@@ -240,12 +244,12 @@ def test_add_remove_history(caplog):
     state_dict['state2'] = state2
 
     state_path_dict = {}
-    for key in state_dict.keys():
+    for key in state_dict:
         state_path_dict[key] = state_dict[key].get_path()
 
     def do_check_for_state(state_name):
 
-        from test_models import check_state_for_all_models
+        from .test_models import check_state_for_all_models
 
         def check_models_for_state_with_name(state_name, state_path_dict, sm_model):
             state_m = sm_model.get_state_model_by_path(state_path_dict[state_name])
@@ -273,7 +277,7 @@ def test_add_remove_history(caplog):
         #         for state_m in state_m.states:
         #             print_all(state_m)
 
-        print sm_model, "\n", sm_model.root_state
+        print(sm_model, "\n", sm_model.root_state)
         save_state_machine(sm_model, state_machine_path + '_before', logger, with_gui=False, menubar_ctrl=None)
         # new outcome should be the third one
         sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).remove_outcome(outcome_super)
@@ -294,17 +298,17 @@ def test_add_remove_history(caplog):
 
         #############
         # add state
-        print "xyz", state_dict[state_name].states.keys(), state_name
-        print "xyz", sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).states.keys(), state_name
+        print("xyz", state_dict[state_name].states.keys(), state_name)
+        print("xyz", sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).states.keys(), state_name)
         sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).add_state(state4)
         state_path_dict['state4'] = state4.get_path()
-        print sm_model.state_machine.get_state_by_path(state_path_dict['state4']).get_path()
+        print(sm_model.state_machine.get_state_by_path(state_path_dict['state4']).get_path())
         assert len(sm_history.modifications.single_trail_history()) == 4
         sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).add_state(state5)
         state_path_dict['state5'] = state5.get_path()
-        print sm_model.state_machine.get_state_by_path(state_path_dict['state5']).get_path()
+        print(sm_model.state_machine.get_state_by_path(state_path_dict['state5']).get_path())
         assert len(sm_history.modifications.single_trail_history()) == 5
-        print state_dict[state_name].states
+        print(state_dict[state_name].states)
         # store_state_machine(sm_model, test_history_path1)
         check_models_for_state_with_name(state_name, state_path_dict, sm_model)
         sm_history.undo()
@@ -318,11 +322,11 @@ def test_add_remove_history(caplog):
         # store_state_machine(sm_model, test_history_path2)
 
         # resolve reference
-        print state4.get_path(), state_path_dict['state4']
-        print "\n\n\n"
-        print sm_model.state_machine.get_state_by_path(state_path_dict['state4'])
-        print sm_model.state_machine.get_state_by_path(state_path_dict['Nested']).states
-        print "\n\n\n"
+        print(state4.get_path(), state_path_dict['state4'])
+        print("\n\n\n")
+        print(sm_model.state_machine.get_state_by_path(state_path_dict['state4']))
+        print(sm_model.state_machine.get_state_by_path(state_path_dict['Nested']).states)
+        print("\n\n\n")
         state4 = sm_model.state_machine.get_state_by_path(state_path_dict['state4'])
         state5 = sm_model.state_machine.get_state_by_path(state_path_dict['state5'])
         state_dict[state_name] = sm_model.get_state_model_by_path(state_path_dict[state_name]).state
@@ -449,7 +453,7 @@ def test_add_remove_history(caplog):
 
         state5 = ExecutionState('State5', 'STATE5')
         state_dict[state_name].add_state(state5)
-        print state_path_dict['state5'] + "\n" + state5.get_path()
+        print(state_path_dict['state5'] + "\n" + state5.get_path())
         assert state_path_dict['state5'] == state5.get_path()
         assert len(sm_history.modifications.single_trail_history()) == 19
         input_par_state5 = state5.add_input_data_port("par", "int", 0)
@@ -725,7 +729,7 @@ def test_outcome_property_modifications_history(caplog):
     def do_check_for_state(state_dict, state_name='Nested'):
         ####################################################
         # modify outcome and generate in previous a observer
-        for outcome_id, outcome in state_dict['Nested2'].outcomes.iteritems():
+        for outcome_id, outcome in state_dict['Nested2'].outcomes.items():
             if not outcome_id < 0:
                 outcome.name = "new_name_" + str(outcome_id)
                 sm_model.history.undo()
@@ -739,7 +743,7 @@ def test_outcome_property_modifications_history(caplog):
 
         ####################################################
         # modify outcome
-        for outcome_id, outcome in state_dict['Nested'].outcomes.iteritems():
+        for outcome_id, outcome in state_dict['Nested'].outcomes.items():
             outcome.name = "new_name_" + str(outcome_id)
             sm_model.history.undo()
             sm_model.history.redo()
@@ -1195,11 +1199,11 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     else:
         testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True},
                                              gui_already_started=False)
-        print "start thread"
+        print("start thread")
         trigger_state_type_change_tests(with_gui)
         testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
-    print "FINISH test_state_machine_modifications_with_gui", with_gui
+    print("FINISH test_state_machine_modifications_with_gui", with_gui)
 
 
 @pytest.mark.parametrize("with_gui", [True])
@@ -1225,7 +1229,7 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
         trigger_state_type_change_typical_bug_tests(with_gui)
         testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
-    print "FINISH", test_state_type_change_bugs_with_gui, "with_gui", with_gui
+    print("FINISH", test_state_type_change_bugs_with_gui, "with_gui", with_gui)
 
 
 def test_multiple_undo_redo_bug_with_gui(caplog):
@@ -1270,17 +1274,17 @@ def trigger_state_type_change_tests(with_gui):
     path_of_state_of_type_change = state_dict[state_of_type_change].get_path()
     path_of_parent_of_type_change = state_dict[parent_of_type_change].get_path()
 
-    print "start 1"
+    print("start 1")
     # do state_type_change with gui
     if with_gui:
         call_gui_callback(sm_m.history.modifications.reset)
     else:
         sm_m.history.modifications.reset()
-    print "start 2"
+    print("start 2")
 
     state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
-    print "\n\n %s \n\n" % state_m.state.name
+    print("\n\n %s \n\n" % state_m.state.name)
     if with_gui:
         call_gui_callback(sm_m.selection.set, [state_m])
     else:
@@ -1292,7 +1296,7 @@ def trigger_state_type_change_tests(with_gui):
     state_machine_path = TEST_PATH + "_state_type_change_{0}".format("with_gui" if with_gui else "without_gui")
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller') if with_gui else None
     save_state_machine(sm_m, state_machine_path, logger, with_gui, menubar_ctrl)
-    print "CHECK state_of_type_change path", state_dict[state_of_type_change].get_path()
+    print("CHECK state_of_type_change path", state_dict[state_of_type_change].get_path())
     if with_gui:
         call_gui_callback(check_state_editor_models, sm_m, state_m, logger)
 
@@ -1308,7 +1312,7 @@ def trigger_state_type_change_tests(with_gui):
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
-    print "CHECK state_of_type_change path", state_dict[state_of_type_change].get_path()
+    print("CHECK state_of_type_change path", state_dict[state_of_type_change].get_path())
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
@@ -1321,18 +1325,18 @@ def trigger_state_type_change_tests(with_gui):
         call_gui_callback(sm_m.history.undo)
     else:
         sm_m.history.undo()
-    print "CHECK state_of_type_change path", state_dict[state_of_type_change].get_path()
+    print("CHECK state_of_type_change path", state_dict[state_of_type_change].get_path())
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
 
     save_state_machine(sm_m, state_machine_path + '_undo1', logger, with_gui, menubar_ctrl)
-    print "CHECK state_of_type_change path", state_dict[state_of_type_change].get_path()
+    print("CHECK state_of_type_change path", state_dict[state_of_type_change].get_path())
     new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
     new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     check_state_elements(check_list_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
     if with_gui:
         call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
-    print "CHECK state_of_type_change path", state_dict[state_of_type_change].get_path()
+    print("CHECK state_of_type_change path", state_dict[state_of_type_change].get_path())
     logger.info("HS -> BCS (redo)")
     if with_gui:
         call_gui_callback(sm_m.history.redo)
@@ -1368,8 +1372,8 @@ def trigger_state_type_change_tests(with_gui):
     new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
     [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
 
-    print "\n\n ###### State: %s" % state_dict[state_of_type_change]
-    from test_storage import check_that_all_files_are_there
+    print("\n\n ###### State: %s" % state_dict[state_of_type_change])
+    from .test_storage import check_that_all_files_are_there
     check_that_all_files_are_there(sm_m.state_machine, state_machine_path + '_before2', False, True)
     check_that_all_files_are_there(sm_m.state_machine, state_machine_path + '_after2', False, True)
 
@@ -1700,7 +1704,7 @@ def trigger_state_type_change_tests(with_gui):
         testing_utils.wait_for_gui()
 
     check_elements_ignores.remove("internal_transitions")
-    print check_elements_ignores
+    print(check_elements_ignores)
 
 
 # @log.log_exceptions(None, gtk_quit=True)
@@ -1728,7 +1732,7 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
 
     state_parent_m = sm_m.get_state_model_by_path(state_dict[parent_of_type_change].get_path())
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    print "\n\n %s \n\n" % state_m.state.name
+    print("\n\n %s \n\n" % state_m.state.name)
     if with_gui:
         call_gui_callback(sm_m.selection.set, [state_m])
     else:
@@ -1782,7 +1786,7 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
 
     logger.info("DO_TYPE_CHANGE")
     if with_gui:
-        print h_state1.get_path()
+        print(h_state1.get_path())
         h_state1_m = sm_m.get_state_model_by_path(h_state1.get_path())
         call_gui_callback(do_type_change, sm_m, h_state1_m, ExecutionState.__name__, logger)
         # call_gui_callback(sm_m.state_machine.root_state.change_state_type, h_state1, ExecutionState)
@@ -1804,7 +1808,7 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
     logger.info("REDO finished")
 
     check_elements_ignores.remove("internal_transitions")
-    print check_elements_ignores
+    print(check_elements_ignores)
 
 
 def trigger_multiple_undo_redo_bug_tests(with_gui=False):
@@ -1813,7 +1817,7 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
     call_gui_callback(rafcon.core.singleton.state_machine_manager.__setattr__,
                       "active_state_machine_id", sm.state_machine_id)
-    sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines.values()[-1]
+    sm_m = list(rafcon.gui.singleton.state_machine_manager_model.state_machines.values())[-1]
 
     call_gui_callback(sm_m.selection.set, [sm_m.root_state])
 
@@ -1824,15 +1828,15 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
         keyboard = pykeyboard.PyKeyboard()
 
         def press_key(characters, duration=0.05):
-            assert all([isinstance(character, (int, str)) for character in characters])
+            assert all([isinstance(character, (int, string_types)) for character in characters])
             assert isinstance(duration, (int, float))
             for character in characters:
-                print "press_key: ", character
+                print("press_key: ", character)
                 keyboard.press_key(character=character)
-            print "for {0} seconds".format(duration)
+            print("for {0} seconds".format(duration))
             time.sleep(duration)
             for character in characters:
-                print "release_key: ", character
+                print("release_key: ", character)
                 keyboard.release_key(character=character)
 
         sm_id = sm_m.state_machine.state_machine_id
@@ -1847,7 +1851,7 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
         press_key([keyboard.control_l_key, keyboard.shift_l_key, 'z'], duration=1.2)
         call_gui_callback(testing_utils.wait_for_gui)  # wait that last redo is fully done
     except ImportError as e:
-        print "ERROR: ", e
+        print("ERROR: ", e)
         # TODO finish this test and make a better raise or error here
 
 

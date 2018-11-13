@@ -109,7 +109,7 @@ class MenuBarView(View):
         # Gtk TODO: Unfortunately does not help against not showing Accel Keys
         # self.win.add_accel_group(self['accelgroup1'])
 
-        for menu_item_name in self.buttons.iterkeys():
+        for menu_item_name in self.buttons:
             # set icon
             self.set_menu_item_icon(menu_item_name, self.buttons[menu_item_name])
             # set accelerator if in shortcuts dictionary with menu_item_name == key

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 
 def execute(self, inputs, outputs, gvm):
@@ -6,5 +7,5 @@ def execute(self, inputs, outputs, gvm):
     return 0
 
 def backward_execute(self, inputs, outputs, gvm):
-    print "Backward execute ", self.name
+    print("Backward execute ", self.name)
     time.sleep(1.0)

@@ -15,6 +15,7 @@
 
 """
 
+from past.builtins import map
 import os
 from os import listdir
 from os.path import expanduser, isfile, join

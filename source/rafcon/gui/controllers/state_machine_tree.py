@@ -22,6 +22,7 @@
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Gdk
+from builtins import range
 from functools import partial
 
 from rafcon.core.states.state import State
@@ -60,7 +61,7 @@ class StateMachineTreeController(TreeViewController):
 
     def __init__(self, model, view):
         assert isinstance(model, StateMachineManagerModel)
-        tree_store = Gtk.TreeStore(str, str, str, GObject.TYPE_PYOBJECT, str)
+        tree_store = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_PYOBJECT, GObject.TYPE_STRING)
         super(StateMachineTreeController, self).__init__(model, view, view, tree_store)
 
         self.add_controller("state_right_click_ctrl", StateMachineTreeRightClickMenuController(model, view))
@@ -253,7 +254,7 @@ class StateMachineTreeController(TreeViewController):
 
         try:
             act_expansion_state = {}
-            for state_path, state_row_iter in self.state_row_iter_dict_by_state_path.iteritems():
+            for state_path, state_row_iter in self.state_row_iter_dict_by_state_path.items():
                 state_row_path = self.tree_store.get_path(state_row_iter)
                 if state_row_path is not None:
                     act_expansion_state[state_path] = self.view.row_expanded(state_row_path)
@@ -279,7 +280,7 @@ class StateMachineTreeController(TreeViewController):
         if self.__my_selected_sm_id is not None and self.__my_selected_sm_id in self.__expansion_state:
             expansion_state = self.__expansion_state[self.__my_selected_sm_id]
             try:
-                for state_path, state_row_expanded in expansion_state.iteritems():
+                for state_path, state_row_expanded in expansion_state.items():
                     if state_path in self.state_row_iter_dict_by_state_path:
                         if state_row_expanded:
                             set_expansion_state(state_path)

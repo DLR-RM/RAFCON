@@ -17,7 +17,8 @@
 
 """
 
-from gtkmvc3.observable import Observable
+from future.utils import string_types
+from gtkmvc import Observable
 
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.decorators import lock_state_machine
@@ -112,8 +113,8 @@ class Outcome(StateElement):
     @lock_state_machine
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, basestring):
-            raise TypeError("name must be of type str")
+        if not isinstance(name, string_types):
+            raise TypeError("name must be a string")
 
         if len(name) < 1:
             raise ValueError("Name cannot be empty")

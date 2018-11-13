@@ -1,3 +1,4 @@
+from builtins import str
 from pytest import raises
 
 # state machine
@@ -207,7 +208,7 @@ def test_create_container_state(caplog):
 
     barrier_state_id = container.add_state(BarrierConcurrencyState())
     with raises(AttributeError):
-        container.states[barrier_state_id].remove(container.states[barrier_state_id].states.values()[0])
+        container.states[barrier_state_id].remove(list(container.states[barrier_state_id].states.values())[0])
     container.remove_state(barrier_state_id)
     ###########################################
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 
 def execute(self, inputs, outputs, gvm):
@@ -14,6 +15,6 @@ def execute(self, inputs, outputs, gvm):
     return 0
 
 def backward_execute(self, inputs, outputs, gvm):
-    print "Backward stepping decimate state"
+    print("Backward stepping decimate state")
     gvm.set_variable("decimate_counter", gvm.get_variable("decimate_counter") - 1)
     

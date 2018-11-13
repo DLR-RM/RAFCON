@@ -19,6 +19,9 @@
 """
 from gi.repository import Gtk
 from gi.repository import Gdk
+from gi.repository import GObject
+from future.utils import string_types
+from builtins import str
 import yaml_configuration.config
 from os.path import dirname
 
@@ -54,10 +57,10 @@ class PreferencesWindowController(ExtendedController):
         self.observe_model(gui_config_model)
 
         # (config_key, config_value, text_visible, toggle_activatable, toggle_visible, text_editable, toggle_value)
-        self.core_list_store = Gtk.ListStore(str, str, bool, bool, bool, bool, bool)
-        self.library_list_store = Gtk.ListStore(str, str)
-        self.gui_list_store = Gtk.ListStore(str, str, bool, bool, bool, bool, bool)
-        self.shortcut_list_store = Gtk.ListStore(str, str)
+        self.core_list_store = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING, bool, bool, bool, bool, bool)
+        self.library_list_store = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
+        self.gui_list_store = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING, bool, bool, bool, bool, bool)
+        self.shortcut_list_store = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
 
         self._lib_counter = 0
         self._gui_checkbox = Gtk.CheckButton("GUI Config")
@@ -538,7 +541,7 @@ class PreferencesWindowController(ExtendedController):
         try:
             new_shortcuts = literal_eval(new_shortcuts)
             if not isinstance(new_shortcuts, list) and \
-               not all([isinstance(shortcut, basestring) for shortcut in new_shortcuts]):
+               not all([isinstance(shortcut, string_types) for shortcut in new_shortcuts]):
                 raise ValueError()
         except (ValueError, SyntaxError):
             logger.warn("Shortcuts must be a list of strings")

@@ -1,3 +1,6 @@
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
 import os
 
 import testing_utils
@@ -7,11 +10,10 @@ from testing_utils import RAFCON_TEMP_PATH_TEST_BASE
 def test_core_open_folder(monkeypatch):
     """Tests `open_folder_cmd_line` function from `rafcon.core.interface`"""
     testing_utils.dummy_gui(None)
-    import __builtin__
-    print "execute test_core_open_folder"
+    print("execute test_core_open_folder")
     import rafcon.core.interface as core_interface
     # replaces raw_input by an expression that returns "/tmp"
-    monkeypatch.setattr(__builtin__, 'raw_input', lambda _: "/tmp")
+    monkeypatch.setattr(core_interface, 'input', lambda _: "/tmp")
 
     # Return user input
     assert core_interface.open_folder_cmd_line("query") == "/tmp"
@@ -19,7 +21,7 @@ def test_core_open_folder(monkeypatch):
     assert core_interface.open_folder_cmd_line("query", "/home") == "/tmp"
 
     # replaces raw_input by an expression that returns ""
-    monkeypatch.setattr(__builtin__, 'raw_input', lambda _: "")
+    monkeypatch.setattr(core_interface, 'input', lambda _: "")
     # Return None if no user input and no default path
     assert core_interface.open_folder_cmd_line("query") is None
     # Return default path if no user input is given
@@ -31,11 +33,10 @@ def test_core_open_folder(monkeypatch):
 def test_core_create_folder(monkeypatch):
     """Tests `create_folder_cmd_line` function from `rafcon.core.interface`"""
     testing_utils.dummy_gui(None)
-    print "execute test_core_create_folder"
-    import __builtin__
+    print("execute test_core_create_folder")
     import rafcon.core.interface as core_interface
     # replaces raw_input by an expression that returns RAFCON_TEMP_PATH_TEST_BASE
-    monkeypatch.setattr(__builtin__, 'raw_input', lambda _: RAFCON_TEMP_PATH_TEST_BASE)
+    monkeypatch.setattr(core_interface, 'input', lambda _: RAFCON_TEMP_PATH_TEST_BASE)
 
     # Return user input
     assert core_interface.create_folder_cmd_line("query") == RAFCON_TEMP_PATH_TEST_BASE
@@ -44,7 +45,7 @@ def test_core_create_folder(monkeypatch):
     assert core_interface.create_folder_cmd_line("query", "new", "/home") == RAFCON_TEMP_PATH_TEST_BASE
 
     # replaces raw_input by an expression that returns ""
-    monkeypatch.setattr(__builtin__, 'raw_input', lambda _: "")
+    monkeypatch.setattr(core_interface, 'input', lambda _: "")
 
     # Return None if no user input and no default path
     assert core_interface.create_folder_cmd_line("query") is None
@@ -83,7 +84,7 @@ def test_gui_tests(monkeypatch, caplog):
 def test_gui_open_folder(monkeypatch):
     """Tests `open_folder` function from `rafcon.core.interface`"""
     testing_utils.dummy_gui(None)
-    print "execute test_gui_open_folder"
+    print("execute test_gui_open_folder")
     import rafcon.gui.interface as gui_interface
     import gi
     gi.require_version('Gtk', '3.0')
@@ -122,7 +123,7 @@ def test_gui_open_folder(monkeypatch):
 def test_gui_create_folder(monkeypatch):
     """Tests `create_folder` function from `rafcon.core.interface`"""
     testing_utils.dummy_gui(None)
-    print "execute test_gui_create_folder"
+    print("execute test_gui_create_folder")
     import rafcon.gui.interface as gui_interface
     import gi
     gi.require_version('Gtk', '3.0')

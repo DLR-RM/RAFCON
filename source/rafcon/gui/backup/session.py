@@ -11,6 +11,7 @@
 
 """ Module collects methods and function to be integrated into a respective class if that is of advantage, in future.
 """
+from builtins import range
 import os
 import time
 
@@ -31,7 +32,7 @@ def store_session():
     from rafcon.gui.models import AbstractStateModel
     from rafcon.gui.singleton import main_window_controller
     # check if there are dirty state machines -> use backup file structure maybe it is already stored
-    for sm_m in state_machine_manager_model.state_machines.itervalues():
+    for sm_m in state_machine_manager_model.state_machines.values():
         if sm_m.auto_backup:
             if sm_m.state_machine.marked_dirty:
                 sm_m.auto_backup.perform_temp_storage()

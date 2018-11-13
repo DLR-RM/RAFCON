@@ -12,6 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from future.utils import string_types
 import threading
 
 from gtkmvc3.view import View
@@ -108,7 +109,7 @@ class LoggingConsoleView(View):
         :param text_to_split: Text to split
         :return: List containing the content of text_to_split split up
         """
-        assert isinstance(text_to_split, (str, unicode))
+        assert isinstance(text_to_split, string_types)
         try:
             time, rest = text_to_split.split(': ', 1)
             source, message = rest.split(':', 1)

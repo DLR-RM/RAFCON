@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import str
 import rospy
 from turtlesim.msg import *
 
@@ -31,7 +33,7 @@ def execute(self, inputs, outputs, gvm):
     r = rospy.Rate(3)
 
     while x is None:
-        print "turtle_position_subscriber: Wait for the subscriber to get a position message from turtle ", turtle_name
+        print("turtle_position_subscriber: Wait for the subscriber to get a position message from turtle ", turtle_name)
         # actually ros.spin_once should be called but under python each subscriber gets his own thread
         # and cares for the subscriber to get called
         r.sleep()

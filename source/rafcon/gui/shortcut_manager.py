@@ -13,6 +13,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
+from builtins import str, object
 from functools import partial
 
 from rafcon.gui.config import global_gui_config
@@ -20,7 +21,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class ShortcutManager:
+class ShortcutManager(object):
     """Handles shortcuts
 
     Holds a mapping between shortcuts and action. Actions can be subscribed to. When a listed shortcut is triggered,

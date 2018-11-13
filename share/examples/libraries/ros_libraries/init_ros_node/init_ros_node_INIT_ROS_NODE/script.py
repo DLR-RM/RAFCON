@@ -1,3 +1,4 @@
+from builtins import str
 import rospy
 import time
 import traceback
@@ -8,7 +9,7 @@ def execute(self, inputs, outputs, gvm):
         # check if the roscore is already running
         try:
             rospy.wait_for_service("/rosout/get_loggers", 3.0)
-        except Exception, e:
+        except Exception as e:
             self.logger.error("Exception: " + str(e) + str(traceback.format_exc()))
             return -1
 
@@ -23,7 +24,7 @@ def execute(self, inputs, outputs, gvm):
             else:
                 gvm.set_variable("ros_node_initialized", True)
                 rospy.init_node(node_name, anonymous=False, disable_signals=True)
-        except Exception, e:
+        except Exception as e:
             self.logger.error("Unexpected error:" + str(e) + str(traceback.format_exc()))
 
         return 0

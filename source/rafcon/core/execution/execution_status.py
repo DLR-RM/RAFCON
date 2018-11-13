@@ -15,11 +15,11 @@
    :synopsis: A module to represent the state machine status
 
 """
+from builtins import str
 from enum import Enum
 from gtkmvc3.observable import Observable
 from threading import _Condition
 
-from execution_history import ExecutionHistory
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 
 # general tool elements
@@ -106,7 +107,7 @@ def check_state_editor_models(sm_m, parent_state_m, logger=None):
         #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
         # for tab in states_editor_controller.closed_tabs.itervalues():
         #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
-        for state_m in parent_state_m.states.values():
+        for state_m in list(parent_state_m.states.values()):
             # get widget of state-model
             # if not state_m.state.name == "Decider":
             state_identifier = states_editor_controller.get_state_identifier(state_m)
@@ -127,7 +128,7 @@ def check_state_editor_models(sm_m, parent_state_m, logger=None):
 
     state_identifier = states_editor_controller.get_state_identifier(parent_state_m)
     parent_state_m.get_state_machine_m()
-    print "try to select", parent_state_m
+    print("try to select", parent_state_m)
     # create state editor
     sm_m.selection.set([parent_state_m])
     [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller, state_identifier, sleep_time_max)

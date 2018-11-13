@@ -21,6 +21,7 @@
 
 from gi.repository import GObject
 from gi.repository import Gtk
+from builtins import str
 
 from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -53,7 +54,7 @@ class ModificationHistoryTreeController(ExtendedController):
         self.tree_folded = False
 
         assert self._mode in ['trail', 'branch']
-        self.history_tree_store = Gtk.TreeStore(str, str, str, str, str, str, GObject.TYPE_PYOBJECT, str, str)
+        self.history_tree_store = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_PYOBJECT, GObject.TYPE_STRING, GObject.TYPE_STRING)
         if view is not None:
             view['history_tree'].set_model(self.history_tree_store)
         view['history_tree'].set_tooltip_column(8)
@@ -182,7 +183,7 @@ class ModificationHistoryTreeController(ExtendedController):
         :rtype: bool
         """
         # TODO re-organize as request to controller which holds source-editor-view or any parent to it
-        for key, tab in gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
+        for key, tab in gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.items():
             if tab['controller'].get_controller('source_ctrl') is not None and \
                     react_to_event(self.view, tab['controller'].get_controller('source_ctrl').view.textview,
                                    (key_value, modifier_mask)) or \
@@ -203,7 +204,7 @@ class ModificationHistoryTreeController(ExtendedController):
         :rtype: bool
         """
         # TODO re-organize as request to controller which holds source-editor-view or any parent to it
-        for key, tab in gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
+        for key, tab in gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.items():
             if tab['controller'].get_controller('source_ctrl') is not None and \
                     react_to_event(self.view, tab['controller'].get_controller('source_ctrl').view.textview,
                                    (key_value, modifier_mask)) or \
@@ -262,7 +263,7 @@ class ModificationHistoryTreeController(ExtendedController):
                 for index, value in enumerate(action.before_overview['args'][-1]):
                     if not index == 0:
                         parameters.append(str(value))
-            for name, value in action.before_overview['kwargs'][-1].iteritems():
+            for name, value in action.before_overview['kwargs'][-1].items():
                 parameters.append("{0}: {1}".format(name, value))
 
             if hasattr(action, 'action_type') and action.action_type == "script_text" and hasattr(action, 'script_diff'):

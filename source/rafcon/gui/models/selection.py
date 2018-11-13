@@ -15,6 +15,8 @@
 
 from gtkmvc3.model_mt import ModelMT
 from gtkmvc3.observable import Signal
+from past.builtins import map
+from builtins import next, str
 
 from rafcon.core.states.state import State
 from rafcon.core.state_elements.outcome import Outcome

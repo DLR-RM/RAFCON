@@ -10,8 +10,10 @@
 
 # example basictreeview.py
 
+from builtins import str
 from gi.repository import Gtk
 from gi.repository import Gdk
+from gi.repository import GObject
 import shelve
 
 import rafcon.utils.execution_log as log_helper
@@ -38,7 +40,7 @@ class ExecutionLogTreeController(ExtendedController):
                                                   throw_on_pickle_error=False,
                                                   include_erroneous_data_ports=True)
         # create a TreeStore with one string column to use as the model
-        self.tree_store = Gtk.TreeStore(str, str)
+        self.tree_store = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
         self.item_iter = {}
         view.tree_view.set_model(self.tree_store)
 

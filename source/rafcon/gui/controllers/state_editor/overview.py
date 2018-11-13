@@ -21,6 +21,8 @@
 from gi.repository import GLib
 from gi.repository import Gtk
 from gi.repository import Gdk
+from gi.repository import GObject
+from builtins import str
 
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.core.states.execution_state import ExecutionState
@@ -85,7 +87,7 @@ class StateOverviewController(ExtendedController):
             view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
 
-        l_store = Gtk.ListStore(str)
+        l_store = Gtk.ListStore(GObject.TYPE_STRING)
         combo = Gtk.ComboBoxText()
         combo.set_name("state_type_combo")
         combo.set_focus_on_click(False)

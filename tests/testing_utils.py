@@ -1,3 +1,7 @@
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import copy
 import datetime
 import signal
@@ -35,8 +39,8 @@ TEST_ASSETS_PATH = join(TESTS_PATH, 'assets')
 TEST_SCRIPT_PATH = join(TESTS_PATH, 'assets', 'scripts')
 TUTORIAL_PATH = join(TESTS_PATH, "..", "share", "examples", "tutorials")
 RAFCON_SHARED_LIBRARY_PATH = join(dirname(RAFCON_PATH), '..', 'share', 'libraries')
-print LIBRARY_SM_PATH
-print RAFCON_SHARED_LIBRARY_PATH
+print(LIBRARY_SM_PATH)
+print(RAFCON_SHARED_LIBRARY_PATH)
 
 # from rafcon.core.config import global_config
 # global_config.load(path=join(TESTS_PATH, "assets", "configs", "valid_config"))
@@ -94,9 +98,9 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
         if hasattr(record, 'exc_info'):
             record.exc_info = None
 
-    print "counted_warnings == expected_warnings", counted_warnings, expected_warnings
+    print("counted_warnings == expected_warnings", counted_warnings, expected_warnings)
     assert counted_warnings == expected_warnings
-    print "counted_errors == expected_errors", counted_errors, expected_errors
+    print("counted_errors == expected_errors", counted_errors, expected_errors)
     assert counted_errors == expected_errors
 
 
@@ -180,7 +184,7 @@ def initialize_environment_core(core_config=None, libraries=None, delete=False):
     else:
         global_config.load()
         if isinstance(core_config, dict):
-            for key, value in core_config.iteritems():
+            for key, value in core_config.items():
                 global_config.set_config_value(key, value)
 
     rewind_and_set_libraries(libraries=libraries)
@@ -206,7 +210,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
     else:
         global_gui_config.load()
         if isinstance(gui_config, dict):
-            for key, value in gui_config.iteritems():
+            for key, value in gui_config.items():
                 global_gui_config.set_config_value(key, value)
 
     # initialize global runtime config
@@ -215,7 +219,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
     else:
         global_runtime_config.load()
         if isinstance(runtime_config, dict):
-            for key, value in runtime_config.iteritems():
+            for key, value in runtime_config.items():
                 global_runtime_config.set_config_value(key, value)
 
     GUI_INITIALIZED = True
@@ -306,8 +310,8 @@ def run_gui_thread(gui_config=None, runtime_config=None):
     main_window_view.get_top_widget().set_gravity(Gdk.Gravity.STATIC)
     MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
 
-    print "run_gui thread: ", currentThread(), currentThread().ident, "gui.singleton thread ident:", \
-        rafcon.gui.singleton.thread_identifier
+    print("run_gui thread: ", currentThread(), currentThread().ident, "gui.singleton thread ident:", \
+        rafcon.gui.singleton.thread_identifier)
 
     # Wait for GUI to initialize
     wait_for_gui()
@@ -320,9 +324,9 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
 
     if gui_config is None:
         gui_config = {'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False}
-    if 'HISTORY_ENABLED' not in gui_config.keys():
+    if 'HISTORY_ENABLED' not in list(gui_config.keys()):
         gui_config['HISTORY_ENABLED'] = False
-    if 'AUTO_BACKUP_ENABLED' not in gui_config.keys():
+    if 'AUTO_BACKUP_ENABLED' not in list(gui_config.keys()):
         gui_config['AUTO_BACKUP_ENABLED'] = False
 
     if patch_threading:
@@ -336,13 +340,13 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     except (ImportError, RuntimeError):
         GL_ENABLED = False
 
-    print "WT thread: ", currentThread(), currentThread().ident
+    print("WT thread: ", currentThread(), currentThread().ident)
     gui_ready = Event()
     gui_thread = Thread(target=run_gui_thread, args=[gui_config, runtime_config])
     gui_thread.start()
 
     used_gui_threads.append(gui_thread)
-    print "used_gui_threads", used_gui_threads
+    print("used_gui_threads", used_gui_threads)
     # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
     call_gui_callback(initialize_environment_core, core_config, libraries)
     if not gui_ready.wait(timeout):
@@ -384,7 +388,7 @@ auto_backup_threads = []
 
 
 def patch_gtkmvc3_model_mt():
-    print "patch"
+    print("patch")
     global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine,\
         used_gui_threads, auto_backup_threads
 
@@ -395,12 +399,12 @@ def patch_gtkmvc3_model_mt():
     import gtkmvc3
     from gtkmvc3.model_mt import Model, _threading, GObject
     from rafcon.core.states.state import run_id_generator, threading
-    from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger, Queue
+    from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger
 
     original_ModelMT_notify_observer = gtkmvc3.model_mt.ModelMT.__notify_observer__
     original_state_start = rafcon.core.states.state.State.start
     original_run_state_machine = rafcon.core.execution.execution_engine.ExecutionEngine._run_active_state_machine
-    print original_ModelMT_notify_observer, original_run_state_machine, original_state_start
+    print(original_ModelMT_notify_observer, original_run_state_machine, original_state_start)
     state_threads = []
 
     def state_start(self, execution_history, backward_execution=False, generate_run_id=True):
@@ -416,9 +420,10 @@ def patch_gtkmvc3_model_mt():
     def _patched_run_active_state_machine(self):
         """Store running state machine and observe its status
         """
+        import queue
         # Create new concurrency queue for root state to be able to synchronize with the execution
         self._ExecutionEngine__running_state_machine = self.state_machine_manager.get_active_state_machine()
-        self._ExecutionEngine__running_state_machine.root_state.concurrency_queue = Queue.Queue(maxsize=0)
+        self._ExecutionEngine__running_state_machine.root_state.concurrency_queue = queue.Queue(maxsize=0)
 
         if self._ExecutionEngine__running_state_machine:
             self._ExecutionEngine__running_state_machine.start()
@@ -439,10 +444,10 @@ def patch_gtkmvc3_model_mt():
         from notifications import feed_debugging_graph
         feed_debugging_graph(self, observer, method, *args, **kwargs)
 
-        if not self._ModelMT__observer_threads.has_key(observer):
+        if observer not in self._ModelMT__observer_threads:
             logger.error("ASSERT WILL COME observer not in observable threads observer: {0} observable: {1}"
                          "-> known threads are {2}".format(observer, self, self._ModelMT__observer_threads))
-        assert self._ModelMT__observer_threads.has_key(observer)
+        assert observer in self._ModelMT__observer_threads
         if _threading.currentThread() == self._ModelMT__observer_threads[observer]:
             # standard call => single threaded
             # print "{0} -> {1}: single threading '{2}' in call_thread {3} object_generation_thread {3} \n{4}" \
@@ -460,15 +465,15 @@ def patch_gtkmvc3_model_mt():
                 # As long as the gtk module keeps constant the gtk main thread will always have the same thread id!
                 # But, if the module is patched as in "test_interface.py" the gtk thread will get another thread id!
                 # Thus, if both threads are in used_gui_threads then we simply allow this case!
-                print "Both threads are former gui threads! Current thread {}, Observer thread {}".format(
-                    _threading.currentThread(), self._ModelMT__observer_threads[observer])
+                print("Both threads are former gui threads! Current thread {}, Observer thread {}".format(
+                    _threading.currentThread(), self._ModelMT__observer_threads[observer]))
                 return Model.__notify_observer__(self, observer, method, *args, **kwargs)
                 # GObject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
                 # return
             else:
-                print "{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \
+                print("{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \
                       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
-                                _threading.currentThread(), self._ModelMT__observer_threads[observer], (args, kwargs))
+                                _threading.currentThread(), self._ModelMT__observer_threads[observer], (args, kwargs)))
 
                 # print "state threads", state_threads
                 # print "used_gui_threads", used_gui_threads
@@ -480,13 +485,13 @@ def patch_gtkmvc3_model_mt():
 
 
 def unpatch_gtkmvc3_model_mt():
-    print "unpatch"
+    print("unpatch")
     global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine
 
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
     import gtkmvc3
-    if any([e is None for e in original_ModelMT_notify_observer, original_state_start, original_run_state_machine]):
+    if any([e is None for e in (original_ModelMT_notify_observer, original_state_start, original_run_state_machine)]):
         raise EnvironmentError("All methods to un-patch have to be set not None.")
     gtkmvc3.model_mt.ModelMT.__notify_observer__ = original_ModelMT_notify_observer
     rafcon.core.states.state.State.start = original_state_start

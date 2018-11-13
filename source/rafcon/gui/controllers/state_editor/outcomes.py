@@ -22,6 +22,7 @@
 
 from gi.repository import GObject
 from gi.repository import Gtk
+from builtins import str
 
 from rafcon.gui.helpers.meta_data import insert_self_transition_meta_data
 from rafcon.core.state_elements.outcome import Outcome
@@ -60,12 +61,12 @@ class StateOutcomesListController(ListViewController):
         assert isinstance(model, AbstractStateModel)
         # initiate data base and tree
         # id, name, to-state, to-outcome, name-color, to-state-color, outcome, state, outcome_model
-        list_store = Gtk.ListStore(int, str, str, str, GObject.TYPE_PYOBJECT, GObject.TYPE_PYOBJECT,
+        list_store = Gtk.ListStore(int, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_PYOBJECT, GObject.TYPE_PYOBJECT,
                                    GObject.TYPE_PYOBJECT)
         super(StateOutcomesListController, self).__init__(model, view, view['tree_view'], list_store, logger)
 
-        self.to_state_combo_list = Gtk.ListStore(str, str, str)
-        self.to_outcome_combo_list = Gtk.ListStore(str, str, str)
+        self.to_state_combo_list = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING)
+        self.to_outcome_combo_list = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING)
         # key-outcome_id -> label,  to_state_id,  transition_id
         self.dict_to_other_state = {}
         # key-outcome_id ->  label,  to_outcome_id,  transition_id
@@ -134,9 +135,9 @@ class StateOutcomesListController(ListViewController):
                 insert_self_transition_meta_data(self.model, t_id, 'outcomes_widget', combined_action=True)
 
         outcome_id = self.list_store[path][self.ID_STORAGE_ID]
-        if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
+        if outcome_id in self.dict_to_other_state or outcome_id in self.dict_to_other_outcome:
             transition_parent_state = self.model.parent.state
-            if outcome_id in self.dict_to_other_state.keys():
+            if outcome_id in self.dict_to_other_state:
                 t_id = self.dict_to_other_state[outcome_id][2]
             else:
                 t_id = self.dict_to_other_outcome[outcome_id][2]
@@ -180,8 +181,8 @@ class StateOutcomesListController(ListViewController):
             return
         outcome_id = self.list_store[path][self.ID_STORAGE_ID]
         transition_parent_state = self.model.parent.state
-        if outcome_id in self.dict_to_other_state.keys() or outcome_id in self.dict_to_other_outcome.keys():
-            if outcome_id in self.dict_to_other_state.keys():
+        if outcome_id in self.dict_to_other_state or outcome_id in self.dict_to_other_outcome:
+            if outcome_id in self.dict_to_other_state:
                 t_id = self.dict_to_other_state[outcome_id][2]
             else:
                 t_id = self.dict_to_other_outcome[outcome_id][2]
@@ -262,7 +263,7 @@ class StateOutcomesListController(ListViewController):
                                                    str(outcome.outcome_id), parent_id])
             for transition_id, transition in model.parent.state.transitions.items():
                 # check for "to other state" connections -> so from self-state and self-outcome "external" transitions
-                if transition.from_state == model.state.state_id and transition.from_outcome in model.state.outcomes.keys():
+                if transition.from_state == model.state.state_id and transition.from_outcome in model.state.outcomes:
                     # check for "to other outcomes" connections -> so to parent-state and parent-outcome "ext" transitions
                     if transition.to_state == model.parent.state.state_id:
                         to_state_id = model.parent.state.state_id
@@ -292,10 +293,10 @@ class StateOutcomesListController(ListViewController):
         self.list_store.clear()
         for outcome in self.model.state.outcomes.values():
             to_state = None
-            if outcome.outcome_id in self.dict_to_other_state.keys():
+            if outcome.outcome_id in self.dict_to_other_state:
                 to_state = self.dict_to_other_state[outcome.outcome_id][0]
             to_outcome = None
-            if outcome.outcome_id in self.dict_to_other_outcome.keys():
+            if outcome.outcome_id in self.dict_to_other_outcome:
                 to_outcome = self.dict_to_other_outcome[outcome.outcome_id][0]
                 to_state = 'parent'
             self.list_store.append([outcome.outcome_id, outcome.name, to_state, to_outcome,

@@ -18,10 +18,12 @@
    :synopsis: A module that cares for the execution of the state machine
 
 """
+from future import standard_library
+standard_library.install_aliases()
 import copy
 import threading
 import time
-import Queue
+import queue
 from threading import Lock, RLock
 import sys
 
@@ -199,7 +201,7 @@ class ExecutionEngine(Observable):
 
         # Create new concurrency queue for root state to be able to synchronize with the execution
         self.__running_state_machine = self.state_machine_manager.get_active_state_machine()
-        self.__running_state_machine.root_state.concurrency_queue = Queue.Queue(maxsize=0)
+        self.__running_state_machine.root_state.concurrency_queue = queue.Queue(maxsize=0)
 
         if self.__running_state_machine:
             self.__running_state_machine.start()

@@ -19,6 +19,7 @@
 """
 
 from gtkmvc3.controller import Controller
+from past.builtins import map
 
 from rafcon.gui.shortcut_manager import ShortcutManager
 from rafcon.utils import log
@@ -75,7 +76,7 @@ class ExtendedController(Controller):
         # Get name of controller
         if isinstance(controller, ExtendedController):
             # print self.__class__.__name__, " remove ", controller.__class__.__name__
-            for key, child_controller in self.__child_controllers.iteritems():
+            for key, child_controller in self.__child_controllers.items():
                 if controller is child_controller:
                     break
             else:
@@ -125,7 +126,7 @@ class ExtendedController(Controller):
         :return: List of child controllers
         :rtype: list
         """
-        return self.__child_controllers.values()
+        return list(self.__child_controllers.values())
 
     @property
     def parent(self):
@@ -152,7 +153,7 @@ class ExtendedController(Controller):
         assert isinstance(shortcut_manager, ShortcutManager)
         self.__shortcut_manager = shortcut_manager
 
-        for controller in self.__child_controllers.values():
+        for controller in list(self.__child_controllers.values()):
             if controller not in self.__action_registered_controllers:
                 try:
                     controller.register_actions(shortcut_manager)
@@ -161,13 +162,13 @@ class ExtendedController(Controller):
                 self.__action_registered_controllers.append(controller)
 
     def unregister_actions(self, shortcut_manager):
-        for controller in self.__child_controllers.values():
+        for controller in list(self.__child_controllers.values()):
             controller.unregister_actions(shortcut_manager)
         shortcut_manager.remove_callbacks_for_controller(self)
 
     def __register_actions_of_child_controllers(self):
         assert isinstance(self.__child_controllers, dict)
-        for controller in self.__child_controllers.itervalues():
+        for controller in self.__child_controllers.values():
             register_function = getattr(controller, "register_actions", None)
             if hasattr(register_function, '__call__'):
                 register_function(self.__shortcut_manager)

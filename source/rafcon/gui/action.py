@@ -20,6 +20,9 @@ initialized with consistent arguments.
 This general Action (one procedure for all possible edition) procedure is expansive and complex, therefore it is aimed
 to define specific _-Action-Classes for simple/specific edit actions.
 """
+from future.utils import string_types
+from builtins import object
+from builtins import str
 import copy
 import json
 import difflib
@@ -93,7 +96,7 @@ def get_state_tuple(state, state_m=None):
     state_tuples_dict = {}
     if isinstance(state, ContainerState):
         # print state.states, "\n"
-        for child_state_id, child_state in state.states.iteritems():
+        for child_state_id, child_state in state.states.items():
             # print "child_state: %s" % child_state_id, child_state, "\n"
             state_tuples_dict[child_state_id] = get_state_tuple(child_state)
 
@@ -128,7 +131,7 @@ def get_state_from_state_tuple(state_tuple):
         # logger.debug("\n\ninsert decider_state\n\n")
         child_state = get_state_from_state_tuple(state_tuple[STATE_TUPLE_CHILD_STATES_INDEX][UNIQUE_DECIDER_STATE_ID])
         # do_storage_test(child_state)
-        for t in state.transitions.values():
+        for t in list(state.transitions.values()):
             if UNIQUE_DECIDER_STATE_ID in [t.from_state, t.to_state]:
                 state.remove_transition(t.transition_id)
         try:
@@ -141,7 +144,7 @@ def get_state_from_state_tuple(state_tuple):
     if isinstance(state, ExecutionState):
         state.script_text = state_tuple[STATE_TUPLE_SCRIPT_TEXT_INDEX]
     # print "------------- ", state
-    for child_state_id, child_state_tuple in state_tuple[STATE_TUPLE_CHILD_STATES_INDEX].iteritems():
+    for child_state_id, child_state_tuple in state_tuple[STATE_TUPLE_CHILD_STATES_INDEX].items():
         child_state = get_state_from_state_tuple(child_state_tuple)
         # do_storage_test(child_state)
 
@@ -156,7 +159,7 @@ def get_state_from_state_tuple(state_tuple):
 
         def print_states(state):
             if isinstance(state, ContainerState):
-                for state_id, child_state in state.states.iteritems():
+                for state_id, child_state in state.states.items():
                     logger.verbose(child_state.get_path())
                     print_states(child_state)
                     # print "got from tuple:"
@@ -218,7 +221,7 @@ def get_state_element_meta(state_model, with_parent_linkage=True, with_verbose=F
     # logger.verbose("store meta of state id {0} data -> {1}".format(state_model.state.state_id, state_model.meta))
     meta_dict['state'] = meta_dump_or_deepcopy(state_model.meta)
     if isinstance(state_model, ContainerStateModel):
-        for child_state_id, child_state_m in state_model.states.iteritems():
+        for child_state_id, child_state_m in state_model.states.items():
             meta_dict['states'][child_state_m.state.state_id] = get_state_element_meta(child_state_m, with_parent_linkage)
             if with_verbose:
                 logger.verbose("FINISHED STORE META for STATE: id {0} other ids {1} parent state-id {2}"
@@ -296,7 +299,7 @@ def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=Non
                                       [op_m.data_port.data_port_id for op_m in state_model.output_data_ports])
 
     if isinstance(state_model, ContainerStateModel):
-        for state_id, state_m in state_model.states.iteritems():
+        for state_id, state_m in state_model.states.items():
             # TODO check if decider miss the meta or it has to be like that UNDO, REDO?
             if state_m.state.state_id in meta_dict['states']:
                 if level is None:
@@ -342,7 +345,7 @@ def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=Non
     check_state_model_for_is_start_state(state_model)
 
 
-class CoreObjectIdentifier:
+class CoreObjectIdentifier(object):
     # TODO generalize and include into utils
 
     type_related_list_name_dict = {InputDataPort.__name__: 'input_data_ports',
@@ -653,15 +656,15 @@ class Action(ModelMT, AbstractAction):
         if isinstance(state, ContainerState):
 
             # print state.data_flows.keys()
-            for data_flow_id in state.data_flows.keys():
+            for data_flow_id in list(state.data_flows.keys()):
                 state.remove_data_flow(data_flow_id)
 
             if not isinstance(state, BarrierConcurrencyState):
-                for t_id in state.transitions.keys():
+                for t_id in list(state.transitions.keys()):
                     # if not UNIQUE_DECIDER_STATE_ID in [state.transitions[t_id].from_state, state.transitions[t_id].to_state]: # funst nicht
                     state.remove_transition(t_id)
 
-            for old_state_id in state.states.keys():
+            for old_state_id in list(state.states.keys()):
                 # try:
                 state.remove_state(old_state_id, force=True)
                 # except Exception as e:
@@ -669,19 +672,19 @@ class Action(ModelMT, AbstractAction):
                 #     raise
 
         if is_root:
-            for outcome_id in state.outcomes.keys():
+            for outcome_id in list(state.outcomes.keys()):
                 if not outcome_id < 0:
                     state.remove_outcome(outcome_id)
 
-            for dp_id in state.input_data_ports.keys():
+            for dp_id in list(state.input_data_ports.keys()):
                 state.remove_input_data_port(dp_id)
 
             # print " \n\n\n ########### start removing output data_ports ", state.output_data_ports.keys(), "\n\n\n"
-            for dp_id in state.output_data_ports.keys():
+            for dp_id in list(state.output_data_ports.keys()):
                 state.remove_output_data_port(dp_id)
 
         if isinstance(state, ContainerState):
-            for dp_id in state.scoped_variables.keys():
+            for dp_id in list(state.scoped_variables.keys()):
                 # print "scoped_variable ", dp_id
                 state.remove_scoped_variable(dp_id)
 
@@ -693,36 +696,36 @@ class Action(ModelMT, AbstractAction):
             state.script_text = stored_state.script_text
 
         if is_root:
-            for dp_id, dp in stored_state.input_data_ports.iteritems():
+            for dp_id, dp in stored_state.input_data_ports.items():
                 # print "generate input data port", dp_id
                 state.add_input_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
                 # print "got input data ports", dp_id, state.input_data_ports.keys()
-                assert dp_id in state.input_data_ports.keys()
+                assert dp_id in state.input_data_ports
 
             # print " \n\n\n ########### start adding output data_ports ", state.output_data_ports.keys(), "\n\n\n"
-            for dp_id, dp in stored_state.output_data_ports.iteritems():
+            for dp_id, dp in stored_state.output_data_ports.items():
                 scoped_str = str([])
                 if isinstance(state, ContainerState):
-                    scoped_str = str(state.scoped_variables.keys())
+                    scoped_str = str(list(state.scoped_variables.keys()))
                 # print "\n\n\n ------- ############ generate output data port", dp_id, state.input_data_ports.keys(), \
                 #     state.output_data_ports.keys(), scoped_str, "\n\n\n"
                 state.add_output_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
                 # print "\n\n\n ------- ############ got output data ports", dp_id, state.output_data_ports.keys(), "\n\n\n"
-                assert dp_id in state.output_data_ports.keys()
+                assert dp_id in state.output_data_ports
 
-            for oc_id, oc in stored_state.outcomes.iteritems():
+            for oc_id, oc in stored_state.outcomes.items():
                 # print oc_id, state.outcomes, type(oc_id), oc_id < 0, oc_id == 0, oc_id == -1, oc_id == -2
                 if not oc_id < 0:
                     # print "add_outcome", oc_id
                     state.add_outcome(oc.name, oc_id)
             # print "\n\n\n++++++++++++++++ ", stored_state.outcomes, state.outcomes, "\n\n\n++++++++++++++++ "
-            for oc_id, oc in stored_state.outcomes.iteritems():
+            for oc_id, oc in stored_state.outcomes.items():
                 # print oc_id, state.outcomes
                 assert oc_id in state.outcomes
 
         if isinstance(state, ContainerState):
             # logger.debug("UPDATE STATES")
-            for dp_id, sv in stored_state.scoped_variables.iteritems():
+            for dp_id, sv in stored_state.scoped_variables.items():
                 state.add_scoped_variable(sv.name, sv.data_type, sv.default_value, sv.data_port_id)
 
             if UNIQUE_DECIDER_STATE_ID in stored_state.states:
@@ -738,20 +741,20 @@ class Action(ModelMT, AbstractAction):
                         state.states[new_state.state_id].script_text = new_state.script_text
 
             if isinstance(state, BarrierConcurrencyState):
-                for t_id in state.transitions.keys():
+                for t_id in list(state.transitions.keys()):
                     state.remove_transition(t_id)
 
-            for t_id, t in stored_state.transitions.iteritems():
+            for t_id, t in stored_state.transitions.items():
                 state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
 
             # logger.debug("CHECK self TRANSITIONS of unique state%s" % state.transitions.keys())
-            for t in state.transitions.values():
+            for t in list(state.transitions.values()):
                 # logger.debug(str([t.from_state, t.from_outcome, t.to_state, t.to_outcome]))
                 if UNIQUE_DECIDER_STATE_ID == t.from_state and UNIQUE_DECIDER_STATE_ID == t.to_state:
                     # logger.error("found DECIDER_STATE_SELF_TRANSITION")
                     state.remove_transition(t.transition_id)
 
-            for df_id, df in stored_state.data_flows.iteritems():
+            for df_id, df in stored_state.data_flows.items():
                 state.add_data_flow(df.from_state, df.from_key, df.to_state, df.to_key, df.data_flow_id)
 
     def add_core_object_to_state(self, state, core_obj):
@@ -1140,23 +1143,23 @@ class RemoveObjectAction(Action):
 
         state = self.state_machine.get_state_by_path(self.instance_path)
         if isinstance(state, HierarchyState):
-            for t in state.transitions.itervalues():
+            for t in state.transitions.values():
                 t_dict = {'from_state': t.from_state, 'from_outcome': t.from_outcome,
                           'to_state': t.to_state, 'to_outcome': t.to_outcome, 'transition_id': t.transition_id}
                 linkage_dict['internal']['transitions'].append(t_dict)
 
-            for df in state.data_flows.itervalues():
+            for df in state.data_flows.values():
                 df_dict = {'from_state': df.from_state, 'from_key': df.from_key,
                            'to_state': df.to_state, 'to_key': df.to_key, 'data_flow_id': df.data_flow_id}
                 linkage_dict['internal']['data_flows'].append(df_dict)
 
         if isinstance(state.parent, State):
-            for t in state.parent.transitions.itervalues():
+            for t in state.parent.transitions.values():
                 t_dict = {'from_state': t.from_state, 'from_outcome': t.from_outcome,
                           'to_state': t.to_state, 'to_outcome': t.to_outcome, 'transition_id': t.transition_id}
                 linkage_dict['external']['transitions'].append(t_dict)
 
-            for df in state.parent.data_flows.itervalues():
+            for df in state.parent.data_flows.values():
                 df_dict = {'from_state': df.from_state, 'from_key': df.from_key,
                            'to_state': df.to_state, 'to_key': df.to_key, 'data_flow_id': df.data_flow_id}
                 linkage_dict['external']['data_flows'].append(df_dict)
@@ -1268,7 +1271,7 @@ class DataFlowAction(StateElementAction):
 
     def set_data_flow_version(self, df, arguments):
         if self.action_type in self.possible_args:
-            exec "df.{0} = arguments['{0}']".format(self.action_type)
+            exec("df.{0} = arguments['{0}']".format(self.action_type))
         elif self.action_type == 'modify_origin':
             df.modify_origin(from_state=arguments['from_state'], from_key=arguments['from_key'])
         elif self.action_type == 'modify_target':
@@ -1303,7 +1306,7 @@ class TransitionAction(StateElementAction):
 
     def set_transition_version(self, t, arguments):
         if self.action_type in self.possible_args:
-            exec "t.{0} = arguments['{0}']".format(self.action_type)
+            exec("t.{0} = arguments['{0}']".format(self.action_type))
         elif self.action_type == 'modify_origin':
             t.modify_origin(from_state=arguments['from_state'], from_outcome=arguments['from_outcome'])
         elif self.action_type == 'modify_target':
@@ -1336,7 +1339,7 @@ class DataPortAction(StateElementAction):
 
     def set_data_port_version(self, dp, arguments):
         if self.action_type in self.possible_args:
-            exec "dp.{0} = arguments['{0}']".format(self.action_type)
+            exec("dp.{0} = arguments['{0}']".format(self.action_type))
         elif self.action_type == 'data_type':
             dp.data_type = arguments['data_type']
             dp.default_value = arguments['default_value']
@@ -1376,7 +1379,7 @@ class OutcomeAction(StateElementAction):
 
     def set_outcome_version(self, oc, arguments):
         if self.action_type in self.possible_args:
-            exec "oc.{0} = arguments['{0}']".format(self.action_type)
+            exec("oc.{0} = arguments['{0}']".format(self.action_type))
         else:
             raise TypeError("Only types of the following list are allowed. {0}".format(self.possible_method_names))
 
@@ -1433,7 +1436,7 @@ class StateAction(Action):
             assert self.parent_path == self.object_identifier._path
         self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
         self.after_arguments = None
-        if self.action_type == 'script_text' and isinstance(self.before_overview['args'][-1][1], str):
+        if self.action_type == 'script_text' and isinstance(self.before_overview['args'][-1][1], string_types):
             d = difflib.Differ()
             diff = list(d.compare(self.before_overview['args'][-1][0].script_text.split('\n'),
                                   self.before_overview['args'][-1][1].split('\n')))
@@ -1511,8 +1514,8 @@ class StateAction(Action):
 
     def set_attr_to_version(self, s, arguments):
         if self.action_type in self.possible_args:
-            exec "s.{0} = copy.deepcopy(arguments['{0}'])".format(self.substitute_dict.get(self.action_type,
-                                                                                           self.action_type))
+            exec("s.{0} = copy.deepcopy(arguments['{0}'])".format(self.substitute_dict.get(self.action_type,
+                                                                                           self.action_type)))
         else:
             assert False
 

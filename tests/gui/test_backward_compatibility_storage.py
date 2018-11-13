@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pytest
 import os
 import hashlib
@@ -42,7 +43,7 @@ def run_state_machine(state_machine_path):
     if not execution_engine.finished_or_stopped():
         raise RuntimeError("The execution engine is not stopped")
 
-    print "Loading state machine from path: {}".format(state_machine_path)
+    print("Loading state machine from path: {}".format(state_machine_path))
 
     call_gui_callback(gui_helper_statemachine.open_state_machine, state_machine_path)
     call_gui_callback(testing_utils.remove_all_gvm_variables)

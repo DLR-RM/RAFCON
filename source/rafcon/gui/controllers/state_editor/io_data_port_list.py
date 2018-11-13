@@ -22,6 +22,7 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
+from builtins import str
 
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.states.library_state import LibraryState
@@ -172,7 +173,7 @@ class DataPortListController(ListViewController):
 
     @staticmethod
     def _get_new_list_store():
-        return Gtk.ListStore(str, str, str, int, bool, str, GObject.TYPE_PYOBJECT)
+        return Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, int, bool, GObject.TYPE_STRING, GObject.TYPE_PYOBJECT)
 
     def _default_value_cell_data_func(self, tree_view_column, cell, model, iter, data=None):
         """Function set renderer properties for every single cell independently
@@ -211,7 +212,7 @@ class DataPortListController(ListViewController):
             # get module of type, e.g. numpy
             data_type_module = data_type.__module__
             # if the type is not a builtin type, also show the module
-            if data_type_module != '__builtin__':
+            if data_type_module not in ['__builtin__', 'builtins']:
                 data_type_name = data_type_module + '.' + data_type_name
             if data_port_m.data_port.default_value is None:
                 default_value = "None"

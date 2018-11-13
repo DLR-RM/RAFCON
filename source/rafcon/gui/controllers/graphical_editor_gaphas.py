@@ -23,6 +23,7 @@
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GLib
+from future.utils import string_types
 import time
 from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
@@ -451,7 +452,7 @@ class GraphicalEditorController(ExtendedController):
                 return
 
             # The method causing the change raised an exception, thus nothing was changed
-            if (isinstance(result, str) and "CRASH" in result) or isinstance(result, Exception):
+            if (isinstance(result, string_types) and "CRASH" in result) or isinstance(result, Exception):
                 return
 
             # avoid to remove views of elements of states which parent state is destroyed recursively
@@ -868,7 +869,7 @@ class GraphicalEditorController(ExtendedController):
             for scoped_variable_m in state_m.scoped_variables:
                 state_v.add_scoped_variable(scoped_variable_m)
 
-            for child_state_m in state_m.states.itervalues():
+            for child_state_m in state_m.states.values():
                 # generate optional meta data for child state - not used if valid meta data already in child state model
                 child_rel_pos, child_size = gui_helper_meta_data.generate_default_state_meta_data(state_m, self.canvas,
                                                                                                   num_child_state)

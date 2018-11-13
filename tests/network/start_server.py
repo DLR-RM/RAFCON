@@ -7,10 +7,13 @@
 
 
 """
+from __future__ import print_function
 
+from future import standard_library
+standard_library.install_aliases()
 import os
 import signal
-from Queue import Empty
+from queue import Empty
 import threading
 
 
@@ -19,10 +22,10 @@ def check_for_sm_finished(sm, monitoring_manager=None):
     while sm.root_state.state_execution_status is not StateExecutionStatus.INACTIVE:
         try:
             sm.root_state.concurrency_queue.get(timeout=10.0)
-        except Empty, e:
+        except Empty as e:
             pass
         # no logger output here to make it easier for the parser
-        print "RAFCON live signal"
+        print("RAFCON live signal")
 
     sm.root_state.join()
 
@@ -78,8 +81,8 @@ def start_server(interacting_function, queue_dict):
 
     plugins.run_post_inits(setup_config)
 
-    if "twisted" in sys.modules.keys():
-        print "################# twisted found #######################"
+    if "twisted" in sys.modules:
+        print("################# twisted found #######################")
         interacting_thread = threading.Thread(target=interacting_function,
                                               args=[queue_dict, ])
         interacting_thread.start()
@@ -97,8 +100,8 @@ def start_server(interacting_function, queue_dict):
 
 
 def print_object(queue_dict):
-    print "dummy prints:"
-    print queue_dict
+    print("dummy prints:")
+    print(queue_dict)
 
 
 if __name__ == '__main__':

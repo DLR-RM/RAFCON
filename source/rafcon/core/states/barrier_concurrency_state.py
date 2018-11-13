@@ -19,6 +19,7 @@
 
 """
 
+from builtins import str
 import traceback
 
 from gtkmvc3.observable import Observable
@@ -80,11 +81,11 @@ class BarrierConcurrencyState(ConcurrencyState):
         ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes,
                                   states, transitions, data_flows, start_state_id, scoped_variables)
 
-        for state_id, state in self.states.iteritems():
+        for state_id, state in self.states.items():
             if state_id != UNIQUE_DECIDER_STATE_ID:
                 for outcome in self.states[state_id].outcomes.values():
                     # TODO figure out how to solve this clinch better #3
-                    match = [t.from_state == state_id and t.from_outcome == outcome.outcome_id for t in self.transitions.itervalues()]
+                    match = [t.from_state == state_id and t.from_outcome == outcome.outcome_id for t in self.transitions.values()]
                     if not outcome.outcome_id < 0 and not any(match):
                         try:
                             self.add_transition(from_state_id=state_id, from_outcome=outcome.outcome_id,
@@ -117,7 +118,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             #######################################################
             # wait for all child threads to finish
             #######################################################
-            for history_index, state in enumerate(self.states.itervalues()):
+            for history_index, state in enumerate(self.states.values()):
                 # skip the decider state
                 if state is not decider_state:
                     self.join_state(state, history_index, concurrency_history_item)
@@ -172,7 +173,7 @@ class BarrierConcurrencyState(ConcurrencyState):
 
             return self.finalize_concurrency_state(self.final_outcome)
 
-        except Exception, e:
+        except Exception as e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
@@ -250,7 +251,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         state_id = super(BarrierConcurrencyState, self).add_state(state)
         if not storage_load and not self.__init_running and not state.state_id == UNIQUE_DECIDER_STATE_ID:
             # the transitions must only be created for the initial add_state call and not during each load procedure
-            for o_id, o in state.outcomes.iteritems():
+            for o_id, o in list(state.outcomes.items()):
                 if not o_id == -1 and not o_id == -2:
                     self.add_transition(state.state_id, o_id, self.states[UNIQUE_DECIDER_STATE_ID].state_id, None)
         return state_id
@@ -265,7 +266,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         :raises exceptions.TypeError: if the states parameter is not of type dict
         """
         # First safely remove all existing states (recursively!), as they will be replaced
-        state_ids = self.states.keys()
+        state_ids = list(self.states.keys())
         for state_id in state_ids:
             # Do not remove decider state, if teh new list of states doesn't contain an alternative one
             if state_id == UNIQUE_DECIDER_STATE_ID and UNIQUE_DECIDER_STATE_ID not in states:
@@ -279,7 +280,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             decider_state = states.pop(UNIQUE_DECIDER_STATE_ID, None)
             if decider_state is not None:
                 self.add_state(decider_state)
-            for state in states.itervalues():
+            for state in states.values():
                 self.add_state(state)
 
     def remove_state(self, state_id, recursive=True, force=False, destroy=True):
@@ -357,7 +358,7 @@ class DeciderState(ExecutionState):
         :return:
         """
         return_value = None
-        for state_id, name_outcome_tuple in self.final_outcomes_dict.iteritems():
+        for state_id, name_outcome_tuple in self.final_outcomes_dict.items():
             if name_outcome_tuple[0] == name:
                 return_value = name_outcome_tuple[1]
                 break
@@ -370,7 +371,7 @@ class DeciderState(ExecutionState):
         :return:
         """
         return_value = None
-        for s_id, name_outcome_tuple in self.final_outcomes_dict.iteritems():
+        for s_id, name_outcome_tuple in self.final_outcomes_dict.items():
             if s_id == state_id:
                 return_value = name_outcome_tuple[1]
                 break
@@ -387,7 +388,7 @@ class DeciderState(ExecutionState):
         :return:
         """
         return_value = None
-        for state_id, name_outcome_tuple in self.child_errors.iteritems():
+        for state_id, name_outcome_tuple in self.child_errors.items():
             if name_outcome_tuple[0] == name:
                 return_value = name_outcome_tuple[1]
                 break

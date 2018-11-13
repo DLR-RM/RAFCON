@@ -20,6 +20,7 @@
 
 """
 
+from builtins import str
 import time
 import copy
 from gtkmvc3.observable import Observable
@@ -205,7 +206,7 @@ class GlobalVariableManager(Observable):
             else:
                 logger.error("Global variable key {} does not exist".format(str(key)))
                 return False
-        except Exception, e:
+        except Exception as e:
             logger.error("Exception thrown: {}".format(str(e)))
             return False
 
@@ -283,7 +284,7 @@ class GlobalVariableManager(Observable):
         :return:
         """
         output_list = []
-        if len(self.__global_variable_dictionary.keys()) == 0:
+        if len(self.__global_variable_dictionary) == 0:
             return output_list
         for g_key in self.__global_variable_dictionary.keys():
             # string comparison
@@ -299,7 +300,7 @@ class GlobalVariableManager(Observable):
     def global_variable_dictionary(self):
         """Property for the _global_variable_dictionary field"""
         dict_copy = {}
-        for key, value in self.__global_variable_dictionary.iteritems():
+        for key, value in self.__global_variable_dictionary.items():
             if key in self.__variable_references and self.__variable_references[key]:
                 dict_copy[key] = value
             else:
@@ -312,7 +313,7 @@ class GlobalVariableManager(Observable):
 
         :return: Keys of all variables
         """
-        return self.__global_variable_dictionary.keys()
+        return list(self.__global_variable_dictionary.keys())
 
     def get_representation(self, key):
         if not self.variable_exist(key):

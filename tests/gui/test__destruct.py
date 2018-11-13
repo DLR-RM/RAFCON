@@ -1,3 +1,7 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from past.builtins import map
+from builtins import str
 import os
 import gc
 import time
@@ -127,7 +131,7 @@ def get_log_elements(elements, with_prints=False, print_method=None):
         if file_name is None:
             continue
         gen_file = os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(file_name, GENERATION_LOG_FILE_APPENDIX))
-        print gen_file
+        print(gen_file)
         with open(gen_file) as f:
             element_gen_file = f.readlines()
         element_gen_file = [line.replace('\n', '') for line in element_gen_file]
@@ -152,7 +156,7 @@ def get_log_elements(elements, with_prints=False, print_method=None):
                     if _print_method is not None:
                         _print_method(s)
                     else:
-                        print s
+                        print(s)
 
         log_result_dict[file_name] = {'gen_file': element_gen_file, 'del_file': element_del_file}
 
@@ -168,20 +172,20 @@ def check_log_files(elements):
         files.append(os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, GENERATION_LOG_FILE_APPENDIX)))
 
     for file_path in files:
-        print "check file: ", file_path
+        print("check file: ", file_path)
         if os.path.exists(file_path):
-            print "exists before: ", file_path
+            print("exists before: ", file_path)
         with open(file_path, 'a+'):
             pass
         if os.path.exists(file_path):
-            print "exists after: ", file_path
+            print("exists after: ", file_path)
 
 
 def remove_log_files(elements):
     files = []
     for element_name in elements:
         files.append(os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, GENERATION_LOG_FILE_APPENDIX)))
-    print "REMOVE: \n{}".format('\n'.join([log_file_path for log_file_path in files]))
+    print("REMOVE: \n{}".format('\n'.join([log_file_path for log_file_path in files])))
     for log_file_path in files:
         if os.path.exists(log_file_path):
             os.remove(log_file_path)
@@ -274,10 +278,10 @@ def generate_graphs(target_object_s):
         try:
             import objgraph
         except ImportError:
-            print "ImportError no generation of graph"
+            print("ImportError no generation of graph")
             return
 
-        print "graph from object: ", target_object_s, id(target_object_s)
+        print("graph from object: ", target_object_s, id(target_object_s))
 
         if isinstance(target_object_s, list):
             target_object = target_object_s[0]
@@ -288,7 +292,7 @@ def generate_graphs(target_object_s):
             for to in set(target_object_s):  # set used to additional avoid multiple identical graph generation
                 generate_graphs(to)
         else:
-            print "generate graph"
+            print("generate graph")
             target_object = target_object_s
             folder_path = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "..", "..",
                                        target_object.__class__.__name__)
@@ -300,7 +304,7 @@ def generate_graphs(target_object_s):
                                    highlight=None,
                                    extra_info=None, refcounts=True, shortnames=False,
                                    filename=graph_file_name)
-            print "generate graph finished"
+            print("generate graph finished")
 
 
 def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=None, log_file=True,
@@ -346,9 +350,9 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
                          "".format(object_class, len(found_objects_of_kind), collection_counts,
                                    len(result_dict[name]['gen_file']) if name else None, class_types_found))
         else:
-            print "of object of kind '{0}' have been generated {2} and there are {1} left over instances " \
+            print("of object of kind '{0}' have been generated {2} and there are {1} left over instances " \
                   "".format(object_class, len(found_objects_of_kind),
-                            len(result_dict[name]['gen_file']) if name else None)
+                            len(result_dict[name]['gen_file']) if name else None))
         if check_it:
             assert len(found_objects_of_kind) == 0
 
@@ -366,10 +370,10 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
         if isinstance(it, dict):
             if name:
                 return set(["{0}: {1}".format(key, element_in_iter.__class__.__name__)
-                            for key, element_in_iter in it.iteritems()])
+                            for key, element_in_iter in it.items()])
             else:
                 return set(["{0}: {1}".format(key, element_in_iter.__class__)
-                            for key, element_in_iter in it.iteritems()])
+                            for key, element_in_iter in it.items()])
         else:
             if name:
                 return set([element_in_iter.__class__.__name__ for element_in_iter in it])
@@ -386,33 +390,33 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
             pprint(["{1} with {0} elements of type: ".format(len(referrer), referrer.__class__.__name__),
                     get_classes_in_iter(referrer)])
 
-    print "ignored_objects", ignored_objects
-    print "found_objects", found_objects
-    print "target_objects", target_objects
+    print("ignored_objects", ignored_objects)
+    print("found_objects", found_objects)
+    print("target_objects", target_objects)
 
     if target_objects:
         generate_graphs(target_objects)
         return
         for index_target_object, target_object in enumerate(target_objects):
-            print
-            print
-            print "# Referrers of #{0} {1}:".format(index_target_object + 1, searched_type), target_object
+            print()
+            print()
+            print("# Referrers of #{0} {1}:".format(index_target_object + 1, searched_type), target_object)
 
             # TODO the referrer prints should avoid to print the local variables list (by checking element keys)
             # TODO the referrer prints should avoid to print the list generated in this script (by inherit)
             target_object_referrers = gc.get_referrers(target_object)
             list_referrers = [referrer for referrer in target_object_referrers if hasattr(referrer, '__iter__')]
 
-            print "## simple referrers", len(target_object_referrers)
+            print("## simple referrers", len(target_object_referrers))
             map(print_referrer, [referrer for referrer in target_object_referrers if referrer not in list_referrers])
 
-            print "## list referrers"
+            print("## list referrers")
             gc.collect()
 
             for referrer in list_referrers:
                 print_referrer(referrer)
                 second_instance_list_referrers = gc.get_referrers(referrer)
-                print "### referrers of list referrer", len(second_instance_list_referrers)
+                print("### referrers of list referrer", len(second_instance_list_referrers))
                 map(print_referrer, second_instance_list_referrers)
     # else:
     #     generate_graphs(found_objects)
@@ -459,43 +463,43 @@ def run_simple_modification_construction():
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     testing_utils.call_gui_callback(check_state_editor_models, sm_m, sm_m.root_state)
     import rafcon.gui.helpers.state
-    list_exsisting_state_ids = sm_m.root_state.states.keys()
+    list_exsisting_state_ids = list(sm_m.root_state.states.keys())
 
-    print "%" * 50
-    print "check before add_state"
-    print "%" * 50
+    print("%" * 50)
+    print("check before add_state")
+    print("%" * 50)
 
     testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
                                     rafcon.gui.helpers.state.StateType.EXECUTION)
-    print "%" * 50
-    print "after first add"
-    print "%" * 50
+    print("%" * 50)
+    print("after first add")
+    print("%" * 50)
     testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
                                     rafcon.gui.helpers.state.StateType.HIERARCHY)
 
-    new_state_ids = [state_id for state_id, state_m in sm_m.root_state.states.iteritems()
+    new_state_ids = [state_id for state_id, state_m in sm_m.root_state.states.items()
                      if state_id not in list_exsisting_state_ids]
     for state_id in new_state_ids:
         testing_utils.call_gui_callback(sm_m.root_state.state.remove_state, state_id)
-    print "%" * 50
-    print "after deletes"
-    print "%" * 50
+    print("%" * 50)
+    print("after deletes")
+    print("%" * 50)
     import time
-    print "%" * 50
-    print "do test menu bar"
-    print "%" * 50
-    import widget.test_menu_bar
+    print("%" * 50)
+    print("do test menu bar")
+    print("%" * 50)
+    from .widget import test_menu_bar
     # TODO D-get this test also running with substitute_library
-    widget.test_menu_bar.trigger_gui_signals(with_refresh=True, with_substitute_library=False)
-    print "%" * 50
-    print "do test complex actions, group & ungroup"
-    print "%" * 50
-    import test_complex_actions
+    test_menu_bar.trigger_gui_signals(with_refresh=True, with_substitute_library=False)
+    print("%" * 50)
+    print("do test complex actions, group & ungroup")
+    print("%" * 50)
+    from . import test_complex_actions
     test_complex_actions.trigger_repetitive_group_ungroup()
-    print "%" * 50
-    print "do test ungroup"
-    print "%" * 50
-    import test_group_ungroup
+    print("%" * 50)
+    print("do test ungroup")
+    print("%" * 50)
+    from . import test_group_ungroup
     test_group_ungroup.trigger_ungroup_signals()
     testing_utils.call_gui_callback(testing_utils.wait_for_gui)
 
@@ -514,7 +518,7 @@ def run_simple_execution_controller_construction():
     testing_utils.call_gui_callback(execution_engine.start)
 
     while execution_engine.status.execution_mode is not sm_execution_status.FINISHED:
-        print "execution not finished yet: wait"
+        print("execution not finished yet: wait")
         time.sleep(0.01)
     testing_utils.call_gui_callback(rafcon.core.singleton.state_machine_manager.delete_all_state_machines)
 
@@ -795,7 +799,7 @@ def un_patch_gaphas_classes_from_log():
 
 
 def print_func(s):
-    print s
+    print(s)
 
 
 LOG_FILE_NAME_ID = 0
@@ -851,7 +855,7 @@ def run_patching(elements):
     f_set = set([param_dict[class_to_patch][PATCH_FUNCTION_ID] for class_to_patch, _ in elements
                  if class_to_patch in param_dict])
     for func in f_set:
-        print "patch with: ", func
+        print("patch with: ", func)
         func()
 
 
@@ -860,7 +864,7 @@ def run_un_patching(elements):
     f_set = set([param_dict[class_to_patch][UN_PATCH_FUNCTION_ID] for class_to_patch, check_it in elements
                  if class_to_patch in param_dict])
     for func in f_set:
-        print "un-patch with: ", func
+        print("un-patch with: ", func)
         func()
 
 
@@ -1057,11 +1061,11 @@ def run_copy_cut_and_paste():
     #########################################
 
     # select state 1
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State1":
             selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
             testing_utils.call_gui_callback(selection.add, sm_model)
-            print "select state: ", sm_model.state
+            print("select state: ", sm_model.state)
 
     # focus correct page
     page_id = state_machines_ctrl.get_page_num(sm_m.state_machine.state_machine_id)
@@ -1070,49 +1074,49 @@ def run_copy_cut_and_paste():
 
     # copy state 1
     testing_utils.call_gui_callback(menu_bar_controller.on_copy_selection_activate, None, None)
-    print "copy state: ", sm_model.state
+    print("copy state: ", sm_model.state)
 
     # clear selection
     testing_utils.call_gui_callback(selection.clear)
 
     # select state 3
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State3":
             from rafcon.gui.models.container_state import ContainerStateModel
             assert isinstance(sm_model, ContainerStateModel)
             testing_utils.call_gui_callback(selection.add, sm_model)
-            print "select state: ", sm_model.state
+            print("select state: ", sm_model.state)
     # focus
     focus_graphical_editor_in_page(page)
     # paste state 1 into state 3
     testing_utils.call_gui_callback(menu_bar_controller.on_paste_clipboard_activate, None, None)
-    print "pasted state into target state for the first time: ", sm_model.state
+    print("pasted state into target state for the first time: ", sm_model.state)
 
     # another time
     # select state 3
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State3":
             from rafcon.gui.models.container_state import ContainerStateModel
             assert isinstance(sm_model, ContainerStateModel)
             testing_utils.call_gui_callback(selection.add, sm_model)
-            print "select state: ", sm_model.state
+            print("select state: ", sm_model.state)
     # focus
     focus_graphical_editor_in_page(page)
     # paste state 1 into state 3
     testing_utils.call_gui_callback(menu_bar_controller.on_paste_clipboard_activate, None, None)
-    print "pasted state into target state for the second time: ", sm_model.state
+    print("pasted state into target state for the second time: ", sm_model.state)
 
     #########################################
     # cut tests
     #########################################
 
     # select state 1
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State1":
             state1 = sm_model.state
             selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
             testing_utils.call_gui_callback(selection.add, sm_model)
-            print "select state: ", sm_model.state
+            print("select state: ", sm_model.state)
 
     # focus correct page
     page_id = state_machines_ctrl.get_page_num(sm_m.state_machine.state_machine_id)
@@ -1121,7 +1125,7 @@ def run_copy_cut_and_paste():
 
     # cut state 1
     testing_utils.call_gui_callback(menu_bar_controller.on_cut_selection_activate, None, None)
-    print "cut state: ", sm_model.state
+    print("cut state: ", sm_model.state)
 
     # destroy state test
     # print "%" * 20, "before  ", "%" * 20
@@ -1132,19 +1136,19 @@ def run_copy_cut_and_paste():
     testing_utils.call_gui_callback(selection.clear)
 
     # select state 3
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State3":
             from rafcon.gui.models.container_state import ContainerStateModel
             assert isinstance(sm_model, ContainerStateModel)
             testing_utils.call_gui_callback(selection.add, sm_model)
-            print "select state: ", sm_model.state
+            print("select state: ", sm_model.state)
 
     # focus
     focus_graphical_editor_in_page(page)
 
     # paste state 1 into state 3
     testing_utils.call_gui_callback(menu_bar_controller.on_paste_clipboard_activate, None, None)
-    print "paste state into target state: ", sm_model.state
+    print("paste state into target state: ", sm_model.state)
 
     # import time
     # time.sleep(10.0)
@@ -1231,9 +1235,9 @@ def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, l
     exception_during_test_method = None
 
     try:
-        print "%" * 50
-        print "before test function print"
-        print "%" * 50
+        print("%" * 50)
+        print("before test function print")
+        print("%" * 50)
         func()
     except Exception as e:
         exception_during_test_method = e
@@ -1242,10 +1246,9 @@ def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, l
     testing_utils.close_gui()
     if exception_during_test_method:
         raise exception_during_test_method
-
-    print "%" * 50
-    print "check for existing objects print"
-    print "%" * 50
+    print("%" * 50)
+    print("check for existing objects print")
+    print("%" * 50)
     testing_utils.shutdown_environment(caplog=caplog, expected_warnings=expected_warnings, expected_errors=expected_errors)
     check_existing_objects_of_kind(elements, print_func, ignored_objects=already_existing_objects,
                                    searched_type=searched_class.__name__)

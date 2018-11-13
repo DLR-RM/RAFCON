@@ -16,6 +16,8 @@
 
 from gi.repository import Gtk
 from gi.repository import Gdk
+from builtins import filter
+from builtins import next
 from enum import Enum
 from gaphas.aspect import HandleFinder, InMotion
 from gaphas.item import NW, Item
@@ -217,7 +219,7 @@ class MoveItemTool(gaphas.tool.ItemTool):
         elif len(affected_models) > 1:
             # if more than one item has been moved, we need to call the meta_data_changed signal on a common parent
             common_parents = None
-            for change, affects_children, view in affected_models.itervalues():
+            for change, affects_children, view in affected_models.values():
                 parents_of_view = set(self.view.canvas.get_ancestors(view))
                 if common_parents is None:
                     common_parents = parents_of_view
@@ -312,7 +314,7 @@ class HoverItemTool(gaphas.tool.HoverTool):
 
         # States/Names take precedence over connections if the connections are on the same hierarchy and if there is
         # a port beneath the cursor
-        first_state_v = filter(lambda item: isinstance(item, (NameView, StateView)), items)[0]
+        first_state_v = next(filter(lambda item: isinstance(item, (NameView, StateView)), items))
         first_state_v = first_state_v.parent if isinstance(first_state_v, NameView) else first_state_v
         if first_state_v:
             # There can be several connections above the state/name skip those and find the first non-connection-item

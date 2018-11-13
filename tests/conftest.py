@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 
 # Unfortunately this approach does not work to make sure to initialize the gui singletons from a gui thread
 # Problem: after executing conftest.py all modules are re-imported
@@ -23,7 +24,7 @@ def pytest_unconfigure(config):
 def clean_temp_test_directory():
     import shutil
     import os
-    import testing_utils
+    from . import testing_utils
     test_temp_path = testing_utils.RAFCON_TEMP_PATH_TEST_BASE
     try:
         shutil.rmtree(test_temp_path)

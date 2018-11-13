@@ -10,8 +10,9 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-# from cairo import Antialias, Matrix
+# from cairo import Antialias
 from cairo import Matrix
+from builtins import zip
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.utils import constants
