@@ -14,11 +14,11 @@
 
 """
 .. module:: extended_controller
-   :synopsis: A module that holds all extensions in respect to the gtkmvc.Controller that are used in rafcon.gui.
+   :synopsis: A module that holds all extensions in respect to the gtkmvc3.Controller that are used in rafcon.gui.
 
 """
 
-from gtkmvc import Controller
+from gtkmvc3.controller import Controller
 
 from rafcon.gui.shortcut_manager import ShortcutManager
 from rafcon.utils import log
@@ -36,6 +36,8 @@ class ExtendedController(Controller):
         self.__child_controllers = dict()
         self.__shortcut_manager = None
         self.__parent = None
+        self.__connected_signals = dict()
+        self.__signal_counter = 0
 
     def register_view(self, view):
         """Called when the View was registered
@@ -170,12 +172,24 @@ class ExtendedController(Controller):
             if hasattr(register_function, '__call__'):
                 register_function(self.__shortcut_manager)
 
+    def connect_signal(self, widget, signal, callback):
+        widget.connect(signal, callback)
+        self.__signal_counter += 1
+        self.__connected_signals["signal" + str(self.__signal_counter)] = (callback, widget)
+
+    def disconnect_all_signals(self):
+        # logger.verbose("Disconnect all signals of the class {}".format(str(self.__class__.__name__)))
+        for signal_id, (callback, widget) in self.__connected_signals.iteritems():
+            widget.disconnect_by_func(callback)
+        self.__connected_signals.clear()
+
     def destroy(self):
         """Recursively destroy all Controllers
 
         The method remove all controllers, which calls the destroy method of the child controllers. Then,
         all registered models are relieved and and the widget hand by the initial view argument is destroyed.
         """
+        self.disconnect_all_signals()
         controller_names = [key for key in self.__child_controllers]
         for controller_name in controller_names:
             self.remove_controller(controller_name)
@@ -188,10 +202,7 @@ class ExtendedController(Controller):
             self.view = None
             self._Observer__PROP_TO_METHS.clear()  # prop name --> set of observing methods
             self._Observer__METH_TO_PROPS.clear()  # method --> set of observed properties
-
-            # like __PROP_TO_METHS but only for pattern names (to optimize search)
-            self._Observer__PAT_TO_METHS.clear()
-
+            self._Observer__PAT_TO_METHS.clear() # like __PROP_TO_METHS but only for pattern names (to optimize search)
             self._Observer__METH_TO_PAT.clear()  # method --> pattern
             self._Observer__PAT_METH_TO_KWARGS.clear()  # (pattern, method) --> info
             self.observe = None
@@ -205,7 +216,7 @@ class ExtendedController(Controller):
 
         The method also keeps track of all observed models, in order to be able to relieve them later on.
 
-        :param gtkmvc.Model model: The model to be observed
+        :param gtkmvc3.Model model: The model to be observed
         """
         self.__registered_models.add(model)
         return super(ExtendedController, self).observe_model(model)
@@ -215,7 +226,7 @@ class ExtendedController(Controller):
 
         The model is also removed from the internal set of tracked models.
 
-        :param gtkmvc.Model model: The model to be relieved
+        :param gtkmvc3.Model model: The model to be relieved
         """
         self.__registered_models.remove(model)
         return super(ExtendedController, self).relieve_model(model)

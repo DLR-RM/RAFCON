@@ -13,7 +13,8 @@
 import os.path
 from copy import copy, deepcopy
 from weakref import ref
-from gtkmvc import ModelMT, Signal
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Signal
 
 from rafcon.gui.models.signals import MetaSignalMsg, Notification
 from rafcon.gui.models.meta import MetaModel
@@ -200,6 +201,7 @@ class AbstractStateModel(MetaModel, Hashable):
         try:
             self.unregister_observer(self)
         except KeyError:  # Might happen if the observer was already unregistered
+            logger.verbose("Observer already unregistered!")
             pass
         if recursive:
             for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
@@ -208,6 +210,15 @@ class AbstractStateModel(MetaModel, Hashable):
         del self.output_data_ports[:]
         del self.outcomes[:]
         self.state = None
+        self.input_data_ports = None
+        self.output_data_ports = None
+        self.outcomes = None
+        # History TODO: these are needed by the modification history
+        # self.action_signal = None
+        # self.meta_signal = None
+        # self.destruction_signal = None
+        self.observe = None
+        super(AbstractStateModel, self).prepare_destruction()
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.core_element)

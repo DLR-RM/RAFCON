@@ -19,14 +19,13 @@
 
 """
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
 
 from rafcon.core.state_elements.transition import Transition
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.controllers.state_editor.linkage_list import LinkageListController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers.label import format_cell
 from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
@@ -38,7 +37,7 @@ logger = log.get_logger(__name__)
 class StateTransitionsListController(LinkageListController):
     """Controller handling the view of transitions of the ContainerStateModel
 
-    This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
+    This :class:`gtkmvc3.Controller` class is the interface between the GTK widget view
     :class:`gui.views.transitions.TransitionListView` and the transitions of the
     :class:`gui.models.state.ContainerStateModel`. Changes made in
     the GUI are written back to the model and vice versa.
@@ -60,8 +59,8 @@ class StateTransitionsListController(LinkageListController):
     def __init__(self, model, view):
         # ListStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
         #                   name-color, to-state-color, transition-object, state-object, is_editable, transition-model
-        list_store = gtk.ListStore(int, str, str, str, str, bool,
-                                   gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
+        list_store = Gtk.ListStore(int, str, str, str, str, bool,
+                                   GObject.TYPE_PYOBJECT, GObject.TYPE_PYOBJECT, bool, GObject.TYPE_PYOBJECT)
 
         self.view_dict = {'transitions_internal': True, 'transitions_external': True}
         self.combo = {}
@@ -79,12 +78,8 @@ class StateTransitionsListController(LinkageListController):
         """Called when the View was registered
         """
         super(StateTransitionsListController, self).register_view(view)
-        format_cell(view['from_state_combo'], None, 0)
-        format_cell(view['to_state_combo'], None, 0)
-        format_cell(view['from_outcome_combo'], None, 0)
-        format_cell(view['to_outcome_combo'], None, 0)
 
-        def cell_text(column, cell_renderer, model, iter):
+        def cell_text(column, cell_renderer, model, iter, data):
             t_id = model.get_value(iter, self.ID_STORAGE_ID)
             in_external = 'external' if model.get_value(iter, self.IS_EXTERNAL_STORAGE_ID) else 'internal'
             # print t_id, in_external, self.combo[in_external]
@@ -118,10 +113,10 @@ class StateTransitionsListController(LinkageListController):
             view['to_state_combo'].set_property("editable", False)
             view['to_outcome_combo'].set_property("editable", False)
         else:
-            view['from_state_combo'].connect("edited", self.on_combo_changed_from_state)
-            view['from_outcome_combo'].connect("edited", self.on_combo_changed_from_outcome)
-            view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
-            view['to_outcome_combo'].connect("edited", self.on_combo_changed_to_outcome)
+            self.connect_signal(view['from_state_combo'], "edited", self.on_combo_changed_from_state)
+            self.connect_signal(view['from_outcome_combo'], "edited", self.on_combo_changed_from_outcome)
+            self.connect_signal(view['to_state_combo'], "edited", self.on_combo_changed_to_state)
+            self.connect_signal(view['to_outcome_combo'], "edited", self.on_combo_changed_to_outcome)
 
         view.tree_view.connect("grab-focus", self.on_focus)
         self.update(initiator='"register view"')
@@ -318,10 +313,10 @@ class StateTransitionsListController(LinkageListController):
         :param is_external:
         :return:
         """
-        from_state_combo = gtk.ListStore(str, str)
-        from_outcome_combo = gtk.ListStore(str)
-        to_state_combo = gtk.ListStore(str)
-        to_outcome_combo = gtk.ListStore(str)
+        from_state_combo = Gtk.ListStore(str, str)
+        from_outcome_combo = Gtk.ListStore(str)
+        to_state_combo = Gtk.ListStore(str)
+        to_outcome_combo = Gtk.ListStore(str)
 
         trans_dict = model.state.transitions
 
@@ -501,7 +496,7 @@ class StateTransitionsListController(LinkageListController):
                 self.combo['free_ext_from_outcomes_dict'] = free_from_outcomes_dict
 
     def _update_tree_store(self):
-        """ Updates TreeStore of the gtk.ListView according internal combo knowledge gained by
+        """ Updates TreeStore of the Gtk.ListView according internal combo knowledge gained by
         _update_internal_data_base function call.
         """
 

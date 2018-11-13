@@ -23,7 +23,8 @@
 
 import os
 import logging
-import gtk
+from gi.repository import Gtk
+from gi.repository import Gdk
 from functools import partial
 
 import rafcon.core.config
@@ -42,7 +43,6 @@ from rafcon.gui.controllers.state_machine_tree import StateMachineTreeController
 from rafcon.gui.controllers.state_machines_editor import StateMachinesEditorController
 from rafcon.gui.controllers.states_editor import StatesEditorController
 from rafcon.gui.controllers.tool_bar import ToolBarController
-from rafcon.gui.controllers.top_tool_bar import TopToolBarMainWindowController
 from rafcon.gui.controllers.undocked_window import UndockedWindowController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.views.main_window import MainWindowView
@@ -160,17 +160,10 @@ class MainWindowController(ExtendedController):
         self.add_controller('tool_bar_controller', tool_bar_controller)
 
         ######################################################
-        # top tool bar
-        ######################################################
-        top_tool_bar_controller = TopToolBarMainWindowController(state_machine_manager_model, view.top_tool_bar,
-                                                                 view['main_window'])
-        self.add_controller('top_tool_bar_controller', top_tool_bar_controller)
-
-        ######################################################
         # Undocked Windows Controllers
         ######################################################
         for window_key in constants.UNDOCKABLE_WINDOW_KEYS:
-            widget_name = "left_sidebar_viewport" if window_key == 'LEFT_BAR' else window_key.lower() + "_container"
+            widget_name = window_key.lower() + "_container"
             replacement_name = None if window_key == 'CONSOLE' else window_key.lower() + "_replacement"
             window_ctrl_name = window_key.lower() + "_window_controller"
             undocked_window_view = getattr(view, window_key.lower() + "_window")
@@ -203,6 +196,7 @@ class MainWindowController(ExtendedController):
         super(MainWindowController, self).destroy()
         # The sidebars have no corresponding controller that could destroy the views what cause the connected methods
         # to stay connected to (hold references on) the main window controller. So, we do this here. TODO D-solve it
+        self.shortcut_manager.destroy()
         self.left_bar_child.destroy()
         self.right_bar_child.destroy()
         self.console_child.destroy()
@@ -211,6 +205,7 @@ class MainWindowController(ExtendedController):
     def configure_event(widget, event, name):
         # print "configure event", widget, event, name
         global_runtime_config.store_widget_properties(widget, name)
+        global_runtime_config.save_configuration()
 
     def register_view(self, view):
         super(MainWindowController, self).register_view(view)
@@ -223,7 +218,7 @@ class MainWindowController(ExtendedController):
 
         self.connect_button_to_function('main_window',
                                         "delete_event",
-                                        self.get_controller('menu_bar_controller').on_delete_event)
+                                        self.get_controller('menu_bar_controller').on_quit_activate)
 
         # connect left bar, right bar and console hide buttons' signals to their corresponding methods
         self.connect_button_to_function('left_bar_hide_button', "clicked", self.on_left_bar_hide_clicked)
@@ -278,6 +273,11 @@ class MainWindowController(ExtendedController):
         view.right_bar_window.get_top_widget().connect("configure-event", self.configure_event, "RIGHT_BAR_WINDOW")
         view.console_window.get_top_widget().connect("configure-event", self.configure_event, "CONSOLE_WINDOW")
 
+        # save pane positions in the runtime config on every change
+        view['top_level_h_pane'].connect("button-release-event", self.configure_event, "LEFT_BAR_DOCKED")
+        view['right_h_pane'].connect("button-release-event", self.configure_event, "RIGHT_BAR_DOCKED")
+        view['central_v_pane'].connect("button-release-event", self.configure_event, "CONSOLE_DOCKED")
+
         # hide not usable buttons
         self.view['step_buttons'].hide()
 
@@ -285,6 +285,8 @@ class MainWindowController(ExtendedController):
         # secure un maximize in initial condition to restore correct position and size
         view.get_top_widget().unmaximize()
         gui_helper_label.set_window_size_and_position(view.get_top_widget(), 'MAIN')
+
+        wait_for_gui()
 
         # Initializing Pane positions
         for config_id in constants.PANE_ID.keys():
@@ -430,7 +432,7 @@ class MainWindowController(ExtendedController):
 
     def on_right_bar_return_clicked(self, widget, event=None):
         self.view['right_bar_return_button'].hide()
-        self.view['right_h_pane'].pack2(self.right_bar_child, resize=True, shrink=False)
+        self.view['right_h_pane'].pack2(self.right_bar_child, resize=False, shrink=False)
         self.right_bar_hidden = False
 
     def on_console_return_clicked(self, widget, event=None):
@@ -454,7 +456,7 @@ class MainWindowController(ExtendedController):
         self.console_hidden = True
 
     def undock_window_callback(self, widget, event, undocked_window):
-        if event.new_window_state & gtk.gdk.WINDOW_STATE_WITHDRAWN or event.new_window_state & gtk.gdk.WINDOW_STATE_ICONIFIED:
+        if event.new_window_state & Gdk.WindowState.WITHDRAWN or event.new_window_state & Gdk.WindowState.ICONIFIED:
             undocked_window.iconify()
         else:
             undocked_window.deiconify()
@@ -482,8 +484,8 @@ class MainWindowController(ExtendedController):
         self.view['undock_{}_button'.format(widget_name)].hide()
         getattr(self, 'on_{}_hide_clicked'.format(widget_name))(None)
         self.view['{}_return_button'.format(widget_name)].hide()
-        if replacement_name:
-            self.view[replacement_name].show()
+        # if replacement_name:
+        #     self.view[replacement_name].show()
 
         main_window = self.view.get_top_widget()
         state_handler = main_window.connect('window-state-event', self.undock_window_callback, undocked_window)
@@ -499,18 +501,40 @@ class MainWindowController(ExtendedController):
         to the main-window, and the left-bar window is hidden. The undock button of the bar is made visible again.
         """
         config_parameter_undocked = window_key + '_WINDOW_UNDOCKED'
+        config_id_for_pane_position = window_key + '_DOCKED_POS'
         undocked_window_name = window_key.lower() + '_window'
         widget_name = window_key.lower()
+        undocked_window_view = getattr(self.view, undocked_window_name)
 
         self.view['main_window'].disconnect(self.handler_ids[undocked_window_name]['state'])
         getattr(self, 'on_{}_return_clicked'.format(widget_name))(None)
-        self.view[widget_name].reparent(self.view[sidebar_name])
+
+        undocked_window_view['central_eventbox'].remove(self.view[widget_name])
+        self.view[sidebar_name].pack_start(self.view[widget_name], True, True, 0)
+
         self.get_controller(controller_name).hide_window()
         self.view['undock_{}_button'.format(widget_name)].show()
-        if replacement_name:
-            self.view[replacement_name].hide()
+        # if replacement_name:
+        #     self.view[replacement_name].hide()
+
+        # restore the position of the pane
+        self.set_pane_position(config_id_for_pane_position)
+
         global_runtime_config.set_config_value(config_parameter_undocked, False)
         return True
+
+    def toggle_sidebars(self):
+        # If any sidebar is shown, hide both
+        if not self.left_bar_hidden or not self.right_bar_hidden:
+            if not self.left_bar_hidden:
+                self.on_left_bar_hide_clicked(None)
+            if not self.right_bar_hidden:
+                self.on_right_bar_hide_clicked(None)
+        else:
+            if self.left_bar_hidden:
+                self.on_left_bar_return_clicked(None)
+            if self.right_bar_hidden:
+                self.on_right_bar_return_clicked(None)
 
     # Shortcut buttons
     def on_button_start_shortcut_toggled(self, widget, event=None):
@@ -585,32 +609,36 @@ class MainWindowController(ExtendedController):
     def _on_key_press(self, widget, event):
         """Updates the currently pressed keys
 
-        :param gtk.Widget widget: The main window
-        :param gtk.gdk.Event event: The key press event
+        :param Gtk.Widget widget: The main window
+        :param Gdk.Event event: The key press event
         """
         self.currently_pressed_keys.add(event.keyval)
 
     def _on_key_release(self, widget, event):
         """Updates the currently pressed keys
 
-        :param gtk.Widget widget: The main window
-        :param gtk.gdk.Event event: The key release event
+        :param Gtk.Widget widget: The main window
+        :param Gdk.Event event: The key release event
         """
         self.currently_pressed_keys.discard(event.keyval)
 
     def _on_key_press(self, widget, event):
         """Updates the currently pressed keys
 
-        :param gtk.Widget widget: The main window
-        :param gtk.gdk.Event event: The key press event
+        In addition, the sidebars are toggled if <Ctrl><Tab> is pressed.
+
+        :param Gtk.Widget widget: The main window
+        :param Gdk.Event event: The key press event
         """
         self.currently_pressed_keys.add(event.keyval)
+        if event.keyval in [Gdk.KEY_Tab, Gdk.KEY_ISO_Left_Tab] and event.state & Gdk.ModifierType.CONTROL_MASK:
+            self.toggle_sidebars()
 
     def _on_key_release(self, widget, event):
         """Updates the currently pressed keys
 
-        :param gtk.Widget widget: The main window
-        :param gtk.gdk.Event event: The key release event
+        :param Gtk.Widget widget: The main window
+        :param Gdk.Event event: The key release event
         """
         self.currently_pressed_keys.discard(event.keyval)
         
@@ -633,7 +661,7 @@ class MainWindowController(ExtendedController):
 
         global_runtime_config.save_configuration()
         
-        # close all tabs
+        # state-editor will relieve it's model => it won't observe the state machine manager any more
         self.get_controller('states_editor_ctrl').prepare_destruction()  # avoid new state editor TODO tbd (deleted)
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
         rafcon.core.singleton.library_manager.prepare_destruction()
@@ -641,13 +669,15 @@ class MainWindowController(ExtendedController):
         # gtkmvc installs a global glade custom handler that holds a reference to the last created View class,
         # preventing it from being destructed. By installing a dummy callback handler, after all views have been
         # created, the old handler is being removed and with it the reference, allowing all Views to be destructed.
-        try:
-            from gtk import glade
-            def dummy(*args, **kwargs):
-                pass
-            glade.set_custom_handler(dummy)
-        except ImportError:
-            pass
+
+        # Gtk TODO: check if necessary and search for replacement
+        # try:
+        #     from gtk import glade
+        #     def dummy(*args, **kwargs):
+        #         pass
+        #     glade.set_custom_handler(dummy)
+        # except ImportError:
+        #     pass
 
         # Recursively destroys the main window
         self.destroy()

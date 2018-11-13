@@ -20,8 +20,8 @@
 
 """
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
 
 from rafcon.gui.helpers.meta_data import insert_self_transition_meta_data
 from rafcon.core.state_elements.outcome import Outcome
@@ -60,12 +60,12 @@ class StateOutcomesListController(ListViewController):
         assert isinstance(model, AbstractStateModel)
         # initiate data base and tree
         # id, name, to-state, to-outcome, name-color, to-state-color, outcome, state, outcome_model
-        list_store = gtk.ListStore(int, str, str, str, gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT,
-                                   gobject.TYPE_PYOBJECT)
+        list_store = Gtk.ListStore(int, str, str, str, GObject.TYPE_PYOBJECT, GObject.TYPE_PYOBJECT,
+                                   GObject.TYPE_PYOBJECT)
         super(StateOutcomesListController, self).__init__(model, view, view['tree_view'], list_store, logger)
 
-        self.to_state_combo_list = gtk.ListStore(str, str, str)
-        self.to_outcome_combo_list = gtk.ListStore(str, str, str)
+        self.to_state_combo_list = Gtk.ListStore(str, str, str)
+        self.to_outcome_combo_list = Gtk.ListStore(str, str, str)
         # key-outcome_id -> label,  to_state_id,  transition_id
         self.dict_to_other_state = {}
         # key-outcome_id ->  label,  to_outcome_id,  transition_id
@@ -81,6 +81,10 @@ class StateOutcomesListController(ListViewController):
         else:
             logger.warning("State model has no state machine model -> state model: {0}".format(self.model))
 
+    def destroy(self):
+        self.relieve_all_models()
+        super(StateOutcomesListController, self).destroy()
+
     def register_view(self, view):
         """Called when the View was registered
 
@@ -88,8 +92,8 @@ class StateOutcomesListController(ListViewController):
         """
         super(StateOutcomesListController, self).register_view(view)
         if isinstance(view, StateOutcomesTreeView):
-            view['to_state_combo'].connect("edited", self.on_to_state_edited)
-            view['to_outcome_combo'].connect("edited", self.on_to_outcome_edited)
+            self.connect_signal(view['to_state_combo'], "edited", self.on_to_state_edited)
+            self.connect_signal(view['to_outcome_combo'], "edited", self.on_to_outcome_edited)
 
         if isinstance(self.model.state, LibraryState) or self.model.state.get_next_upper_library_root_state():
             view['id_cell'].set_property('editable', False)
@@ -120,7 +124,7 @@ class StateOutcomesListController(ListViewController):
     def on_to_state_edited(self, renderer, path, new_state_identifier):
         """Connects the outcome with a transition to the newly set state
 
-        :param gtk.CellRendererText renderer: The cell renderer that was edited
+        :param Gtk.CellRendererText renderer: The cell renderer that was edited
         :param str path: The path string of the renderer
         :param str new_state_identifier: An identifier for the new state that was selected
         """
@@ -168,7 +172,7 @@ class StateOutcomesListController(ListViewController):
     def on_to_outcome_edited(self, renderer, path, new_outcome_identifier):
         """Connects the outcome with a transition to the newly set outcome
 
-        :param gtk.CellRendererText renderer: The cell renderer that was edited
+        :param Gtk.CellRendererText renderer: The cell renderer that was edited
         :param str path: The path string of the renderer
         :param str new_outcome_identifier: An identifier for the new outcome that was selected
         """
@@ -255,7 +259,7 @@ class StateOutcomesListController(ListViewController):
             # check for "to outcome combos" -> so all outcomes of parent
             for outcome in model.parent.state.outcomes.values():
                 self.to_outcome_combo_list.append(['parent.' + outcome.name + '.' + str(outcome.outcome_id),
-                                                   outcome.outcome_id, parent_id])
+                                                   str(outcome.outcome_id), parent_id])
             for transition_id, transition in model.parent.state.transitions.items():
                 # check for "to other state" connections -> so from self-state and self-outcome "external" transitions
                 if transition.from_state == model.state.state_id and transition.from_outcome in model.state.outcomes.keys():
@@ -298,14 +302,14 @@ class StateOutcomesListController(ListViewController):
                                     outcome, self.model.state, self.model.get_outcome_m(outcome.outcome_id)])
 
         if isinstance(self.view, StateOutcomesTreeView):
-            for cell_renderer in self.view['to_state_col'].get_cell_renderers():
+            for cell_renderer in self.view['to_state_col'].get_cells():
                 if self.model.state.get_next_upper_library_root_state() is None:
                     cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_state_combo_list)
                 cell_renderer.set_property("text-column", self.ID_STORAGE_ID)
                 cell_renderer.set_property("has-entry", False)
         if self.view and isinstance(self.view, StateOutcomesTreeView):
-            for cell_renderer in self.view['to_outcome_col'].get_cell_renderers():
+            for cell_renderer in self.view['to_outcome_col'].get_cells():
                 if self.model.state.get_next_upper_library_root_state() is None:
                     cell_renderer.set_property("editable", True)
                 cell_renderer.set_property("model", self.to_outcome_combo_list)
@@ -317,7 +321,12 @@ class StateOutcomesListController(ListViewController):
             self.update_internal_data_base()
             self.update_list_store()
         except Exception as e:
-            logger.exception("Unexpected failure while update of outcomes of {0} with path {1} "
+            # TODO this is connected to the destruction_signal TODO some lines below
+            # normally this is the case when some of the sibling states are already destroyed i.e. sibling = None
+            # and the code line to access the state_id of a sibling state cannot be done any more
+            # actually this should be solved by connecting to the destruction_signal and relieve all models upon
+            # receiving it, but the TODO below prevents this
+            logger.debug("Error: Unexpected failure while update of outcomes of {0} with path {1} "
                              "with initiator {2}".format(self.model.state, self.model.state.get_path(), initiator))
 
     @ListViewController.observe("parent", after=True)
@@ -326,10 +335,10 @@ class StateOutcomesListController(ListViewController):
     def outcomes_changed(self, model, prop_name, info):
         self.update(initiator=str(info))
 
-    # TODO D-Find out why the observation of the destruction_signal cause threading problems
+    # TODO Find out why the observation of the destruction_signal cause threading problems
     # @ExtendedController.observe("destruction_signal", signal=True)
     # def get_destruction_signal(self, model, prop_name, info):
-    #     """ Relieve models if the parent state model """
+    #     """ Relieve models if the parent state model is destroyed"""
     #     # this is necessary because the controller use data of its parent model and would try to adapt to
     #     # transition changes before the self.model is destroyed, too
     #     if not self.model.state.is_root_state and self.model.parent is model:
@@ -353,8 +362,8 @@ class StateOutcomesEditorController(ExtendedController):
         """
         super(StateOutcomesEditorController, self).register_view(view)
         if isinstance(view, StateOutcomesEditorView):
-            view['add_button'].connect("clicked", self.oc_list_ctrl.on_add)
-            view['remove_button'].connect("clicked", self.oc_list_ctrl.on_remove)
+            self.connect_signal(view['add_button'], "clicked", self.oc_list_ctrl.on_add)
+            self.connect_signal(view['remove_button'], "clicked", self.oc_list_ctrl.on_remove)
 
             if isinstance(self.model.state, LibraryState) or self.model.state.get_next_upper_library_root_state():
                 view['add_button'].set_sensitive(False)

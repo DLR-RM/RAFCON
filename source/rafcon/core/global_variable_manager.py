@@ -22,7 +22,7 @@
 
 import time
 import copy
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 from threading import Lock, currentThread, RLock
 from rafcon.core.id_generator import *
 
@@ -292,7 +292,7 @@ class GlobalVariableManager(Observable):
         return output_list
 
 #########################################################################
-# Properties for all class fields that must be observed by gtkmvc
+# Properties for all class fields that must be observed by gtkmvc3
 #########################################################################
 
     @property

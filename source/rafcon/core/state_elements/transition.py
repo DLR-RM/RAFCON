@@ -17,7 +17,7 @@
 
 """
 
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.decorators import lock_state_machine
@@ -103,7 +103,7 @@ class Transition(StateElement):
         }
 
 #########################################################################
-# Properties for all class field that must be observed by the gtkmvc
+# Properties for all class field that must be observed by the gtkmvc3
 #########################################################################
 
     @lock_state_machine

@@ -9,7 +9,7 @@
 # Rico Belder <rico.belder@dlr.de>
 
 import threading
-from gtkmvc import View
+from gtkmvc3.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.config import global_gui_config
@@ -49,3 +49,5 @@ class DebugConsoleView(View):
         self['undock_console_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
         self['undock_console_button'].set_tooltip_text("Undock debug console widget")
         self['console_hide_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_DOWNA))
+
+        gui_helper_label.ellipsize_labels_recursively(self['debug_console_button_hbox'])

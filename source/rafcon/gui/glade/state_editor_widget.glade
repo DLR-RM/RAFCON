@@ -1,7 +1,7 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.20.0 -->
 <interface>
-  <requires lib="gtk+" version="2.16"/>
-  <!-- interface-naming-policy project-wide -->
+  <requires lib="gtk+" version="3.20"/>
   <object class="GtkAdjustment" id="adjustment1">
     <property name="upper">78</property>
     <property name="step_increment">7.8000000000000007</property>
@@ -32,13 +32,15 @@
     <property name="page_increment">70.200000000000003</property>
     <property name="page_size">78</property>
   </object>
-  <object class="GtkVBox" id="main_frame_vbox">
-    <property name="visible">True</property>
-    <property name="resize_mode">queue</property>
+  <object class="GtkBox" id="main_frame_vbox">
     <property name="orientation">vertical</property>
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="resize_mode">queue</property>
     <child>
       <object class="GtkViewport" id="properties_viewport">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="resize_mode">queue</property>
         <child>
           <placeholder/>
@@ -46,14 +48,15 @@
       </object>
       <packing>
         <property name="expand">False</property>
+        <property name="fill">True</property>
         <property name="position">0</property>
       </packing>
     </child>
     <child>
-      <object class="GtkVPaned" id="vpaned1">
+      <object class="GtkPaned" id="vpaned1">
+        <property name="orientation">vertical</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
-        <property name="orientation">vertical</property>
         <child>
           <object class="GtkExpander" id="source_expander">
             <property name="visible">True</property>
@@ -63,6 +66,7 @@
             <child>
               <object class="GtkViewport" id="source_viewport">
                 <property name="visible">True</property>
+                <property name="can_focus">False</property>
                 <property name="border_width">5</property>
                 <property name="resize_mode">queue</property>
                 <child>
@@ -73,6 +77,7 @@
             <child type="label">
               <object class="GtkLabel" id="label_script">
                 <property name="visible">True</property>
+                <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Script</property>
               </object>
             </child>
@@ -83,9 +88,10 @@
           </packing>
         </child>
         <child>
-          <object class="GtkVBox" id="vbox2">
-            <property name="visible">True</property>
+          <object class="GtkBox" id="vbox2">
             <property name="orientation">vertical</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <child>
               <object class="GtkExpander" id="port_expander">
                 <property name="visible">True</property>
@@ -94,38 +100,41 @@
                 <child>
                   <object class="GtkAlignment" id="alignment2">
                     <property name="visible">True</property>
+                    <property name="can_focus">False</property>
                     <property name="no_show_all">True</property>
                     <child>
-                      <object class="GtkVBox" id="vbox1">
-                        <property name="visible">True</property>
+                      <object class="GtkBox" id="vbox1">
                         <property name="orientation">vertical</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
                         <child>
                           <object class="GtkExpander" id="port_expander1">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="label_fill">True</property>
                             <child>
-                              <object class="GtkVBox" id="input_port_vbox">
-                                <property name="visible">True</property>
+                              <object class="GtkBox" id="input_port_vbox">
                                 <property name="orientation">vertical</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
                                 <child>
                                   <object class="GtkScrolledWindow" id="input_ports_scroller">
-                                    <property name="height_request">130</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="hscrollbar_policy">automatic</property>
-                                    <property name="vscrollbar_policy">automatic</property>
                                     <child>
                                       <placeholder/>
                                     </child>
                                   </object>
                                   <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
                                     <property name="position">0</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkHBox" id="hbox1">
+                                  <object class="GtkBox" id="hbox1">
                                     <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
                                     <property name="homogeneous">True</property>
                                     <child>
                                       <object class="GtkButton" id="add_input_port_button">
@@ -136,6 +145,7 @@
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
+                                        <property name="fill">True</property>
                                         <property name="position">0</property>
                                       </packing>
                                     </child>
@@ -148,12 +158,14 @@
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
+                                        <property name="fill">True</property>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
+                                    <property name="fill">True</property>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
@@ -162,6 +174,7 @@
                             <child type="label">
                               <object class="GtkLabel" id="label_script1">
                                 <property name="visible">True</property>
+                                <property name="can_focus">False</property>
                                 <property name="label" translatable="yes">Inputs</property>
                                 <property name="justify">center</property>
                               </object>
@@ -169,6 +182,7 @@
                           </object>
                           <packing>
                             <property name="expand">False</property>
+                            <property name="fill">True</property>
                             <property name="padding">1</property>
                             <property name="position">0</property>
                           </packing>
@@ -179,27 +193,28 @@
                             <property name="can_focus">True</property>
                             <property name="label_fill">True</property>
                             <child>
-                              <object class="GtkVBox" id="output_port_vbox">
-                                <property name="visible">True</property>
+                              <object class="GtkBox" id="output_port_vbox">
                                 <property name="orientation">vertical</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
                                 <child>
                                   <object class="GtkScrolledWindow" id="output_ports_scroller">
-                                    <property name="height_request">150</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="hscrollbar_policy">automatic</property>
-                                    <property name="vscrollbar_policy">automatic</property>
                                     <child>
                                       <placeholder/>
                                     </child>
                                   </object>
                                   <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
                                     <property name="position">0</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkHBox" id="hbox2">
+                                  <object class="GtkBox" id="hbox2">
                                     <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
                                     <property name="homogeneous">True</property>
                                     <child>
                                       <object class="GtkButton" id="add_output_port_button">
@@ -210,6 +225,7 @@
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
+                                        <property name="fill">True</property>
                                         <property name="position">0</property>
                                       </packing>
                                     </child>
@@ -222,12 +238,14 @@
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
+                                        <property name="fill">True</property>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
+                                    <property name="fill">True</property>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
@@ -236,12 +254,14 @@
                             <child type="label">
                               <object class="GtkLabel" id="label_script2">
                                 <property name="visible">True</property>
+                                <property name="can_focus">False</property>
                                 <property name="label" translatable="yes">Outputs</property>
                               </object>
                             </child>
                           </object>
                           <packing>
                             <property name="expand">False</property>
+                            <property name="fill">True</property>
                             <property name="padding">1</property>
                             <property name="position">1</property>
                           </packing>
@@ -252,27 +272,28 @@
                             <property name="can_focus">True</property>
                             <property name="label_fill">True</property>
                             <child>
-                              <object class="GtkVBox" id="scoped_variable_vbox">
-                                <property name="visible">True</property>
+                              <object class="GtkVox" id="scoped_variable_vbox">
                                 <property name="orientation">vertical</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
                                 <child>
                                   <object class="GtkScrolledWindow" id="scoped_variables_scroller">
-                                    <property name="height_request">150</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="hscrollbar_policy">automatic</property>
-                                    <property name="vscrollbar_policy">automatic</property>
                                     <child>
                                       <placeholder/>
                                     </child>
                                   </object>
                                   <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
                                     <property name="position">0</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkHBox" id="hbox3">
+                                  <object class="GtkBox" id="hbox3">
                                     <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
                                     <property name="homogeneous">True</property>
                                     <child>
                                       <object class="GtkButton" id="add_scoped_variable_button">
@@ -283,6 +304,7 @@
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
+                                        <property name="fill">True</property>
                                         <property name="position">0</property>
                                       </packing>
                                     </child>
@@ -295,12 +317,14 @@
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
+                                        <property name="fill">True</property>
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
+                                    <property name="fill">True</property>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
@@ -309,12 +333,14 @@
                             <child type="label">
                               <object class="GtkLabel" id="label_script3">
                                 <property name="visible">True</property>
+                                <property name="can_focus">False</property>
                                 <property name="label" translatable="yes">Scopes</property>
                               </object>
                             </child>
                           </object>
                           <packing>
                             <property name="expand">False</property>
+                            <property name="fill">True</property>
                             <property name="padding">1</property>
                             <property name="position">2</property>
                           </packing>
@@ -326,12 +352,14 @@
                 <child type="label">
                   <object class="GtkLabel" id="label_dataport">
                     <property name="visible">True</property>
+                    <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Ports</property>
                   </object>
                 </child>
               </object>
               <packing>
                 <property name="expand">False</property>
+                <property name="fill">True</property>
                 <property name="padding">2</property>
                 <property name="position">0</property>
               </packing>
@@ -344,6 +372,7 @@
                 <child>
                   <object class="GtkViewport" id="data_flows_viewport">
                     <property name="visible">True</property>
+                    <property name="can_focus">False</property>
                     <property name="resize_mode">queue</property>
                     <child>
                       <placeholder/>
@@ -353,11 +382,14 @@
                 <child type="label">
                   <object class="GtkLabel" id="label_script6">
                     <property name="visible">True</property>
+                    <property name="can_focus">False</property>
                     <property name="label" translatable="yes">DataFlows</property>
                   </object>
                 </child>
               </object>
               <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
                 <property name="position">1</property>
               </packing>
             </child>
@@ -369,6 +401,7 @@
                 <child>
                   <object class="GtkViewport" id="outcomes_viewport">
                     <property name="visible">True</property>
+                    <property name="can_focus">False</property>
                     <property name="resize_mode">queue</property>
                     <child>
                       <placeholder/>
@@ -378,11 +411,14 @@
                 <child type="label">
                   <object class="GtkLabel" id="label_script4">
                     <property name="visible">True</property>
+                    <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Outcomes</property>
                   </object>
                 </child>
               </object>
               <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
                 <property name="padding">1</property>
                 <property name="position">2</property>
               </packing>
@@ -395,6 +431,7 @@
                 <child>
                   <object class="GtkViewport" id="transitions_viewport">
                     <property name="visible">True</property>
+                    <property name="can_focus">False</property>
                     <property name="resize_mode">queue</property>
                     <child>
                       <placeholder/>
@@ -404,11 +441,14 @@
                 <child type="label">
                   <object class="GtkLabel" id="label_script5">
                     <property name="visible">True</property>
+                    <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Transitions</property>
                   </object>
                 </child>
               </object>
               <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
                 <property name="position">3</property>
               </packing>
             </child>
@@ -420,6 +460,8 @@
         </child>
       </object>
       <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
         <property name="pack_type">end</property>
         <property name="position">1</property>
       </packing>

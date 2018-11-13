@@ -9,17 +9,18 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from rafcon.gui.views.utils.editor import EditorView, gtksourceview2
+from gi.repository import GtkSource
+from rafcon.gui.views.utils.editor import EditorView
 
 
 class DescriptionEditorView(EditorView):
 
     def __init__(self):
         super(DescriptionEditorView, self).__init__(name='DESCRIPTION', language='idl',
-                                                    editor_style="DESCRIPTION_EDITOR_STYLE")
+                                                    editor_style="SOURCE_EDITOR_STYLE")
 
         try:
-            if isinstance(self.textview, gtksourceview2.View):
+            if isinstance(self.textview, GtkSource.View):
                 self.textview.set_wrap_mode(True)
                 self.textview.set_tab_width(4)
                 self.textview.set_insert_spaces_instead_of_tabs(True)

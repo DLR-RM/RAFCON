@@ -22,7 +22,7 @@
 
 """
 
-import gtk
+from gi.repository import Gtk
 
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.state_editor.state_editor import StateEditorController
@@ -46,15 +46,15 @@ STATE_NAME_MAX_CHARS = 16
 
 def create_button(toggle, font, font_size, icon_code, release_callback=None, *additional_parameters):
     if toggle:
-        button = gtk.ToggleButton()
+        button = Gtk.ToggleButton()
     else:
-        button = gtk.Button()
+        button = Gtk.Button()
 
-    button.set_relief(gtk.RELIEF_NONE)
+    button.set_relief(Gtk.ReliefStyle.NONE)
     button.set_focus_on_click(False)
     button.set_size_request(width=constants.GRID_SIZE*3, height=constants.GRID_SIZE*3)
 
-    label = gtk.Label()
+    label = Gtk.Label()
     label.set_markup("<span font_desc='{0} {1}'>&#x{2};</span>".format(font, font_size, icon_code))
     button.add(label)
 
@@ -81,15 +81,15 @@ def create_sticky_button(callback, *additional_parameters):
 def create_tab_header(title, close_callback, sticky_callback, *additional_parameters):
     def handle_middle_click(widget, event, callback, *additional_parameters):
         """Calls `callback` in case the middle mouse button was pressed"""
-        if event.button == 2 and callback:
+        if event.get_button()[1] == 2 and callback:
             callback(event, *additional_parameters)
 
     sticky_button = None
-    label = gtk.Label(title)
+    label = Gtk.Label(label=title)
     label.set_max_width_chars(STATE_NAME_MAX_CHARS)
     close_button = create_tab_close_button(close_callback, *additional_parameters)
 
-    hbox = gtk.HBox()
+    hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
     if global_gui_config.get_config_value('KEEP_ONLY_STICKY_STATES_OPEN', True):
         sticky_button = create_sticky_button(sticky_callback, *additional_parameters)
         sticky_button.set_name('sticky_button')
@@ -97,7 +97,7 @@ def create_tab_header(title, close_callback, sticky_callback, *additional_parame
     hbox.pack_start(label, expand=True, fill=True, padding=0)
     hbox.pack_start(close_button, expand=False, fill=False, padding=0)
 
-    event_box = gtk.EventBox()
+    event_box = Gtk.EventBox()
     event_box.set_name("tab_label")  # required for gtkrc
     event_box.connect('button-press-event', handle_middle_click, close_callback, *additional_parameters)
     event_box.tab_label = label
@@ -212,8 +212,9 @@ class StatesEditorController(ExtendedController):
         # TODO check if some models are the same in the new model - but only if widgets update if parent has changed
         def close_all_tabs_of_related_state_models_recursively(parent_state_m):
             if isinstance(parent_state_m, ContainerStateModel):
-                for child_state_m in parent_state_m.states.values():
-                    close_all_tabs_of_related_state_models_recursively(child_state_m)
+                if parent_state_m.states:  # maybe empty if the states editor is under destruction
+                    for child_state_m in parent_state_m.states.values():
+                        close_all_tabs_of_related_state_models_recursively(child_state_m)
             state_identifier = self.get_state_identifier(parent_state_m)
             self.close_page(state_identifier, delete=True)
 
@@ -285,7 +286,7 @@ class StatesEditorController(ExtendedController):
                 # observe changed to set the mark dirty flag
                 handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
                                                                                 state_m)
-                self.view.get_top_widget().connect('expose_event', state_editor_view.source_view.on_expose_event)
+                self.view.get_top_widget().connect('draw', state_editor_view.source_view.on_draw)
             else:
                 handler_id = None
             source_code_view_is_dirty = False

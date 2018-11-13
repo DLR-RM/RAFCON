@@ -16,13 +16,13 @@ import subprocess
 import distutils.log
 
 try:
-    import gtk
+    from gi.repository import Gtk
 except ImportError:
-    gtk = None
+    Gtk = None
 try:
-    import glib
+    from gi.repository import GLib
 except ImportError:
-    glib = None
+    GLib = None
 
 assets_folder = os.path.join('source', 'rafcon', 'gui', 'assets')
 share_folder = "share"
@@ -33,11 +33,11 @@ def install_fonts(logger=None, restart=False):
         log = logger
     else:
         log = distutils.log
-    if not gtk:
+    if not Gtk:
         log.warn("No GTK found. Will not install fonts.")
         return
 
-    tv = gtk.TextView()
+    tv = Gtk.TextView()
     try:
         context = tv.get_pango_context()
     except Exception as e:
@@ -94,18 +94,18 @@ def install_gtk_source_view_styles(logger=None):
         log = logger
     else:
         log = distutils.log
-    if glib:
-        user_data_folder = glib.get_user_data_dir()
+    if GLib:
+        user_data_folder = GLib.get_user_data_dir()
     else:
         user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
-    user_source_view_style_path = os.path.join(user_data_folder, 'gtksourceview-2.0', 'styles')
+    user_source_view_style_path = os.path.join(user_data_folder, 'gtksourceview-3.0', 'styles')
 
     try:
         if not os.path.exists(user_source_view_style_path):
             os.makedirs(user_source_view_style_path)
 
         # Copy all .xml source view style files from all themes to local user styles folder
-        themes_path = os.path.join(assets_folder, "themes")
+        themes_path = os.path.join(assets_folder, "share", "themes")
         for theme in os.listdir(themes_path):
             theme_source_view_path = os.path.join(themes_path, theme, "gtk-sourceview")
             if not os.path.isdir(theme_source_view_path):
@@ -125,8 +125,8 @@ def install_libraries(logger=None, overwrite=True):
         log = logger
     else:
         log = distutils.log
-    if glib:
-        user_data_folder = glib.get_user_data_dir()
+    if GLib:
+        user_data_folder = GLib.get_user_data_dir()
     else:
         user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
     user_library_path = os.path.join(user_data_folder, 'rafcon', 'libraries')

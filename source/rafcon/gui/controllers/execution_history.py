@@ -22,8 +22,9 @@
 """
 
 from os import path
-import gtk
-import gobject
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GObject
 from threading import RLock
 
 import rafcon
@@ -66,7 +67,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         assert isinstance(view, ExecutionHistoryView)
 
         super(ExecutionHistoryTreeController, self).__init__(model, view)
-        self.history_tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str)
+        self.history_tree_store = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT, str)
         # a TreeView
         self.history_tree = view['history_tree']
         self.history_tree.set_model(self.history_tree_store)
@@ -134,7 +135,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         final_string = menu_item_string
         if len(menu_item_string) > 2000:
             final_string = menu_item_string[:1000] + "\n...\n" + menu_item_string[-1000:]
-        menu_item = gtk.MenuItem(final_string)
+        menu_item = Gtk.MenuItem(final_string)
         menu_item.set_sensitive(False)
         menu_item.show()
         popup_menu.append(menu_item)
@@ -144,7 +145,7 @@ class ExecutionHistoryTreeController(ExtendedController):
         step as tooltip or fold and unfold the tree by double-click and select respective state for double clicked
         element.
         """
-        if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
+        if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
 
             (model, row) = self.history_tree.get_selection().get_selected()
             if row is not None:
@@ -174,7 +175,7 @@ class ExecutionHistoryTreeController(ExtendedController):
 
             return True
 
-        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 2:
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 2:
             x = int(event.x)
             y = int(event.y)
             pthinfo = self.history_tree.get_path_at_pos(x, y)
@@ -184,7 +185,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 self.history_tree.set_cursor(path, col, 0)
                 self.open_selected_history_separately(None)
 
-        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 3:
             x = int(event.x)
             y = int(event.y)
             time = event.time
@@ -194,7 +195,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 self.history_tree.grab_focus()
                 self.history_tree.set_cursor(path, col, 0)
 
-                popup_menu = gtk.Menu()
+                popup_menu = Gtk.Menu()
 
                 model, row = self.history_tree.get_selection().get_selected()
                 history_item = model[row][self.HISTORY_ITEM_STORAGE_ID]
@@ -234,7 +235,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                         self.append_string_to_menu(popup_menu, "------------------------")
 
                 popup_menu.show()
-                popup_menu.popup(None, None, None, event.button, time)
+                popup_menu.popup(None, None, None, None, event.get_button()[1], time)
 
             return True
 
@@ -247,7 +248,7 @@ class ExecutionHistoryTreeController(ExtendedController):
     def get_history_item_for_tree_iter(self, child_tree_iter):
         """Hands history item for tree iter and compensate if tree item is a dummy item
 
-        :param gtk.TreeIter child_tree_iter: Tree iter of row
+        :param Gtk.TreeIter child_tree_iter: Tree iter of row
         :rtype rafcon.core.execution.execution_history.HistoryItem:
         :return history tree item:
         """
@@ -278,7 +279,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, n)
                 store_tree_expansion(child_iter, expansion_state)
 
-        root_iter = self.history_tree_store.get_iter_root()
+        root_iter = self.history_tree_store.get_iter_first()
         if not root_iter:
             return
         current_expansion_state = {}
@@ -307,7 +308,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, n)
                 restore_tree_expansion(child_iter, expansion_state)
 
-        root_iter = self.history_tree_store.get_iter_root()
+        root_iter = self.history_tree_store.get_iter_first()
         if not root_iter:
             return
         state_machine = self.get_history_item_for_tree_iter(root_iter).state_reference.get_state_machine()
@@ -409,12 +410,12 @@ class ExecutionHistoryTreeController(ExtendedController):
     def insert_history_item(self, parent, history_item, description, dummy=False):
         """Enters a single history item into the tree store
 
-        :param gtk.TreeItem parent: Parent tree item
+        :param Gtk.TreeItem parent: Parent tree item
         :param HistoryItem history_item: History item to be inserted
         :param str description: A description to be added to the entry
         :param None dummy: Whether this is just a dummy entry (wrapper for concurrency items)
         :return: Inserted tree item
-        :rtype: gtk.TreeItem
+        :rtype: Gtk.TreeItem
         """
         if not history_item.state_reference:
             logger.error("This must never happen! Current history_item is {}".format(history_item))
@@ -440,7 +441,7 @@ class ExecutionHistoryTreeController(ExtendedController):
 
         If there are concurrency history items, the method is called recursively.
 
-        :param gtk.TreeItem parent: the parent to add the next history item to
+        :param Gtk.TreeItem parent: the parent to add the next history item to
         :param ExecutionHistory execution_history: all history items of a certain state machine execution
         :param bool is_root: Whether this is the root execution history
         """
@@ -461,7 +462,11 @@ class ExecutionHistoryTreeController(ExtendedController):
                     if next_history_item and next_history_item.call_type is CallType.CONTAINER:
                         current_parent = tree_item
                         self.insert_history_item(current_parent, next_history_item, "Enter")
-                        next(execution_history_iterator)  # skips the next history item in the iterator
+                        try:
+                            next(execution_history_iterator)  # skips the next history item in the iterator
+                        except StopIteration as e:
+                            # the execution engine does not have another item
+                            return
 
             else:  # history_item is ReturnItem
                 if current_parent is None:
@@ -480,7 +485,7 @@ class ExecutionHistoryTreeController(ExtendedController):
     def insert_concurrent_execution_histories(self, parent, concurrent_execution_histories):
         """Adds the child execution histories of a concurrency state.
 
-        :param gtk.TreeItem parent: the parent to add the next history item to
+        :param Gtk.TreeItem parent: the parent to add the next history item to
         :param list[ExecutionHistory] concurrent_execution_histories: a list of all child execution histories
         :return:
         """

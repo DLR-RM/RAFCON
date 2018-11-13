@@ -70,7 +70,7 @@ def south_east_coordinates_of_model(gaphas_view):
 
 
 def create_and_resize_state():
-    import gtk
+    from gi.repository import Gtk
     from rafcon.gui.singleton import main_window_controller
     # gvm = rafcon.core.singleton.global_variable_manager
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')

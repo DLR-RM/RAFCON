@@ -18,7 +18,7 @@
 
 """
 
-from gtkmvc import Model
+from gtkmvc3.model_mt import ModelMT
 
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.container_state import ContainerState
@@ -31,7 +31,7 @@ from rafcon.gui.controllers.state_editor.outcomes import StateOutcomesEditorCont
 from rafcon.gui.models import LibraryStateModel, ContainerStateModel
 
 
-class LinkageOverviewController(ExtendedController, Model):
+class LinkageOverviewController(ExtendedController, ModelMT):
     def __init__(self, model, view):
         ExtendedController.__init__(self, model, view)
 

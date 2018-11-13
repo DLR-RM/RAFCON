@@ -101,7 +101,7 @@ def model_has_empty_meta(m, ignored_keys=None, ignored_partial_keys=None):
 
 
 def get_y_axis_and_gaphas_editor_flag():
-    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    gaphas_editor = global_gui_config.get_config_value('GAPHAS_EDITOR', True)
     y_axis_mirror = 1. if gaphas_editor else -1.
     return gaphas_editor, y_axis_mirror
 
@@ -462,7 +462,7 @@ def scale_library_content(library_state_m, gaphas_editor=True):
     models_dict = {'state': library_state_m.state_copy}
     for state_element_key in library_state_m.state_copy.state.state_element_attrs:
         state_element_list = getattr(library_state_m.state_copy, state_element_key)
-        # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
+        # Some models are hold in a gtkmvc3.support.wrappers.ObsListWrapper, not a list
         if hasattr(state_element_list, 'keys'):
             state_element_list = state_element_list.values()
         models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
@@ -588,7 +588,7 @@ def offset_rel_pos_of_models_meta_data_according_parent_state(models_dict):
     :param models_dict: dict that hold lists of meta data with state attribute consistent keys
     :return:
     """
-    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    gaphas_editor = global_gui_config.get_config_value('GAPHAS_EDITOR', True)
     old_parent_rel_pos = models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
     offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset=old_parent_rel_pos, gaphas_editor=gaphas_editor)
 
@@ -606,7 +606,7 @@ def scale_meta_data_according_states(models_dict):
     :param models_dict: dictionary that hold lists of meta data with state attribute consistent keys
     :return:
     """
-    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    gaphas_editor = global_gui_config.get_config_value('GAPHAS_EDITOR', True)
 
     left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)
 

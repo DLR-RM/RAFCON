@@ -11,9 +11,11 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
-import gobject
-from gtkmvc import View
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GObject
+from gi.repository import GdkPixbuf
+from gtkmvc3.view import View
 from rafcon.gui.utils import constants
 from rafcon.gui.config import global_gui_config as gui_config
 
@@ -23,20 +25,22 @@ class StateMachinesEditorView(View):
     def __init__(self):
         View.__init__(self)
         self.notebook = PlusAddNotebook()
-        self.notebook.set_tab_hborder(constants.TAB_BORDER_WIDTH)
-        self.notebook.set_tab_vborder(constants.TAB_BORDER_WIDTH)
+        # gtk TODO: the methods set_tab_hborder and set_tab_vborder do not exist any more, find replacement
+        # self.notebook.set_tab_hborder(constants.TAB_BORDER_WIDTH)
+        # self.notebook.set_tab_vborder(constants.TAB_BORDER_WIDTH)
         self.notebook.set_scrollable(True)
         self.notebook.set_name("state_machines_notebook")
+        self.notebook.get_style_context().add_class("secondary")
         self.notebook.show()
 
         self['notebook'] = self.notebook
         self.top = 'notebook'
 
 
-gobject.signal_new("add_clicked", gtk.Notebook, gobject.SIGNAL_RUN_FIRST, None, ())
+GObject.signal_new("add_clicked", Gtk.Notebook, GObject.SignalFlags.RUN_FIRST, None, ())
 
 
-class PlusAddNotebook(gtk.Notebook):
+class PlusAddNotebook(Gtk.Notebook):
     pixbuf_data = [
         "13 13 2 1",
         "  c None",
@@ -57,12 +61,14 @@ class PlusAddNotebook(gtk.Notebook):
     ]
 
     def __init__(self):
-        gtk.Notebook.__init__(self)
+        super(PlusAddNotebook, self).__init__()
 
         self.connect("button_release_event", self.on_button_release)
         self.connect('button_press_event', self.on_button_press)
-        self.connect('expose_event', self.on_expose_event)
-        self.pixbuf = gtk.gdk.pixbuf_new_from_xpm_data(self.pixbuf_data)
+        # expose-event does not exist any more, use the 'draw' signal instead see:
+        # https://developer.gnome.org/gtk3/stable/ch26s02.html#id-1.6.3.4.11
+        self.connect('draw', self.on_draw)
+        self.pixbuf = GdkPixbuf.Pixbuf.new_from_xpm_data(self.pixbuf_data)
 
         self.enable_add_button = True
         self._add_button_drawn = False
@@ -79,7 +85,7 @@ class PlusAddNotebook(gtk.Notebook):
         right_row_end_x = self.get_allocation().x + self.get_allocation().width - arrow_icon_width
         if pb_x - constants.ICON_MARGIN <= event.x <= right_row_end_x and \
                 pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN and \
-                event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
+                event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
             self.emit("add_clicked")
             return True
 
@@ -97,11 +103,11 @@ class PlusAddNotebook(gtk.Notebook):
 
         if pb_x - constants.ICON_MARGIN <= event.x <= pb_x + pb_width + constants.ICON_MARGIN and \
                 pb_y - constants.ICON_MARGIN <= event.y <= pb_y + pb_height + constants.ICON_MARGIN \
-                and self._add_button_drawn and event.state & gtk.gdk.BUTTON1_MASK:
+                and self._add_button_drawn and event.get_state()[1] & Gdk.ModifierType.BUTTON1_MASK:
             self.emit("add_clicked")
             return True
 
-    def on_expose_event(self, widget, event):
+    def on_draw(self, widget, event):
         if self.get_n_pages() > 0 and self.enable_add_button:
             self.update_add_button()
 
@@ -114,7 +120,11 @@ class PlusAddNotebook(gtk.Notebook):
 
         self._add_button_drawn = self.is_there_space_for_a_button()
         if self._add_button_drawn:
-            self.window.draw_pixbuf(None, self.pixbuf, 0, 0, x, y, -1, -1, gtk.gdk.RGB_DITHER_NONE, 0, 0)
+            # Gtk TODO
+            # self.get_window().draw_pixbuf(None, self.pixbuf, 0, 0, x, y, -1, -1, Gdk.RGB_DITHER_NONE, 0, 0)
+            context = self.get_window().cairo_create()
+            Gdk.cairo_set_source_pixbuf(context, self.pixbuf, x, y)
+            context.paint()
 
     def get_pixbuf_xy(self):
         pb_width = self.pixbuf.get_width()
@@ -127,7 +137,7 @@ class PlusAddNotebook(gtk.Notebook):
         return x, y
 
     def get_pixbuf_xy_root(self):
-        root_x, root_y = self.window.get_root_origin()
+        root_x, root_y = self.get_window().get_root_origin()
         x, y = self.get_pixbuf_xy()
 
         x += root_x

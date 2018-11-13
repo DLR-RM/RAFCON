@@ -1,4 +1,4 @@
-from gtkmvc.observable import Observable
+from gtkmvc3.observable import Observable
 import testing_utils
 import pytest
 

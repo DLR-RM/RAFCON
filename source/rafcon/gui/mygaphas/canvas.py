@@ -59,7 +59,12 @@ class MyCanvas(gaphas.canvas.Canvas):
         if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
             # print "remove", item
             self._remove_view_maps(item)
-        super(MyCanvas, self).remove(item)
+
+        # Gtk TODO: fix destruct of gaphas
+        try:
+            super(MyCanvas, self).remove(item)
+        except KeyError as e:
+            logger.info("The destruct of gaphas items has to be fixed!")
 
     def add_port(self, port_v):
         # The LibraryState and its state_copy share the same port core_elements
@@ -96,7 +101,7 @@ class MyCanvas(gaphas.canvas.Canvas):
     def get_view_for_model(self, model):
         """Searches and return the View for the given model
 
-        :param gtkmvc.ModelMT model: The model of the searched view
+        :param gtkmvc3.ModelMT model: The model of the searched view
         :return: The view for the given model or None if not found
         """
         return self._model_view_map.get(model)
@@ -143,21 +148,21 @@ class MyCanvas(gaphas.canvas.Canvas):
         if trigger_update:
             self.update_now()
 
-        import gtk
-        import gobject
+        from gi.repository import Gtk
+        from gi.repository import GObject
         from threading import Event
         event = Event()
 
-        # Handle all events from gaphas, but not from gtkmvc
-        # Make use of the priority, which is higher for gaphas then for gtkmvc
+        # Handle all events from gaphas, but not from gtkmvc3
+        # Make use of the priority, which is higher for gaphas then for gtkmvc3
         def priority_handled(event):
             event.set()
-        priority = (gobject.PRIORITY_HIGH_IDLE + gobject.PRIORITY_DEFAULT_IDLE) / 2
+        priority = (GObject.PRIORITY_HIGH_IDLE + GObject.PRIORITY_DEFAULT_IDLE) / 2
         # idle_add is necessary here, as we do not want to block the user from interacting with the GUI
         # while gaphas is redrawing
-        gobject.idle_add(priority_handled, event, priority=priority)
+        GObject.idle_add(priority_handled, event, priority=priority)
         while not event.is_set():
-            gtk.main_iteration(False)
+            Gtk.main_iteration()
 
     def resolve_constraint(self, constraints):
         constraints = constraints if hasattr(constraints, "__iter__") else [constraints]

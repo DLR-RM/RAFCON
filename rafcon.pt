@@ -23,7 +23,7 @@ DEPENDS.sled11*     = gtk_etc==0,
                       gtk_etc_python==0,
                       python-jsonconversion==0.2,
                       python_yaml_configuration==0.0
-DEPENDS.osl*        = python-gtkmvc==1.99,
+DEPENDS.osl*        = python-gtkmvc3==1.99,
                       python-gaphas==0.7,
                       python-jsonconversion==0.2,
                       python_yaml_configuration==0.0,

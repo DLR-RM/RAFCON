@@ -1,4 +1,4 @@
-from gtkmvc.observer import Observer
+from gtkmvc3.observer import Observer
 
 import pytest
 import testing_utils

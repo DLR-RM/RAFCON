@@ -20,7 +20,7 @@
 
 import os
 import subprocess
-import gtk
+from gi.repository import Gtk
 import shlex
 import contextlib
 from pylint import lint
@@ -66,7 +66,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
         lib_with_show_content = isinstance(model, LibraryStateModel) and not model.show_content()
         model = model.state_copy if lib_with_show_content else model
 
-        # unfortunately this cannot be down with super, as gtkmvc does not use super() consistently
+        # unfortunately this cannot be down with super, as gtkmvc3 does not use super() consistently
         EditorController.__init__(self, model, view, observed_method="script_text")
         AbstractExternalEditor.__init__(self)
         self.saved_initial = False
@@ -151,8 +151,8 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
         # Without the loop, this function would block the GTK main loop and the log message would appear after the
         # function has finished
         # TODO: run parser in separate thread
-        while gtk.events_pending():
-            gtk.main_iteration_do()
+        while Gtk.events_pending():
+            Gtk.main_iteration_do(False)
 
         # get script
         current_text = self.view.get_text()
@@ -209,7 +209,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
 
             RAFCONButtonDialog(message_string, ["Save with errors", "Do not save"],
                                on_message_dialog_response_signal,
-                               message_type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+                               message_type=Gtk.MessageType.WARNING, parent=self.get_root_window())
         else:
             self.set_script_text(current_text)
 

@@ -10,7 +10,11 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from cairo import ImageSurface, FORMAT_ARGB32, Context, Error
-from gtk.gdk import CairoContext
+from gi.repository import Gtk
+from gi.repository import Gdk
+# Gtk TODO
+# from Gtk.gdk import CairoContext
+
 
 from math import ceil, sqrt
 
@@ -110,9 +114,8 @@ class ImageCache(object):
         :return: Cairo context to draw on
         """
         cairo_context = Context(self.__image)
-        c = CairoContext(cairo_context)
-        c.scale(zoom * self.multiplicator, zoom * self.multiplicator)
-        return c
+        cairo_context.scale(zoom * self.multiplicator, zoom * self.multiplicator)
+        return cairo_context
 
     def __set_cached_image(self, image, width, height, zoom, parameters):
         self.__image = image

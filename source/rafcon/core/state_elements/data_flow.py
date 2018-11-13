@@ -17,7 +17,7 @@
 
 """
 
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.id_generator import generate_data_flow_id
 from rafcon.core.state_elements.state_element import StateElement
@@ -119,7 +119,7 @@ class DataFlow(StateElement):
         }
 
 #########################################################################
-# Properties for all class field that must be observed by the gtkmvc
+# Properties for all class field that must be observed by the gtkmvc3
 #########################################################################
 
     @lock_state_machine

@@ -76,8 +76,3 @@ ToolBarView (in tool_bar)
 -------------------------
 
 .. automodule:: rafcon.gui.views.tool_bar
-
-TopToolBarView (in top_tool_bar)
---------------------------------
-
-.. automodule:: rafcon.gui.views.top_tool_bar

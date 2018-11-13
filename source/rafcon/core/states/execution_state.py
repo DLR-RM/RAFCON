@@ -23,7 +23,7 @@ import sys
 import os
 from copy import copy, deepcopy
 
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.states.state import State
 from rafcon.core.decorators import lock_state_machine
@@ -167,7 +167,7 @@ class ExecutionState(State):
             return self.finalize(Outcome(-1, "aborted"))
 
 #########################################################################
-# Properties for all class fields that must be observed by gtkmvc
+# Properties for all class fields that must be observed by gtkmvc3
 #########################################################################
 
     @State.name.setter

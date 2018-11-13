@@ -23,7 +23,7 @@ import traceback
 from copy import copy, deepcopy
 from threading import Condition
 
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.custom_exceptions import RecoveryModeException
 from rafcon.core.decorators import lock_state_machine
@@ -2064,7 +2064,7 @@ class ContainerState(State):
         return number_of_all_transitions + len(self.transitions)
 
     # ---------------------------------------------------------------------------------------------
-    # ------------ Properties for all class fields that must be observed by gtkmvc ----------------
+    # ------------ Properties for all class fields that must be observed by gtkmvc3 ----------------
     # ---------------------------------------------------------------------------------------------
 
     @property

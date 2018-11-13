@@ -14,7 +14,7 @@
 
 from copy import deepcopy
 
-from gtkmvc import ModelMT
+from gtkmvc3.model_mt import ModelMT
 
 from rafcon.core.states.container_state import ContainerState
 from rafcon.gui.models.abstract_state import AbstractStateModel, MetaSignalMsg
@@ -122,7 +122,7 @@ class ContainerStateModel(StateModel):
         Recursively un-registers all observers and removes references to child models. Extends the destroy method of
         the base class by child elements of a container state.
         """
-        super(ContainerStateModel, self).prepare_destruction(recursive)
+        logger.verbose("Prepare destruction container state ...")
         if recursive:
             for scoped_variable in self.scoped_variables:
                 scoped_variable.prepare_destruction()
@@ -134,6 +134,11 @@ class ContainerStateModel(StateModel):
         del self.transitions[:]
         del self.data_flows[:]
         self.states.clear()
+        self.scoped_variables = None
+        self.transitions = None
+        self.data_flows = None
+        self.states = None
+        super(ContainerStateModel, self).prepare_destruction(recursive)
 
     def update_hash(self, obj_hash):
         super(ContainerStateModel, self).update_hash(obj_hash)

@@ -20,8 +20,9 @@
 
 """
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
+from gi.repository import Gdk
 import os
 from functools import partial
 
@@ -30,7 +31,7 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.library_manager import LibraryManagerModel
-from rafcon.gui.helpers.label import create_image_menu_item, append_sub_menu_to_parent_menu
+from rafcon.gui.helpers.label import create_menu_item, append_sub_menu_to_parent_menu
 from rafcon.gui.helpers.text_formatting import format_folder_name_human_readable
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.utils import constants
@@ -51,13 +52,14 @@ class LibraryTreeController(ExtendedController):
 
     def __init__(self, model, view):
         assert isinstance(model, LibraryManagerModel)
-        assert isinstance(view, gtk.TreeView)
+        assert isinstance(view, Gtk.TreeView)
         ExtendedController.__init__(self, model, view)
-        self.tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str, str, str)
+        self.tree_store = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT, str, str, str)
         view.set_model(self.tree_store)
         view.set_tooltip_column(3)
 
-        view.drag_source_set(gtk.gdk.BUTTON1_MASK, [('STRING', 0, 0)], gtk.gdk.ACTION_COPY)
+        # Gtk TODO: solve via Gtk.TargetList? https://python-gtk-3-tutorial.readthedocs.io/en/latest/drag_and_drop.html
+        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [Gtk.TargetEntry.new('STRING', 0, 0)], Gdk.DragAction.COPY)
 
         self.library_row_iter_dict_by_library_path = {}
         self.__expansion_state = None
@@ -72,46 +74,46 @@ class LibraryTreeController(ExtendedController):
         self.view.connect("drag-begin", self.on_drag_begin)
 
     def generate_right_click_menu(self, kind='library'):
-        menu = gtk.Menu()
+        menu = Gtk.Menu()
         if kind == 'library':
-            menu.append(create_image_menu_item("Add as library (link)", constants.BUTTON_ADD,
-                                               partial(self.insert_button_clicked, as_template=False)))
-            menu.append(create_image_menu_item("Add as template (copy)", constants.BUTTON_COPY,
-                                               partial(self.insert_button_clicked, as_template=True)))
-            menu.append(gtk.SeparatorMenuItem())
-            menu.append(create_image_menu_item("Open", constants.BUTTON_OPEN, self.open_button_clicked))
-            menu.append(create_image_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
-            menu.append(gtk.SeparatorMenuItem())
-            menu.append(create_image_menu_item("Remove library", constants.BUTTON_DEL, self.delete_button_clicked))
+            menu.append(create_menu_item("Add as library (link)", constants.BUTTON_ADD,
+                                         partial(self.insert_button_clicked, as_template=False)))
+            menu.append(create_menu_item("Add as template (copy)", constants.BUTTON_COPY,
+                                         partial(self.insert_button_clicked, as_template=True)))
+            menu.append(Gtk.SeparatorMenuItem())
+            menu.append(create_menu_item("Open", constants.BUTTON_OPEN, self.open_button_clicked))
+            menu.append(create_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
+            menu.append(Gtk.SeparatorMenuItem())
+            menu.append(create_menu_item("Remove library", constants.BUTTON_DEL, self.delete_button_clicked))
 
             sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute as library", menu,
                                                                      constants.BUTTON_REFR)
 
-            sub_menu.append(create_image_menu_item("Keep state name", constants.BUTTON_LEFTA,
-                            partial(self.substitute_as_library_clicked, keep_name=True)))
-            sub_menu.append(create_image_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
-                            partial(self.substitute_as_library_clicked, keep_name=False)))
+            sub_menu.append(create_menu_item("Keep state name", constants.BUTTON_LEFTA,
+                                             partial(self.substitute_as_library_clicked, keep_name=True)))
+            sub_menu.append(create_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
+                                             partial(self.substitute_as_library_clicked, keep_name=False)))
 
             sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute as template", menu,
                                                                      constants.BUTTON_REFR)
 
-            sub_menu.append(create_image_menu_item("Keep state name", constants.BUTTON_LEFTA,
-                            partial(self.substitute_as_template_clicked, keep_name=True)))
-            sub_menu.append(create_image_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
-                            partial(self.substitute_as_template_clicked, keep_name=False)))
+            sub_menu.append(create_menu_item("Keep state name", constants.BUTTON_LEFTA,
+                                             partial(self.substitute_as_template_clicked, keep_name=True)))
+            sub_menu.append(create_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
+                                             partial(self.substitute_as_template_clicked, keep_name=False)))
         elif kind == 'library root':
-            menu.append(create_image_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
-            menu.append(create_image_menu_item("Remove library root", constants.BUTTON_DEL, self.delete_button_clicked))
+            menu.append(create_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
+            menu.append(create_menu_item("Remove library root", constants.BUTTON_DEL, self.delete_button_clicked))
         elif kind == 'libraries':
-            menu.append(create_image_menu_item("Remove libraries", constants.BUTTON_DEL, self.delete_button_clicked))
+            menu.append(create_menu_item("Remove libraries", constants.BUTTON_DEL, self.delete_button_clicked))
         elif kind == 'library tree':
-            menu.append(create_image_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
+            menu.append(create_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
 
         return menu
 
     def mouse_click(self, widget, event=None):
         # Double click with left mouse button
-        if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
+        if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][self.ITEM_STORAGE_ID], dict):  # double click on folder, not library
                 state_row_path = self.tree_store.get_path(row)
@@ -125,7 +127,7 @@ class LibraryTreeController(ExtendedController):
             return True
 
         # Single right click
-        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 3:
 
             x = int(event.x)
             y = int(event.y)
@@ -147,7 +149,7 @@ class LibraryTreeController(ExtendedController):
             else:
                 menu = self.generate_right_click_menu('library tree')
             menu.show_all()
-            menu.popup(None, None, None, event.button, time)
+            menu.popup(None, None, None, None, event.get_button()[1], time)
             return True
 
     @ExtendedController.observe("library_manager", after=True)
@@ -250,7 +252,7 @@ class LibraryTreeController(ExtendedController):
         :param widget:
         :param context:
         """
-        self.view.drag_source_set_icon_stock(gtk.STOCK_NEW)
+        self.view.drag_source_set_icon_stock(Gtk.STOCK_NEW)
 
     def insert_button_clicked(self, widget, as_template=False):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
@@ -338,7 +340,7 @@ class LibraryTreeController(ExtendedController):
                                        partial_message)
 
             width = 8*len("physical path:        " + library_file_system_path)
-            dialog = RAFCONButtonDialog(message_string, button_texts, message_type=gtk.MESSAGE_QUESTION,
+            dialog = RAFCONButtonDialog(message_string, button_texts, message_type=Gtk.MessageType.QUESTION,
                                         parent=self.get_root_window(), width=min(width, 1400))
             response_id = dialog.run()
             dialog.destroy()

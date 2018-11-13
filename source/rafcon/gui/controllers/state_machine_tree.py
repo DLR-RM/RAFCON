@@ -19,8 +19,9 @@
 
 """
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
+from gi.repository import Gdk
 from functools import partial
 
 from rafcon.core.states.state import State
@@ -59,7 +60,7 @@ class StateMachineTreeController(TreeViewController):
 
     def __init__(self, model, view):
         assert isinstance(model, StateMachineManagerModel)
-        tree_store = gtk.TreeStore(str, str, str, gobject.TYPE_PYOBJECT, str)
+        tree_store = Gtk.TreeStore(str, str, str, GObject.TYPE_PYOBJECT, str)
         super(StateMachineTreeController, self).__init__(model, view, view, tree_store)
 
         self.add_controller("state_right_click_ctrl", StateMachineTreeRightClickMenuController(model, view))
@@ -101,6 +102,7 @@ class StateMachineTreeController(TreeViewController):
 
     def register(self):
         """Change the state machine that is observed for new selected states to the selected state machine."""
+        self._do_selection_update = True
         # relieve old model
         if self.__my_selected_sm_id is not None:  # no old models available
             self.relieve_model(self._selected_sm_model)
@@ -113,7 +115,9 @@ class StateMachineTreeController(TreeViewController):
             self.update()
         else:
             self._selected_sm_model = None
+            self.state_row_iter_dict_by_state_path.clear()
             self.tree_store.clear()
+        self._do_selection_update = False
 
     def paste_action_callback(self, *event):
         """Callback method for paste action"""
@@ -244,6 +248,9 @@ class StateMachineTreeController(TreeViewController):
         self.redo_expansion_state()
 
     def store_expansion_state(self):
+        if self.__my_selected_sm_id is None:
+            return
+
         try:
             act_expansion_state = {}
             for state_path, state_row_iter in self.state_row_iter_dict_by_state_path.iteritems():
@@ -269,7 +276,7 @@ class StateMachineTreeController(TreeViewController):
                 state_row_path = self.tree_store.get_path(state_row_iter)
                 self.view.expand_to_path(state_row_path)
 
-        if self.__my_selected_sm_id in self.__expansion_state:
+        if self.__my_selected_sm_id is not None and self.__my_selected_sm_id in self.__expansion_state:
             expansion_state = self.__expansion_state[self.__my_selected_sm_id]
             try:
                 for state_path, state_row_expanded in expansion_state.iteritems():
@@ -495,12 +502,12 @@ class StateMachineTreeController(TreeViewController):
             return None, set()
 
     def mouse_click(self, widget, event=None):
-        if event.type == gtk.gdk._2BUTTON_PRESS:
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
             return self._handle_double_click(event)
 
     def _handle_double_click(self, event):
         """ Double click with left mouse button focuses the state and toggles the collapse status"""
-        if event.button == 1:  # Left mouse button
+        if event.get_button()[1] == 1:  # Left mouse button
             path_info = self.tree_view.get_path_at_pos(int(event.x), int(event.y))
             if path_info:  # Valid entry was clicked on
                 path = path_info[0]
@@ -524,6 +531,6 @@ class StateMachineTreeController(TreeViewController):
         if state_machine_m is None and self._selected_sm_model and \
                 self._selected_sm_model.selection.get_selected_state():
             self.update_selection_sm_prior()
-        elif signal_msg and self.tree_store.get_iter_root():
+        elif signal_msg and self.tree_store.get_iter_first():
             if any(issubclass(cls, self.CORE_ELEMENT_CLASS) for cls in signal_msg.arg.affected_core_element_classes):
                 self.update_selection_sm_prior()

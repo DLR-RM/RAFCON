@@ -9,19 +9,6 @@ import pytest
 logger = log.get_logger(__name__)
 
 
-class StructHelper:
-    def __init__(self, x, y, text):
-        self.x = x
-        self.y = y
-        self.text = text
-
-    def set_text(self, text):
-        self.text = text
-
-    def get_text(self):
-        return self.text
-
-
 def create_models(*args, **kargs):
     import rafcon.core.singleton
     import rafcon.gui.singleton
@@ -45,6 +32,23 @@ def create_models(*args, **kargs):
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_drag_and_drop_tests(*args):
+
+    # TODO test should use real SelectionData objects and motion to provide selection
+    # -> currently very limited test scenario
+
+    class StructHelper:
+        """Used to imitate a SelectionData Class"""
+        def __init__(self, x, y, text):
+            self.x = x
+            self.y = y
+            self.text = text
+
+        def set_text(self, text, length):
+            self.text = text
+
+        def get_text(self):
+            return self.text
+
     # TODO test needs check on position -> is the state drawn where it was dropped?
     sm_manager_model = args[0]
     main_window_controller = args[1]
@@ -122,7 +126,7 @@ def test_drag_and_drop_test(caplog):
                                     rafcon.gui.singleton.main_window_controller)
     finally:
         testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=1, expected_errors=0)
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
 
 if __name__ == '__main__':

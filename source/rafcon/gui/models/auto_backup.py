@@ -15,8 +15,8 @@ import os
 import time
 import threading
 
-import gtk
-from gtkmvc import ModelMT
+from gi.repository import Gtk
+from gtkmvc3.model_mt import ModelMT
 
 from rafcon.core.storage import storage
 import rafcon.core.singleton as core_singletons
@@ -227,7 +227,7 @@ def check_for_crashed_rafcon_instances():
     #     print "Restorable state machines: \n" + '\n'.join([elem[0] for elem in restorable_sm if elem[0] is not None])
 
     if restorable_sm and any([path is not None for path, pid, lock_file, m_time, full_path_dirty_lock in restorable_sm]):
-        message_string = "There have been found state machines of not correctly closed rafcon instances?\n\n" \
+        message_string = "State machines of not correctly closed RAFCON instances have been found.\n\n" \
                          "This check and dialog can be disabled by setting 'AUTO_RECOVERY_CHECK': False " \
                          "in the GUI configuration file.\n\n" \
                          "The following state machines have been modified and not saved: \n"
@@ -254,7 +254,7 @@ def check_for_crashed_rafcon_instances():
                                            button_texts=("Apply", "Remind me Later.", "Ignore -> Remove all Notifications/Locks."),
                                            callback=on_message_dialog_response_signal, callback_args=[restorable_sm],
                                            table_header=table_header, table_data=table_data, toggled_callback=on_toggled,
-                                           message_type=gtk.MESSAGE_QUESTION,
+                                           message_type=Gtk.MessageType.QUESTION,
                                            parent=gui_singletons.main_window_controller.view.get_top_widget(),
                                            width=800, standalone=False)
         dialog.activate()

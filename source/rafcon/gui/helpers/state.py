@@ -396,7 +396,7 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
 
             for state_element_key in state_m_to_insert.state.state_element_attrs:
                 state_element_list = getattr(state_m_to_insert, state_element_key)
-                # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
+                # Some models are hold in a gtkmvc3.support.wrappers.ObsListWrapper, not a list
                 if hasattr(state_element_list, 'keys'):
                     state_element_list = state_element_list.values()
                 models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
@@ -480,7 +480,7 @@ def substitute_state(target_state_m, state_m_to_insert):
     """
     # print "substitute_state"
 
-    gaphas_editor = True if gui_singletons.global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    gaphas_editor = gui_singletons.global_gui_config.get_config_value('GAPHAS_EDITOR', True)
     state_to_insert = state_m_to_insert.state
     action_parent_m = target_state_m.parent
     old_state_m = target_state_m

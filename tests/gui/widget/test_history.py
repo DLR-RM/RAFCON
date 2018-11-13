@@ -1,5 +1,4 @@
 import logging
-import gtk
 import threading
 import time
 
@@ -76,8 +75,8 @@ def create_state_machine():
 
     logger = log.get_logger(__name__)
     logger.setLevel(logging.VERBOSE)
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
+    for handler in logging.getLogger('gtkmvc3').handlers:
+        logging.getLogger('gtkmvc3').removeHandler(handler)
 
     state1 = ExecutionState('State1', state_id='STATE1')
     output_state1 = state1.add_output_data_port("output", "int")
@@ -1302,7 +1301,7 @@ def trigger_state_type_change_tests(with_gui):
     # - do state type change
     logger.info("HS -> BCS")
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, state_m, 'BARRIER_CONCURRENCY', logger)
+        call_gui_callback(do_type_change, sm_m, state_m, BarrierConcurrencyState.__name__, logger)
     else:
         gui_helper_state.change_state_type(state_m, BarrierConcurrencyState)
         # state_dict[parent_of_type_change].change_state_type(state_m.state, BarrierConcurrencyState)
@@ -1356,7 +1355,7 @@ def trigger_state_type_change_tests(with_gui):
     logger.info("BCS -> HS 2")
     if with_gui:
         call_gui_callback(sm_m.state_machine.__setattr__, "file_system_path", state_machine_path)
-        call_gui_callback(do_type_change, sm_m, new_state_m, 'HIERARCHY', logger)
+        call_gui_callback(do_type_change, sm_m, new_state_m, HierarchyState.__name__, logger)
     else:
         sm_m.state_machine.file_system_path = state_machine_path
         gui_helper_state.change_state_type(new_state_m, HierarchyState)
@@ -1414,7 +1413,7 @@ def trigger_state_type_change_tests(with_gui):
     save_state_machine(sm_m, state_machine_path + '_before3', logger, with_gui, menubar_ctrl)
     logger.info("HS -> PCS")
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, 'PREEMPTION_CONCURRENCY', logger)
+        call_gui_callback(do_type_change, sm_m, new_state_m, PreemptiveConcurrencyState.__name__, logger)
     else:
         gui_helper_state.change_state_type(new_state_m, PreemptiveConcurrencyState)
         # state_dict[parent_of_type_change].change_state_type(new_state_m.state, PreemptiveConcurrencyState)
@@ -1469,7 +1468,7 @@ def trigger_state_type_change_tests(with_gui):
     save_state_machine(sm_m, state_machine_path + '_before4', logger, with_gui, menubar_ctrl)
     logger.info("PCS -> ES")
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, 'EXECUTION', logger)
+        call_gui_callback(do_type_change, sm_m, new_state_m, ExecutionState.__name__, logger)
     else:
         gui_helper_state.change_state_type(new_state_m, ExecutionState)
         # state_dict[parent_of_type_change].change_state_type(new_state_m.state, ExecutionState)
@@ -1531,7 +1530,7 @@ def trigger_state_type_change_tests(with_gui):
     # HS -> BCS
     logger.info("HS -> BCS root")
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, state_m, 'BARRIER_CONCURRENCY', logger)
+        call_gui_callback(do_type_change, sm_m, state_m, BarrierConcurrencyState.__name__, logger)
     else:
         gui_helper_state.change_state_type(sm_m.root_state, BarrierConcurrencyState)
         # sm_m.state_machine.change_root_state_type(BarrierConcurrencyState)
@@ -1576,7 +1575,7 @@ def trigger_state_type_change_tests(with_gui):
     [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
     logger.info("BCS -> HS root 2")
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, 'HIERARCHY', logger)
+        call_gui_callback(do_type_change, sm_m, new_state_m, HierarchyState.__name__, logger)
     else:
         gui_helper_state.change_state_type(sm_m.root_state, HierarchyState)
         # sm_m.state_machine.change_root_state_type(HierarchyState)
@@ -1616,7 +1615,7 @@ def trigger_state_type_change_tests(with_gui):
     logger.info("HS -> PCS")
     # - do state type change
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, 'PREEMPTION_CONCURRENCY', logger)
+        call_gui_callback(do_type_change, sm_m, new_state_m, PreemptiveConcurrencyState.__name__, logger)
     else:
         gui_helper_state.change_state_type(sm_m.root_state, PreemptiveConcurrencyState)
         # sm_m.state_machine.change_root_state_type(PreemptiveConcurrencyState)
@@ -1655,7 +1654,7 @@ def trigger_state_type_change_tests(with_gui):
     logger.info("PCS -> ES")
     # - do state type change
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, 'EXECUTION', logger)
+        call_gui_callback(do_type_change, sm_m, new_state_m, ExecutionState.__name__, logger)
     else:
         gui_helper_state.change_state_type(sm_m.root_state, ExecutionState)
         # sm_m.state_machine.change_root_state_type(ExecutionState)
@@ -1785,7 +1784,7 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
     if with_gui:
         print h_state1.get_path()
         h_state1_m = sm_m.get_state_model_by_path(h_state1.get_path())
-        call_gui_callback(do_type_change, sm_m, h_state1_m, 'EXECUTION', logger)
+        call_gui_callback(do_type_change, sm_m, h_state1_m, ExecutionState.__name__, logger)
         # call_gui_callback(sm_m.state_machine.root_state.change_state_type, h_state1, ExecutionState)
     else:
         sm_m.state_machine.root_state.change_state_type(h_state1, ExecutionState)
@@ -1840,11 +1839,13 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
         state_machines_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('state_machines_editor_ctrl')
         state_machines_editor_ctrl.get_controller(sm_id).view.get_top_widget().grab_focus()
         state_machines_editor_ctrl.get_controller(sm_id).view.editor.grab_focus()
-        press_key([keyboard.control_l_key, 'a'], duration=0.8)
-        time.sleep(0.1)  # wait that last add is fully done
+        press_key([keyboard.control_l_key, 'a'], duration=0.6)
+        call_gui_callback(testing_utils.wait_for_gui)  # wait that last add is fully done
         assert sm_m.history.modifications.single_trail_history()
-        press_key([keyboard.control_l_key, 'z'], duration=0.8)
-        press_key([keyboard.control_l_key, keyboard.shift_l_key, 'z'], duration=0.8)
+        press_key([keyboard.control_l_key, 'z'], duration=1.2)
+        call_gui_callback(testing_utils.wait_for_gui)  # wait that last undo is fully done
+        press_key([keyboard.control_l_key, keyboard.shift_l_key, 'z'], duration=1.2)
+        call_gui_callback(testing_utils.wait_for_gui)  # wait that last redo is fully done
     except ImportError as e:
         print "ERROR: ", e
         # TODO finish this test and make a better raise or error here
@@ -1863,8 +1864,8 @@ if __name__ == '__main__':
     # test_scoped_variable_modify_notification(None)
     # test_data_flow_property_modifications_history(None)
 
-    test_state_machine_modifications_with_gui(with_gui=True, caplog=None)
+    # test_state_machine_modifications_with_gui(with_gui=True, caplog=None)
     # test_state_type_change_bugs_with_gui(with_gui=False, caplog=None)
     # test_state_type_change_bugs_with_gui(with_gui=True, caplog=None)
-    # test_multiple_undo_redo_bug_with_gui(None)
+    test_multiple_undo_redo_bug_with_gui(None)
     # pytest.main(['-xs', __file__])

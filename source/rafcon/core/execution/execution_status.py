@@ -16,7 +16,7 @@
 
 """
 from enum import Enum
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 from threading import _Condition
 
 from execution_history import ExecutionHistory
@@ -65,7 +65,7 @@ class ExecutionStatus(Observable):
         self.execution_condition_variable = CustomCondition()
 
     #########################################################################
-    # Properties for all class fields that must be observed by gtkmvc
+    # Properties for all class fields that must be observed by gtkmvc3
     #########################################################################
 
     @property

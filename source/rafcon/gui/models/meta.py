@@ -11,7 +11,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import hashlib
-from gtkmvc import ModelMT, Signal
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Signal
 
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
@@ -130,3 +131,13 @@ class MetaModel(ModelMT):
         :param obj_hash: The hash object (see Python hashlib)
         """
         Hashable.update_hash_from_dict(obj_hash, self.meta)
+
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        """
+        self._Observer__PROP_TO_METHS.clear()
+        self._Observer__METH_TO_PROPS.clear()
+        self._Observer__PAT_TO_METHS.clear()
+        self._Observer__METH_TO_PAT.clear()
+        self._Observer__PAT_METH_TO_KWARGS.clear()

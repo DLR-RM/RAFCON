@@ -16,7 +16,7 @@
    :synopsis: Configuration for runtime parameters, such as window size and position
 
 """
-import gtk
+from gi.repository import Gtk
 
 from rafcon.core.config import ObservableConfig
 
@@ -30,7 +30,7 @@ class RuntimeConfig(ObservableConfig):
     """Class to hold and load the runtime configuration"""
 
     def __init__(self):
-        super(RuntimeConfig, self).__init__("")
+        super(RuntimeConfig, self).__init__("", logger_object=logger)
 
     def load(self, config_file=None, path=None):
         if config_file is None:
@@ -50,15 +50,18 @@ class RuntimeConfig(ObservableConfig):
         :param widget_name: The window or widget name of the widget, which constitutes a part of its key in the
         configuration file.
         """
-        if isinstance(widget, gtk.Window):
-            maximized = bool(widget.maximize_initially)
+        if isinstance(widget, Gtk.Window):
+            maximized = bool(widget.is_maximized())
             self.set_config_value('{0}_MAXIMIZED'.format(widget_name), maximized)
             if maximized:
                 return
             size = widget.get_size()
-            self.set_config_value('{0}_SIZE'.format(widget_name), size)
-        position = widget.get_position()
-        self.set_config_value('{0}_POS'.format(widget_name), position)
+            self.set_config_value('{0}_SIZE'.format(widget_name), tuple(size))
+            position = widget.get_position()
+            self.set_config_value('{0}_POS'.format(widget_name), tuple(position))
+        else:  # Gtk.Paned
+            position = widget.get_position()
+            self.set_config_value('{0}_POS'.format(widget_name), position)
 
     def save_configuration(self):
         # if the runtime_config was not loaded in some startup routine then load it explicitly (= create it)

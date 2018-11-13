@@ -600,6 +600,10 @@ def trigger_state_type_change_tests(with_gui):
     """
     import rafcon.core.singleton
     import rafcon.gui.singleton
+    from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     state_dict, sm = create_state_machine()
@@ -626,19 +630,19 @@ def trigger_state_type_change_tests(with_gui):
     # HS -> BCS
     input_and_return_list = [state_m]
     call_gui_callback(sm_m.selection.set, input_and_return_list)
-    call_gui_callback(change_state_type, input_and_return_list, 'BARRIER_CONCURRENCY', 'State3', check_list_BCS,
+    call_gui_callback(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, 'State3', check_list_BCS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # BCS -> HS
-    call_gui_callback(change_state_type, input_and_return_list, 'HIERARCHY', 'State3', check_list_HS,
+    call_gui_callback(change_state_type, input_and_return_list, HierarchyState.__name__, 'State3', check_list_HS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # HS -> PCS
-    call_gui_callback(change_state_type, input_and_return_list, 'PREEMPTION_CONCURRENCY', 'State3', check_list_PCS,
+    call_gui_callback(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, 'State3', check_list_PCS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # PCS -> ES
-    call_gui_callback(change_state_type, input_and_return_list, 'EXECUTION', 'State3', check_list_ES,
+    call_gui_callback(change_state_type, input_and_return_list, ExecutionState.__name__, 'State3', check_list_ES,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # TODO all test that are not root_state-test have to be performed with Preemptive and Barrier Concurrency States as parents too
@@ -659,22 +663,22 @@ def trigger_state_type_change_tests(with_gui):
     print "Test: change root state type: HS -> BCS"
     input_and_return_list = [state_m]
     call_gui_callback(sm_m.selection.set, input_and_return_list)
-    call_gui_callback(change_state_type, input_and_return_list, 'BARRIER_CONCURRENCY', 'Container', check_list_root_BCS,
+    call_gui_callback(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, 'Container', check_list_root_BCS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # BCS -> HS
     print "Test: change root state type: BCS -> HS"
-    call_gui_callback(change_state_type, input_and_return_list, 'HIERARCHY', 'Container', check_list_root_HS,
+    call_gui_callback(change_state_type, input_and_return_list, HierarchyState.__name__, 'Container', check_list_root_HS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # HS -> PCS
     print "Test: change root state type: HS -> PCS"
-    call_gui_callback(change_state_type, input_and_return_list, 'PREEMPTION_CONCURRENCY', 'Container', check_list_root_PCS,
+    call_gui_callback(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, 'Container', check_list_root_PCS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # PCS -> ES
     print "Test: change root state type: PCS -> ES"
-    call_gui_callback(change_state_type, input_and_return_list, 'EXECUTION', 'Container', check_list_root_ES,
+    call_gui_callback(change_state_type, input_and_return_list, ExecutionState.__name__, 'Container', check_list_root_ES,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # simple type change of root_state -> still could be extended

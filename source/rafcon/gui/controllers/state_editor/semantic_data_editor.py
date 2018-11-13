@@ -10,13 +10,13 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
-import gobject
+from gi.repository import Gtk
+from gi.repository import GObject
 import copy
 import os
 from functools import partial
 
-from gtkmvc import ModelMT
+from gtkmvc3.model_mt import ModelMT
 
 from rafcon.core.id_generator import generate_semantic_data_key
 from rafcon.core.states.library_state import LibraryState
@@ -59,9 +59,9 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
             model_to_observe = model
 
         # define tree store with the values in [key, value Is Dict]
-        tree_store = gtk.TreeStore(str, str, bool, gobject.TYPE_PYOBJECT)
+        tree_store = Gtk.TreeStore(str, str, bool, GObject.TYPE_PYOBJECT)
 
-        # unfortunately this cannot be down with super, as gtkmvc does not use super() consistently
+        # unfortunately this cannot be down with super, as gtkmvc3 does not use super() consistently
         TreeViewController.__init__(self, model_to_observe, view,
                                     view["semantic_data_tree_view"], tree_store, logger)
         AbstractExternalEditor.__init__(self)
@@ -85,9 +85,9 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         view['new_entry'].connect('clicked', self.on_add, False)
         view['new_dict_entry'].connect('clicked', self.on_add, True)
         view['delete_entry'].connect('clicked', self.on_remove)
-        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.KEY_COLUMN_ID].get_cell_renderers()[0],
+        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.KEY_COLUMN_ID].get_cells()[0],
                                                   self.key_edited)
-        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.VALUE_COLUMN_ID].get_cell_renderers()[0],
+        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.VALUE_COLUMN_ID].get_cells()[0],
                                                   self.value_edited)
         self.reload_tree_store_data()
 
@@ -100,7 +100,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         # self.view['open_externally'].set_sensitive(not locked)
 
         for current_column in self.view['semantic_data_tree_view'].get_columns():
-            current_column.get_cell_renderers()[0].set_property('editable', not locked)
+            current_column.get_cells()[0].set_property('editable', not locked)
 
     def register_actions(self, shortcut_manager):
         shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)

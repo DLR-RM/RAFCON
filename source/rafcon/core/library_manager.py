@@ -20,7 +20,7 @@
 import os
 import shutil
 import copy
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core import interface
 from rafcon.core.storage import storage
@@ -181,7 +181,7 @@ class LibraryManager(Observable):
         self.initialize()
 
     #########################################################################
-    # Properties for all class fields that must be observed by gtkmvc
+    # Properties for all class fields that must be observed by gtkmvc3
     #########################################################################
 
     @property

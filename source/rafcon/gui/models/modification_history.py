@@ -24,7 +24,8 @@ Hereby the branching of the edit process is stored and should be accessible, too
 """
 import copy
 
-from gtkmvc import ModelMT, Observable
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Observable
 
 from rafcon.gui.action import ActionDummy, Action, StateMachineAction, StateAction, DataPortAction, \
     ScopedVariableAction, OutcomeAction, TransitionAction, DataFlowAction, AddObjectAction, RemoveObjectAction, \

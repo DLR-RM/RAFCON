@@ -32,13 +32,6 @@ def check_for_sm_finished(sm, monitoring_manager=None):
         reactor.callFromThread(reactor.stop)
 
 
-def register_signal_handlers(callback):
-    signal.signal(signal.SIGINT, callback)
-    signal.signal(signal.SIGHUP, callback)
-    signal.signal(signal.SIGQUIT, callback)
-    signal.signal(signal.SIGTERM, callback)
-
-
 def start_server(interacting_function, queue_dict):
     import sys
     import os
@@ -56,14 +49,14 @@ def start_server(interacting_function, queue_dict):
     from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
     from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 
+    from rafcon.core.start import signal_handler, register_signal_handlers
+    register_signal_handlers(signal_handler)
+
     logger = log.get_logger("start-no-gui")
     logger.info("initialize RAFCON ... ")
 
     plugins.load_plugins()
     plugins.run_pre_inits()
-
-    from rafcon.core.start import signal_handler
-    register_signal_handlers(signal_handler)
 
     global_config.load(path=os.path.dirname(os.path.abspath(__file__)))
 

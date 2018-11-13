@@ -1,4 +1,3 @@
-import gtk
 import threading
 import testing_utils
 
@@ -16,6 +15,7 @@ def xor(_list):
 
 def trigger_dialog_tests():
     test_text = "test_text"
+    from gi.repository import Gtk
     from rafcon.gui.utils import dialog
 
     def on_ok_clicked(widget, response_id):
@@ -31,7 +31,7 @@ def trigger_dialog_tests():
         assert response_id == 1
         assert widget.entry.get_text() == test_text
         assert widget.checkbox.get_label() == test_text
-        # As gtk.CheckButton is a ToggleButton, get_active()=True represents the "checked" state
+        # As Gtk.CheckButton is a ToggleButton, get_active()=True represents the "checked" state
         assert widget.checkbox.get_active()
 
     def on_checkbox_dialog_approval(widget, response_id):
@@ -73,7 +73,7 @@ def trigger_dialog_tests():
 
     dialog_window = dialog.RAFCONColumnCheckboxDialog(markup_text=test_text,
                                                       callback=on_checkbox_dialog_approval,
-                                                      message_type=gtk.MESSAGE_QUESTION,
+                                                      message_type=Gtk.MessageType.QUESTION,
                                                       checkbox_texts=[test_text, test_text, test_text, test_text],
                                                       button_texts=button_texts)
 

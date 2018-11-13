@@ -68,8 +68,8 @@ def setup_environment():
     """Ensures that the environmental variable RAFCON_LIB_PATH is existent
     """
     try:
-        import glib
-        user_data_folder = glib.get_user_data_dir()
+        from gi.repository import GLib
+        user_data_folder = GLib.get_user_data_dir()
     except ImportError:
         user_data_folder = join(os.path.expanduser("~"), ".local", "share")
     rafcon_root_path = dirname(realpath(rafcon.__file__))
@@ -239,10 +239,8 @@ def signal_handler(signal, frame):
 
 
 def register_signal_handlers(callback):
-    signal.signal(signal.SIGINT, callback)
-    signal.signal(signal.SIGHUP, callback)
-    signal.signal(signal.SIGQUIT, callback)
-    signal.signal(signal.SIGTERM, callback)
+    for signal_code in [signal.SIGHUP, signal.SIGINT, signal.SIGTERM]:
+        signal.signal(signal_code, callback)
 
 
 def main():

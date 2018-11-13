@@ -12,7 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import View
+from gtkmvc3.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.views.utils.tree import TreeView
@@ -62,8 +62,3 @@ class LinkageOverviewView(View):
         self.outputs_view.scrollbar_widget = self['outputs_scroller']
         self.scope_view.scrollbar_widget = self['scoped_scroller']
         self.outcomes_view.scrollbar_widget = self['outcomes_scroller']
-
-        gui_helper_label.set_label_markup(self['data_linkage_label'], 'DATA LINKAGE',
-                                          letter_spacing=constants.LETTER_SPACING_1PT)
-        gui_helper_label.set_label_markup(self['logical_linkage_label'], 'LOGICAL LINKAGE',
-                                          letter_spacing=constants.LETTER_SPACING_1PT)

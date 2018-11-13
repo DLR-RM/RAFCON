@@ -14,7 +14,9 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from weakref import ref
-from pango import SCALE, FontDescription, WRAP_WORD
+from gi.repository.Pango import SCALE, FontDescription, WrapMode
+from gi.repository import PangoCairo
+# from cairo import Antialias
 from copy import copy
 import cairo
 
@@ -22,6 +24,7 @@ from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
 from gaphas.matrix import Matrix
 from gaphas.solver import Variable
+from gaphas.painter import CairoBoundingBoxContext
 
 from rafcon.core.states.state import StateExecutionStatus
 
@@ -62,6 +65,9 @@ class StateView(Element):
         self.min_width = self.min_height = 0
         self.width = size[0]
         self.height = size[1]
+
+        self._c_min_w = self._constraints[0]
+        self._c_min_h = self._constraints[1]
 
         self.is_root_state_of_library = state_m.state.is_root_state_of_library
 
@@ -490,12 +496,15 @@ class StateView(Element):
 
     def _draw_symbol(self, context, symbol, color, transparency=0.):
         c = context.cairo
+        cairo_context = c
+        if isinstance(c, CairoBoundingBoxContext):
+            cairo_context = c._cairo
         width = self.width
         height = self.height
 
-        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+        # c.set_antialias(Antialias.GOOD)
 
-        layout = c.create_layout()
+        layout = PangoCairo.create_layout(cairo_context)
 
         font_name = constants.ICON_FONT
 
@@ -526,8 +535,8 @@ class StateView(Element):
                   height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
-        c.update_layout(layout)
-        c.show_layout(layout)
+        PangoCairo.update_layout(cairo_context, layout)
+        PangoCairo.show_layout(cairo_context, layout)
 
     def get_transitions(self):
         transitions = []
@@ -1006,12 +1015,16 @@ class NameView(Element):
                 c.set_source_rgba(0, 0, 0, 0)
                 c.stroke()
 
-            c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+            # c.set_antialias(Antialias.GOOD)
 
-            layout = c.create_layout()
-            layout.set_wrap(WRAP_WORD)
+            cairo_context = c
+            if isinstance(c, CairoBoundingBoxContext):
+                cairo_context = c._cairo
+
+            layout = PangoCairo.create_layout(cairo_context)
+            layout.set_wrap(WrapMode.WORD)
             layout.set_width(int(round(BASE_WIDTH * SCALE)))
-            layout.set_text(self.name)
+            layout.set_text(self.name, -1)
 
             def set_font_description(font_size):
                 font = FontDescription(font_name + " " + str(font_size))
@@ -1068,12 +1081,13 @@ class NameView(Element):
                 self.view.value_cache.store_value("font_size", current_font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
-            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
+            cairo_context.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
             c.save()
             # The pango layout has a fixed width and needs to be fitted to the context size
-            c.scale(1. / zoom_scale, 1. / zoom_scale)
-            c.update_layout(layout)
-            c.show_layout(layout)
+            cairo_context.scale(1. / zoom_scale, 1. / zoom_scale)
+
+            PangoCairo.update_layout(cairo_context, layout)
+            PangoCairo.show_layout(cairo_context, layout)
             c.restore()
 
             # Copy image surface to current cairo context

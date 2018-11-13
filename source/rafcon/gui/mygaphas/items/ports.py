@@ -14,10 +14,13 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from weakref import ref
-from pango import SCALE, FontDescription
+from gi.repository.Pango import SCALE, FontDescription
+from gi.repository import PangoCairo
+# from cairo import Antialias
 
 from gaphas.state import observed
 from gaphas.connector import Handle
+from gaphas.painter import CairoBoundingBoxContext
 import cairo
 
 from rafcon.gui.utils import constants
@@ -252,9 +255,9 @@ class PortView(object):
         center = (position.x.value, position.y.value)
         view_center = matrix_i2v.transform_point(*center)
         if view_center[0] + view_length / 2. < 0 or \
-                view_center[0] - view_length / 2. > view.allocation[2] or \
+                view_center[0] - view_length / 2. > view.get_allocation().width or \
                 view_center[1] + view_length / 2. < 0 or \
-                view_center[1] - view_length / 2. > view.allocation[3]:
+                view_center[1] - view_length / 2. > view.get_allocation().height:
             if not context.draw_all:
                 return
 
@@ -406,7 +409,7 @@ class PortView(object):
         if self.connected:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgb(*gui_config.gtk_colors['PORT_UNCONNECTED'].to_floats())
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -438,7 +441,7 @@ class PortView(object):
         if self.connected_incoming:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgb(*gui_config.gtk_colors['PORT_UNCONNECTED'].to_floats())
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -453,7 +456,7 @@ class PortView(object):
         if self.connected_outgoing:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgb(*gui_config.gtk_colors['PORT_UNCONNECTED'].to_floats())
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -611,6 +614,9 @@ class IncomeView(LogicPortView):
     def __init__(self, parent):
         super(IncomeView, self).__init__(in_port=True, parent=parent, side=SnappedSide.LEFT)
 
+        self.text_color = gui_config.gtk_colors['OUTCOME_PORT']
+        self.fill_color = gui_config.gtk_colors['OUTCOME_PORT']
+
     def draw(self, context, state, highlight=False):
         self.draw_port(context, self.fill_color, state.transparency)
 
@@ -654,7 +660,7 @@ class OutcomeView(LogicPortView):
         elif self.outcome_id == -1:
             fill_color = gui_config.gtk_colors['ABORTED']
         else:
-            fill_color = gui_config.gtk_colors['LABEL']
+            fill_color = gui_config.gtk_colors['OUTCOME_PORT']
 
         self.draw_port(context, fill_color, state.transparency)
 
@@ -765,19 +771,23 @@ class ScopedVariablePortView(PortView):
         :rtype: float, float
         """
         c = context
-        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+        cairo_context = c
+        if isinstance(c, CairoBoundingBoxContext):
+            cairo_context = c._cairo
+        # c.set_antialias(Antialias.GOOD)
 
         side_length = self.port_side_size
 
-        layout = c.create_layout()
+        layout = PangoCairo.create_layout(cairo_context)
         font_name = constants.INTERFACE_FONT
         font_size = gap_draw_helper.FONT_SIZE
         font = FontDescription(font_name + " " + str(font_size))
         layout.set_font_description(font)
-        layout.set_text(self.name)
+        layout.set_text(self.name, -1)
 
         ink_extents, logical_extents = layout.get_extents()
-        extents = [extent / float(SCALE) for extent in logical_extents]
+        extents = [extent / float(SCALE) for extent in [logical_extents.x, logical_extents.y,
+                                                        logical_extents.width, logical_extents.height]]
         real_name_size = extents[2], extents[3]
         desired_height = side_length * 0.75
         scale_factor = real_name_size[1] / desired_height
@@ -800,8 +810,8 @@ class ScopedVariablePortView(PortView):
         c.rel_move_to(-extents[0], -extents[1])
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(self.text_color, transparency))
-        c.update_layout(layout)
-        c.show_layout(layout)
+        PangoCairo.update_layout(cairo_context, layout)
+        PangoCairo.show_layout(cairo_context, layout)
         c.restore()
 
         return name_size_with_margin

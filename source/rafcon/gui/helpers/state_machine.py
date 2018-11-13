@@ -19,7 +19,7 @@
 import copy
 import time
 import os
-import gtk
+from gi.repository import Gtk
 
 import rafcon.gui.helpers.state as gui_helper_state
 import rafcon.gui.singleton
@@ -180,14 +180,14 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
 
     for dirty_source_editor_ctrl in dirty_source_editor_ctrls:
         state = dirty_source_editor_ctrl.model.state
-        message_string = "The source code of the state '{}' (path: {}) has net been applied yet and would " \
-                         "therefore not be stored.\n\nDo you want to apply the changes now?" \
+        message_string = "The source code of the state '{}' (path: {}) has not been applied yet and would " \
+                         "therefore not be saved.\n\nDo you want to apply the changes now?" \
                          "".format(state.name, state.get_path())
         if global_gui_config.get_config_value("AUTO_APPLY_SOURCE_CODE_CHANGES", False):
             dirty_source_editor_ctrl.apply_clicked(None)
         else:
             dialog = RAFCONButtonDialog(message_string, ["Apply", "Ignore changes"],
-                                        message_type=gtk.MESSAGE_WARNING, parent=states_editor_ctrl.get_root_window())
+                                        message_type=Gtk.MessageType.WARNING, parent=states_editor_ctrl.get_root_window())
             response_id = dialog.run()
             state = dirty_source_editor_ctrl.model.state
             if response_id == 1:  # Apply changes
@@ -321,7 +321,7 @@ def save_selected_state_as():
             dialog = RAFCONCheckBoxTableDialog(message_string,
                                                button_texts=("Apply", "Cancel"),
                                                table_header=table_header, table_data=table_data,
-                                               message_type=gtk.MESSAGE_QUESTION,
+                                               message_type=Gtk.MessageType.QUESTION,
                                                parent=root_window,
                                                width=800, standalone=False)
             response_id = dialog.run()
@@ -356,7 +356,7 @@ def save_selected_state_as():
             # Offer to open saved state machine dialog
             message_string = "Should the newly created state machine be opened?"
             dialog = RAFCONButtonDialog(message_string, ["Open", "Do not open"],
-                                        message_type=gtk.MESSAGE_QUESTION,
+                                        message_type=Gtk.MessageType.QUESTION,
                                         parent=root_window)
             response_id = dialog.run()
             if response_id == 1:  # Apply pressed
@@ -388,10 +388,10 @@ def is_state_machine_stopped_to_proceed(selected_sm_id=None, root_window=None):
         if selected_sm_id is None or selected_sm_id == state_machine_manager.active_state_machine_id:
 
             message_string = "A state machine is still running. This state machine can only be refreshed" \
-                             "if not running any more."
+                             "when not longer running."
             dialog = RAFCONButtonDialog(message_string, ["Stop execution and refresh",
                                                          "Keep running and do not refresh"],
-                                        message_type=gtk.MESSAGE_QUESTION,
+                                        message_type=Gtk.MessageType.QUESTION,
                                         parent=root_window)
             response_id = dialog.run()
             state_machine_stopped = False
@@ -536,7 +536,7 @@ def refresh_selected_state_machine():
                 message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
                     message_string, ctrl.model.state.name, ctrl.model.state.get_path())
         dialog = RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"],
-                                    message_type=gtk.MESSAGE_WARNING, parent=states_editor_ctrl.get_root_window())
+                                    message_type=Gtk.MessageType.WARNING, parent=states_editor_ctrl.get_root_window())
         response_id = dialog.run()
         dialog.destroy()
         if response_id == 1:  # Reload anyway
@@ -585,7 +585,7 @@ def refresh_all(force=False):
                 message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
                     message_string, ctrl.model.state.name, ctrl.model.state.get_path())
             dialog = RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"],
-                                        message_type=gtk.MESSAGE_WARNING, parent=states_editor_ctrl.get_root_window())
+                                        message_type=Gtk.MessageType.WARNING, parent=states_editor_ctrl.get_root_window())
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:  # Reload anyway
@@ -818,7 +818,7 @@ def add_state_by_drag_and_drop(state, data):
     state_machine_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller_by_path(ctrl_path)
     state_machine_editor_ctrl.perform_drag_and_drop = True
     if insert_state_into_selected_state(state, False):
-        data.set_text(state.state_id)
+        data.set_text(state.state_id, -1)
     state_machine_editor_ctrl.perform_drag_and_drop = False
 
 

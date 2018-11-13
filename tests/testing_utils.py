@@ -16,8 +16,6 @@ test_multithreading_lock = Lock()
 gui_thread = None
 gui_ready = None
 gui_executed_once = False
-exception_info = None
-result = None
 
 
 RAFCON_TEMP_PATH_TEST_BASE = join(constants.RAFCON_TEMP_PATH_BASE, 'unit_tests')
@@ -103,50 +101,8 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
 
 
 def call_gui_callback(callback, *args, **kwargs):
-    """Wrapper method for glib.idle_add
-
-    This method is intended as replacement for idle_add. It wraps the method with a callback option. The advantage is
-    that this way, the call is blocking. The method return, when the callback method has been called and executed.
-
-    :param callback: The callback method, e.g. on_open_activate
-    :param args: The parameters to be passed to the callback method
-    """
-    global exception_info, result
-    import glib
-    condition = Condition()
-    exception_info = None
-
-    @log.log_exceptions()
-    def fun():
-        """Call callback and notify condition variable
-        """
-        global exception_info, result
-        result = None
-        try:
-            result = callback(*args)
-        except:
-            # Exception within this asynchronously called function won't reach pytest. This is why we have to store
-            # the information about the exception to re-raise it at the end of the synchronous call.
-            exception_info = sys.exc_info()
-        finally:  # Finally is also executed in the case of exceptions
-            condition.acquire()
-            condition.notify()
-            condition.release()
-
-    if "priority" in kwargs:
-        priority = kwargs["priority"]
-    else:
-        priority = glib.PRIORITY_LOW
-
-    glib.idle_add(fun, priority=priority)
-    # Wait for the condition to be notified
-    condition.acquire()
-    # TODO: implement timeout that raises an exception
-    condition.wait()
-    condition.release()
-    if exception_info:
-        raise exception_info[0], exception_info[1], exception_info[2]
-    return result
+    import rafcon.utils.gui_functions
+    return rafcon.utils.gui_functions.call_gui_callback(*((callback, ) + args), **kwargs)
 
 
 def rewind_and_set_libraries(libraries=None):
@@ -266,7 +222,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
 
 
 def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0,
-                         unpatch_threading=True):
+                         unpatch_threading=True, core_only=False):
     """ Reset Config object classes of singletons and release multi threading lock and optional do the log-msg test
 
      The function reloads the default config files optional and release the multi threading lock. This function is
@@ -302,13 +258,14 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
         finally:
             rewind_and_set_libraries()
             reload_config(config, gui_config)
-            wait_for_gui()  # is needed to empty the idle add queue and not party destroy elements in next test
+            if not core_only:
+                wait_for_gui()  # is needed to empty the idle add queue and not party destroy elements in next test
             GUI_INITIALIZED = GUI_SIGNAL_INITIALIZED = False
             gui_thread = gui_ready = None
             test_multithreading_lock.release()
 
     if unpatch_threading:
-        unpatch_gtkmvc_model_mt()
+        unpatch_gtkmvc3_model_mt()
     if e:
         raise e
 
@@ -318,24 +275,26 @@ def shutdown_environment_only_core(config=True, caplog=None, expected_warnings=0
     # in the gui case, the state machines have to be deleted while the gui is still running with add_gui_callback
     # if add_gui_callback is not used, then a multi threading RuntimeError will be raised by the PatchedModelMT
     state_machine_manager.delete_all_state_machines()
-    shutdown_environment(config, False, caplog, expected_warnings, expected_errors, unpatch_threading=False)
+    shutdown_environment(config, False, caplog, expected_warnings, expected_errors, unpatch_threading=False,
+                         core_only=True)
 
 
 def wait_for_gui():
-    import gtk
-    while gtk.events_pending():
-        gtk.main_iteration(False)
+    import rafcon.gui.utils
+    rafcon.gui.utils.wait_for_gui()
 
 
 def run_gui_thread(gui_config=None, runtime_config=None):
-    import gobject
-    import gtk
+    from gi.repository import GObject
+    from gi.repository import Gdk
     from rafcon.core.start import reactor_required
     from rafcon.gui.start import start_gtk, install_reactor
     from rafcon.utils.i18n import setup_l10n
     global gui_ready
     # see https://stackoverflow.com/questions/35700140/pygtk-run-gtk-main-loop-in-a-seperate-thread
-    gobject.threads_init()
+    # not needed any more:
+    # https://pygobject.readthedocs.io/en/latest/guide/threading.html?highlight=threads_init#threads-faq
+    # GObject.threads_init()
     if reactor_required():
         install_reactor()
     setup_l10n()
@@ -344,7 +303,7 @@ def run_gui_thread(gui_config=None, runtime_config=None):
 
     initialize_environment_gui(gui_config, runtime_config)
     main_window_view = MainWindowView()
-    main_window_view.get_top_widget().set_gravity(gtk.gdk.GRAVITY_STATIC)
+    main_window_view.get_top_widget().set_gravity(Gdk.Gravity.STATIC)
     MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
 
     print "run_gui thread: ", currentThread(), currentThread().ident, "gui.singleton thread ident:", \
@@ -353,7 +312,7 @@ def run_gui_thread(gui_config=None, runtime_config=None):
     # Wait for GUI to initialize
     wait_for_gui()
     # Set an event when the gtk loop is running
-    gobject.idle_add(gui_ready.set)
+    GObject.idle_add(gui_ready.set)
     start_gtk()
 
 
@@ -367,11 +326,15 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
         gui_config['AUTO_BACKUP_ENABLED'] = False
 
     if patch_threading:
-        patch_gtkmvc_model_mt()
+        patch_gtkmvc3_model_mt()
     global gui_ready, gui_thread, gui_executed_once
-    # IMPORTANT enforce gtk.gtkgl import in the python main thread to avoid segfaults
-    # noinspection PyUnresolvedReferences
-    import gtk.gtkgl
+    # careful import
+    try:
+        import gtk.gtkgl
+        import gtk.gdkgl
+        GL_ENABLED = True
+    except (ImportError, RuntimeError):
+        GL_ENABLED = False
 
     print "WT thread: ", currentThread(), currentThread().ident
     gui_ready = Event()
@@ -420,19 +383,21 @@ used_gui_threads = []
 auto_backup_threads = []
 
 
-def patch_gtkmvc_model_mt():
+def patch_gtkmvc3_model_mt():
     print "patch"
     global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine,\
         used_gui_threads, auto_backup_threads
 
+    # noinspection PyUnresolvedReferences
+    import rafcon.gui
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
-    import gtkmvc
-    from gtkmvc.model_mt import Model, _threading, gobject
+    import gtkmvc3
+    from gtkmvc3.model_mt import Model, _threading, GObject
     from rafcon.core.states.state import run_id_generator, threading
     from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger, Queue
 
-    original_ModelMT_notify_observer = gtkmvc.model_mt.ModelMT.__notify_observer__
+    original_ModelMT_notify_observer = gtkmvc3.model_mt.ModelMT.__notify_observer__
     original_state_start = rafcon.core.states.state.State.start
     original_run_state_machine = rafcon.core.execution.execution_engine.ExecutionEngine._run_active_state_machine
     print original_ModelMT_notify_observer, original_run_state_machine, original_state_start
@@ -467,7 +432,7 @@ def patch_gtkmvc_model_mt():
             self.set_execution_mode(StateMachineExecutionStatus.STOPPED)
 
     def __patched__notify_observer__(self, observer, method, *args, **kwargs):
-        """This makes a call either through the gtk.idle list or a
+        """This makes a call either through the Gtk.idle list or a
         direct method call depending whether the caller's thread is
         different from the observer's thread"""
 
@@ -488,7 +453,7 @@ def patch_gtkmvc_model_mt():
             # multi-threading call
             if _threading.currentThread() in state_threads or _threading.currentThread() in auto_backup_threads:
                 # print "Notification from state thread", _threading.currentThread()
-                gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
+                GObject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
                 return
             elif _threading.currentThread() in used_gui_threads \
                     and self._ModelMT__observer_threads[observer] in used_gui_threads:
@@ -498,7 +463,7 @@ def patch_gtkmvc_model_mt():
                 print "Both threads are former gui threads! Current thread {}, Observer thread {}".format(
                     _threading.currentThread(), self._ModelMT__observer_threads[observer])
                 return Model.__notify_observer__(self, observer, method, *args, **kwargs)
-                # gobject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
+                # GObject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
                 # return
             else:
                 print "{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \
@@ -509,21 +474,21 @@ def patch_gtkmvc_model_mt():
                 # print "used_gui_threads", used_gui_threads
                 raise RuntimeError("This test should not have multi-threading constellations.")
 
-    gtkmvc.model_mt.ModelMT.__notify_observer__ = __patched__notify_observer__
+    gtkmvc3.model_mt.ModelMT.__notify_observer__ = __patched__notify_observer__
     rafcon.core.states.state.State.start = state_start
     rafcon.core.execution.execution_engine.ExecutionEngine._run_active_state_machine = _patched_run_active_state_machine
 
 
-def unpatch_gtkmvc_model_mt():
+def unpatch_gtkmvc3_model_mt():
     print "unpatch"
     global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine
 
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
-    import gtkmvc
+    import gtkmvc3
     if any([e is None for e in original_ModelMT_notify_observer, original_state_start, original_run_state_machine]):
         raise EnvironmentError("All methods to un-patch have to be set not None.")
-    gtkmvc.model_mt.ModelMT.__notify_observer__ = original_ModelMT_notify_observer
+    gtkmvc3.model_mt.ModelMT.__notify_observer__ = original_ModelMT_notify_observer
     rafcon.core.states.state.State.start = original_state_start
     rafcon.core.execution.execution_engine.ExecutionEngine._run_state_machine = original_run_state_machine
     original_ModelMT_notify_observer = original_state_start = original_run_state_machine = None
@@ -564,3 +529,12 @@ def wait_for_execution_engine_sync_counter(target_value, logger, timeout=5):
         if (datetime.datetime.now() - current_time).seconds > timeout:
             raise RuntimeError("Something went wrong while waiting for states to finish!")
         time.sleep(0.1)
+
+
+def focus_graphical_editor_in_page(page):
+    from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
+    from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
+    graphical_controller = page.get_children()[0]
+    if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
+        graphical_controller = graphical_controller.get_children()[0]
+    graphical_controller.grab_focus()

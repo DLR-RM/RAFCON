@@ -1,5 +1,4 @@
 import os
-import gtk
 
 import testing_utils
 from testing_utils import RAFCON_TEMP_PATH_TEST_BASE
@@ -58,14 +57,6 @@ def test_core_create_folder(monkeypatch):
     assert core_interface.create_folder_cmd_line("query", "new_folder") is None
 
 
-class PatchedFileChooserDialog(gtk.FileChooserDialog):
-    """Subclass for FileChooserDialog
-    
-    FileChooserDialog cannot be monkey-patched directly. It must first be replaced by a subclass, which is this one.
-    """
-    pass
-
-
 def test_gui_tests(monkeypatch, caplog):
     # let the gui thread create the gui singletons by opening and closing an empty gui
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
@@ -94,20 +85,31 @@ def test_gui_open_folder(monkeypatch):
     testing_utils.dummy_gui(None)
     print "execute test_gui_open_folder"
     import rafcon.gui.interface as gui_interface
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk
+
+    class PatchedFileChooserDialog(Gtk.FileChooserDialog):
+        """Subclass for FileChooserDialog
+
+        FileChooserDialog cannot be monkey-patched directly. It must first be replaced by a subclass, which is this one.
+        """
+        pass
+
     # prepare FileChooserDialog for monkey-patching
-    monkeypatch.setattr(gtk, "FileChooserDialog", PatchedFileChooserDialog)
-    # replaces run by an expression that returns gtk.RESPONSE_OK
-    monkeypatch.setattr(gtk.FileChooserDialog, 'run', lambda _: gtk.RESPONSE_OK)
+    monkeypatch.setattr(Gtk, "FileChooserDialog", PatchedFileChooserDialog)
+    # replaces run by an expression that returns Gtk.ResponseType.OK
+    monkeypatch.setattr(Gtk.FileChooserDialog, 'run', lambda _: Gtk.ResponseType.OK)
     # replaces get_filename by an expression that returns "/tmp"
-    monkeypatch.setattr(gtk.FileChooserDialog, 'get_filename', lambda _: "/tmp")
+    monkeypatch.setattr(Gtk.FileChooserDialog, 'get_filename', lambda _: "/tmp")
 
     # Return user input
     assert gui_interface.open_folder("query") == "/tmp"
     # Return user input despite default path given
     assert gui_interface.open_folder("query", "/home") == "/tmp"
 
-    # replaces run by an expression that returns gtk.RESPONSE_CANCEL
-    monkeypatch.setattr(gtk.FileChooserDialog, 'run', lambda _: gtk.RESPONSE_CANCEL)
+    # replaces run by an expression that returns Gtk.ResponseType.CANCEL
+    monkeypatch.setattr(Gtk.FileChooserDialog, 'run', lambda _: Gtk.ResponseType.CANCEL)
 
     # Return None if no user input and no default path
     assert gui_interface.open_folder("query") is None
@@ -122,12 +124,23 @@ def test_gui_create_folder(monkeypatch):
     testing_utils.dummy_gui(None)
     print "execute test_gui_create_folder"
     import rafcon.gui.interface as gui_interface
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk
+
+    class PatchedFileChooserDialog(Gtk.FileChooserDialog):
+        """Subclass for FileChooserDialog
+
+        FileChooserDialog cannot be monkey-patched directly. It must first be replaced by a subclass, which is this one.
+        """
+        pass
+
     # prepare FileChooserDialog for monkey-patching
-    monkeypatch.setattr(gtk, "FileChooserDialog", PatchedFileChooserDialog)
-    # replaces run by an expression that returns gtk.RESPONSE_OK
-    monkeypatch.setattr(gtk.FileChooserDialog, 'run', lambda _: gtk.RESPONSE_OK)
+    monkeypatch.setattr(Gtk, "FileChooserDialog", PatchedFileChooserDialog)
+    # replaces run by an expression that returns Gtk.ResponseType.OK
+    monkeypatch.setattr(Gtk.FileChooserDialog, 'run', lambda _: Gtk.ResponseType.OK)
     # replaces get_filename by an expression that returns "/tmp"
-    monkeypatch.setattr(gtk.FileChooserDialog, 'get_filename', lambda _: RAFCON_TEMP_PATH_TEST_BASE)
+    monkeypatch.setattr(Gtk.FileChooserDialog, 'get_filename', lambda _: RAFCON_TEMP_PATH_TEST_BASE)
 
     # Return user input
     assert gui_interface.create_folder("query") == RAFCON_TEMP_PATH_TEST_BASE
@@ -135,8 +148,8 @@ def test_gui_create_folder(monkeypatch):
     assert gui_interface.create_folder("query", "/home") == RAFCON_TEMP_PATH_TEST_BASE
     assert gui_interface.create_folder("query", "new", "/home") == RAFCON_TEMP_PATH_TEST_BASE
 
-    # replaces run by an expression that returns gtk.RESPONSE_CANCEL
-    monkeypatch.setattr(gtk.FileChooserDialog, 'run', lambda _: gtk.RESPONSE_CANCEL)
+    # replaces run by an expression that returns Gtk.ResponseType.CANCEL
+    monkeypatch.setattr(Gtk.FileChooserDialog, 'run', lambda _: Gtk.ResponseType.CANCEL)
 
     # Return None if no user input and no default path
     assert gui_interface.create_folder("query") is None

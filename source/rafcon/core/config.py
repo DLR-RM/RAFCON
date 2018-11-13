@@ -19,7 +19,8 @@
 
 import yaml
 from os.path import split
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
+
 from rafcon.utils.resources import resource_string, resource_filename
 from yaml_configuration.config import DefaultConfig, ConfigError
 
@@ -35,21 +36,16 @@ DEFAULT_CONFIG = resource_string(__name__, CONFIG_FILE)
 
 class ObservableConfig(DefaultConfig, Observable):
 
-    keys = set()
     keys_requiring_state_machine_refresh = set()
     keys_requiring_restart = set()
 
-    def __init__(self, defaults, logger_object=None):
-        DefaultConfig.__init__(self, defaults, logger_object, rel_config_path='rafcon')
+    def __init__(self, default_config_filename, logger_object=None):
+        DefaultConfig.__init__(self, default_config_filename, logger_object, rel_config_path='rafcon')
         Observable.__init__(self)
-        config = yaml.load(defaults)
-        self.keys = set([] if not config else config.keys())
-        
+
     @Observable.observed
     def set_config_value(self, key, value):
         super(ObservableConfig, self).set_config_value(key, value)
-        if key not in self.keys:
-            self.keys.add(key)
 
     def as_dict(self):
         """Returns the configuration as dict
@@ -57,7 +53,11 @@ class ObservableConfig(DefaultConfig, Observable):
         :return: A copy of the whole configuration as dict
         :rtype: dict
         """
-        return {key: self.get_config_value(key) for key in self.keys}
+        return dict(self._config_dict)
+
+    @property
+    def keys(self):
+        return set(self._config_dict.keys())
 
 
 class Config(ObservableConfig):
@@ -74,7 +74,6 @@ class Config(ObservableConfig):
         :raises ConfigError: if the config type is not given in the config file
         """
         super(Config, self).__init__(DEFAULT_CONFIG, logger_object)
-        self.load()
         if self.get_config_value("TYPE") != "SM_CONFIG":
             raise ConfigError("Type should be SM_CONFIG for state machine configuration. "
                               "Please add \"TYPE: SM_CONFIG\" to your config.yaml file.")

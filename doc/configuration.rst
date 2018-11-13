@@ -118,11 +118,12 @@ A typical config file looks like this:
 
     TYPE: GUI_CONFIG
 
-    SOURCE_EDITOR_STYLE: rafcon-dark
+    SOURCE_EDITOR_STYLE: rafcon
 
     GAPHAS_EDITOR: True
     GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE: True
     ENABLE_CACHING: True    # Affects only Gaphas editor
+    THEME_DARK_VARIANT: True
     DRAG_N_DROP_WITH_FOCUS: False
 
     WAYPOINT_SNAP_ANGLE: 45
@@ -272,14 +273,14 @@ TYPE
 
 SOURCE\_EDITOR\_STYLE
   | Type: string
-  | Default: ``rafcon-dark``
+  | Default: ``rafcon``
   | The gtk source view style used in the script editor. Note: You can
     download different styles at
     `https://wiki.gnome.org/Projects/GtkSourceView/StyleSchemes GTK
     Source View
     Styles <https://wiki.gnome.org/Projects/GtkSourceView/StyleSchemes_GTK_Source_View_Styles>`__.
     The scripts have to be downloaded to
-    ~/.local/share/gtksourceview-2.0/styles. "rafcon-dark" is a style
+    ~/.local/share/gtksourceview-2.0/styles. "rafcon" is a style
     created to fit to the design of RAFCON.
 
 GAPHAS\_EDITOR
@@ -300,6 +301,10 @@ GAPHAS\_EDITOR\_AUTO\_FOCUS\_OF\_ROOT\_STATE
 ENABLE\_CACHING:
   | Default: ``True``
   | Affects only Gaphas editor and enables a accelerating caching feature.
+
+THEME\_DARK\_VARIANT:
+  | Default: ``True``
+  | If ``True``, a dark theme will be used, else a light theme
 
 WAYPOINT\_SNAP\_ANGLE
   | Default: ``45``

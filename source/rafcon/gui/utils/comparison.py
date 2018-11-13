@@ -17,7 +17,7 @@ def compare_variables(tree_model, iter1, iter2, user_data=None):
 
         Helper method to sort global variables alphabetically.
 
-        :param tree_model: Tree model implementing the gtk.TreeSortable interface.
+        :param tree_model: Tree model implementing the Gtk.TreeSortable interface.
         :param iter1: Points at a row.
         :param iter2: Points at a row.
         """

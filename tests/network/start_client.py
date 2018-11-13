@@ -9,7 +9,6 @@
 """
 
 import logging
-import gtk
 import signal
 import sys
 from os.path import realpath, dirname, join
@@ -19,13 +18,13 @@ def setup_logger():
     import sys
     # Set the views for the loggers
 
-    # Apply defaults to logger of gtkmvc
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
+    # Apply defaults to logger of gtkmvc3
+    for handler in logging.getLogger('gtkmvc3').handlers:
+        logging.getLogger('gtkmvc3').removeHandler(handler)
     stdout = logging.StreamHandler(sys.stdout)
     stdout.setFormatter(logging.Formatter("%(asctime)s: %(levelname)-8s - %(name)s:  %(message)s"))
     stdout.setLevel(logging.DEBUG)
-    logging.getLogger('gtkmvc').addHandler(stdout)
+    logging.getLogger('gtkmvc3').addHandler(stdout)
 
 
 def start_client(interacting_function, queue_dict):
@@ -57,9 +56,9 @@ def start_client(interacting_function, queue_dict):
 
     # check if twisted is imported
     if "twisted" in sys.modules.keys():
-        from twisted.internet import gtk2reactor
-        # needed for glib.idle_add, and signals
-        gtk2reactor.install()
+        from twisted.internet import gtk3reactor
+        # needed for GLib.idle_add, and signals
+        gtk3reactor.install()
         from twisted.internet import reactor
     else:
         print "Twisted not imported! Thus the gkt2reatcor is not installed!"

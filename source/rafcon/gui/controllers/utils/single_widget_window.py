@@ -16,7 +16,7 @@
 
 """
 
-import gtk
+from gi.repository import Gtk
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.shortcut_manager import ShortcutManager
@@ -42,8 +42,8 @@ class SingleWidgetWindowController(ExtendedController):
         self.shortcut_manager = ShortcutManager(self.view['main_window'])
         self.register_actions(self.shortcut_manager)
 
-        view['main_window'].connect('destroy', gtk.main_quit)
-        # view.get_top_widget().connect('destroy', gtk.main_quit)
+        view['main_window'].connect('destroy', Gtk.main_quit)
+        # view.get_top_widget().connect('destroy', Gtk.main_quit)
 
     pass  # class end
 
@@ -66,4 +66,4 @@ class SingleWidgetWindowController(ExtendedController):
 # single_view['library_tree_view'] = single_view.widget_view['library_tree_view']
 # SingleWidgetWindowController(rafcon.gui.singleton.library_manager_model, single_view, LibraryTreeController)
 #
-# gtk.main()
+# Gtk.main()

@@ -46,25 +46,17 @@ def create_state_machine(*args, **kargs):
     return StateMachine(ctr_state)
 
 
-def focus_graphical_editor_in_page(page):
-    from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
-    from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
-    graphical_controller = page.children()[0]
-    if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
-        graphical_controller = graphical_controller.children()[0]
-    graphical_controller.grab_focus()
-
-
 def check_order_and_consistency_of_menu(menubar_ctrl):
     import rafcon.gui.singleton
     from rafcon.gui.controllers.main_window import MenuBarController
+    from rafcon.gui.helpers.label import get_label_of_menu_item_box
     assert isinstance(menubar_ctrl, MenuBarController)
     recently_opened = rafcon.gui.singleton.global_runtime_config.get_config_value('recently_opened_state_machines')
     for index, elem in enumerate(menubar_ctrl.view.sub_menu_open_recently):
         if index in [0, 1]:
             continue
-        print elem.get_label()
-        assert recently_opened[index - 2] in elem.get_label()
+        print "check_order_and_consistency_of_menu: ", get_label_of_menu_item_box(elem)
+        assert recently_opened[index - 2] in get_label_of_menu_item_box(elem)
 
 
 @log.log_exceptions(None, gtk_quit=True)
@@ -98,6 +90,7 @@ def trigger_gui_signals(*args):
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     import rafcon.core.config
     from rafcon.core.states.library_state import LibraryState
+    from rafcon.gui.helpers.label import get_label_of_menu_item_box
 
     print "WT: ", threading.currentThread()
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
@@ -176,7 +169,7 @@ def trigger_gui_signals(*args):
                       sm_manager_model.state_machines[first_sm_id].state_machine)
     first_sm_path = sm_manager_model.state_machines[first_sm_id].state_machine.file_system_path
     call_gui_callback(testing_utils.wait_for_gui)
-    assert first_sm_path in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
+    assert first_sm_path in get_label_of_menu_item_box(menubar_ctrl.view.sub_menu_open_recently.get_children()[2])
     call_gui_callback(sm_manager_model.state_machine_manager.remove_state_machine, first_sm_id)
     call_gui_callback(menubar_ctrl.view.sub_menu_open_recently.get_children()[2].activate)
     call_gui_callback(testing_utils.wait_for_gui)
@@ -224,11 +217,11 @@ def trigger_gui_signals(*args):
     selected_sm_id = sm_manager_model.selected_state_machine_id
     assert not sm_manager_model.state_machines[selected_sm_id].state_machine.file_system_path == lib_sm_path
     # is still in and after clean removed
-    assert lib_sm_path in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
+    assert lib_sm_path in get_label_of_menu_item_box(menubar_ctrl.view.sub_menu_open_recently.get_children()[2])
     call_gui_callback(global_runtime_config.clean_recently_opened_state_machines)
-    assert lib_sm_path not in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
+    assert lib_sm_path not in get_label_of_menu_item_box(menubar_ctrl.view.sub_menu_open_recently.get_children()[2])
     call_gui_callback(global_runtime_config.update_recently_opened_state_machines_with, lib_sm_before_remove)
-    assert 'NOT_ACCESSIBLE' in menubar_ctrl.view.sub_menu_open_recently.get_children()[2].get_label()
+    assert 'NOT_ACCESSIBLE' in get_label_of_menu_item_box(menubar_ctrl.view.sub_menu_open_recently.get_children()[2])
 
     # TODO maybe finally move this into the auto-backup or restore test module
     print "AUTO BACKUP TEST"

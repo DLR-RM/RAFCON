@@ -1,51 +1,57 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.20.0 -->
 <interface>
-  <requires lib="gtk+" version="2.16"/>
-  <!-- interface-naming-policy toplevel-contextual -->
-  <object class="GtkHBox" id="linkage_container">
+  <requires lib="gtk+" version="3.20"/>
+  <object class="GtkBox" id="linkage_container">
     <property name="visible">True</property>
+    <property name="can_focus">False</property>
     <child>
-      <object class="GtkVBox" id="vbox1">
+      <object class="GtkBox" id="vbox1">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="orientation">vertical</property>
         <child>
-          <object class="GtkViewport" id="data_linkage_title_wrapper">
+          <object class="GtkEventBox" id="data_linkage_label_eventbox">
             <property name="visible">True</property>
-            <property name="resize_mode">queue</property>
+            <property name="can_focus">False</property>
             <child>
-              <object class="GtkEventBox" id="label_wrapper1">
+              <object class="GtkLabel" id="data_linkage_label">
                 <property name="visible">True</property>
-                <property name="border_width">10</property>
-                <child>
-                  <object class="GtkLabel" id="data_linkage_label">
-                    <property name="visible">True</property>
-                    <property name="xalign">0</property>
-                    <property name="label" translatable="yes">Data Linkage</property>
-                  </object>
-                </child>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">DATA LINKAGE</property>
+                <property name="xalign">0</property>
               </object>
             </child>
+            <style>
+              <class name="widget-title"/>
+            </style>
           </object>
           <packing>
             <property name="expand">False</property>
+            <property name="fill">True</property>
             <property name="position">0</property>
           </packing>
         </child>
         <child>
-          <object class="GtkHBox" id="hbox2">
+          <object class="GtkBox" id="hbox2">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="homogeneous">True</property>
             <child>
-              <object class="GtkVBox" id="input_box">
+              <object class="GtkBox" id="input_box">
                 <property name="visible">True</property>
+                <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkLabel" id="input_label">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Input ports</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Input</property>
+                    <property name="xalign">0</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="fill">True</property>
                     <property name="padding">5</property>
                     <property name="position">0</property>
                   </packing>
@@ -54,32 +60,38 @@
                   <object class="GtkScrolledWindow" id="inputs_scroller">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="hscrollbar_policy">automatic</property>
-                    <property name="vscrollbar_policy">automatic</property>
                     <child>
                       <placeholder/>
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
               </object>
               <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="output_box">
+              <object class="GtkBox" id="output_box">
                 <property name="visible">True</property>
+                <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkLabel" id="output_label">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Output ports</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Output</property>
+                    <property name="xalign">0</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="fill">True</property>
                     <property name="padding">5</property>
                     <property name="position">0</property>
                   </packing>
@@ -88,32 +100,38 @@
                   <object class="GtkScrolledWindow" id="outputs_scroller">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="hscrollbar_policy">automatic</property>
-                    <property name="vscrollbar_policy">automatic</property>
                     <child>
                       <placeholder/>
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
               </object>
               <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
                 <property name="position">1</property>
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="scoped_box">
+              <object class="GtkBox" id="scoped_box">
                 <property name="visible">True</property>
+                <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkLabel" id="scoped_label">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Scoped variables</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Scope</property>
+                    <property name="xalign">0</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="fill">True</property>
                     <property name="padding">5</property>
                     <property name="position">0</property>
                   </packing>
@@ -122,69 +140,79 @@
                   <object class="GtkScrolledWindow" id="scoped_scroller">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="hscrollbar_policy">automatic</property>
-                    <property name="vscrollbar_policy">automatic</property>
                     <child>
                       <placeholder/>
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
               </object>
               <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
                 <property name="position">2</property>
               </packing>
             </child>
           </object>
           <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
         </child>
       </object>
       <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
         <property name="position">0</property>
       </packing>
     </child>
     <child>
-      <object class="GtkVBox" id="vbox2">
+      <object class="GtkBox" id="vbox2">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="orientation">vertical</property>
         <child>
-          <object class="GtkViewport" id="logical_linkage_title_wrapper">
+          <object class="GtkEventBox" id="logical_linkage_label_eventbox">
             <property name="visible">True</property>
-            <property name="resize_mode">queue</property>
+            <property name="can_focus">False</property>
             <child>
-              <object class="GtkEventBox" id="label_wrapper2">
+              <object class="GtkLabel" id="logical_linkage_label">
                 <property name="visible">True</property>
-                <property name="border_width">10</property>
-                <child>
-                  <object class="GtkLabel" id="logical_linkage_label">
-                    <property name="visible">True</property>
-                    <property name="xalign">0</property>
-                    <property name="label" translatable="yes">Logical Linkage</property>
-                  </object>
-                </child>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">LOGICAL LINKAGE</property>
+                <property name="xalign">0</property>
               </object>
             </child>
+            <style>
+              <class name="widget-title"/>
+            </style>
           </object>
           <packing>
             <property name="expand">False</property>
+            <property name="fill">True</property>
             <property name="position">0</property>
           </packing>
         </child>
         <child>
-          <object class="GtkVBox" id="outcomes_box">
+          <object class="GtkBox" id="outcomes_box">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="orientation">vertical</property>
             <child>
               <object class="GtkLabel" id="outcomes_label">
                 <property name="visible">True</property>
+                <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Outcomes</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="expand">False</property>
+                <property name="fill">True</property>
                 <property name="padding">5</property>
                 <property name="position">0</property>
               </packing>
@@ -193,24 +221,27 @@
               <object class="GtkScrolledWindow" id="outcomes_scroller">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="hscrollbar_policy">automatic</property>
-                <property name="vscrollbar_policy">automatic</property>
                 <child>
                   <placeholder/>
                 </child>
               </object>
               <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
                 <property name="position">1</property>
               </packing>
             </child>
           </object>
           <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
         </child>
       </object>
       <packing>
         <property name="expand">False</property>
+        <property name="fill">True</property>
         <property name="position">1</property>
       </packing>
     </child>

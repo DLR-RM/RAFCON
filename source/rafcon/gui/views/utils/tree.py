@@ -9,7 +9,7 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 
-from gtkmvc import View
+from gtkmvc3.view import View
 
 
 class TreeView(View):

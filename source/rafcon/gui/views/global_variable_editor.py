@@ -10,10 +10,11 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import View
+from gtkmvc3.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.utils import constants
+from rafcon.gui.helpers import label
 
 
 class GlobalVariableEditorView(View):
@@ -27,3 +28,6 @@ class GlobalVariableEditorView(View):
         self['delete_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['lock_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['unlock_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self.scrollbar_widget = self['scroller']
+
+        label.ellipsize_labels_recursively(self['global_variables_toolbar'])

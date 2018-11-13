@@ -18,7 +18,8 @@ import os
 import threading
 from copy import copy, deepcopy
 
-from gtkmvc import ModelMT, Signal
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Signal
 
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.container_state import ContainerState
@@ -161,6 +162,7 @@ class StateMachineModel(MetaModel, Hashable):
             self.root_state.prepare_destruction()
         self.root_state = None
         self.state_machine = None
+        super(StateMachineModel, self).prepare_destruction()
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.root_state)

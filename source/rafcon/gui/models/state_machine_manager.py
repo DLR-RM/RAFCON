@@ -13,7 +13,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 import os
 
-from gtkmvc import ModelMT
+from gtkmvc3.model_mt import ModelMT
 
 from rafcon.core.state_machine_manager import StateMachineManager
 

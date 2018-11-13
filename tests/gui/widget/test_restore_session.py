@@ -1,5 +1,3 @@
-import gtk
-import threading
 from os.path import join, exists
 
 # general tool elements
@@ -44,15 +42,6 @@ def create_state_machine(*args, **kargs):
     ctr_state.name = "Container"
 
     return StateMachine(ctr_state)
-
-
-def focus_graphical_editor_in_page(page):
-    from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
-    from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
-    graphical_controller = page.children()[0]
-    if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
-        graphical_controller = graphical_controller.children()[0]
-    graphical_controller.grab_focus()
 
 
 def check_order_and_consistency_of_menu(menubar_ctrl):
@@ -112,6 +101,7 @@ def trigger_gui_signals_first_run(*args):
     - SHOULD stored state machine and no changes that was removed/moved before restart
     """
     import rafcon.gui.singleton
+    from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.gui.controllers.main_window import MenuBarController
     from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
     from gui.widget.test_state_type_change import get_state_editor_ctrl_and_store_id_dict
@@ -204,7 +194,7 @@ def trigger_gui_signals_first_run(*args):
         [state_editor_ctrl, list_store_id_from_state_type_dict] = \
             get_state_editor_ctrl_and_store_id_dict(lib_sm_m, lib_sm_m.root_state, main_window_controller, 5., logger)
         # - do state type change
-        state_type_row_id = list_store_id_from_state_type_dict['HIERARCHY']
+        state_type_row_id = list_store_id_from_state_type_dict[HierarchyState.__name__]
         state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active(state_type_row_id)
 
     call_gui_callback(lib_sm_m.selection.set, [lib_sm_m.root_state])

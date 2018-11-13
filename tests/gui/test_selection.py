@@ -1,7 +1,7 @@
 import pytest
 import testing_utils
 
-from gtkmvc.observer import Observer
+from gtkmvc3.observer import Observer
 
 
 class SignalCounter(Observer):

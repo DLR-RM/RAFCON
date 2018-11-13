@@ -24,7 +24,7 @@ import copy
 import json
 import difflib
 
-from gtkmvc import ModelMT
+from gtkmvc3.model_mt import ModelMT
 from jsonconversion.decoder import JSONObjectDecoder
 from jsonconversion.encoder import JSONObjectEncoder
 

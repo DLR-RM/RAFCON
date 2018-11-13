@@ -19,7 +19,7 @@
 import os
 import imp
 import yaml
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.id_generator import generate_script_id
 import rafcon.core.singleton
@@ -36,7 +36,7 @@ DEFAULT_SCRIPT = filesystem.read_file(os.path.dirname(__file__), DEFAULT_SCRIPT_
 
 
 class Script(Observable, yaml.YAMLObject):
-    """A class for representing the script file for each state in a state machine
+    """A class for representing the script file for all execution states in a state machine.
 
     It inherits from Observable to make a change of its fields observable.
 
@@ -213,7 +213,7 @@ class Script(Observable, yaml.YAMLObject):
                 raise
 
 #########################################################################
-# Properties for all class fields that must be observed by gtkmvc
+# Properties for all class fields that must be observed by gtkmvc3
 #########################################################################
 
     @property

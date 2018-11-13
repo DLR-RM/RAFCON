@@ -20,6 +20,7 @@ from os import path
 import os
 import sys
 from imp import load_source
+import distutils.log as log
 
 
 class PyTest(TestCommand):
@@ -46,9 +47,8 @@ class PyTest(TestCommand):
         sys.path.insert(0, test_path)
         sys.path.insert(0, rafcon_path)
         os.environ["PYTHONPATH"] = rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
-        print
-        print "Running pytest with the following arguments:", shlex.split(self.pytest_args) + ['tests']
-        print
+        log.info("\nRunning pytest with the following arguments: {}\n".format(shlex.split(self.pytest_args) + [
+            'tests']))
         error_number = pytest.main(shlex.split(self.pytest_args) + ['tests'])
         sys.exit(error_number)
 
@@ -99,7 +99,7 @@ def get_all_files_recursivly(*path):
     """
     result_list = list()
     root_dir = os.path.join(*path)
-    print "retrieving all files from folder '{}'recursivelyy and adding to data_files ... ".format(root_dir)
+    log.debug("retrieving all files from folder '{}' recursively and adding to data_files ...".format(root_dir))
 
     # remove share/ (package_dir) => e.g. target_dir_sub_path will be just "libraries"
     target_dir_sub_path = os.path.join(*root_dir.split(os.sep)[1:])
@@ -125,7 +125,7 @@ def generate_data_files():
     :rtype: list(tuple(str, [str]))
     """
     assets_folder = path.join('source', 'rafcon', 'gui', 'assets')
-    themes_folder = path.join(assets_folder, 'themes')
+    themes_folder = path.join(assets_folder, 'share', 'themes')
     examples_folder = path.join('share', 'examples')
     libraries_folder = path.join('share', 'libraries')
 
@@ -134,9 +134,11 @@ def generate_data_files():
         get_data_files_tuple(assets_folder, 'splashscreens'),
         get_data_files_tuple(assets_folder, path.join('fonts', 'FontAwesome')),
         get_data_files_tuple(assets_folder, path.join('fonts', 'DIN Next LT Pro')),
-        get_data_files_tuple(themes_folder, 'dark', 'gtk-2.0', 'gtkrc', path_to_file=True),
-        get_data_files_tuple(themes_folder, 'dark', 'colors.json', path_to_file=True),
-        get_data_files_tuple(themes_folder, 'dark', 'gtk-sourceview'),
+        get_data_files_tuple(themes_folder, 'RAFCON', 'gtk-2.0', 'gtkrc', path_to_file=True),
+        get_data_files_tuple(themes_folder, 'RAFCON', 'gtk-3.0'),
+        get_data_files_tuple(themes_folder, 'RAFCON', 'colors.json', path_to_file=True),
+        get_data_files_tuple(themes_folder, 'RAFCON', 'colors-dark.json', path_to_file=True),
+        get_data_files_tuple(themes_folder, 'RAFCON', 'gtk-sourceview'),
     ]
 
     locale_data_files = installation.create_mo_files()
@@ -204,9 +206,17 @@ setup(
 
     data_files=generate_data_files(),
 
-    setup_requires=['Sphinx>=1.4'] + global_requirements,
+    setup_requires=['Sphinx>=1.4', 'libsass >= 0.15.0'] + global_requirements,
     tests_require=['pytest', 'pytest-catchlog', 'graphviz', 'pymouse'] + global_requirements,
     install_requires=global_requirements,
+
+    sass_manifests={
+        'rafcon': {
+            'sass_path': 'gui/assets/share/themes/RAFCON/sass',
+            'css_path': 'gui/assets/share/themes/RAFCON/gtk-3.0',
+            'strip_extension': True
+        }
+    },
 
     dependency_links=[
         "https://github.com/DLR-RM/gtkmvc3/releases/download/gtkmvc_dlr_1.99.2/python-gtkmvc-dlr-1.99.2.tar.gz"
