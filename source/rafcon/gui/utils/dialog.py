@@ -214,10 +214,10 @@ class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
         self.run() if standalone else None
 
     def get_checkbox_state_by_name(self, checkbox_text):
-        return [bool(checkbox.get_state()) for checkbox in self.checkboxes if checkbox.get_label() == checkbox_text]
+        return [checkbox.get_active() for checkbox in self.checkboxes if checkbox.get_label() == checkbox_text]
 
     def get_checkbox_state_by_index(self, checkbox_index):
-        return bool(self.checkboxes[checkbox_index].get_state())
+        return self.checkboxes[checkbox_index].get_active()
 
     def get_checkbox_states(self):
         return [bool(checkbox.get_state()) for checkbox in self.checkboxes]
