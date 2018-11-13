@@ -219,6 +219,9 @@ def check_pane_positions():
 def test_window_positions(caplog):
     testing_utils.run_gui(core_config=None,
                           runtime_config={
+                              'MAIN_WINDOW_MAXIMIZED': False,
+                              'MAIN_WINDOW_SIZE': (1500, 800),
+                              'MAIN_WINDOW_POS': (0, 0),
                               'LEFT_BAR_WINDOW_SIZE': (800, 800),
                               'RIGHT_BAR_WINDOW_SIZE': (800, 800),
                               'CONSOLE_WINDOW_SIZE': (800, 800),
@@ -250,10 +253,12 @@ def test_pane_positions(caplog):
     testing_utils.run_gui(core_config=None,
                           gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
                           runtime_config={
+                              'MAIN_WINDOW_MAXIMIZED': False,
+                              'MAIN_WINDOW_SIZE': (1500, 800),
+                              'MAIN_WINDOW_POS': (0, 0),
                               'LEFT_BAR_DOCKED_POS': 400,
                               'RIGHT_BAR_DOCKED_POS': 800,
                               'CONSOLE_DOCKED_POS': 600,
-                              'MAIN_WINDOW_SIZE': (1500, 800),
                               'LEFT_BAR_WINDOW_UNDOCKED': False,
                               'RIGHT_BAR_WINDOW_UNDOCKED': False,
                               'CONSOLE_WINDOW_UNDOCKED': False,
