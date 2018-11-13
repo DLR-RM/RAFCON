@@ -248,7 +248,18 @@ def test_window_positions(caplog):
 def test_pane_positions(caplog):
     testing_utils.run_gui(core_config=None,
                           gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
-                          )
+                          runtime_config={
+                              'LEFT_BAR_DOCKED_POS': 400,
+                              'RIGHT_BAR_DOCKED_POS': 800,
+                              'CONSOLE_DOCKED_POS': 600,
+                              'MAIN_WINDOW_SIZE': (1500, 800),
+                              'LEFT_BAR_WINDOW_UNDOCKED': False,
+                              'RIGHT_BAR_WINDOW_UNDOCKED': False,
+                              'CONSOLE_WINDOW_UNDOCKED': False,
+                              'LEFT_BAR_HIDDEN': False,
+                              'RIGHT_BAR_HIDDEN': False,
+                              'CONSOLE_HIDDEN': False,
+                          })
     from rafcon.gui.runtime_config import global_runtime_config
     original_runtime_config = global_runtime_config.as_dict()
 
