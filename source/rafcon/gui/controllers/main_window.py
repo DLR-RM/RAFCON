@@ -205,6 +205,7 @@ class MainWindowController(ExtendedController):
     def configure_event(widget, event, name):
         # print "configure event", widget, event, name
         global_runtime_config.store_widget_properties(widget, name)
+        global_runtime_config.save_configuration()
 
     def register_view(self, view):
         super(MainWindowController, self).register_view(view)
@@ -273,9 +274,9 @@ class MainWindowController(ExtendedController):
         view.console_window.get_top_widget().connect("configure-event", self.configure_event, "CONSOLE_WINDOW")
 
         # save pane positions in the runtime config on every change
-        view['top_level_h_pane'].connect("button-release-event", self.configure_event, "LEFT_BAR_WINDOW")
-        view['right_h_pane'].connect("button-release-event", self.configure_event, "RIGHT_BAR_WINDOW")
-        view['central_v_pane'].connect("button-release-event", self.configure_event, "CONSOLE_WINDOW")
+        view['top_level_h_pane'].connect("button-release-event", self.configure_event, "LEFT_BAR_DOCKED")
+        view['right_h_pane'].connect("button-release-event", self.configure_event, "RIGHT_BAR_DOCKED")
+        view['central_v_pane'].connect("button-release-event", self.configure_event, "CONSOLE_DOCKED")
 
         # hide not usable buttons
         self.view['step_buttons'].hide()
