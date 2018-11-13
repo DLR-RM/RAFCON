@@ -128,7 +128,6 @@ class Vividict(dict, YAMLObject, JSONObject):
             value = np_to_native(value)
             if isinstance(value, Vividict):
                 value = Vividict.vividict_to_dict(value)
-            print key, type(key), type(value)
             dictionary[key] = value
 
         return dictionary
