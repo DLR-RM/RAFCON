@@ -84,7 +84,7 @@ class StateTransitionsListController(LinkageListController):
         def cell_text(column, cell_renderer, model, iter, data):
             t_id = model.get_value(iter, self.ID_STORAGE_ID)
             in_external = 'external' if model.get_value(iter, self.IS_EXTERNAL_STORAGE_ID) else 'internal'
-            # print t_id, in_external, self.combo[in_external]
+            # print(t_id, in_external, self.combo[in_external])
             if column.get_title() == 'Source State':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['from_state'])
                 cell_renderer.set_property("text-column", 0)
@@ -157,7 +157,7 @@ class StateTransitionsListController(LinkageListController):
             logger.warning("No more options to add a transition")
             return
         to_outcome = to_outcomes[0].outcome_id
-        # print "NEW TRANSITION IS: ", from_state_id, from_outcome, to_state_id, to_outcome
+        # print("NEW TRANSITION IS: ", from_state_id, from_outcome, to_state_id, to_outcome)
 
         try:
             if from_state_id == responsible_parent.state_id:
@@ -334,12 +334,12 @@ class StateTransitionsListController(LinkageListController):
         free_from_outcomes_dict = {}
         for state in model.state.states.values():
             from_o_combo = state.outcomes.values()
-            # print [o.outcome_id for o in from_o_combo], state_model.state.state_id
+            # print([o.outcome_id for o in from_o_combo], state_model.state.state_id)
             for transition in trans_dict.values():
-                # print transition, [[o.outcome_id == transition.from_outcome, transition.from_state == state_model.state.state_id] for o in from_o_combo]
+                # print(transition, [[o.outcome_id == transition.from_outcome, transition.from_state == state_model.state.state_id] for o in from_o_combo])
                 from_o_combo = [o for o in from_o_combo if not (o.outcome_id == transition.from_outcome and
                                                      transition.from_state == state.state_id)]
-                # print [o.outcome_id for o in from_o_combo]
+                # print([o.outcome_id for o in from_o_combo])
             if len(from_o_combo) > 0:
                 free_from_outcomes_dict[state.state_id] = from_o_combo
         # check if parent has start_state
@@ -425,7 +425,7 @@ class StateTransitionsListController(LinkageListController):
 
         model = self.model
 
-        # print "clean data base"
+        # print("clean data base")
 
         ### FOR COMBOS
         # internal transitions
@@ -506,7 +506,7 @@ class StateTransitionsListController(LinkageListController):
         if self.view_dict['transitions_internal'] and isinstance(self.model, ContainerStateModel) and \
                 len(self.model.state.transitions) > 0:
             for transition_id in self.combo['internal'].keys():
-                # print "TRANSITION_ID: ", transition_id, self.model.state.transitions
+                # print("TRANSITION_ID: ", transition_id, self.model.state.transitions)
                 t = self.model.state.transitions[transition_id]
 
                 if t.from_state is not None:
@@ -522,7 +522,7 @@ class StateTransitionsListController(LinkageListController):
                     to_outcome = None if t.to_outcome is None else self.model.state.outcomes[t.to_outcome]
                     to_outcome_label = "None" if to_outcome is None else to_outcome.name
                 else:
-                    # print t.to_state, self.model.states
+                    # print(t.to_state, self.model.states)
                     if t.to_state == self.model.state.state_id:
                         to_state_label = "self (" + self.model.state.name + ")"
                         to_outcome_label = self.model.state.outcomes[t.to_outcome].name
@@ -544,7 +544,7 @@ class StateTransitionsListController(LinkageListController):
         if self.view_dict['transitions_external'] and self.model.parent and \
                 len(self.model.parent.state.transitions) > 0:
             for transition_id in self.combo['external'].keys():
-                # print "TRANSITION_ID: ", transition_id, self.model.parent.state.transitions
+                # print("TRANSITION_ID: ", transition_id, self.model.parent.state.transitions)
                 try:
                     t = self.model.parent.state.transitions[transition_id]
                     # logger.info(str(t))
@@ -630,7 +630,7 @@ class StateTransitionsListController(LinkageListController):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
-        # print self, self.model.state.get_path(), overview
+        # print(self, self.model.state.get_path(), overview)
         # logger.info("after_notification_of_parent_or_state_from_lists: OK")
 
         if overview['prop_name'][0] in ['states', 'outcomes', 'transitions'] and \
@@ -649,7 +649,7 @@ class StateTransitionsListController(LinkageListController):
                         return
                 else:
                     return
-        # print "TUPDATE ", self, overview
+        # print("TUPDATE ", self, overview)
 
         try:
             # logger.info("after_notification_of_parent_or_state_from_lists: UPDATE")

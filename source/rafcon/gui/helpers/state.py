@@ -392,7 +392,7 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
 
         gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
         if isinstance(state_m_to_insert, ContainerStateModel):
-            # print "TARGET1", state_m_to_insert.state.state_element_attrs
+            # print("TARGET1", state_m_to_insert.state.state_element_attrs)
             models_dict = {'state': state_m_to_insert}
 
             for state_element_key in state_m_to_insert.state.state_element_attrs:
@@ -406,7 +406,7 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
             gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor, gaphas_editor)
 
         elif isinstance(state_m_to_insert, StateModel):
-            # print "TARGET2", state_m_to_insert.state.state_element_attrs
+            # print("TARGET2", state_m_to_insert.state.state_element_attrs)
 
             if previous_state_size:
                 current_size = state_m_to_insert.get_meta_data_editor(gaphas_editor)['size']
@@ -479,7 +479,7 @@ def substitute_state(target_state_m, state_m_to_insert):
     :param rafcon.gui.models.container_state.StateModel state_m_to_insert: State Model of state to be insert instate
     :return:
     """
-    # print "substitute_state"
+    # print("substitute_state")
 
     gaphas_editor = gui_singletons.global_gui_config.get_config_value('GAPHAS_EDITOR', True)
     state_to_insert = state_m_to_insert.state
@@ -487,19 +487,19 @@ def substitute_state(target_state_m, state_m_to_insert):
     old_state_m = target_state_m
     old_state = old_state_m.state
     state_id = old_state.state_id
-    # print "TARGET", old_state_m.get_meta_data_editor(gaphas_editor)
+    # print("TARGET", old_state_m.get_meta_data_editor(gaphas_editor))
 
     # BEFORE MODEL
     tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'state': None}
     old_state_m = action_parent_m.states[state_id]
-    # print "EMIT-BEFORE ON OLD_STATE ", state_id
+    # print("EMIT-BEFORE ON OLD_STATE ", state_id)
     old_state_m.action_signal.emit(ActionSignalMsg(action='substitute_state', origin='model',
                                                    action_parent_m=action_parent_m,
                                                    affected_models=[old_state_m, ], after=False,
                                                    kwargs={'state_id': state_id, 'state': state_to_insert}))
     related_transitions, related_data_flows = action_parent_m.state.related_linkage_state(state_id)
     tmp_meta_data['state'] = old_state_m.meta
-    # print "old state meta", old_state_m.meta
+    # print("old state meta", old_state_m.meta)
     for t in related_transitions['external']['ingoing'] + related_transitions['external']['outgoing']:
         tmp_meta_data['transitions'][t.transition_id] = action_parent_m.get_transition_m(t.transition_id).meta
     for df in related_data_flows['external']['ingoing'] + related_data_flows['external']['outgoing']:
@@ -518,7 +518,7 @@ def substitute_state(target_state_m, state_m_to_insert):
 
     # CORE
     new_state = e = None
-    # print "state to insert", state_to_insert
+    # print("state to insert", state_to_insert)
     try:
         action_parent_m.expected_future_models.add(state_m_to_insert)
         new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
@@ -529,7 +529,7 @@ def substitute_state(target_state_m, state_m_to_insert):
 
     if new_state:
         # AFTER MODEL
-        # print "AFTER MODEL", new_state
+        # print("AFTER MODEL", new_state)
         new_state_m = action_parent_m.states[new_state.state_id]
         tmp_meta_data = action_parent_m.substitute_state.__func__.tmp_meta_data_storage
         old_state_m = action_parent_m.substitute_state.__func__.old_state_m
@@ -551,7 +551,7 @@ def substitute_state(target_state_m, state_m_to_insert):
 
         msg = ActionSignalMsg(action='substitute_state', origin='model', action_parent_m=action_parent_m,
                               affected_models=changed_models, after=True, result=e)
-        # print "EMIT-AFTER OLDSTATE", msg
+        # print("EMIT-AFTER OLDSTATE", msg)
         old_state_m.action_signal.emit(msg)
 
     del action_parent_m.substitute_state.__func__.tmp_meta_data_storage
@@ -617,7 +617,7 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         elif isinstance(elemets_dict, AbstractStateModel):
             affected_models.extend(elemets_dict)
 
-    # print "EMIT-BEFORE ON ACTION PARENT"
+    # print("EMIT-BEFORE ON ACTION PARENT")
     action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
                                                        action_parent_m=action_parent_m,
                                                        affected_models=affected_models, after=False,
@@ -656,7 +656,7 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
             grouped_state_m.insert_meta_data_from_models_dict(tmp_models_dict, logger.error)
 
         affected_models = action_parent_m.group_states.__func__.affected_models
-        # print "EMIT-AFTER ON ACTION PARENT"
+        # print("EMIT-AFTER ON ACTION PARENT")
         affected_models.append(grouped_state_m)
 
     action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
@@ -690,14 +690,14 @@ def ungroup_state(state_m):
     for df in related_data_flows['internal']['enclosed']:
         tmp_models_dict['data_flows'][df.data_flow_id] = action_parent_m.states[state_id].get_data_flow_m(df.data_flow_id)
     affected_models = [action_parent_m.states[state_id], ]
-    # print "EMIT-BEFORE ON OLD_STATE ", state_id
+    # print("EMIT-BEFORE ON OLD_STATE ", state_id)
     old_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
                                                    action_parent_m=action_parent_m,
                                                    affected_models=affected_models, after=False,
                                                    kwargs={'state_id': state_id}))
     action_parent_m.ungroup_state.__func__.tmp_models_storage = tmp_models_dict
     action_parent_m.ungroup_state.__func__.affected_models = affected_models
-    # print "ungroup", id(old_state_m), [id(m) for m in tmp_models_dict['states']]
+    # print("ungroup", id(old_state_m), [id(m) for m in tmp_models_dict['states']])
 
     error_msg = "Un-Group action has not started with empty expected future models list."
     check_expected_future_model_list_is_empty(action_parent_m, msg=error_msg)
@@ -752,10 +752,10 @@ def ungroup_state(state_m):
                                                    affected_models=affected_models, after=True, result=e))
 
     old_state_m.prepare_destruction(recursive=True)
-    # print "prepare destruction finished"
+    # print("prepare destruction finished")
     del action_parent_m.ungroup_state.__func__.tmp_models_storage
     del action_parent_m.ungroup_state.__func__.affected_models
-    # print "## ungroup finished"
+    # print("## ungroup finished")
     return old_state_m
 
 

@@ -388,24 +388,24 @@ class ContainerState(State):
             minor_locate_key = 'external' if prior_locate_key == 'internal' else 'internal'
             for port_key in list(going_data_linkage_for_port[prior_port_key].keys()):
                 port_dfs = going_data_linkage_for_port[prior_port_key][port_key]
-                # print prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key])
+                # print(prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key]))
                 if len(port_dfs[prior_locate_key]) > 1:
                     for df in port_dfs[prior_locate_key]:
-                        # print "remove: ", df.data_flow_id, prior_locate_key, minor_port_key
+                        # print("remove: ", df.data_flow_id, prior_locate_key, minor_port_key)
                         reduce_dfs(going_data_linkage_for_port[minor_port_key], df.data_flow_id)
             for port_key in list(going_data_linkage_for_port[minor_port_key].keys()):
                 port_dfs = going_data_linkage_for_port[minor_port_key][port_key]
-                # print minor_port_key, ": check: ", port_key, " length: ", len(port_dfs[minor_locate_key])
+                # print(minor_port_key, ": check: ", port_key, " length: ", len(port_dfs[minor_locate_key]))
                 if len(port_dfs[minor_locate_key]) > 1:
                     for df in port_dfs[minor_locate_key]:
-                        # print "remove: ", df.data_flow_id, minor_locate_key, prior_port_key
+                        # print("remove: ", df.data_flow_id, minor_locate_key, prior_port_key)
                         reduce_dfs(going_data_linkage_for_port[prior_port_key], df.data_flow_id)
             for port_key in list(going_data_linkage_for_port[prior_port_key].keys()):
                 port_dfs = going_data_linkage_for_port[prior_port_key][port_key]
-                # print prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key])
+                # print(prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key]))
                 if len(port_dfs[prior_locate_key]) == 1:
                     for df in port_dfs[prior_locate_key]:
-                        # print "remove: ", df.data_flow_id, prior_locate_key, minor_port_key
+                        # print("remove: ", df.data_flow_id, prior_locate_key, minor_port_key)
                         reduce_dfs(going_data_linkage_for_port[minor_port_key], df.data_flow_id)
 
         def create_data_port_args(going_data_linkage_for_port):
@@ -532,15 +532,15 @@ class ContainerState(State):
         for goal, transitions in list(outgoing_logical_destinations.items()):
             t = transitions[0]
             name = s.states[t.from_state].outcomes[t.from_outcome].name
-            # print (t.to_state, t.to_outcome)
-            # print outcomes_outgoing_transitions
+            # print((t.to_state, t.to_outcome))
+            # print(outcomes_outgoing_transitions)
             if goal in outcomes_outgoing_transitions:
                 # logger.info("old outcome {}".format((t.to_state, t.to_outcome)))
                 name = outcomes_outgoing_transitions[goal]
             else:
                 name = create_name(name, list(new_outcome_ids.keys()))
                 outcomes_outgoing_transitions[goal] = name
-            # print outcomes_outgoing_transitions, "\n", new_outcome_ids
+            # print(outcomes_outgoing_transitions, "\n", new_outcome_ids)
             if name not in new_outcome_ids:
                 if name in state_outcomes_by_name:
                     new_outcome_ids[name] = state_outcomes_by_name[name]
@@ -553,7 +553,7 @@ class ContainerState(State):
 
         ################## DO OUTGOING TRANSITIONS ###################
         # external outgoing transitions
-        # print "external transitions to create", outcomes_outgoing_transitions
+        # print("external transitions to create", outcomes_outgoing_transitions)
         for goal, name in outcomes_outgoing_transitions.items():
             try:
                 # avoid to use a outcome twice
@@ -565,7 +565,7 @@ class ContainerState(State):
             except ValueError:
                 logger.exception("Error while recreation of logical linkage.")
         # internal outgoing transitions
-        # print "internal transitions to create", transitions_outgoing
+        # print("internal transitions to create", transitions_outgoing)
         for t_id, t in transitions_outgoing.items():
             name = outcomes_outgoing_transitions[(t.to_state, t.to_outcome)]
             s.add_transition(t.from_state, t.from_outcome, s.state_id, new_outcome_ids[name], t_id)
@@ -580,16 +580,16 @@ class ContainerState(State):
             args['data_port_id'] = None
             args['data_port_id'] = s.add_input_data_port(**args)
             # internal data flows from ingoing data flows
-            # print "ingoing internal data flows"
+            # print("ingoing internal data flows")
             for df in data_port_linkage['internal']:
-                # print df
+                # print(df)
                 s.add_data_flow(from_state_id=s.state_id, from_data_port_id=args['data_port_id'],
                                 to_state_id=new_state_ids.get(df.to_state, df.to_state),
                                 to_data_port_id=df.to_key, data_flow_id=df.data_flow_id)
             # external data flows from ingoing data flows
-            # print "ingoing external data flows"
+            # print("ingoing external data flows")
             for df in data_port_linkage['external']:
-                # print df
+                # print(df)
                 self.add_data_flow(from_state_id=df.from_state,
                                    from_data_port_id=df.from_key, to_state_id=s.state_id,
                                    to_data_port_id=args['data_port_id'], data_flow_id=df.data_flow_id)
@@ -603,16 +603,16 @@ class ContainerState(State):
             args['data_port_id'] = None
             args['data_port_id'] = s.add_output_data_port(**args)
             # internal data flows from outgoing data flows
-            # print "outgoing internal data flows"
+            # print("outgoing internal data flows")
             for df in data_port_linkage['internal']:
-                # print df
+                # print(df)
                 s.add_data_flow(from_state_id=new_state_ids.get(df.from_state, df.from_state),
                                 from_data_port_id=df.from_key, to_state_id=s.state_id,
                                 to_data_port_id=args['data_port_id'], data_flow_id=df.data_flow_id)
             # external data flows from outgoing data flows
-            # print "outgoing external data flows"
+            # print("outgoing external data flows")
             for df in data_port_linkage['external']:
-                # print df
+                # print(df)
                 self.add_data_flow(from_state_id=s.state_id, from_data_port_id=args['data_port_id'],
                                    to_state_id=df.to_state, to_data_port_id=df.to_key, data_flow_id=df.data_flow_id)
 
@@ -720,7 +720,7 @@ class ContainerState(State):
 
         # re-create data flow linkage
         for df in related_data_flows['internal']['enclosed']:
-            # print "enclosed: ", df
+            # print("enclosed: ", df)
             new_df_id = self.add_data_flow(self.state_id if state_id == df.from_state else state_id_dict[df.from_state],
                                            sv_id_dict[df.from_key] if state_id == df.from_state else df.from_key,
                                            self.state_id if state_id == df.to_state else state_id_dict[df.to_state],
@@ -729,7 +729,7 @@ class ContainerState(State):
         for data_port_linkage in ingoing_data_linkage_for_port.values():
             for ext_df in data_port_linkage['external']:
                 for df in data_port_linkage['internal']:
-                    # print "ingoing: ", ext_df, df
+                    # print("ingoing: ", ext_df, df)
                     if df.to_state not in state_id_dict and df.to_state == state_id:
                         self.add_data_flow(ext_df.from_state, ext_df.from_key, self.state_id, sv_id_dict[df.to_key])
                     else:
@@ -737,7 +737,7 @@ class ContainerState(State):
         for data_port_linkage in outgoing_data_linkage_for_port.values():
             for ext_df in data_port_linkage['external']:
                 for df in data_port_linkage['internal']:
-                    # print "outgoing: ", ext_df, df
+                    # print("outgoing: ", ext_df, df)
                     if df.from_state not in state_id_dict and df.from_state == state_id:
                         self.add_data_flow(self.state_id, sv_id_dict[df.from_key], ext_df.to_state, ext_df.to_key)
                     else:

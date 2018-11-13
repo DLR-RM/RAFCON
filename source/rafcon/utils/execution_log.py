@@ -175,8 +175,8 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
 
             # for item in gitems:
             #     if item["description"] is not None:
-            #         print item["item_type"], item["call_type"], item["state_type"], item["state_name"]
-            #     print item["description"]
+            #         print(item["item_type"], item["call_type"], item["state_type"], item["state_name"])
+            #     print(item["description"])
 
             # select call and return items for this state
             try:

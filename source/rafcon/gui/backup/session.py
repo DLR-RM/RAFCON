@@ -112,7 +112,7 @@ def restore_session_from_runtime_config():
             else:
                 from_backup_path = backup_meta_dict['last_backup']['file_system_path']
         elif 'last_saved' in backup_meta_dict:
-            # print "### open last saved", sm_meta_dict['last_saved']['file_system_path']
+            # print("### open last saved", sm_meta_dict['last_saved']['file_system_path'])
             pass
         else:
             logger.error("A tab was stored into session storage dictionary {0} without any recovery path"

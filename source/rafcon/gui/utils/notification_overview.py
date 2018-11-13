@@ -239,8 +239,8 @@ class NotificationOverview(dict):
                     overview['others'][len(overview['others'])-1][key] = info[key]
         else:
             overview['kwargs'].append({})
-            # print info
-            # print info['arg']
+            # print(info)
+            # print(info['arg'])
             if isinstance(info['arg'], MetaSignalMsg):
                 overview['signal'].append(info['arg'])
                 s += "\n{0}'arg': MetaSignalMsg({1}".format(level,

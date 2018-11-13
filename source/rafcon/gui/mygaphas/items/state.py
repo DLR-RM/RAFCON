@@ -630,13 +630,13 @@ class StateView(Element):
 
         port_meta = self.model.get_meta_data_editor()['income']
         if not contains_geometric_info(port_meta['rel_pos']):
-            # print "generate rel_pos"
+            # print("generate rel_pos")
             # Position income on the top of the left state side
             income_v.side = SnappedSide.LEFT
             pos_x = 0
             pos_y = self._calculate_port_pos_on_line(1, self.height)
             port_meta = self.model.set_meta_data_editor('income.rel_pos', (pos_x, pos_y))['income']
-        # print "add income", self.model, self.model.parent, port_meta['rel_pos']
+        # print("add income", self.model, self.model.parent, port_meta['rel_pos'])
         income_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(income_v)
         return income_v
@@ -661,7 +661,7 @@ class StateView(Element):
 
         port_meta = outcome_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
-            # print "generate rel_pos"
+            # print("generate rel_pos")
             if outcome_m.outcome.outcome_id < 0:
                 # Position aborted/preempted in upper right corner
                 outcome_v.side = SnappedSide.TOP
@@ -675,7 +675,7 @@ class StateView(Element):
                 number_of_outcome = [o.model for o in self.outcomes if o.model.outcome.outcome_id >= 0].index(outcome_m) + 1
                 pos_y = self._calculate_port_pos_on_line(number_of_outcome, self.height)
             port_meta = outcome_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
-        # print "add outcome", self.model, self.model.parent, port_meta['rel_pos']
+        # print("add outcome", self.model, self.model.parent, port_meta['rel_pos'])
         outcome_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(outcome_v)
 
@@ -699,14 +699,14 @@ class StateView(Element):
 
         port_meta = port_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
-            # print "generate rel_pos"
+            # print("generate rel_pos")
             # Distribute input ports on the left side of the state, starting from bottom
             input_port_v.side = SnappedSide.LEFT
             number_of_input = self.model.input_data_ports.index(port_m) + 1
             pos_x = 0
             pos_y = self.height - self._calculate_port_pos_on_line(number_of_input, self.height)
             port_meta = port_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
-        # print "add input_port", self.model, self.model.parent, port_meta['rel_pos']
+        # print("add input_port", self.model, self.model.parent, port_meta['rel_pos'])
         input_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(input_port_v)
 
@@ -731,13 +731,13 @@ class StateView(Element):
         port_meta = port_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
             # Distribute output ports on the right side of the state, starting from bottom
-            # print "generate rel_pos"
+            # print("generate rel_pos")
             output_port_v.side = SnappedSide.RIGHT
             number_of_output = self.model.output_data_ports.index(port_m) + 1
             pos_x = self.width
             pos_y = self.height - self._calculate_port_pos_on_line(number_of_output, self.height)
             port_meta = port_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
-        # print "add output_port", self.model, self.model.parent, port_meta['rel_pos']
+        # print("add output_port", self.model, self.model.parent, port_meta['rel_pos'])
         output_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(output_port_v)
 
@@ -764,7 +764,7 @@ class StateView(Element):
         port_meta = scoped_variable_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
             # Distribute scoped variables on the top side of the state, starting from left
-            # print "generate rel_pos"
+            # print("generate rel_pos")
             scoped_variable_port_v.side = SnappedSide.BOTTOM
 
             number_of_scoped_var = self.model.scoped_variables.index(scoped_variable_m) + 1
@@ -772,7 +772,7 @@ class StateView(Element):
                                                      port_width=self.border_width * 4)
             pos_y = self.height
             port_meta = scoped_variable_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
-        # print "add scoped_variable", self.model, self.model.parent, port_meta['rel_pos']
+        # print("add scoped_variable", self.model, self.model.parent, port_meta['rel_pos'])
         scoped_variable_port_v.handle.pos = port_meta['rel_pos']
 
         self.add_rect_constraint_for_port(scoped_variable_port_v)
@@ -972,7 +972,7 @@ class NameView(Element):
         # logger.info("name rel_pos {}".format(name_meta['rel_pos']))
         # logger.info("name size {}".format(name_meta['size']))
         self.position = name_meta['rel_pos']
-        # print "name pos from meta", name_meta['rel_pos']
+        # print("name pos from meta", name_meta['rel_pos'])
         self.width = name_meta['size'][0]
         self.height = name_meta['size'][1]
 

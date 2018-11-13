@@ -261,7 +261,7 @@ class StateMachine(Observable, JSONObject, Hashable):
     @marked_dirty.setter
     @Observable.observed
     def marked_dirty(self, marked_dirty):
-        # print "sm-core: marked dirty changed from ", self._marked_dirty, " to ", marked_dirty
+        # print("sm-core: marked dirty changed from ", self._marked_dirty, " to ", marked_dirty)
         if not isinstance(marked_dirty, bool):
             raise AttributeError("marked_dirty has to be of type bool")
         self.old_marked_dirty = self._marked_dirty

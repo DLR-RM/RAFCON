@@ -285,12 +285,12 @@ class PortView(object):
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
-            # print "from cache"
+            # print("from cache")
             self._port_image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
         else:
-            # print "draw"
+            # print("draw")
             c = self._port_image_cache.get_context_for_image(current_zoom)
 
             c.move_to(0, 0)
@@ -340,12 +340,12 @@ class PortView(object):
                                                                            current_zoom, parameters)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache and not context.draw_all:
-            # print "draw port name from cache"
+            # print("draw port name from cache")
             self._label_image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
         else:
-            # print "draw port name"
+            # print("draw port name")
 
             # First we have to do a "dry run", in order to determine the size of the new label
             c.move_to(position.x.value, position.y.value)
@@ -357,7 +357,7 @@ class PortView(object):
             relative_pos = label_pos[0] - position[0], label_pos[1] - position[1]
             label_size = extents[2] - extents[0], extents[3] - extents[1]
 
-            # print label_size[0], self.name, self.parent.model.state.name
+            # print(label_size[0], self.name, self.parent.model.state.name)
             # if label_size[0] < constants.MINIMUM_PORT_NAME_SIZE_FOR_DISPLAY and self.parent:
             #     return
             self._last_label_relative_pos = relative_pos

@@ -262,7 +262,7 @@ class PerpLine(Line):
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
-            # print "draw port name from cache"
+            # print("draw port name from cache")
             self._label_image_cache.copy_image_to_context(c, upper_left_corner, angle)
 
         # Parameters have changed or nothing in cache => redraw

@@ -384,7 +384,7 @@ class GraphicalEditorController(ExtendedController):
         if action in ['change_root_state_type', 'change_state_type', 'substitute_state',
                       'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
 
-            # print self.__class__.__name__, 'add complex action', action
+            # print(self.__class__.__name__, 'add complex action', action)
             if not self._ongoing_complex_actions:
                 self._nested_action_already_in = {}
 
@@ -423,7 +423,7 @@ class GraphicalEditorController(ExtendedController):
 
         old_state_m = self._ongoing_complex_actions[action]['target']
 
-        # print self.__class__.__name__, 'remove complex action', action, \
+        # print(self.__class__.__name__, 'remove complex action', action, \)
         #     id(old_state_m), id(new_state_m), old_state_m, new_state_m
         self._nested_action_already_in.update({action: self._ongoing_complex_actions.pop(action)})
 
@@ -838,10 +838,10 @@ class GraphicalEditorController(ExtendedController):
         num_data_flows = len(state_m.state.parent.data_flows) if isinstance(state_m.parent, ContainerStateModel) else 0
         index = 1 if not parent_v else num_data_flows + 1
         # if self.model.root_state is state_m:
-        #     print "init root_state", state_m, state_v
+        #     print("init root_state", state_m, state_v)
         # else:
-        #     print "init state", state_m, state_v
-        # print [hash(elem) for elem in state_m.state.outcomes.itervalues()]
+        #     print("init state", state_m, state_v)
+        # print([hash(elem) for elem in state_m.state.outcomes.itervalues()])
         self.canvas.add(state_v, parent_v, index=index)
         state_v.matrix.translate(*rel_pos)
 

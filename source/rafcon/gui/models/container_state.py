@@ -256,7 +256,7 @@ class ContainerStateModel(StateModel):
             model_class = None
             # TODO this if cause is not working if keys are used for arguments
             # if len(info.args) < 2:
-            #     print "XXXX", info
+            #     print("XXXX", info)
             if not isinstance(info.args[1], (string_types, dict)) and info.args[1] is not None:
                 model_class = get_state_model_class_for_state(info.args[1])
             model_key = "state_id"

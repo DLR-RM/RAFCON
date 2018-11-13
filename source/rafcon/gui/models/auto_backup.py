@@ -227,7 +227,7 @@ def check_for_crashed_rafcon_instances():
                                 os.remove(full_path)
 
     # if restorable_sm:
-    #     print "Restorable state machines: \n" + '\n'.join([elem[0] for elem in restorable_sm if elem[0] is not None])
+    #     print("Restorable state machines: \n" + '\n'.join([elem[0] for elem in restorable_sm if elem[0] is not None]))
 
     if restorable_sm and any([path is not None for path, pid, lock_file, m_time, full_path_dirty_lock in restorable_sm]):
         message_string = "State machines of not correctly closed RAFCON instances have been found.\n\n" \

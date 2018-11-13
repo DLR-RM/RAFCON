@@ -212,19 +212,19 @@ class StateMachineModel(MetaModel, Hashable):
     @ModelMT.observe("action_signal", signal=True)
     def action_signal_triggered(self, model, prop_name, info):
         """When the action was performed, we have to set the dirty flag, as the changes are unsaved"""
-        # print "action_signal_triggered state machine: ", model, prop_name, info
+        # print("action_signal_triggered state machine: ", model, prop_name, info)
         self.state_machine.marked_dirty = True
         msg = info.arg
         if model is not self and msg.action.startswith('sm_notification_'):  # Signal was caused by the root state
             # Emit state_action_signal to inform observing controllers about changes made to the state within the
             # state machine
-            # print "DONE1 S", self.state_machine.state_machine_id, msg, model
+            # print("DONE1 S", self.state_machine.state_machine_id, msg, model)
             # -> removes mark of "sm_notification_"-prepend to mark root-state msg forwarded to state machine label
             msg = msg._replace(action=msg.action.replace('sm_notification_', '', 1))
             self.state_action_signal.emit(msg)
-            # print "FINISH DONE1 S", self.state_machine.state_machine_id, msg
+            # print("FINISH DONE1 S", self.state_machine.state_machine_id, msg)
         else:
-            # print "DONE2 S", self.state_machine.state_machine_id, msg
+            # print("DONE2 S", self.state_machine.state_machine_id, msg)
             pass
 
     @staticmethod
@@ -284,7 +284,7 @@ class StateMachineModel(MetaModel, Hashable):
         if self.suppress_new_root_state_model_one_time:
             self.suppress_new_root_state_model_one_time = False
             return
-        # print "ASSIGN ROOT_STATE", model, prop_name, info
+        # print("ASSIGN ROOT_STATE", model, prop_name, info)
         try:
             self.root_state.unregister_observer(self)
         except KeyError:

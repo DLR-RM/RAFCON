@@ -95,9 +95,9 @@ def get_state_tuple(state, state_m=None):
 
     state_tuples_dict = {}
     if isinstance(state, ContainerState):
-        # print state.states, "\n"
+        # print(state.states, "\n")
         for child_state_id, child_state in state.states.items():
-            # print "child_state: %s" % child_state_id, child_state, "\n"
+            # print("child_state: %s" % child_state_id, child_state, "\n")
             state_tuples_dict[child_state_id] = get_state_tuple(child_state)
 
     state_meta_dict = {} if state_m is None else get_state_element_meta(state_m)
@@ -124,7 +124,7 @@ def get_state_from_state_tuple(state_tuple):
         data_flows = state_info[2]
 
     state._file_system_path = state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX]
-    # print "got state tuple with sd", state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX], state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX]
+    # print("got state tuple with sd", state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX], state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX])
     state.semantic_data = state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX]
 
     if isinstance(state, BarrierConcurrencyState):
@@ -143,12 +143,12 @@ def get_state_from_state_tuple(state_tuple):
 
     if isinstance(state, ExecutionState):
         state.script_text = state_tuple[STATE_TUPLE_SCRIPT_TEXT_INDEX]
-    # print "------------- ", state
+    # print("------------- ", state)
     for child_state_id, child_state_tuple in state_tuple[STATE_TUPLE_CHILD_STATES_INDEX].items():
         child_state = get_state_from_state_tuple(child_state_tuple)
         # do_storage_test(child_state)
 
-        # print "++++ new cild", child_state  # child_state_tuple, child_state
+        # print("++++ new cild", child_state  # child_state_tuple, child_state)
         if not child_state.state_id == UNIQUE_DECIDER_STATE_ID:
             try:
                 state.add_state(child_state)
@@ -162,7 +162,7 @@ def get_state_from_state_tuple(state_tuple):
                 for state_id, child_state in state.states.items():
                     logger.verbose(child_state.get_path())
                     print_states(child_state)
-                    # print "got from tuple:"
+                    # print("got from tuple:")
                     # print_states(state)
 
     # Child states were added, now we can add transitions and data flows
@@ -490,7 +490,7 @@ class MetaAction(AbstractAction):
 
         meta_str = json.dumps(overview['model'][-1].meta, cls=JSONObjectEncoder,
                               indent=4, check_circular=False, sort_keys=True)
-        # print meta_str
+        # print(meta_str)
         self.meta = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
 
     def get_storage(self):
@@ -589,9 +589,9 @@ class Action(ModelMT, AbstractAction):
                            "\n{0}\n{1}".format(previous_model, actual_model))
 
     def set_state_to_version(self, state, storage_version):
-        # print state.get_path(), '\n', storage_version[STATE_TUPLE_PATH_INDEX]
+        # print(state.get_path(), '\n', storage_version[STATE_TUPLE_PATH_INDEX])
         assert state.get_path() == storage_version[STATE_TUPLE_PATH_INDEX]
-        # print self.parent_path, self.parent_path.split('/'), len(self.parent_path.split('/'))
+        # print(self.parent_path, self.parent_path.split('/'), len(self.parent_path.split('/')))
         path_of_state = state.get_path()
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
@@ -655,7 +655,7 @@ class Action(ModelMT, AbstractAction):
 
         if isinstance(state, ContainerState):
 
-            # print state.data_flows.keys()
+            # print(state.data_flows.keys())
             for data_flow_id in list(state.data_flows.keys()):
                 state.remove_data_flow(data_flow_id)
 
@@ -668,7 +668,7 @@ class Action(ModelMT, AbstractAction):
                 # try:
                 state.remove_state(old_state_id, force=True)
                 # except Exception as e:
-                #     print "ERROR: ", old_state_id, UNIQUE_DECIDER_STATE_ID, state
+                #     print("ERROR: ", old_state_id, UNIQUE_DECIDER_STATE_ID, state)
                 #     raise
 
         if is_root:
@@ -679,13 +679,13 @@ class Action(ModelMT, AbstractAction):
             for dp_id in list(state.input_data_ports.keys()):
                 state.remove_input_data_port(dp_id)
 
-            # print " \n\n\n ########### start removing output data_ports ", state.output_data_ports.keys(), "\n\n\n"
+            # print(" \n\n\n ########### start removing output data_ports ", state.output_data_ports.keys(), "\n\n\n")
             for dp_id in list(state.output_data_ports.keys()):
                 state.remove_output_data_port(dp_id)
 
         if isinstance(state, ContainerState):
             for dp_id in list(state.scoped_variables.keys()):
-                # print "scoped_variable ", dp_id
+                # print("scoped_variable ", dp_id)
                 state.remove_scoped_variable(dp_id)
 
         state.name = stored_state.name
@@ -697,30 +697,30 @@ class Action(ModelMT, AbstractAction):
 
         if is_root:
             for dp_id, dp in stored_state.input_data_ports.items():
-                # print "generate input data port", dp_id
+                # print("generate input data port", dp_id)
                 state.add_input_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
-                # print "got input data ports", dp_id, state.input_data_ports.keys()
+                # print("got input data ports", dp_id, state.input_data_ports.keys())
                 assert dp_id in state.input_data_ports
 
-            # print " \n\n\n ########### start adding output data_ports ", state.output_data_ports.keys(), "\n\n\n"
+            # print(" \n\n\n ########### start adding output data_ports ", state.output_data_ports.keys(), "\n\n\n")
             for dp_id, dp in stored_state.output_data_ports.items():
                 scoped_str = str([])
                 if isinstance(state, ContainerState):
                     scoped_str = str(list(state.scoped_variables.keys()))
-                # print "\n\n\n ------- ############ generate output data port", dp_id, state.input_data_ports.keys(), \
+                # print("\n\n\n ------- ############ generate output data port", dp_id, state.input_data_ports.keys(), \)
                 #     state.output_data_ports.keys(), scoped_str, "\n\n\n"
                 state.add_output_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
-                # print "\n\n\n ------- ############ got output data ports", dp_id, state.output_data_ports.keys(), "\n\n\n"
+                # print("\n\n\n ------- ############ got output data ports", dp_id, state.output_data_ports.keys(), "\n\n\n")
                 assert dp_id in state.output_data_ports
 
             for oc_id, oc in stored_state.outcomes.items():
-                # print oc_id, state.outcomes, type(oc_id), oc_id < 0, oc_id == 0, oc_id == -1, oc_id == -2
+                # print(oc_id, state.outcomes, type(oc_id), oc_id < 0, oc_id == 0, oc_id == -1, oc_id == -2)
                 if not oc_id < 0:
-                    # print "add_outcome", oc_id
+                    # print("add_outcome", oc_id)
                     state.add_outcome(oc.name, oc_id)
-            # print "\n\n\n++++++++++++++++ ", stored_state.outcomes, state.outcomes, "\n\n\n++++++++++++++++ "
+            # print("\n\n\n++++++++++++++++ ", stored_state.outcomes, state.outcomes, "\n\n\n++++++++++++++++ ")
             for oc_id, oc in stored_state.outcomes.items():
-                # print oc_id, state.outcomes
+                # print(oc_id, state.outcomes)
                 assert oc_id in state.outcomes
 
         if isinstance(state, ContainerState):
@@ -732,7 +732,7 @@ class Action(ModelMT, AbstractAction):
                 state.add_state(stored_state.states[UNIQUE_DECIDER_STATE_ID], storage_load=True)
 
             for new_state in stored_state.states.values():
-                # print "++++ new child", new_state
+                # print("++++ new child", new_state)
                 if not new_state.state_id == UNIQUE_DECIDER_STATE_ID:
                     state.add_state(new_state)
                     # state.states[new_state.state_id].script = new_state.script

@@ -113,7 +113,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             concurrency_history_item = self.setup_forward_or_backward_execution()
             self.start_child_states(concurrency_history_item, decider_state)
 
-            # print "bcs1"
+            # print("bcs1")
 
             #######################################################
             # wait for all child threads to finish
@@ -129,26 +129,26 @@ class BarrierConcurrencyState(ConcurrencyState):
                         child_errors[state.state_id] = (state.name, state.output_data['error'])
                     final_outcomes_dict[state.state_id] = (state.name, state.final_outcome)
 
-            # print "bcs2"
+            # print("bcs2")
 
             #######################################################
             # handle backward execution case
             #######################################################
             if self.backward_execution:
-                # print "bcs2.1."
+                # print("bcs2.1.")
                 return self.finalize_backward_execution()
             else:
-                # print "bcs2.2."
+                # print("bcs2.2.")
                 self.backward_execution = False
 
-            # print "bcs3"
+            # print("bcs3")
 
             #######################################################
             # execute decider state
             #######################################################
             decider_state_error = self.run_decider_state(decider_state, child_errors, final_outcomes_dict)
 
-            # print "bcs4"
+            # print("bcs4")
 
             #######################################################
             # handle no transition
@@ -160,7 +160,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             # if the transition is still None, then the child_state was preempted or aborted, in this case return
             decider_state.state_execution_status = StateExecutionStatus.INACTIVE
 
-            # print "bcs5"
+            # print("bcs5")
 
             if transition is None:
                 self.output_data["error"] = RuntimeError("state aborted")
@@ -169,7 +169,7 @@ class BarrierConcurrencyState(ConcurrencyState):
                     self.output_data["error"] = decider_state_error
                 self.final_outcome = self.outcomes[transition.to_outcome]
 
-            # print "bcs6"
+            # print("bcs6")
 
             return self.finalize_concurrency_state(self.final_outcome)
 

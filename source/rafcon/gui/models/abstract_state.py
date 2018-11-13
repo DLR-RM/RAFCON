@@ -354,14 +354,14 @@ class AbstractStateModel(MetaModel, Hashable):
         """This method notifies the parent state and child state models about complex actions
         """
         msg = info.arg
-        # print "action_signal_triggered state: ", self.state.state_id, model, prop_name, info
+        # print("action_signal_triggered state: ", self.state.state_id, model, prop_name, info)
         if msg.action.startswith('sm_notification_'):
             return
         # # affected child propagation from state
         # if hasattr(self, 'states'):
         #     for m in info['arg'].affected_models:
-        #         print m, self.states
-        #         print [m is mm for mm in self.states.itervalues()], [m in self for m in info['arg'].affected_models], \
+        #         print(m, self.states)
+        #         print([m is mm for mm in self.states.itervalues()], [m in self for m in info['arg'].affected_models], \)
         #             [m in self.states.values() for m in info['arg'].affected_models]
         if any([m in self for m in info['arg'].affected_models]):
             if not msg.action.startswith('parent_notification_'):
@@ -369,9 +369,9 @@ class AbstractStateModel(MetaModel, Hashable):
             else:
                 new_msg = msg
             for m in info['arg'].affected_models:
-                # print '???propagate it to', m, m.parent
+                # print('???propagate it to', m, m.parent)
                 if isinstance(m, AbstractStateModel) and m in self:
-                    # print '!!!propagate it from {0} to {1} {2}'.format(self.state.state_id, m.state.state_id, m)
+                    # print('!!!propagate it from {0} to {1} {2}'.format(self.state.state_id, m.state.state_id, m))
                     m.action_signal.emit(new_msg)
 
         if msg.action.startswith('parent_notification_'):
@@ -381,20 +381,20 @@ class AbstractStateModel(MetaModel, Hashable):
         if self.parent is not None:
             # Notify parent about change of meta data
             info.arg = msg
-            # print "DONE1", self.state.state_id, msg
+            # print("DONE1", self.state.state_id, msg)
             self.parent.action_signal_triggered(model, prop_name, info)
-            # print "FINISH DONE1", self.state.state_id, msg
+            # print("FINISH DONE1", self.state.state_id, msg)
         # state machine propagation of action signal (indirect) TODO remove finally
         elif not msg.action.startswith('sm_notification_'):  # Prevent recursive call
             # If we are the root state, inform the state machine model by emitting our own meta signal.
             # To make the signal distinguishable for a change of meta data to our state, the change property of
             # the message is prepended with 'sm_notification_'
-            # print "DONE2", self.state.state_id, msg
+            # print("DONE2", self.state.state_id, msg)
             new_msg = msg._replace(action='sm_notification_' + msg.action)
             self.action_signal.emit(new_msg)
-            # print "FINISH DONE2", self.state.state_id, msg
+            # print("FINISH DONE2", self.state.state_id, msg)
         else:
-            # print "DONE3 NOTHING"
+            # print("DONE3 NOTHING")
             pass
 
     @ModelMT.observe("meta_signal", signal=True)
@@ -402,27 +402,27 @@ class AbstractStateModel(MetaModel, Hashable):
         """This method notifies the parent state about changes made to the meta data
         """
         msg = info.arg
-        # print "meta_changed state: ", model, prop_name, info
+        # print("meta_changed state: ", model, prop_name, info)
         if msg.notification is None:
             # Meta data of this state was changed, add information about notification to the signal message
             notification = Notification(model, prop_name, info)
             msg = msg._replace(notification=notification)
-            # print "DONE0 ", msg
+            # print("DONE0 ", msg)
 
         if self.parent is not None:
             # Notify parent about change of meta data
             info.arg = msg
             self.parent.meta_changed(model, prop_name, info)
-            # print "DONE1 ", msg
+            # print("DONE1 ", msg)
         elif not msg.change.startswith('sm_notification_'):  # Prevent recursive call
             # If we are the root state, inform the state machine model by emitting our own meta signal.
             # To make the signal distinguishable for a change of meta data to our state, the change property of
             # the message is prepended with 'sm_notification_'
             msg = msg._replace(change='sm_notification_' + msg.change)
             self.meta_signal.emit(msg)
-            # print "DONE2 ", msg
+            # print("DONE2 ", msg)
         else:
-            # print "DONE3 NOTHING"
+            # print("DONE3 NOTHING")
             pass
 
     def _mark_state_machine_as_dirty(self):
@@ -456,10 +456,10 @@ class AbstractStateModel(MetaModel, Hashable):
         :rtype: bool
         """
         # TODO: for an Execution state this method is called for each hierarchy level again and again, still?? check it!
-        # print "1AbstractState_load_meta_data: ", path, not path
+        # print("1AbstractState_load_meta_data: ", path, not path)
         if not path:
             path = self.state.file_system_path
-        # print "2AbstractState_load_meta_data: ", path
+        # print("2AbstractState_load_meta_data: ", path)
         if path is None:
             self.meta = Vividict({})
             return False
@@ -475,7 +475,7 @@ class AbstractStateModel(MetaModel, Hashable):
             #     logger.info("path not found {0}".format(path_meta_data))
 
         try:
-            # print "try to load meta data from {0} for state {1}".format(path_meta_data, self.state)
+            # print("try to load meta data from {0} for state {1}".format(path_meta_data, self.state))
             tmp_meta = storage.load_data_file(path_meta_data)
         except ValueError as e:
             # if no element which is newly generated log a warning
@@ -495,7 +495,7 @@ class AbstractStateModel(MetaModel, Hashable):
             self.meta_signal.emit(MetaSignalMsg("load_meta_data", "all", True))
             return True
         else:
-            # print "nothing to parse", tmp_meta
+            # print("nothing to parse", tmp_meta)
             return False
 
     def store_meta_data(self, copy_path=None):
@@ -556,7 +556,7 @@ class AbstractStateModel(MetaModel, Hashable):
 
         :param meta_data: Dictionary of loaded meta data
         """
-        # print "_parse meta data", meta_data
+        # print("_parse meta data", meta_data)
         for data_port_m in self.input_data_ports:
             self._copy_element_meta_data_from_meta_file_data(meta_data, data_port_m, "input_data_port",
                                                              data_port_m.data_port.data_port_id)
@@ -581,7 +581,7 @@ class AbstractStateModel(MetaModel, Hashable):
         """
         meta_data_element_id = element_name + str(element_id)
         meta_data_element = meta_data[meta_data_element_id]
-        # print meta_data_element_id, element_m, meta_data_element
+        # print(meta_data_element_id, element_m, meta_data_element)
         element_m.meta = meta_data_element
         del meta_data[meta_data_element_id]
 

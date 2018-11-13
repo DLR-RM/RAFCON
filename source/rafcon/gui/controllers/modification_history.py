@@ -258,7 +258,7 @@ class ModificationHistoryTreeController(ExtendedController):
                 else:
                     logger.warning("no parameters defined for signal: {0}".format(action.before_overview['signal']))
                     # for index, signal in enumerate(action.before_overview['signal']):
-                    #     print "\n", index, signal
+                    #     print("\n", index, signal)
             else:
                 for index, value in enumerate(action.before_overview['args'][-1]):
                     if not index == 0:
@@ -308,7 +308,7 @@ class ModificationHistoryTreeController(ExtendedController):
                 return
             next_id = version_id
             while next_id is not None:
-                # print next_id, len(self._selected_sm_model.history.modifications.all_time_history)
+                # print(next_id, len(self._selected_sm_model.history.modifications.all_time_history))
                 version_id = next_id
                 history_tree_elem = self._selected_sm_model.history.modifications.all_time_history[next_id]
                 next_id = history_tree_elem.next_id

@@ -180,9 +180,9 @@ class StateEditorController(ExtendedController):
         depends on the kind of model. Therefore, we have to destroy this editor and open a new one with the new model.
         """
         msg = info['arg']
-        # print self.__class__.__name__, "state_type_changed check", info
+        # print(self.__class__.__name__, "state_type_changed check", info)
         if msg.action in ['change_state_type', 'change_root_state_type'] and msg.after:
-            # print self.__class__.__name__, "state_type_changed"
+            # print(self.__class__.__name__, "state_type_changed")
             import rafcon.gui.singleton as gui_singletons
             msg = info['arg']
             new_state_m = msg.affected_models[-1]

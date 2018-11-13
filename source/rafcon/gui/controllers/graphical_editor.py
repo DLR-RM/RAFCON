@@ -223,7 +223,7 @@ class GraphicalEditorController(ExtendedController):
                       'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
             self._ongoing_complex_actions.append(action)
             self.suspend_drawing = True
-            # print self.__class__.__name__, 'add complex action', action
+            # print(self.__class__.__name__, 'add complex action', action)
             # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
             if action in ['group_states', 'paste', 'cut']:
                 self.observe_model(info['arg'].action_parent_m)
@@ -242,7 +242,7 @@ class GraphicalEditorController(ExtendedController):
                       'ungroup_state', 'paste', 'cut', 'undo/redo']:
             self._ongoing_complex_actions.remove(action)
             self.relieve_model(model)
-            # print self.__class__.__name__, 'remove complex action', action
+            # print(self.__class__.__name__, 'remove complex action', action)
             if not self._ongoing_complex_actions:
                 self.suspend_drawing = False
                 # logger.info("drawing suspended: {0} redraw".format(self.suspend_drawing))

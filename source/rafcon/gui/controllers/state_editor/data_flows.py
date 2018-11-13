@@ -138,7 +138,7 @@ class StateDataFlowsListController(LinkageListController):
         self.update(initiator='"register view"')
 
     def find_free_and_valid_data_flows(self, depend_to_state_id=None):
-        # print "\n internal from %s \n\n internal to %s" % (self.free_to_port_internal, self.from_port_internal)
+        # print("\n internal from %s \n\n internal to %s" % (self.free_to_port_internal, self.from_port_internal))
         internal_data_flows = []
 
         def add_if_valid(future_data_flow_parent, from_port, to_port, data_flow_list):
@@ -165,22 +165,22 @@ class StateDataFlowsListController(LinkageListController):
 
         if self.free_to_port_internal and self.from_port_internal:
             for from_state_id, elems in self.from_port_internal.items():
-                # print "\n\nfrom_state %s and ports %s" % (from_state_id, [(elem.name, elem.data_type) for elem in elems])
+                # print("\n\nfrom_state %s and ports %s" % (from_state_id, [(elem.name, elem.data_type) for elem in elems]))
                 for from_port in elems:
                     for to_state_id, elems in list(self.free_to_port_internal.items()):
-                        # print "\nto_state %s and ports %s" % (to_state_id, [(elem.name, elem.data_type) for elem in elems])
+                        # print("\nto_state %s and ports %s" % (to_state_id, [(elem.name, elem.data_type) for elem in elems]))
                         for to_port in elems:
                             if from_state_id == from_port.parent.state_id and to_state_id == to_port.parent.state_id:
                                 add_if_valid(self.model.state, from_port, to_port, internal_data_flows)
 
-        # print "\n\n\n" + 60*"-" + "\n external from %s \n\n external to %s" % (self.free_to_port_external, self.from_port_external)
+        # print("\n\n\n" + 60*"-" + "\n external from %s \n\n external to %s" % (self.free_to_port_external, self.from_port_external))
         external_data_flows = []
         if self.free_to_port_external and self.from_port_external:
             for from_state_id, elems in list(self.from_port_external.items()):
-                # print "\n\nfrom_state %s and ports %s" % (from_state_id, [(elem.name, elem.data_type) for elem in elems])
+                # print("\n\nfrom_state %s and ports %s" % (from_state_id, [(elem.name, elem.data_type) for elem in elems]))
                 for from_port in elems:
                     for to_state_id, elems in list(self.free_to_port_external.items()):
-                        # print "\nto_state %s and ports %s" % (to_state_id, [(elem.name, elem.data_type) for elem in elems])
+                        # print("\nto_state %s and ports %s" % (to_state_id, [(elem.name, elem.data_type) for elem in elems]))
                         for to_port in elems:
                             if from_state_id == from_port.parent.state_id and to_state_id == to_port.parent.state_id:
                                 add_if_valid(self.model.state.parent, from_port, to_port, external_data_flows)
@@ -199,35 +199,35 @@ class StateDataFlowsListController(LinkageListController):
             return
         own_state_id = self.model.state.state_id
         [possible_internal_data_flows, possible_external_data_flows] = self.find_free_and_valid_data_flows(own_state_id)
-        # print "\n\npossible internal data_flows\n %s" % possible_internal_data_flows
-        # print "\n\npossible external data_flows\n %s" % possible_external_data_flows
+        # print("\n\npossible internal data_flows\n %s" % possible_internal_data_flows)
+        # print("\n\npossible external data_flows\n %s" % possible_external_data_flows)
 
         from_key = None
         if self.view_dict['data_flows_internal'] and possible_internal_data_flows:
-            # print self.from_port_internal
+            # print(self.from_port_internal)
             from_state_id = possible_internal_data_flows[0][0]
             from_key = possible_internal_data_flows[0][1]
-            # print from_state_id, from_key, self.model.state.state_id
+            # print(from_state_id, from_key, self.model.state.state_id)
             to_state_id = possible_internal_data_flows[0][2]
             to_key = possible_internal_data_flows[0][3]
-            # print "NEW DATA_FLOW INTERNAL IS: ", from_state_id, from_key, to_state_id, to_key
+            # print("NEW DATA_FLOW INTERNAL IS: ", from_state_id, from_key, to_state_id, to_key)
             try:
                 data_flow_id = self.model.state.add_data_flow(from_state_id, from_key, to_state_id, to_key)
-                # print "NEW DATA_FLOW INTERNAL IS: ", self.model.state.data_flows[data_flow_id]
+                # print("NEW DATA_FLOW INTERNAL IS: ", self.model.state.data_flows[data_flow_id])
             except (AttributeError, ValueError) as e:
                 logger.error("Data Flow couldn't be added: {0}".format(e))
                 return
         elif self.view_dict['data_flows_external'] and possible_external_data_flows:  # self.free_to_port_external:
             from_state_id = possible_external_data_flows[0][0]
-            # print from_state_id, self.model.state.output_data_ports
+            # print(from_state_id, self.model.state.output_data_ports)
             from_key = possible_external_data_flows[0][1]
             to_state_id = possible_external_data_flows[0][2]
             to_key = possible_external_data_flows[0][3]
-            # print "NEW DATA_FLOW EXTERNAL IS: ", from_state_id, from_key, to_state_id, to_key, \
+            # print("NEW DATA_FLOW EXTERNAL IS: ", from_state_id, from_key, to_state_id, to_key, \)
             #     get_state_model(self.model.parent, to_state_id).state.get_data_port_by_id(to_key)
             try:
                 data_flow_id = self.model.parent.state.add_data_flow(from_state_id, from_key, to_state_id, to_key)
-                # print "NEW DATA_FLOW EXTERNAL IS: ", self.model.parent.state.data_flows[data_flow_id]
+                # print("NEW DATA_FLOW EXTERNAL IS: ", self.model.parent.state.data_flows[data_flow_id])
             except (AttributeError, ValueError) as e:
                 logger.error("Data Flow couldn't be added: {0}".format(e))
                 return
@@ -353,12 +353,12 @@ class StateDataFlowsListController(LinkageListController):
         if self.view_dict['data_flows_internal'] and isinstance(self.model, ContainerStateModel):
             for data_flow in list(self.model.state.data_flows.values()):
 
-                # print "type: ", type(data_flow)
+                # print("type: ", type(data_flow))
                 if data_flow.data_flow_id in list(self.data_flow_dict['internal'].keys()):
                     df_dict = self.data_flow_dict['internal'][data_flow.data_flow_id]
                     # TreeStore for: id, from-state, from-key, to-state, to-key, is_external,
                     #       name-color, to-state-color, data-flow-object, state-object, is_editable
-                    # print 'insert int: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], \
+                    # print('insert int: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], \)
                     #     df_dict['to_state'], df_dict['to_key']
                     self.list_store.append([data_flow.data_flow_id,
                                             df_dict['from_state'],
@@ -376,7 +376,7 @@ class StateDataFlowsListController(LinkageListController):
                     df_dict = self.data_flow_dict['external'][data_flow.data_flow_id]
                     # TreeStore for: id, from-state, from-key, to-state, to-key, is_external,
                     #       name-color, to-state-color, data-flow-object, state-object, is_editable
-                    # print 'insert ext: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], \
+                    # print('insert ext: ', data_flow.data_flow_id, df_dict['from_state'], df_dict['from_key'], \)
                     #     df_dict['to_state'], df_dict['to_key']
                     self.list_store.append([data_flow.data_flow_id,
                                             df_dict['from_state'],
@@ -436,7 +436,7 @@ class StateDataFlowsListController(LinkageListController):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
-        # print self, self.model.state.get_path(), overview
+        # print(self, self.model.state.get_path(), overview)
         # logger.info("after_notification_of_parent_or_state_from_lists: OK")
 
         # avoid updates because of unimportant methods
@@ -457,7 +457,7 @@ class StateDataFlowsListController(LinkageListController):
                     return
             else:
                 return
-        # print "DUPDATE ", self, overview
+        # print("DUPDATE ", self, overview)
 
         try:
             # logger.info("after_notification_of_parent_or_state_from_lists: UPDATE")
@@ -486,7 +486,7 @@ def get_key_combos(ports, keys_store, not_key=None):
                                str(key) + '.' +
                                (port.data_type.__name__ or 'None') + '.' +
                                port.name])
-    # print "final store: ", keys_store
+    # print("final store: ", keys_store)
     return keys_store
 
 
@@ -536,7 +536,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                     from_state = take_from_dict(model.state.states, data_flow.from_state)
                     from_state_label = from_state.name + '.' + data_flow.from_state
                 else:
-                    # print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                    # print(data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key)
                     logger.warning("DO break in ctrl/data_flow.py -1")
                     break
             # check if to Self_state
@@ -548,7 +548,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                     to_state = take_from_dict(model.state.states, data_flow.to_state)
                     to_state_label = to_state.name + '.' + data_flow.to_state
                 else:
-                    # print data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                    # print(data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key)
                     logger.warning("DO break in ctrl/data_flow.py 0")
                     break
 
@@ -588,10 +588,10 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
 
             from_keys_store = Gtk.ListStore(GObject.TYPE_STRING)
             if model.state.state_id == data_flow.from_state:
-                # print "input_ports", model.state.input_data_ports
-                # print type(model)
+                # print("input_ports", model.state.input_data_ports)
+                # print(type(model))
                 if isinstance(model, ContainerStateModel):
-                    # print "scoped_variables", model.state.scoped_variables
+                    # print("scoped_variables", model.state.scoped_variables)
                     combined_ports = {}
                     combined_ports.update(model.state.scoped_variables)
                     combined_ports.update(model.state.input_data_ports)
@@ -599,16 +599,16 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                 else:
                     get_key_combos(model.state.input_data_ports, from_keys_store, data_flow.from_key)
             else:
-                # print "output_ports", model.states[data_flow.from_state].state.output_data_ports
+                # print("output_ports", model.states[data_flow.from_state].state.output_data_ports)
                 get_key_combos(model.state.states[data_flow.from_state].output_data_ports,
                                from_keys_store, data_flow.from_key)
 
             to_keys_store = Gtk.ListStore(GObject.TYPE_STRING)
             if model.state.state_id == data_flow.to_state:
-                # print "output_ports", model.state.output_data_ports
-                # print type(model)
+                # print("output_ports", model.state.output_data_ports)
+                # print(type(model))
                 if isinstance(model, ContainerStateModel):
-                    # print "scoped_variables", model.state.scoped_variables
+                    # print("scoped_variables", model.state.scoped_variables)
                     combined_ports = {}
                     combined_ports.update(model.state.scoped_variables)
                     combined_ports.update(model.state.output_data_ports)
@@ -616,14 +616,14 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                 else:
                     get_key_combos(model.state.output_data_ports, to_keys_store, data_flow.to_key)
             else:
-                # print "input_ports", model.states[data_flow.to_state].state.input_data_ports
+                # print("input_ports", model.states[data_flow.to_state].state.input_data_ports)
                 get_key_combos(model.state.states[data_flow.to_state].input_data_ports
                                , to_keys_store, data_flow.to_key)
             tree_dict_combos['internal'][data_flow.data_flow_id] = {'from_state': from_states_store,
                                                                     'from_key': from_keys_store,
                                                                     'to_state': to_states_store,
                                                                     'to_key': to_keys_store}
-            # print "internal", data_flow_dict['internal'][data_flow.data_flow_id]
+            # print("internal", data_flow_dict['internal'][data_flow.data_flow_id])
 
     if not model.state.is_root_state:
         for data_flow in list(model.parent.state.data_flows.values()):  # model.parent.data_flow_list_store:
@@ -642,7 +642,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                         from_state = take_from_dict(model.parent.state.states, data_flow.from_state)
                         from_state_label = from_state.name + '.' + data_flow.from_state
                     else:
-                        # print "#", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                        # print("#", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key)
                         logger.warning("DO break in ctrl/data_flow.py 1")
                         break
 
@@ -659,7 +659,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                         to_state = take_from_dict(model.parent.state.states, data_flow.to_state)
                         to_state_label = to_state.name + '.' + data_flow.to_state
                     else:
-                        # print "##", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key
+                        # print("##", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key)
                         logger.warning("DO break in ctrl/data_flow.py 2")
                         break
             if model.state.state_id in [data_flow.from_state, data_flow.to_state]:
@@ -699,7 +699,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                 # only outports of self
                 from_keys_store = Gtk.ListStore(GObject.TYPE_STRING)
                 if model.parent.state.state_id == data_flow.from_state:
-                    # print "output_ports", model.parent.states[data_flow.from_state].state.output_data_ports
+                    # print("output_ports", model.parent.states[data_flow.from_state].state.output_data_ports)
                     combined_ports = {}
                     combined_ports.update(model.parent.state.input_data_ports)
                     combined_ports.update(model.parent.state.scoped_variables)
@@ -756,9 +756,9 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                                                                         'from_key': from_keys_store,
                                                                         'to_state': to_states_store,
                                                                         'to_key': to_keys_store}
-                # print "external", data_flow_dict['external'][data_flow.data_flow_id]
+                # print("external", data_flow_dict['external'][data_flow.data_flow_id])
 
-    # print "ALL SCANNED: ", data_flow_dict['internal'].keys(), data_flow_dict['external'].keys(), \
+    # print("ALL SCANNED: ", data_flow_dict['internal'].keys(), data_flow_dict['external'].keys(), \)
     #     tree_dict_combos['internal'].keys(), tree_dict_combos['external'].keys()
     return free_to_port_internal, free_to_port_external, from_ports_internal, from_ports_external
 
@@ -780,13 +780,13 @@ def find_free_keys(model):
         nfree_container_ports.extend([s.name for s in list(model.state.scoped_variables.values())])
         if model.state.output_data_ports:
             port_keys = list(model.state.output_data_ports.keys())
-            # print "actual keys: ", port_keys
+            # print("actual keys: ", port_keys)
             # TODO check if the filter can be made valid -> at the moment it is not fully valid because multiple data-flows  for IO are allowed
             # for data_flow in model.state.data_flows.values():
             #     port_keys = [port_id for port_id in port_keys if not (model.state.state_id == data_flow.to_state and port_id == data_flow.to_key)]
 
-                # print "actual keys: ", port_keys
-            # print "found free prots: ", port_keys
+                # print("actual keys: ", port_keys)
+            # print("found free prots: ", port_keys)
             free_container_ports.extend([model.state.output_data_ports[i] for i in port_keys])
             # free_container_ports.extend(port_keys)
             nfree_container_ports.extend([model.state.output_data_ports[i].name for i in port_keys])
@@ -804,20 +804,20 @@ def find_free_keys(model):
 
             if state_model.state.input_data_ports:
                 port_keys = list(state_model.state.input_data_ports.keys())
-                # print "actual keys: ", port_keys
+                # print("actual keys: ", port_keys)
                 # TODO check if the filter can be made valid -> at the moment it is not fully valid because multiple data-flows  for IO are allowed
                 # for data_flow in model.state.data_flows.values():
                 #     port_keys = [port_id for port_id in port_keys if not (state_model.state.state_id == data_flow.to_state and port_id == data_flow.to_key)]
-                    # print "actual keys: ", port_keys
+                    # print("actual keys: ", port_keys)
 
-                # print "found free prots: ", port_keys
+                # print("found free prots: ", port_keys)
                 if port_keys:
                     free_to_ports[state_model.state.state_id] = [state_model.state.input_data_ports[i] for i in
                                                                  port_keys]
                     nfree_to_ports[state_model.state.name] = [state_model.state.input_data_ports[i].name for i in
                                                               port_keys]
 
-    # print "\nFOUND FREE PORTS: \n", nfree_to_ports, "\n", free_to_ports, "\n",  from_ports
+    # print("\nFOUND FREE PORTS: \n", nfree_to_ports, "\n", free_to_ports, "\n",  from_ports)
 
     return free_to_ports, from_ports
 

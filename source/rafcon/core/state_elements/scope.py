@@ -200,12 +200,12 @@ class ScopedData(StateElement):
                 self.value_type, value, type(value)
             ))
         # if value is not None and str(type(value).__name__) != self._value_type:
-        #     print "types", value, str(type(value).__name__), self._value_type
+        #     print("types", value, str(type(value).__name__), self._value_type)
         #     #check for classes
         #     if not isinstance(value, getattr(sys.modules[__name__], self._value_type)):
         #         raise TypeError("result must be of type %s" % str(self._value_type))
         self._timestamp = generate_time_stamp()
-        # print "new scope data update {0}: {1} t:{2}".format(self.name+self.from_state, self._value, self._timestamp)
+        # print("new scope data update {0}: {1} t:{2}".format(self.name+self.from_state, self._value, self._timestamp))
         self._value = value
 
     @property

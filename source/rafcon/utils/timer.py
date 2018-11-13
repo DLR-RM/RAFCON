@@ -30,7 +30,7 @@ class Timer(object):
         self.count = 0
 
     def start(self):
-        # print "start", self.count + 1
+        # print("start", self.count + 1)
         if self.__status == 'stopped':
             pass
         else:
@@ -43,7 +43,7 @@ class Timer(object):
         return self.count
 
     def stop(self, key):
-        # print "stop", key, self.count, self.count == key
+        # print("stop", key, self.count, self.count == key)
         if self.__status == 'running':
             if self.count == key:
                 pass
