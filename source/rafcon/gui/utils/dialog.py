@@ -39,7 +39,10 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
                  message_type=Gtk.MessageType.WARNING, flags=Gtk.DialogFlags.MODAL, parent=None,
                  width=None, standalone=False, title="RAFCON"):
 
-        super(RAFCONMessageDialog, self).__init__(type=message_type, flags=flags)
+        if self.__class__.__name__ == "RAFCONMessageDialog":
+            super(RAFCONMessageDialog, self).__init__(type=message_type, buttons=Gtk.ButtonsType.OK, flags=flags)
+        else:
+            super(RAFCONMessageDialog, self).__init__(type=message_type, flags=flags)
 
         self.set_title(title)
 
