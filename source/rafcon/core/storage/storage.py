@@ -298,69 +298,49 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
         if not os.path.exists(state_machine_file_path) and not os.path.exists(state_machine_file_path_old):
             raise ValueError("Provided path doesn't contain a valid state machine: {0}".format(base_path))
 
-    if os.path.exists(state_machine_file_path):
-        state_machine_dict = storage_utils.load_objects_from_json(state_machine_file_path)
-        if 'used_rafcon_version' in state_machine_dict:
-            previously_used_rafcon_version = StrictVersion(state_machine_dict['used_rafcon_version']).version
-            active_rafcon_version = StrictVersion(rafcon.__version__).version
+    state_machine_dict = storage_utils.load_objects_from_json(state_machine_file_path)
+    if 'used_rafcon_version' in state_machine_dict:
+        previously_used_rafcon_version = StrictVersion(state_machine_dict['used_rafcon_version']).version
+        active_rafcon_version = StrictVersion(rafcon.__version__).version
 
-            rafcon_newer_than_sm_version = "You are trying to load a state machine that was stored with an older " \
-                                           "version of RAFCON ({0}) than the one you are using ({1}).".format(
-                                            state_machine_dict['used_rafcon_version'], rafcon.__version__)
-            rafcon_older_than_sm_version = "You are trying to load a state machine that was stored with an newer " \
-                                           "version of RAFCON ({0}) than the one you are using ({1}).".format(
-                                            state_machine_dict['used_rafcon_version'], rafcon.__version__)
-            note_about_possible_incompatibility = "The state machine will be loaded with no guarantee of success."
+        rafcon_newer_than_sm_version = "You are trying to load a state machine that was stored with an older " \
+                                       "version of RAFCON ({0}) than the one you are using ({1}).".format(
+                                        state_machine_dict['used_rafcon_version'], rafcon.__version__)
+        rafcon_older_than_sm_version = "You are trying to load a state machine that was stored with an newer " \
+                                       "version of RAFCON ({0}) than the one you are using ({1}).".format(
+                                        state_machine_dict['used_rafcon_version'], rafcon.__version__)
+        note_about_possible_incompatibility = "The state machine will be loaded with no guarantee of success."
 
-            if active_rafcon_version[0] > previously_used_rafcon_version[0]:
+        if active_rafcon_version[0] > previously_used_rafcon_version[0]:
+            # this is the default case
+            # for a list of breaking changes please see: doc/breaking_changes.rst
+            # logger.warn(rafcon_newer_than_sm_version)
+            # logger.warn(note_about_possible_incompatibility)
+            pass
+        if active_rafcon_version[0] == previously_used_rafcon_version[0]:
+            if active_rafcon_version[1] > previously_used_rafcon_version[1]:
                 # this is the default case
                 # for a list of breaking changes please see: doc/breaking_changes.rst
-                # logger.warn(rafcon_newer_than_sm_version)
-                # logger.warn(note_about_possible_incompatibility)
+                # logger.info(rafcon_newer_than_sm_version)
+                # logger.info(note_about_possible_incompatibility)
                 pass
-            if active_rafcon_version[0] == previously_used_rafcon_version[0]:
-                if active_rafcon_version[1] > previously_used_rafcon_version[1]:
-                    # this is the default case
-                    # for a list of breaking changes please see: doc/breaking_changes.rst
-                    # logger.info(rafcon_newer_than_sm_version)
-                    # logger.info(note_about_possible_incompatibility)
-                    pass
-                elif active_rafcon_version[1] == previously_used_rafcon_version[1]:
-                    # Major and minor version of RAFCON and the state machine match
-                    # It should be safe to load the state machine, as the patch level does not change the format
-                    pass
-                else:
-                    logger.warn(rafcon_older_than_sm_version)
-                    logger.warn(note_about_possible_incompatibility)
+            elif active_rafcon_version[1] == previously_used_rafcon_version[1]:
+                # Major and minor version of RAFCON and the state machine match
+                # It should be safe to load the state machine, as the patch level does not change the format
+                pass
             else:
                 logger.warn(rafcon_older_than_sm_version)
                 logger.warn(note_about_possible_incompatibility)
+        else:
+            logger.warn(rafcon_older_than_sm_version)
+            logger.warn(note_about_possible_incompatibility)
 
-        state_machine = StateMachine.from_dict(state_machine_dict, state_machine_id)
-        if "root_state_storage_id" not in state_machine_dict:
-            root_state_storage_id = state_machine_dict['root_state_id']
-            state_machine.supports_saving_state_names = False
-        else:
-            root_state_storage_id = state_machine_dict['root_state_storage_id']
-
-    # TODO: Remove this with next minor release
-    else:
-        stream = file(state_machine_file_path_old, 'r')
-        tmp_dict = yaml.load(stream)
-        if "root_state" in tmp_dict:
-            root_state_storage_id = tmp_dict['root_state']
-        else:
-            root_state_storage_id = tmp_dict['root_state_id']
-        version = tmp_dict['version']
-        # Prevents storage as datetime object
-        creation_time = str(tmp_dict['creation_time'])
-        if 'last_update' not in tmp_dict:
-            last_update = creation_time
-        else:
-            last_update = tmp_dict['last_update']
-        state_machine = StateMachine(version=version, creation_time=creation_time, last_update=last_update,
-                                     state_machine_id=state_machine_id)
+    state_machine = StateMachine.from_dict(state_machine_dict, state_machine_id)
+    if "root_state_storage_id" not in state_machine_dict:
+        root_state_storage_id = state_machine_dict['root_state_id']
         state_machine.supports_saving_state_names = False
+    else:
+        root_state_storage_id = state_machine_dict['root_state_storage_id']
 
     root_state_path = os.path.join(base_path, root_state_storage_id)
     state_machine.file_system_path = base_path
