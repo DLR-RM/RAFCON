@@ -1,12 +1,11 @@
 from __future__ import print_function
 
-from builtins import object
+import time
 from rafcon.utils import log
 
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
-import pytest
 
 logger = log.get_logger(__name__)
 
@@ -64,7 +63,9 @@ def trigger_drag_and_drop_tests(*args):
     while not graphical_editor_controller.view:
         testing_utils.wait_for_gui()
 
-    call_gui_callback(graphical_editor_controller.view.editor.set_size_request, 500, 500)
+    # wait for root state to be focused
+    time.sleep(.5)
+
     call_gui_callback(library_tree_controller.view.expand_all)
     # generic and unit_test_state_machines in library tree index 1 is unit_test_state_machines
     call_gui_callback(library_tree_controller.view.get_selection().select_path, (1, 0))
@@ -118,6 +119,17 @@ def trigger_drag_and_drop_tests(*args):
 def test_drag_and_drop_test(caplog):
     testing_utils.run_gui(
         gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False},
+        runtime_config={
+            'MAIN_WINDOW_MAXIMIZED': False,
+            'MAIN_WINDOW_SIZE': (1500, 800),
+            'MAIN_WINDOW_POS': (0, 0),
+            'LEFT_BAR_WINDOW_UNDOCKED': False,
+            'RIGHT_BAR_WINDOW_UNDOCKED': False,
+            'CONSOLE_WINDOW_UNDOCKED': False,
+            'LEFT_BAR_HIDDEN': True,
+            'RIGHT_BAR_HIDDEN': True,
+            'CONSOLE_HIDDEN': True,
+        },
         libraries={"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
     )
     import rafcon.core.singleton
