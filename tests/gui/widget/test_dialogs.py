@@ -58,7 +58,7 @@ def trigger_dialog_tests():
 
     for index, button_text in enumerate(button_texts):
         # Check if the button order is the same as requested by the button_texts list
-        button = dialog_window.hbox.get_children()[index]
+        button = dialog_window.get_action_area().get_children()[index]
         assert str(button.get_label()) == button_texts[index]
 
     button.clicked()
