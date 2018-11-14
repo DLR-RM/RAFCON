@@ -78,7 +78,7 @@ class ExecutionState(State):
     @lock_state_machine
     def update_hash(self, obj_hash):
         super(ExecutionState, self).update_hash(obj_hash)
-        obj_hash.update(self.script.script)
+        obj_hash.update(self.get_object_hash_string(self.script.script))
 
     @classmethod
     def from_dict(cls, dictionary):
