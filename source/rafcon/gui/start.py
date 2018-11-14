@@ -31,7 +31,6 @@ import rafcon
 from rafcon.gui.config import global_gui_config
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.runtime_config import global_runtime_config
-import rafcon.gui.models.auto_backup
 from rafcon.gui.utils.splash_screen import SplashScreen
 from rafcon.gui.helpers import installation
 import rafcon.gui.backup.session as backup_session
@@ -226,6 +225,7 @@ def post_gui_destruction():
     plugins.run_hook("post_destruction")
 
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
+        import rafcon.gui.models.auto_backup
         rafcon.gui.models.auto_backup.remove_rafcon_instance_lock_file()
 
 
@@ -340,6 +340,7 @@ def main():
 
     # create lock file -> keep behavior for hole instance
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
+        import rafcon.gui.models.auto_backup
         rafcon.gui.models.auto_backup.generate_rafcon_instance_lock_file()
 
     # setup the gui before loading the state machine as then the debug console shows the errors that emerged during
