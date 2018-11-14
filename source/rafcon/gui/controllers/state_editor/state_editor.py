@@ -152,7 +152,7 @@ class StateEditorController(ExtendedController):
         if isinstance(self.model, ContainerStateModel):
             self.scopes_ctrl.reload_scoped_variables_list_store()
 
-        plugins.run_hook("on_state_editor_init", self)
+        plugins.run_hook("post_state_editor_register_view", self)
 
     def rename(self):
         state_overview_controller = self.get_controller('properties_ctrl')
