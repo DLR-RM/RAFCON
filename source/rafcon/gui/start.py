@@ -265,7 +265,7 @@ def signal_handler(signal, frame=None):
             state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
     except Exception as e:
         import traceback
-        print(_("Could not stop state machine: {0} {1}").format(e.message, traceback.format_exc()))
+        print(_("Could not stop state machine: {0} {1}").format(e, traceback.format_exc()))
 
     try:
         gui_singletons.main_window_controller.prepare_destruction()

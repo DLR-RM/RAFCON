@@ -27,7 +27,7 @@ def test_lock_state_machine(caplog):
         state1.custom_method(5)
     except Exception as e:
         import traceback
-        print("Could not stop state machine: {0} {1}".format(e.message, traceback.format_exc()))
+        print("Could not stop state machine: {0} {1}".format(e, traceback.format_exc()))
 
     assert global_lock_counter == 0
 

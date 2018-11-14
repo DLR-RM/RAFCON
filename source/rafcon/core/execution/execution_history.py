@@ -394,7 +394,7 @@ class ScopedDataItem(HistoryItem):
                 scoped_data_dict['!' + v.name] = (str(e), str(v.value))
             # logger.debug('TypeError: Could not serialize one of the scoped data port types.')
             # record['scoped_data'] = json.dumps({'error_type': 'TypeError',
-            #                                     'error_message': e.message}, cls=JSONObjectEncoder)
+            #                                     'error_message': e}, cls=JSONObjectEncoder)
         record['scoped_data'] = scoped_data_dict
 
         child_state_input_output_dict = {}
@@ -412,7 +412,7 @@ class ScopedDataItem(HistoryItem):
         #     except TypeError as e:
         #         # logger.exception('TypeError: Could not serialize one of the scoped variables types.')
         #         # record['scoped_variables'] = json.dumps({'error_type': 'TypeError',
-        #         #                                          'error_message': e.message}, cls=JSONObjectEncoder)
+        #         #                                          'error_message': e}, cls=JSONObjectEncoder)
         #         record['scoped_variables'] = json.dumps(
         #             {"key_all": {"name": "all_scoped_variables_as_string",
         #                          "value": str(self.state_reference.scoped_variables)}}, cls=JSONObjectEncoder
