@@ -57,6 +57,8 @@ def test_execution_log(caplog):
         assert list(all_starts['outcome_name']) == ['success', 'success', 'done']
 
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    except ImportError:  # if pandas is not installed
+        pass
     finally:
         testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=0)
 
