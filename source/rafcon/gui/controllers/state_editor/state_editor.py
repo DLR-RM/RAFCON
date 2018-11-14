@@ -39,6 +39,7 @@ from rafcon.gui.views.state_editor.state_editor import StateEditorView
 from rafcon.gui.config import global_gui_config
 
 from rafcon.utils import log
+from rafcon.utils import plugins
 logger = log.get_logger(__name__)
 
 
@@ -150,6 +151,8 @@ class StateEditorController(ExtendedController):
 
         if isinstance(self.model, ContainerStateModel):
             self.scopes_ctrl.reload_scoped_variables_list_store()
+
+        plugins.run_hook("on_state_editor_init", self)
 
     def rename(self):
         state_overview_controller = self.get_controller('properties_ctrl')
