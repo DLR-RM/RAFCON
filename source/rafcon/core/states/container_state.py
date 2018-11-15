@@ -664,7 +664,7 @@ class ContainerState(State):
                     if (ext_df.from_state, ext_df.from_key) == (df.to_state, df.to_key):
                         outgoing_data_linkage_for_port[(df.to_state, df.to_key)]['external'].append(ext_df)
         # hold states and scoped variables to rebuild
-        child_states = [state.remove_state(s_id, recursive=False, destroy=False) for s_id in state.states.keys()]
+        child_states = [state.remove_state(s_id, recursive=False, destroy=False) for s_id in list(state.states.keys())]
         child_scoped_variables = [sv for sv_id, sv in list(state.scoped_variables.items())]
 
         # remove state that should be ungrouped

@@ -88,9 +88,10 @@ def trigger_repetitive_group_ungroup(*args):
     call_gui_callback(sm_m.selection.set, list(list(sm_m.root_state.states.values())[0].states.values())[0].states.values())
     # time.sleep(1)
     call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
-    print("Stage 3", list(list(sm_m.root_state.states.values())[0].states.values())[0].states.values()[0].state.get_path())
+    print("Stage 3", list(list(list(sm_m.root_state.states.values())[0].states.values())[0].states.values())[0].state.get_path())
     call_gui_callback(
-        set_state_name, list(list(sm_m.root_state.states.values())[0].states.values())[0].states.values()[0].state, "Stage 3"
+        set_state_name,
+        list(list(list(sm_m.root_state.states.values())[0].states.values())[0].states.values())[0].state, "Stage 3"
     )
     # time.sleep(5)
 
