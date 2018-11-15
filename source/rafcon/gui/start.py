@@ -282,6 +282,7 @@ def signal_handler(signal, frame=None):
     # noinspection PyProtectedMember
     os._exit(0)
 
+
 def register_signal_handlers(callback):
     # When using plain signal.signal to install a signal handler, the GUI will not shutdown until it receives the
     # focus again. The following logic (inspired from https://stackoverflow.com/a/26457317) fixes this
@@ -361,7 +362,7 @@ def main():
 
     # initiate stored session # TODO think about a controller for this
     if not user_input.new and not user_input.state_machine_paths \
-            and rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
+            and global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
         # do in background in order not to block GUI
         GLib.idle_add(backup_session.restore_session_from_runtime_config, priority=GLib.PRIORITY_LOW)
 
