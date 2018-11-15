@@ -11,7 +11,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from builtins import zip
-from math import atan2, pi
+from math import atan2, pi, floor
 
 from gaphas.item import Line, NW, SE
 from gaphas.painter import CairoBoundingBoxContext
@@ -225,12 +225,12 @@ class PerpLine(Line):
     def _draw_name(self, context):
         c = context.cairo
 
-        if len(self._handles) % 2:
-            index = len(self._handles) / 2
+        if len(self._handles) % 2:  # uneven
+            index = int(floor(len(self._handles) / 2))
             cx, cy = self._handles[index].pos
             angle = 0
         else:
-            index = len(self._handles) / 2 - 1
+            index = int(len(self._handles) / 2) - 1
 
             p1, p2 = self._handles[index].pos, self._handles[index + 1].pos
 
