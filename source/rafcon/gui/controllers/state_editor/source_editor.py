@@ -145,7 +145,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
 
         """
         if isinstance(self.model.state, LibraryState):
-            logger.warn("It is not allowed to modify libraries.")
+            logger.warning("It is not allowed to modify libraries.")
             self.view.set_text("")
             return
 

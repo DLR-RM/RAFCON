@@ -474,7 +474,7 @@ class ListViewController(AbstractTreeViewController):
             try:
                 self.remove_core_elements(models)
             except AttributeError as e:
-                self._logger.warn("The respective core element of {1}.list_store couldn't be removed. -> {0}"
+                self._logger.warning("The respective core element of {1}.list_store couldn't be removed. -> {0}"
                                   "".format(e, self.__class__.__name__))
             if len(self.list_store) > 0:
                 self.tree_view.set_cursor(min(old_path[0], len(self.list_store) - 1))

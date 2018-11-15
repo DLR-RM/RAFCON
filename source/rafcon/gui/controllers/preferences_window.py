@@ -414,7 +414,7 @@ class PreferencesWindowController(ExtendedController):
                     if ".yaml" not in config_file:
                         config_file += ".yaml"
                     if config_m.preliminary_config:
-                        logger.warn("There are changes in the configuration that have not yet been applied. These "
+                        logger.warning("There are changes in the configuration that have not yet been applied. These "
                                     "changes will not be exported.")
                     self._last_path = dirname(config_file)
                     config_dict = config_m.as_dict()
@@ -544,7 +544,7 @@ class PreferencesWindowController(ExtendedController):
                not all([isinstance(shortcut, string_types) for shortcut in new_shortcuts]):
                 raise ValueError()
         except (ValueError, SyntaxError):
-            logger.warn("Shortcuts must be a list of strings")
+            logger.warning("Shortcuts must be a list of strings")
             new_shortcuts = old_shortcuts
 
         shortcuts = self.gui_config_model.get_current_config_value("SHORTCUTS", use_preliminary=True,  default={})
@@ -574,7 +574,7 @@ class PreferencesWindowController(ExtendedController):
             elif new_value in ["False", "false"]:
                 new_value = False
             else:
-                logger.warn("'{}' must be a boolean value".format(config_key))
+                logger.warning("'{}' must be a boolean value".format(config_key))
                 new_value = old_value
         elif isinstance(old_value, (int, float)):
             try:
@@ -583,7 +583,7 @@ class PreferencesWindowController(ExtendedController):
                 try:
                     new_value = float(new_value)
                 except ValueError:
-                    logger.warn("'{}' must be a numeric value".format(config_key))
+                    logger.warning("'{}' must be a numeric value".format(config_key))
                     new_value = old_value
 
         config_m.set_preliminary_config_value(config_key, new_value)

@@ -97,7 +97,7 @@ class Clipboard(Observable):
 
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         if gui_helper_state_machine.is_selection_inside_of_library_state(selected_elements=selection.get_all()):
-            logger.warn("Cut is not performed because elements inside of a library state are selected.")
+            logger.warning("Cut is not performed because elements inside of a library state are selected.")
             return
         selection_dict_of_copied_models, parent_m = self.__create_core_and_model_object_copies(
             selection, smart_selection_adaption)
@@ -141,11 +141,11 @@ class Clipboard(Observable):
         """
         self.reset_clipboard_mapping_dicts()
         if not isinstance(target_state_m, StateModel):
-            logger.warn("Paste is not performed because target state indication has to be a StateModel not {0}"
+            logger.warning("Paste is not performed because target state indication has to be a StateModel not {0}"
                         "".format(target_state_m.__class__.__name__))
             return
         if target_state_m.state.get_next_upper_library_root_state() is not None:
-            logger.warn("Paste is not performed because selected target state is inside of a library state.")
+            logger.warning("Paste is not performed because selected target state is inside of a library state.")
             return
 
         element_m_copy_lists = self.model_copies

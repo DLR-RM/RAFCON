@@ -169,7 +169,7 @@ class LibraryTreeController(ExtendedController):
                 #     print(library_path)
             self.__expansion_state = act_expansion_library
         except TypeError:
-            logger.warn("expansion state of library could not be stored")
+            logger.warning("expansion state of library could not be stored")
 
     def redo_expansion_state(self):
         if self.__expansion_state:
@@ -183,7 +183,7 @@ class LibraryTreeController(ExtendedController):
                             self.view.expand_to_path(library_row_path)
                             # print(library_path)
             except (TypeError, KeyError):
-                logger.warn("expansion state of library tree could not be re-done")
+                logger.warning("expansion state of library tree could not be re-done")
 
     def update(self):
         self.store_expansion_state()

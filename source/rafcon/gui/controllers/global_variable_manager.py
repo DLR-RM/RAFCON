@@ -131,7 +131,7 @@ class GlobalVariableManagerController(ListViewController):
             try:
                 self.model.global_variable_manager.lock_variable(models[0])
             except AttributeError as e:
-                self._logger.warn("The respective core element of {1}.list_store couldn't be locked. -> {0}"
+                self._logger.warning("The respective core element of {1}.list_store couldn't be locked. -> {0}"
                                   "".format(e, self.__class__.__name__))
             return True
         else:
@@ -149,7 +149,7 @@ class GlobalVariableManagerController(ListViewController):
             try:
                 self.model.global_variable_manager.unlock_variable(models[0], None, force=True)
             except AttributeError as e:
-                self._logger.warn("The respective core element of {1}.list_store couldn't be unlocked. -> {0}"
+                self._logger.warning("The respective core element of {1}.list_store couldn't be unlocked. -> {0}"
                                   "".format(e, self.__class__.__name__))
             return True
         else:
@@ -166,7 +166,7 @@ class GlobalVariableManagerController(ListViewController):
             try:
                 self.model.global_variable_manager.delete_variable(gv_name)
             except AttributeError as e:
-                logger.warn("The respective global variable '{1}' couldn't be removed. -> {0}"
+                logger.warning("The respective global variable '{1}' couldn't be removed. -> {0}"
                             "".format(e, model))
 
     def apply_new_global_variable_name(self, path, new_gv_name):
@@ -272,7 +272,7 @@ class GlobalVariableManagerController(ListViewController):
                 new_value = new_data_type(old_value)
             except (ValueError, TypeError) as e:
                 new_value = new_data_type()
-                logger.warn("Old value '{}' of global variable '{}' could not be parsed to new type '{}' and is "
+                logger.warning("Old value '{}' of global variable '{}' could not be parsed to new type '{}' and is "
                             "therefore resetted: {}".format(old_value, gv_name, new_data_type.__name__, e))
 
         # set value in global variable manager

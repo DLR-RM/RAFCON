@@ -112,7 +112,7 @@ class ExecutionEngine(Observable):
         else:
             # do not start another state machine before the old one did not finish its execution
             if self.state_machine_running:
-                logger.warn("An old state machine is still running! Make sure that it terminates,"
+                logger.warning("An old state machine is still running! Make sure that it terminates,"
                             " before you can start another state machine!")
                 return
 
@@ -166,7 +166,7 @@ class ExecutionEngine(Observable):
             self.__wait_for_finishing_thread.join(timeout)
             return not self.__wait_for_finishing_thread.is_alive()
         else:
-            logger.warn("Cannot join as state machine was not started yet.")
+            logger.warning("Cannot join as state machine was not started yet.")
             return False
 
     def __set_execution_mode_to_stopped(self):
@@ -209,7 +209,7 @@ class ExecutionEngine(Observable):
             self.__wait_for_finishing_thread = threading.Thread(target=self._wait_for_finishing)
             self.__wait_for_finishing_thread.start()
         else:
-            logger.warn("Currently no active state machine! Please create a new state machine.")
+            logger.warning("Currently no active state machine! Please create a new state machine.")
             self.set_execution_mode(StateMachineExecutionStatus.STOPPED)
 
     def _wait_for_finishing(self):

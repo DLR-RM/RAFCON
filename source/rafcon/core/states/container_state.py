@@ -284,13 +284,13 @@ class ContainerState(State):
             if execution_signal is StateMachineExecutionStatus.STOPPED:
                 # this will be caught at the end of the run method
                 self.last_child.state_execution_status = StateExecutionStatus.INACTIVE
-                logger.warn("State machine was stopped, while state {} waited for the next transition.".format(
+                logger.warning("State machine was stopped, while state {} waited for the next transition.".format(
                     state.name
                 ))
                 return None
 
             # wait until the user connects the outcome of the state with a transition
-            logger.warn("Waiting for new transition at {1} of {0} ".format(state, state.final_outcome))
+            logger.warning("Waiting for new transition at {1} of {0} ".format(state, state.final_outcome))
             self._transitions_cv.acquire()
             self._transitions_cv.wait(3.0)
             self._transitions_cv.release()

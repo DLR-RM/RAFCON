@@ -148,12 +148,12 @@ class StateOutcomesListController(ListViewController):
                         transition_parent_state.transitions[t_id].modify_target(to_state=to_state_id)
                         do_self_transition_check(t_id, new_state_identifier)
                     except ValueError as e:
-                        logger.warn("The target of transition couldn't be modified: {0}".format(e))
+                        logger.warning("The target of transition couldn't be modified: {0}".format(e))
             else:
                 try:
                     transition_parent_state.remove_transition(t_id)
                 except AttributeError as e:
-                    logger.warn("The transition couldn't be removed: {0}".format(e))
+                    logger.warning("The transition couldn't be removed: {0}".format(e))
         else:  # there is no transition till now
             if new_state_identifier is not None and not self.model.state.is_root_state:
                 transition_parent_state = self.model.parent.state
@@ -165,7 +165,7 @@ class StateOutcomesListController(ListViewController):
                                                                   to_outcome=None, transition_id=None)
                     do_self_transition_check(t_id, new_state_identifier)
                 except (ValueError, TypeError) as e:
-                    logger.warn("The transition couldn't be added: {0}".format(e))
+                    logger.warning("The transition couldn't be added: {0}".format(e))
                     return
             else:
                 logger.debug("outcome-editor got None in to_state-combo-change no transition is added")
@@ -194,7 +194,7 @@ class StateOutcomesListController(ListViewController):
                         transition_parent_state.transitions[t_id].modify_target(to_state=to_state_id,
                                                                                 to_outcome=new_to_outcome_id)
                     except ValueError as e:
-                        logger.warn("The target of transition couldn't be modified: {0}".format(e))
+                        logger.warning("The target of transition couldn't be modified: {0}".format(e))
             else:
 
                 transition_parent_state.remove_transition(t_id)
@@ -208,7 +208,7 @@ class StateOutcomesListController(ListViewController):
                                                            to_state_id=self.model.parent.state.state_id,
                                                            to_outcome=to_outcome, transition_id=None)
                 except (ValueError, TypeError) as e:
-                    logger.warn("The transition couldn't be added: {0}".format(e))
+                    logger.warning("The transition couldn't be added: {0}".format(e))
             else:
                 logger.debug("outcome-editor got None in to_outcome-combo-change no transition is added")
 
@@ -218,7 +218,7 @@ class StateOutcomesListController(ListViewController):
             if outcome_ids:
                 self.select_entry(outcome_ids[self.model.state])
         except ValueError as e:
-            logger.warn("The outcome couldn't be added: {0}".format(e))
+            logger.warning("The outcome couldn't be added: {0}".format(e))
             return False
         return True
 

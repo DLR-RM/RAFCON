@@ -262,7 +262,7 @@ def client_interaction(main_window_controller, global_monitoring_manager, queue_
         assert isinstance(queue, multiprocessing.queues.Queue)
 
     while not global_monitoring_manager.endpoint_initialized:
-        logger.warn("global_monitoring_manager not initialized yet!")
+        logger.warning("global_monitoring_manager not initialized yet!")
         time.sleep(sleep_time)
 
     while len(network_manager_model.connected_ip_port) < 1:
@@ -467,7 +467,7 @@ def client_interaction(main_window_controller, global_monitoring_manager, queue_
     global_monitoring_manager.reinitialize(network_manager_model.connected_ip_port)
 
     while not global_monitoring_manager.endpoint_initialized:
-        logger.warn("global_monitoring_manager not initialized yet!")
+        logger.warning("global_monitoring_manager not initialized yet!")
         time.sleep(sleep_time)
 
     logger.info("Wait until registered to server")

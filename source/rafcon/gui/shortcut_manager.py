@@ -50,7 +50,7 @@ class ShortcutManager(object):
             for shortcut in shortcuts:
                 keyval, modifier_mask = Gtk.accelerator_parse(shortcut)
                 if keyval == 0 and modifier_mask == 0:  # No valid shortcut
-                    logger.warn("No valid shortcut for shortcut %s" % str(shortcut))
+                    logger.warning("No valid shortcut for shortcut %s" % str(shortcut))
                     continue
                 callback = partial(self.__on_shortcut, action)  # Bind the action to the callback function
                 self.accel_group.connect(keyval, modifier_mask, Gtk.AccelFlags.VISIBLE, callback)

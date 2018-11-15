@@ -64,7 +64,7 @@ def log_to_raw_structure(execution_history_items):
                     # this is a logical 'next' relationship
                     next_[prev_item_id] = k
             else:
-                logger.warn('HistoryItem is referring to a non-existing previous history item, HistoryItem was %s' % str(v))
+                logger.warning('HistoryItem is referring to a non-existing previous history item, HistoryItem was %s' % str(v))
 
         rid = v['run_id']
         if rid in grouped_by_run_id:
@@ -127,7 +127,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                     try:
                         execution_item[l] = item[l]
                     except KeyError:
-                        logger.warn("Key {} not in history start item".format(str(l)))
+                        logger.warning("Key {} not in history start item".format(str(l)))
 
                 ## add extended properties (added in later rafcon versions),
                 ## will add default value if not existing instead
@@ -153,7 +153,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                 try:
                     execution_item[l] = item[l]
                 except KeyError:
-                    logger.warn("Key {} not in history start item".format(str(l)))
+                    logger.warning("Key {} not in history start item".format(str(l)))
 
             ## add extended properties (added in later rafcon versions),
             ## will add default value if not existing instead
@@ -190,7 +190,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                         gitems[i]['call_type'] == 'CONTAINER' \
                                         for i in range(len(gitems))].index(True)]
                 except ValueError:
-                    logger.warn('Could not find a CallItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
+                    logger.warning('Could not find a CallItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
                     ## create dummy returnitem with the properties referenced later in this code
                     call_item = dict(description=None,
                                      history_item_id=None,
@@ -214,7 +214,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                           gitems[i]['call_type'] == 'CONTAINER' \
                                           for i in range(len(gitems))].index(True)]
                 except ValueError:
-                    logger.warn('Could not find a ReturnItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
+                    logger.warning('Could not find a ReturnItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
                     ## create dummy returnitem with the properties referenced later in this code
                     return_item = dict(history_item_id=None,
                                        outcome_name=None,

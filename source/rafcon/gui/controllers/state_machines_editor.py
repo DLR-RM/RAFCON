@@ -53,7 +53,7 @@ try:
         GraphicalEditorGaphasController
 except ImportError as e:
     raise
-    logger.warn("The Gaphas graphical editor is not supported due to missing libraries: {0}".format(e))
+    logger.warning("The Gaphas graphical editor is not supported due to missing libraries: {0}".format(e))
     GAPHAS_AVAILABLE = False
 
 ROOT_STATE_NAME_MAX_CHARS = 25

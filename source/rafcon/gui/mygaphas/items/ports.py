@@ -118,7 +118,7 @@ class PortView(object):
     def port_side_size(self):
         parent = self.parent
         if not parent:
-            logger.warn("PortView without parent: {}".format(self))
+            logger.warning("PortView without parent: {}".format(self))
             return 1
         return parent.border_width
 

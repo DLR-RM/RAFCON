@@ -95,7 +95,7 @@ class LibraryManager(Observable):
                     library_root_key, library_root_path))
                 self._load_libraries_from_root_path(library_root_key, library_root_path)
             else:
-                logger.warn("Configured path for library root key '{}' does not exist: {}".format(
+                logger.warning("Configured path for library root key '{}' does not exist: {}".format(
                     library_root_key, library_root_path))
 
         # 2. Load libraries from RAFCON_LIBRARY_PATH
@@ -106,11 +106,11 @@ class LibraryManager(Observable):
                 continue
             library_root_path = self._clean_path(library_root_path)
             if not os.path.exists(library_root_path):
-                logger.warn("The library specified in RAFCON_LIBRARY_PATH does not exist: {}".format(library_root_path))
+                logger.warning("The library specified in RAFCON_LIBRARY_PATH does not exist: {}".format(library_root_path))
                 continue
             _, library_root_key = os.path.split(library_root_path)
             if library_root_key in self._libraries:
-                logger.warn("The library '{}' is already existing and will be overridden with '{}'".format(
+                logger.warning("The library '{}' is already existing and will be overridden with '{}'".format(
                     library_root_key, library_root_path))
             self._load_libraries_from_root_path(library_root_key, library_root_path)
             logger.debug("Adding library '{1}' from {0}".format(library_root_path, library_root_key))

@@ -1022,13 +1022,13 @@ class GraphicalEditorController(ExtendedController):
             # One case, for which there is no from_port_m is when the the from-port is a ScopedVariable of a
             # LibraryState
             if not isinstance(from_state_m, LibraryStateModel):
-                logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
+                logger.warning('Cannot find model of the from data port {0}, ({1})'.format(from_key,
                                                                                         data_flow_m.data_flow))
             return
         if to_port_m is None:
             # One case, for which there is no to_port_m is when the the to-port is a ScopedVariable of a LibraryState
             if not isinstance(to_state_m, LibraryStateModel):
-                logger.warn('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
+                logger.warning('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
             return
 
         # For scoped variables, there is no inner and outer connector

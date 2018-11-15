@@ -234,7 +234,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
         assert isinstance(queue, multiprocessing.queues.Queue)
 
     while not global_monitoring_manager.endpoint_initialized:
-        logger.warn("global_monitoring_manager not initialized yet!")
+        logger.warning("global_monitoring_manager not initialized yet!")
         time.sleep(0.01)
 
     import rafcon.core.singleton as core_singletons

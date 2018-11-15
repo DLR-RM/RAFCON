@@ -190,7 +190,7 @@ class StateOverviewController(ExtendedController):
                 self.model.state.name = new_name
                 logger.debug("State '{0}' changed name to '{1}'".format(self.model.state.name, new_name))
             except (TypeError, ValueError) as e:
-                logger.warn("Could not change state name: {0}".format(e))
+                logger.warning("Could not change state name: {0}".format(e))
             self.view['entry_name'].set_text(self.model.state.name)
 
     def change_type(self, widget, model=None, info=None):

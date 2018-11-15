@@ -981,7 +981,7 @@ class GraphicalEditorController(ExtendedController):
         parent_state_m = connection_m.parent
         # The waypoints should exist as list. If not (for any reason), we have to convert it to one
         if isinstance(connection_m.get_meta_data_editor(for_gaphas=False)['waypoints'], dict):
-            # logger.warn("Connection waypoints was of type dict, expected list")
+            # logger.warning("Connection waypoints was of type dict, expected list")
             # connection_m.meta['gui']['editor']['waypoints'] = connection_m.meta['waypoints'].items()
             connection_m.set_meta_data_editor('waypoints', [], from_gaphas=False)
         waypoint_list = copy(connection_m.get_meta_data_editor(for_gaphas=False)['waypoints'])
@@ -1039,7 +1039,7 @@ class GraphicalEditorController(ExtendedController):
 
         try:
             if not isinstance(responsible_parent_m, ContainerStateModel):
-                logger.warn("Only container states can have inner transitions.")
+                logger.warning("Only container states can have inner transitions.")
             else:
                 transition_id = responsible_parent_m.state.add_transition(from_state_id, from_outcome_id, to_state_id,
                                                                           to_outcome_id)
@@ -1051,7 +1051,7 @@ class GraphicalEditorController(ExtendedController):
                     insert_self_transition_meta_data(responsible_parent_m.states[from_state_id], transition_id,
                                                      combined_action=True)
         except (AttributeError, ValueError) as e:
-            logger.warn("Transition couldn't be added: {0}".format(e))
+            logger.warning("Transition couldn't be added: {0}".format(e))
             # import traceback
             # logger.debug("The graphical editor had an internal error: %s %s" % (str(e), str(traceback.format_exc())))
         except Exception as e:
@@ -1092,7 +1092,7 @@ class GraphicalEditorController(ExtendedController):
                     data_flow_m.set_meta_data_editor('waypoints', self.temporary_waypoints, from_gaphas=False)
                     self._meta_data_changed(model=data_flow_m, change='append_to_last_change')
             except AttributeError as e:
-                logger.warn("Data flow couldn't be added: {0}".format(e))
+                logger.warning("Data flow couldn't be added: {0}".format(e))
             except Exception as e:
                 logger.error("Unexpected exception while creating data flow: {0}".format(e))
 
@@ -1897,11 +1897,11 @@ class GraphicalEditorController(ExtendedController):
             to_port = to_state.get_data_port_m(to_key)
 
             if from_port is None:
-                logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
+                logger.warning('Cannot find model of the from data port {0}, ({1})'.format(from_key,
                                                                                         data_flow_m.data_flow))
                 continue
             if to_port is None:
-                logger.warn('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
+                logger.warning('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
                 continue
 
             # For scoped variables, there is no inner and outer connector

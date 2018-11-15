@@ -433,7 +433,7 @@ def patch_gtkmvc3_model_mt():
             state_threads.append(self._ExecutionEngine__wait_for_finishing_thread)
             self._ExecutionEngine__wait_for_finishing_thread.start()
         else:
-            logger.warn("Currently no active state machine! Please create a new state machine.")
+            logger.warning("Currently no active state machine! Please create a new state machine.")
             self.set_execution_mode(StateMachineExecutionStatus.STOPPED)
 
     def __patched__notify_observer__(self, observer, method, *args, **kwargs):

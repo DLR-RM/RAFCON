@@ -59,7 +59,7 @@ class DataPort(StateElement):
         self._was_forced_type = force_type
         if data_port_id is None:
             self._data_port_id = generate_data_port_id([])
-            logger.warn("Look out: Instantiation of a data port without specifying its id is not recommended! The "
+            logger.warning("Look out: Instantiation of a data port without specifying its id is not recommended! The "
                         "add_data_port* functions of the State/ContainerState class should be used!")
         else:
             self._data_port_id = data_port_id
@@ -144,7 +144,7 @@ class DataPort(StateElement):
             raise ValueError("Name cannot be empty")
 
         if name == "error":
-            logger.warn("The name of the created data port is 'error'. "
+            logger.warning("The name of the created data port is 'error'. "
                         "This name is internally used for error propagation as well. "
                         "Only proceed if you know, what you are doing, otherwise rename the data port.")
         self._change_property_with_validity_check('_name', name)
