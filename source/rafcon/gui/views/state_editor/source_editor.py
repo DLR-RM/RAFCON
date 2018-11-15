@@ -37,20 +37,20 @@ class SourceEditorView(EditorView):
             pass
         hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
         hbox.get_style_context().add_class("widget-toolbar")
-        pylint_check_button = Gtk.CheckButton("Validate")
+        pylint_check_button = Gtk.CheckButton(label="Validate")
         pylint_check_button.set_focus_on_click(False)
         pylint_check_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         pylint_check_button.get_style_context().add_class("secondary")
 
-        open_external_button = Gtk.ToggleButton("Open externally")
+        open_external_button = Gtk.ToggleButton(label="Open externally")
         open_external_button.set_focus_on_click(False)
         open_external_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
-        apply_button = Gtk.Button("Apply")
+        apply_button = Gtk.Button(label="Apply")
         apply_button.set_focus_on_click(False)
         apply_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
-        cancel_button = Gtk.Button("Reset")
+        cancel_button = Gtk.Button(label="Reset")
         cancel_button.set_focus_on_click(False)
         cancel_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
 

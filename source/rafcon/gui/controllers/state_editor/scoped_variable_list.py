@@ -215,7 +215,7 @@ class ScopedVariableListController(ListViewController):
                 tmp.append([sv_model.scoped_variable.name, data_type_name,
                             str(sv_model.scoped_variable.default_value), sv_model.scoped_variable.data_port_id,
                                 sv_model])
-            tms = Gtk.TreeModelSort(tmp)
+            tms = Gtk.TreeModelSort(model=tmp)
             tms.set_sort_column_id(0, Gtk.SortType.ASCENDING)
             tms.set_sort_func(0, compare_variables)
             tms.sort_column_changed()

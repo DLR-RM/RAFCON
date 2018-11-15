@@ -37,12 +37,12 @@ class StateOutcomesEditorView(View):
         self.vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.treeView = StateOutcomesTreeView()
 
-        add_button = Gtk.Button('Add')
+        add_button = Gtk.Button(label='Add')
         add_button.set_focus_on_click(False)
         add_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         add_button.set_size_request(constants.BUTTON_MIN_WIDTH, -1)
 
-        remove_button = Gtk.Button('Remove')
+        remove_button = Gtk.Button(label='Remove')
         remove_button.set_focus_on_click(False)
         remove_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
         remove_button.set_size_request(constants.BUTTON_MIN_WIDTH, -1)

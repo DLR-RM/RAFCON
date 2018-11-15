@@ -63,8 +63,8 @@ class PreferencesWindowController(ExtendedController):
         self.shortcut_list_store = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
 
         self._lib_counter = 0
-        self._gui_checkbox = Gtk.CheckButton("GUI Config")
-        self._core_checkbox = Gtk.CheckButton("Core Config")
+        self._gui_checkbox = Gtk.CheckButton(label="GUI Config")
+        self._core_checkbox = Gtk.CheckButton(label="Core Config")
         self._last_path = self.core_config_model.config.path
 
     def __destroy(self):
@@ -602,10 +602,10 @@ class PreferencesWindowController(ExtendedController):
         label.set_padding(xpad=10, ypad=10)
         dialog.vbox.pack_start(label, True, True, 0)
         label.show()
-        self._gui_checkbox = Gtk.CheckButton("GUI Config")
+        self._gui_checkbox = Gtk.CheckButton(label="GUI Config")
         dialog.vbox.pack_start(self._gui_checkbox, True, True, 0)
         self._gui_checkbox.show()
-        self._core_checkbox = Gtk.CheckButton("Core Config")
+        self._core_checkbox = Gtk.CheckButton(label="Core Config")
         self._core_checkbox.show()
         dialog.vbox.pack_start(self._core_checkbox, True, True, 0)
         response = dialog.run()

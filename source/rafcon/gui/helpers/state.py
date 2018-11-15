@@ -637,7 +637,8 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
     try:
         assert isinstance(action_parent_m.state, ContainerState)
         new_state = action_parent_m.state.group_states(state_ids, sv_ids)
-    except Exception as e:
+    except Exception as e2:
+        e = e2
         logger.exception("State group failed")
 
     # AFTER MODEL
@@ -710,7 +711,8 @@ def ungroup_state(state_m):
     e = None
     try:
         state_m.parent.state.ungroup_state(state_m.state.state_id)
-    except Exception as e:
+    except Exception as e2:
+        e = e2
         logger.exception("State ungroup failed")
 
     error_msg = "Un-Group action has not re-used all models of grouped elements."

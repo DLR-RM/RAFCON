@@ -233,7 +233,7 @@ class DataPortListController(ListViewController):
                             data_port_m,
                             ])
 
-        tms = Gtk.TreeModelSort(tmp)
+        tms = Gtk.TreeModelSort(model=tmp)
         tms.set_sort_column_id(0, Gtk.SortType.ASCENDING)
         tms.set_sort_func(0, compare_variables)
         tms.sort_column_changed()

@@ -152,7 +152,7 @@ class MyCanvas(gaphas.canvas.Canvas):
             self.update_now()
 
         from gi.repository import Gtk
-        from gi.repository import GObject
+        from gi.repository import GLib
         from threading import Event
         event = Event()
 
@@ -160,10 +160,10 @@ class MyCanvas(gaphas.canvas.Canvas):
         # Make use of the priority, which is higher for gaphas then for gtkmvc3
         def priority_handled(event):
             event.set()
-        priority = (GObject.PRIORITY_HIGH_IDLE + GObject.PRIORITY_DEFAULT_IDLE) / 2
+        priority = (GLib.PRIORITY_HIGH_IDLE + GLib.PRIORITY_DEFAULT_IDLE) / 2
         # idle_add is necessary here, as we do not want to block the user from interacting with the GUI
         # while gaphas is redrawing
-        GObject.idle_add(priority_handled, event, priority=priority)
+        GLib.idle_add(priority_handled, event, priority=priority)
         while not event.is_set():
             Gtk.main_iteration()
 
