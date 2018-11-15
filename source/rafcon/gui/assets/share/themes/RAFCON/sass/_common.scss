@@ -1889,7 +1889,7 @@ notebook {
 $_scrollbar_bg_color: darken($base_color, 1%);
 
 scrollbar {
-  $_slider_min_length: 5px;
+  $_slider_min_length: 40px;
 
   // disable steppers
   @at-root * {
