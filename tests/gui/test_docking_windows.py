@@ -85,11 +85,11 @@ def undock_sidebars():
         logger.info("resizing...")
         time.sleep(debug_sleep_time)
         ready.clear()
-        target_size = (800, 800)
+        target_size = (1400, 800)
         try:
             assert_size_equality(new_size, target_size, 90)
             # Change target size if it is similar to the current size
-            target_size = (900, 900)
+            target_size = (1600, 900)
         except AssertionError:
             pass
 
