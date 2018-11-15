@@ -73,7 +73,7 @@ def show_dialog(event, text, subtext, options, key_mapping, result):
 
 
 def execute(self, inputs, outputs, gvm):
-    import gobject
+    from gi.repository import GLib
 
     # self_preempted is a threading.Event object
     event = self._preempted
@@ -83,8 +83,8 @@ def execute(self, inputs, outputs, gvm):
     subtext = inputs['subtext']
     options = inputs['options']
     key_mapping = inputs['key_mapping']
-    
-    gobject.idle_add(show_dialog, event, text, subtext, options, key_mapping, result)
+
+    GLib.idle_add(show_dialog, event, text, subtext, options, key_mapping, result)
     
     # Event is either set by the dialog or by an external preemption request
     event.wait()
