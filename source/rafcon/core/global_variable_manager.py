@@ -62,6 +62,7 @@ class GlobalVariableManager(Observable):
         :param access_key: if the variable was explicitly locked with the  rafcon.state lock_variable
         :raises exceptions.RuntimeError: if a wrong access key is passed
         """
+        key = str(key)  # Ensure that we have the same string type for all keys (under Python2 and 3!)
         if self.variable_exist(key):
             if data_type is None:
                 data_type = self.__global_variable_type_dictionary[key]
@@ -110,6 +111,7 @@ class GlobalVariableManager(Observable):
         :return: The value stored at in the global variable key
         :raises exceptions.RuntimeError: if a wrong access key is passed or the variable cannot be accessed by reference
         """
+        key = str(key)
         if self.variable_exist(key):
             unlock = True
             if self.is_locked(key):
@@ -150,6 +152,7 @@ class GlobalVariableManager(Observable):
         :param str key: Name of the variable
         :return: True if value of variable can be returned by reference, False else
         """
+        key = str(key)
         return key in self.__variable_references and self.__variable_references[key]
 
     @Observable.observed
@@ -159,6 +162,7 @@ class GlobalVariableManager(Observable):
         :param key: the key of the global variable to be deleted
         :raises exceptions.AttributeError:  if the global variable does not exist
         """
+        key = str(key)
         if self.is_locked(key):
             raise RuntimeError("Global variable is locked")
 
@@ -181,6 +185,7 @@ class GlobalVariableManager(Observable):
         :param key: the key of the global variable to be locked
         :param block: a flag to specify if to wait for locking the variable in blocking mode
         """
+        key = str(key)
         # watch out for releasing the __dictionary_lock properly
         try:
             if key in self.__variable_locks:
@@ -220,6 +225,7 @@ class GlobalVariableManager(Observable):
         :raises exceptions.AttributeError: if the global variable does not exist
         :raises exceptions.RuntimeError: if the wrong access key is passed
         """
+        key = str(key)
         if self.__access_keys[key] == access_key or force:
             if key in self.__variable_locks:
                 if self.is_locked(key):
@@ -256,6 +262,7 @@ class GlobalVariableManager(Observable):
 
         :param key: the name of the global variable
         """
+        key = str(key)
         return key in self.__global_variable_dictionary
 
     variable_exists = variable_exist
@@ -265,6 +272,7 @@ class GlobalVariableManager(Observable):
 
         :param key: the name of the global variable
         """
+        key = str(key)
         return key in self.__global_variable_type_dictionary
 
     def is_locked(self, key):
@@ -273,6 +281,7 @@ class GlobalVariableManager(Observable):
         :param key: the unique key of the global variable
         :return:
         """
+        key = str(key)
         if key in self.__variable_locks:
             return self.__variable_locks[key].locked()
         return False
@@ -283,6 +292,7 @@ class GlobalVariableManager(Observable):
         :param start_key: The start pattern to search all keys for.
         :return:
         """
+        start_key = str(start_key)
         output_list = []
         if len(self.__global_variable_dictionary) == 0:
             return output_list
@@ -316,11 +326,13 @@ class GlobalVariableManager(Observable):
         return list(self.__global_variable_dictionary.keys())
 
     def get_representation(self, key):
+        key = str(key)
         if not self.variable_exist(key):
             return None
         return self.__global_variable_dictionary[key]
 
     def get_data_type(self, key):
+        key = str(key)
         if not self.data_type_exist(key):
             return None
         return self.__global_variable_type_dictionary[key]
