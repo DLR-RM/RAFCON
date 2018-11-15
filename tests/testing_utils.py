@@ -289,7 +289,7 @@ def wait_for_gui():
 
 
 def run_gui_thread(gui_config=None, runtime_config=None):
-    from gi.repository import GObject
+    from gi.repository import GLib
     from gi.repository import Gdk
     from rafcon.core.start import reactor_required
     from rafcon.gui.start import start_gtk, install_reactor
@@ -298,7 +298,7 @@ def run_gui_thread(gui_config=None, runtime_config=None):
     # see https://stackoverflow.com/questions/35700140/pygtk-run-gtk-main-loop-in-a-seperate-thread
     # not needed any more:
     # https://pygobject.readthedocs.io/en/latest/guide/threading.html?highlight=threads_init#threads-faq
-    # GObject.threads_init()
+    # GLib.threads_init()
     if reactor_required():
         install_reactor()
     setup_l10n()
@@ -316,7 +316,7 @@ def run_gui_thread(gui_config=None, runtime_config=None):
     # Wait for GUI to initialize
     wait_for_gui()
     # Set an event when the gtk loop is running
-    GObject.idle_add(gui_ready.set)
+    GLib.idle_add(gui_ready.set)
     start_gtk()
 
 
@@ -397,7 +397,7 @@ def patch_gtkmvc3_model_mt():
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
     import gtkmvc3
-    from gtkmvc3.model_mt import Model, _threading, GObject
+    from gtkmvc3.model_mt import Model, _threading, GLib
     from rafcon.core.states.state import run_id_generator, threading
     from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger
 
@@ -458,7 +458,7 @@ def patch_gtkmvc3_model_mt():
             # multi-threading call
             if _threading.currentThread() in state_threads or _threading.currentThread() in auto_backup_threads:
                 # print "Notification from state thread", _threading.currentThread()
-                GObject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
+                GLib.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
                 return
             elif _threading.currentThread() in used_gui_threads \
                     and self._ModelMT__observer_threads[observer] in used_gui_threads:
@@ -468,7 +468,7 @@ def patch_gtkmvc3_model_mt():
                 print("Both threads are former gui threads! Current thread {}, Observer thread {}".format(
                     _threading.currentThread(), self._ModelMT__observer_threads[observer]))
                 return Model.__notify_observer__(self, observer, method, *args, **kwargs)
-                # GObject.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
+                # GLib.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
                 # return
             else:
                 print("{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \
