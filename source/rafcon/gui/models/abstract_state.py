@@ -147,6 +147,9 @@ class AbstractStateModel(MetaModel, Hashable):
         if isinstance(other, AbstractStateModel):
             return self.core_element.__cmp__(other.core_element)
 
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
+
     def __contains__(self, item):
         """Checks whether `item` is an element of the state model
 

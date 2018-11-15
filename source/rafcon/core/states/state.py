@@ -179,6 +179,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 return 0
             return -1 if self.state_id < other.state_id else 1
 
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
+
     @property
     def core_element_id(self):
         return self._state_id

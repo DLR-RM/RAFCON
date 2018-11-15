@@ -69,8 +69,15 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
     def __cmp__(self, other):
         if isinstance(other, StateElement):
             if self.__class__ is other.__class__:
-                return self.core_element_id.__cmp__(other.core_element_id)
+                if self.core_element_id < other.core_element_id:
+                    return -1
+                elif self.core_element_id > other.core_element_id:
+                    return 1
+                return 0
             return -1 if self.__class__.__name__ < other.__class__.__name__ else 1
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
 
     @property
     def parent(self):
