@@ -147,7 +147,7 @@ class log_exceptions(object):
                     self.logger = get_logger(__name__)
                 self.logger.exception("Unexpected error")
                 if self.gtk_quit:
-                    from gtk import main_quit
-                    main_quit()
+                    from gi.repository import Gtk
+                    Gtk.main_quit()
 
         return wrapper
