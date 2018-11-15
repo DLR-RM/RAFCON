@@ -190,10 +190,6 @@ class AbstractStateModel(MetaModel, Hashable):
         # TODO rewrite it to be more efficient -> try a recursive pattern on parent
         return len(self.state.get_path().split('/'))
 
-    @property
-    def hierarchy_level(self):
-        return len(self.state.get_path().split('/'))
-
     def prepare_destruction(self, recursive=True):
         """Prepares the model for destruction
 
