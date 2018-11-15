@@ -165,10 +165,9 @@ class MainWindowController(ExtendedController):
         ######################################################
         for window_key in constants.UNDOCKABLE_WINDOW_KEYS:
             widget_name = window_key.lower() + "_container"
-            replacement_name = None if window_key == 'CONSOLE' else window_key.lower() + "_replacement"
             window_ctrl_name = window_key.lower() + "_window_controller"
             undocked_window_view = getattr(view, window_key.lower() + "_window")
-            redock_callback = partial(self.redock_sidebar, window_key, widget_name, replacement_name, window_ctrl_name)
+            redock_callback = partial(self.redock_sidebar, window_key, widget_name, window_ctrl_name)
             window_ctrl = UndockedWindowController(state_machine_manager_model, undocked_window_view, redock_callback)
             self.add_controller(window_ctrl_name, window_ctrl)
 
@@ -231,9 +230,8 @@ class MainWindowController(ExtendedController):
 
         # Connect undock buttons signals
         for window_key in constants.UNDOCKABLE_WINDOW_KEYS:
-            replacement_name = None if window_key == 'CONSOLE' else window_key.lower() + "_replacement"
             self.connect_button_to_function('undock_{}_button'.format(window_key.lower()), "clicked",
-                                            partial(self.undock_sidebar, window_key, replacement_name))
+                                            partial(self.undock_sidebar, window_key))
 
         # Connect collapse button for trees
         self.connect_button_to_function('collapse_tree_button', "clicked", self.on_collapse_button_clicked)
@@ -301,8 +299,7 @@ class MainWindowController(ExtendedController):
         if gui_config.get_config_value("RESTORE_UNDOCKED_SIDEBARS"):
             for window_key in constants.UNDOCKABLE_WINDOW_KEYS:
                 if global_runtime_config.get_config_value(window_key + "_WINDOW_UNDOCKED"):
-                    replacement_name = None if window_key == 'CONSOLE' else window_key.lower() + "_replacement"
-                    self.undock_sidebar(window_key, replacement_name)
+                    self.undock_sidebar(window_key)
 
         # secure maximized state
         if global_runtime_config.get_config_value("MAIN_WINDOW_MAXIMIZED"):
@@ -460,7 +457,7 @@ class MainWindowController(ExtendedController):
         else:
             undocked_window.deiconify()
 
-    def undock_sidebar(self, window_key, replacement_name, widget=None, event=None):
+    def undock_sidebar(self, window_key, widget=None, event=None):
         """Undock/separate sidebar into independent window
 
         The sidebar is undocked and put into a separate new window. The sidebar is hidden in the main-window by
@@ -483,8 +480,6 @@ class MainWindowController(ExtendedController):
         self.view['undock_{}_button'.format(widget_name)].hide()
         getattr(self, 'on_{}_hide_clicked'.format(widget_name))(None)
         self.view['{}_return_button'.format(widget_name)].hide()
-        # if replacement_name:
-        #     self.view[replacement_name].show()
 
         main_window = self.view.get_top_widget()
         state_handler = main_window.connect('window-state-event', self.undock_window_callback, undocked_window)
@@ -493,7 +488,7 @@ class MainWindowController(ExtendedController):
         main_window.grab_focus()
         global_runtime_config.set_config_value(window_key + '_WINDOW_UNDOCKED', True)
 
-    def redock_sidebar(self, window_key, sidebar_name, replacement_name, controller_name, widget, event=None):
+    def redock_sidebar(self, window_key, sidebar_name, controller_name, widget, event=None):
         """Redock/embed sidebar into main window
 
         The size & position of the open window are saved to the runtime_config file, the sidebar is redocked back
@@ -513,8 +508,6 @@ class MainWindowController(ExtendedController):
 
         self.get_controller(controller_name).hide_window()
         self.view['undock_{}_button'.format(widget_name)].show()
-        # if replacement_name:
-        #     self.view[replacement_name].hide()
 
         # restore the position of the pane
         self.set_pane_position(config_id_for_pane_position)
