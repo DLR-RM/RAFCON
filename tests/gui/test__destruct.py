@@ -161,7 +161,7 @@ def get_log_elements(elements, with_prints=False, print_method=None):
         log_result_dict[file_name] = {'gen_file': element_gen_file, 'del_file': element_del_file}
 
     # print '\n'.join(["{0}: \n{1}\n{2}".format(element_name, log_files['gen_file'], log_files['del_file'])
-    #                  for element_name, log_files in log_result_dict.iteritems()])
+    #                  for element_name, log_files in log_result_dict.items()])
 
     return log_result_dict
 

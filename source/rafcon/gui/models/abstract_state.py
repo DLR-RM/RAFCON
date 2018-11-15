@@ -364,7 +364,7 @@ class AbstractStateModel(MetaModel, Hashable):
         # if hasattr(self, 'states'):
         #     for m in info['arg'].affected_models:
         #         print(m, self.states)
-        #         print([m is mm for mm in self.states.itervalues()], [m in self for m in info['arg'].affected_models], \)
+        #         print([m is mm for mm in self.states.values()], [m in self for m in info['arg'].affected_models], \)
         #             [m in self.states.values() for m in info['arg'].affected_models]
         if any([m in self for m in info['arg'].affected_models]):
             if not msg.action.startswith('parent_notification_'):

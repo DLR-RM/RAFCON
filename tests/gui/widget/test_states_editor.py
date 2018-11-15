@@ -103,9 +103,9 @@ def check_state_editor_models(sm_m, parent_state_m, logger=None):
     states_editor_controller = main_window_controller.get_controller('states_editor_ctrl')
     if isinstance(parent_state_m, ContainerStateModel):
         # logger.debug("old tabs are:")
-        # for tab in states_editor_controller.tabs.itervalues():
+        # for tab in states_editor_controller.tabs.values():
         #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
-        # for tab in states_editor_controller.closed_tabs.itervalues():
+        # for tab in states_editor_controller.closed_tabs.values():
         #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
         for state_m in list(parent_state_m.states.values()):
             # get widget of state-model

@@ -275,10 +275,10 @@ def equal_check_state_model(origin_state_m, target_state_m):
     #     diff_of_list_elements(origin_state_m.data_flows, target_state_m.data_flows, 'data_flow')
     #     diff_of_list_elements(origin_state_m.transitions, target_state_m.transitions, 'transition')
     #     diff_of_list_elements(origin_state_m.scoped_variables, target_state_m.scoped_variables, 'scoped_variable')
-    #     for elem_id, elem in origin_state_m.states.iteritems():
+    #     for elem_id, elem in origin_state_m.states.items():
     #         # if elem_id not in target_state_m.states:
     #         #     print "XXX ", target_state_m.state.get_path(), target_state_m.state.name, elem_id
-    #         #     print "\n".join([str((elem, elem_id)) for elem, elem_id in origin_state_m.states.iteritems()])
+    #         #     print "\n".join([str((elem, elem_id)) for elem, elem_id in origin_state_m.states.items()])
     #         #     print "XXX ", elem.state.get_path(), elem.state.name
     #         equal_check_state_model(elem, target_state_m.states[elem_id])
 

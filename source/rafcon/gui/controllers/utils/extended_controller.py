@@ -179,8 +179,7 @@ class ExtendedController(Controller):
         self.__connected_signals["signal" + str(self.__signal_counter)] = (callback, widget)
 
     def disconnect_all_signals(self):
-        # logger.verbose("Disconnect all signals of the class {}".format(str(self.__class__.__name__)))
-        for signal_id, (callback, widget) in self.__connected_signals.iteritems():
+        for signal_id, (callback, widget) in self.__connected_signals.items():
             widget.disconnect_by_func(callback)
         self.__connected_signals.clear()
 

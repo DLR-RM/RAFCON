@@ -157,7 +157,7 @@ class StateDataFlowsListController(LinkageListController):
             # check if data flow already exists
             exists = any([from_state_id == df.from_state and from_port.data_port_id == df.from_key
                           and to_state_id == df.to_state and to_port.data_port_id == df.to_key
-                          for df in future_data_flow_parent.data_flows.itervalues()])
+                          for df in future_data_flow_parent.data_flows.values()])
             if exists:
                 return
             # add valid data flow

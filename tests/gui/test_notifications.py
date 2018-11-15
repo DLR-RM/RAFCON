@@ -1441,7 +1441,7 @@ def test_state_property_modify_notification(caplog):
 
         # check parent
         num_child_effects = 0
-        # for num_prop_effects in child_effects.itervalues():
+        # for num_prop_effects in child_effects.values():
         #     num_child_effects += num_prop_effects
         if 'outcomes' in child_effects:
             num_child_effects = child_effects['outcomes']

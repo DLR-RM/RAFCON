@@ -48,7 +48,7 @@ def server_interaction_worker(queue_dict, execution_engine):
     root_state = active_sm.root_state
     sleep_time = 0.99
 
-    for key, sv in active_sm.root_state.scoped_variables.iteritems():
+    for key, sv in active_sm.root_state.scoped_variables.items():
         if sv.name == "bottles":
             sv.default_value = 3
 
