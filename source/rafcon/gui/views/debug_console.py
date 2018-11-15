@@ -20,7 +20,7 @@ from rafcon.gui.utils import constants
 
 class DebugConsoleView(View):
     builder = glade.get_glade_path("debug_console.glade")
-    top = 'main_frame_vbox'
+    top = 'console_container'
 
     def __init__(self):
         View.__init__(self)
@@ -37,8 +37,6 @@ class DebugConsoleView(View):
         ######################################################
         # initial configuration of the console
         ######################################################
-        self['debug_eventbox'].set_border_width(0)
-
         self['button_follow_logging'].set_active(global_gui_config.get_config_value('CONSOLE_FOLLOW_LOGGING', True))
         self['button_show_verbose'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_VERBOSE', True))
         self['button_show_debug'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True))
