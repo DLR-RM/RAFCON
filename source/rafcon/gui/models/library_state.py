@@ -119,6 +119,9 @@ class LibraryStateModel(AbstractStateModel):
         else:
             return False
 
+    def __hash__(self):
+        return id(self)
+
     def __copy__(self):
         state_m = AbstractStateModel.__copy__(self)
         state_m.state_copy.copy_meta_data_from_state_m(self.state_copy)

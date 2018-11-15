@@ -120,6 +120,9 @@ class StateMachineModel(MetaModel, Hashable):
         else:
             return False
 
+    def __hash__(self):
+        return id(self)
+
     def __copy__(self):
         sm_m = self.__class__(copy(self.state_machine))
         sm_m.root_state.copy_meta_data_from_state_m(self.root_state)

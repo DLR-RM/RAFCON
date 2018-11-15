@@ -46,7 +46,7 @@ class StateModel(AbstractStateModel):
         if load_meta_data and type(self) == StateModel:
             self.load_meta_data()
 
-    @ModelMT.observe("state", after=True, before=True)
+    # @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, prop_name, info):
         """This method notifies the model lists and the parent state about changes
 
