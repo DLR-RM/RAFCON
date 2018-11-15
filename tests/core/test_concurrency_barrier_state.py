@@ -98,6 +98,6 @@ def test_concurrency_barrier_save_load(caplog):
         testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 if __name__ == '__main__':
-    test_create_barrier_state_with_predefined_decider_state(None)
+    test_create_barrier_state_with_predefined_decider_state()
     test_concurrency_barrier_save_load(None)
     # pytest.main([__file__])
