@@ -55,6 +55,9 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
 
         self.parent = parent
 
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False

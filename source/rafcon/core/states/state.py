@@ -148,6 +148,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def id(self):
         return self
 
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False

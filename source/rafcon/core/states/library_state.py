@@ -169,8 +169,10 @@ class LibraryState(State):
 
         self.initialized = True
 
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
-        # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}".format(self, other))
         if not isinstance(other, self.__class__):
             return False
         return str(self) == str(other) and self._state_copy == other.state_copy

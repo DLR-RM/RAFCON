@@ -55,8 +55,10 @@ class ExecutionState(State):
         # here all persistent variables that should be available for the next state run should be stored
         self.persistent_variables = {}
 
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
-        # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}\n{2}\n{3}".format(self, other, self.script_text, other.script_text))
         if not isinstance(other, self.__class__):
             return False
         return str(self) == str(other) and self.script_text == other.script_text

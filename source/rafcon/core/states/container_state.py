@@ -153,6 +153,9 @@ class ContainerState(State):
     def __str__(self):
         return "{0} [{1} child states]".format(super(ContainerState, self).__str__(), len(self.states))
 
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
         # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}".format(self, other))
         if not isinstance(other, self.__class__):
