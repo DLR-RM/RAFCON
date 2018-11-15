@@ -30,7 +30,8 @@ def call_gui_callback(callback, *args, **kwargs):
     :param callback: The callback method, e.g. on_open_activate
     :param args: The parameters to be passed to the callback method
     """
-    from threading import Lock, Condition, Event, Thread
+    from future.utils import raise_
+    from threading import Condition
     import sys
     from rafcon.utils import log
     global exception_info, result
@@ -67,5 +68,6 @@ def call_gui_callback(callback, *args, **kwargs):
     condition.wait()
     condition.release()
     if exception_info:
-        raise exception_info[0], exception_info[1], exception_info[2]
+        e_type, e_value, e_traceback = exception_info
+        raise_(e_type, e_value, e_traceback)
     return result
