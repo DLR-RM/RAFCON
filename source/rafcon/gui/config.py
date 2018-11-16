@@ -118,7 +118,12 @@ class GuiConfig(ObservableConfig):
                 color_name = match.group(1).upper()
                 color_code = match.group(2)
                 self.colors[color_name] = color_code
-                self.gtk_colors[color_name] = Gdk.Color.parse(color_code)[1]
+                gtk_color = Gdk.RGBA()
+                if gtk_color.parse(color_code):
+                    self.gtk_colors[color_name] = gtk_color.to_color()
+                else:
+                    self.logger.warning("Could not parse color with name '{}' and code '{}'".format(color_name,
+                                                                                                    color_code))
 
         # Get color definitions
         colors_filename = "colors-dark.json" if dark_theme else "colors.json"
