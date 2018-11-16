@@ -19,7 +19,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">DATA LINKAGE</property>
-                <property name="xalign">0</property>
+                <property name="halign">start</property>
               </object>
             </child>
             <style>
@@ -47,7 +47,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Input</property>
-                    <property name="xalign">0</property>
+                    <property name="halign">start</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -87,7 +87,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Output</property>
-                    <property name="xalign">0</property>
+                    <property name="halign">start</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -127,7 +127,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Scope</property>
-                    <property name="xalign">0</property>
+                    <property name="halign">start</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -185,7 +185,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">LOGICAL LINKAGE</property>
-                <property name="xalign">0</property>
+                <property name="halign">start</property>
               </object>
             </child>
             <style>
@@ -208,7 +208,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Outcomes</property>
-                <property name="xalign">0</property>
+                <property name="halign">start</property>
               </object>
               <packing>
                 <property name="expand">False</property>

@@ -19,7 +19,7 @@
             <property name="can_focus">False</property>
             <property name="ypad">6</property>
             <property name="label" translatable="yes">Type</property>
-            <property name="xalign">0</property>
+            <property name="halign">start</property>
             <style>
               <class name="secondary"/>
             </style>
@@ -98,7 +98,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">Library Path/Name</property>
-            <property name="xalign">0</property>
+            <property name="halign">start</property>
             <style>
               <class name="secondary"/>
             </style>
@@ -128,7 +128,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">Library content</property>
-            <property name="xalign">0</property>
+            <property name="halign">start</property>
             <style>
               <class name="secondary"/>
             </style>
@@ -164,7 +164,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">State Name</property>
-                <property name="xalign">0</property>
+                <property name="halign">start</property>
                 <style>
                   <class name="secondary"/>
                 </style>

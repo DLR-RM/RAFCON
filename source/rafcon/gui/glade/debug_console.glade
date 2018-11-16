@@ -19,8 +19,8 @@
               <object class="GtkLabel" id="debug_console_label">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="halign">start</property>
                 <property name="label" translatable="yes">DEBUG CONSOLE</property>
-                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="expand">True</property>

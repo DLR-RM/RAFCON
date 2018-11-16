@@ -486,7 +486,7 @@
                 <property name="xpad">10</property>
                 <property name="ypad">3</property>
                 <property name="label" translatable="yes">Core Config Path: </property>
-                <property name="xalign">0</property>
+                <property name="halign">start</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -502,7 +502,7 @@
                 <property name="ypad">3</property>
                 <property name="label" translatable="yes">GUI Config Path: </property>
                 <property name="single_line_mode">True</property>
-                <property name="xalign">0</property>
+                <property name="halign">start</property>
               </object>
               <packing>
                 <property name="expand">True</property>

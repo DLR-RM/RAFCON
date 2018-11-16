@@ -20,7 +20,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">SEMANTIC DATA</property>
-                <property name="xalign">0</property>
+                <property name="halign">start</property>
               </object>
             </child>
             <style>
