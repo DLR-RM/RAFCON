@@ -287,21 +287,6 @@ def set_window_size_and_position(window, window_key):
     window.show()
 
 
-def draw_for_all_gtk_states(object, function_name, color):
-    """
-    Call given draw function for an object with a given color
-    :param object:  the object to call the draw function on
-    :param function_name: the draw function to call
-    :param color: the color to use for drawing
-    :return:
-    """
-    getattr(object, function_name)(Gtk.StateType.ACTIVE, color)
-    getattr(object, function_name)(Gtk.StateType.INSENSITIVE, color)
-    getattr(object, function_name)(Gtk.StateType.NORMAL, color)
-    getattr(object, function_name)(Gtk.StateType.PRELIGHT, color)
-    getattr(object, function_name)(Gtk.StateType.SELECTED, color)
-
-
 def react_to_event(view, widget, event):
     """Checks whether the widget is supposed to react to passed event
 

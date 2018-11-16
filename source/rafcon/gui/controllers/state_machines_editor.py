@@ -34,7 +34,6 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.graphical_editor import GraphicalEditorController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers import text_formatting
-from rafcon.gui.helpers.label import draw_for_all_gtk_states
 from rafcon.gui.models.state_machine import StateMachineModel, StateMachine
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.utils import constants
@@ -491,13 +490,9 @@ class StateMachinesEditorController(ExtendedController):
 
         label = notebook.get_tab_label(page).get_child().get_children()[0]
         if active:
-            draw_for_all_gtk_states(label,
-                                    "modify_fg",
-                                    Gdk.color_parse(global_gui_config.colors['STATE_MACHINE_ACTIVE']))
+            label.get_style_context().add_class("execution-running")
         else:
-            draw_for_all_gtk_states(label,
-                                    "modify_fg",
-                                    Gdk.color_parse(global_gui_config.colors['STATE_MACHINE_NOT_ACTIVE']))
+            label.get_style_context().remove_class("execution-running")
 
     def refresh_state_machines(self, state_machine_ids):
         """ Refresh list af state machine tabs

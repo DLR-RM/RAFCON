@@ -44,6 +44,10 @@ label.secondary, checkbutton.secondary label {
     font-weight: 500;
 }
 
+label.execution-running {
+    color: $success_color;
+}
+
 // Square buttons for execution buttons
 #graphical_editor_toolbar button {
     padding: 5px 6px;
