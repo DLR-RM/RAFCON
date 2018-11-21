@@ -37,6 +37,7 @@ def test_execution_log(caplog):
         assert prod1['scoped_data_ins']['product'] == 2
         assert prod1['scoped_data_outs']['product'] == 2
         assert prod1['outcome_name'] == 'success'
+        assert prod1['semantic_data']['test_key'] == 'TestValue'
 
         prod2_id = [k for k, v in collapsed_items.items() if v['state_name'] == 'MakeProd2' ][0]
         prod2 = collapsed_items[prod2_id]
@@ -63,4 +64,5 @@ def test_execution_log(caplog):
         testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=0)
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    test_execution_log(None)
+    # pytest.main([__file__])

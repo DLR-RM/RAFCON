@@ -261,7 +261,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                  ('library_state_name', None),
                                  ('library_name', None),
                                  ('library_path', None)]:
-                execution_item[l] = call_item.get(l, default)
+                execution_item[l] = return_item.get(l, default)
 
             for l in ['outcome_name', 'outcome_id']:
                 execution_item[l] = return_item[l]
@@ -295,6 +295,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             execution_item['data_outs'] = unpickle_data(return_item['input_output_data'])
             execution_item['scoped_data_ins'] = unpickle_data(call_item['scoped_data'])
             execution_item['scoped_data_outs'] = unpickle_data(return_item['scoped_data'])
+            execution_item['semantic_data'] = unpickle_data(execution_item['semantic_data'])
 
             collapsed_items[rid] = execution_item
 
