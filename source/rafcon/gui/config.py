@@ -89,6 +89,8 @@ class GuiConfig(ObservableConfig):
         data_dir = resource_filename(__name__, self.get_assets_path(for_theme=False))
         os.environ['GTK_DATA_PREFIX'] = data_dir
         os.environ['GTK_THEME'] = "{}{}".format(theme_name, ":dark" if dark_theme else "")
+        print("data dir", data_dir)
+        print("theme", os.environ['GTK_THEME'])
 
         # The env vars GTK_DATA_PREFIX and GTK_THEME must be set before Gtk is imported first to prevent GTK warnings
         # from other themes
@@ -97,9 +99,7 @@ class GuiConfig(ObservableConfig):
         settings.set_property("gtk-theme-name", theme_name)
         settings.set_property("gtk-application-prefer-dark-theme", dark_theme)
 
-        filename = resource_filename(__name__, self.get_assets_path(
-            "icons", "RAFCON_figurative_mark_negative.svg", for_theme=False))
-        Gtk.Window.set_default_icon_from_file(filename)
+        Gtk.Window.set_default_icon_name("rafcon" if dark_theme else "rafcon-light")
 
     def configure_colors(self):
         from gi.repository import Gdk
