@@ -150,8 +150,6 @@ def generate_data_files():
 
     version_data_file = [("./", ["./VERSION"])]
 
-    application_file = [(path.join('share', 'applications'), [path.join('share', 'applications', 'de.dlr.rm.RAFCON.desktop')])]
-
     # print gui_data_files
     # print version_data_file
 
@@ -159,14 +157,14 @@ def generate_data_files():
     # print examples_data_files
     libraries_data_files = get_all_files_recursivly(libraries_folder)
     generated_data_files = locale_data_files + gui_data_files + examples_data_files + libraries_data_files + \
-                           version_data_file + application_file
+                           version_data_file
     # for elem in generated_data_files:
     #     print elem
     return generated_data_files
 
 
 global_requirements = ['pylint>=1.6,<2', 'pyyaml~=3.10', 'psutil', 'jsonconversion~=0.2.7', 'yaml_configuration~=0.0',
-                       'PyGObject~=3.2', 'future~=0.16']
+                       'python-gtkmvc-dlr==1.99.2', 'gaphas>=0.7', 'PyGObject~=3.2', 'future~=0.16']
 
 script_path = path.realpath(__file__)
 install_helper = path.join(path.dirname(script_path), "source", "rafcon", "gui", "helpers", "installation.py")
