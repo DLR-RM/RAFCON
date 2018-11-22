@@ -126,19 +126,21 @@ def generate_data_files():
     :rtype: list(tuple(str, [str]))
     """
     assets_folder = path.join('source', 'rafcon', 'gui', 'assets')
-    themes_folder = path.join(assets_folder, 'share', 'themes')
+    themes_folder = path.join(assets_folder, 'share', 'themes', 'RAFCON')
     examples_folder = path.join('share', 'examples')
     libraries_folder = path.join('share', 'libraries')
 
     gui_data_files = [
         get_data_files_tuple(assets_folder, 'icons'),
         get_data_files_tuple(assets_folder, 'splashscreens'),
-        get_data_files_tuple(assets_folder, path.join('fonts', 'FontAwesome')),
-        get_data_files_tuple(assets_folder, path.join('fonts', 'DIN Next LT Pro')),
-        get_data_files_tuple(themes_folder, 'RAFCON', 'gtk-3.0'),
-        get_data_files_tuple(themes_folder, 'RAFCON', 'colors.json', path_to_file=True),
-        get_data_files_tuple(themes_folder, 'RAFCON', 'colors-dark.json', path_to_file=True),
-        get_data_files_tuple(themes_folder, 'RAFCON', 'gtk-sourceview'),
+        get_data_files_tuple(assets_folder, 'fonts', 'FontAwesome'),
+        get_data_files_tuple(assets_folder, 'fonts', 'DIN Next LT Pro'),
+        get_data_files_tuple(themes_folder, 'gtk-3.0'),
+        get_data_files_tuple(themes_folder, 'assets'),
+        get_data_files_tuple(themes_folder, 'sass'),
+        get_data_files_tuple(themes_folder, 'gtk-sourceview'),
+        get_data_files_tuple(themes_folder, 'colors.json', path_to_file=True),
+        get_data_files_tuple(themes_folder, 'colors-dark.json', path_to_file=True)
     ]
 
     locale_data_files = installation.create_mo_files()
@@ -148,6 +150,8 @@ def generate_data_files():
 
     version_data_file = [("./", ["./VERSION"])]
 
+    application_file = [(path.join('share', 'applications'), [path.join('share', 'applications', 'de.dlr.rm.RAFCON.desktop')])]
+
     # print gui_data_files
     # print version_data_file
 
@@ -155,14 +159,14 @@ def generate_data_files():
     # print examples_data_files
     libraries_data_files = get_all_files_recursivly(libraries_folder)
     generated_data_files = locale_data_files + gui_data_files + examples_data_files + libraries_data_files + \
-                           version_data_file
+                           version_data_file + application_file
     # for elem in generated_data_files:
     #     print elem
     return generated_data_files
 
 
 global_requirements = ['pylint>=1.6,<2', 'pyyaml~=3.10', 'psutil', 'jsonconversion~=0.2.7', 'yaml_configuration~=0.0',
-                       'python-gtkmvc-dlr==1.99.2', 'gaphas>=0.7', 'PyGObject~=3.2', 'future~=0.16']
+                       'PyGObject~=3.2', 'future~=0.16']
 
 script_path = path.realpath(__file__)
 install_helper = path.join(path.dirname(script_path), "source", "rafcon", "gui", "helpers", "installation.py")
