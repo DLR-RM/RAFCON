@@ -151,12 +151,13 @@ def generate_data_files():
     # print("locale_data_files", locale_data_files)
 
     version_data_file = [("./", ["./VERSION"])]
+    desktop_data_file = [("share/applications", [path.join('share', 'applications', 'de.dlr.rm.RAFCON.desktop')])]
 
     examples_data_files = get_data_files_recursivly(examples_folder, share_target_root=path.join("rafcon", "examples"))
     libraries_data_files = get_data_files_recursivly(libraries_folder, share_target_root=path.join("rafcon",
                                                                                                    "libraries"))
     generated_data_files = gui_data_files + icon_data_files + locale_data_files + version_data_file + \
-                           examples_data_files + libraries_data_files
+                           desktop_data_file + examples_data_files + libraries_data_files
     # for elem in generated_data_files:
     #     print(elem)
     return generated_data_files
