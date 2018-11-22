@@ -91,7 +91,7 @@ def get_data_files_tuple(*path, **kwargs):
     return target_path, source_files
 
 
-def get_all_files_recursivly(*path):
+def get_data_files_recursivly(*path, **kwargs):
     """ Adds all files of the specified path to a data_files compatible list
 
     :param tuple path: List of path elements pointing to a directory of files
@@ -100,10 +100,9 @@ def get_all_files_recursivly(*path):
     """
     result_list = list()
     root_dir = os.path.join(*path)
-    log.debug("retrieving all files from folder '{}' recursively and adding to data_files ...".format(root_dir))
-
-    # remove share/ (package_dir) => e.g. target_dir_sub_path will be just "libraries"
-    target_dir_sub_path = os.path.join(*root_dir.split(os.sep)[1:])
+    share_target_root = os.path.join("share", kwargs.get("share_target_root", "rafcon"))
+    log.debug("recursively generating data files for folder '{}' ...".format(
+        root_dir))
 
     for dir_, _, files in os.walk(root_dir):
         relative_directory = os.path.relpath(dir_, root_dir)
@@ -111,10 +110,9 @@ def get_all_files_recursivly(*path):
         for fileName in files:
             relative_file = os.path.join(relative_directory, fileName)
             file_list.append(os.path.join(root_dir, relative_file))  # this is now a path relative to rafcon root folder
-            # print relative_file
         if len(file_list) > 0:
             # this is valid path in ~/.local folder: e.g. share/rafcon/libraries/generic/wait
-            target_path = os.path.join("share", "rafcon", target_dir_sub_path, relative_directory)
+            target_path = os.path.join(share_target_root, relative_directory)
             result_list.append((target_path, file_list))
     return result_list
 
@@ -126,12 +124,12 @@ def generate_data_files():
     :rtype: list(tuple(str, [str]))
     """
     assets_folder = path.join('source', 'rafcon', 'gui', 'assets')
-    themes_folder = path.join(assets_folder, 'share', 'themes', 'RAFCON')
+    share_folder = path.join(assets_folder, 'share')
+    themes_folder = path.join(share_folder, 'themes', 'RAFCON')
     examples_folder = path.join('share', 'examples')
     libraries_folder = path.join('share', 'libraries')
 
     gui_data_files = [
-        get_data_files_tuple(assets_folder, 'icons'),
         get_data_files_tuple(assets_folder, 'splashscreens'),
         get_data_files_tuple(assets_folder, 'fonts', 'FontAwesome'),
         get_data_files_tuple(assets_folder, 'fonts', 'DIN Next LT Pro'),
@@ -142,24 +140,25 @@ def generate_data_files():
         get_data_files_tuple(themes_folder, 'colors.json', path_to_file=True),
         get_data_files_tuple(themes_folder, 'colors-dark.json', path_to_file=True)
     ]
+    # print("gui_data_files", gui_data_files)
+
+    icon_data_files = get_data_files_recursivly(path.join(share_folder, 'icons'), share_target_root="icons")
+    # print("icon_data_files", icon_data_files)
 
     locale_data_files = installation.create_mo_files()
     # example tuple
     # locale_data_files = [('share/rafcon/locale/de/LC_MESSAGES', ['source/rafcon/locale/de/LC_MESSAGES/rafcon.mo'])]
-    # print locale_data_files
+    # print("locale_data_files", locale_data_files)
 
     version_data_file = [("./", ["./VERSION"])]
 
-    # print gui_data_files
-    # print version_data_file
-
-    examples_data_files = get_all_files_recursivly(examples_folder)
-    # print examples_data_files
-    libraries_data_files = get_all_files_recursivly(libraries_folder)
-    generated_data_files = locale_data_files + gui_data_files + examples_data_files + libraries_data_files + \
-                           version_data_file
+    examples_data_files = get_data_files_recursivly(examples_folder, share_target_root=path.join("rafcon", "examples"))
+    libraries_data_files = get_data_files_recursivly(libraries_folder, share_target_root=path.join("rafcon",
+                                                                                                   "libraries"))
+    generated_data_files = gui_data_files + icon_data_files + locale_data_files + version_data_file + \
+                           examples_data_files + libraries_data_files
     # for elem in generated_data_files:
-    #     print elem
+    #     print(elem)
     return generated_data_files
 
 
