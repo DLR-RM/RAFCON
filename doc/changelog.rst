@@ -23,6 +23,7 @@ Next release
   - :issue:`617` Invalid DataFlow by DataFlowWidget
   - :issue:`618` semantic data strings get scrambled/obfuscated in execution history log
                  fixed by pull request :issue:`626` fix(execution_log): unpickle semantic data
+  - :issue:`596` External editor does not remember the handed command and also does not lock the embedded editor
 
 Patch releases 0.12.\*
 ----------------------

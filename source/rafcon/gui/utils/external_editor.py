@@ -36,7 +36,7 @@ class AbstractExternalEditor(object):
         :param path: the path as first argument to the shell command
         :return: None
         """
-        execute_command_with_path_in_process(command, path, logger=logger)
+        return execute_command_with_path_in_process(command, path, logger=logger)
 
     def get_file_name(self):
         """ The object base class specific file name, which can then be passed to e.g. the external editor shell command
@@ -88,7 +88,7 @@ class AbstractExternalEditor(object):
 
         if button.get_active():
             # Get the specified "Editor" as in shell command from the gui config yaml
-            external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR')
+            external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR', None)
 
             def open_file_in_editor(cmd_to_open_editor, test_command=False):
                 self.save_file_data(file_system_path)
@@ -108,10 +108,10 @@ class AbstractExternalEditor(object):
                 # create a new RAFCONButtonInputDialog, add a checkbox and add the text 'remember' to it
                 text_input = RAFCONInputDialog(markup_text, ["Apply", "Cancel"], checkbox_text='remember')
                 # Run the text_input Dialog until a response is emitted. The apply button and the 'activate' signal of
-                # the textinput send response 1
+                # the text input send response 1
                 if text_input.run() == 1:
                     # If the response emitted from the Dialog is 1 than handle the 'OK'
-                    # If the checkbox is activated, also save the textinput the the config
+                    # If the checkbox is activated, also save the text input into the config
                     if text_input.get_checkbox_state():
                         global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', text_input.get_entry_text())
                         global_gui_config.save_configuration()
@@ -129,7 +129,7 @@ class AbstractExternalEditor(object):
             else:
                 # If an editor is specified, open the path with the specified command. Also text_field is None, there is
                 # no active text field in the case of an already specified editor. Its needed for the SyntaxError catch
-                open_file_in_editor(external_editor)
+                open_file_in_editor(external_editor, test_command=True)
         else:
             # If button is clicked after one open a file in the external editor, unlock the internal editor to reload
             set_editor_lock_inline(False)
