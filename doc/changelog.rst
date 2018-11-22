@@ -13,11 +13,15 @@ Next release
 
 - Improvements:
 
-  -
+  - gtk2 to gtk3 conversion of the RAFCON GUI
+  - :issue:`117` Make GUI resizeable on all edges and corners
+  - :issue:`621` Provide full license text
 
 - Bug Fixes:
 
   - :issue:`617` Invalid DataFlow by DataFlowWidget
+  - :issue:`618` semantic data strings get scrambled/obfuscated in execution history log
+                 fixed by pull request :issue:`626` fix(execution_log): unpickle semantic data
 
 Patch releases 0.12.\*
 ----------------------
