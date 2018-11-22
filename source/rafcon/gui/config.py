@@ -16,6 +16,7 @@ from builtins import str
 import os
 import re
 import yaml
+from collections import defaultdict
 
 from yaml_configuration.config import ConfigError
 
@@ -107,6 +108,10 @@ class GuiConfig(ObservableConfig):
         # Get colors from GTKrc file
         if not resource_exists(__name__, self.get_assets_path("gtk-3.0", css_filename)):
             raise ValueError("GTK theme does not exist")
+
+        # Provide black as fallback color if theme is not found instead of crashing
+        self.colors = defaultdict(lambda: "#FFFFFF")
+        self.gtk_colors = defaultdict(lambda: Gdk.RGBA(0, 0, 0).to_color())
 
         gtkrc_file_path = resource_filename(__name__, self.get_assets_path("gtk-3.0", css_filename))
         with open(gtkrc_file_path) as f:
