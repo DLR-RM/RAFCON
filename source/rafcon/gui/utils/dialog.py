@@ -167,7 +167,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
 
     def get_checkbox_state(self):
         if self.checkbox:
-            return bool(self.checkbox.get_state())
+            return bool(self.checkbox.get_active())
         else:
             return False
 
