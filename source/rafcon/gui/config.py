@@ -89,8 +89,6 @@ class GuiConfig(ObservableConfig):
         data_dir = resource_filename(__name__, self.get_assets_path(for_theme=False))
         os.environ['GTK_DATA_PREFIX'] = data_dir
         os.environ['GTK_THEME'] = "{}{}".format(theme_name, ":dark" if dark_theme else "")
-        print("data dir", data_dir)
-        print("theme", os.environ['GTK_THEME'])
 
         # The env vars GTK_DATA_PREFIX and GTK_THEME must be set before Gtk is imported first to prevent GTK warnings
         # from other themes
