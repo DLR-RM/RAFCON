@@ -163,7 +163,7 @@ def generate_data_files():
     return generated_data_files
 
 
-global_requirements = ['pylint>=1.6,<2', 'pyyaml~=3.10', 'psutil', 'jsonconversion~=0.2.7', 'yaml_configuration~=0.0',
+global_requirements = ['pylint>=1.6,<2', 'pyyaml~=3.10', 'psutil', 'jsonconversion~=0.2.7', 'yaml_configuration~=0.1',
                        'python-gtkmvc-dlr==1.99.2', 'gaphas>=0.7', 'PyGObject~=3.2', 'future~=0.16']
 
 script_path = path.realpath(__file__)
