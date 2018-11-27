@@ -612,6 +612,9 @@ def delete_core_element_of_model(model, raise_exceptions=False, recursive=True, 
     :param bool destroy: Access the destroy flag of the core remove methods
     :return: True if successful, False else
     """
+    if isinstance(model, AbstractStateModel) and model.state.is_root_state:
+        logger.warning("Deletion is not allowed. {0} is root state of state machine.".format(model.core_element))
+        return False
     state_m = model.parent
     if state_m is None:
         msg = "Model has no parent from which it could be deleted from"
