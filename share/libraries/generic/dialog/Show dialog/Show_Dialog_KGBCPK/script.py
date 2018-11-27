@@ -1,6 +1,7 @@
-
 from past.builtins import str
 from builtins import str
+
+
 def on_dialog_key_press(dialog, event, key_mapping, buttons):
     from gtk.gdk import keyval_name
     key_name = str.lower(str(keyval_name(event.keyval)))
@@ -17,39 +18,39 @@ def on_dialog_key_press(dialog, event, key_mapping, buttons):
     pass
 
 
-def show_dialog(event, text, subtext, options, key_mapping, result):
-    import gtk
+def show_dialog(event, text, subtext, options, key_mapping, result, logger):
+    from gi.repository import Gtk
+    from gi.repository import Gdk
+    from future.utils import string_types
+    
     try:
         from rafcon.gui.singleton import main_window_controller
     except ImportError:
         main_window_controller = None
-    dialog = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
+    dialog = Gtk.MessageDialog(type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.NONE, flags=Gtk.DialogFlags.MODAL)
+
+    message_area = dialog.get_message_area()
+    message_area.get_children()[0].set_size_request(600, -1)
+    message_area.get_children()[1].set_size_request(600, -1)
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_top_widget())
-    dialog.set_geometry_hints(min_width=700)
-    result[1] = dialog
-    text = "<span size='50000'>" + text + "</span>"
-    dialog.set_markup(text)
-    hbox = dialog.get_action_area()
-    vbox = hbox.parent
-    msg_ctr = vbox.get_children()[0]
-    text_ctr = msg_ctr.get_children()[1]
-    text_ctr.get_children()[0].set_size_request(600, -1)
-    text_ctr.get_children()[1].set_size_request(600, -1)
+    #dialog.set_geometry_hints(min_width=700)
+    markup_text = text
+    if isinstance(markup_text, string_types):
+        from cgi import escape
+        dialog.set_markup(escape(str(markup_text)))
+    else:
+        logger.debug("The specified message '{1}' text is not a string, but {0}".format(markup_text,
+                                                                                        type(markup_text)))
 
-    align_action_area = gtk.Alignment(xalign=0.5, yalign=0.0, xscale=0.0, yscale=0.0)
-    vbox.pack_end(child=align_action_area)
-    align_action_area.show()
-    hbox.reparent(new_parent=align_action_area)
-    
-    if isinstance(subtext, str) and len(subtext) > 0:
+    if isinstance(subtext, basestring) and len(subtext) > 0:
         subtext = "<span size='20000'>" + subtext + "</span>"
         dialog.format_secondary_markup(subtext)
         
     buttons = {}
     for i, option in enumerate(options):
-        button = gtk.Button()
-        label = gtk.Label("<span size='20000'>" + option + "</span>")
+        button = Gtk.Button()
+        label = Gtk.Label("<span size='20000'>" + option + "</span>")
         label.set_use_markup(True)
         label.show()
         button.add(label)
@@ -58,7 +59,7 @@ def show_dialog(event, text, subtext, options, key_mapping, result):
         dialog.add_action_widget(button, i)
         buttons[i] = button
         
-    dialog.add_events(gtk.gdk.KEY_PRESS_MASK)
+    #dialog.add_events(Gdk.KEY_PRESS_MASK)
     dialog.connect('key-press-event', on_dialog_key_press, key_mapping, buttons)
 
     res = dialog.run()
@@ -73,7 +74,7 @@ def show_dialog(event, text, subtext, options, key_mapping, result):
 
 
 def execute(self, inputs, outputs, gvm):
-    from gi.repository import GLib
+    from gi.repository import GObject
 
     # self_preempted is a threading.Event object
     event = self._preempted
@@ -84,7 +85,7 @@ def execute(self, inputs, outputs, gvm):
     options = inputs['options']
     key_mapping = inputs['key_mapping']
 
-    GLib.idle_add(show_dialog, event, text, subtext, options, key_mapping, result)
+    GObject.idle_add(show_dialog, event, text, subtext, options, key_mapping, result, self.logger)
     
     # Event is either set by the dialog or by an external preemption request
     event.wait()
@@ -105,4 +106,3 @@ def execute(self, inputs, outputs, gvm):
     outputs['option'] = option
     
     return "done"
-
