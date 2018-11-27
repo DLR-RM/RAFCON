@@ -1,5 +1,5 @@
 from gi.repository import GObject
-from rafcon.gui.utils import dialog
+from rafcon.gui.utils.dailog import RAFCONColumnCheckboxDialog
 
 
 def execute(self, inputs, outputs, gvm):
@@ -10,9 +10,9 @@ def execute(self, inputs, outputs, gvm):
         return "aborted"
         
     def run_dialog(event, result, logger):
-        dialog_window = dialog.RAFCONColumnCheckboxDialog(markup_text=inputs['message_text'],
-                                                          button_texts=inputs['buttons'],
-                                                          checkbox_texts=inputs['checkbox_texts'])
+        dialog_window = RAFCONColumnCheckboxDialog(markup_text=inputs['message_text'],
+                                                   button_texts=inputs['buttons'],
+                                                   checkbox_texts=inputs['checkbox_texts'])
     
         response_id = dialog_window.run()    
         outputs['checkbox_states'] = dialog_window.get_checkbox_states()
@@ -29,8 +29,8 @@ def execute(self, inputs, outputs, gvm):
     event.wait()
     
     response_id = result[0]
-    dialog_window = result[1]
-    dialog_window.destroy()
+    dialog = result[1]
+    dialog.destroy()
 
     # The dialog was not closed by the user, but we got a preemption request
     if response_id is None:
