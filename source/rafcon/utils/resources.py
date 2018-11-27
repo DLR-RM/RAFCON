@@ -15,6 +15,7 @@
 
 """
 
+import sys
 from past.builtins import map
 import os
 from os import listdir
@@ -22,20 +23,17 @@ from os.path import expanduser, isfile, join
 import pkg_resources
 
 
-share_folder_paths = [
-    join(expanduser("~"), ".local", "share"),
-    join(os.sep, 'usr', 'local', 'share'),
-    join(os.sep, 'usr', 'share'),
-]
+share_folder_paths = []
 
-# Check for non-default PYTHONUSERBASE and VIRTAL_ENV and add it to the search path list
-search_path_env_vars = ["PYTHONUSERBASE", "VIRTUAL_ENV"]
-for search_path_env_var in search_path_env_vars:
-    search_path_base = os.getenv(search_path_env_var)
-    if search_path_base:
-        search_path_base = join(search_path_base, "share")
-        if search_path_base not in share_folder_paths:
-            share_folder_paths.append(search_path_base)
+possible_prefix_paths = [sys.prefix, sys.exec_prefix,
+                         os.getenv("PYTHONUSERBASE"), os.getenv("VIRTUAL_ENV"),
+                         join(expanduser("~"), ".local"), join(os.sep, "usr", "local"), join(os.sep, "usr")]
+
+for prefix_path in possible_prefix_paths:
+    if prefix_path:
+        prefix_path = join(prefix_path, "share")
+        if prefix_path not in share_folder_paths:
+            share_folder_paths.append(prefix_path)
 
 
 def resource_filename(package_or_requirement, resource_name):
