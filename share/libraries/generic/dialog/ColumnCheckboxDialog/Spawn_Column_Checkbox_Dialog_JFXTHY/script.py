@@ -1,4 +1,6 @@
+from gi.repository import GObject
 from rafcon.gui.utils import dialog
+
 
 def execute(self, inputs, outputs, gvm):
     self.logger.debug("Creating columncheckbox dialog")
@@ -7,16 +9,36 @@ def execute(self, inputs, outputs, gvm):
         self.logger.error("Please specify exactly two buttons as a list")
         return "aborted"
         
-    dialog_window = dialog.RAFCONColumnCheckboxDialog(markup_text=inputs['message_text'],
-                                               button_texts=inputs['buttons'],
-                                               checkbox_texts=inputs['checkbox_texts'])
-    abort = inputs['abort_on_quit']
+    def run_dialog(event, result, logger):
+        dialog_window = dialog.RAFCONColumnCheckboxDialog(markup_text=inputs['message_text'],
+                                                          button_texts=inputs['buttons'],
+                                                          checkbox_texts=inputs['checkbox_texts'])
     
-    response_id = dialog_window.run()
+        response_id = dialog_window.run()    
+        outputs['checkbox_states'] = dialog_window.get_checkbox_states()
+        result.append(response_id)
+        result.append(dialog_window)
+
+        event.set()
     
-    outputs['checkbox_states'] = dialog_window.get_checkbox_states()
+    event = self._preempted
+    result = []
+    GObject.idle_add(run_dialog, event, result, self.logger)
     
+    # Event is either set by the dialog or by an external preemption request
+    event.wait()
+    
+    response_id = result[0]
+    dialog_window = result[1]
     dialog_window.destroy()
+
+    # The dialog was not closed by the user, but we got a preemption request
+    if response_id is None:
+        return "preempted"
+        
+    event.clear()
+        
+    abort = inputs['abort_on_quit']
     
     if response_id == 1:
         return 0
