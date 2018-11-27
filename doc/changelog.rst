@@ -17,6 +17,7 @@ Next release
   - :issue:`117` Make GUI resizeable on all edges and corners
   - :issue:`619` Provide and install *.desktop file
   - :issue:`621` Provide full license text
+  - The installation should now work from a blank virtualenv
 
 - Bug Fixes:
 
