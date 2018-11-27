@@ -9,7 +9,6 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import next
 import os
 import sys
 import shutil
