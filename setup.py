@@ -24,6 +24,9 @@ from imp import load_source
 import distutils.log as log
 
 
+rafcon_root_path = os.path.dirname(os.path.abspath(__file__))
+
+
 class PyTest(TestCommand):
     """Run py.test with RAFCON tests
 
@@ -73,7 +76,7 @@ class PostInstallCommand(InstallCommand):
         installation.install_libraries()
 
 
-def get_data_files_tuple(*path, **kwargs):
+def get_data_files_tuple(*rel_path, **kwargs):
     """Return a tuple which can be used for setup.py's data_files
     
     :param tuple path: List of path elements pointing to a file or a directory of files
@@ -81,25 +84,26 @@ def get_data_files_tuple(*path, **kwargs):
     :return: tuple of install directory and list of source files
     :rtype: tuple(str, [str])
     """
-    path = os.path.join(*path)
-    target_path = os.path.join("share", *path.split(os.sep)[1:])  # remove source/ (package_dir)
+    rel_path = os.path.join(*rel_path)
+    abs_path = os.path.join(rafcon_root_path, rel_path)
+    target_path = os.path.join("share", *rel_path.split(os.sep)[1:])  # remove source/ (package_dir)
     if "path_to_file" in kwargs and kwargs["path_to_file"]:
-        source_files = [path]
+        source_files = [abs_path]
         target_path = os.path.dirname(target_path)
     else:
-        source_files = [os.path.join(path, filename) for filename in os.listdir(path)]
+        source_files = [os.path.join(abs_path, filename) for filename in os.listdir(abs_path)]
     return target_path, source_files
 
 
-def get_data_files_recursivly(*path, **kwargs):
+def get_data_files_recursivly(*rel_root_path, **kwargs):
     """ Adds all files of the specified path to a data_files compatible list
 
-    :param tuple path: List of path elements pointing to a directory of files
+    :param tuple rel_root_path: List of path elements pointing to a directory of files
     :return: list of tuples of install directory and list of source files
     :rtype: list(tuple(str, [str]))
     """
     result_list = list()
-    root_dir = os.path.join(*path)
+    root_dir = os.path.join(rafcon_root_path, *rel_root_path)
     share_target_root = os.path.join("share", kwargs.get("share_target_root", "rafcon"))
     log.debug("recursively generating data files for folder '{}' ...".format(
         root_dir))
@@ -108,10 +112,11 @@ def get_data_files_recursivly(*path, **kwargs):
         relative_directory = os.path.relpath(dir_, root_dir)
         file_list = list()
         for fileName in files:
-            relative_file = os.path.join(relative_directory, fileName)
-            file_list.append(os.path.join(root_dir, relative_file))  # this is now a path relative to rafcon root folder
+            rel_file_path = os.path.join(relative_directory, fileName)
+            abs_file_path = os.path.join(root_dir, rel_file_path)
+            file_list.append(abs_file_path)
         if len(file_list) > 0:
-            # this is valid path in ~/.local folder: e.g. share/rafcon/libraries/generic/wait
+            # this is a valid path in ~/.local folder: e.g. share/rafcon/libraries/generic/wait
             target_path = os.path.join(share_target_root, relative_directory)
             result_list.append((target_path, file_list))
     return result_list
@@ -150,8 +155,9 @@ def generate_data_files():
     # locale_data_files = [('share/rafcon/locale/de/LC_MESSAGES', ['source/rafcon/locale/de/LC_MESSAGES/rafcon.mo'])]
     # print("locale_data_files", locale_data_files)
 
-    version_data_file = [("./", ["./VERSION"])]
-    desktop_data_file = [("share/applications", [path.join('share', 'applications', 'de.dlr.rm.RAFCON.desktop')])]
+    version_data_file = [("./", [os.path.join(rafcon_root_path, "VERSION")])]
+    desktop_data_file = [("share/applications", [path.join(rafcon_root_path, 'share', 'applications',
+                                                           'de.dlr.rm.RAFCON.desktop')])]
 
     examples_data_files = get_data_files_recursivly(examples_folder, share_target_root=path.join("rafcon", "examples"))
     libraries_data_files = get_data_files_recursivly(libraries_folder, share_target_root=path.join("rafcon",
@@ -172,13 +178,12 @@ installation = load_source("installation", install_helper)
 
 # read version from VERSION file
 # this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon
-setup_dir = os.path.dirname(__file__)
-version_file_path = os.path.join(setup_dir, "VERSION")
+version_file_path = os.path.join(rafcon_root_path, "VERSION")
 with open(version_file_path, "r") as f:
     content = f.read().splitlines()
     version = content[0]
 
-readme_file_path = os.path.join(setup_dir, "README.rst")
+readme_file_path = os.path.join(rafcon_root_path, "README.rst")
 with open(readme_file_path, "r") as f:
     long_description = f.read()
 
@@ -193,8 +198,8 @@ setup(
                 'interface',
     long_description=long_description,
 
-    packages=find_packages('source'),
-    package_dir={'': 'source'},  # tell distutils packages are under src
+    packages=find_packages(os.path.join(rafcon_root_path, "source")),
+    package_dir={'': os.path.join(rafcon_root_path, "source")},  # tell distutils packages are under source
 
     package_data={
         # Include pylint and logging config
