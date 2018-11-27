@@ -28,12 +28,14 @@ share_folder_paths = [
     join(os.sep, 'usr', 'share'),
 ]
 
-# Check for non-default PYTHONUSERBASE and add it to the seach path list
-pythonuserbase = os.getenv("PYTHONUSERBASE")
-if pythonuserbase:
-    pythonuserbase = join(pythonuserbase, "share")
-    if pythonuserbase not in share_folder_paths:
-        share_folder_paths.append(pythonuserbase)
+# Check for non-default PYTHONUSERBASE and VIRTAL_ENV and add it to the search path list
+search_path_env_vars = ["PYTHONUSERBASE", "VIRTUAL_ENV"]
+for search_path_env_var in search_path_env_vars:
+    search_path_base = os.getenv(search_path_env_var)
+    if search_path_base:
+        search_path_base = join(search_path_base, "share")
+        if search_path_base not in share_folder_paths:
+            share_folder_paths.append(search_path_base)
 
 
 def resource_filename(package_or_requirement, resource_name):
