@@ -160,6 +160,22 @@
             "to_outcome": 0, 
             "to_state": "MRIAXB", 
             "transition_id": 17
+        }, 
+        "18": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "BQRPMX", 
+            "to_outcome": 0, 
+            "to_state": "MRIAXB", 
+            "transition_id": 18
+        }, 
+        "19": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 1, 
+            "from_state": "BQRPMX", 
+            "to_outcome": 0, 
+            "to_state": "MRIAXB", 
+            "transition_id": 19
         }
     }
 }
