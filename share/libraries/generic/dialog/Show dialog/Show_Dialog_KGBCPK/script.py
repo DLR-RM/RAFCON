@@ -43,7 +43,7 @@ def show_dialog(event, text, subtext, options, key_mapping, result, logger):
         logger.debug("The specified message '{1}' text is not a string, but {0}".format(markup_text,
                                                                                         type(markup_text)))
 
-    if isinstance(subtext, basestring) and len(subtext) > 0:
+    if isinstance(subtext, string_types) and len(subtext) > 0:
         subtext = "<span size='20000'>" + subtext + "</span>"
         dialog.format_secondary_markup(subtext)
         
