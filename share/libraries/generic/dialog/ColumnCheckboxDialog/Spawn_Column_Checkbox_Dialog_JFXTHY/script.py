@@ -1,10 +1,10 @@
 from gi.repository import GObject
 from gi.repository import Gtk
-from rafcon.gui.utils.dialog import RAFCONColumnCheckboxDialog, set_transient_parent_to_main_window_for_dialog
+from rafcon.gui.utils.dialog import RAFCONColumnCheckboxDialog, get_root_window
 
 
 def execute(self, inputs, outputs, gvm):
-    self.logger.debug("Creating columncheckbox dialog")
+    self.logger.debug("Creating column checkbox dialog")
     
     if len(inputs['buttons']) != 2:
         self.logger.error("Please specify exactly two buttons as a list")
@@ -13,9 +13,9 @@ def execute(self, inputs, outputs, gvm):
     def run_dialog(event, result, logger):
         dialog_window = RAFCONColumnCheckboxDialog(markup_text=inputs['message_text'],
                                                    button_texts=inputs['buttons'],
-                                                   checkbox_texts=inputs['checkbox_texts'], flags=Gtk.DialogFlags.MODAL)
-        set_transient_parent_to_main_window_for_dialog(dialog_window)
-    
+                                                   checkbox_texts=inputs['checkbox_texts'], flags=Gtk.DialogFlags.MODAL,
+                                                   parent=get_root_window())
+
         response_id = dialog_window.run()    
         outputs['checkbox_states'] = dialog_window.get_checkbox_states()
         result.append(response_id)

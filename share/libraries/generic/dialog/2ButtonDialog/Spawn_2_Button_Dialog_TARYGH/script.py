@@ -1,6 +1,6 @@
 from gi.repository import GObject
 from gi.repository import Gtk
-from rafcon.gui.utils.dialog import RAFCONButtonDialog, set_transient_parent_to_main_window_for_dialog
+from rafcon.gui.utils.dialog import RAFCONButtonDialog, get_root_window
 
 
 def execute(self, inputs, outputs, gvm):
@@ -12,8 +12,8 @@ def execute(self, inputs, outputs, gvm):
        
     def run_dialog(event, result, logger):
         dialog_window = RAFCONButtonDialog(markup_text=inputs['message_text'],
-                                           button_texts=inputs['buttons'], flags=Gtk.DialogFlags.MODAL)
-        set_transient_parent_to_main_window_for_dialog(dialog_window)
+                                           button_texts=inputs['buttons'], flags=Gtk.DialogFlags.MODAL,
+                                           parent=get_root_window)
 
         response_id = dialog_window.run()
         result.append(response_id)
@@ -29,7 +29,7 @@ def execute(self, inputs, outputs, gvm):
     event.wait()
     
     response_id = result[0]
-    dialog  = result[1]
+    dialog = result[1]
     dialog.destroy()
 
     # The dialog was not closed by the user, but we got a preemption request

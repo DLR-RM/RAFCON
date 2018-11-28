@@ -1,6 +1,6 @@
 from gi.repository import GObject
 from gi.repository import Gtk
-from rafcon.gui.utils.dialog import RAFCONInputDialog, set_transient_parent_to_main_window_for_dialog
+from rafcon.gui.utils.dialog import RAFCONInputDialog, get_root_window
 
 
 def execute(self, inputs, outputs, gvm):
@@ -13,8 +13,8 @@ def execute(self, inputs, outputs, gvm):
     def run_dialog(event, result, logger):
         dialog_window = RAFCONInputDialog(markup_text=inputs['message_text'],
                                           button_texts=inputs['buttons'],
-                                          checkbox_text=inputs['checkbox_text'], flags=Gtk.DialogFlags.MODAL)
-        set_transient_parent_to_main_window_for_dialog(dialog_window)
+                                          checkbox_text=inputs['checkbox_text'], flags=Gtk.DialogFlags.MODAL,
+                                          parent=get_root_window())
 
         response_id = dialog_window.run()
 

@@ -1,6 +1,6 @@
 from gi.repository import GObject
 from gi.repository import Gtk
-from rafcon.gui.utils.dialog import RAFCONMessageDialog, set_transient_parent_to_main_window_for_dialog
+from rafcon.gui.utils.dialog import RAFCONMessageDialog, get_root_window
 
 
 def execute(self, inputs, outputs, gvm):
@@ -9,8 +9,9 @@ def execute(self, inputs, outputs, gvm):
     abort = inputs['abort_on_quit']
 
     def run_dialog(event, result, logger):
-        dialog_window = RAFCONMessageDialog(markup_text=markup_text, flags=Gtk.DialogFlags.MODAL)
-        set_transient_parent_to_main_window_for_dialog(dialog_window)
+        dialog_window = RAFCONMessageDialog(markup_text=markup_text,
+                                            message_type=Gtk.MessageType.INFO, flags=Gtk.DialogFlags.MODAL,
+                                            parent=get_root_window())
 
         response_id = dialog_window.run()
         result.append(response_id)

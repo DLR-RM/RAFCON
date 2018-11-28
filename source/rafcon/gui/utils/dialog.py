@@ -21,14 +21,19 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-def set_transient_parent_to_main_window_for_dialog(dialog):
+def get_root_window():
     try:
         from rafcon.gui.singleton import main_window_controller
     except ImportError:
         main_window_controller = None
-
     if main_window_controller:
-        dialog.set_transient_for(main_window_controller.view.get_top_widget())
+        return main_window_controller.get_root_window()
+
+
+def set_transient_parent_to_main_window_for_dialog(dialog):
+    gui_root_widget = get_root_window()
+    if gui_root_widget:
+        dialog.set_transient_for(gui_root_widget)
 
 
 class RAFCONMessageDialog(Gtk.MessageDialog):
@@ -67,10 +72,7 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
         if callback:
             self.add_callback(callback, *callback_args)
 
-        if isinstance(width, int):
-            message_area = self.get_message_area()
-            message_area.get_children()[0].set_size_request(width, -1)
-            message_area.get_children()[1].set_size_request(width, -1)
+
 
         self.show_grab_focus_and_run(standalone)
 

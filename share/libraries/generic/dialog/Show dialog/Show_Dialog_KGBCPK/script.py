@@ -19,10 +19,10 @@ def on_dialog_key_press(dialog, event, key_mapping, buttons):
 def show_dialog(event, text, subtext, options, key_mapping, result, logger):
     from gi.repository import Gtk
     from future.utils import string_types
-    from rafcon.gui.utils.dialog import set_transient_parent_to_main_window_for_dialog
+    from rafcon.gui.utils.dialog import get_root_window
     
-    dialog = Gtk.MessageDialog(type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.NONE, flags=Gtk.DialogFlags.MODAL)
-    set_transient_parent_to_main_window_for_dialog(dialog)
+    dialog = Gtk.MessageDialog(type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.NONE, flags=Gtk.DialogFlags.MODAL,
+                               parent=get_root_window())
 
     message_area = dialog.get_message_area()
     message_area.get_children()[0].set_size_request(600, -1)
