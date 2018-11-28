@@ -9,8 +9,8 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import next
 import os
+from os.path import dirname
 import sys
 import shutil
 import subprocess
@@ -25,8 +25,9 @@ try:
 except ImportError:
     GLib = None
 
+# Path to  this file: source/rafcon/gui/helpers/installation.py
+rafcon_root_folder = dirname(dirname(dirname(dirname(dirname(os.path.abspath(__file__))))))
 assets_folder = os.path.join('source', 'rafcon', 'gui', 'assets')
-share_folder = "share"
 
 
 def install_fonts(logger=None, restart=False):
@@ -106,7 +107,7 @@ def install_gtk_source_view_styles(logger=None):
             os.makedirs(user_source_view_style_path)
 
         # Copy all .xml source view style files from all themes to local user styles folder
-        themes_path = os.path.join(assets_folder, "share", "themes")
+        themes_path = os.path.join(rafcon_root_folder, assets_folder, "share", "themes")
         for theme in os.listdir(themes_path):
             theme_source_view_path = os.path.join(themes_path, theme, "gtk-sourceview")
             if not os.path.isdir(theme_source_view_path):
@@ -131,7 +132,7 @@ def install_libraries(logger=None, overwrite=True):
     else:
         user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
     user_library_path = os.path.join(user_data_folder, 'rafcon', 'libraries')
-    library_path = os.path.join(share_folder, "libraries")
+    library_path = os.path.join(rafcon_root_folder, "share", "libraries")
 
     if os.path.exists(user_library_path):
         if not overwrite:
@@ -155,7 +156,8 @@ def create_mo_files():
     import subprocess
     data_files = []
     domain = "rafcon"
-    localedir = path.join('source', 'rafcon', 'locale')
+    rel_localedir = path.join('source', 'rafcon', 'locale')
+    localedir = os.path.join(rafcon_root_folder, rel_localedir)
     po_files = [po_file
                 for po_file in next(os.walk(localedir))[2]
                 if path.splitext(po_file)[1] == '.po']
@@ -173,7 +175,7 @@ def create_mo_files():
         result = subprocess.call(msgfmt_cmd, shell=True)
         if result == 0:  # Compilation successful
             # add po file
-            target_dir = path.join("share", *localedir.split(os.sep)[1:])  # remove source/ (package_dir)
+            target_dir = path.join("share", *rel_localedir.split(os.sep)[1:])  # remove source/ (package_dir)
             data_files.append((target_dir, [os.path.join(localedir, po_file)]))
             # add mo file
             target_dir = path.join("share", *mo_dir.split(os.sep)[1:])  # remove source/ (package_dir)
