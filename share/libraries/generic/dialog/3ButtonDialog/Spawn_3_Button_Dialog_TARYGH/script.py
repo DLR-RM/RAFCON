@@ -1,5 +1,7 @@
 from gi.repository import GObject
-from rafcon.gui.utils.dialog import RAFCONButtonDialog
+from gi.repository import Gtk
+from rafcon.gui.utils.dialog import RAFCONButtonDialog, set_transient_parent_to_main_window_for_dialog
+
 
 def execute(self, inputs, outputs, gvm):
     self.logger.debug("Creating button dialog")
@@ -10,7 +12,9 @@ def execute(self, inputs, outputs, gvm):
         
     def run_dialog(event, result, logger):
         dialog_window = RAFCONButtonDialog(markup_text=inputs['message_text'],
-                                      button_texts=inputs['buttons'])
+                                           button_texts=inputs['buttons'], flags=Gtk.DialogFlags.MODAL)
+        set_transient_parent_to_main_window_for_dialog(dialog_window)
+
         response_id = dialog_window.run()
         result.append(response_id)
         result.append(dialog_window)

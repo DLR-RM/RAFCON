@@ -1,5 +1,6 @@
 from gi.repository import GObject
-from rafcon.gui.utils.dailog import RAFCONColumnCheckboxDialog
+from gi.repository import Gtk
+from rafcon.gui.utils.dialog import RAFCONColumnCheckboxDialog, set_transient_parent_to_main_window_for_dialog
 
 
 def execute(self, inputs, outputs, gvm):
@@ -12,7 +13,8 @@ def execute(self, inputs, outputs, gvm):
     def run_dialog(event, result, logger):
         dialog_window = RAFCONColumnCheckboxDialog(markup_text=inputs['message_text'],
                                                    button_texts=inputs['buttons'],
-                                                   checkbox_texts=inputs['checkbox_texts'])
+                                                   checkbox_texts=inputs['checkbox_texts'], flags=Gtk.DialogFlags.MODAL)
+        set_transient_parent_to_main_window_for_dialog(dialog_window)
     
         response_id = dialog_window.run()    
         outputs['checkbox_states'] = dialog_window.get_checkbox_states()
