@@ -1,19 +1,44 @@
-from rafcon.gui.utils.dialog import RAFCONMessageDialog
+from gi.repository import GObject
+from gi.repository import Gtk
+from rafcon.gui.utils.dialog import RAFCONMessageDialog, set_transient_parent_to_main_window_for_dialog
+
 
 def execute(self, inputs, outputs, gvm):
     self.logger.debug("Creating message dialog")
     markup_text = inputs['message_text']
     abort = inputs['abort_on_quit']
-    
-    dialog = RAFCONMessageDialog(markup_text=markup_text)
-    
-    response_id = dialog.run()                       
+
+    def run_dialog(event, result, logger):
+        dialog_window = RAFCONMessageDialog(markup_text=markup_text, flags=Gtk.DialogFlags.MODAL)
+        set_transient_parent_to_main_window_for_dialog(dialog_window)
+
+        response_id = dialog_window.run()
+        result.append(response_id)
+        result.append(dialog_window)
+
+        event.set()
+
+    event = self._preempted
+    result = []
+    GObject.idle_add(run_dialog, event, result, self.logger)
+
+    # Event is either set by the dialog or by an external preemption request
+    event.wait()
+
+    response_id = result[0]
+    dialog = result[1]
+
+    # The dialog was not closed by the user, but we got a preemption request
     dialog.destroy()
+    if response_id is None:
+        return "preempted"
+
+    event.clear()
+
     if response_id == -5:
         return 0
     
     if abort:
         return 'aborted'
     else:
-        return 0 
-        
+        return 0

@@ -21,6 +21,16 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
+def set_transient_parent_to_main_window_for_dialog(dialog):
+    try:
+        from rafcon.gui.singleton import main_window_controller
+    except ImportError:
+        main_window_controller = None
+
+    if main_window_controller:
+        dialog.set_transient_for(main_window_controller.view.get_top_widget())
+
+
 class RAFCONMessageDialog(Gtk.MessageDialog):
     """A dialog which consists of a gtk button and a markup text. This can be used for informing the user about
     important things happening
