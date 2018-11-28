@@ -25,14 +25,6 @@
     "scoped_variables": {}, 
     "state_id": "ZRVSOX", 
     "transitions": {
-        "1": {
-            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
-            "from_outcome": 0, 
-            "from_state": "GOVLVD", 
-            "to_outcome": null, 
-            "to_state": "PSCESO", 
-            "transition_id": 1
-        }, 
         "2": {
             "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
             "from_outcome": 0, 
@@ -48,30 +40,6 @@
             "to_outcome": null, 
             "to_state": "LTQOLK", 
             "transition_id": 3
-        }, 
-        "4": {
-            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
-            "from_outcome": 0, 
-            "from_state": "LTQOLK", 
-            "to_outcome": null, 
-            "to_state": "QANJCZ", 
-            "transition_id": 4
-        }, 
-        "5": {
-            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
-            "from_outcome": 1, 
-            "from_state": "LTQOLK", 
-            "to_outcome": null, 
-            "to_state": "QANJCZ", 
-            "transition_id": 5
-        }, 
-        "6": {
-            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
-            "from_outcome": 2, 
-            "from_state": "LTQOLK", 
-            "to_outcome": null, 
-            "to_state": "QANJCZ", 
-            "transition_id": 6
         }, 
         "7": {
             "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
@@ -142,7 +110,7 @@
             "from_outcome": 1, 
             "from_state": "ZABTXF", 
             "to_outcome": null, 
-            "to_state": "WCGUWM", 
+            "to_state": "QANJCZ", 
             "transition_id": 15
         }, 
         "16": {
@@ -169,6 +137,14 @@
             "to_state": "PDCDWA", 
             "transition_id": 18
         }, 
+        "19": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "GOVLVD", 
+            "to_outcome": null, 
+            "to_state": "RDAXGL", 
+            "transition_id": 19
+        }, 
         "20": {
             "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
             "from_outcome": 0, 
@@ -177,6 +153,22 @@
             "to_state": "RDAXGL", 
             "transition_id": 20
         }, 
+        "21": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "LTQOLK", 
+            "to_outcome": null, 
+            "to_state": "PSCESO", 
+            "transition_id": 21
+        }, 
+        "22": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 1, 
+            "from_state": "LTQOLK", 
+            "to_outcome": null, 
+            "to_state": "PSCESO", 
+            "transition_id": 22
+        }, 
         "23": {
             "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
             "from_outcome": null, 
@@ -184,6 +176,14 @@
             "to_outcome": null, 
             "to_state": "GENRYG", 
             "transition_id": 23
+        }, 
+        "24": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 2, 
+            "from_state": "LTQOLK", 
+            "to_outcome": null, 
+            "to_state": "PSCESO", 
+            "transition_id": 24
         }, 
         "25": {
             "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
