@@ -12,26 +12,24 @@ def execute(self, inputs, outputs, gvm):
         dialog_window = RAFCONMessageDialog(markup_text=markup_text,
                                             message_type=Gtk.MessageType.INFO, flags=Gtk.DialogFlags.MODAL,
                                             parent=get_root_window())
-
-        response_id = dialog_window.run()
-        result.append(response_id)
-        result.append(dialog_window)
+        result[1] = dialog_window
+        result[0] = dialog_window.run()
+        dialog_window.destroy()
 
         event.set()
 
     event = self._preempted
-    result = []
+    result = [None, None]  # first entry is the dialog return value, second one is the dialog object
     GObject.idle_add(run_dialog, event, result, self.logger)
 
     # Event is either set by the dialog or by an external preemption request
     event.wait()
 
-    response_id = result[0]
-    dialog = result[1]
+    response_id, dialog = result
 
     # The dialog was not closed by the user, but we got a preemption request
-    dialog.destroy()
     if response_id is None:
+        dialog.destroy()
         return "preempted"
 
     event.clear()

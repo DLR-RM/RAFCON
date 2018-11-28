@@ -15,32 +15,28 @@ def execute(self, inputs, outputs, gvm):
                                           button_texts=inputs['buttons'],
                                           checkbox_text=inputs['checkbox_text'], flags=Gtk.DialogFlags.MODAL,
                                           parent=get_root_window(), width=600., height=-1)
-
         dialog_window.show_all()
         # dialog_window.set_resizable(True)
-
-        response_id = dialog_window.run()
-
+        result[1] = dialog_window
+        result[0] = dialog_window.run()
         outputs['entered_text'] = dialog_window.get_entry_text()
         outputs['checkbox_state'] = dialog_window.get_checkbox_state()
-        result.append(response_id)
-        result.append(dialog_window)
+        dialog_window.destroy()
 
         event.set()
 
     event = self._preempted
-    result = []
-    GObject.idle_add(run_dialog, event, result, self.logger)    
+    result = [None, None]  # first entry is the dialog return value, second one is the dialog object
+    GObject.idle_add(run_dialog, event, result, self.logger)
 
     # Event is either set by the dialog or by an external preemption request
     event.wait()
 
-    response_id = result[0]
-    dialog = result[1]
+    response_id, dialog = result
     
     # The dialog was not closed by the user, but we got a preemption request
-    dialog.destroy()
     if response_id is None:
+        dialog.destroy()
         return "preempted"
         
     event.clear()

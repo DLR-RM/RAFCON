@@ -23,7 +23,7 @@ def show_dialog(event, text, subtext, options, key_mapping, result, logger):
     
     dialog = Gtk.MessageDialog(type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.NONE, flags=Gtk.DialogFlags.MODAL,
                                parent=get_root_window())
-
+    result[1] = dialog
     dialog.set_size_request(600, -1)
 
     markup_text = text
@@ -55,7 +55,7 @@ def show_dialog(event, text, subtext, options, key_mapping, result, logger):
 
     res = dialog.run()
     dialog.destroy()
-    
+
     # Group all default response type to -1
     if res < 0:
         res = -1
@@ -77,23 +77,22 @@ def execute(self, inputs, outputs, gvm):
     key_mapping = inputs['key_mapping']
 
     GObject.idle_add(show_dialog, event, text, subtext, options, key_mapping, result, self.logger)
-    
+
     # Event is either set by the dialog or by an external preemption request
     event.wait()
 
-    option = result[0]
-    dialog = result[1]
-    
+    option, dialog = result
+
     # The dialog was not closed by the user, but we got a preemption request
     if option is None:
         dialog.destroy()
         return "preempted"
-        
+
     event.clear()
     if option < 0:
         return "aborted"
-        
+
     self.logger.debug("User decided: {0} => {1}".format(option, options[option]))
     outputs['option'] = option
-    
+
     return "done"
