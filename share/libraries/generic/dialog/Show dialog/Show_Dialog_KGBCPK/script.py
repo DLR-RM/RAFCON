@@ -85,7 +85,7 @@ def execute(self, inputs, outputs, gvm):
 
     # The dialog was not closed by the user, but we got a preemption request
     if option is None:
-        dialog.destroy()
+        GObject.idle_add(dialog.destroy)
         return "preempted"
 
     event.clear()
