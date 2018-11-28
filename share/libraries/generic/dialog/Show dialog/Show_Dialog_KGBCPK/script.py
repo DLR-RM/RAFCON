@@ -1,10 +1,8 @@
-from past.builtins import str
-from builtins import str
 
 
 def on_dialog_key_press(dialog, event, key_mapping, buttons):
-    from gtk.gdk import keyval_name
-    key_name = str.lower(str(keyval_name(event.keyval)))
+    from gi.repository import Gdk
+    key_name = str.lower(str(Gdk.keyval_name(event.keyval)))
     for i, desired_key in enumerate(key_mapping):
         if i >= len(buttons):
             break
@@ -20,20 +18,15 @@ def on_dialog_key_press(dialog, event, key_mapping, buttons):
 
 def show_dialog(event, text, subtext, options, key_mapping, result, logger):
     from gi.repository import Gtk
-    from gi.repository import Gdk
     from future.utils import string_types
+    from rafcon.gui.utils.dialog import set_transient_parent_to_main_window_for_dialog
     
-    try:
-        from rafcon.gui.singleton import main_window_controller
-    except ImportError:
-        main_window_controller = None
     dialog = Gtk.MessageDialog(type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.NONE, flags=Gtk.DialogFlags.MODAL)
+    set_transient_parent_to_main_window_for_dialog(dialog)
 
     message_area = dialog.get_message_area()
     message_area.get_children()[0].set_size_request(600, -1)
     message_area.get_children()[1].set_size_request(600, -1)
-    if main_window_controller:
-        dialog.set_transient_for(main_window_controller.view.get_top_widget())
     #dialog.set_geometry_hints(min_width=700)
     markup_text = text
     if isinstance(markup_text, string_types):
