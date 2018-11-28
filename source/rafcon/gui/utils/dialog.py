@@ -52,14 +52,17 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
     def __init__(self, markup_text=None,
                  callback=None, callback_args=(),
                  message_type=Gtk.MessageType.WARNING, flags=Gtk.DialogFlags.MODAL, parent=None,
-                 width=None, standalone=False, title="RAFCON"):
+                 width=-1, standalone=False, title="RAFCON", height=-1):
 
         if self.__class__.__name__ == "RAFCONMessageDialog":
-            super(RAFCONMessageDialog, self).__init__(type=message_type, buttons=Gtk.ButtonsType.OK, flags=flags)
+            super(RAFCONMessageDialog, self).__init__(type=message_type, buttons=Gtk.ButtonsType.OK, flags=flags,
+                                                      parent=parent)
         else:
-            super(RAFCONMessageDialog, self).__init__(type=message_type, flags=flags)
+            super(RAFCONMessageDialog, self).__init__(type=message_type, flags=flags, parent=parent)
 
         self.set_title(title)
+
+        self.set_default_size(width, height)
 
         if parent:
             self.set_transient_for(parent)
@@ -71,8 +74,6 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
                                                                                             type(markup_text)))
         if callback:
             self.add_callback(callback, *callback_args)
-
-
 
         self.show_grab_focus_and_run(standalone)
 
@@ -107,10 +108,10 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
     def __init__(self, markup_text=None, button_texts=None,
                  callback=None, callback_args=(),
                  message_type=Gtk.MessageType.INFO, flags=Gtk.DialogFlags.MODAL, parent=None,
-                 width=None, standalone=False, title="RAFCON"):
+                 width=-1, standalone=False, title="RAFCON", height=-1):
 
         super(RAFCONButtonDialog, self).__init__(markup_text, callback, callback_args, message_type,
-                                                 flags, parent, width, standalone, title)
+                                                 flags, parent, width, standalone, title, height)
 
         if button_texts:
             for index, button in enumerate(button_texts, 1):
@@ -144,10 +145,10 @@ class RAFCONInputDialog(RAFCONButtonDialog):
     def __init__(self, markup_text=None, button_texts=None, checkbox_text=None,
                  callback=None, callback_args=(),
                  message_type=Gtk.MessageType.INFO, flags=Gtk.DialogFlags.MODAL, parent=None,
-                 width=None, standalone=False, title="RAFCON"):
+                 width=-1, standalone=False, title="RAFCON", height=-1):
 
         super(RAFCONInputDialog, self).__init__(markup_text, button_texts, callback, callback_args,
-                                                message_type, flags, parent, width, standalone, title)
+                                                message_type, flags, parent, width, standalone, title, height)
 
         # Create a new Gtk.Hbox to put in the checkbox and entry
         hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, constants.GRID_SIZE)
@@ -170,7 +171,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
         if isinstance(checkbox_text, string_types):
             # If a checkbox_text is specified by the caller, we can assume that one should be used.
             self.checkbox = Gtk.CheckButton(checkbox_text)
-            hbox.pack_end(self.checkbox, True, True, 1)
+            hbox.pack_end(self.checkbox, False, True, 1)
 
         self.show_grab_focus_and_run(standalone)
 
@@ -203,10 +204,10 @@ class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
     def __init__(self, markup_text=None, button_texts=None, checkbox_texts=None,
                  callback=None, callback_args=(),
                  message_type=Gtk.MessageType.INFO, flags=Gtk.DialogFlags.MODAL, parent=None,
-                 width=None, standalone=False, title="RAFCON"):
+                 width=-1, standalone=False, title="RAFCON", height=-1):
 
         super(RAFCONColumnCheckboxDialog, self).__init__(markup_text, button_texts, callback, callback_args,
-                                                         message_type, flags, parent, width, standalone, title)
+                                                         message_type, flags, parent, width, standalone, title, height)
 
         checkbox_vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, constants.GRID_SIZE)
         self.get_content_area().add(checkbox_vbox)
@@ -255,13 +256,13 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
     """
 
     def __init__(self, markup_text, button_texts, callback=None, callback_args=(), table_header=None, table_data=None,
-                 toggled_callback=None, message_type=Gtk.MessageType.INFO, parent=None, width=None, standalone=True,
-                 title="RAFCON"):
+                 toggled_callback=None, message_type=Gtk.MessageType.INFO, parent=None, width=-1, standalone=True,
+                 title="RAFCON", height=-1):
 
         super(RAFCONCheckBoxTableDialog, self).__init__(markup_text, button_texts,
                                                         callback=callback, callback_args=callback_args,
                                                         message_type=message_type, parent=parent,
-                                                        width=width, standalone=standalone, title=title)
+                                                        width=width, standalone=standalone, title=title, height=height)
         if table_header is None:
             table_header = ["CheckBox", "Description"]
         if table_data is None:

@@ -14,7 +14,10 @@ def execute(self, inputs, outputs, gvm):
         dialog_window = RAFCONInputDialog(markup_text=inputs['message_text'],
                                           button_texts=inputs['buttons'],
                                           checkbox_text=inputs['checkbox_text'], flags=Gtk.DialogFlags.MODAL,
-                                          parent=get_root_window())
+                                          parent=get_root_window(), width=600., height=-1)
+
+        dialog_window.show_all()
+        # dialog_window.set_resizable(True)
 
         response_id = dialog_window.run()
 

@@ -24,10 +24,8 @@ def show_dialog(event, text, subtext, options, key_mapping, result, logger):
     dialog = Gtk.MessageDialog(type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.NONE, flags=Gtk.DialogFlags.MODAL,
                                parent=get_root_window())
 
-    message_area = dialog.get_message_area()
-    message_area.get_children()[0].set_size_request(600, -1)
-    message_area.get_children()[1].set_size_request(600, -1)
-    #dialog.set_geometry_hints(min_width=700)
+    dialog.set_size_request(600, -1)
+
     markup_text = text
     if isinstance(markup_text, string_types):
         from cgi import escape
@@ -47,7 +45,7 @@ def show_dialog(event, text, subtext, options, key_mapping, result, logger):
         label.set_use_markup(True)
         label.show()
         button.add(label)
-        button.set_size_request(300, 300)
+        button.set_size_request(300, 300)  # TODO maybe parameter
         button.show()
         dialog.add_action_widget(button, i)
         buttons[i] = button
