@@ -293,8 +293,6 @@ def run_copy_test(sm_m, with_gui=False):
     compare_references_to_sm_model_and_core(sm_m, new_sm_m)
 
     # storage copy tests
-    # RAFCON_TEMP_PATH_BASE = "/net/notos/home_local/dark_room"
-    # RAFCON_TEMP_PATH_BASE = "/volume/USERSTORE/beld_rc/tmp"
     if sm.file_system_path is None:
         tmp_sm_system_path = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, 'copy_test_' + str(sm.state_machine_id))
     else:
@@ -319,8 +317,6 @@ def run_copy_performance_test_and_check_storage_copy(*args):
     sm = sm_m.state_machine
 
     # storage copy tests
-    # RAFCON_TEMP_PATH_BASE = "/net/notos/home_local/dark_room"
-    # RAFCON_TEMP_PATH_BASE = "/volume/USERSTORE/beld_rc/tmp"
     if sm.file_system_path is None:
         tmp_sm_system_path = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, 'copy_test_' + str(sm.state_machine_id))
     else:
