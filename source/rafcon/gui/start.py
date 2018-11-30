@@ -32,7 +32,6 @@ from rafcon.gui.config import global_gui_config
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils.splash_screen import SplashScreen
-from rafcon.gui.helpers import installation
 import rafcon.gui.backup.session as backup_session
 
 # state machine
@@ -46,7 +45,7 @@ from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 # utils
 from rafcon.gui.utils import wait_for_gui
 import rafcon.utils.filesystem as filesystem
-from rafcon.utils import plugins
+from rafcon.utils import plugins, installation
 from rafcon.utils.i18n import setup_l10n
 from rafcon.utils import log
 
