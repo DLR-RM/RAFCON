@@ -372,7 +372,7 @@ class StatesEditorController(ExtendedController):
             if tab_dict['controller'].view.source_view.get_buffer().handler_is_connected(handler_id):
                 tab_dict['controller'].view.source_view.get_buffer().disconnect(handler_id)
             else:
-                logger.warning("Source code changed handler of state {0} was already removed.".format(tab_dict['model']))
+                logger.warning("Source code changed handler of state {0} was already removed.".format(tab_dict['state_m']))
         self.remove_controller(tab_dict['controller'])
 
     def close_page(self, state_identifier, delete=True):
