@@ -1017,7 +1017,10 @@ def group_selected_states_and_scoped_variables():
         logger.debug("Group selected states: {0} scoped variables: {1}".format(selected_states, selected_scoped_vars))
         # TODO remove un-select workaround (used to avoid wrong selections in gaphas and inconsistent selection)
         sm_m.selection.clear()
-        return gui_helper_state.group_states_and_scoped_variables(selected_states, selected_scoped_vars)
+        group_state = gui_helper_state.group_states_and_scoped_variables(selected_states, selected_scoped_vars)
+        if group_state:
+            sm_m.selection.add(sm_m.get_state_model_by_path(group_state.get_path()))
+        return group_state
 
 
 def ungroup_selected_state():
