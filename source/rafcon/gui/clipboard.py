@@ -111,7 +111,7 @@ class Clipboard(Observable):
 
         for models in selection_dict_of_copied_models.values():
             gui_helper_state_machine.delete_core_elements_of_models(models, destroy=True,
-                                                                    recursive=True, force=True)
+                                                                    recursive=True, force=False)
         affected_models = [model for models in non_empty_lists_dict.values() for model in models]
         action_parent_m.action_signal.emit(ActionSignalMsg(action='cut', origin='clipboard',
                                                            action_parent_m=action_parent_m,
@@ -488,7 +488,11 @@ class Clipboard(Observable):
 
         return selected_models_dict, parent_m
 
-    def destroy_all_models_in_dict(self, target_dict, destroy_parent=True):
+    @staticmethod
+    def destroy_all_models_in_dict(target_dict):
+        """ Method runs the prepare destruction method of models 
+            which are assumed in list or tuple as values within a dict
+        """
         if target_dict:
             for model_list in target_dict.values():
                 if isinstance(model_list, (list, tuple)):
