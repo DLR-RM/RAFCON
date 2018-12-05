@@ -1799,9 +1799,9 @@ notebook {
         padding-#{$_bpos}: 0;
 
         > tabs > tab {
-          padding: 6px $padding_left;
-          min-width: 20px;
-          min-height: 20px;
+          padding:3px 10px;
+          min-width: 15px;
+          min-height: 15px;
 
           outline-offset: -4px;
 

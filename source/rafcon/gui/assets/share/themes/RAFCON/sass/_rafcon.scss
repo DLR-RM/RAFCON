@@ -89,6 +89,7 @@ notebook.secondary > header {
       &.#{$_pos} {
 
         > tabs > tab {
+          padding: 6px $padding_left;
           border: none;
           border-#{$_bpos}: 1px solid $borders_color;
           &:checked {
