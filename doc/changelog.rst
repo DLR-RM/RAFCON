@@ -18,6 +18,7 @@ Next release
   - :issue:`619` Provide and install *.desktop file
   - :issue:`621` Provide full license text
   - The installation should now work from a blank virtualenv
+  - The documentation about the release steps has been extended
 
 - Bug Fixes:
 
