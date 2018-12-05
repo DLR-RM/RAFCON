@@ -25,6 +25,7 @@ Next release
   - :issue:`618` semantic data strings get scrambled/obfuscated in execution history log
                  fixed by pull request :issue:`626` fix(execution_log): unpickle semantic data
   - :issue:`596` External editor does not remember the handed command and also does not lock the embedded editor
+  - :issue:`624` Debug console: cursor is not positioned at the point were it is clicked on
 
 Patch releases 0.12.\*
 ----------------------
