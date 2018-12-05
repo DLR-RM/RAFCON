@@ -38,7 +38,10 @@ class LoggingConsoleView(View):
 
         self.text_view.set_buffer(self.filtered_buffer)
 
-        self.text_view.set_border_width(10)
+        self.text_view.set_border_window_size(Gtk.TextWindowType.LEFT, 10)
+        self.text_view.set_border_window_size(Gtk.TextWindowType.RIGHT, 10)
+        self.text_view.set_border_window_size(Gtk.TextWindowType.TOP, 10)
+        self.text_view.set_border_window_size(Gtk.TextWindowType.BOTTOM, 10)
 
         self._enables = {}
         self._auto_scroll_handler_id = None
