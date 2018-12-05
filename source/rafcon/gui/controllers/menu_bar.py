@@ -519,7 +519,7 @@ class MenuBarController(ExtendedController):
             if response_id == 1:  # Stop execution
                 self.state_machine_execution_engine.stop()
             elif response_id == 2:  # Keep running
-                logger.debug("State machine will stay running!")
+                logger.debug("State machine will keep running!")
                 gui_singletons.main_window_controller.prepare_destruction()
             self.on_destroy(None)
             return True
