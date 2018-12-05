@@ -47,8 +47,11 @@ institute):
 
 7. Apply the version number
 
-  Update the version number in ``[project directory]/VERSION``.
-  Commit your changes.
+  1. Update the version number in ``[project directory]/VERSION``.
+  2. Update the ``version`` in ``[project directory]/CITATION.cff``.
+  3. Update the ``date-released`` in ``[project directory]/VERSION``.
+  4. Run ``cffconvert --ignore-suspect-keys --outputformat zenodo --outfile .zenodo.json`` (see `"Making software citable" <https://guide.esciencecenter.nl/citable_software/making_software_citable.html>`__)
+  5. Commit and push your changes.
 
 8. Merge to master
 
