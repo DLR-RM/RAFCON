@@ -263,7 +263,8 @@ class MenuBarController(ExtendedController):
         :return:
         """
         self.sm_notebook.set_show_tabs(False)
-        self.sm_notebook.reparent(self.full_screen_window)
+        self.main_window_view['graphical_editor_vbox'].remove(self.sm_notebook)
+        self.full_screen_window.add(self.sm_notebook)
         position = self.main_window_view.get_top_widget().get_position()
         self.full_screen_window.show()
         self.full_screen_window.move(position[0], position[1])
@@ -272,9 +273,9 @@ class MenuBarController(ExtendedController):
         self.main_window_view.get_top_widget().iconify()
 
     def on_full_screen_deactivate(self):
-        # gui_helper.set_window_size_and_position(self.main_window_view.get_top_widget(), "MAIN_WINDOW")
         self.main_window_view.get_top_widget().present()
-        self.sm_notebook.reparent(self.main_window_view['graphical_editor_vbox'])
+        self.full_screen_window.remove(self.sm_notebook)
+        self.main_window_view['graphical_editor_vbox'].pack_start(self.sm_notebook, True, True, 0)
         self.main_window_view['graphical_editor_vbox'].reorder_child(self.sm_notebook, 0)
         self.sm_notebook.set_show_tabs(True)
         self.full_screen_window.hide()

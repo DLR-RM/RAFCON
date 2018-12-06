@@ -28,6 +28,7 @@ Next release
                  fixed by pull request :issue:`626` fix(execution_log): unpickle semantic data
   - :issue:`596` External editor does not remember the handed command and also does not lock the embedded editor
   - :issue:`624` Debug console: cursor is not positioned at the point were it is clicked on
+  - :issue:`638` Exiting Fullscreen mode hides the graphical editor
 
 Patch releases 0.12.\*
 ----------------------
