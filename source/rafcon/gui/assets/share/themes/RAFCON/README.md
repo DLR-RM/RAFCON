@@ -19,3 +19,15 @@ You can also run `sass` as background process that autmatically compiles the SCS
  ```
 
 This will generate the two files `gtk.css` and `gtk-dark.css` in the `gtk-3.0` folder.
+
+## Render assets
+
+The ``assets.svg`` file contains all assets as a vector graphic in a single file. The ``assets.txt`` file contains 
+all names of all objects that will be rendered. Just execute the ``render-asstes.sh`` file to render them.
+
+### Notes
+
+* Assets will only be rendered, if they are not existing. So you have to delete them from the ``assets`` folder if 
+you want to re-create the.
+* Some named objects in the `assets.svg` file are groups. Do not ungroup these, otherwise the name and (sometimes) 
+the transparency will be lost. You can use the `Edit paths` tool to access objects within a group.
