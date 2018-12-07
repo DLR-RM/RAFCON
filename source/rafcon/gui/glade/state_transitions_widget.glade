@@ -14,7 +14,7 @@
           <object class="GtkLabel" id="transitions_label">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Transitions</property>
+            <property name="label" translatable="yes">TRANSITIONS</property>
             <property name="halign">start</property>
           </object>
         </child>
