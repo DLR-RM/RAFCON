@@ -379,6 +379,9 @@ def main():
 
     if core_singletons.state_machine_execution_engine.status.execution_mode == StateMachineExecutionStatus.STARTED:
         logger.info(_("Waiting for the state machine execution to finish"))
+        # overwriting signal handlers here does not work either
+        import rafcon
+        rafcon.core.start.register_signal_handlers(rafcon.core.start.signal_handler)
         core_singletons.state_machine_execution_engine.join()
         logger.info(_("State machine execution has finished"))
 
