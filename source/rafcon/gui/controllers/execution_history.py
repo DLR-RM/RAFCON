@@ -363,7 +363,9 @@ class ExecutionHistoryTreeController(ExtendedController):
         self.history_tree_store.clear()
         selected_sm_m = self.model.get_selected_state_machine_model()
         if selected_sm_m:
-            selected_sm_m.state_machine.clear_execution_histories()
+            # this must not be done here!
+            # the core may continue running without the GUI and for this it needs its execution histories
+            # selected_sm_m.state_machine.clear_execution_histories()
             self.update()
 
     def reload_history(self, widget, event=None):
