@@ -224,6 +224,7 @@ class ExecutionEngine(Observable):
         self.state_machine_running = True
         self.__running_state_machine.join()
         self.__set_execution_mode_to_finished()
+        self.state_machine_manager.active_state_machine_id = None
         plugins.run_on_state_machine_execution_finished()
         # self.__set_execution_mode_to_stopped()
         self.state_machine_running = False
