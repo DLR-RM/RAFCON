@@ -347,11 +347,10 @@ class ExecutionHistoryTreeController(ExtendedController):
             if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):
                 # request focus -> which has not have to be satisfied
                 self.parent.focus_notebook_page_of_controller(self)
-                self.model.selected_state_machine_id = self.model.state_machine_manager.active_state_machine_id
 
         if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
             if not self.model.selected_state_machine_id == self.model.state_machine_manager.active_state_machine_id:
-                self.model.selected_state_machine_id = self.model.state_machine_manager.active_state_machine_id
+                pass
             else:
                 self.update()
 
