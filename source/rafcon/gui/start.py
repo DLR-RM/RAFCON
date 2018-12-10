@@ -384,6 +384,7 @@ def main():
         rafcon.core.start.register_signal_handlers(rafcon.core.start.signal_handler)
         core_singletons.state_machine_execution_engine.join()
         logger.info(_("State machine execution has finished"))
+        core_singletons.state_machine_manager.delete_all_state_machines()
 
     logger.info(_("Exiting ..."))
 
