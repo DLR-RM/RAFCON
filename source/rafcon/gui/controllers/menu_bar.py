@@ -639,19 +639,12 @@ class MenuBarController(ExtendedController):
     ######################################################
     # menu bar functionality - Execution
     ######################################################
-    def update_active_state_machine_id(self):
-        selected_state_machine_id = gui_singletons.state_machine_manager_model.selected_state_machine_id
-        if self.state_machine_execution_engine.finished_or_stopped():
-            core_singletons.state_machine_manager.active_state_machine_id = selected_state_machine_id
 
     def on_start_activate(self, widget, data=None):
-        print "on_start_activate", self.model.selected_state_machine_id
-        self.update_active_state_machine_id()
         self.state_machine_execution_engine.start(self.model.selected_state_machine_id)
 
     def on_start_from_selected_state_activate(self, widget, data=None):
         logger.debug("Run from selected state ...")
-        self.update_active_state_machine_id()
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) is not 1:
             logger.error("Exactly one state must be selected!")
@@ -660,35 +653,27 @@ class MenuBarController(ExtendedController):
                                                       selection.get_selected_state().state.get_path())
 
     def on_pause_activate(self, widget, data=None):
-        self.update_active_state_machine_id()
         self.state_machine_execution_engine.pause()
 
     def on_stop_activate(self, widget, data=None):
-        self.update_active_state_machine_id()
         self.state_machine_execution_engine.stop()
 
     def on_step_mode_activate(self, widget, data=None):
-        self.update_active_state_machine_id()
         self.state_machine_execution_engine.step_mode(self.model.selected_state_machine_id)
 
     def on_step_into_activate(self, widget, data=None):
-        self.update_active_state_machine_id()
         self.state_machine_execution_engine.step_into()
 
     def on_step_over_activate(self, widget, data=None):
-        self.update_active_state_machine_id()
         self.state_machine_execution_engine.step_over()
 
     def on_step_out_activate(self, widget, data=None):
-        self.update_active_state_machine_id()
         self.state_machine_execution_engine.step_out()
 
     def on_backward_step_activate(self, widget, data=None):
-        self.update_active_state_machine_id()
         self.state_machine_execution_engine.backward_step()
 
     def on_run_to_selected_state_activate(self, widget, data=None):
-        self.update_active_state_machine_id()
         logger.debug("Run to selected state ...")
 
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
