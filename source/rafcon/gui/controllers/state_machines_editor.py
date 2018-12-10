@@ -393,6 +393,10 @@ class StateMachinesEditorController(ExtendedController):
             if response_id == 1:
                 logger.debug("State machine execution is being stopped")
                 state_machine_execution_engine.stop()
+                state_machine_execution_engine.join()
+                # wait for gui is needed; otherwise the signals related to the execution engine cannot
+                # be processed properly by the state machine under destruction
+                rafcon.gui.utils.wait_for_gui()
                 remove_state_machine_m()
                 return True
             elif response_id == 2:
