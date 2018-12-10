@@ -163,7 +163,14 @@ class ExecutionEngine(Observable):
         :rtype: bool
         """
         if self.__wait_for_finishing_thread:
-            self.__wait_for_finishing_thread.join(timeout)
+            if not timeout:
+                # signal handlers won't work if timeout is None and the thread is joined
+                while True:
+                    self.__wait_for_finishing_thread.join(0.5)
+                    if not self.__wait_for_finishing_thread.isAlive():
+                        break
+            else:
+                self.__wait_for_finishing_thread.join(timeout)
             return not self.__wait_for_finishing_thread.is_alive()
         else:
             logger.warning("Cannot join as state machine was not started yet.")
