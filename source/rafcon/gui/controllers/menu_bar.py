@@ -458,7 +458,6 @@ class MenuBarController(ExtendedController):
             backup_session.reset_session()
         if not force and global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
             backup_session.store_session()
-            self.on_delete_check_sm_running()
             force = True
         avoid_shutdown = self.on_delete_event(widget, None, force=force)
         if not avoid_shutdown:
@@ -470,9 +469,9 @@ class MenuBarController(ExtendedController):
         # State machine was modified, callback method handles closing operation
         if not force and self.on_delete_check_sm_modified():
             return True  # prevents closing operation
-        # State machine is running, callback method handles closing operation
-        if not force and self.on_delete_check_sm_running():
-            return True  # prevents closing operation
+
+        # independently if state machine is running or not the GUI will be closed
+        self.on_delete_check_sm_running()
 
         gui_singletons.main_window_controller.prepare_destruction()
         return False
@@ -487,7 +486,6 @@ class MenuBarController(ExtendedController):
 
     def on_delete_check_sm_modified(self):
         if state_machine_manager.has_dirty_state_machine():
-
             message_string = "Are you sure you want to exit RAFCON?\n\n" \
                              "The following state machines have been modified and not saved. " \
                              "These changes will get lost:"
@@ -499,19 +497,15 @@ class MenuBarController(ExtendedController):
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:  # Close without saving - button pressed
-                if not self.state_machine_execution_engine.finished_or_stopped():
-                    self.on_delete_check_sm_running()
-                else:
-                    gui_singletons.main_window_controller.prepare_destruction()
-                    self.on_destroy(None)
+                return False
             elif response_id == 2:  # Cancel - button pressed
                 logger.debug("Close main window canceled")
-            return True
-        return False
+                return True
+        else:
+            return False
 
     def on_delete_check_sm_running(self):
         if not self.state_machine_execution_engine.finished_or_stopped():
-
             message_string = "The state machine is still running. Do you want to stop the execution before closing?"
             dialog = RAFCONButtonDialog(message_string, ["Stop execution", "Keep running"],
                                         message_type=Gtk.MessageType.QUESTION, parent=self.get_root_window())
@@ -519,12 +513,12 @@ class MenuBarController(ExtendedController):
             dialog.destroy()
             if response_id == 1:  # Stop execution
                 self.state_machine_execution_engine.stop()
+                return False
             elif response_id == 2:  # Keep running
                 logger.debug("State machine will keep running!")
-                gui_singletons.main_window_controller.prepare_destruction()
-            self.on_destroy(None)
-            return True
-        return False
+                return True
+        else:
+            return False
 
     def on_destroy(self, widget, data=None):
         from rafcon.gui.start import stop_gtk

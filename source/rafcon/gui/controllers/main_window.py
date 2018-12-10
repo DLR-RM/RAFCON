@@ -353,6 +353,13 @@ class MainWindowController(ExtendedController):
         """ Highlight buttons according actual execution status. Furthermore it triggers the label redraw of the active
         state machine.
         """
+
+        # TODO: find nice solution
+        # this in only required if the GUI is terminated via Ctrl+C signal
+        if not self.view:
+            # this means that the main window is currently under destruction
+            return
+
         execution_engine = rafcon.core.singleton.state_machine_execution_engine
         label_string = str(execution_engine.status.execution_mode)
         label_string = label_string.replace("STATE_MACHINE_EXECUTION_STATUS.", "")
