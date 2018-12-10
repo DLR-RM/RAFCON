@@ -48,10 +48,10 @@ class StateMachineManager(Observable):
                 self.add_state_machine(state_machine)
 
     def delete_all_state_machines(self):
-        self.active_state_machine_id = None
         sm_ids = [sm_id for sm_id in self.state_machines]
         for sm_id in sm_ids:
-            self.remove_state_machine(sm_id)
+            if not (sm_id == self.active_state_machine_id):
+                self.remove_state_machine(sm_id)
 
     def open_state_machines(self, state_machine_path_by_sm_id):
         from rafcon.core.storage import storage
