@@ -208,6 +208,8 @@ class ExecutionEngine(Observable):
 
         # Create new concurrency queue for root state to be able to synchronize with the execution
         self.__running_state_machine = self.state_machine_manager.get_active_state_machine()
+        if not self.__running_state_machine:
+            logger.error("The running state machine must not be None")
         self.__running_state_machine.root_state.concurrency_queue = queue.Queue(maxsize=0)
 
         if self.__running_state_machine:
@@ -454,7 +456,7 @@ class ExecutionEngine(Observable):
         if wait_for_execution_finished:
             self.join()
             self.stop()
-        return rafcon.core.singleton.state_machine_manager.get_active_state_machine()
+        return self.__running_state_machine
 
     @Observable.observed
     def set_execution_mode(self, execution_mode, notify=True):
