@@ -70,7 +70,6 @@ def start_server(interacting_function, queue_dict):
     state_machine = global_storage.load_state_machine_from_path(
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "99_bottles_of_beer_monitoring")))
     sm_id = rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm_id
 
     sm_thread = threading.Thread(target=check_for_sm_finished, args=[state_machine, ])
     sm_thread.start()
@@ -84,7 +83,7 @@ def start_server(interacting_function, queue_dict):
     if "twisted" in sys.modules:
         print("################# twisted found #######################")
         interacting_thread = threading.Thread(target=interacting_function,
-                                              args=[queue_dict, ])
+                                              args=[queue_dict, sm_id])
         interacting_thread.start()
         from twisted.internet import reactor
         reactor.run()
