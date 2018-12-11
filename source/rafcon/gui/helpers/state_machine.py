@@ -76,6 +76,7 @@ def new_state_machine():
 
     editor_controller = state_machines_editor_ctrl.get_controller(state_machine.state_machine_id)
     editor_controller.view.editor.grab_focus()
+    return state_machine
 
 
 def open_state_machine(path=None, recent_opened_notification=False):
