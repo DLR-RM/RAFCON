@@ -23,7 +23,7 @@ def execute_library_state_forwards_backwards():
     import rafcon.gui.singleton as gui_singleton
 
     menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
-    call_gui_callback(
+    sm = call_gui_callback(
         menubar_ctrl.on_open_activate, None, None,
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_step_library_execution_test"))
     )
@@ -49,7 +49,6 @@ def execute_library_state_forwards_backwards():
 
     call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
-    sm = state_machine_manager.get_active_state_machine()
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
     for key, sd in sm.root_state.scoped_data.items():
@@ -153,7 +152,7 @@ def execute_barrier_state_forwards_backwards():
 
     menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
 
-    call_gui_callback(
+    sm = call_gui_callback(
         menubar_ctrl.on_open_activate, None, None,
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_step_barrier_test"))
     )
@@ -165,7 +164,7 @@ def execute_barrier_state_forwards_backwards():
     state_machine_execution_engine.synchronization_counter = 0
     state_machine_execution_engine.synchronization_lock.release()
 
-    call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
+    call_gui_callback(menubar_ctrl.on_step_mode_activate, sm.state_machine_id, None)
     wait_for_execution_engine_sync_counter(1, logger)
 
     # forward
@@ -200,7 +199,6 @@ def execute_barrier_state_forwards_backwards():
 
     print("cp3")
 
-    sm = state_machine_manager.get_active_state_machine()
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
 

@@ -1748,7 +1748,6 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
         root_state = HierarchyState("new root state", state_id="ROOT")
         state_machine = StateMachine(root_state)
         sm_manager_model.state_machine_manager.add_state_machine(state_machine)
-        sm_manager_model.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
         return state_machine
 
     state_machine_path = TEST_PATH + '_state_type_change_bug_tests'
@@ -1815,9 +1814,6 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
     import rafcon.gui.singleton
     sm = StateMachine(HierarchyState())
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.__setattr__,
-                      "active_state_machine_id", sm.state_machine_id)
-    sm_m = list(rafcon.gui.singleton.state_machine_manager_model.state_machines.values())[-1]
 
     call_gui_callback(sm_m.selection.set, [sm_m.root_state])
 

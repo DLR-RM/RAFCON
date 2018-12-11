@@ -258,6 +258,7 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
             if gui_ready:
                 assert not rafcon.gui.singleton.state_machine_manager_model.state_machines
         except Exception as e:
+            raise
             pass
         finally:
             rewind_and_set_libraries()

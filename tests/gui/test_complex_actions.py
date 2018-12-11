@@ -36,7 +36,6 @@ def create_models(*args, **kargs):
 
     # add new state machine
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm.state_machine_id
 
 # def test_state_type_change(caplog):
 #     pass

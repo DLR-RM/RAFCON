@@ -20,8 +20,7 @@ def test_execution_log(caplog):
                                                         "execution_file_log_test")))
 
         rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-        rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-        rafcon.core.singleton.state_machine_execution_engine.start()
+        rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
         rafcon.core.singleton.state_machine_execution_engine.join()
 
         import shelve

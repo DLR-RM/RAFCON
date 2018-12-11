@@ -18,7 +18,7 @@ def execute_dynamic_state_insertion():
 
     menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
 
-    call_gui_callback(
+    sm = call_gui_callback(
         menubar_ctrl.on_open_activate, None, None,
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "dynamic_library_insertion"))
     )
@@ -28,7 +28,6 @@ def execute_dynamic_state_insertion():
 
     testing_utils.wait_for_gui()
 
-    sm = state_machine_manager.get_active_state_machine()
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
 

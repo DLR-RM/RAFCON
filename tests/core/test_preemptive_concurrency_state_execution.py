@@ -38,8 +38,7 @@ def test_concurrency_preemption_state_execution(caplog):
 
     testing_utils.test_multithreading_lock.acquire()
     rafcon.core.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(preemption_state_sm.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
 
     try:
@@ -62,8 +61,7 @@ def test_concurrency_preemption_save_load(caplog):
     storage.load_state_machine_from_path(storage_path)
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(preemption_state_sm.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
 
     try:

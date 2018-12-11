@@ -91,8 +91,7 @@ def test_functionality_example(caplog):
     try:
         # main_window_controller = rafcon.gui.singleton.main_window_controller
         for state_machine_id in list(rafcon.core.singleton.state_machine_manager.state_machines.keys()):
-            rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine_id
-            rafcon.core.singleton.state_machine_execution_engine.start()
+            rafcon.core.singleton.state_machine_execution_engine.start(state_machine_id)
             time.sleep(3)
             rafcon.core.singleton.state_machine_execution_engine.stop()
             rafcon.core.singleton.state_machine_execution_engine.join()

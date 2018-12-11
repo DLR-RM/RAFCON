@@ -59,8 +59,6 @@ def trigger_source_editor_signals():
 
     # ---focus the newly added state and get the source controller---
     sm_m = menubar_ctrl.model.get_selected_state_machine_model()
-    call_gui_callback(rafcon.gui.singleton.state_machine_manager.__setattr__, "active_state_machine_id",
-                      sm_m.state_machine.state_machine_id)
     root_state_m = sm_m.root_state
     state_m = list(root_state_m.states.values())[0]
     states_editor_controller = rafcon.gui.singleton.main_window_controller.get_controller('states_editor_ctrl')

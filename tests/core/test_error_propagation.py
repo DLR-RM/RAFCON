@@ -20,5 +20,5 @@ def test_error_propagation(caplog):
 
 
 if __name__ == '__main__':
-    # test_error_propagation(None)
-    pytest.main([__file__])
+    test_error_propagation(None)
+    # pytest.main([__file__])

@@ -77,10 +77,6 @@ def create_models():
 
     testing_utils.wait_for_gui()
 
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm.state_machine_id
-
-    testing_utils.wait_for_gui()
-
     state_machine_model = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     return ctr_state, state_machine_model, state_dict
