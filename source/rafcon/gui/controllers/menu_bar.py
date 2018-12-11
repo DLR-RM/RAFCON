@@ -397,11 +397,11 @@ class MenuBarController(ExtendedController):
     ######################################################
 
     def on_new_activate(self, widget=None, data=None):
-        gui_helper_state_machine.new_state_machine()
+        return gui_helper_state_machine.new_state_machine()
 
     @staticmethod
     def on_open_activate(widget=None, data=None, path=None):
-        gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
+        return gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
 
     @staticmethod
     def on_open_library_state_separately_activate(widget, data=None):
