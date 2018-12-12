@@ -4,9 +4,9 @@ from rafcon.gui.utils.dialog import RAFCONButtonDialog, get_root_window
 
 
 def execute(self, inputs, outputs, gvm):
-    self.logger.warning("This library is deprecated please substitute it with 'generic/dialog/Dialog [2 options]' "
-                        "or the more generic 'generic/dialog/Show dialog' and consider there description text "
-                        "to map the current inputs and outputs to the future once.")
+    self.logger.warning("This library is deprecated. Please substitute it with 'generic/dialog/Dialog [2 options]' "
+                        "or the more generic 'generic/dialog/Show dialog'. "
+                        "See the library description for details on the new API.")
     self.logger.debug("Creating button dialog")
     
     if len(inputs['buttons']) != 2:

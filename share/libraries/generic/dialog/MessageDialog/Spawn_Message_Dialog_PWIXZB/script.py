@@ -4,9 +4,8 @@ from rafcon.gui.utils.dialog import RAFCONMessageDialog, get_root_window
 
 
 def execute(self, inputs, outputs, gvm):
-    self.logger.warning("This library is deprecated please substitute it with 'generic/dialog/Dialog [Info]' and copy "
-                        "your 'message_text' into its input 'text' and/or 'subtext' "
-                        "and consider also the description text.")
+    self.logger.warning("This library is deprecated. Please substitute it with 'generic/dialog/Dialog [Info]'. "
+                        "See the library description for details on the new API.")
     self.logger.debug("Creating message dialog")
     markup_text = inputs['message_text']
     abort = inputs['abort_on_quit']
