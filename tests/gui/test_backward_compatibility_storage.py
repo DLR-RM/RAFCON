@@ -69,6 +69,10 @@ def test_backward_compatibility_storage(caplog):
     """This test ensures that old state machines storage formats can still be opened with the current RAFCON version"""
     path = get_backward_compatibility_state_machines_path()
 
+    if not os.path.exists(path):
+        logger.info("test_backward_compatibility_storage: the current python interpreter version is not supported")
+        return
+
     run_gui(gui_config={'HISTORY_ENABLED': False,
                         'AUTO_BACKUP_ENABLED': False},
             libraries={'unit_test_state_machines': testing_utils.get_test_sm_path("unit_test_state_machines")})
@@ -92,6 +96,9 @@ def test_unchanged_storage_format(caplog):
     import rafcon
 
     path = get_backward_compatibility_state_machines_path()
+    if not os.path.exists(path):
+        logger.info("test_unchanged_storage_format: the current python interpreter version is not supported")
+        return
 
     testing_utils.initialize_environment(
         gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
@@ -151,5 +158,5 @@ def calculate_state_machine_hash(path):
 
 if __name__ == '__main__':
     test_backward_compatibility_storage(None)
-    # test_unchanged_storage_format(None)
+    test_unchanged_storage_format(None)
     # pytest.main(['-s', __file__])
