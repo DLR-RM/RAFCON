@@ -32,6 +32,10 @@ Next release
   - :issue:`624` Debug console: cursor is not positioned at the point were it is clicked on
   - :issue:`638` Exiting Fullscreen mode hides the graphical editor
 
+- Changes
+
+  - No more "+"-icon next to state machine tabs to add a new state machine (related to :issue:`639`)
+
 Patch releases 0.12.\*
 ----------------------
 
