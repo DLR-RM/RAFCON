@@ -36,7 +36,7 @@ def execute_all_generic_libraries_with_keyboard_only():
 
     call_gui_callback(menubar_ctrl.on_start_activate, None, None)
     import time
-    from keyboard_utils import press_key, keyboard as k
+    from keyboard_utils import keyboard as k
     for key in [k.return_key]*7 + [k.tab_key]*2 + [k.return_key]*5:
         time.sleep(0.5)
         k.press_key(key)
@@ -74,10 +74,6 @@ def execute_preemption_of_all_state_machines_at_once():
     state_machine_execution_engine.synchronization_lock.release()
 
     call_gui_callback(menubar_ctrl.on_start_activate, None, None)
-    for i in range(20):
-        import time
-        time.sleep(0.5)
-
     wait_for_execution_engine_sync_counter(1, logger)
 
 
