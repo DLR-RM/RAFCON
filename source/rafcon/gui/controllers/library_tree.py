@@ -292,8 +292,15 @@ class LibraryTreeController(ExtendedController):
         global_runtime_config.update_recently_opened_state_machines_with(state_machine)
         return state_machine
 
+    def get_text_of_menu_item(self, menu_item):
+        assert isinstance(menu_item, Gtk.MenuItem)
+        menu_box = menu_item.get_child()
+        assert isinstance(menu_box, Gtk.Box)
+        return menu_box.get_children()[1].get_text()
+
     def add_button_clicked(self, widget):
-        if "library root" in widget.get_label():
+        menu_item_text = self.get_text_of_menu_item(widget)
+        if "library root" in menu_item_text:
             logger.info("Get new path and mounting key.")
             from rafcon.gui import interface
             from rafcon.gui.singleton import global_config, global_runtime_config
@@ -315,7 +322,10 @@ class LibraryTreeController(ExtendedController):
 
     def delete_button_clicked(self, widget):
         """Removes library from hard drive after request second confirmation"""
-        logger.info("delete library" + str(widget) + str(widget.get_label()))
+
+        menu_item_text = self.get_text_of_menu_item(widget)
+
+        logger.info("delete library" + str(widget) + str(menu_item_text))
         model, path = self.view.get_selection().get_selected()
         if path:
             # Second confirmation to delete library
@@ -324,11 +334,11 @@ class LibraryTreeController(ExtendedController):
             # assert isinstance(tree_m_row[self.ITEM_STORAGE_ID], str)
             library_file_system_path = library_os_path
 
-            if "root" in widget.get_label():
-                button_texts = [widget.get_label() + "from tree and config", "Cancel"]
+            if "root" in menu_item_text:
+                button_texts = [menu_item_text + "from tree and config", "Cancel"]
                 partial_message = "This will remove the library root from your configuration (config.yaml)."
             else:
-                button_texts = [widget.get_label(), "Cancel"]
+                button_texts = [menu_item_text, "Cancel"]
                 partial_message = "This folder will be removed from hard drive! You really wanna do that?"
 
             message_string = "You choose to {2} with " \
@@ -338,7 +348,7 @@ class LibraryTreeController(ExtendedController):
                              "".format(os.path.join(self.convert_if_human_readable(tree_m_row[self.LIB_PATH_STORAGE_ID]),
                                                     item_key),
                                        library_file_system_path,
-                                       widget.get_label().lower(),
+                                       menu_item_text.lower(),
                                        partial_message)
 
             width = 8*len("physical path:        " + library_file_system_path)
@@ -347,14 +357,14 @@ class LibraryTreeController(ExtendedController):
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:
-                if "root" in widget.get_label():
+                if "root" in menu_item_text:
                     logger.info("Remove library root key '{0}' from config.".format(item_key))
                     from rafcon.gui.singleton import global_config
                     library_paths = global_config.get_config_value('LIBRARY_PATHS')
                     del library_paths[tree_m_row[self.LIB_KEY_STORAGE_ID]]
                     global_config.save_configuration()
                     self.model.library_manager.refresh_libraries()
-                elif "libraries" in widget.get_label():
+                elif "libraries" in menu_item_text:
                     logger.debug("Remove of all libraries in {} is triggered.".format(library_os_path))
                     import shutil
                     shutil.rmtree(library_os_path)
