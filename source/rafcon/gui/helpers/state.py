@@ -469,7 +469,7 @@ def insert_state_as(target_state_m, state, as_template):
     target_state_m.state.add_state(state_m.state)
 
 
-def substitute_state(target_state_m, state_m_to_insert):
+def substitute_state(target_state_m, state_m_to_insert, as_template=False):
     """ Substitute the target state with a the handed state
 
     Both states are handed by there state models. The insert state adapts the size and position of the target state.
@@ -520,8 +520,16 @@ def substitute_state(target_state_m, state_m_to_insert):
     new_state = e = None
     # print("state to insert", state_to_insert)
     try:
-        action_parent_m.expected_future_models.add(state_m_to_insert)
-        new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
+        if as_template:  # TODO remove this work around if the models are loaded correctly
+            # the following enforce the creation of a new model (in needed depth) and transfer of meta data
+            import rafcon.gui.action
+            meta_dict = rafcon.gui.action.get_state_element_meta(state_m_to_insert)
+            new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
+            sm_m = action_parent_m.get_state_machine_m()
+            rafcon.gui.action.insert_state_meta_data(meta_dict, sm_m.get_state_model_by_path(new_state.get_path()))
+        else:
+            action_parent_m.expected_future_models.add(state_m_to_insert)
+            new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
         # assert new_state.state_id is state_id
         assert new_state is state_to_insert
     except Exception as e:
@@ -584,7 +592,7 @@ def substitute_state_as(target_state_m, state, as_template, keep_name=False):
         state_m.state.name = target_state_m.state.name
 
     assert target_state_m.parent.states[target_state_m.state.state_id] is target_state_m
-    substitute_state(target_state_m, state_m)
+    substitute_state(target_state_m, state_m, as_template)
 
 
 def group_states_and_scoped_variables(state_m_list, sv_m_list):
