@@ -81,8 +81,8 @@ def execute(self, inputs, outputs, gvm):
     event = self._preempted
     result = [None, None]  # first entry is the dialog return value, second one is the dialog object
     
-    text = inputs['text']
-    subtext = inputs['subtext']
+    text = '' if inputs['text'] is None else inputs['text']
+    subtext = '' if inputs['subtext'] is None else inputs['subtext']
     options = inputs['options']
     key_mapping = inputs['key_mapping']
 

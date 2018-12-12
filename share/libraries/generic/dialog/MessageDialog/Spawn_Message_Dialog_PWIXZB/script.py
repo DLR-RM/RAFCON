@@ -1,4 +1,4 @@
-from gi.repository import GObject
+from gi.repository import GLib
 from gi.repository import Gtk
 from rafcon.gui.utils.dialog import RAFCONMessageDialog, get_root_window
 
@@ -23,7 +23,7 @@ def execute(self, inputs, outputs, gvm):
 
     event = self._preempted
     result = [None, None]  # first entry is the dialog return value, second one is the dialog object
-    GObject.idle_add(run_dialog, event, result, self.logger)
+    GLib.idle_add(run_dialog, event, result, self.logger)
 
     # Event is either set by the dialog or by an external preemption request
     event.wait()
@@ -32,7 +32,7 @@ def execute(self, inputs, outputs, gvm):
 
     # The dialog was not closed by the user, but we got a preemption request
     if response_id is None:
-        GObject.idle_add(dialog.destroy)
+        GLib.idle_add(dialog.destroy)
         return "preempted"
 
     event.clear()
