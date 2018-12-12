@@ -6,7 +6,6 @@ keyboard = pykeyboard.PyKeyboard()
 
 
 def press_key(characters, duration=0.05):
-    print characters
     assert all([isinstance(character, (int, string_types)) for character in characters])
     assert isinstance(duration, (int, float))
     for character in characters:
