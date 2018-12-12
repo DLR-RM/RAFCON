@@ -17,6 +17,7 @@ Next release
   - :issue:`117` Make GUI resizeable on all edges and corners
   - :issue:`640` Backward compatibility test runs with various python versions now
   - :issue:`610` Provide CITATION.cff to make software citable
+  - :issue:`646` Library roots can be added and removed inside the library tree
   - :issue:`619` Provide and install *.desktop file
   - :issue:`636` No exception when closing RAFCON and a state machine is still running
   - :issue:`637` No exception when closing a state machine tab, when it still runs
