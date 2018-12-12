@@ -53,16 +53,16 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
                  callback=None, callback_args=(),
                  message_type=Gtk.MessageType.WARNING, flags=Gtk.DialogFlags.MODAL, parent=None,
                  width=-1, standalone=False, title="RAFCON", height=-1):
-        modal_true = destroy_with_parent = False
+        modal_flag = destroy_with_parent = False
         if flags is Gtk.DialogFlags.MODAL:
-            modal_true = destroy_with_parent = True
+            modal_flag = destroy_with_parent = True
         if self.__class__.__name__ == "RAFCONMessageDialog":
             super(RAFCONMessageDialog, self).__init__(message_type=message_type, buttons=Gtk.ButtonsType.OK,
-                                                      modal=modal_true, destroy_with_parent=destroy_with_parent,
+                                                      modal=modal_flag, destroy_with_parent=destroy_with_parent,
                                                       transient_for=parent)
         else:
             super(RAFCONMessageDialog, self).__init__(message_type=message_type,
-                                                      modal=modal_true, destroy_with_parent=destroy_with_parent,
+                                                      modal=modal_flag, destroy_with_parent=destroy_with_parent,
                                                       transient_for=parent)
         self.set_title(title)
 
