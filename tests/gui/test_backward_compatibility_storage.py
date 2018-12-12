@@ -78,7 +78,20 @@ def test_backward_compatibility_storage(caplog):
             libraries={'unit_test_state_machines': testing_utils.get_test_sm_path("unit_test_state_machines")})
 
     try:
+        logger.info("Run backward compatibility state machine for own version")
         run_backward_compatibility_state_machines(path)
+
+        logger.info("Run backward compatibility state machine for other versions")
+        all_versions_path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines",
+                                                                        "backward_compatibility"))
+        for python_version_folder in os.listdir(all_versions_path):
+            full_python_version_path = os.path.join(all_versions_path, python_version_folder)
+            if os.path.isdir(full_python_version_path):
+                if full_python_version_path == path:
+                    pass
+                else:
+                    run_backward_compatibility_state_machines(full_python_version_path)
+
     except Exception:
         raise
     finally:
