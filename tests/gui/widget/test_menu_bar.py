@@ -113,7 +113,6 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     state_machine = create_state_machine()
     first_sm_id = state_machine.state_machine_id
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, state_machine)
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.__setattr__, "active_state_machine_id", first_sm_id)
 
     current_sm_length = len(sm_manager_model.state_machines)
     call_gui_callback(menubar_ctrl.on_new_activate, None)

@@ -28,9 +28,8 @@ def test_custom_entry_point(caplog):
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "stepping_test")))
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
-    rafcon.core.singleton.state_machine_execution_engine.step_mode()
+    rafcon.core.singleton.state_machine_execution_engine.step_mode(state_machine.state_machine_id)
     time.sleep(0.2)  # let the state machine start properly
 
     # sm structure
@@ -87,13 +86,12 @@ def test_step_through_library(caplog):
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "stepping_test_with_library")))
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
     state_machine_execution_engine.synchronization_lock.acquire()
     state_machine_execution_engine.synchronization_counter = 0
     state_machine_execution_engine.synchronization_lock.release()
 
-    rafcon.core.singleton.state_machine_execution_engine.step_mode()
+    rafcon.core.singleton.state_machine_execution_engine.step_mode(state_machine.state_machine_id)
     wait_for_execution_engine_sync_counter(1, logger)
 
     # step till library

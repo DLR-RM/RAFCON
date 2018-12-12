@@ -397,11 +397,11 @@ class MenuBarController(ExtendedController):
     ######################################################
 
     def on_new_activate(self, widget=None, data=None):
-        gui_helper_state_machine.new_state_machine()
+        return gui_helper_state_machine.new_state_machine()
 
     @staticmethod
     def on_open_activate(widget=None, data=None, path=None):
-        gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
+        return gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
 
     @staticmethod
     def on_open_library_state_separately_activate(widget, data=None):
@@ -458,7 +458,6 @@ class MenuBarController(ExtendedController):
             backup_session.reset_session()
         if not force and global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
             backup_session.store_session()
-            self.on_delete_check_sm_running()
             force = True
         avoid_shutdown = self.on_delete_event(widget, None, force=force)
         if not avoid_shutdown:
@@ -470,9 +469,9 @@ class MenuBarController(ExtendedController):
         # State machine was modified, callback method handles closing operation
         if not force and self.on_delete_check_sm_modified():
             return True  # prevents closing operation
-        # State machine is running, callback method handles closing operation
-        if not force and self.on_delete_check_sm_running():
-            return True  # prevents closing operation
+
+        # independently if state machine is running or not the GUI will be closed
+        self.on_delete_check_sm_running()
 
         gui_singletons.main_window_controller.prepare_destruction()
         return False
@@ -487,7 +486,6 @@ class MenuBarController(ExtendedController):
 
     def on_delete_check_sm_modified(self):
         if state_machine_manager.has_dirty_state_machine():
-
             message_string = "Are you sure you want to exit RAFCON?\n\n" \
                              "The following state machines have been modified and not saved. " \
                              "These changes will get lost:"
@@ -499,19 +497,15 @@ class MenuBarController(ExtendedController):
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:  # Close without saving - button pressed
-                if not self.state_machine_execution_engine.finished_or_stopped():
-                    self.on_delete_check_sm_running()
-                else:
-                    gui_singletons.main_window_controller.prepare_destruction()
-                    self.on_destroy(None)
+                return False
             elif response_id == 2:  # Cancel - button pressed
                 logger.debug("Close main window canceled")
-            return True
-        return False
+                return True
+        else:
+            return False
 
     def on_delete_check_sm_running(self):
         if not self.state_machine_execution_engine.finished_or_stopped():
-
             message_string = "The state machine is still running. Do you want to stop the execution before closing?"
             dialog = RAFCONButtonDialog(message_string, ["Stop execution", "Keep running"],
                                         message_type=Gtk.MessageType.QUESTION, parent=self.get_root_window())
@@ -519,12 +513,12 @@ class MenuBarController(ExtendedController):
             dialog.destroy()
             if response_id == 1:  # Stop execution
                 self.state_machine_execution_engine.stop()
+                return False
             elif response_id == 2:  # Keep running
                 logger.debug("State machine will keep running!")
-                gui_singletons.main_window_controller.prepare_destruction()
-            self.on_destroy(None)
-            return True
-        return False
+                return True
+        else:
+            return False
 
     def on_destroy(self, widget, data=None):
         from rafcon.gui.start import stop_gtk
@@ -645,29 +639,12 @@ class MenuBarController(ExtendedController):
     ######################################################
     # menu bar functionality - Execution
     ######################################################
-    def execution_status_dependent_correction_of_selected_and_active_state_machine(self):
-        active_state_machine_id = None
-        if core_singletons.state_machine_manager.get_active_state_machine():
-            active_state_machine_id = core_singletons.state_machine_manager.get_active_state_machine().state_machine_id
-        selected_state_machine_id = gui_singletons.state_machine_manager_model.selected_state_machine_id
-        if core_singletons.state_machine_manager.get_active_state_machine():
-            # is the state machine active change the selection accordingly to be the active state machine
-            if not self.state_machine_execution_engine.finished_or_stopped():
-                gui_singletons.state_machine_manager_model.selected_state_machine_id = active_state_machine_id
-            else:  # change the active state machine to be the selected state machine
-                core_singletons.state_machine_manager.active_state_machine_id = selected_state_machine_id
-
-        # is there no active state machine id set the selected state machine (if it is set) is now the active one
-        if selected_state_machine_id and active_state_machine_id is None:
-            gui_singletons.state_machine_manager.active_state_machine_id = selected_state_machine_id
 
     def on_start_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.start(self.model.selected_state_machine_id)
 
     def on_start_from_selected_state_activate(self, widget, data=None):
         logger.debug("Run from selected state ...")
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) is not 1:
             logger.error("Exactly one state must be selected!")
@@ -676,35 +653,27 @@ class MenuBarController(ExtendedController):
                                                       selection.get_selected_state().state.get_path())
 
     def on_pause_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.pause()
 
     def on_stop_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.stop()
 
     def on_step_mode_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.step_mode(self.model.selected_state_machine_id)
 
     def on_step_into_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.step_into()
 
     def on_step_over_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.step_over()
 
     def on_step_out_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.step_out()
 
     def on_backward_step_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.backward_step()
 
     def on_run_to_selected_state_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         logger.debug("Run to selected state ...")
 
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection

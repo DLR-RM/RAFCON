@@ -89,7 +89,6 @@ def trigger_logging_view_gui_signals():
     state_machine = create_state_machine()
     first_sm_id = state_machine.state_machine_id
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, state_machine)
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.__setattr__, "active_state_machine_id", first_sm_id)
 
     current_line_number, current_line_offset = call_gui_callback(logging_console_ctrl.view.get_cursor_position)
     assert line_number == current_line_number

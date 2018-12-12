@@ -35,8 +35,7 @@ def test_start_stop_pause_step(caplog):
 
     testing_utils.test_multithreading_lock.acquire()
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm.state_machine_id
-    rafcon.core.singleton.state_machine_execution_engine.step_mode()
+    rafcon.core.singleton.state_machine_execution_engine.step_mode(sm.state_machine_id)
 
     for i in range(5):
         time.sleep(0.2)

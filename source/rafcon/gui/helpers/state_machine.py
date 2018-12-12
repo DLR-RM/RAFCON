@@ -68,8 +68,6 @@ def new_state_machine():
     root_state = HierarchyState("new root state")
     state_machine = StateMachine(root_state)
     state_machine_manager.add_state_machine(state_machine)
-    rafcon.gui.utils.wait_for_gui()
-    state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
     # this is needed in order that the model is already there, when it is access via get_selected_state_machine_model()
     rafcon.gui.utils.wait_for_gui()
@@ -78,6 +76,7 @@ def new_state_machine():
 
     editor_controller = state_machines_editor_ctrl.get_controller(state_machine.state_machine_id)
     editor_controller.view.editor.grab_focus()
+    return state_machine
 
 
 def open_state_machine(path=None, recent_opened_notification=False):
@@ -110,8 +109,6 @@ def open_state_machine(path=None, recent_opened_notification=False):
     try:
         state_machine = storage.load_state_machine_from_path(load_path)
         state_machine_manager.add_state_machine(state_machine)
-        if state_machine_manager.active_state_machine_id is None:
-            state_machine_manager.active_state_machine_id = state_machine.state_machine_id
         if recent_opened_notification:
             global_runtime_config.update_recently_opened_state_machines_with(state_machine)
         duration = time.time() - start_time

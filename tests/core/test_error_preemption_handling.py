@@ -30,7 +30,6 @@ class TestErrorPreemptionHandling(object):
             testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "action_block_execution_test")))
         cls.state_machine = state_machine
         state_machine_manager.add_state_machine(state_machine)
-        state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
     @classmethod
     def teardown_class(cls):
@@ -65,7 +64,8 @@ class TestErrorPreemptionHandling(object):
         pass
 
     def run_state_machine(self):
-        state_machine_execution_engine.start()
+        sms = state_machine_manager.state_machines
+        state_machine_execution_engine.start(sms[sms.keys()[0]].state_machine_id)
         state_machine_execution_engine.join()
 
     @staticmethod

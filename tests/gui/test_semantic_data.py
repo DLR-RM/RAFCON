@@ -29,9 +29,8 @@ def change_semantic_data_values():
     # All executions from a thread which is not the gtk main thread must be called via "idle_add" or call_gui_callback
     # see https://developer.gnome.org/gdk3/stable/gdk3-Threads.html#gdk-threads-add-idle-full
     # and https://stackoverflow.com/questions/35700140/pygtk-run-gtk-main-loop-in-a-seperate-thread
-    call_gui_callback(menu_bar_controller.on_new_activate)
+    state_machine = call_gui_callback(menu_bar_controller.on_new_activate)
 
-    state_machine = state_machine_manager.get_active_state_machine()
     root_state = state_machine.root_state
     call_gui_callback(initialize_data, root_state)
 

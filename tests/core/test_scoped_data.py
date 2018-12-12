@@ -60,8 +60,7 @@ def test_scoped_data(caplog):
 
     testing_utils.test_multithreading_lock.acquire()
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
 

@@ -163,7 +163,14 @@ class ExecutionEngine(Observable):
         :rtype: bool
         """
         if self.__wait_for_finishing_thread:
-            self.__wait_for_finishing_thread.join(timeout)
+            if not timeout:
+                # signal handlers won't work if timeout is None and the thread is joined
+                while True:
+                    self.__wait_for_finishing_thread.join(0.5)
+                    if not self.__wait_for_finishing_thread.isAlive():
+                        break
+            else:
+                self.__wait_for_finishing_thread.join(timeout)
             return not self.__wait_for_finishing_thread.is_alive()
         else:
             logger.warning("Cannot join as state machine was not started yet.")
@@ -201,6 +208,8 @@ class ExecutionEngine(Observable):
 
         # Create new concurrency queue for root state to be able to synchronize with the execution
         self.__running_state_machine = self.state_machine_manager.get_active_state_machine()
+        if not self.__running_state_machine:
+            logger.error("The running state machine must not be None")
         self.__running_state_machine.root_state.concurrency_queue = queue.Queue(maxsize=0)
 
         if self.__running_state_machine:
@@ -217,6 +226,7 @@ class ExecutionEngine(Observable):
         self.state_machine_running = True
         self.__running_state_machine.join()
         self.__set_execution_mode_to_finished()
+        self.state_machine_manager.active_state_machine_id = None
         plugins.run_on_state_machine_execution_finished()
         # self.__set_execution_mode_to_stopped()
         self.state_machine_running = False
@@ -446,7 +456,7 @@ class ExecutionEngine(Observable):
         if wait_for_execution_finished:
             self.join()
             self.stop()
-        return rafcon.core.singleton.state_machine_manager.get_active_state_machine()
+        return self.__running_state_machine
 
     @Observable.observed
     def set_execution_mode(self, execution_mode, notify=True):

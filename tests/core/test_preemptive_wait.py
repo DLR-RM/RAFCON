@@ -52,8 +52,7 @@ def run_state_machine():
 
     preemption_state_sm = create_preemptive_wait_state_machine()
     rafcon.core.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = preemption_state_sm.state_machine_id
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(preemption_state_sm.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
 

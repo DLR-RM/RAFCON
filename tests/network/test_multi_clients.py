@@ -44,7 +44,7 @@ TEST_ERROR = "Test error"
 sleep_time = 0.01
 
 
-def synchronize_with_root_state(root_state, execution_engine, state_id_to_join_first):
+def synchronize_with_root_state(root_state, execution_engine, state_id_to_join_first, state_machine_id):
     global sleep_time
     root_state.states[state_id_to_join_first].join()
     # wait until the root state is is ready for the next execution command i.e.
@@ -53,14 +53,14 @@ def synchronize_with_root_state(root_state, execution_engine, state_id_to_join_f
         time.sleep(sleep_time)
 
 
-def synchronize_with_client_threads(queue_dict, execution_engine):
+def synchronize_with_client_threads(queue_dict, execution_engine, state_machine_id):
     from rafcon.core.singleton import global_variable_manager as gvm
     from rafcon.core.execution.execution_status import StateMachineExecutionStatus
     from rafcon.core.singleton import state_machine_manager
     from rafcon.core.execution.execution_engine import ExecutionEngine
     assert isinstance(execution_engine, ExecutionEngine)
-    active_sm = state_machine_manager.get_active_state_machine()
-    root_state = active_sm.root_state
+    sm = state_machine_manager.state_machines[state_machine_id]
+    root_state = sm.root_state
     sleep_time = 0.01
 
     # wait for the client to start
@@ -93,7 +93,7 @@ def synchronize_with_client_threads(queue_dict, execution_engine):
     os._exit(0)
 
 
-def interacting_function_server(queue_dict):
+def interacting_function_server(queue_dict, state_machine_id):
     # from rafcon.utils import log
     # logger = log.get_logger("Interacting server")
 
@@ -103,17 +103,18 @@ def interacting_function_server(queue_dict):
     import rafcon.core.singleton as core_singletons
     execution_engine = core_singletons.state_machine_execution_engine
 
-    active_sm = core_singletons.state_machine_manager.get_active_state_machine()
+    sm = core_singletons.state_machine_manager.state_machines[state_machine_id]
     # root state is a hierarchy state
-    for key, sv in active_sm.root_state.scoped_variables.items():
+    for key, sv in sm.root_state.scoped_variables.items():
         if sv.name == "bottles":
             sv.default_value = 8
 
-    sm_thread = threading.Thread(target=synchronize_with_client_threads, args=[queue_dict, execution_engine])
+    sm_thread = threading.Thread(target=synchronize_with_client_threads,
+                                 args=[queue_dict, execution_engine, state_machine_id])
     sm_thread.start()
 
 
-def interacting_function_client1(main_window_controller, global_monitoring_manager, queue_dict):
+def interacting_function_client1(main_window_controller, global_monitoring_manager, queue_dict, state_machine_id):
     import queue
     from rafcon.utils import log
     logger = log.get_logger("Interacting client1")
@@ -134,8 +135,8 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     queue_dict[CLIENT1_TO_SERVER_QUEUE].put("ready")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].get()
 
-    # test start (from server) + pause (from client1) + resume (from client2)
-    remote_execution_engine.start()
+    # test start (from server) + pause (from client2) + resume (from client1)
+    remote_execution_engine.start(state_machine_id)
     try:
         # Wait for client2 to pause the state machine
         queue_dict[CLIENT2_TO_CLIENT1].get(timeout=10)  # get paused signal from client2
@@ -144,7 +145,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
         logger.exception("Client2 did not respond")
         os._exit(0)
 
-    remote_execution_engine.start()  # resume execution
+    remote_execution_engine.start(state_machine_id)  # resume execution
 
     queue_dict[SERVER_TO_CLIENT1_QUEUE].get()  # synchronize to server
     queue_dict[MAIN_QUEUE].put(START_PAUSE_RESUME_SUCCESSFUL)
@@ -152,7 +153,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     os._exit(0)
 
 
-def interacting_function_client2(main_window_controller, global_monitoring_manager, queue_dict):
+def interacting_function_client2(main_window_controller, global_monitoring_manager, queue_dict, state_machine_id):
     import rafcon.core.singleton as core_singletons
     from rafcon.utils import log
     logger = log.get_logger("Interacting client2")
@@ -182,7 +183,7 @@ def interacting_function_client2(main_window_controller, global_monitoring_manag
 def test_multi_clients():
     from network.test_single_client import launch_client
     from network.test_single_client import launch_server
-    from .test_single_client import check_if_ports_are_open
+    from network.test_single_client import check_if_ports_are_open
     if not check_if_ports_are_open():
         print("Address already in use by another server!")
         assert True == False

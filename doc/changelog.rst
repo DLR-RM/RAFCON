@@ -17,6 +17,8 @@ Next release
   - :issue:`117` Make GUI resizeable on all edges and corners
   - :issue:`610` Provide CITATION.cff to make software citable
   - :issue:`619` Provide and install *.desktop file
+  - :issue:`636` No exception when closing RAFCON and a state machine is still running
+  - :issue:`637` No exception when closing a state machine tab, when it still runs
   - :issue:`621` Provide full license text
   - The installation should now work from a blank virtualenv
   - The documentation about the release steps has been extended

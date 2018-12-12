@@ -488,18 +488,18 @@ def run_simple_modification_construction():
     print("%" * 50)
     print("do test menu bar")
     print("%" * 50)
-    from .widget import test_menu_bar
+    from gui.widget import test_menu_bar
     # TODO D-get this test also running with substitute_library
     test_menu_bar.trigger_gui_signals(with_refresh=True, with_substitute_library=False)
     print("%" * 50)
     print("do test complex actions, group & ungroup")
     print("%" * 50)
-    from . import test_complex_actions
+    from gui import test_complex_actions
     test_complex_actions.trigger_repetitive_group_ungroup()
     print("%" * 50)
     print("do test ungroup")
     print("%" * 50)
-    from . import test_group_ungroup
+    from gui import test_group_ungroup
     test_group_ungroup.trigger_ungroup_signals()
     testing_utils.call_gui_callback(testing_utils.wait_for_gui)
 
@@ -511,11 +511,9 @@ def run_simple_execution_controller_construction():
     import rafcon.core.execution.execution_engine
     import rafcon.gui.singleton
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
-    testing_utils.call_gui_callback(rafcon.gui.singleton.state_machine_manager.__setattr__, "active_state_machine_id",
-                                    sm_m.state_machine.state_machine_id)
     execution_engine = rafcon.gui.singleton.state_machine_execution_engine
     sm_execution_status = rafcon.core.execution.execution_engine.StateMachineExecutionStatus
-    testing_utils.call_gui_callback(execution_engine.start)
+    testing_utils.call_gui_callback(execution_engine.start, sm_m.state_machine.state_machine_id)
 
     while execution_engine.status.execution_mode is not sm_execution_status.FINISHED:
         print("execution not finished yet: wait")
@@ -1257,12 +1255,12 @@ def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, l
 
 if __name__ == '__main__':
     testing_utils.dummy_gui(None)
-    test_core_destruct(None)
-    test_model_and_core_destruct(None)
-    test_simple_model_and_core_destruct_with_gui(None)
-    test_simple_execution_model_and_core_destruct_with_gui(None)
-    test_model_and_core_modification_history_destruct_with_gui(None)
-    test_copy_paste_with_modification_history_destruct_with_gui(None)
+    # test_core_destruct(None)
+    # test_model_and_core_destruct(None)
+    # test_simple_model_and_core_destruct_with_gui(None)
+    # test_simple_execution_model_and_core_destruct_with_gui(None)
+    # test_model_and_core_modification_history_destruct_with_gui(None)
+    # test_copy_paste_with_modification_history_destruct_with_gui(None)
     test_complex_model_and_core_destruct_with_gui(None)
     # import pytest
     # pytest.main(['-s', __file__])

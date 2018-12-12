@@ -97,7 +97,7 @@ def create_models():
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     # wait until model is created, otherwise gui will crash
     testing_utils.wait_for_gui()
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm.state_machine_id
+    return sm
 
 
 def on_save_activate(state_machine_m, logger):
@@ -125,11 +125,10 @@ def save_state_machine(with_gui=True):
 
     path = testing_utils.get_unique_temp_path()
     if with_gui:
-        call_gui_callback(create_models)
+        state_machine = call_gui_callback(create_models)
     else:
-        create_models()
+        state_machine = create_models()
 
-    state_machine = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
     if with_gui:
         sm_model = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
         menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
