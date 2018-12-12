@@ -33,6 +33,8 @@ Next release
   - :issue:`596` External editor does not remember the handed command and also does not lock the embedded editor
   - :issue:`624` Debug console: cursor is not positioned at the point were it is clicked on
   - :issue:`638` Exiting Fullscreen mode hides the graphical editor
+  - :issue:`627` Generic library state machines need Gtk2 to gtk3 conversion
+    - now also some redundant libraries are deprecated
 
 - Changes
 
