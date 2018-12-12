@@ -1,6 +1,7 @@
 from __future__ import print_function
 import pytest
 import os
+import sys
 import hashlib
 from distutils.version import StrictVersion
 
@@ -45,20 +46,28 @@ def run_state_machine(state_machine_path):
 
     print("Loading state machine from path: {}".format(state_machine_path))
 
-    call_gui_callback(gui_helper_statemachine.open_state_machine, state_machine_path)
+    state_machine = call_gui_callback(gui_helper_statemachine.open_state_machine, state_machine_path)
     call_gui_callback(testing_utils.remove_all_gvm_variables)
-    call_gui_callback(execution_engine.start)
+    call_gui_callback(execution_engine.start, state_machine.state_machine_id)
 
     if not execution_engine.join(3):
         raise RuntimeError("State machine did not finish within the given time")
 
     call_gui_callback(assert_correctness_of_execution)
-    call_gui_callback(state_machine_manager.remove_state_machine, state_machine_manager.active_state_machine_id)
+    call_gui_callback(state_machine_manager.remove_state_machine, state_machine.state_machine_id)
+
+
+def get_backward_compatibility_state_machines_path():
+    python_version = "python" + str(sys.version_info.major) + "." + str(sys.version_info.minor)
+    path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines",
+                                                       "backward_compatibility",
+                                                       python_version))
+    return path
 
 
 def test_backward_compatibility_storage(caplog):
     """This test ensures that old state machines storage formats can still be opened with the current RAFCON version"""
-    path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_compatibility"))
+    path = get_backward_compatibility_state_machines_path()
 
     run_gui(gui_config={'HISTORY_ENABLED': False,
                         'AUTO_BACKUP_ENABLED': False},
@@ -82,7 +91,7 @@ def test_unchanged_storage_format(caplog):
     from rafcon.gui.models.state_machine import StateMachineModel
     import rafcon
 
-    path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_compatibility"))
+    path = get_backward_compatibility_state_machines_path()
 
     testing_utils.initialize_environment(
         gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
@@ -139,7 +148,8 @@ def calculate_state_machine_hash(path):
         hash.update(open(path, 'rb').read())
     return hash
 
+
 if __name__ == '__main__':
     test_backward_compatibility_storage(None)
-    test_unchanged_storage_format(None)
+    # test_unchanged_storage_format(None)
     # pytest.main(['-s', __file__])
