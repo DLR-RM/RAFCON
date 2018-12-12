@@ -18,7 +18,7 @@ class RAFCONShowDialog(RAFCONButtonDialog):
         from gi.repository import Gdk
         key_name = Gdk.keyval_name(event.keyval).lower()
         for i, key_list in enumerate(key_mapping, 1):
-            if i >= len(buttons):
+            if i > len(buttons):
                 break
             if not isinstance(key_list, list):
                 key_list = [key_list]
