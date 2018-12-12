@@ -1,60 +1,30 @@
-from future.utils import string_types
 from gi.repository import Gtk
-from rafcon.gui.utils.dialog import get_root_window, RAFCONMessageDialog
+from rafcon.gui.utils.dialog import get_root_window, RAFCONButtonDialog
 
 
-class RAFCONShowDialog(RAFCONMessageDialog):
+class RAFCONShowDialog(RAFCONButtonDialog):
 
     def __init__(self, text, subtext, options, key_mapping, logger):
+        subtext = subtext or text
+        RAFCONButtonDialog.__init__(self, message_type=Gtk.MessageType.INFO, flags=Gtk.DialogFlags.MODAL,
+                                    parent=get_root_window(),
+                                    title=text, markup_text=subtext,
+                                    button_texts=options)
 
-        RAFCONMessageDialog.__init__(self, message_type=Gtk.MessageType.INFO, flags=Gtk.DialogFlags.MODAL,
-                                     parent=get_root_window(), title="RAFCON State Machine Dialog - ShowDialog")
-
-        self.set_size_request(600, -1)
-
-        markup_text = text
-        if isinstance(markup_text, string_types):
-            from cgi import escape
-            self.set_markup(escape(str(markup_text)))
-        else:
-            logger.debug("The specified message '{1}' text is not a string, but {0}".format(markup_text,
-                                                                                            type(markup_text)))
-
-        if isinstance(subtext, string_types) and len(subtext) > 0:
-            subtext = "<span size='20000'>" + subtext + "</span>"
-            self.format_secondary_markup(subtext)
-
-        buttons = {}
-        for i, option in enumerate(options):
-            button = Gtk.Button()
-
-            label = Gtk.Label("<span size='20000'>" + option + "</span>")
-            label.set_use_markup(True)
-            label.show()
-            button.add(label)
-            # button.set_size_request(300, 300)  # TODO maybe parameter
-            button.show()
-            self.add_action_widget(button, i)
-            buttons[i] = button
-
-        # dialog.add_events(Gdk.KEY_PRESS_MASK)
         if key_mapping:
-            self.connect('key-press-event', self.on_dialog_key_press, key_mapping, buttons)
+            self.connect('key-press-event', self.on_dialog_key_press, key_mapping, options)
 
     def on_dialog_key_press(self, dialog, event, key_mapping, buttons):
         from gi.repository import Gdk
-        key_name = str.lower(str(Gdk.keyval_name(event.keyval)))
-        for i, desired_key in enumerate(key_mapping):
+        key_name = Gdk.keyval_name(event.keyval).lower()
+        for i, key_list in enumerate(key_mapping, 1):
             if i >= len(buttons):
                 break
-            if isinstance(desired_key, list):
-                key_list = desired_key
-                for desired_key in key_list:
-                    if str.lower(str(desired_key)) == key_name:
-                        buttons[i].clicked()
-            elif str.lower(desired_key) == key_name:
-                buttons[i].clicked()
-        pass
+            if not isinstance(key_list, list):
+                key_list = [key_list]
+            for desired_key in key_list:
+                if desired_key.lower() == key_name:
+                    self.response(i)
 
 
 def show_dialog(event, text, subtext, options, key_mapping, result, logger):
@@ -102,6 +72,7 @@ def execute(self, inputs, outputs, gvm):
     if option < 0:
         return "aborted"
 
+    option -= 1  # output numeration starts with 0, response id starts with 1
     self.logger.debug("User decided: {0} => {1}".format(option, options[option]))
     outputs['option'] = option
 
