@@ -456,7 +456,7 @@ class ExecutionEngine(Observable):
         if wait_for_execution_finished:
             self.join()
             self.stop()
-        return self.__running_state_machine
+        return state_machine
 
     @Observable.observed
     def set_execution_mode(self, execution_mode, notify=True):
