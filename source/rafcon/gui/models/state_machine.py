@@ -20,6 +20,7 @@ from copy import copy, deepcopy
 
 from gtkmvc3.model_mt import ModelMT
 from gtkmvc3.observable import Signal
+from gtkmvc3.observer import Observer
 
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.container_state import ContainerState
@@ -27,9 +28,10 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.models.meta import MetaModel
-from rafcon.gui.models import ContainerStateModel, StateModel, LibraryStateModel
+from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateModel, LibraryStateModel
 from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.signals import MetaSignalMsg
+import rafcon.gui.utils.constants
 from rafcon.utils import log
 from rafcon.utils import storage_utils
 from rafcon.utils.hashable import Hashable
@@ -50,6 +52,7 @@ class StateMachineModel(MetaModel, Hashable):
     selection = None
     root_state = None
     meta = None
+    ongoing_complex_actions = None
     meta_signal = Signal()
     state_meta_signal = Signal()
     action_signal = Signal()
@@ -60,7 +63,7 @@ class StateMachineModel(MetaModel, Hashable):
     suppress_new_root_state_model_one_time = False
 
     __observables__ = ("state_machine", "root_state", "meta_signal", "state_meta_signal", "sm_selection_changed_signal",
-                       "action_signal", "state_action_signal", "destruction_signal")
+                       "action_signal", "state_action_signal", "destruction_signal", "ongoing_complex_actions")
 
     def __init__(self, state_machine, meta=None, load_meta_data=True):
         """Constructor
@@ -82,6 +85,12 @@ class StateMachineModel(MetaModel, Hashable):
             self.meta = meta
         else:
             self.meta = Vividict()
+
+        # ongoing_complex_actions and nested_action_already_in are updated by ComplexActionObserver -> Encapsulated
+        self.ongoing_complex_actions = {}
+        self.nested_action_already_in = []
+        self.complex_action_observer = ComplexActionObserver(self)
+
         self.meta_signal = Signal()
         self.state_meta_signal = Signal()
         self.action_signal = Signal()
@@ -215,7 +224,7 @@ class StateMachineModel(MetaModel, Hashable):
     @ModelMT.observe("action_signal", signal=True)
     def action_signal_triggered(self, model, prop_name, info):
         """When the action was performed, we have to set the dirty flag, as the changes are unsaved"""
-        # print("action_signal_triggered state machine: ", model, prop_name, info)
+        # print("ACTION_signal_triggered state machine: ", model, prop_name, info)
         self.state_machine.marked_dirty = True
         msg = info.arg
         if model is not self and msg.action.startswith('sm_notification_'):  # Signal was caused by the root state
@@ -375,3 +384,86 @@ class StateMachineModel(MetaModel, Hashable):
         storage_utils.write_dict_to_json(self.meta, meta_file_json)
 
         self.root_state.store_meta_data(copy_path)
+
+
+class ComplexActionObserver(Observer):
+    """ This Observer observes the and structures the information of complex actions and separates this observation
+     from the StateMachineModel to avoid to mix these with the root state observation of the state machine model.
+    """
+
+    def __init__(self, model):
+        Observer.__init__(self)
+        self.model = model
+        self.observe_model(model)
+
+    @property
+    def ongoing_complex_actions(self):
+        return self.model.ongoing_complex_actions
+
+    @ongoing_complex_actions.setter
+    def ongoing_complex_actions(self, value):
+        self.model.ongoing_complex_actions = value
+
+    @property
+    def nested_action_already_in(self):
+        return self.model.nested_action_already_in
+
+    @nested_action_already_in.setter
+    def nested_action_already_in(self, value):
+        self.model.nested_action_already_in = value
+
+    @ModelMT.observe("state_action_signal", signal=True)
+    def state_action_signal(self, model, prop_name, info):
+        if not ('arg' in info and info['arg'].after is False):
+            return
+
+        msg = info['arg']
+        action = msg.action
+
+        if action in rafcon.gui.utils.constants.complex_actions:
+
+            if not self.ongoing_complex_actions:
+                self.nested_action_already_in = []
+
+            self.ongoing_complex_actions[action] = {}
+            if action in ['group_states', 'paste', 'cut']:
+                # msg.action_parent_m.register_observer(self)
+                self.observe_model(msg.action_parent_m)
+            else:
+                self.observe_model(msg.affected_models[0])
+
+            self.ongoing_complex_actions[action]['affected_models'] = msg.affected_models
+            if action in ['change_state_type', 'change_root_state_type', 'undo/redo']:
+                old_state_m = msg.affected_models[0]
+                self.ongoing_complex_actions[action]['target'] = old_state_m
+            else:
+                self.ongoing_complex_actions[action]['target'] = msg.action_parent_m
+
+    @ModelMT.observe("action_signal", signal=True)
+    def action_signal(self, model, prop_name, info):
+        if not (isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after):
+            return
+
+        msg = info['arg']
+        action = msg.actions
+
+        if isinstance(msg.result, Exception) and action in self.ongoing_complex_actions:
+            self.nested_action_already_in.append((action, self.ongoing_complex_actions.pop(action)))
+            return
+
+        if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut']:
+            new_state_m = msg.action_parent_m
+        elif action in ['change_state_type', 'change_root_state_type', 'undo/redo']:
+            new_state_m = msg.affected_models[-1]
+        else:
+            return
+
+        self.ongoing_complex_actions[action]['new'] = new_state_m
+        self.nested_action_already_in.append((action, self.ongoing_complex_actions[action]))
+
+        self.ongoing_complex_actions.pop(action)
+
+        if not self.ongoing_complex_actions:  # TODO check if the condition is exact enough
+            # common case remove the view here in the after action signal
+            self.relieve_model(model)
+            self.nested_action_already_in = []  # TODO check if this is not needed

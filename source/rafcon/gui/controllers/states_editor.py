@@ -145,9 +145,7 @@ class StatesEditorController(ExtendedController):
         self.tabs = {}
         self.closed_tabs = {}
 
-        self._ongoing_complex_actions = {}
-        # the variable is for debugging -> I like to have it to improve complex actions
-        self._nested_action_already_in = {}
+        self.complex_action_ongoing = False
 
     def register_view(self, view):
         super(StatesEditorController, self).register_view(view)
@@ -266,49 +264,15 @@ class StatesEditorController(ExtendedController):
                 pass
             self.clean_up_tabs()
 
-    @ExtendedController.observe("state_action_signal", signal=True)
+    @ExtendedController.observe("ongoing_complex_actions", after=True)
     def state_action_signal(self, model, prop_name, info):
-        if not ('arg' in info and info['arg'].after is False):
-            return
-
-        action = info['arg'].action
-
-        if action in ['change_root_state_type', 'change_state_type', 'substitute_state',
-                      'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
-
-            if not self._ongoing_complex_actions:
-                self._nested_action_already_in = {}
-
-            self._ongoing_complex_actions[action] = {}
-            if action in ['group_states', 'paste', 'cut']:
-                self.observe_model(info['arg'].action_parent_m)
-            else:
-                self.observe_model(info['arg'].affected_models[0])
-
-    @ExtendedController.observe("action_signal", signal=True)
-    def action_signal(self, model, prop_name, info):
-        if not (isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after):
-            return
-
-        action = info['arg'].action
-
-        if isinstance(info['arg'].result, Exception) and action in self._ongoing_complex_actions:
-            self._nested_action_already_in.update({action: self._ongoing_complex_actions.pop(action)})
-            return
-
-        if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut'] or \
-                action in ['change_state_type', 'change_root_state_type', 'undo/redo']:
-            pass
+        if self.complex_action_ongoing:
+            if not self.current_state_machine_m.ongoing_complex_actions:
+                self.complex_action_ongoing = False
+                self.adapt_complex_action()
         else:
-            return
-
-        self._nested_action_already_in.update({action: self._ongoing_complex_actions.pop(action)})
-
-        if not self._ongoing_complex_actions:
-            # common case remove the view here in the after action signal
-            self.relieve_model(model)
-            self.adapt_complex_action()
-            self._nested_action_already_in = {}
+            if not self.complex_action_ongoing and self.current_state_machine_m.ongoing_complex_actions:
+                self.complex_action_ongoing = True
 
     def adapt_complex_action(self):
         # destroy pages of no more existing states
@@ -584,7 +548,7 @@ class StatesEditorController(ExtendedController):
     @ExtendedController.observe("sm_selection_changed_signal", signal=True)
     def selection_notification(self, model, property, info):
         """If a single state is selected, open the corresponding tab"""
-        if model != self.current_state_machine_m or self._ongoing_complex_actions:
+        if model is not self.current_state_machine_m or len(self.current_state_machine_m.ongoing_complex_actions) > 0:
             return
         state_machine_m = model
         assert isinstance(state_machine_m.selection, Selection)

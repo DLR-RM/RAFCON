@@ -84,10 +84,8 @@ class GraphicalEditorController(ExtendedController):
         self.canvas = MyCanvas()
         self.zoom = 3.
         self.perform_drag_and_drop = False
+        self.complex_action_ongoing = False
 
-        self._ongoing_complex_actions = {}
-        # the variable is for debugging -> I like to have it to improve complex actions
-        self._nested_action_already_in = {}
         view.setup_canvas(self.canvas, self.zoom)
 
         view.editor.drag_dest_set(Gtk.DestDefaults.ALL, None, Gdk.DragAction.COPY)
@@ -372,66 +370,17 @@ class GraphicalEditorController(ExtendedController):
         self.canvas.request_update(view, matrix=True)
         self.canvas.wait_for_update()
 
-    @ExtendedController.observe("state_action_signal", signal=True)
-    def state_action_signal(self, model, prop_name, info):
-        if not ('arg' in info and info['arg'].after is False):
-            return
-
-        action = info['arg'].action
-        action_parent_m = info['arg'].action_parent_m
-        affected_models = info['arg'].affected_models
-
-        if action in ['change_root_state_type', 'change_state_type', 'substitute_state',
-                      'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
-
-            # print(self.__class__.__name__, 'add complex action', action)
-            if not self._ongoing_complex_actions:
-                self._nested_action_already_in = {}
-
-            self._ongoing_complex_actions[action] = {}
-            if action in ['group_states', 'paste', 'cut']:
-                self.observe_model(info['arg'].action_parent_m)
-            else:
-                self.observe_model(info['arg'].affected_models[0])
-
-            self._ongoing_complex_actions[action]['affected_models'] = affected_models
-            if action in ['change_state_type', 'change_root_state_type', 'undo/redo']:
-                old_state_m = affected_models[0]
-                self._ongoing_complex_actions[action]['target'] = old_state_m
-            else:
-                self._ongoing_complex_actions[action]['target'] = action_parent_m
-
-    @ExtendedController.observe("action_signal", signal=True)
-    def action_signal(self, model, prop_name, info):
-        if not (isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after):
-            return
-
-        action = info['arg'].action
-        action_parent_m = info['arg'].action_parent_m
-        affected_models = info['arg'].affected_models
-
-        if isinstance(info['arg'].result, Exception) and action in self._ongoing_complex_actions:
-            self._nested_action_already_in.update({action: self._ongoing_complex_actions.pop(action)})
-            return
-
-        if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut']:
-            new_state_m = action_parent_m
-        elif action in ['change_state_type', 'change_root_state_type', 'undo/redo']:
-            new_state_m = affected_models[-1]
+    @ExtendedController.observe("ongoing_complex_actions", after=True)
+    def update_of_ongoing_complex_actions(self, model, prop_name, info):
+        if self.complex_action_ongoing:
+            if not self.model.ongoing_complex_actions:
+                self.complex_action_ongoing = False
+                # print("do adapt complex action")
+                action_name, action_dict = self.model.nested_action_already_in[-1]
+                self.adapt_complex_action(action_dict['target'], action_dict['new'])
         else:
-            return
-
-        old_state_m = self._ongoing_complex_actions[action]['target']
-
-        # print(self.__class__.__name__, 'remove complex action', action, \)
-        #     id(old_state_m), id(new_state_m), old_state_m, new_state_m
-        self._nested_action_already_in.update({action: self._ongoing_complex_actions.pop(action)})
-
-        if not self._ongoing_complex_actions:
-            # common case remove the view here in the after action signal
-            self.relieve_model(model)
-            self.adapt_complex_action(old_state_m, new_state_m)
-            self._nested_action_already_in = {}
+            if not self.complex_action_ongoing and self.model.ongoing_complex_actions:
+                self.complex_action_ongoing = True
 
     @ExtendedController.observe("state_machine", after=True)
     def state_machine_change_after(self, model, prop_name, info):
@@ -448,7 +397,7 @@ class GraphicalEditorController(ExtendedController):
         if 'method_name' in info and info['method_name'] == 'root_state_change':
             method_name, model, result, arguments, instance = self._extract_info_data(info['kwargs'])
 
-            if self._ongoing_complex_actions:
+            if self.model.ongoing_complex_actions:
                 return
 
             # The method causing the change raised an exception, thus nothing was changed
