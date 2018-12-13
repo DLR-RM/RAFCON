@@ -23,7 +23,7 @@ DEPENDS.osl*        = python-gtkmvc3==1.0,
                       python-gaphas==0.7,
                       python-jsonconversion==0.2,
                       python_yaml_configuration==0.1,
-                      sw.common.pango==1.41
+                      sw.common.pango==1.40
 
 ARCHS               = osl42-x86_64
 PYTHON_PATHS        = ${PKGROOT}/source
