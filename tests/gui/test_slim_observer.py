@@ -1,4 +1,7 @@
-from gtkmvc.observable import Observable
+from __future__ import print_function
+
+from gtkmvc3.observable import Observable
+from builtins import object
 import testing_utils
 import pytest
 
@@ -21,12 +24,12 @@ class ObservableTest(Observable):
 
     @Observable.observed
     def complex_method(self, param1, param2, param3):
-        print param3
+        print(param3)
         self.observable_test_var = param1 + param2
         return 20
 
 
-class ObserverTest():
+class ObserverTest(object):
 
     def __init__(self):
         self.test_observable = ObservableTest()
@@ -53,6 +56,7 @@ class ObserverTest():
 
 
 def test_slim_observer(caplog):
+    testing_utils.dummy_gui(None)
     test_observer = ObserverTest()
     test_observer.test_observable.first_var = 20.0
     assert test_observer.test_value == 20
@@ -67,4 +71,4 @@ def test_slim_observer(caplog):
 
 if __name__ == '__main__':
     # test_slim_observer(None)
-    pytest.main([__file__])
+    pytest.main(['-s', __file__])

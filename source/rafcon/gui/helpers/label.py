@@ -14,8 +14,9 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
-from gtk import Container, Button
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import Pango
 
 from rafcon.gui.utils import constants
 from rafcon.gui.config import global_gui_config
@@ -30,9 +31,9 @@ def create_tab_header_label(tab_name, icons):
     :param icons: A dict mapping each tab_name to its corresponding icon
     :return: The GTK Eventbox holding the tab label
     """
-    tooltip_event_box = gtk.EventBox()
+    tooltip_event_box = Gtk.EventBox()
     tooltip_event_box.set_tooltip_text(tab_name)
-    tab_label = gtk.Label()
+    tab_label = Gtk.Label()
     if global_gui_config.get_config_value('USE_ICONS_AS_TAB_LABELS', True):
         tab_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
                             (constants.ICON_FONT,
@@ -50,23 +51,23 @@ def create_tab_header_label(tab_name, icons):
 
 def create_label_with_text_and_spacing(text, font=constants.INTERFACE_FONT, font_size=constants.FONT_SIZE_NORMAL,
                                        letter_spacing=constants.LETTER_SPACING_NONE):
-    label = gtk.Label()
+    label = Gtk.Label()
     set_label_markup(label, text, font, font_size, letter_spacing)
     label.show()
     return label
 
 
 def create_label_widget_with_icon(icon, text, tooltip=None):
-    hbox = gtk.HBox()
+    hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
 
-    icon_label = gtk.Label()
+    icon_label = Gtk.Label()
     icon_label.set_markup('<span font_desc="{0} {1}">&#x{2};</span>'.format(constants.ICON_FONT,
                                                                             constants.FONT_SIZE_NORMAL,
                                                                             icon))
     icon_label.show()
     hbox.pack_start(icon_label, False, True, 2)
 
-    text_label = gtk.Label()
+    text_label = Gtk.Label()
     text_label.set_markup('<span font_desc="{0} {1}" letter_spacing="{2}">{3}</span>'.format(constants.INTERFACE_FONT,
                                                                                              constants.FONT_SIZE_NORMAL,
                                                                                              constants.LETTER_SPACING_075PT,
@@ -80,34 +81,77 @@ def create_label_widget_with_icon(icon, text, tooltip=None):
     return hbox
 
 
-def create_image_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=(),
-                           accel_code=None, accel_group=None):
-    menu_item = gtk.ImageMenuItem()
-    menu_item.set_image(create_label_widget_with_icon(icon_code, ""))
+def get_label_of_menu_item_box(menu_item):
+    return menu_item.get_child().get_children()[-1].get_text()
+
+
+def set_label_of_menu_item_box(menu_item, new_label_text):
+    return menu_item.get_child().get_children()[-1].set_text(new_label_text)
+
+
+def set_icon_and_text_box_of_menu_item(menu_item, uni_code):
+    menu_item_child = menu_item.get_child()
+    # per default MenuItems created through the glade file have a AccelLabel as child
+    # this we have to delete at first, as we want a Box, with two labels
+    if isinstance(menu_item_child, Gtk.AccelLabel):
+        label_text = menu_item_child.get_text()
+
+        menu_item.remove(menu_item_child)
+
+        menu_box, icon_label, text_label = create_menu_box_with_icon_and_label(label_text)
+        menu_item.add(menu_box)
+        menu_box.show()
+
+        text_label.set_accel_widget(menu_item)
+    else:
+        box = menu_item_child
+        icon_label = box.get_children()[0]
+
+    # now add the awesome icon to the icon_label
+    if uni_code is not None:
+        set_label_markup(icon_label, '&#x' + uni_code + ';',
+                         font=constants.ICON_FONT, font_size=constants.FONT_SIZE_NORMAL)
+
+
+def create_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=(),
+                     accel_code=None, accel_group=None):
+    menu_item = Gtk.MenuItem()
     menu_item.set_label(label_text)
+    set_icon_and_text_box_of_menu_item(menu_item, icon_code)
     if callback is not None:
         menu_item.connect("activate", callback, *callback_args)
-    menu_item.set_always_show_image(True)
     if accel_code is not None and accel_group is not None:
-        key, mod = gtk.accelerator_parse(accel_code)
-        menu_item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
+        key, mod = Gtk.accelerator_parse(accel_code)
+        menu_item.add_accelerator("activate", accel_group, key, mod, Gtk.AccelFlags.VISIBLE)
     return menu_item
 
 
 def create_check_menu_item(label_text="", is_active=False, callback=None, callback_args=(), is_sensitive=True,
                            accel_code=None, accel_group=None):
     icon_code = constants.BUTTON_CHECK if is_active else constants.BUTTON_SQUARE
-    menu_item = create_image_menu_item(label_text, icon_code, callback, callback_args, accel_code, accel_group)
+    menu_item = create_menu_item(label_text, icon_code, callback, callback_args, accel_code, accel_group)
     menu_item.set_sensitive(is_sensitive)
     return menu_item
 
 
 def append_sub_menu_to_parent_menu(name, parent_menu, icon_code=None):
-    sub_menu_item = create_image_menu_item(name, icon_code)
+    sub_menu_item = create_menu_item(name, icon_code)
     parent_menu.append(sub_menu_item)
-    sub_menu = gtk.Menu()
+    sub_menu = Gtk.Menu()
     sub_menu_item.set_submenu(sub_menu)
     return sub_menu_item, sub_menu
+
+
+def create_widget_title(title, widget_name=None):
+    widget_name = widget_name if widget_name else title.replace(' ', '_').lower()
+    label = Gtk.Label.new(title)
+    label.set_name("{}_title".format(widget_name))
+    label.set_xalign(0.0)
+    eventbox = Gtk.EventBox()
+    eventbox.set_name("{}_title_eventbox".format(widget_name))
+    eventbox.get_style_context().add_class("widget-title")
+    eventbox.add(label)
+    return eventbox
 
 
 def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
@@ -117,7 +161,7 @@ def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
     :param font_size: The size of the icon
     :return: The created label
     """
-    label = gtk.Label()
+    label = Gtk.Label()
     set_label_markup(label, '&#x' + icon + ';', constants.ICON_FONT, font_size)
     label.show()
     return label
@@ -125,11 +169,11 @@ def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
 
 def set_button_children_size_request(widget):
     try:
-        if not isinstance(widget, Container):
+        if not isinstance(widget, Gtk.Container):
             return
         for child in widget.get_children():
-            if isinstance(child, Button):
-                child.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
+            if isinstance(child, Gtk.Button):
+                child.set_size_request(constants.BUTTON_MIN_WIDTH, -1)
             else:
                 set_button_children_size_request(child)
     except AttributeError:
@@ -186,23 +230,28 @@ def set_notebook_title(notebook, page_num, title_label):
     return text
 
 
+def create_menu_box_with_icon_and_label(label_text):
+    """ Creates a MenuItem box, which is a replacement for the former ImageMenuItem. The box contains, a label
+        for the icon and one for the text.
+
+    :param label_text: The text, which is displayed for the text label
+    :return:
+    """
+    box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 10)
+    box.set_border_width(0)
+    icon_label = Gtk.Label()
+    text_label = Gtk.AccelLabel.new(label_text)
+    text_label.set_xalign(0)
+
+    box.pack_start(icon_label, False, False, 0)
+    box.pack_start(text_label, True, True, 0)
+    return box, icon_label, text_label
+
+
 def set_label_markup(label, text, font=constants.INTERFACE_FONT, font_size=constants.FONT_SIZE_NORMAL,
                      letter_spacing=constants.LETTER_SPACING_NONE):
     label.set_markup('<span font_desc="{0} {1}" letter_spacing="{2}">{3}</span>'.format(font, font_size,
                                                                                         letter_spacing, text))
-
-
-def format_cell(cell, height=None, padding=None):
-    cell.set_property("cell-background-set", True)
-    cell.set_property("cell-background-gdk", global_gui_config.gtk_colors['INPUT_BACKGROUND'])
-    cell.set_property("background-set", True)
-    cell.set_property("background-gdk", global_gui_config.gtk_colors['INPUT_BACKGROUND'])
-    cell.set_property("foreground-set", True)
-    cell.set_property("foreground-gdk", global_gui_config.gtk_colors['TEXT_DEFAULT'])
-    if height:
-        cell.set_property("height", height)
-    if padding:
-        cell.set_padding(padding, padding)
 
 
 def set_window_size_and_position(window, window_key):
@@ -227,30 +276,15 @@ def set_window_size_and_position(window, window_key):
     window.resize(*size)
     if position:
         position = (max(0, position[0]), max(0, position[1]))
-        screen_width = gtk.gdk.screen_width()
-        screen_height = gtk.gdk.screen_height()
+        screen_width = Gdk.Screen.width()
+        screen_height = Gdk.Screen.height()
         if position[0] < screen_width and position[1] < screen_height:
             window.move(*position)
     else:
-        window.set_position(gtk.WIN_POS_MOUSE)
+        window.set_position(Gtk.WindowPosition.MOUSE)
     if maximized:
         window.maximize()
     window.show()
-
-
-def draw_for_all_gtk_states(object, function_name, color):
-    """
-    Call given draw function for an object with a given color
-    :param object:  the object to call the draw function on
-    :param function_name: the draw function to call
-    :param color: the color to use for drawing
-    :return:
-    """
-    getattr(object, function_name)(gtk.STATE_ACTIVE, color)
-    getattr(object, function_name)(gtk.STATE_INSENSITIVE, color)
-    getattr(object, function_name)(gtk.STATE_NORMAL, color)
-    getattr(object, function_name)(gtk.STATE_PRELIGHT, color)
-    getattr(object, function_name)(gtk.STATE_SELECTED, color)
 
 
 def react_to_event(view, widget, event):
@@ -259,35 +293,35 @@ def react_to_event(view, widget, event):
     The function is intended for callback methods registering to shortcut actions. As several widgets can register to
     the same shortcut, only the one having the focus should react to it.
 
-    :param gtkmvc.View view: The view in which the widget is registered
-    :param gtk.Widget widget: The widget that subscribed to the shortcut action, should be the top widget of the view
+    :param gtkmvc3.View view: The view in which the widget is registered
+    :param Gtk.Widget widget: The widget that subscribed to the shortcut action, should be the top widget of the view
     :param event: The event that caused the callback
     :return: Whether the widget is supposed to react to the event or not
     :rtype: bool
     """
     # See
-    # http://pygtk.org/pygtk2reference/class-gtkwidget.html#method-gtkwidget--is-focus and
-    # http://pygtk.org/pygtk2reference/class-gtkwidget.html#method-gtkwidget--has-focus
+    # http://pyGtk.org/pygtk2reference/class-gtkwidget.html#method-gtkwidget--is-focus and
+    # http://pyGtk.org/pygtk2reference/class-gtkwidget.html#method-gtkwidget--has-focus
     # for detailed information about the difference between is_focus() and has_focus()
     if not view:  # view needs to be initialized
         return False
-    # widget parameter must be set and a gtk.Widget
-    if not isinstance(widget, gtk.Widget):
+    # widget parameter must be set and a Gtk.Widget
+    if not isinstance(widget, Gtk.Widget):
         return False
     # Either the widget itself or one of its children must be the focus widget within their toplevel
-    child_is_focus = False if not isinstance(widget, gtk.Container) else bool(widget.get_focus_child())
+    child_is_focus = False if not isinstance(widget, Gtk.Container) else bool(widget.get_focus_child())
     if not child_is_focus and not widget.is_focus():
         return False
 
     def has_focus(widget):
         """Checks whether `widget` or one of its children ``has_focus()`` is ``True``
 
-        :param gtk.Widget widget: The widget to be checked
+        :param Gtk.Widget widget: The widget to be checked
         :return: If any (child) widget has the global input focus
         """
         if widget.has_focus():
             return True
-        if not isinstance(widget, gtk.Container):
+        if not isinstance(widget, Gtk.Container):
             return False
         return any(has_focus(child) for child in widget.get_children())
     # Either, for any of widget or its children, has_focus must be True, in this case the widget has the global focus.
@@ -295,8 +329,8 @@ def react_to_event(view, widget, event):
         return True
     # Or the callback was not triggered by a shortcut, but e.g. a mouse click or a call from a test.
     # If the callback was triggered by a shortcut action, the event has at least a length of two and the second
-    # element is a gtk.gdk.ModifierType
-    if len(event) < 2 or (len(event) >= 2 and not isinstance(event[1], gtk.gdk.ModifierType)):
+    # element is a Gdk.ModifierType
+    if len(event) < 2 or (len(event) >= 2 and not isinstance(event[1], Gdk.ModifierType)):
         return True
     return False
 
@@ -308,4 +342,13 @@ def is_event_of_key_string(event, key_string):
     :param tuple event: Event tuple generated by the ShortcutManager
     :param str key_string: Key string parsed to a key value and for condition check
     """
-    return len(event) >= 2 and not isinstance(event[1], gtk.gdk.ModifierType) and event[0] == gtk.accelerator_parse(key_string)[0]
+    return len(event) >= 2 and not isinstance(event[1], Gdk.ModifierType) and event[0] == Gtk.accelerator_parse(key_string)[0]
+
+
+def ellipsize_labels_recursively(widget, ellipsize=Pango.EllipsizeMode.END, width_chars=1):
+    if isinstance(widget, Gtk.Label):
+        widget.set_ellipsize(ellipsize)
+        widget.set_width_chars(width_chars)
+    elif isinstance(widget, Gtk.Container):
+        for child_widget in widget.get_children():
+            ellipsize_labels_recursively(child_widget, ellipsize, width_chars)

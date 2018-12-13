@@ -7,10 +7,13 @@
 
 
 """
+from __future__ import print_function
 
+from future import standard_library
+standard_library.install_aliases()
 import os
 import signal
-from Queue import Empty
+from queue import Empty
 import threading
 
 
@@ -19,10 +22,10 @@ def check_for_sm_finished(sm, monitoring_manager=None):
     while sm.root_state.state_execution_status is not StateExecutionStatus.INACTIVE:
         try:
             sm.root_state.concurrency_queue.get(timeout=10.0)
-        except Empty, e:
+        except Empty as e:
             pass
         # no logger output here to make it easier for the parser
-        print "RAFCON live signal"
+        print("RAFCON live signal")
 
     sm.root_state.join()
 
@@ -30,13 +33,6 @@ def check_for_sm_finished(sm, monitoring_manager=None):
     if monitoring_manager:
         from twisted.internet import reactor
         reactor.callFromThread(reactor.stop)
-
-
-def register_signal_handlers(callback):
-    signal.signal(signal.SIGINT, callback)
-    signal.signal(signal.SIGHUP, callback)
-    signal.signal(signal.SIGQUIT, callback)
-    signal.signal(signal.SIGTERM, callback)
 
 
 def start_server(interacting_function, queue_dict):
@@ -56,14 +52,14 @@ def start_server(interacting_function, queue_dict):
     from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
     from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 
+    from rafcon.core.start import signal_handler, register_signal_handlers
+    register_signal_handlers(signal_handler)
+
     logger = log.get_logger("start-no-gui")
     logger.info("initialize RAFCON ... ")
 
     plugins.load_plugins()
     plugins.run_pre_inits()
-
-    from rafcon.core.start import signal_handler
-    register_signal_handlers(signal_handler)
 
     global_config.load(path=os.path.dirname(os.path.abspath(__file__)))
 
@@ -73,7 +69,7 @@ def start_server(interacting_function, queue_dict):
     import testing_utils
     state_machine = global_storage.load_state_machine_from_path(
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "99_bottles_of_beer_monitoring")))
-    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    sm_id = rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
     sm_thread = threading.Thread(target=check_for_sm_finished, args=[state_machine, ])
     sm_thread.start()
@@ -84,14 +80,15 @@ def start_server(interacting_function, queue_dict):
 
     plugins.run_post_inits(setup_config)
 
-    if "twisted" in sys.modules.keys():
+    if "twisted" in sys.modules:
+        print("################# twisted found #######################")
         interacting_thread = threading.Thread(target=interacting_function,
-                                              args=[queue_dict, ])
+                                              args=[queue_dict, sm_id])
         interacting_thread.start()
         from twisted.internet import reactor
         reactor.run()
     else:
-        logger.error("Something went seriously wrong!")
+        logger.error("Server: Twisted is not in sys.modules or twisted is not working! Exiting program ... !")
         import os
         os._exit(0)
 
@@ -102,8 +99,8 @@ def start_server(interacting_function, queue_dict):
 
 
 def print_object(queue_dict):
-    print "dummy prints:"
-    print queue_dict
+    print("dummy prints:")
+    print(queue_dict)
 
 
 if __name__ == '__main__':

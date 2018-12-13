@@ -3,8 +3,8 @@ Tutorials
 
 .. _tutorial_bottles_of_beer:
 
-99 Bottles of Beer. Or: How to create a simple state machine containing a loop
-------------------------------------------------------------------------------
+99 Bottles of Beer - Or: How to create a simple state machine containing a loop
+-------------------------------------------------------------------------------
 
 .. figure:: _static/Tutorial_99_Bottles_of_Beer.png
    :alt: Screenshot of the finished tutorial
@@ -27,17 +27,17 @@ of achieving things in RAFCON.
    and clicking on the state here.
 #. Now we change the name of the root state to "99 Bottles of Beer" by
    entering that text in the input field next to "State Name" in the
-   State Editor on the center site. Here you can also see all other
+   State Editor on the right bar. Here you can also see all other
    properties of our container state.
 #. Now we are going to create three execution states named "Sing",
    "Decimate bottles" and "Count bottles". Do so by selecting the
-   container state first and then either use +A or Edit > Add state in
+   container state first and then either use Alt+E or Edit > Add state in
    the menu bar. Rename each new state as described in the previous
    step.
 #. You can use drag and drop for the three child states to place them
    next to each other. Using the lower center corner of all states, you
-   can resize them. When holding during the resize, the state keeps its
-   width to height ratio. When holding during the resize (of container
+   can resize them. When holding Ctrl during the resize, the state keeps its
+   width to height ratio. When holding Ctrl during the resize (of container
    states), all content is resized with the state.
 #. Next, we are going to add the logical flow, that is the outcomes and
    transitions. "Sing" and "Decimate bottles" each need one outcome,
@@ -46,7 +46,7 @@ of achieving things in RAFCON.
    ">0". Click on the state to open it in the State Editor and open the
    "Logical Linkage" widget on the bottom. In the upper half of this
    widget, you can edit the state's outcomes. Create an additional
-   outcome by clicking on "Add" or using +A if the outcomes list has the
+   outcome by clicking on "Add" or using Ctrl+A if the outcomes list has the
    focus. Then name the new outcomes (by clicking on the name in the
    name column). Also the container state needs an outcome, name it "the
    end".
@@ -55,19 +55,23 @@ of achieving things in RAFCON.
    Thus click on it and check "is start state" in the top of the State
    Editor. This creates a transition from the entry point of the root to
    the entry point of "Sing". The easiest way to create the remaining
-   transitions is to first click on an outcome and then click on the
-   target state. This creates a transition starting from the outcome and
+   transitions is to first left click on an outcome and, while holding the left mouse pressed,
+   dragging the mouse over the income of the target state and release the mouse button there.
+   This creates a transition starting from the outcome and
    going to the entry point of the state. The starting transition can be
-   created in the same manner. You can set transition waypoints in
-   between by clicking on the desired position within the container
-   while creating the transition. Later, you can add/remove waypoints by
+   created in the same manner. Also waypoints for transitions can be created.
+   In the default GUI (gaphas) waypoints can only be created after the transition has been created.
+   Select any transition then click on the grey square and move it. Two new square emerge that can be modified
+   accordingly.
+   In the OpenGL GUI, you can set transition waypoints by clicking on the desired position
+   within the container state while creating the transition. Later, you can add/remove waypoints by
    clicking on the desired position of the transition. By this, you can
-   e. g. draw transitions around other states. Another possibility to
-   create transitions is the State Editor again. In the lower half of
+   e. g. draw transitions around other states.
+   Another possibility to create transitions is the State Editor again. In the lower half of
    the Logical Linkage widget, new transitions can be created by a click
-   on "Add" (or using +A if the focus is on the transition list). The
+   on "Add" (or using Ctrl+A if the focus is on the transition list). The
    widget tries to guess on which transition to create, but you can edit
-   the origin and target by clicking on the field in the appropriate
+   the origin and target with the dropdown list in the appropriate
    column. We need four transitions. One from "Sing" to "Decimate
    bottles", then one from "Decimate bottles" to "Count bottles", one
    from "Count bottles" outcome ">0" back to "Sing" and finally one from
@@ -92,7 +96,7 @@ of achieving things in RAFCON.
    Variables" tab. Name and type are again "bottles" and "int". Here we
    set the default value, which is also the initial value, to 99. Scoped
    variables can be moved in the graphical editor just like states with
-   drag and drop.
+   drag and drop. To move the scoped variable the corresponding state has to be selected and Ctrl pressed.
 #. The data flows are now created similar to the transitions. Either in
    the graphical editor by clicking on the origin port (from where to
    read) and then clicking on the target port (to where to write) or,
@@ -108,10 +112,6 @@ of achieving things in RAFCON.
    #. From the output of "Decimate bottles" to the input of "Count
       bottles": Here we directly pass the decimated number to "Count
       bottles". This could also have the scoped variable as origin.
-   #. Instead of reading the second data flow, one could also add an
-      output to "Sing", and write the read value from the input of
-      "Sing". This output could then be used as origin for the second
-      data flow.
 
 #. Finally, we have to add some source code to the three child states.
    The code executed for each state is shown in the source code widget
@@ -127,8 +127,9 @@ of achieving things in RAFCON.
    You can also rename these dictionaries if you prefer a different
    (shorter) name: ``def execute(self, in, out, gvm):``. The logger is a
    member of each state and can be used to write to the logger window.
-   You can use different logger levels (debug, info, warn, error).
-#. You can now test the state-machine. Click on Execution > Start and
+   You can use different logger levels (debug, info, warn, error, verbose).
+   Moreover, custom logger levels can be created in the logger config file (logging.conf in source/rafcon).
+#. You can now test the state machine. Click on Execution > Start and
    see what happens. The current state should be highlighted and the
    verses printed in the logger widget. You can stop the execution with
    Execution > Stop. Alternatively, use the buttons shown in the menu of
@@ -176,13 +177,15 @@ of achieving things in RAFCON.
 
 .. _tutorial_ros_turtle:
 
-Starting the basic turtle demo statemachine using ROS
------------------------------------------------------
+Starting the basic turtle demo state machine using ROS
+------------------------------------------------------
 
 The basic turtle demo is a demo to demonstrate the use of libraries and
 to show the easy integration of `ROS <ROS>`__ into the RAFCON. To start
-the turtle demo just change into the RAFCON directory and open the
-basic\_turtle\_state\_machine:
+the turtle demo just open the basic\_turtle\_state\_machine in the tutorials library folder and click on start.
+The following code blocks include code lines to generate the correct environment for our institute PCs;
+in an e.g. Ubuntu setup, where the environment is statically specified
+in the ~/.bashrc these environment generating commands can be omitted:
 
 .. code:: python
 
@@ -193,7 +196,7 @@ basic\_turtle\_state\_machine:
     cd $RAFCON_GIT_HUB_REPO_OR_RMPM_PATH/share/examples/api/generate_state_machine
     python basic_turtle_state_machine.py
 
-A screenshot of how the state machine how it looks like is shown here.
+A screenshot of how the state machine looks like is shown here.
 
 .. figure:: _static/BasicTurtleDemoScreenshot.png
    :alt: Screenshot of RAFCON with an example state machine
@@ -217,8 +220,7 @@ And the turtlesim node in yet another console:
     rosrun turtlesim turtlesim_node
 
 After that start the state machine. The state machine will then start
-some basic services of the turtlesim in a sequence. As this sequence
-will change in the future they are not listed yet.
+some basic services of the turtlesim in a sequence.
 
 .. _tutorial_libraries:
 
@@ -235,7 +237,7 @@ Option 1
 This can be done in the `configuration of the
 core <https://rmintra01.robotic.dlr.de/wiki/RAFCON/Configuration#Core_configuration>`__.
 
-.. figure:: _static/EmptyLibraryPath_and_NewLibrary.jpg
+.. figure:: _static/WaitLibrary.png
    :alt: Screenshot of a empty library path and created 'Wait' state machine.
    :width: 90 %
    :align: center
@@ -262,16 +264,16 @@ We edit the ``LIBRARY_PATH`` to take into account the library with name
     USE_JSON: true
 
 RAFCON assumes the path to be existing, so make sure it is.
+Otherwise RAFCON will print a warning message.
 
-Now, we can :ref:`Getting started`. On the left side
-in the Library Tree, you can now see the new entry ``lib_tutorial``,
-which is currently empty (see Figure above).
+On the left side in the Library Tree, you can now see the new entry ``lib_tutorial``,
+which is currently empty.
 
 Next, we generate two state machines, one is waiting and another is
 printing a message to the logger console (info level). Generate two
-state machines by clicking the button "New Statemachine" and turn the
+state machines by clicking the button "New state machine" and turn the
 root\_state to a ExecutionState (by using StateEditorWidget on the center
-site) and insert the following scripts.
+site and select "Execution" as type instead of "Hierarchy") and insert the following scripts.
 
 First:
 
@@ -280,8 +282,8 @@ First:
     import time
 
     def execute(self, inputs, outputs, gvm):
-        duration = inputs['duration']
-        if self.preemptive_wait(duration):
+        time = inputs['time']
+        if self.preemptive_wait(time):
             return 'preempted'
         return 0  # same as return "success"
 
@@ -296,7 +298,7 @@ Second:
         return 0
 
 Don't forget to create the input data ports used in the scripts
-('info\_message' as string and 'duration' as float) and run them finally
+('time' as float and 'info\_message' as string) and run them finally
 to test there functionality.
 
 .. figure:: _static/ReCombinedLibraries.jpg
@@ -304,29 +306,31 @@ to test there functionality.
    :width: 90 %
    :align: center
 
-   Screenshot of the finished tutorial
+   Screenshot of the finished library tutorial
 
 Give the state machines useful names like "Wait" for the first and
 "Print Info" for the second state machine.
 
-Store both state machines (by pressing button "Save Statemachine" or
+Store both state machines (by pressing button "Save state machine" or
 Ctrl+s) to sub-folders of ``~/Desktop/rafcon_tutorial_library`` by
 entering a the library folder and assigning a name in the dialog window.
-The name is used to generate a the new library state machine path.
+The name is used to generate the new library state machine path.
 
 Now press the button "Refresh Libraries". The new libraries will be now
 available in the library tree. They can be used to create more complex
 state machines.
 
 Using Drag&Drop, the created library state machines can be re-combined
-as in the "Screenshot of the finished tutorial" and the input port
-values can be modified to generate the same console info prints while a
-run of the state machine.
+as in the "Screenshot of the finished library tutorial" and the input port
+values can be modified to generate similar console info prints while
+running the state machine.
+
+.. _tutorial_rafcon_library_path:
 
 Option 2
 """"""""
 
-Instead of specifying the path of the library in he config file, there
+Instead of specifying the path of the library in the config file, there
 is an alternative solution. You can also set an environmental variable
 with name :envvar:`RAFCON_LIBRARY_PATH` and colon-separated paths to state
 machines, e. g. ``~/Desktop/rafcon_tutorial_library``. These libraries
@@ -355,8 +359,8 @@ image. The State called "Barrier Concurrency" is a barrier concurrency
 state. The state called decider is the state that is automatically
 created when a new barrier concurrency state is added. The decider state
 gets the information of all concurrent child states about the chosen
-outcome and eventually occurred errors. Of course data flows can also
-arbitrarily connected to the decider state from each concurrent child
+outcome, the output data and even every eventually occurred error. Of course data flows can also
+arbitrarily be connected to the decider state from each concurrent child
 state. With this information it can decide via which outcome the barrier
 concurrency state is left.
 
@@ -412,8 +416,10 @@ Decider:
 Using the monitoring plugin
 ---------------------------
 
-This tutorial will show us how to use the monitoring plugin, to connect
-and monitor two systems running RAFCON. First, we need to setup our
+The tutorial is only for internal use inside the institute.
+
+This tutorial will show how to use the monitoring plugin i.e. how to monitor one system from another one if both
+are using RAFCON as their flow control solution. First, we need to setup our
 environment:
 
 .. code:: python
@@ -427,8 +433,8 @@ By running RAFCON after sourcing the environment, the
 all settings for the communication. More details can be found at the
 :ref:`Configuration`. The path of the
 ``network_config.yaml`` can be changed by running the ``start.py``
-script with argument "-nc", which will be neccessary when we want to
-connect server and client running on a single system as like in this
+script with argument "-nc", which will be necessary when we want to
+connect server and client running on a single system like in this
 tutorial. Therefore we create the subdirectories ``/client`` and
 ``/server`` within the ``~.config/rafcon/`` path and copy/paste the
 ``network_config.yaml`` into both. Since the file is created for servers
@@ -447,7 +453,7 @@ and the client:
 
     /volume/software/common/packages/rafcon/latest/lib/python2.7/rafcon/mvc/start.py -nc ~/.config/rafcon/client
 
-If everything went fine, we sould see below output in the debug console
+If everything went fine, we should see below output in the debug console
 of the client:
 
 .. code:: python
@@ -457,9 +463,9 @@ of the client:
     11:23:40 INFO - monitoring.client: sending protocol 34ce956f:72f0dc:2:4:Registering
     11:23:40 INFO - monitoring.client: Connected to server!
 
-After the connection we open the same statemachine on server and client.
-Now we are able to remote control the server by the client as like
-reverse. To connect two seperated systems, the ``<SERVER_IP:>`` has to
+After the connection was established, we open the same state machine on server and client.
+Now we are able to remote control the server by the client.
+To connect two systems distributed across a network, the ``<SERVER_IP:>`` has to
 be adjusted within the ``network_config.yaml`` files.
 
 .. _tutorial_dialogs:
@@ -468,44 +474,45 @@ How to use dialog states from the generic library
 -------------------------------------------------
 
 Sometimes it can be useful to await user confirmation before jumping into a state or
-request a textinput from the user. That is why RAFCON contains serveral dialog states 
-in its 'generic' library. This tutorial goes through serval of them and explains their
+request a text input from the user. That is why RAFCON contains several dialog states
+in its 'generic' library. This tutorial goes through several of them and explains their
 characteristics.
 
 MessageDialog
 """""""""""""
 
 This dialog prompts the user with a text which is defined by the string type input dataport 'message\_text'.
-The boolean type input dataport 'abort\_on\_quit' defines the states behaviour on force closing the dialog.
-If True, the state and if not defines otherwise the state machine execution will abort.
+The boolean type input dataport 'abort\_on\_quit' defines the states behaviour on canceling the dialog.
+If True, the state will return with the 'abortion' outcome, otherwise it just will return with 'success'.
 
 2ButtonDialog
 """""""""""""
 
-This dialog is features the same text option as the above one, but lets you define two buttons as a string list
-through its 'buttons' input dataport. Clicking the first button results in exiting with outcome 'button\_1', hitting
-the second with 'button\_1'.
+This dialog features the same text option as the one above, but lets you define two buttons via the input ports
+'option 1' and 'option 2'. Clicking the first button results in exiting with outcome 'option\_1', hitting
+the second one returns the outcome 'option\_2'.
 
 GenericButtonDialog
 """""""""""""""""""
 
-This dialog equals the 2ButtonDialog in any way, except that it lets you define more than two buttons. On clicking a button,
-the dialog will always exit with outcome 'reponded' but puts the index of the clicked button in the output dataport 'response\_id'
+This dialog equals the 2ButtonDialog state, except that it lets you define more than two buttons. On clicking a button,
+the dialog will always exit with outcome 'responded' but puts the index of the clicked button in the output dataport
+'response\_id'.
 
 InputDialog
 """""""""""
 
-This dialog contains buttons like the 2ButtonDialog but also features a text entry field and an optional checkbox 
-which could be used for a 'remember' option or something similar. The checkbox is only placed if a string is present
-at the 'checkbox\_text' input dataport. 
+This dialog contains two buttons like the 2ButtonDialog but also features a 'message\_text' entry field and an optional
+'checkbox\_text' entry field, which could be used for a 'remember' option or something similar. The checkbox is only
+placed if a string is present for the 'checkbox\_text' input dataport.
 The checkbox state is written to the boolean output dataport 'checkbox\_state', the entered text to 'entered\_text'.
 
 ColumnCheckboxDialog
 """"""""""""""""""""
 
-This dialog contains buttons like the 2ButtonDialog but also features a single columns of checkboxes 
-with labels attached to them. These labels are defined via the 'checkbox\_texts' input dataport as a list 
-of strings. The states of those checkboxes are emmitted as a bool list via the 'checkbox\_states' output
-data port. A checked chechbox returns 'True'
+This dialog contains buttons like the 2ButtonDialog but also features a single column of checkboxes
+with labels attached to them. These labels are defined via the 'checkbox\_texts' input dataport as a list
+of strings. The states of those checkboxes are emitted as a bool list via the 'checkbox\_states' output
+data port. A checked checkbox returns 'True'.
 
 

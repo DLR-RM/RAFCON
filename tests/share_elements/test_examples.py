@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 from os.path import join
 import sys
@@ -6,11 +7,6 @@ import threading
 import subprocess
 import select
 
-# core elements
-import rafcon.core.singleton
-from rafcon.core.storage import storage
-
-# gui elements
 import rafcon
 
 # general tool elements
@@ -59,7 +55,7 @@ def test_api_example(caplog):
         timed_thread.join()
     finally:
         sys.path.remove(path_of_api_examples)
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 def test_ros_library_examples(caplog):
@@ -78,6 +74,8 @@ def test_functionality_example(caplog):
     - if test can be run and stopped
     - and everything can be closed again
     """
+    import rafcon.core.singleton
+    from rafcon.core.storage import storage
 
     # The test maybe should also test if functionality are correct depicted.
     # TODO check if this is done in the common tests already
@@ -85,31 +83,33 @@ def test_functionality_example(caplog):
     for name in ['backward_step_barrier', 'backward_step_hierarchy', 'backward_step_preemption', 'decider_statemachine',
                  'hierarchy_abortion_handling']:
         sm_path = join(testing_utils.EXAMPLES_PATH, 'functionality_examples', name)
-        print sm_path
+        print(sm_path)
         state_machine = storage.load_state_machine_from_path(sm_path)
         rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
     testing_utils.test_multithreading_lock.acquire()
     try:
         # main_window_controller = rafcon.gui.singleton.main_window_controller
-        for state_machine_id in rafcon.core.singleton.state_machine_manager.state_machines.keys():
-            rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine_id
-            rafcon.core.singleton.state_machine_execution_engine.start()
+        for state_machine_id in list(rafcon.core.singleton.state_machine_manager.state_machines.keys()):
+            rafcon.core.singleton.state_machine_execution_engine.start(state_machine_id)
             time.sleep(3)
             rafcon.core.singleton.state_machine_execution_engine.stop()
             rafcon.core.singleton.state_machine_execution_engine.join()
     finally:
-        testing_utils.shutdown_environment(gui_config=False, caplog=caplog, expected_warnings=2, expected_errors=3)
+        testing_utils.wait_for_gui()  # to avoid execution and model notification clinches
+        testing_utils.shutdown_environment(gui_config=False, caplog=caplog, expected_warnings=2, expected_errors=4,
+                                           unpatch_threading=False)
 
 
 def test_plugins_example(caplog):
 
     os.environ['RAFCON_PLUGIN_PATH'] = os.path.join(testing_utils.EXAMPLES_PATH, 'plugins', 'templates')
-    print os.environ.get('RAFCON_PLUGIN_PATH')
+    print(os.environ.get('RAFCON_PLUGIN_PATH'))
+    path_of_sm_to_run = testing_utils.get_test_sm_path(join("unit_test_state_machines", "99_bottles_of_beer_monitoring"))
     # testing_utils.initialize_environment()
     testing_utils.test_multithreading_lock.acquire()
     try:
-        cmd = join(testing_utils.RAFCON_PATH, 'gui', 'start.py')
+        cmd = join(testing_utils.RAFCON_PATH, 'gui', 'start.py') + ' -o ' + path_of_sm_to_run + " -ss"
         start_time = time.time()
         rafcon_gui_process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # See https://stackoverflow.com/a/36477512 for details
@@ -121,19 +121,23 @@ def test_plugins_example(caplog):
         while True:
             if poller.poll(0.1):
                 line = rafcon_gui_process.stdout.readline().rstrip()
-                print "process:", line
+                print("process:", line)
                 if "Successfully loaded plugin 'templates'" in line:
-                    print "=> plugin loaded"
+                    print("=> plugin loaded")
                     plugin_loaded = True
                 if "rafcon.gui.controllers.main_window" in line and "Ready" in line:
-                    print "=> ready"
+                    print("=> ready")
                     assert plugin_loaded
-                    time.sleep(0.2)  # safety margin...
-                    print "=> RAFCON is now terminated"
+                    time.sleep(0.5)  # safety margin...
+                    print("=> RAFCON is now terminated")
                     rafcon_gui_process.terminate()
                     stdout, _ = rafcon_gui_process.communicate()
+                    exception_count = 0
                     for line in stdout.rstrip().split("\n"):
-                        print "process:", line
+                        print("process:", line)
+                        if "Exception" in line:
+                            exception_count += 1
+                    assert exception_count == 0
                     assert rafcon_gui_process.returncode == 0
                     break
             else:
@@ -143,7 +147,8 @@ def test_plugins_example(caplog):
                     rafcon_gui_process.communicate()
                     assert False, "RAFCON did not start in time"
     finally:
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0,
+                                           unpatch_threading=False)
 
 
 def test_tutorial_state_machine_examples(caplog):
@@ -152,4 +157,10 @@ def test_tutorial_state_machine_examples(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    # test_api_example(None)
+    # test_ros_library_examples(None)
+    # test_turtle_library_examples(None)
+    # test_functionality_example(None)
+    # test_plugins_example(None)
+    # test_tutorial_state_machine_examples(None)
+    pytest.main(['-s', __file__])

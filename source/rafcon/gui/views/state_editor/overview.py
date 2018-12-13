@@ -11,7 +11,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import View
+from gtkmvc3.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.utils import constants
@@ -24,5 +24,4 @@ class StateOverviewView(View):
     def __init__(self):
         View.__init__(self)
 
-        self['properties_widget'].set_border_width(constants.GRID_SIZE * 2)
-        # self['is_start_state_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+        self['properties_widget'].set_border_width(constants.PADDING_LEFT)

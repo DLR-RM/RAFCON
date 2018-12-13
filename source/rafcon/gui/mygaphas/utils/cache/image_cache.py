@@ -9,8 +9,13 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from cairo import ImageSurface, FORMAT_ARGB32, Context
-from gtk.gdk import CairoContext
+from builtins import object
+from cairo import ImageSurface, FORMAT_ARGB32, Context, Error
+from gi.repository import Gtk
+from gi.repository import Gdk
+# Gtk TODO
+# from Gtk.gdk import CairoContext
+
 
 from math import ceil, sqrt
 
@@ -18,6 +23,7 @@ from rafcon.gui.config import global_gui_config
 
 
 MAX_ALLOWED_AREA = 5000. * 5000.
+
 
 class ImageCache(object):
     def __init__(self, multiplicator=2):
@@ -54,6 +60,7 @@ class ImageCache(object):
           surface or a blank one with the desired size; The zoom parameter when the image was stored
         :rtype: bool, ImageSurface, float
         """
+        global MAX_ALLOWED_AREA
         if not parameters:
             parameters = {}
 
@@ -61,13 +68,18 @@ class ImageCache(object):
             return True, self.__image, self.__zoom
 
         # Restrict image surface size to prevent excessive use of memory
-        self.__limiting_multiplicator = 1
-        area = width * zoom * self.__zoom_multiplicator * height * zoom * self.__zoom_multiplicator
-        if area > MAX_ALLOWED_AREA:
-            self.__limiting_multiplicator = sqrt(MAX_ALLOWED_AREA / area)
+        while True:
+            try:
+                self.__limiting_multiplicator = 1
+                area = width * zoom * self.__zoom_multiplicator * height * zoom * self.__zoom_multiplicator
+                if area > MAX_ALLOWED_AREA:
+                    self.__limiting_multiplicator = sqrt(MAX_ALLOWED_AREA / area)
 
-        image = ImageSurface(self.__format, int(ceil(width * zoom * self.multiplicator)),
-                             int(ceil(height * zoom * self.multiplicator)))
+                image = ImageSurface(self.__format, int(ceil(width * zoom * self.multiplicator)),
+                                     int(ceil(height * zoom * self.multiplicator)))
+                break  # If we reach this point, the area was successfully allocated and we can break the loop
+            except Error:
+                MAX_ALLOWED_AREA *= 0.8
 
         self.__set_cached_image(image, width, height, zoom, parameters)
         return False, self.__image, zoom
@@ -103,9 +115,8 @@ class ImageCache(object):
         :return: Cairo context to draw on
         """
         cairo_context = Context(self.__image)
-        c = CairoContext(cairo_context)
-        c.scale(zoom * self.multiplicator, zoom * self.multiplicator)
-        return c
+        cairo_context.scale(zoom * self.multiplicator, zoom * self.multiplicator)
+        return cairo_context
 
     def __set_cached_image(self, image, width, height, zoom, parameters):
         self.__image = image
@@ -148,7 +159,19 @@ class ImageCache(object):
 
         # Changed drawing parameter
         for key in parameters:
-            if key not in self.__last_parameters or self.__last_parameters[key] != parameters[key]:
+            try:
+                if key not in self.__last_parameters or self.__last_parameters[key] != parameters[key]:
+                    return False
+            except (AttributeError, ValueError):
+                # Some values cannot be compared and raise an exception on comparison (e.g. numpy.ndarray). In this
+                # case, just return False and do not cache.
+                try:
+                    # Catch at least the ndarray-case, as this could occure relatively often
+                    import numpy
+                    if isinstance(self.__last_parameters[key], numpy.ndarray):
+                        return numpy.array_equal(self.__last_parameters[key], parameters[key])
+                except ImportError:
+                    return False
                 return False
 
         return True

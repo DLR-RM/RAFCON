@@ -1,6 +1,3 @@
-# state machine elements
-from docutils.statemachine import StateMachine
-from rafcon.core.singleton import state_machine_manager
 
 # test environment elements
 import testing_utils
@@ -22,26 +19,23 @@ def initialize_data(state):
 
 
 def change_semantic_data_values():
+    # core elements
+    from rafcon.core.singleton import state_machine_manager
     # gui elements
     import rafcon.gui.singleton as gui_singleton
     from rafcon.gui.controllers.state_editor.semantic_data_editor import SemanticDataEditorController
-    import threading
-    # print "WT: ", threading.currentThread()
+
     menu_bar_controller = gui_singleton.main_window_controller.get_controller("menu_bar_controller")
     # All executions from a thread which is not the gtk main thread must be called via "idle_add" or call_gui_callback
     # see https://developer.gnome.org/gdk3/stable/gdk3-Threads.html#gdk-threads-add-idle-full
     # and https://stackoverflow.com/questions/35700140/pygtk-run-gtk-main-loop-in-a-seperate-thread
-    call_gui_callback(menu_bar_controller.on_new_activate)
+    state_machine = call_gui_callback(menu_bar_controller.on_new_activate)
 
-    state_machine = state_machine_manager.state_machines[state_machine_manager.active_state_machine_id]
     root_state = state_machine.root_state
-    initialize_data(root_state)
+    call_gui_callback(initialize_data, root_state)
 
     state_machine_model = gui_singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
     states_editor_controller = gui_singleton.main_window_controller.get_controller("states_editor_ctrl")
-    # print states_editor_controller
-    # print state_machine_model.root_state
-    # print states_editor_controller.tabs
 
     page_info, state_identifier = states_editor_controller.find_page_of_state_m(state_machine_model.root_state)
     # print page_info, state_identifier
@@ -50,7 +44,8 @@ def change_semantic_data_values():
     semantic_data_controller = state_editor_controller.get_controller("semantic_data_ctrl")
 
     assert isinstance(semantic_data_controller, SemanticDataEditorController)
-    # semantic_data_controller.select_entry(['key 2'], by_cursor=False)
+    # TODO: why is this reload necessary?
+    call_gui_callback(semantic_data_controller.reload_tree_store_data)
     call_gui_callback(semantic_data_controller.select_entry, ['key 2'])
     tree_test_path = (1, )
     # semantic_data_controller.tree_view.get_selection().select_path(tree_test_path)
@@ -71,30 +66,30 @@ def change_semantic_data_values():
     # print root_state.semantic_data
 
     # test delete
-    assert len(root_state.semantic_data.keys()) == 5
+    assert len(list(root_state.semantic_data.keys())) == 5
     call_gui_callback(semantic_data_controller.select_entry, ['dict 2'])
     # semantic_data_controller.select_entry(['dict 2'])
     call_gui_callback(semantic_data_controller.on_remove, None)
-    assert len(root_state.semantic_data.keys()) == 4 and 'dict 2' not in root_state.semantic_data.keys()
+    assert len(list(root_state.semantic_data.keys())) == 4 and 'dict 2' not in list(root_state.semantic_data.keys())
 
     # test add normal entry into first hierarchy
     call_gui_callback(semantic_data_controller.tree_view.get_selection().select_path, tree_test_path)
     call_gui_callback(semantic_data_controller.on_add, None, False)
-    assert len(root_state.semantic_data.keys()) == 5
+    assert len(list(root_state.semantic_data.keys())) == 5
 
     # test add dictionary entry in second hierarchy
     # tree_test_path = semantic_data_controller.get_path_for_core_element(["dict 1"])
     # print "second hierarchy: ", tree_test_path
-    assert len(root_state.semantic_data["dict 1"].keys()) == 2
+    assert len(list(root_state.semantic_data["dict 1"].keys())) == 2
     # call_gui_callback(semantic_data_controller.tree_view.get_selection().select_path, tree_test_path)
     call_gui_callback(semantic_data_controller.select_entry, ['dict 1'])
     call_gui_callback(semantic_data_controller.on_add, None, False)
-    assert len(root_state.semantic_data.keys()) == 5
-    assert len(root_state.semantic_data["dict 1"].keys()) == 3
+    assert len(list(root_state.semantic_data.keys())) == 5
+    assert len(list(root_state.semantic_data["dict 1"].keys())) == 3
 
 
 def test_semantic_data(caplog):
-    testing_utils.run_gui()
+    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
     try:
         change_semantic_data_values()
     finally:

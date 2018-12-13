@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.20.0 -->
+<interface>
+  <requires lib="gtk+" version="3.20"/>
+  <object class="GtkWindow" id="preferences_window">
+    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">Preferences</property>
+    <property name="default_width">1000</property>
+    <property name="default_height">600</property>
+    <child>
+      <object class="GtkBox" id="vbox1">
+        <property name="orientation">vertical</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkNotebook" id="notebook1">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="tab_pos">left</property>
+            <child>
+              <object class="GtkScrolledWindow" id="scrolledwindow1">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <child>
+                  <object class="GtkViewport" id="viewport1">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="resize_mode">queue</property>
+                    <child>
+                      <object class="GtkAlignment" id="alignment1">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkTreeView" id="config_tree_view">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="enable_grid_lines">vertical</property>
+                            <child internal-child="selection">
+                              <object class="GtkTreeSelection"/>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="config_col">
+                                <property name="spacing">1</property>
+                                <property name="sizing">autosize</property>
+                                <property name="title">Configuration</property>
+                                <property name="expand">True</property>
+                                <child>
+                                  <object class="GtkCellRendererText" id="core_config_key_renderer"/>
+                                  <attributes>
+                                    <attribute name="text">0</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="value_col">
+                                <property name="sizing">autosize</property>
+                                <property name="title">Value</property>
+                                <property name="expand">True</property>
+                                <child>
+                                  <object class="GtkCellRendererToggle" id="core_config_toggle_renderer"/>
+                                  <attributes>
+                                    <attribute name="visible">4</attribute>
+                                    <attribute name="activatable">3</attribute>
+                                    <attribute name="active">6</attribute>
+                                  </attributes>
+                                </child>
+                                <child>
+                                  <object class="GtkCellRendererText" id="core_config_value_renderer"/>
+                                  <attributes>
+                                    <attribute name="visible">2</attribute>
+                                    <attribute name="editable">5</attribute>
+                                    <attribute name="text">1</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel" id="general_config">
+                <property name="width_request">0</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Core Config</property>
+              </object>
+              <packing>
+                <property name="tab_fill">False</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkViewport" id="viewport4">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="resize_mode">queue</property>
+                <child>
+                  <object class="GtkAlignment" id="alignment4">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkBox" id="hbox2">
+                        <property name="orientation">vertical</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkScrolledWindow" id="scrolledwindow4">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <child>
+                              <object class="GtkTreeView" id="library_tree_view">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="headers_clickable">False</property>
+                                <property name="enable_grid_lines">vertical</property>
+                                <child internal-child="selection">
+                                  <object class="GtkTreeSelection"/>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn" id="lib_col">
+                                    <property name="spacing">1</property>
+                                    <property name="sizing">autosize</property>
+                                    <property name="title">Library</property>
+                                    <property name="expand">True</property>
+                                    <child>
+                                      <object class="GtkCellRendererText" id="library_config_key_renderer"/>
+                                      <attributes>
+                                        <attribute name="text">0</attribute>
+                                      </attributes>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkTreeViewColumn" id="lib_path_col">
+                                    <property name="sizing">autosize</property>
+                                    <property name="title">Path</property>
+                                    <property name="expand">True</property>
+                                    <child>
+                                      <object class="GtkCellRendererText" id="library_config_value_renderer"/>
+                                      <attributes>
+                                        <attribute name="text">1</attribute>
+                                      </attributes>
+                                    </child>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox" id="hbox3">
+                            <property name="width_request">0</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <child>
+                              <object class="GtkButton" id="remove_library_button">
+                                <property name="label">gtk-remove</property>
+                                <property name="width_request">90</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="use_stock">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="padding">5</property>
+                                <property name="pack_type">end</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="add_library_button">
+                                <property name="label">gtk-add</property>
+                                <property name="width_request">90</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">True</property>
+                                <property name="use_stock">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="padding">5</property>
+                                <property name="pack_type">end</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="padding">5</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel" id="libraries">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Libraries</property>
+              </object>
+              <packing>
+                <property name="position">3</property>
+                <property name="tab_fill">False</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScrolledWindow" id="scrolledwindow2">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <child>
+                  <object class="GtkViewport" id="viewport2">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="resize_mode">queue</property>
+                    <child>
+                      <object class="GtkAlignment" id="alignment2">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkTreeView" id="gui_tree_view">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="headers_clickable">False</property>
+                            <child internal-child="selection">
+                              <object class="GtkTreeSelection"/>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="config_col1">
+                                <property name="spacing">1</property>
+                                <property name="sizing">autosize</property>
+                                <property name="title">Configuration</property>
+                                <property name="expand">True</property>
+                                <child>
+                                  <object class="GtkCellRendererText" id="gui_config_key_renderer"/>
+                                  <attributes>
+                                    <attribute name="text">0</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="value_col1">
+                                <property name="sizing">autosize</property>
+                                <property name="title">Value</property>
+                                <property name="expand">True</property>
+                                <child>
+                                  <object class="GtkCellRendererToggle" id="gui_config_toggle_renderer"/>
+                                  <attributes>
+                                    <attribute name="visible">4</attribute>
+                                    <attribute name="activatable">3</attribute>
+                                    <attribute name="active">6</attribute>
+                                  </attributes>
+                                </child>
+                                <child>
+                                  <object class="GtkCellRendererText" id="gui_config_value_renderer"/>
+                                  <attributes>
+                                    <attribute name="visible">2</attribute>
+                                    <attribute name="editable">5</attribute>
+                                    <attribute name="text">1</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel" id="gui_config">
+                <property name="width_request">180</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">GUI Config</property>
+              </object>
+              <packing>
+                <property name="position">2</property>
+                <property name="tab_fill">False</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScrolledWindow" id="scrolledwindow3">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <child>
+                  <object class="GtkViewport" id="viewport3">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="resize_mode">queue</property>
+                    <child>
+                      <object class="GtkAlignment" id="alignment3">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkTreeView" id="shortcut_tree_view">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="headers_clickable">False</property>
+                            <property name="enable_grid_lines">vertical</property>
+                            <child internal-child="selection">
+                              <object class="GtkTreeSelection"/>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="action_col">
+                                <property name="spacing">1</property>
+                                <property name="sizing">autosize</property>
+                                <property name="title">Action</property>
+                                <property name="expand">True</property>
+                                <child>
+                                  <object class="GtkCellRendererText" id="shortcut_config_key_renderer"/>
+                                  <attributes>
+                                    <attribute name="text">0</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="shortcut">
+                                <property name="sizing">autosize</property>
+                                <property name="title">Shortcut</property>
+                                <property name="expand">True</property>
+                                <child>
+                                  <object class="GtkCellRendererText" id="shortcut_config_value_renderer"/>
+                                  <attributes>
+                                    <attribute name="text">1</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="position">3</property>
+              </packing>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel" id="shortcuts">
+                <property name="width_request">180</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Shortcuts</property>
+              </object>
+              <packing>
+                <property name="position">3</property>
+                <property name="tab_fill">False</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="hbox1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="border_width">4</property>
+            <child>
+              <object class="GtkButton" id="cancel_button">
+                <property name="label" translatable="yes">Cancel</property>
+                <property name="width_request">90</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">5</property>
+                <property name="pack_type">end</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="apply_button">
+                <property name="label" translatable="yes">Apply</property>
+                <property name="width_request">90</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">5</property>
+                <property name="pack_type">end</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="export_button">
+                <property name="label" translatable="yes">Export</property>
+                <property name="width_request">90</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="ok_button">
+                <property name="label" translatable="yes">Ok</property>
+                <property name="width_request">90</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">5</property>
+                <property name="pack_type">end</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="import_button">
+                <property name="label" translatable="yes">Import</property>
+                <property name="width_request">90</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">7</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="vbox2">
+            <property name="orientation">vertical</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkLabel" id="core_label">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="xpad">10</property>
+                <property name="ypad">3</property>
+                <property name="label" translatable="yes">Core Config Path: </property>
+                <property name="halign">start</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="gui_label">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="xpad">10</property>
+                <property name="ypad">3</property>
+                <property name="label" translatable="yes">GUI Config Path: </property>
+                <property name="single_line_mode">True</property>
+                <property name="halign">start</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

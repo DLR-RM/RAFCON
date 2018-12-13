@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -21,12 +21,14 @@
 
 """
 
+from future import standard_library
+standard_library.install_aliases()
 import os
 import argparse
 from os.path import realpath, dirname, join, exists
 import signal
 import time
-from Queue import Empty
+from queue import Empty
 import threading
 import sys
 
@@ -39,7 +41,6 @@ import rafcon.core.singleton as core_singletons
 from rafcon.core.storage import storage
 from rafcon.core.states.state import StateExecutionStatus
 
-from rafcon.utils import profiler
 from rafcon.utils import plugins
 from rafcon.utils import log
 
@@ -69,8 +70,8 @@ def setup_environment():
     """Ensures that the environmental variable RAFCON_LIB_PATH is existent
     """
     try:
-        import glib
-        user_data_folder = glib.get_user_data_dir()
+        from gi.repository import GLib
+        user_data_folder = GLib.get_user_data_dir()
     except ImportError:
         user_data_folder = join(os.path.expanduser("~"), ".local", "share")
     rafcon_root_path = dirname(realpath(rafcon.__file__))
@@ -84,6 +85,14 @@ def setup_environment():
             os.environ['RAFCON_LIB_PATH'] = user_library_folder
         else:
             os.environ['RAFCON_LIB_PATH'] = join(dirname(dirname(rafcon_root_path)), 'share', 'libraries')
+
+    # Install dummy _ builtin function in case i18.setup_l10n() is not called
+    if sys.version_info >= (3,):
+        import builtins as builtins23
+    else:
+        import __builtin__ as builtins23
+    if "_" not in builtins23.__dict__:
+        builtins23.__dict__["_"] = lambda s: s
 
 
 def parse_state_machine_path(path):
@@ -156,8 +165,7 @@ def open_state_machine(state_machine_path):
 
 
 def start_state_machine(sm, start_state_path=None):
-    core_singletons.state_machine_manager.active_state_machine_id = sm.state_machine_id
-    core_singletons.state_machine_execution_engine.start(start_state_path=start_state_path)
+    core_singletons.state_machine_execution_engine.start(sm.state_machine_id, start_state_path=start_state_path)
 
     if reactor_required():
         sm_thread = threading.Thread(target=stop_reactor_on_state_machine_finish, args=[sm, ])
@@ -188,7 +196,7 @@ def wait_for_state_machine_finished(state_machine):
         except Empty:
             pass
         # no logger output here to make it easier for the parser
-        print "RAFCON live signal"
+        logger.verbose("RAFCON live signal")
 
 
 def stop_reactor_on_state_machine_finish(state_machine):
@@ -235,10 +243,8 @@ def signal_handler(signal, frame):
 
 
 def register_signal_handlers(callback):
-    signal.signal(signal.SIGINT, callback)
-    signal.signal(signal.SIGHUP, callback)
-    signal.signal(signal.SIGQUIT, callback)
-    signal.signal(signal.SIGTERM, callback)
+    for signal_code in [signal.SIGHUP, signal.SIGINT, signal.SIGTERM]:
+        signal.signal(signal_code, callback)
 
 
 def main():
@@ -261,39 +267,29 @@ def main():
 
     post_setup_plugins(user_input)
 
-    if global_config.get_config_value("PROFILER_RUN", False):
-        profiler.start("global")
+    first_sm = None
+    for sm_path in user_input.state_machine_path:
+        sm = open_state_machine(sm_path)
+        if first_sm is None:
+            first_sm = sm
 
-    try:
+    if not user_input.remote:
+        start_state_machine(first_sm, user_input.start_state_path)
 
-        first_sm = None
-        for sm_path in user_input.state_machine_path:
-            sm = open_state_machine(sm_path)
-            if first_sm is None:
-                first_sm = sm
+    if reactor_required():
+        from twisted.internet import reactor
 
-        if not user_input.remote:
-            start_state_machine(first_sm, user_input.start_state_path)
+        # Blocking call, return when state machine execution finishes
+        reactor.run()
 
-        if reactor_required():
-            from twisted.internet import reactor
+    if not user_input.remote:
+        wait_for_state_machine_finished(first_sm)
+    else:
+        while not _user_abort:
+            time.sleep(1)
 
-            # Blocking call, return when state machine execution finishes
-            reactor.run()
-
-        if not user_input.remote:
-            wait_for_state_machine_finished(first_sm)
-        else:
-            while not _user_abort:
-                time.sleep(1)
-
-        logger.info("State machine execution finished!")
-        plugins.run_hook("post_destruction")
-    finally:
-        if global_config.get_config_value("PROFILER_RUN", False):
-            result_path = global_config.get_config_value("PROFILER_RESULT_PATH")
-            view = global_config.get_config_value("PROFILER_VIEWER")
-            profiler.stop("global", result_path, view)
+    logger.info("State machine execution finished!")
+    plugins.run_hook("post_destruction")
 
 
 if __name__ == '__main__':

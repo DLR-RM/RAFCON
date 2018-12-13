@@ -11,7 +11,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from copy import copy, deepcopy
-from gtkmvc import ModelMT
+from gtkmvc3.model_mt import ModelMT
 
 from rafcon.gui.models.state_element import StateElementModel
 from rafcon.core.state_elements.data_flow import DataFlow
@@ -58,3 +58,7 @@ class DataFlowModel(StateElementModel):
     @ModelMT.observe("data_flow", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(DataFlowModel, self).model_changed(model, prop_name, info)
+
+    def prepare_destruction(self):
+        super(DataFlowModel, self).prepare_destruction()
+        self.data_flow = None

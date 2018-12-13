@@ -1,4 +1,5 @@
 
+from builtins import str
 def execute(self, inputs, outputs, gvm):
     self.logger.info('prod_type: %s' % str(inputs['prod_type']))
     if inputs['prod_type'] % 2 == 0:

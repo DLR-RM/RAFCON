@@ -12,8 +12,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
-from gtkmvc import View
+from gi.repository import Gtk
+from gtkmvc3.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.views.utils.tree import TreeView
@@ -32,47 +32,39 @@ class StateOutcomesTreeView(TreeView):
 class StateOutcomesEditorView(View):
 
     def __init__(self):
-        View.__init__(self)
+        super(StateOutcomesEditorView, self).__init__()
 
-        self.vbox = gtk.VBox()
+        self.vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.treeView = StateOutcomesTreeView()
 
-        add_button = gtk.Button('Add')
+        add_button = Gtk.Button(label='Add')
         add_button.set_focus_on_click(False)
         add_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        add_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
+        add_button.set_size_request(constants.BUTTON_MIN_WIDTH, -1)
 
-        remove_button = gtk.Button('Remove')
+        remove_button = Gtk.Button(label='Remove')
         remove_button.set_focus_on_click(False)
         remove_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        remove_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
+        remove_button.set_size_request(constants.BUTTON_MIN_WIDTH, -1)
 
         self['add_button'] = add_button
         self['remove_button'] = remove_button
 
-        self.Hbox = gtk.HBox()
-        self.Hbox.pack_end(self['remove_button'], expand=False, fill=True)
-        self.Hbox.pack_end(self['add_button'], expand=False, fill=True)
+        self.Hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+        self.Hbox.get_style_context().add_class("widget-toolbar")
+        self.Hbox.pack_end(self['remove_button'], False, True, 0)
+        self.Hbox.pack_end(self['add_button'], False, True, 0)
 
-        scrollable = gtk.ScrolledWindow()
-        scrollable.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrollable.add(self.treeView['tree_view'])
+        scrollable = Gtk.ScrolledWindow()
+        scrollable.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        scrollable.add(self.treeView.get_top_widget())
         self.treeView.scrollbar_widget = scrollable
 
-        outcomes_label = gui_helper_label.create_label_with_text_and_spacing("OUTCOMES",
-                                                                             letter_spacing=constants.LETTER_SPACING_1PT)
-        outcomes_label.set_alignment(0.0, 0.5)
-        eventbox = gtk.EventBox()
-        eventbox.set_border_width(constants.BORDER_WIDTH_TEXTVIEW)
-        eventbox.set_name('label_wrapper')
-        eventbox.add(outcomes_label)
-        title_viewport = gtk.Viewport()
-        title_viewport.set_name("outcomes_title_wrapper")
-        title_viewport.add(eventbox)
+        outcomes_widget_title = gui_helper_label.create_widget_title("OUTCOMES")
 
-        self.vbox.pack_start(title_viewport, False, True, 0)
+        self.vbox.pack_start(outcomes_widget_title, False, True, 0)
         self.vbox.pack_start(scrollable, True, True, 0)
-        self.vbox.pack_start(self.Hbox, expand=False, fill=True)
+        self.vbox.pack_start(self.Hbox, expand=False, fill=True, padding=0)
         self.vbox.show_all()
 
         self['main_frame'] = self.vbox

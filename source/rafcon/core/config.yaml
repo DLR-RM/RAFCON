@@ -1,14 +1,18 @@
 TYPE: SM_CONFIG
 
-LIBRARY_PATHS: {"generic": "${RAFCON_LIB_PATH}/generic"}
+LIBRARY_PATHS: {
+"generic": "${RAFCON_LIB_PATH}/generic",
+"tutorials": "${RAFCON_LIB_PATH}/../examples/tutorials",
+"ros": "${RAFCON_LIB_PATH}/../examples/libraries/ros_libraries",
+"turtle_libraries": "${RAFCON_LIB_PATH}/../examples/libraries/turtle_libraries",
+"advanced_examples": "${RAFCON_LIB_PATH}/../examples/functionality_examples"
+}
 LIBRARY_RECOVERY_MODE: False
 
 STORAGE_PATH_WITH_STATE_NAME: True
 MAX_LENGTH_FOR_STATE_NAME_IN_STORAGE_PATH: None
-
-PROFILER_RUN: False
-PROFILER_VIEWER: True
-PROFILER_RESULT_PATH: "/tmp/"
+NO_PROGRAMMATIC_CHANGE_OF_LIBRARY_STATES_PERFORMED: False
 
 EXECUTION_LOG_ENABLE: False
 EXECUTION_LOG_PATH: "%RAFCON_TEMP_PATH_BASE/execution_logs"
+EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL: False

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -14,7 +14,10 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
+from gi.repository import Gtk
+from gi.repository import Gdk
+from builtins import filter
+from builtins import next
 from enum import Enum
 from gaphas.aspect import HandleFinder, InMotion
 from gaphas.item import NW, Item
@@ -48,7 +51,7 @@ class ToolChain(gaphas.tool.ToolChain):
         """
         # Allow to handle a subset of events while having a grabbed tool (between a button press & release event)
         suppressed_grabbed_tool = None
-        if event.type in (gtk.gdk.SCROLL, gtk.gdk.KEY_PRESS, gtk.gdk.KEY_RELEASE):
+        if event.type in (Gdk.EventType.SCROLL, Gdk.EventType.KEY_PRESS, Gdk.EventType.KEY_RELEASE):
             suppressed_grabbed_tool = self._grabbed_tool
             self._grabbed_tool = None
 
@@ -72,10 +75,10 @@ class PanTool(gaphas.tool.PanTool):
         self.zoom_with_control = global_gui_config.get_config_value("ZOOM_WITH_CTRL", False)
 
     def on_scroll(self, event):
-        if self.zoom_with_control:
+        ctrl_key_pressed = bool(event.get_state()[1] & Gdk.ModifierType.CONTROL_MASK)
+        if (self.zoom_with_control and ctrl_key_pressed) or (not self.zoom_with_control and not ctrl_key_pressed):
             return False
-        else:
-            super(PanTool, self).on_scroll(event)
+        return super(PanTool, self).on_scroll(event)
 
 
 class ZoomTool(gaphas.tool.ZoomTool):
@@ -85,9 +88,26 @@ class ZoomTool(gaphas.tool.ZoomTool):
         self.zoom_with_control = global_gui_config.get_config_value("ZOOM_WITH_CTRL", False)
 
     def on_scroll(self, event):
-        if event.state & gtk.gdk.CONTROL_MASK or not self.zoom_with_control:
-            event.state |= gtk.gdk.CONTROL_MASK  # Set CONTROL_MASK
-            return super(ZoomTool, self).on_scroll(event)
+        ctrl_key_pressed = bool(event.get_state()[1] & Gdk.ModifierType.CONTROL_MASK)
+        if (self.zoom_with_control and ctrl_key_pressed) or (not self.zoom_with_control and not ctrl_key_pressed):
+            # Gtk TODO
+            # event.get_state() |= Gdk.ModifierType.CONTROL_MASK  # Set CONTROL_MASK
+            # return super(ZoomTool, self).on_scroll(event)
+            view = self.view
+            event_coords = event.get_coords()[1:]
+            sx = view._matrix[0]
+            sy = view._matrix[3]
+            ox = (view._matrix[4] - event_coords[0]) / sx
+            oy = (view._matrix[5] - event_coords[1]) / sy
+            factor = 0.9
+            if event.get_scroll_direction()[1] == Gdk.ScrollDirection.UP:
+                factor = 1. / factor
+            view._matrix.translate(-ox, -oy)
+            view._matrix.scale(factor, factor)
+            view._matrix.translate(+ox, +oy)
+            # Make sure everything's updated
+            view.request_update((), view._canvas.get_all_items())
+            return True
 
 
 class MoveItemTool(gaphas.tool.ItemTool):
@@ -101,25 +121,32 @@ class MoveItemTool(gaphas.tool.ItemTool):
         self._old_selection = None
 
     def movable_items(self):
+        """Filter selection
+
+        Filter items of selection that cannot be moved (i.e. are not instances of `Item`) and return the rest.
+        """
         view = self.view
 
         if self._move_name_v:
             yield InMotion(self._item, view)
         else:
-            get_ancestors = view.canvas.get_ancestors
             selected_items = set(view.selected_items)
             for item in selected_items:
                 if not isinstance(item, Item):
                     continue
-                # Do not move subitems of selected items
-                if not set(get_ancestors(item)).intersection(selected_items):
-                    yield InMotion(item, view)
+                yield InMotion(item, view)
 
     def on_button_press(self, event):
-        if event.button not in self._buttons:
+        """Select items
+
+        When the mouse button is pressed, the selection is updated.
+
+        :param event: The button event
+        """
+        if event.get_button()[1] not in self._buttons:
             return False  # Only handle events for registered buttons (left mouse clicks)
 
-        if event.state & constants.RUBBERBAND_MODIFIER:
+        if event.get_state()[1] & constants.RUBBERBAND_MODIFIER:
             return False  # Mouse clicks with pressed shift key are handled in another tool
 
         # Special case: moving the NameView
@@ -129,7 +156,7 @@ class MoveItemTool(gaphas.tool.ItemTool):
         self._item = self.get_item()
         if isinstance(self._item, NameView):
             selected_items = self.view.selected_items
-            if event.state & gtk.gdk.CONTROL_MASK and len(selected_items) == 1 and next(iter(selected_items)) is \
+            if event.get_state()[1] & Gdk.ModifierType.CONTROL_MASK and len(selected_items) == 1 and next(iter(selected_items)) is \
                     self._item.parent:
                 self._move_name_v = True
             else:
@@ -137,7 +164,7 @@ class MoveItemTool(gaphas.tool.ItemTool):
 
         if not self._move_name_v:
             self._old_selection = self.view.selected_items
-            if not self._item in self.view.selected_items:
+            if self._item not in self.view.selected_items:
                 # When items are to be moved, a button-press should not cause any deselection.
                 # However, the selection is stored, in case no move operation is performed.
                 self.view.handle_new_selection(self._item)
@@ -148,45 +175,66 @@ class MoveItemTool(gaphas.tool.ItemTool):
         return True
 
     def on_button_release(self, event):
-        position_changed = False
+        """Write back changes
+
+        If one or more items have been moved, the new position are stored in the corresponding meta data and a signal
+        notifying the change is emitted.
+
+        :param event: The button event
+        """
+        affected_models = {}
+
         for inmotion in self._movable_items:
             inmotion.move((event.x, event.y))
             rel_pos = gap_helper.calc_rel_pos_to_parent(self.view.canvas, inmotion.item,
                                                         inmotion.item.handles()[NW])
             if isinstance(inmotion.item, StateView):
-                state_m = inmotion.item.model
+                state_v = inmotion.item
+                state_m = state_v.model
+                self.view.canvas.request_update(state_v)
                 if state_m.get_meta_data_editor()['rel_pos'] != rel_pos:
-                    position_changed = True
                     state_m.set_meta_data_editor('rel_pos', rel_pos)
+                    affected_models[state_m] = ("position", True, state_v)
             elif isinstance(inmotion.item, NameView):
-                state_m = self.view.canvas.get_parent(inmotion.item).model
+                state_v = inmotion.item
+                state_m = self.view.canvas.get_parent(state_v).model
+                self.view.canvas.request_update(state_v)
                 if state_m.get_meta_data_editor()['name']['rel_pos'] != rel_pos:
                     state_m.set_meta_data_editor('name.rel_pos', rel_pos)
-                    position_changed = True
+                    affected_models[state_m] = ("name_position", False, state_v)
             elif isinstance(inmotion.item, TransitionView):
-                position_changed = True
                 transition_v = inmotion.item
+                transition_m = transition_v.model
+                self.view.canvas.request_update(transition_v)
                 current_waypoints = gap_helper.get_relative_positions_of_waypoints(transition_v)
-                old_waypoints = transition_v.model.get_meta_data_editor()['waypoints']
+                old_waypoints = transition_m.get_meta_data_editor()['waypoints']
                 if current_waypoints != old_waypoints:
-                    gap_helper.update_meta_data_for_transition_waypoints(self.view.graphical_editor, transition_v, None)
-                    position_changed = True
+                    transition_m.set_meta_data_editor('waypoints', current_waypoints)
+                    affected_models[transition_m] = ("waypoints", False, transition_v)
 
-        if isinstance(self._item, StateView):
-            self.view.canvas.request_update(self._item)
-            if position_changed:
-                self.view.graphical_editor.emit('meta_data_changed', self._item.model, "position", True)
+        if len(affected_models) == 1:
+            model = next(iter(affected_models))
+            change, affects_children, view = affected_models[model]
+            self.view.graphical_editor.emit('meta_data_changed', model, change, affects_children)
+        elif len(affected_models) > 1:
+            # if more than one item has been moved, we need to call the meta_data_changed signal on a common parent
+            common_parents = None
+            for change, affects_children, view in affected_models.values():
+                parents_of_view = set(self.view.canvas.get_ancestors(view))
+                if common_parents is None:
+                    common_parents = parents_of_view
+                else:
+                    common_parents = common_parents.intersection(parents_of_view)
+            assert len(common_parents) > 0, "The selected elements do not have common parent element"
+            for state_v in common_parents:
+                # Find most nested state_v
+                children_of_state_v = self.view.canvas.get_all_children(state_v)
+                if any(common_parent in children_of_state_v for common_parent in common_parents):
+                    continue
+                self.view.graphical_editor.emit('meta_data_changed', state_v.model, "positions", True)
+                break
 
-        if isinstance(self.view.focused_item, NameView):
-            if position_changed:
-                self.view.graphical_editor.emit('meta_data_changed', self.view.focused_item.parent.model,
-                                                "name_position", False)
-
-        if isinstance(self.view.focused_item, TransitionView):
-            if position_changed:
-                self.view.graphical_editor.emit('meta_data_changed', self._item.model, "waypoints", False)
-
-        if not position_changed and self._old_selection is not None:
+        if not affected_models and self._old_selection is not None:
             # The selection is handled differently depending on whether states were moved or not
             # If no move operation was performed, we reset the selection to that is was before the button-press event
             # and let the state machine selection handle the selection
@@ -194,6 +242,8 @@ class MoveItemTool(gaphas.tool.ItemTool):
             self.view.select_item(self._old_selection)
             self.view.handle_new_selection(self._item)
 
+        self._move_name_v = False
+        self._old_selection = None
         return super(MoveItemTool, self).on_button_release(event)
 
 
@@ -202,13 +252,115 @@ class HoverItemTool(gaphas.tool.HoverTool):
         super(HoverItemTool, self).__init__(view)
         self._prev_hovered_item = None
 
+    @staticmethod
+    def dismiss_upper_items(items, item):
+        try:
+            return items[items.index(item):]
+        except ValueError:
+            return []
+
+    def _filter_library_state(self, items):
+        """Filters out child elements of library state when they cannot be hovered
+
+        Checks if hovered item is within a LibraryState
+        * if not, the list is returned unfiltered
+        * if so, STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED is checked
+            * if enabled, the library is selected (instead of the state copy)
+            * if not, the upper most library is selected
+
+        :param list items: Sorted list of items beneath the cursor
+        :return: filtered items
+        :rtype: list
+        """
+        if not items:
+            return items
+
+        top_most_item = items[0]
+        # If the hovered item is e.g. a connection, we need to get the parental state
+        top_most_state_v = top_most_item if isinstance(top_most_item, StateView) else top_most_item.parent
+        state = top_most_state_v.model.state
+
+        global_gui_config = gui_helper_state_machine.global_gui_config
+        if global_gui_config.get_config_value('STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED'):
+            # select the library state instead of the library_root_state because it is hidden
+            if state.is_root_state_of_library:
+                new_topmost_item = self.view.canvas.get_view_for_core_element(state.parent)
+                return self.dismiss_upper_items(items, new_topmost_item)
+            return items
+        else:
+            # Find state_copy of uppermost LibraryState
+            library_root_state = state.get_uppermost_library_root_state()
+
+            # If the hovered element is a child of a library, make the library the hovered_item
+            if library_root_state:
+                library_state = library_root_state.parent
+                library_state_v = self.view.canvas.get_view_for_core_element(library_state)
+                return self.dismiss_upper_items(items, library_state_v)
+            return items
+
+    def _filter_hovered_items(self, items, event):
+        """Filters out items that cannot be hovered
+
+        :param list items: Sorted list of items beneath the cursor
+        :param Gtk.Event event: Motion event
+        :return: filtered items
+        :rtype: list
+        """
+        items = self._filter_library_state(items)
+        if not items:
+            return items
+        top_most_item = items[0]
+        second_top_most_item = items[1] if len(items) > 1 else None
+
+        # States/Names take precedence over connections if the connections are on the same hierarchy and if there is
+        # a port beneath the cursor
+        first_state_v = next(filter(lambda item: isinstance(item, (NameView, StateView)), items))
+        first_state_v = first_state_v.parent if isinstance(first_state_v, NameView) else first_state_v
+        if first_state_v:
+            # There can be several connections above the state/name skip those and find the first non-connection-item
+            for item in items:
+                if isinstance(item, ConnectionView):
+                    # connection is on the same hierarchy level as the state/name, thus we dismiss it
+                    if self.view.canvas.get_parent(top_most_item) is not first_state_v:
+                        continue
+                break
+
+            # Connections are only dismissed, if there is a port beneath the cursor. Search for ports here:
+            port_beneath_cursor = False
+            state_ports = first_state_v.get_all_ports()
+            position = self.view.get_matrix_v2i(first_state_v).transform_point(event.x, event.y)
+            i2v_matrix = self.view.get_matrix_i2v(first_state_v)
+            for port_v in state_ports:
+                item_distance = port_v.port.glue(position)[1]
+                view_distance = i2v_matrix.transform_distance(item_distance, 0)[0]
+                if view_distance == 0:
+                    port_beneath_cursor = True
+                    break
+
+            if port_beneath_cursor:
+                items = self.dismiss_upper_items(items, item)
+                top_most_item = items[0]
+                second_top_most_item = items[1] if len(items) > 1 else None
+
+        # NameView can only be hovered if it or its parent state is selected
+        if isinstance(top_most_item, NameView):
+            state_v = second_top_most_item  # second item in the list must be the parent state of the NameView
+            if state_v not in self.view.selected_items and top_most_item not in self.view.selected_items:
+                items = items[1:]
+
+        return items
+
     def on_motion_notify(self, event):
-        super(HoverItemTool, self).on_motion_notify(event)
         from gaphas.tool import HandleFinder
         from gaphas.view import DEFAULT_CURSOR
         from gaphas.aspect import ElementHandleSelection
 
         view = self.view
+        hovered_items = view.get_items_at_point((event.x, event.y), distance=3)
+        hovered_items = self._filter_hovered_items(hovered_items, event)
+
+        view.hovered_item = hovered_items[0] if hovered_items else None
+
         if view.hovered_handle:
             handle = view.hovered_handle
             view.hovered_handle = None
@@ -217,38 +369,22 @@ class HoverItemTool(gaphas.tool.HoverTool):
         pos = event.x, event.y
 
         # Reset cursor
-        self.view.window.set_cursor(gtk.gdk.Cursor(DEFAULT_CURSOR))
+        self.view.get_window().set_cursor(Gdk.Cursor.new(DEFAULT_CURSOR))
 
-        # Check if hovered_item is within a LibraryState, if so, set hovered_item to the LibraryState or
-        # upper most LibraryState
-        if view.hovered_item:
-            if isinstance(view.hovered_item, StateView):
-                state = view.hovered_item.model.state
+        def handle_hover_of_port(hovered_handle):
+            view.hovered_handle = hovered_handle
+            port_v = state_v.get_port_for_handle(hovered_handle)
+            view.queue_draw_area(*port_v.get_port_area(view))
+            if event.get_state()[1] & constants.MOVE_PORT_MODIFIER:
+                self.view.get_window().set_cursor(Gdk.Cursor.new(constants.MOVE_CURSOR))
             else:
-                # If the hovered item is e.g. a connection, we need to get the parental state
-                hovered_state_v = view.canvas.get_parent(view.hovered_item)
-                state = hovered_state_v.model.state
-
-            global_gui_config = gui_helper_state_machine.global_gui_config
-            if global_gui_config.get_config_value('STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED'):
-                # select the library state instate library_root_state because it is hidden
-                if state.is_root_state_of_library:
-                    view.hovered_item = self.view.canvas.get_view_for_core_element(state.parent)
-            else:
-                # Find state_copy of uppermost LibraryState
-                library_root_state = state.get_uppermost_library_root_state()
-
-                # If the hovered element is a child of a library, make the library the hovered_item
-                if library_root_state:
-                    library_state = library_root_state.parent
-                    library_state_v = self.view.canvas.get_view_for_core_element(library_state)
-                    view.hovered_item = library_state_v
+                self.view.get_window().set_cursor(Gdk.Cursor.new(constants.CREATION_CURSOR))
 
         if isinstance(view.hovered_item, PortView):
-            if event.state & constants.MOVE_PORT_MODIFIER:
-                self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
+            if event.get_state()[1] & constants.MOVE_PORT_MODIFIER:
+                self.view.get_window().set_cursor(Gdk.Cursor.new(constants.MOVE_CURSOR))
             else:
-                self.view.window.set_cursor(gtk.gdk.Cursor(constants.CREATION_CURSOR))
+                self.view.get_window().set_cursor(Gdk.Cursor.new(constants.CREATION_CURSOR))
 
         elif isinstance(view.hovered_item, StateView):
             distance = view.hovered_item.border_width / 2.
@@ -256,42 +392,43 @@ class HoverItemTool(gaphas.tool.HoverTool):
 
             # Hover over port => show hover state of port and different cursor
             if hovered_handle and hovered_handle not in state_v.corner_handles:
-                view.hovered_handle = hovered_handle
-                port_v = state_v.get_port_for_handle(hovered_handle)
-                view.queue_draw_area(*port_v.get_port_area(view))
-                if event.state & constants.MOVE_PORT_MODIFIER:
-                    self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
-                else:
-                    self.view.window.set_cursor(gtk.gdk.Cursor(constants.CREATION_CURSOR))
+                handle_hover_of_port(hovered_handle)
 
             # Hover over corner/resize handles => show with cursor
             elif hovered_handle and hovered_handle in state_v.corner_handles:
                 cursors = ElementHandleSelection.CURSORS
                 index = state_v.handles().index(hovered_handle)
-                self.view.window.set_cursor(cursors[index])
+                display = self.view.get_display()
+                self.view.get_window().set_cursor(Gdk.Cursor.new_from_name(display, cursors[index]))
 
         # NameView should only be hovered, if its state is selected
         elif isinstance(view.hovered_item, NameView):
             state_v = self.view.canvas.get_parent(view.hovered_item)
-            if state_v not in self.view.selected_items and view.hovered_item not in self.view.selected_items:
+            distance = state_v.border_width / 2.
+            _, hovered_handle = HandleFinder(state_v, view).get_handle_at_point(pos, distance)
+
+            # Hover over port => show hover state of port and different cursor
+            if hovered_handle and hovered_handle not in state_v.corner_handles:
                 view.hovered_item = state_v
+                handle_hover_of_port(hovered_handle)
             else:
                 name_v, hovered_handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos)
                 # Hover over corner/resize handles => show with cursor
-                if hovered_handle:
-                    index = name_v.handles().index(hovered_handle)
+                if name_v:
                     cursors = ElementHandleSelection.CURSORS
-                    self.view.window.set_cursor(cursors[index])
+                    index = name_v.handles().index(hovered_handle)
+                    display = self.view.get_display()
+                    self.view.get_window().set_cursor(Gdk.Cursor.new_from_name(display, cursors[index]))
 
         # Change mouse cursor to indicate option to move connection
         elif isinstance(view.hovered_item, ConnectionView):
             # If a handle is connection handle is hovered, show the move cursor
             item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos, split=False)
             if handle:
-                self.view.window.set_cursor(gtk.gdk.Cursor(constants.MOVE_CURSOR))
+                self.view.get_window().set_cursor(Gdk.Cursor.new(constants.MOVE_CURSOR))
             # If no handle is hovered, indicate the option for selection with the selection cursor
             else:
-                self.view.window.set_cursor(gtk.gdk.Cursor(constants.SELECT_CURSOR))
+                self.view.get_window().set_cursor(Gdk.Cursor.new(constants.SELECT_CURSOR))
 
         if isinstance(self.view.hovered_item, StateView):
             self._prev_hovered_item = self.view.hovered_item
@@ -299,12 +436,13 @@ class HoverItemTool(gaphas.tool.HoverTool):
 
 class MultiSelectionTool(gaphas.tool.RubberbandTool):
     def on_button_press(self, event):
-        if event.state & constants.RUBBERBAND_MODIFIER:
+        if event.get_state()[1] & constants.RUBBERBAND_MODIFIER:
             return super(MultiSelectionTool, self).on_button_press(event)
         return False
 
     def on_motion_notify(self, event):
-        if event.state & gtk.gdk.BUTTON_PRESS_MASK and event.state & constants.RUBBERBAND_MODIFIER:
+        if event.get_state()[1] & Gdk.EventMask.BUTTON_PRESS_MASK and event.get_state()[1] & \
+                constants.RUBBERBAND_MODIFIER:
             view = self.view
             self.queue_draw(view)
             self.x1, self.y1 = event.x, event.y
@@ -339,7 +477,7 @@ class MoveHandleTool(gaphas.tool.HandleTool):
         If the (mouse) button is pressed on top of a Handle (item.Handle), that handle is grabbed and can be
         dragged around.
         """
-        if not event.button == 1:  # left mouse button
+        if not event.get_button()[1] == 1:  # left mouse button
             return False
         view = self.view
 
@@ -355,7 +493,7 @@ class MoveHandleTool(gaphas.tool.HandleTool):
         # Only move ports when the MOVE_PORT_MODIFIER key is pressed
         if isinstance(item, (StateView, PortView)) and \
             handle in [port.handle for port in item.get_all_ports()] and \
-                not (event.state & constants.MOVE_PORT_MODIFIER):
+                not (event.get_state()[1] & constants.MOVE_PORT_MODIFIER):
             return False
 
         # Do not move from/to handles of connections (only their waypoints)
@@ -372,11 +510,11 @@ class MoveHandleTool(gaphas.tool.HandleTool):
             return True
 
     def on_motion_notify(self, event):
-        if not self.grabbed_handle or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
+        if not self.grabbed_handle or not event.get_state()[1] & Gdk.EventMask.BUTTON_PRESS_MASK:
             return
         item = self.grabbed_item
         resize_recursive = isinstance(item, StateView) and self.grabbed_handle in item.corner_handles and \
-                           event.state & constants.RECURSIVE_RESIZE_MODIFIER
+                           event.get_state()[1] & constants.RECURSIVE_RESIZE_MODIFIER
 
         if resize_recursive:
             old_size = (item.width, item.height)
@@ -534,7 +672,7 @@ class ConnectionCreationTool(ConnectionTool):
         If the (mouse) button is pressed on top of a Handle (item.Handle), that handle is grabbed and can be
         dragged around.
         """
-        if not event.button == 1:  # left mouse button
+        if not event.get_button()[1] == 1:  # left mouse button
             return False
         view = self.view
 
@@ -545,7 +683,7 @@ class ConnectionCreationTool(ConnectionTool):
 
         # Connection handle must belong to a port and the MOVE_PORT_MODIFIER must not be pressed
         if not isinstance(item, StateView) or handle not in [port.handle for port in item.get_all_ports()] or (
-                    event.state & constants.MOVE_PORT_MODIFIER):
+                    event.get_state()[1] & constants.MOVE_PORT_MODIFIER):
             return False
 
         for port in item.get_all_ports():
@@ -563,7 +701,7 @@ class ConnectionCreationTool(ConnectionTool):
         return True
 
     def on_motion_notify(self, event):
-        if not self._parent_state_v or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
+        if not self._parent_state_v or not event.get_state()[1] & Gdk.EventMask.BUTTON_PRESS_MASK:
             return False
 
         if not self._connection_v:
@@ -613,7 +751,7 @@ class ConnectionModificationTool(ConnectionTool):
         If the (mouse) button is pressed on top of a Handle (item.Handle), that handle is grabbed and can be
         dragged around.
         """
-        if not event.button == 1:  # left mouse button
+        if not event.get_button()[1] == 1:  # left mouse button
             return False
         view = self.view
 
@@ -637,7 +775,7 @@ class ConnectionModificationTool(ConnectionTool):
         return True
 
     def on_motion_notify(self, event):
-        if not self._parent_state_v or not event.state & gtk.gdk.BUTTON_PRESS_MASK:
+        if not self._parent_state_v or not event.get_state()[1] & Gdk.EventMask.BUTTON_PRESS_MASK:
             return False
 
         modify_target = self._end_handle is self._connection_v.to_handle()
@@ -694,6 +832,7 @@ class ConnectionModificationTool(ConnectionTool):
 class RightClickTool(gaphas.tool.ItemTool):
     def __init__(self, view=None, buttons=(3,)):
         super(RightClickTool, self).__init__(view, buttons)
+        # TODO correct destruction of the StateRightClickMenu-Controller
         self.sm_right_click_menu = StateRightClickMenuGaphas()
 
     def on_button_press(self, event):

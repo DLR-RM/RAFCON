@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 DLR
+# Copyright (C) 2016-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -22,9 +22,12 @@ The HistoryChanges-Class provides the functionalities to organize and access all
 Hereby the branching of the edit process is stored and should be accessible, too.
 
 """
+from builtins import object
+from builtins import str
 import copy
 
-from gtkmvc import ModelMT, Observable
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Observable
 
 from rafcon.gui.action import ActionDummy, Action, StateMachineAction, StateAction, DataPortAction, \
     ScopedVariableAction, OutcomeAction, TransitionAction, DataFlowAction, AddObjectAction, RemoveObjectAction, \
@@ -42,6 +45,7 @@ from rafcon.core.state_elements.transition import Transition
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
+from rafcon.gui.helpers.meta_data import check_gaphas_state_machine_meta_data_consistency
 
 from rafcon.utils import log
 from rafcon.utils.constants import TEMP_PATH, RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
@@ -64,13 +68,14 @@ class ModificationsHistoryModel(ModelMT):
         assert isinstance(state_machine_model, StateMachineModel)
         self.state_machine_model = state_machine_model
         self.__state_machine_id = state_machine_model.state_machine.state_machine_id
-        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        self._tmp_meta_storage = None
+        self.tmp_meta_storage = self.get_root_state_element_meta()
 
         self.observe_model(self.state_machine_model)
         self.observe_model(self.state_machine_model.root_state)
         self.__buffered_root_state_model = self.state_machine_model.root_state
 
-        self.active_action = None
+        self._active_action = None
         self.locked = False
         self.busy = False
         self.count_before = 0
@@ -81,11 +86,37 @@ class ModificationsHistoryModel(ModelMT):
         self.fake = False
 
         self.refactored_history = True
-        self.with_prints = False
+        self.with_verbose = False
         self.with_debug_logs = False
         self.with_meta_data_actions = True
+        self.check_gaphas_consistency = False
 
         self.re_initiate_meta_data()
+
+    @property
+    def active_action(self):
+        return self._active_action
+
+    @active_action.setter
+    def active_action(self, value):
+        self._active_action = value
+
+    @property
+    def tmp_meta_storage(self):
+        return self._tmp_meta_storage
+
+    @tmp_meta_storage.setter
+    def tmp_meta_storage(self, value):
+        self._tmp_meta_storage = value
+
+    def get_root_state_element_meta(self):
+        return get_state_element_meta(self.state_machine_model.root_state)
+
+    def update_internal_tmp_storage(self):
+        if self.check_gaphas_consistency:
+            logger.info("Check gaphas view is meta data consistent before doing tmp-storage update")
+            check_gaphas_state_machine_meta_data_consistency(self.state_machine_model, with_logger_messages=True)
+        self.tmp_meta_storage = self.get_root_state_element_meta()
 
     def prepare_destruction(self):
         """Prepares the model for destruction
@@ -96,17 +127,27 @@ class ModificationsHistoryModel(ModelMT):
             self.relieve_model(self.state_machine_model)
             assert self.__buffered_root_state_model is self.state_machine_model.root_state
             self.relieve_model(self.__buffered_root_state_model)
+            self.state_machine_model = None
+            self.__buffered_root_state_model = None
+            self.modifications.prepare_destruction()
         except KeyError:  # Might happen if the observer was already unregistered
             pass
+        if self.active_action:
+            try:
+                self.active_action.prepare_destruction()
+            except Exception as e:
+                logger.exception("The modification history has had left over an active-action and "
+                                 "could not destroy it {0}.".format(e))
+            self.active_action = None
 
     def get_state_element_meta_from_internal_tmp_storage(self, state_path):
         path_elements = state_path.split('/')
         path_elements.pop(0)
-        # print path_elements
+        # print(path_elements)
         act_state_elements_meta = self.tmp_meta_storage
         for path_elem in path_elements:
             act_state_elements_meta = act_state_elements_meta['states'][path_elem]
-        # print act_state_elements_meta
+        # print(act_state_elements_meta)
         return act_state_elements_meta
 
     def recover_specific_version(self, pointer_on_version_to_recover):
@@ -139,14 +180,14 @@ class ModificationsHistoryModel(ModelMT):
 
     def _undo(self, version_id):
         self.busy = True
-        # print "undo 1", self.modifications, self.modifications.all_time_history[version_id].action
+        # print("undo 1", self.modifications, self.modifications.all_time_history[version_id].action)
         self.modifications.all_time_history[version_id].action.undo()
         self.modifications.trail_pointer -= 1
         self.busy = False
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
             # logger.debug("StateMachineAction Undo")
             self._re_initiate_observation()
-        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        self.update_internal_tmp_storage()
 
     def undo(self):
         if not self.modifications.trail_history or self.modifications.trail_pointer == 0 \
@@ -160,13 +201,13 @@ class ModificationsHistoryModel(ModelMT):
         self.state_machine_model.storage_lock.acquire()
         # logger.debug("acquired lock 2 - for undo {0}".format(self.modifications.trail_pointer))
         self.busy = True
-        # print "undo 2", self.modifications
+        # print("undo 2", self.modifications)
         self.modifications.undo()
         self.busy = False
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
             # logger.debug("StateMachineAction Undo")
             self._re_initiate_observation()
-        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        self.update_internal_tmp_storage()
         self.change_count += 1
         # logger.debug("release lock 2 - for undo {0}".format(self.modifications.trail_pointer))
         self.state_machine_model.storage_lock.release()
@@ -201,24 +242,25 @@ class ModificationsHistoryModel(ModelMT):
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer], StateMachineAction):
             # logger.debug("StateMachineAction Redo")
             self._re_initiate_observation()
-        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        self.update_internal_tmp_storage()
         self.change_count += 1
         # logger.debug("release lock 3 - for redo")
         self.state_machine_model.storage_lock.release()
         # logger.debug("release lock 3 - for redo")
 
     def _interrupt_active_action(self, info=None):
-        if self.with_prints:
+        if self.with_verbose:
             logger.warning("function crash detected {}_after".format(info['prop_name']))
         else:
             logger.info("Active Action {} is interrupted and removed.".format(info['prop_name']))
         # self.busy = True
-        # self.actual_action.undo()
+        self.active_action.prepare_destruction()
+        # self.active_action = None
         # self.busy = False
         self.locked = False
         self.count_before = 0
-        if self.with_prints and info is not None:
-            logger.debug(NotificationOverview(info, False, self.__class__.__name__))
+        if self.with_verbose and info is not None:
+            logger.verbose(NotificationOverview(info, False, self.__class__.__name__))
         if self.state_machine_model.storage_lock.locked():
             # logger.debug("release lock 0 - for interrupt active action")
             self.state_machine_model.storage_lock.release()
@@ -247,8 +289,9 @@ class ModificationsHistoryModel(ModelMT):
 
         result = True
         cause = overview['method_name'][-1]
-        if self.with_prints:
-            logger.info("create Action for: {0} for prop_name: {1}".format(overview['method_name'][-1], overview['prop_name'][-1]))
+        if self.with_verbose:
+            logger.verbose("Create Action for: {0} for prop_name: {1}"
+                           "".format(overview['method_name'][-1], overview['prop_name'][-1]))
 
         if self.with_debug_logs:
             self.store_test_log_file(str(overview) + "\n")
@@ -349,10 +392,10 @@ class ModificationsHistoryModel(ModelMT):
                                overview['info'][-1], overview['info'][0])
                 assert False  # should never happen
 
-            return result
-
         else:
-            return self.start_new_action_old(overview)
+            result = self.start_new_action_old(overview)
+
+        return result
 
     def start_new_action_old(self, overview):
 
@@ -363,8 +406,8 @@ class ModificationsHistoryModel(ModelMT):
                 isinstance(overview['instance'][-1], ScopedVariable):  # internal modifications No Add or Remove Actions
             if self.with_debug_logs:
                 self.store_test_log_file("$1 DataFlow, Transition, ScopedVariable Change\n model_path: {0}{1}\nparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].parent.state.get_path()))
-            if self.with_prints:
-                print "CHANGE OF OBJECT", overview['info'][-1]
+            if self.with_verbose:
+                logger.verbose("CHANGE OF OBJECT", overview['info'][-1])
             # the model should be StateModel or ContainerStateModel and "info" from those model notification
             self.active_action = Action(parent_path=overview['instance'][-1].parent.get_path(),
                                         state_machine_model=self.state_machine_model,
@@ -378,11 +421,11 @@ class ModificationsHistoryModel(ModelMT):
                                                                                'add_input_data_port',
                                                                                'remove_input_data_port']):
 
-            if self.with_prints:
+            if self.with_verbose:
                 if isinstance(overview['instance'][-1], State):
-                    print "Path_root1: ", overview['instance'][-1].get_path()
+                    logger.verbose("Path_root1: ", overview['instance'][-1].get_path())
                 else:
-                    print "Path_root1: ", overview['instance'][-1].parent.get_path()
+                    logger.verbose("Path_root1: ", overview['instance'][-1].parent.get_path())
 
             if overview['model'][-1].parent:
                 if not isinstance(overview['model'][-1].parent.state, State):
@@ -409,8 +452,9 @@ class ModificationsHistoryModel(ModelMT):
                 assert False
 
         elif overview['prop_name'][-1] == 'state':
-            if self.with_prints:
-                print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
+            if self.with_verbose:
+                logger.verbose("Instance path: {0}", overview['instance'][-1].get_path())
+                logger.verbose("Model path   : {0}", overview['model'][-1].state.get_path())
             if "add_" in overview['method_name'][-1]:
                 if self.with_debug_logs:
                     self.store_test_log_file("$5 add Outcome,In-OutPut in root and State, ScopedVariable, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
@@ -426,13 +470,16 @@ class ModificationsHistoryModel(ModelMT):
 
         else:  # FAILURE
             logger.warning("History may need update, tried to start observation of new action that is not classifiable "
-                        "\n%s \n%s \n%s \n%s",
-                        overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
+                           "\n%s \n%s \n%s \n%s",
+                           overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
             return False
 
         return result
 
     def finish_new_action(self, overview):
+        if isinstance(self.active_action, MetaAction) and self.check_gaphas_consistency:
+            check_gaphas_state_machine_meta_data_consistency(self.state_machine_model, with_logger_messages=True)
+
         # logger.debug("History stores AFTER")
         if self.with_debug_logs:
             self.store_test_log_file(str(overview) + "\n")
@@ -441,7 +488,7 @@ class ModificationsHistoryModel(ModelMT):
             self.active_action.set_after(overview)
             self.state_machine_model.history.modifications.insert_action(self.active_action)
             # logger.debug("history is now: %s" % self.state_machine_model.history.modifications.single_trail_history())
-            self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+            self.update_internal_tmp_storage()
         except:
             logger.exception("Failure occurred while finishing action")
             # traceback.print_exc(file=sys.stdout)
@@ -451,7 +498,7 @@ class ModificationsHistoryModel(ModelMT):
 
     def re_initiate_meta_data(self):
         self.active_action = []
-        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        self.update_internal_tmp_storage()
 
     @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state_model changed
     # @ModelMT.observe("state_meta_signal", signal=True)  # meta data of state_machine_model changed
@@ -460,15 +507,15 @@ class ModificationsHistoryModel(ModelMT):
             return
         overview = NotificationOverview(info, False, self.__class__.__name__)
         # logger.info("meta_changed: \n{0}".format(overview))
-        # WORKAROUND: avoid multiple signals of the root_state, by comparing first and last model in overview
-        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:  # TODO test why those occur
-            # print "ALL"
+        # filter self emit and avoid multiple signals of the root_state, by comparing first and last model in overview
+        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:
+            # print("ALL", overview['signal'][0].change.startswith('sm_notification'))
             return
-
         if self.busy:
             return
         if overview['signal'][-1]['origin'] == 'load_meta_data':
             return
+
         if self.active_action is None or overview['signal'][-1]['change'] in ['append_initial_change']:
             # update last actions after_storage -> meta-data
             self.re_initiate_meta_data()
@@ -477,7 +524,7 @@ class ModificationsHistoryModel(ModelMT):
                 overview['signal'][-1]['origin'] in ['group_states', 'ungroup_state', 'substitute_state']:
             # update last actions after_storage -> meta-data
             self.active_action.after_storage = self.active_action.get_storage()
-            self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+            self.update_internal_tmp_storage()
         else:
             if isinstance(overview['model'][-1], AbstractStateModel):
                 changed_parent_model = overview['model'][-1]
@@ -488,7 +535,7 @@ class ModificationsHistoryModel(ModelMT):
             # TODO think about to remove this work around again
             # ignore meta data changes inside of library states
             changed_parent_state = self.state_machine_model.get_state_model_by_path(changed_parent_state_path).state
-            if changed_parent_state.get_library_root_state():
+            if changed_parent_state.get_next_upper_library_root_state():
                 return
 
             if self.count_before == 0:
@@ -510,13 +557,13 @@ class ModificationsHistoryModel(ModelMT):
             # logger.debug('acquired lock 0 - for before count')
             self.locked = True
         self.count_before += 1
-        if self.with_prints:
-            print "LOCKED count up", self.count_before
+        if self.with_verbose:
+            logger.verbose("LOCKED count up {0}".format(self.count_before))
 
     def after_count(self):
         self.count_before -= 1
-        if self.with_prints:
-            print "LOCKED count down", self.count_before
+        if self.with_verbose:
+            logger.verbose("LOCKED count down {0}".format(self.count_before))
         if self.count_before == 0:
             self.locked = False
             # logger.debug("release lock 1 - for after_count")
@@ -525,16 +572,17 @@ class ModificationsHistoryModel(ModelMT):
 
     @ModelMT.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
-        # print "STATE ACTION SIGNAL: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
+        # logger.verbose("STATE ACTION SIGNAL: " + str(NotificationOverview(info, False, self.__class__.__name__)))
+
         if self.busy:  # if proceeding undo or redo
             return
-        # print "state: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
+        # print("state: ", NotificationOverview(info, self.with_verbose, self.__class__.__name__))
         if isinstance(model, StateMachineModel) and isinstance(info['arg'], ActionSignalMsg) and \
                 not info['arg'].after and info['arg'].action in ['change_root_state_type', 'change_state_type',
                                                                  'paste', 'cut',
                                                                  'substitute_state', 'group_states', 'ungroup_state']:
 
-            overview = NotificationOverview(info, self.with_prints, self.__class__.__name__)
+            overview = NotificationOverview(info, self.with_verbose, self.__class__.__name__)
             if self.with_debug_logs:
                 self.store_test_log_file(str(overview) + "\n")
 
@@ -542,12 +590,12 @@ class ModificationsHistoryModel(ModelMT):
             overview['model'].insert(0, self.state_machine_model)
             if info['arg'].action == 'change_root_state_type':
                 assert info['arg'].action_parent_m is self.state_machine_model
-                # print "CREATE STATE MACHINE ACTION:", self.active_action
+                # print("CREATE STATE MACHINE ACTION:", self.active_action)
                 self.active_action = StateMachineAction(parent_path=info['arg'].action_parent_m.root_state.state.get_path(),
                                                         state_machine_model=info['arg'].action_parent_m,
                                                         overview=overview)
             else:
-                # print "CREATE STATE ACTION:", self.active_action
+                # print("CREATE STATE ACTION:", self.active_action)
                 self.active_action = StateAction(parent_path=info['arg'].action_parent_m.state.get_path(),
                                                  state_machine_model=self.state_machine_model,
                                                  overview=overview)
@@ -555,29 +603,30 @@ class ModificationsHistoryModel(ModelMT):
             self.before_count()
             if info['arg'].action in ['group_states', 'paste', 'cut']:
                 self.observe_model(info['arg'].action_parent_m)
-                # print "OBSERVE MODEL", info['arg'].action_parent_m
+                # print("OBSERVE MODEL", info['arg'].action_parent_m)
             else:
                 self.observe_model(info['arg'].affected_models[0])
-                # print "OBSERVE MODEL", info['arg'].affected_models[0]
+                # print("OBSERVE MODEL", info['arg'].affected_models[0])
 
     @ModelMT.observe("action_signal", signal=True)
     def action_signal_after_complex_action(self, model, prop_name, info):
-        # print "ACTION SIGNAL: ", NotificationOverview(info, self.with_prints, self.__class__.__name__)
+        # logger.verbose("ACTION SIGNAL: " + str(NotificationOverview(info, False, self.__class__.__name__)))
+
         if self.busy:  # if proceeding undo or redo
             return
         if isinstance(model, AbstractStateModel) and isinstance(info['arg'], ActionSignalMsg) and \
                 info['arg'].after and info['arg'].action in ['change_root_state_type', 'change_state_type',
                                                              'paste', 'cut',
                                                              'substitute_state', 'group_states', 'ungroup_state']:
-            # print "\n\nIN AFTER\n\n", info['arg'].action, type(info['arg'].result), self.count_before
+            # print("\n\nIN AFTER\n\n", info['arg'].action, type(info['arg'].result), self.count_before)
 
-            overview = NotificationOverview(info, self.with_prints, "History state_machine_AFTER")
+            overview = NotificationOverview(info, self.with_verbose, "History state_machine_AFTER")
             if info['arg'].action in ['change_state_type', 'paste', 'cut',
                                       'substitute_state', 'group_states', 'ungroup_state']:
 
-                if not model.state.is_root_state:
+                if self.__buffered_root_state_model is not model:
                     self.relieve_model(model)
-                    # print "RELIEVE MODEL", model
+                    # logger.verbose("RELIEVE MODEL {0}".format(model))
 
             if isinstance(info['arg'].result, Exception):
                 if self.count_before == 1:
@@ -589,20 +638,20 @@ class ModificationsHistoryModel(ModelMT):
             if self.locked:
                 self.after_count()
                 if self.count_before == 0:
-                    # print "\n\nAFTER\n\n"
+                    # print("\n\nAFTER\n\n")
                     self.finish_new_action(overview)
                     if info['arg'].action == 'change_root_state_type':
                         self._re_initiate_observation()
-                    if self.with_prints:
-                        print "HISTORY COUNT WAS OF SUCCESS FOR STATE MACHINE"
+                    if self.with_verbose:
+                        logger.verbose("HISTORY COUNT WAS OF SUCCESS FOR STATE MACHINE")
             else:
                 logger.error("HISTORY after not count to 0 [action signal] -> For every before there should be a after."
                              "{0}".format(NotificationOverview(info)))
 
     @ModelMT.observe("states", before=True)
     def assign_notification_states_before(self, model, prop_name, info):
-        if self.with_prints:
-            print "states_before: ", model, prop_name, info
+        # logger.verbose("states_before: " + str(NotificationOverview(info, False, self.__class__.__name__)))
+
         if self.busy:  # if proceeding undo or redo
             return
         else:
@@ -611,7 +660,7 @@ class ModificationsHistoryModel(ModelMT):
                     info['kwargs']['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
                 return
 
-            overview = NotificationOverview(info, self.with_prints, self.__class__.__name__)
+            overview = NotificationOverview(info, self.with_verbose, self.__class__.__name__)
             # logger.debug("History states_BEFORE {0}".format(overview))
 
             # skipped state modifications
@@ -623,8 +672,8 @@ class ModificationsHistoryModel(ModelMT):
             if self.locked:
                 self.before_count()
             else:
-                if self.with_prints:
-                    print "NEW HISTORY ELEMENT"
+                if self.with_verbose:
+                    logger.verbose("NEW HISTORY ELEMENT")
                 if self.start_new_action(overview):
                     self.before_count()
                 else:
@@ -639,8 +688,7 @@ class ModificationsHistoryModel(ModelMT):
         :param prop_name: The property that was changed
         :param info: Information about the change
         """
-        if self.with_prints:
-            print "states_after: ", model, prop_name, info
+        # logger.verbose("states_after: " + str(NotificationOverview(info, False, self.__class__.__name__)))
 
         if self.busy or info.method_name == 'state_change' and \
                 info.kwargs.prop_name == 'state' and \
@@ -654,7 +702,7 @@ class ModificationsHistoryModel(ModelMT):
                     info['kwargs']['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
                 return
 
-            overview = NotificationOverview(info, self.with_prints, self.__class__.__name__)
+            overview = NotificationOverview(info, self.with_verbose, self.__class__.__name__)
 
             # handle interrupts of action caused by exceptions
             if overview['result'][-1] == "CRASH in FUNCTION" or isinstance(overview['result'][-1], Exception):
@@ -672,8 +720,8 @@ class ModificationsHistoryModel(ModelMT):
                 self.after_count()
                 if self.count_before == 0:
                     self.finish_new_action(overview)
-                    if self.with_prints:
-                        print "HISTORY COUNT WAS OF SUCCESS"
+                    if self.with_verbose:
+                        logger.verbose("HISTORY COUNT WAS OF SUCCESS")
             else:
                 logger.error("HISTORY after not count [states] -> For every before there should be a after.")
 
@@ -687,8 +735,7 @@ class ModificationsHistoryModel(ModelMT):
     @ModelMT.observe("scoped_variables", before=True)
     def assign_notification_root_state_before(self, model, prop_name, info):
 
-        # if self.with_prints:
-        #     print "root_state_before: ", NotificationOverview(info, False, self.__class__.__name__), "\n"
+        # logger.verbose("root_state_before: " + str(NotificationOverview(info, False, self.__class__.__name__)))
 
         # execution_status-changes are not observed
         if self.busy or info.method_name in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
@@ -699,7 +746,7 @@ class ModificationsHistoryModel(ModelMT):
         #                                                        "output_data_ports", "scoped_variables"]
         # third (and last element) should be prop_name in ["data_flow", "transition", ...
         else:
-            overview = NotificationOverview(info, self.with_prints, self.__class__.__name__)
+            overview = NotificationOverview(info, self.with_verbose, self.__class__.__name__)
             # modifications of parent are not observed
             if overview['method_name'][-1] == 'parent':
                 return
@@ -710,8 +757,8 @@ class ModificationsHistoryModel(ModelMT):
             if self.locked:
                 self.before_count()
             else:
-                if self.with_prints:
-                    print "NEW HISTORY ELEMENT"
+                if self.with_verbose:
+                    logger.verbose("NEW HISTORY ELEMENT")
 
                 if self.start_new_action(overview):
                     self.before_count()
@@ -734,14 +781,13 @@ class ModificationsHistoryModel(ModelMT):
         :param prop_name: The property that was changed
         :param info: Information about the change
         """
-        # if self.with_prints:
-        #     print "root_state_after: ", NotificationOverview(info, False, self.__class__.__name__)
+        # logger.verbose("root_state_after: " + str(NotificationOverview(info, False, self.__class__.__name__)))
 
         # execution_status-changes are not observed
         if self.busy or info.method_name in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
             return
         else:
-            overview = NotificationOverview(info, self.with_prints, self.__class__.__name__)
+            overview = NotificationOverview(info, self.with_verbose, self.__class__.__name__)
             # logger.debug("History state_AFTER {0}".format(overview))
 
             # handle interrupts of action caused by exceptions
@@ -761,8 +807,8 @@ class ModificationsHistoryModel(ModelMT):
                 self.after_count()
                 if self.count_before == 0:
                     self.finish_new_action(overview)
-                    if self.with_prints:
-                        print "HISTORY COUNT WAS OF SUCCESS"
+                    if self.with_verbose:
+                        logger.verbose("HISTORY COUNT WAS OF SUCCESS")
             else:
                 logger.error("HISTORY after not count [root_state] -> For every before there should be a after.")
 
@@ -781,6 +827,9 @@ class HistoryTreeElement(object):
 
     def __str__(self):
         return "prev_id: {0} next_id: {1} and other next_ids: {2}".format(self._prev_id, self._next_id, self._old_next_ids)
+
+    def prepare_destruction(self):
+        self.action.prepare_destruction()
 
     @property
     def prev_id(self):
@@ -833,13 +882,19 @@ class ModificationsHistory(Observable):
 
         self.trail_pointer = None
 
-        self.with_prints = False
+        self.with_verbose = False
 
         # self.test_action_dumps = False
         # self._tmp_file = TEMP_PATH + '/test_mod_history.txt'
 
         # insert initial dummy element
         self.insert_action(ActionDummy())
+
+    def prepare_destruction(self):
+        del self.trail_history[:]
+        for tree_element in self.all_time_history:
+            tree_element.prepare_destruction()
+        del self.all_time_history[:]
 
     @Observable.observed
     def insert_action(self, action):
@@ -855,11 +910,11 @@ class ModificationsHistory(Observable):
         if prev_id is not None:
             prev_tree_elem = self.all_time_history[prev_id]
             prev_old_next_ids = copy.deepcopy(prev_tree_elem.old_next_ids)
-            if self.with_prints:
-                logger.info("new pointer {0} element {1}\nnew next_id {2}"
-                            "".format(self.all_time_history[self.trail_pointer].action.version_id,
-                                      prev_tree_elem,
-                                      len(self.all_time_history) - 1))
+            if self.with_verbose:
+                logger.verbose("New pointer {0} element {1} -> new next_id {2}"
+                               "".format(self.all_time_history[self.trail_pointer].action.version_id,
+                                         prev_tree_elem,
+                                         len(self.all_time_history) - 1))
             prev_tree_elem.next_id = len(self.all_time_history) - 1
             if not prev_old_next_ids == prev_tree_elem.old_next_ids:
                 logger.info("This action has created a new branch in the state machine modification-history")
@@ -869,15 +924,15 @@ class ModificationsHistory(Observable):
             if self.trail_pointer > len(self.trail_history) - 1 or self.trail_pointer < 0:
                 logger.error('History is broken may!!! %s' % self.trail_pointer)
             while not self.trail_pointer == len(self.trail_history) - 1:
-                if self.with_prints:
-                    print "pointer: %s %s" % (self.trail_pointer, len(self.trail_history))
+                if self.with_verbose:
+                    logger.verbose("pointer: {0} {1}".format(self.trail_pointer, len(self.trail_history)))
                 self.trail_history.pop()
         # append new action to trail history and set actual trail pointer
         self.trail_history.append(action)
         self.trail_pointer = None if len(self.trail_history) == 0 else len(self.trail_history) - 1
 
-        if self.with_prints and action is not None:
-            logger.info("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
+        if self.with_verbose and action is not None:
+            logger.verbose("New trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
         # self.write_trail_history_to_file()
 
     # def write_trail_history_to_file(self):
@@ -886,7 +941,7 @@ class ModificationsHistory(Observable):
     #             for a in self.trail_history:
     #                 h_elem = self.all_time_history[a.version_id]
     #                 s = str(h_elem.summary()) + "--{#}--" + h_elem.as_json_string() + '\n'
-    #                 # print '\n'.join(s.split("--{#}--"))
+    #                 # print('\n'.join(s.split("--{#}--")))
     #                 f.write(s)
 
     @Observable.observed
@@ -894,22 +949,22 @@ class ModificationsHistory(Observable):
         if not self.trail_history or self.trail_pointer == 0 or not self.trail_pointer < len(self.trail_history):
             logger.debug("There is no more action that can be undone")
             return
-        # print "MODEHISTORY UNDO", self.trail_history[self.trail_pointer]
+        # print("MODEHISTORY UNDO", self.trail_history[self.trail_pointer])
         self.trail_history[self.trail_pointer].undo()
         self.trail_pointer -= 1
-        if self.with_prints:
-            logger.info("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
+        if self.with_verbose:
+            logger.verbose("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
 
     @Observable.observed
     def redo(self):
         if not self.trail_history or self.trail_history and not self.trail_pointer + 1 < len(self.trail_history):
             logger.debug("There is no more action that can be redone")
             return
-        # print "MODEHISTORY REDO", self.trail_history[self.trail_pointer]
+        # print("MODEHISTORY REDO", self.trail_history[self.trail_pointer])
         self.trail_history[self.trail_pointer + 1].redo()
         self.trail_pointer += 1
-        if self.with_prints:
-            logger.info("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
+        if self.with_verbose:
+            logger.verbose("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
 
     def single_trail_history(self):
         return self.trail_history
@@ -929,24 +984,24 @@ class ModificationsHistory(Observable):
 
         # search path back to actual trail history
         path = []
-        if self.with_prints:
-            logger.info("old trail: {0}".format(all_trail_action))
+        if self.with_verbose:
+            logger.verbose("Old trail: {0}".format(all_trail_action))
         while intermediate_version_id not in all_trail_action:
             path.insert(0, intermediate_version_id)
             intermediate_version_id = self.all_time_history[intermediate_version_id].prev_id
         # cut of not needed actions
         trail_index = all_trail_action.index(intermediate_version_id)
         self.trail_history = self.trail_history[:trail_index+1]
-        if self.with_prints:
-            logger.info("cut of trail: {0}".format([a.version_id for a in self.trail_history]))
+        if self.with_verbose:
+            logger.verbose("Cut of trail: {0}".format([a.version_id for a in self.trail_history]))
 
         # append all actions of the path -> active actions of the branch
         for version_id in path:
             # set default next_id to active trail
             self.all_time_history[self.trail_history[-1].version_id].next_id = version_id
             self.trail_history.append(self.all_time_history[version_id].action)
-        if self.with_prints:
-            logger.info("new active trail: {0}".format([a.version_id for a in self.trail_history]))
+        if self.with_verbose:
+            logger.verbose("New active trail: {0}".format([a.version_id for a in self.trail_history]))
 
         # adjust trail history point to new active id
         self.trail_pointer = len(self.trail_history) - 1
@@ -955,8 +1010,8 @@ class ModificationsHistory(Observable):
         while self.all_time_history[self.trail_history[-1].version_id].next_id:
             insert_version_id = self.all_time_history[self.trail_history[-1].version_id].next_id
             self.trail_history.append(self.all_time_history[insert_version_id].action)
-        if self.with_prints:
-            logger.info("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
+        if self.with_verbose:
+            logger.verbose("New trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
 
     def get_undo_redo_list_from_active_trail_history_item_to_version_id(self, version_id):
         """Perform fast search from currently active branch to specific version_id and collect all recovery steps.
@@ -967,13 +1022,12 @@ class ModificationsHistory(Observable):
         _undo_redo_list = []
 
         intermediate_version_id = version_id
-        if self.with_prints:
-            logger.info("\n\nactive_action: {0} in: {3}"
-                        "\ntrail_actions: {1} in: {4}"
-                        "\nversion_id   : {2}".format(all_active_action, all_trail_action, intermediate_version_id,
-                                                      intermediate_version_id in all_active_action,
-                                                      intermediate_version_id in all_trail_action
-                                                      ))
+        if self.with_verbose:
+            logger.verbose("Version_id    : {0} in".format(intermediate_version_id))
+            logger.verbose("Active actions: {0} in: {1}".format(all_active_action,
+                                                                intermediate_version_id in all_active_action))
+            logger.verbose("Trail actions : {0} in: {1}".format(all_trail_action,
+                                                                intermediate_version_id in all_trail_action))
 
         if intermediate_version_id not in all_trail_action:
             # get undo to come from version_id to trail_action
@@ -984,13 +1038,13 @@ class ModificationsHistory(Observable):
         else:
             intermediate_goal_version_id = version_id
         intermediate_version_id = self.trail_history[self.trail_pointer].version_id
-        if self.with_prints:
-            logger.info("\n\nactive_action: {0} in: {3}"
-                        "\ntrail_actions: {1} in: {4}"
-                        "\nversion_id   : {5} {2}".format(all_active_action, all_trail_action, intermediate_version_id,
-                                                      intermediate_version_id in all_active_action,
-                                                      intermediate_version_id in all_trail_action, intermediate_goal_version_id
-                                                      ))
+        if self.with_verbose:
+            logger.verbose("Version_id    : {0} {1}".format(intermediate_goal_version_id, intermediate_version_id))
+            logger.verbose("Active actions: {0} in: {1}".format(all_active_action,
+                                                                intermediate_version_id in all_active_action))
+            logger.verbose("Trail actions : {0} in: {1}".format(all_trail_action,
+                                                                intermediate_version_id in all_trail_action))
+
         # collect undo and redo on trail
         if intermediate_goal_version_id in all_active_action:
             # collect needed undo to reach intermediate version

@@ -20,8 +20,9 @@
 
 """
 
-import gtk
-import gobject
+from gi.repository import Gtk
+from gi.repository import GObject
+from builtins import str
 
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.state_elements.scope import ScopedVariable
@@ -67,21 +68,21 @@ class ScopedVariableListController(ListViewController):
 
     @staticmethod
     def get_new_list_store():
-        return gtk.ListStore(str, str, str, int, gobject.TYPE_PYOBJECT)
+        return Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, int, GObject.TYPE_PYOBJECT)
 
     def register_view(self, view):
         """Called when the View was registered"""
         super(ScopedVariableListController, self).register_view(view)
 
         view['name_col'].add_attribute(view['name_text'], 'text', self.NAME_STORAGE_ID)
-        if not isinstance(self.model.state, LibraryState) and self.model.state.get_library_root_state() is None:
+        if not isinstance(self.model.state, LibraryState) and self.model.state.get_next_upper_library_root_state() is None:
             view['name_text'].set_property("editable", True)
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', self.DATA_TYPE_NAME_STORAGE_ID)
-        if not isinstance(self.model.state, LibraryState) and self.model.state.get_library_root_state() is None:
+        if not isinstance(self.model.state, LibraryState) and self.model.state.get_next_upper_library_root_state() is None:
             view['data_type_text'].set_property("editable", True)
         if isinstance(view, ScopedVariablesListView):
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', self.DEFAULT_VALUE_STORAGE_ID)
-            if not isinstance(self.model.state, LibraryState) and self.model.state.get_library_root_state() is None:
+            if not isinstance(self.model.state, LibraryState) and self.model.state.get_next_upper_library_root_state() is None:
                 view['default_value_text'].set_property("editable", True)
             self._apply_value_on_edited_and_focus_out(view['default_value_text'],
                                                       self.apply_new_scoped_variable_default_value)
@@ -141,7 +142,7 @@ class ScopedVariableListController(ListViewController):
                 if scoped_var_ids:
                     self.select_entry(scoped_var_ids[self.model.state])
             except ValueError as e:
-                logger.warn("The scoped variable couldn't be added: {0}".format(e))
+                logger.warning("The scoped variable couldn't be added: {0}".format(e))
                 return False
 
             return True
@@ -209,18 +210,19 @@ class ScopedVariableListController(ListViewController):
                 # get module of type, e.g. numpy
                 data_type_module = data_type.__module__
                 # if the type is not a builtin type, also show the module
-                if data_type_module != '__builtin__':
+                if data_type_module not in ['__builtin__', 'builtins']:
                     data_type_name = data_type_module + '.' + data_type_name
                 tmp.append([sv_model.scoped_variable.name, data_type_name,
-                            sv_model.scoped_variable.default_value, sv_model.scoped_variable.data_port_id, sv_model])
-            tms = gtk.TreeModelSort(tmp)
-            tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
+                            str(sv_model.scoped_variable.default_value), sv_model.scoped_variable.data_port_id,
+                                sv_model])
+            tms = Gtk.TreeModelSort(model=tmp)
+            tms.set_sort_column_id(0, Gtk.SortType.ASCENDING)
             tms.set_sort_func(0, compare_variables)
             tms.sort_column_changed()
             tmp = tms
             self.list_store.clear()
             for elem in tmp:
-                self.list_store.append(elem)
+                self.list_store.append(elem[:])
         else:
             raise RuntimeError("The reload_scoped_variables_list_store function should be never called for "
                                "a non Container State Model")

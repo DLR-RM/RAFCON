@@ -1,0 +1,149 @@
+{
+    "gui": {
+        "editor_gaphas": {
+            "income": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        0.7902013662749233
+                    ]
+                }
+            }, 
+            "name": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.13091518510270658, 
+                        0.13091518510270658
+                    ]
+                }, 
+                "size": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1.3091518510270657, 
+                        0.19637277765405986
+                    ]
+                }
+            }, 
+            "outcome_pos": {
+                "-1": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1139.4775351280837, 
+                        -1129.010588746144
+                    ]
+                }, 
+                "-2": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1135.076507702084, 
+                        -1129.010588746144
+                    ]
+                }, 
+                "0": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1141.6780488410836, 
+                        -1140.0131573111435
+                    ]
+                }
+            }, 
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    4.265850477764445, 
+                    2.3733622101457357
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    1.5709822212324789, 
+                    1.5804027325498466
+                ]
+            }
+        }
+    }, 
+    "input_data_port2": {
+        "gui": {
+            "editor_gaphas": {
+                "outer_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1123.472275347109, 
+                        -1153.216239589143
+                    ]
+                }, 
+                "outer_connector_radius": 0.4584403568749798, 
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        1.4233045104265987
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome-1": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1.413883999109231, 
+                        0
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome-2": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1.0996875548627352, 
+                        0
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome0": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1.5709822212324789, 
+                        0.7902013662749233
+                    ]
+                }
+            }
+        }
+    }, 
+    "output_data_port3": {
+        "gui": {
+            "editor_gaphas": {
+                "outer_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1132.6395479562175, 
+                        -1157.2505147296429
+                    ]
+                }, 
+                "outer_connector_radius": 0.4584403568749798, 
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1.5709822212324789, 
+                        1.4233045104265987
+                    ]
+                }
+            }
+        }
+    }
+}

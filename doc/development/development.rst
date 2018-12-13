@@ -13,10 +13,22 @@ Please check our `code style <#code-style>`__, before making any changes to the 
 guidelines <#git-commit-guidelines>`__, before submitting any commit.
 
 
-Git repository
---------------
+Getting Started
+---------------
 
-The Git repository can be found on `GitHub <https://github.com/DLR-RM/RAFCON>`__.
+.. include:: includes/getting_started.rst
+
+
+Install RAFCON from Sources
+---------------------------
+
+.. include:: includes/install_from_sources.rst
+
+
+Code of Conduct
+---------------
+
+.. include:: includes/code_of_conduct.rst
 
 
 Bugs & Feature request
@@ -25,12 +37,6 @@ Bugs & Feature request
 Please use `GitHub
 Issues <https://github.com/DLR-RM/RAFCON/issues>`__ to
 report bugs. This page can also be used for feature requests.
-
-
-Code of Conduct
----------------
-
-.. include:: includes/code_of_conduct.rst
 
 
 Code style
@@ -49,6 +55,13 @@ Steps for releasing
 -------------------
 
 .. include:: includes/release_steps.rst
+
+
+Translating RAFCON
+------------------
+
+.. include:: includes/translation.rst
+
 
 HowTo on creating a splashscreen
 --------------------------------

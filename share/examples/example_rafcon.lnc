@@ -6,8 +6,6 @@ defines
 RAFCON_SRC_PATH: /volume/software/common/packages/rafcon/latest/source/
 RAFCON_PYTHONPATH_ADD: %(shell echo $HOME)/.local/lib/python2.7/site-packages/ 
 RAFCON_NEW_STATE_MACHINE: True
-# RAFCON_OPEN_STATE_MACHINES: /home_local/stei_fn/taskcontrol/share/examples/tutorials/99_bottles_of_beer
 
 include /volume/software/common/packages/rafcon/latest/share/rafcon.inc.lnc
 
-#include /home_local/stei_fn/taskcontrol/share/rafcon.inc.lnc

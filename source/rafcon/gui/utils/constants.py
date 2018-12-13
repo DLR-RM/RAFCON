@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -14,7 +14,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import os
-import gtk
+from gi.repository import Gtk
+from gi.repository import Gdk
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
 
@@ -29,7 +30,7 @@ INTERFACE_FONT = FONTS[0]
 ICON_FONT = FONTS[1]
 
 FONT_SIZE_SMALL = "10"
-FONT_SIZE_NORMAL = "12"
+FONT_SIZE_NORMAL = "11"
 FONT_SIZE_BIG = "14"
 
 LETTER_SPACING_NONE = "0"
@@ -39,9 +40,9 @@ LETTER_SPACING_1PT = "1024"
 LETTER_SPACING_2PT = "2048"
 LETTER_SPACING_3PT = "3072"
 
-MOVE_CURSOR = gtk.gdk.FLEUR
-SELECT_CURSOR = gtk.gdk.HAND1
-CREATION_CURSOR = gtk.gdk.CROSS
+MOVE_CURSOR = Gdk.CursorType.FLEUR
+SELECT_CURSOR = Gdk.CursorType.HAND1
+CREATION_CURSOR = Gdk.CursorType.CROSS
 
 KEYVALUE_CTRL_L = 65507
 KEYVALUE_CTRL_R = 65508
@@ -51,19 +52,23 @@ KEYVALUE_SHIFT_L = 65505
 KEYVALUE_SHIFT_R = 65506
 KEYVALUE_CONTEXT = 65383
 KEYVALUE_TAB = 65289
-MOVE_PORT_MODIFIER = gtk.gdk.CONTROL_MASK
+MOVE_PORT_MODIFIER = Gdk.ModifierType.CONTROL_MASK
 EXTEND_SELECTION_KEY = KEYVALUE_CTRL_L
 EXTEND_SELECTION_KEY_ALT = KEYVALUE_CTRL_R
-EXTEND_SELECTION_MODIFIER = gtk.gdk.CONTROL_MASK
-RUBBERBAND_MODIFIER = gtk.gdk.SHIFT_MASK
-RECURSIVE_RESIZE_MODIFIER = gtk.gdk.CONTROL_MASK
+EXTEND_SELECTION_MODIFIER = Gdk.ModifierType.CONTROL_MASK
+RUBBERBAND_MODIFIER = Gdk.ModifierType.SHIFT_MASK
+RECURSIVE_RESIZE_MODIFIER = Gdk.ModifierType.CONTROL_MASK
 
 
 MAX_VALUE_LABEL_TEXT_LENGTH = 7
 
-MINIMUM_SIZE_FOR_DISPLAY = 2
+MINIMUM_STATE_SIZE_FOR_DISPLAY = 5
+MINIMUM_NAME_SIZE_FOR_DISPLAY = 10
+MINIMUM_PORT_SIZE_FOR_DISPLAY = 4
+MINIMUM_PORT_NAME_SIZE_FOR_DISPLAY = 4
 
 GRID_SIZE = 10
+PADDING_LEFT = 15
 BORDER_WIDTH_STATE_SIZE_FACTOR = 25.
 BORDER_WIDTH_OUTLINE_WIDTH_FACTOR = 35.
 BORDER_WIDTH_LINE_WIDTH_FACTOR = 8.
@@ -89,7 +94,7 @@ WINDOW_SIZE = {'MAIN_WINDOW': (1800, 900), 'LEFT_BAR_WINDOW': (300, 800), 'RIGHT
 PANE_ID = {'LEFT_BAR_DOCKED_POS': 'top_level_h_pane',
            'RIGHT_BAR_DOCKED_POS': 'right_h_pane',
            'CONSOLE_DOCKED_POS': 'central_v_pane',
-           'LEFT_BAR_INNER_PANE_POS': 'left_bar'}
+           'LEFT_BAR_INNER_PANE_POS': 'left_bar_paned'}
 
 # a mapping of runtime config values for the hidden status of all three main bars (left, right and console)
 # to hide functions (located in the main_window controller)
@@ -111,6 +116,7 @@ BUTTON_OPEN = "f115"
 BUTTON_SAVE = "f0c7"
 BUTTON_PROP = "f0ad"
 BUTTON_REFR = "f021"
+BUTTON_BAKE = "f187"
 BUTTON_CLOSE = "f00d"
 BUTTON_QUIT = "f08b"
 BUTTON_CUT = "f0c4"

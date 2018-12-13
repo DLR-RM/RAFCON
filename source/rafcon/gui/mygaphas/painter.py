@@ -10,7 +10,9 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from cairo import ANTIALIAS_NONE, Matrix
+# from cairo import Antialias
+from cairo import Matrix
+from builtins import zip
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.utils import constants
@@ -54,7 +56,7 @@ class CornerHandlePainter(ItemPaintHovered):
                 break
             # Reset the current transformation
             cairo.identity_matrix()
-            cairo.set_antialias(ANTIALIAS_NONE)
+            #cairo.set_antialias(Antialias.NONE)
             # Move to center of handle
             cairo.translate(*i2v.transform_point(*handle.pos))
             cairo.rectangle(-side_length / 2., -side_length / 2., side_length, side_length)
@@ -66,12 +68,41 @@ class CornerHandlePainter(ItemPaintHovered):
             cairo.stroke()
         cairo.restore()
 
+    def _paint_guides(self, context):
+        # Code copied from gaphas.guide.GuidePainter
+        try:
+            guides = self.view.guides
+        except AttributeError:
+            return
+
+        cr = context.cairo
+        view = self.view
+        allocation = view.get_allocation()
+        w, h = allocation.width, allocation.height
+
+        cr.save()
+        try:
+            cr.set_line_width(1)
+            cr.set_source_rgba(0.0, 0.0, 1.0, 0.6)
+            for g in guides.vertical():
+                cr.move_to(g, 0)
+                cr.line_to(g, h)
+                cr.stroke()
+            for g in guides.horizontal():
+                cr.move_to(0, g)
+                cr.line_to(w, g)
+                cr.stroke()
+        finally:
+            cr.restore()
+
     def paint(self, context, selected):
         if selected:
             self._draw_handles(self.item, context.cairo)
         else:
             # Draw nice opaque handles when hovering an non-selected item:
             self._draw_handles(self.item, context.cairo, opacity=.25)
+
+        self._paint_guides(context)
 
 
 @PaintHovered.when_type(StateView)
@@ -119,7 +150,7 @@ class LineSegmentPainter(ItemPaintHovered):
             cr.identity_matrix()
             m = Matrix(*view.get_matrix_i2v(item))
 
-            cr.set_antialias(ANTIALIAS_NONE)
+            # cr.set_antialias(Antialias.NONE)
             cr.translate(*m.transform_point(cx, cy))
             cr.rectangle(-side_length / 2., -side_length / 2., side_length, side_length)
             cr.set_source_rgba(*get_col_rgba(self.fill_color))

@@ -7,9 +7,9 @@
 
 
 """
+from __future__ import print_function
 
 import logging
-import gtk
 import signal
 import sys
 from os.path import realpath, dirname, join
@@ -19,19 +19,21 @@ def setup_logger():
     import sys
     # Set the views for the loggers
 
-    # Apply defaults to logger of gtkmvc
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
+    # Apply defaults to logger of gtkmvc3
+    for handler in logging.getLogger('gtkmvc3').handlers:
+        logging.getLogger('gtkmvc3').removeHandler(handler)
     stdout = logging.StreamHandler(sys.stdout)
     stdout.setFormatter(logging.Formatter("%(asctime)s: %(levelname)-8s - %(name)s:  %(message)s"))
     stdout.setLevel(logging.DEBUG)
-    logging.getLogger('gtkmvc').addHandler(stdout)
+    logging.getLogger('gtkmvc3').addHandler(stdout)
 
 
 def start_client(interacting_function, queue_dict):
     from rafcon.gui.config import global_gui_config
     import os
 
+    from rafcon.utils.i18n import setup_l10n
+    setup_l10n()
     from rafcon.gui.controllers.main_window import MainWindowController
     from rafcon.gui.views.main_window import MainWindowView
     import rafcon.gui.singleton as gui_singletons
@@ -54,13 +56,13 @@ def start_client(interacting_function, queue_dict):
     import testing_utils
 
     # check if twisted is imported
-    if "twisted" in sys.modules.keys():
-        from twisted.internet import gtk2reactor
-        # needed for glib.idle_add, and signals
-        gtk2reactor.install()
+    if "twisted" in sys.modules:
+        from twisted.internet import gtk3reactor
+        # needed for GLib.idle_add, and signals
+        gtk3reactor.install()
         from twisted.internet import reactor
     else:
-        print "Twisted not imported! Thus the gkt2reatcor is not installed!"
+        print("Twisted not imported! Thus the gkt2reatcor is not installed!")
         exit()
 
     plugins.run_pre_inits()
@@ -90,7 +92,10 @@ def start_client(interacting_function, queue_dict):
     state_machine = global_storage.load_state_machine_from_path(
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "99_bottles_of_beer_monitoring")))
 
-    core_singletons.state_machine_manager.add_state_machine(state_machine)
+    sm_id = rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    # the active_state_machine_id must be set here, as the state machine can be active (e.g. if the server started the sm already)
+    # although it is not yet started on the client
+    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm_id
 
     sm_manager_model = gui_singletons.state_machine_manager_model
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
@@ -102,15 +107,16 @@ def start_client(interacting_function, queue_dict):
     from monitoring.monitoring_manager import global_monitoring_manager
     interacting_thread = threading.Thread(target=interacting_function, args=[main_window_controller,
                                                                              global_monitoring_manager,
-                                                                             queue_dict])
+                                                                             queue_dict,
+                                                                             sm_id])
     testing_utils.wait_for_gui()
     interacting_thread.start()
 
     # check if twisted is imported
-    if "twisted" in sys.modules.keys():
+    if "twisted" in sys.modules:
         reactor.run()
     else:
-        logger.error("Something went seriously wrong!")
+        logger.error("Client: Twisted is not in sys.modules or twisted is not working! Exiting program ... !")
         os._exit(0)
 
     logger.info("Joined root state")
@@ -127,10 +133,10 @@ def start_client(interacting_function, queue_dict):
 
 
 def print_objects(main_window_controller, global_monitoring_manager, queue_dict):
-    print "dummy prints:"
-    print main_window_controller
-    print global_monitoring_manager
-    print queue_dict
+    print("dummy prints:")
+    print(main_window_controller)
+    print(global_monitoring_manager)
+    print(queue_dict)
 
 if __name__ == '__main__':
     start_client(print_objects, "multiprocessing_queue_dict")

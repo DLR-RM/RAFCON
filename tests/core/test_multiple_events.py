@@ -25,7 +25,7 @@ def trigger_exectuion_engine(gvm, execution_engine):
     while gvm.get_variable("sm_status") != 1:
         time.sleep(0.1)
 
-    execution_engine.start()
+    execution_engine.start()  # resume
     while gvm.get_variable("sm_status") != 2:
         time.sleep(0.1)
 
@@ -33,7 +33,7 @@ def trigger_exectuion_engine(gvm, execution_engine):
 
 
 def test_multi_events(caplog):
-    testing_utils.initialize_environment_only_core()
+    testing_utils.initialize_environment_core()
 
     execution_trigger_thread = threading.Thread(target=trigger_exectuion_engine,
                                                 args=[global_variable_manager, state_machine_execution_engine])

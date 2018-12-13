@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -20,10 +20,9 @@
 
 """
 
-import gtk
-import gobject
-from gtk import ListStore
-from gtk import TreeViewColumn, CellRendererToggle
+from gi.repository import Gtk
+from gi.repository import GObject
+from builtins import str
 
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.states.library_state import LibraryState
@@ -56,7 +55,13 @@ class DataPortListController(ListViewController):
     data_port_model_list = None
 
     def __init__(self):
-        raise NotImplementedError("You have to instatiate a subclass of DataPortListController")
+        raise NotImplementedError("You have to instantiate a subclass of DataPortListController")
+
+    def destroy(self):
+        if self.model.state.get_next_upper_library_root_state() is None and \
+                (isinstance(self.view, InputPortsListView) or isinstance(self.view, OutputPortsListView)):
+            self.view['default_value_col'].set_cell_data_func(self.view['default_value_text'], None)
+        super(DataPortListController, self).destroy()
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -64,7 +69,7 @@ class DataPortListController(ListViewController):
 
         view['name_col'].add_attribute(view['name_text'], 'text', self.NAME_STORAGE_ID)
         view['data_type_col'].add_attribute(view['data_type_text'], 'text', self.DATA_TYPE_NAME_STORAGE_ID)
-        if not isinstance(self.model.state, LibraryState) and self.model.state.get_library_root_state() is None:
+        if not isinstance(self.model.state, LibraryState) and self.model.state.get_next_upper_library_root_state() is None:
             view['name_text'].set_property("editable", True)
             view['data_type_text'].set_property("editable", True)
 
@@ -72,24 +77,25 @@ class DataPortListController(ListViewController):
         if isinstance(view, InputPortsListView) or isinstance(view, OutputPortsListView):
             view['default_value_col'].add_attribute(view['default_value_text'], 'text', self.DEFAULT_VALUE_STORAGE_ID)
             self._apply_value_on_edited_and_focus_out(view['default_value_text'], self._apply_new_data_port_default_value)
+            view['default_value_col'].set_cell_data_func(view['default_value_text'],
+                                                         self._default_value_cell_data_func)
             if isinstance(self.model.state, LibraryState):
                 view['default_value_col'].set_title("Used value")
-            if self.model.state.get_library_root_state() is None:  # never enabled means it is disabled
+            if self.model.state.get_next_upper_library_root_state() is None:  # never enabled means it is disabled
                 view['default_value_text'].set_property("editable", True)
-                view['default_value_col'].set_cell_data_func(view['default_value_text'],
-                                                             self._default_value_cell_data_func)
 
         self._apply_value_on_edited_and_focus_out(view['name_text'], self._apply_new_data_port_name)
         self._apply_value_on_edited_and_focus_out(view['data_type_text'], self._apply_new_data_port_type)
 
         if isinstance(self.model.state, LibraryState):
-            view['use_runtime_value_toggle'] = CellRendererToggle()
-            view['use_runtime_value_col'] = TreeViewColumn("Use Runtime Value")
+            view['use_runtime_value_toggle'] = Gtk.CellRendererToggle()
+            view['use_runtime_value_col'] = Gtk.TreeViewColumn("Use Runtime Value")
+            view['use_runtime_value_col'].set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)
             view.get_top_widget().append_column(view['use_runtime_value_col'])
             view['use_runtime_value_col'].pack_start(view['use_runtime_value_toggle'], True)
             view['use_runtime_value_col'].add_attribute(view['use_runtime_value_toggle'], 'active',
                                                         self.USE_RUNTIME_VALUE_STORAGE_ID)
-            if self.model.state.get_library_root_state() is None:
+            if self.model.state.get_next_upper_library_root_state() is None:
                 view['use_runtime_value_toggle'].set_property("activatable", True)
                 view['use_runtime_value_toggle'].connect("toggled", self.on_use_runtime_value_toggled)
 
@@ -167,18 +173,19 @@ class DataPortListController(ListViewController):
 
     @staticmethod
     def _get_new_list_store():
-        return ListStore(str, str, str, int, bool, str, gobject.TYPE_PYOBJECT)
+        return Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, int, bool, GObject.TYPE_STRING, GObject.TYPE_PYOBJECT)
 
-    def _default_value_cell_data_func(self, tree_view_column, cell, model, iter):
+    def _default_value_cell_data_func(self, tree_view_column, cell, model, iter, data=None):
         """Function set renderer properties for every single cell independently
 
         The function controls the editable and color scheme for every cell in the default value column according
         the use_runtime_value flag and whether the state is a library state.
 
-        :param tree_view_column: the gtk.TreeViewColumn to be rendered
+        :param tree_view_column: the Gtk.TreeViewColumn to be rendered
         :param cell: the current CellRenderer
-        :param model: the ListStore or TreeStore that is the model for TreeView
-        :param iter: an iterator over the rows of the TreeStore/ListStore Model
+        :param model: the Gtk.ListStore or TreeStore that is the model for TreeView
+        :param iter: an iterator over the rows of the TreeStore/Gtk.ListStore Model
+        :param data: optional data to be passed: see http://dumbmatter.com/2012/02/some-notes-on-porting-from-pygtk-to-pygobject/
         """
         if isinstance(self.model.state, LibraryState):
             use_runtime_value = model.get_value(iter, self.USE_RUNTIME_VALUE_STORAGE_ID)
@@ -205,7 +212,7 @@ class DataPortListController(ListViewController):
             # get module of type, e.g. numpy
             data_type_module = data_type.__module__
             # if the type is not a builtin type, also show the module
-            if data_type_module != '__builtin__':
+            if data_type_module not in ['__builtin__', 'builtins']:
                 data_type_name = data_type_module + '.' + data_type_name
             if data_port_m.data_port.default_value is None:
                 default_value = "None"
@@ -213,27 +220,27 @@ class DataPortListController(ListViewController):
                 default_value = data_port_m.data_port.default_value
 
             if not isinstance(self.model.state, LibraryState):
-                tmp.append([data_port_m.data_port.name, data_type_name, default_value, data_port_id,
+                tmp.append([data_port_m.data_port.name, data_type_name, str(default_value), data_port_id,
                             None, None, data_port_m])
             else:
                 use_runtime_value, runtime_value = self.get_data_port_runtime_configuration(data_port_id)
                 tmp.append([data_port_m.data_port.name,
                             data_type_name,
-                            default_value,
+                            str(default_value),
                             data_port_id,
-                            use_runtime_value,
-                            runtime_value,
+                            bool(use_runtime_value),
+                            str(runtime_value),
                             data_port_m,
                             ])
 
-        tms = gtk.TreeModelSort(tmp)
-        tms.set_sort_column_id(0, gtk.SORT_ASCENDING)
+        tms = Gtk.TreeModelSort(model=tmp)
+        tms.set_sort_column_id(0, Gtk.SortType.ASCENDING)
         tms.set_sort_func(0, compare_variables)
         tms.sort_column_changed()
         tmp = tms
         self.list_store.clear()
         for elem in tmp:
-            self.list_store.append(elem)
+            self.list_store.append(elem[:])
 
     def _apply_new_data_port_name(self, path, new_name):
         """Applies the new name of the data port defined by path

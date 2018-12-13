@@ -1,6 +1,6 @@
 # core elements
 from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.core.storage import storage
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.script import Script
@@ -54,6 +54,13 @@ def create_concurrency_barrier_state():
     return barrier_state
 
 
+def test_create_barrier_state_with_predefined_decider_state():
+    decider_name = "Decision Maker"
+    decider_state = DeciderState(decider_name)
+    barrier_state = BarrierConcurrencyState("Barrier State", decider_state=decider_state)
+    assert len([state for state in barrier_state.states.values() if state.name == decider_name]) == 1
+
+
 def test_concurrency_barrier_save_load(caplog):
     concurrency_barrier_state = create_concurrency_barrier_state()
 
@@ -71,8 +78,7 @@ def test_concurrency_barrier_save_load(caplog):
     state_machine = StateMachine(root_state)
     testing_utils.test_multithreading_lock.acquire()
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
 
     try:
@@ -80,9 +86,17 @@ def test_concurrency_barrier_save_load(caplog):
         assert rafcon.core.singleton.global_variable_manager.get_variable("var_y") == 20
         assert root_state.final_outcome.outcome_id == 4
 
+        with pytest.raises(ValueError):
+            concurrency_barrier_state.remove(UNIQUE_DECIDER_STATE_ID)
+
+        with pytest.raises(AttributeError):
+            concurrency_barrier_state.remove_state(UNIQUE_DECIDER_STATE_ID)
+
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     finally:
         testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    test_create_barrier_state_with_predefined_decider_state()
+    test_concurrency_barrier_save_load(None)
+    # pytest.main([__file__])

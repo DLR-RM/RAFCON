@@ -1,0 +1,151 @@
+{
+    "gui": {
+        "editor_gaphas": {
+            "income": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.45091618472265355, 
+                        9.190899900004561
+                    ]
+                }
+            }, 
+            "name": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1.2889176820864492, 
+                        1.3473565694023506
+                    ]
+                }, 
+                "size": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        20.562515922901838, 
+                        11.436423855792343
+                    ]
+                }
+            }, 
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    10.577237295349562, 
+                    27.666286285641327
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    22.761314780180975, 
+                    22.545809236132676
+                ]
+            }
+        }
+    }, 
+    "income": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.375, 
+                        4.550420907427702
+                    ]
+                }
+            }
+        }
+    }, 
+    "name": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.75, 
+                        0.75
+                    ]
+                }, 
+                "size": {}
+            }, 
+            "editor_opengl": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.75, 
+                        -0.75
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome-1": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        22.31039859545832, 
+                        0.673678284701179
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome-2": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        22.31039859545832, 
+                        0.673678284701179
+                    ]
+                }
+            }
+        }
+    }, 
+    "transition1": {
+        "gui": {
+            "editor": {
+                "waypoints": {}
+            }
+        }
+    }, 
+    "transition2": {
+        "gui": {
+            "editor_gaphas": {
+                "waypoints": [
+                    {
+                        "__jsonqualname__": "__builtin__.tuple", 
+                        "items": [
+                            12.869698510918736, 
+                            9.087979013710902
+                        ]
+                    }, 
+                    {
+                        "__jsonqualname__": "__builtin__.tuple", 
+                        "items": [
+                            6.059453597856759, 
+                            9.059666053467662
+                        ]
+                    }
+                ]
+            }
+        }
+    }, 
+    "transition3": {
+        "gui": {
+            "editor_gaphas": {
+                "waypoints": [
+                    {
+                        "__jsonqualname__": "__builtin__.tuple", 
+                        "items": [
+                            3.57628620801499, 
+                            7.240851739565329
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -18,10 +18,11 @@
      is-start-state flag and state-type.
 
 """
-import glib
-import gtk
-from gtk.gdk import keyval_name
-from gtkmvc import Model
+from gi.repository import GLib
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GObject
+from builtins import str
 
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.core.states.execution_state import ExecutionState
@@ -30,7 +31,6 @@ from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrenc
 from rafcon.core.states.state import StateType
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-from rafcon.gui.helpers.label import format_cell
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel
 from rafcon.gui.views.state_editor.overview import StateOverviewView
@@ -43,7 +43,7 @@ logger = log.get_logger(__name__)
 class StateOverviewController(ExtendedController):
     """Controller handling the view of properties/attributes of the ContainerStateModel
 
-    This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
+    This :class:`gtkmvc3.Controller` class is the interface between the GTK widget view
     :class:`gui.views.source_editor.SourceEditorView` and the properties of the
     :class:`gui.models.state.StateModel`. Changes made in
     the GUI are written back to the model and vice versa.
@@ -57,29 +57,18 @@ class StateOverviewController(ExtendedController):
         """
         assert isinstance(model, AbstractStateModel)
         assert isinstance(view, StateOverviewView)
-        ExtendedController.__init__(self, model, view)
+        super(StateOverviewController, self).__init__(model, view)
 
         self._external_update = False
-        self.state_types_dict = {}
+        self.allowed_state_classes = []
         self.with_is_start_state_check_box = with_is_start_state_check_box
 
     @staticmethod
-    def change_state_type_class_dict(state):
-        state_types_dict = {}
+    def get_allowed_state_classes(state):
         if isinstance(state, DeciderState):
-            # logger.info(str(StateType))
-            state_types_dict[str(StateType.DECIDER_STATE).split('.')[1]] = {
-                'Enum': StateType.DECIDER_STATE, 'class': DeciderState}
+            return [DeciderState]
         else:
-            state_types_dict[str(StateType.EXECUTION).split('.')[1]] = {
-                'Enum': StateType.EXECUTION, 'class': ExecutionState}
-            state_types_dict[str(StateType.HIERARCHY).split('.')[1]] = {
-                'Enum': StateType.HIERARCHY, 'class': HierarchyState}
-            state_types_dict[str(StateType.BARRIER_CONCURRENCY).split('.')[1]] = {
-                'Enum': StateType.BARRIER_CONCURRENCY, 'class': BarrierConcurrencyState}
-            state_types_dict[str(StateType.PREEMPTION_CONCURRENCY).split('.')[1]] = {
-                'Enum': StateType.PREEMPTION_CONCURRENCY, 'class': PreemptiveConcurrencyState}
-        return state_types_dict
+            return [ExecutionState, HierarchyState, BarrierConcurrencyState, PreemptiveConcurrencyState]
 
     def register_view(self, view):
         """Called when the View was registered
@@ -89,7 +78,8 @@ class StateOverviewController(ExtendedController):
         :param rafcon.gui.views.state_editor.overview.StateOverviewView view: A state overview view instance
         """
         # prepare State Type Change ComboBox
-        self.state_types_dict = self.change_state_type_class_dict(self.model.state)
+        super(StateOverviewController, self).register_view(view)
+        self.allowed_state_classes = self.get_allowed_state_classes(self.model.state)
 
         view['entry_name'].connect('focus-out-event', self.on_focus_out)
         view['entry_name'].connect('key-press-event', self.check_for_enter)
@@ -97,15 +87,11 @@ class StateOverviewController(ExtendedController):
             view['entry_name'].set_text(self.model.state.name)
         view['label_id_value'].set_text(self.model.state.state_id)
 
-        cell = gtk.CellRendererText()
-        format_cell(cell, constants.BUTTON_MIN_HEIGHT, constants.GRID_SIZE)
-        l_store = gtk.ListStore(str)
-        combo = gtk.ComboBox()
+        l_store = Gtk.ListStore(GObject.TYPE_STRING)
+        combo = Gtk.ComboBoxText()
         combo.set_name("state_type_combo")
         combo.set_focus_on_click(False)
         combo.set_model(l_store)
-        combo.pack_start(cell, True)
-        combo.add_attribute(cell, 'text', 0)
         combo.show_all()
         view['type_viewport'].add(combo)
         view['type_viewport'].show()
@@ -116,6 +102,8 @@ class StateOverviewController(ExtendedController):
             combo.set_sensitive(False)
 
             self.view['library_path'].set_text(self.model.state.library_path + "/" + self.model.state.library_name)
+            self.view['library_path'].set_sensitive(True)
+            self.view['library_path'].set_editable(False)
             view['show_content_checkbutton'].set_active(self.model.meta['gui']['show_content'] is True)
             view['show_content_checkbutton'].connect('toggled', self.on_toggle_show_content)
             # self.view['properties_widget'].remove(self.view['show_content_checkbutton'])
@@ -126,11 +114,11 @@ class StateOverviewController(ExtendedController):
             self.view['properties_widget'].remove(self.view['show_content_checkbutton'])
             self.view['properties_widget'].resize(2, 5)
 
-            for key, value in self.state_types_dict.iteritems():
-                if isinstance(self.model.state, value['class']):
-                    l_store.prepend([key])
+            for state_class in self.allowed_state_classes:
+                if isinstance(self.model.state, state_class):
+                    l_store.prepend([state_class.__name__])
                 else:
-                    l_store.append([key])
+                    l_store.append([state_class.__name__])
 
         combo.set_active(0)
         view['type_combobox'] = combo
@@ -149,7 +137,7 @@ class StateOverviewController(ExtendedController):
             combo.set_sensitive(False)
 
         # in case the state is inside of a library
-        if self.model.state.get_library_root_state():
+        if self.model.state.get_next_upper_library_root_state():
             view['entry_name'].set_editable(False)
             combo.set_sensitive(False)
             view['is_start_state_checkbutton'].set_sensitive(False)
@@ -190,9 +178,11 @@ class StateOverviewController(ExtendedController):
             self.view['entry_name'].set_text(self.model.state.name)
 
     def on_focus_out(self, entry, event):
-        # We have to use idle_add to prevent core dumps:
+        # Originally we had to use idle_add to prevent core dumps:
         # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
-        glib.idle_add(self.change_name, entry.get_text())
+        # GLib.idle_add(self.change_name, entry.get_text())
+        # Gtk TODO: use idle_add if problems occur
+        self.change_name(entry.get_text())
 
     def change_name(self, new_name):
         if self.model.state.name != new_name:
@@ -200,19 +190,20 @@ class StateOverviewController(ExtendedController):
                 self.model.state.name = new_name
                 logger.debug("State '{0}' changed name to '{1}'".format(self.model.state.name, new_name))
             except (TypeError, ValueError) as e:
-                logger.warn("Could not change state name: {0}".format(e))
+                logger.warning("Could not change state name: {0}".format(e))
             self.view['entry_name'].set_text(self.model.state.name)
 
     def change_type(self, widget, model=None, info=None):
-        type_text = widget.get_active_text()
-        if type_text not in self.state_types_dict:
+        state_class_name = widget.get_active_text()
+        for state_class in self.allowed_state_classes:
+            if state_class.__name__ == state_class_name:
+                break
+        else:
             logger.error("The desired state type does not exist")
-            return
 
-        target_class = self.state_types_dict[type_text]['class']
-        gui_helper_state_machine.change_state_type_with_error_handling_and_logger_messages(self.model, target_class)
+        gui_helper_state_machine.change_state_type_with_error_handling_and_logger_messages(self.model, state_class)
 
     def check_for_enter(self, entry, event):
-        key_name = keyval_name(event.keyval)
+        key_name = Gdk.keyval_name(event.keyval)
         if key_name in ["Return", "KP_Enter"]:
             self.change_name(entry.get_text())

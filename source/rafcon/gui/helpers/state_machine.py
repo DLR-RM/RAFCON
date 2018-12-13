@@ -1,4 +1,4 @@
-# Copyright (C) 2017 DLR
+# Copyright (C) 2017-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -6,6 +6,7 @@
 # http://www.eclipse.org/legal/epl-v10.html
 #
 # Contributors:
+# Franz Steinmetz <franz.steinmetz@dlr.de>
 # Lukas Becker <lukas.becker@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
@@ -15,14 +16,15 @@
    Additional this module holds methods that employing the state machine manager. Maybe this changes in future.
 """
 
+from builtins import str
 import copy
 import time
-
-import gtk
-import glib
+import os
+from gi.repository import Gtk
 
 import rafcon.gui.helpers.state as gui_helper_state
 import rafcon.gui.singleton
+
 from rafcon.core import interface, id_generator
 from rafcon.core.singleton import state_machine_manager, state_machine_execution_engine, library_manager
 from rafcon.core.state_machine import StateMachine
@@ -31,6 +33,9 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.state import State, StateType
 from rafcon.core.storage import storage
+import rafcon.core.config
+
+from rafcon.gui.helpers.text_formatting import format_default_folder_name
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
@@ -39,7 +44,8 @@ from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateMode
     DataFlowModel, DataPortModel, ScopedVariableModel, OutcomeModel, StateMachineModel
 from rafcon.gui.singleton import library_manager_model
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
-from rafcon.utils import log
+from rafcon.utils.filesystem import make_tarfile, copy_file_or_folder, create_path, make_file_executable
+from rafcon.utils import log, storage_utils
 import rafcon.gui.utils
 
 logger = log.get_logger(__name__)
@@ -48,7 +54,7 @@ logger = log.get_logger(__name__)
 
 
 def is_element_none_with_error_message(method_name, element_dict):
-    missing_elements = [element_name for element_name, element in element_dict.iteritems() if element is None]
+    missing_elements = [element_name for element_name, element in element_dict.items() if element is None]
     if missing_elements:
         logger.error("The following elements are missing to perform {0}: {1}".format(missing_elements))
 
@@ -62,7 +68,6 @@ def new_state_machine():
     root_state = HierarchyState("new root state")
     state_machine = StateMachine(root_state)
     state_machine_manager.add_state_machine(state_machine)
-    state_machine_manager.activate_state_machine_id = state_machine.state_machine_id
 
     # this is needed in order that the model is already there, when it is access via get_selected_state_machine_model()
     rafcon.gui.utils.wait_for_gui()
@@ -71,6 +76,7 @@ def new_state_machine():
 
     editor_controller = state_machines_editor_ctrl.get_controller(state_machine.state_machine_id)
     editor_controller.view.editor.grab_focus()
+    return state_machine
 
 
 def open_state_machine(path=None, recent_opened_notification=False):
@@ -107,11 +113,33 @@ def open_state_machine(path=None, recent_opened_notification=False):
             global_runtime_config.update_recently_opened_state_machines_with(state_machine)
         duration = time.time() - start_time
         stat = state_machine.root_state.get_states_statistics(0)
-        logger.info("It took {0} seconds to load {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
+        logger.info("It took {0:.2}s to load {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
     except (AttributeError, ValueError, IOError) as e:
         logger.error('Error while trying to open state machine: {0}'.format(e))
 
     return state_machine
+
+
+def open_library_state_separately():
+    state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    state_models = state_machine_manager_model.get_selected_state_machine_model().selection.states
+    if not state_models:
+        logger.info("Please select at least one library state to 'open library state separately'")
+        return
+    if not all([isinstance(state_m, LibraryStateModel) for state_m in state_models]):
+        logger.warning("Please select only library states. "
+                       "'Open library state separately' works only for library states.")
+        return
+
+    for state_m in state_models:
+        try:
+            path, _, _ = rafcon.gui.singleton.library_manager.get_os_path_to_library(state_m.state.library_path,
+                                                                                     state_m.state.library_name)
+            state_machine = open_state_machine(path)
+            if state_machine is None:
+                logger.warning('Library state {0} could not be open separately'.format(state_m.state))
+        except Exception:
+            logger.exception('Library state {0} could not be open separately'.format(state_m.state))
 
 
 def save_state_machine(delete_old_state_machine=False, recent_opened_notification=False, as_copy=False, copy_path=None):
@@ -138,11 +166,10 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
     if state_machine_m is None:
         logger.warning("Can not 'save state machine' because no state machine is selected.")
         return False
-    old_file_system_path = state_machine_m.state_machine.file_system_path
 
     previous_path = state_machine_m.state_machine.file_system_path
     previous_marked_dirty = state_machine_m.state_machine.marked_dirty
-    all_tabs = states_editor_ctrl.tabs.values()
+    all_tabs = list(states_editor_ctrl.tabs.values())
     all_tabs.extend(states_editor_ctrl.closed_tabs.values())
     dirty_source_editor_ctrls = [tab_dict['controller'].get_controller('source_ctrl') for tab_dict in all_tabs if
                                  tab_dict['source_code_view_is_dirty'] is True and
@@ -151,14 +178,14 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
 
     for dirty_source_editor_ctrl in dirty_source_editor_ctrls:
         state = dirty_source_editor_ctrl.model.state
-        message_string = "The source code of the state '{}' (path: {}) has net been applied yet and would " \
-                         "therefore not be stored.\n\nDo you want to apply the changes now?" \
+        message_string = "The source code of the state '{}' (path: {}) has not been applied yet and would " \
+                         "therefore not be saved.\n\nDo you want to apply the changes now?" \
                          "".format(state.name, state.get_path())
         if global_gui_config.get_config_value("AUTO_APPLY_SOURCE_CODE_CHANGES", False):
             dirty_source_editor_ctrl.apply_clicked(None)
         else:
             dialog = RAFCONButtonDialog(message_string, ["Apply", "Ignore changes"],
-                                        message_type=gtk.MESSAGE_WARNING, parent=states_editor_ctrl.get_root_window())
+                                        message_type=Gtk.MessageType.WARNING, parent=states_editor_ctrl.get_root_window())
             response_id = dialog.run()
             state = dirty_source_editor_ctrl.model.state
             if response_id == 1:  # Apply changes
@@ -185,12 +212,11 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
 
     storage.save_state_machine_to_path(state_machine_m.state_machine, copy_path if as_copy else sm_path,
                                        delete_old_state_machine=delete_old_state_machine, as_copy=as_copy)
-    if recent_opened_notification and \
-            (not previous_path == save_path or previous_path == save_path and previous_marked_dirty):
+    if recent_opened_notification:
         global_runtime_config.update_recently_opened_state_machines_with(state_machine_m.state_machine)
     state_machine_m.store_meta_data(copy_path=copy_path if as_copy else None)
     logger.debug("Saved state machine and its meta data.")
-    library_manager_model.state_machine_was_stored(state_machine_m, old_file_system_path)
+    library_manager_model.state_machine_was_stored(state_machine_m, previous_path)
     return True
 
 
@@ -220,18 +246,21 @@ def save_state_machine_as(path=None, recent_opened_notification=False, as_copy=F
         folder_name = selected_state_machine_model.state_machine.root_state.name
         path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
                                             "The default folder name is the name of the root state.",
-                                            folder_name)
+                                            format_default_folder_name(folder_name))
         if path is None:
             logger.warning("No valid path specified")
             return False
 
-    old_file_system_path = selected_state_machine_model.state_machine.file_system_path
+    previous_path = selected_state_machine_model.state_machine.file_system_path
     if not as_copy:
+        marked_dirty = selected_state_machine_model.state_machine.marked_dirty
+        recent_opened_notification = recent_opened_notification and (not previous_path == path or marked_dirty)
         selected_state_machine_model.state_machine.file_system_path = path
+
     result = save_state_machine(delete_old_state_machine=True,
                                 recent_opened_notification=recent_opened_notification,
                                 as_copy=as_copy, copy_path=path)
-    library_manager_model.state_machine_was_stored(selected_state_machine_model, old_file_system_path)
+    library_manager_model.state_machine_was_stored(selected_state_machine_model, previous_path)
     return result
 
 
@@ -253,7 +282,7 @@ def save_selected_state_as():
         sm_m.root_state = state_m
         path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine your "
                                             "state is saved in. The default folder name is the name of state.",
-                                            selected_state.state.name)
+                                            format_default_folder_name(selected_state.state.name))
         if path:
             storage.save_state_machine_to_path(sm_m.state_machine, base_path=path)
             sm_m.store_meta_data()
@@ -290,7 +319,7 @@ def save_selected_state_as():
             dialog = RAFCONCheckBoxTableDialog(message_string,
                                                button_texts=("Apply", "Cancel"),
                                                table_header=table_header, table_data=table_data,
-                                               message_type=gtk.MESSAGE_QUESTION,
+                                               message_type=Gtk.MessageType.QUESTION,
                                                parent=root_window,
                                                width=800, standalone=False)
             response_id = dialog.run()
@@ -325,7 +354,7 @@ def save_selected_state_as():
             # Offer to open saved state machine dialog
             message_string = "Should the newly created state machine be opened?"
             dialog = RAFCONButtonDialog(message_string, ["Open", "Do not open"],
-                                        message_type=gtk.MESSAGE_QUESTION,
+                                        message_type=Gtk.MessageType.QUESTION,
                                         parent=root_window)
             response_id = dialog.run()
             if response_id == 1:  # Apply pressed
@@ -357,10 +386,10 @@ def is_state_machine_stopped_to_proceed(selected_sm_id=None, root_window=None):
         if selected_sm_id is None or selected_sm_id == state_machine_manager.active_state_machine_id:
 
             message_string = "A state machine is still running. This state machine can only be refreshed" \
-                             "if not running any more."
+                             "when not longer running."
             dialog = RAFCONButtonDialog(message_string, ["Stop execution and refresh",
                                                          "Keep running and do not refresh"],
-                                        message_type=gtk.MESSAGE_QUESTION,
+                                        message_type=Gtk.MessageType.QUESTION,
                                         parent=root_window)
             response_id = dialog.run()
             state_machine_stopped = False
@@ -379,6 +408,103 @@ def refresh_libraries():
     library_manager.refresh_libraries()
 
 
+def replace_all_libraries_by_template(state_model):
+    for s_id, child_state_model in state_model.states.items():
+        if isinstance(child_state_model, LibraryStateModel):
+            library_name = child_state_model.state.library_name
+            library_path = child_state_model.state.library_path
+            library_state = LibraryState(library_path, library_name, "0.1", library_name)
+            gui_helper_state.substitute_state_as(child_state_model, library_state, True)
+        if isinstance(child_state_model, ContainerStateModel):
+            replace_all_libraries_by_template(child_state_model)
+
+
+def save_all_libraries(target_path):
+    for library_key, library_root_path in library_manager.library_root_paths.items():
+        # lib_target_path = os.path.join(target_path, os.path.split(library_root_path)[1])
+        lib_target_path = os.path.join(target_path, library_key)
+        copy_file_or_folder(library_root_path, lib_target_path)
+
+
+def save_library_config(target_path):
+    config_path = os.path.join(target_path, "__generated__config")
+    create_path(config_path)
+    config_file_path = os.path.join(config_path, "core_config_generated.yaml")
+    tmp_dict = rafcon.core.config.global_config.as_dict()
+    new_config = rafcon.core.config.Config()
+
+    # copy content
+    for key, value in tmp_dict.items():
+        new_config.set_config_value(key, value)
+
+    # recreate library paths to be relative to config file
+    new_library_paths_entry = {}
+    for library_key, library_root_path in library_manager.library_root_paths.items():
+        new_library_paths_entry[library_key] = os.path.relpath(os.path.join(target_path, library_key), config_path)
+    new_config.set_config_value("LIBRARY_PATHS", new_library_paths_entry)
+
+    # save config file to new location
+    new_config.config_file_path = config_file_path
+    new_config.save_configuration()
+    return config_file_path
+
+
+def generate_linux_launch_files(target_path, config_path, state_machine_path):
+    launch_command = "{} -c {} -o {}".format(
+        "/volume/software/common/packages/rafcon/latest/source/rafcon/gui/start.py",
+        os.path.relpath(config_path, target_path),
+        os.path.relpath(state_machine_path, target_path))
+    she_bang = "#!/bin/bash\n\n"
+
+    launch_file_with_env = os.path.join(target_path, "launch_rafcon_with_env_generated.sh")
+    with open(launch_file_with_env, 'w') as file_pointer:
+        file_pointer.write(she_bang)
+        for key, value in os.environ.items():
+            if key not in ["PWD", "BASH_FUNC_mc%%", "BASH_FUNC_module%%", "RAFCON_LIBRARY_PATH"]:
+                file_pointer.write("export {}=\"{}\"\n".format(key, value))
+        file_pointer.write("\n")
+        file_pointer.write(launch_command)
+    make_file_executable(launch_file_with_env)
+
+    launch_file_without_env = os.path.join(target_path, "launch_rafcon_generated.sh")
+    with open(launch_file_without_env, 'w') as file_pointer:
+        file_pointer.write(she_bang)
+        file_pointer.write(launch_command)
+    make_file_executable(launch_file_without_env)
+
+
+def bake_selected_state_machine(path=None):
+    selected_sm_id = rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id
+    if not selected_sm_id:
+        logger.debug("Cannot bake state machine: No state machine selected!")
+    else:
+        logger.debug("Baking state machine ...")
+    # selected_sm = state_machine_manager.state_machines[selected_sm_id]
+    selected_sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[selected_sm_id]
+    assert isinstance(selected_sm_m, StateMachineModel)
+    root_state_m = selected_sm_m.root_state
+
+    # generate path
+    selected_state_machine_model = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    folder_name = format_default_folder_name(selected_state_machine_model.state_machine.root_state.name)
+    if path is None:
+        path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
+                                            "The default folder name is the name of the root state.", folder_name)
+    if path is None:
+        logger.warning("Baking canceled!")
+        return False
+
+    create_path(path)
+    save_all_libraries(path)
+    config_path = save_library_config(path)
+    state_machine_path = os.path.join(path, "__generated__state_machine")
+    generate_linux_launch_files(path, config_path, state_machine_path)
+
+    save_state_machine_as(state_machine_path, as_copy=True)
+    make_tarfile(path+".tar", path)
+    logger.debug("Baking finished!")
+
+
 def refresh_selected_state_machine():
     """Reloads the selected state machine.
     """
@@ -392,7 +518,7 @@ def refresh_selected_state_machine():
         return
 
     # check if the a dirty flag is still set
-    all_tabs = states_editor_ctrl.tabs.values()
+    all_tabs = list(states_editor_ctrl.tabs.values())
     all_tabs.extend(states_editor_ctrl.closed_tabs.values())
     dirty_source_editor = [tab_dict['controller'] for tab_dict in all_tabs if
                            tab_dict['source_code_view_is_dirty'] is True]
@@ -408,7 +534,7 @@ def refresh_selected_state_machine():
                 message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
                     message_string, ctrl.model.state.name, ctrl.model.state.get_path())
         dialog = RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"],
-                                    message_type=gtk.MESSAGE_WARNING, parent=states_editor_ctrl.get_root_window())
+                                    message_type=Gtk.MessageType.WARNING, parent=states_editor_ctrl.get_root_window())
         response_id = dialog.run()
         dialog.destroy()
         if response_id == 1:  # Reload anyway
@@ -417,6 +543,8 @@ def refresh_selected_state_machine():
             logger.debug("Refresh of selected state machine canceled")
             return
 
+    library_manager.clean_loaded_libraries()
+    refresh_libraries()
     states_editor_ctrl.close_pages_for_specific_sm_id(selected_sm_id)
     state_machines_editor_ctrl.refresh_state_machine_by_id(selected_sm_id)
 
@@ -438,7 +566,7 @@ def refresh_all(force=False):
             return
 
         # check if the a dirty flag is still set
-        all_tabs = states_editor_ctrl.tabs.values()
+        all_tabs = list(states_editor_ctrl.tabs.values())
         all_tabs.extend(states_editor_ctrl.closed_tabs.values())
         dirty_source_editor = [tab_dict['controller'] for tab_dict in all_tabs if
                                tab_dict['source_code_view_is_dirty'] is True]
@@ -447,7 +575,7 @@ def refresh_all(force=False):
             message_string = "Are you sure you want to reload the libraries and all state machines?\n\n" \
                              "The following elements have been modified and not saved. " \
                              "These changes will get lost:"
-            for sm_id, sm in state_machine_manager.state_machines.iteritems():
+            for sm_id, sm in state_machine_manager.state_machines.items():
                 if sm.marked_dirty:
                     message_string = "%s\n* State machine #%s and name '%s'" % (
                         message_string, str(sm_id), sm.root_state.name)
@@ -455,7 +583,7 @@ def refresh_all(force=False):
                 message_string = "%s\n* Source code of state with name '%s' and path '%s'" % (
                     message_string, ctrl.model.state.name, ctrl.model.state.get_path())
             dialog = RAFCONButtonDialog(message_string, ["Reload anyway", "Cancel"],
-                                        message_type=gtk.MESSAGE_WARNING, parent=states_editor_ctrl.get_root_window())
+                                        message_type=Gtk.MessageType.WARNING, parent=states_editor_ctrl.get_root_window())
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:  # Reload anyway
@@ -464,12 +592,13 @@ def refresh_all(force=False):
                 logger.debug("Refresh canceled")
                 return
 
+    library_manager.clean_loaded_libraries()
     refresh_libraries()
     states_editor_ctrl.close_all_pages()
     state_machines_editor_ctrl.refresh_all_state_machines()
 
 
-def delete_core_element_of_model(model, raise_exceptions=False):
+def delete_core_element_of_model(model, raise_exceptions=False, recursive=True, destroy=True, force=False):
     """Deletes respective core element of handed model of its state machine
 
     If the model is one of state, data flow or transition, it is tried to delete that model together with its
@@ -477,8 +606,12 @@ def delete_core_element_of_model(model, raise_exceptions=False):
 
     :param model: The model of respective core element to delete
     :param bool raise_exceptions: Whether to raise exceptions or only log errors in case of failures
+    :param bool destroy: Access the destroy flag of the core remove methods
     :return: True if successful, False else
     """
+    if isinstance(model, AbstractStateModel) and model.state.is_root_state:
+        logger.warning("Deletion is not allowed. {0} is root state of state machine.".format(model.core_element))
+        return False
     state_m = model.parent
     if state_m is None:
         msg = "Model has no parent from which it could be deleted from"
@@ -487,7 +620,7 @@ def delete_core_element_of_model(model, raise_exceptions=False):
         logger.error(msg)
         return False
     if is_selection_inside_of_library_state(selected_elements=[model]):
-        logger.warn("Deletion is not allowed. Element {0} is inside of a library.".format(model.core_element))
+        logger.warning("Deletion is not allowed. Element {0} is inside of a library.".format(model.core_element))
         return False
     assert isinstance(state_m, StateModel)
 
@@ -496,7 +629,7 @@ def delete_core_element_of_model(model, raise_exceptions=False):
 
     try:
         if core_element in state:
-            state.remove(core_element)
+            state.remove(core_element, recursive=recursive, destroy=destroy, force=force)
             return True
         return False
     except (AttributeError, ValueError) as e:
@@ -506,19 +639,21 @@ def delete_core_element_of_model(model, raise_exceptions=False):
         return False
 
 
-def delete_core_elements_of_models(models, raise_exceptions=False):
+def delete_core_elements_of_models(models, raise_exceptions=True, recursive=True, destroy=True, force=False):
     """Deletes all respective core elements for the given models
 
     Calls the :func:`delete_core_element_of_model` for all given models.
 
     :param models: A single model or a list of models of respective core element to be deleted
     :param bool raise_exceptions: Whether to raise exceptions or log error messages in case of an error
+    :param bool destroy:  Access the destroy flag of the core remove methods
     :return: The number of models that were successfully deleted
     """
     # If only one model is given, make a list out of it
     if not hasattr(models, '__iter__'):
         models = [models]
-    return sum(delete_core_element_of_model(model, raise_exceptions) for model in models)
+    return sum(delete_core_element_of_model(model, raise_exceptions, recursive=recursive, destroy=destroy, force=force)
+               for model in models)
 
 
 def is_selection_inside_of_library_state(state_machine_m=None, selected_elements=None):
@@ -540,7 +675,7 @@ def is_selection_inside_of_library_state(state_machine_m=None, selected_elements
     for model in selected_elements:
         # check if model is element of child state or the root state (or its scoped variables) of a LibraryState
         state_m = model if isinstance(model.core_element, State) else model.parent
-        selection_in_lib.append(state_m.state.get_library_root_state() is not None)
+        selection_in_lib.append(state_m.state.get_next_upper_library_root_state() is not None)
         # check if model is part of the shell (io-port or outcome) of a LibraryState
         if not isinstance(model.core_element, State) and isinstance(state_m, LibraryStateModel):
             selection_in_lib.append(True)
@@ -552,18 +687,18 @@ def is_selection_inside_of_library_state(state_machine_m=None, selected_elements
 def delete_selected_elements(state_machine_m):
     # avoid to delete any element inside of a library
     if is_selection_inside_of_library_state(state_machine_m):
-        logger.warn("Deletion of elements inside of a library is not allowed.")
+        logger.warning("Deletion of elements inside of a library is not allowed.")
         return
 
     if len(state_machine_m.selection) > 0:
-        delete_core_elements_of_models(state_machine_m.selection.get_all())
+        delete_core_elements_of_models(state_machine_m.selection.get_all(), recursive=True, destroy=True)
         return True
 
 
 def paste_into_selected_state(state_machine_m):
     selection = state_machine_m.selection
     if len(selection.states) != 1:
-        logger.warn("Please select a single container state for pasting the clipboard")
+        logger.warning("Please select a single container state for pasting the clipboard")
         return
 
     # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
@@ -579,8 +714,8 @@ def selected_state_toggle_is_start_state():
     selection = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection
     selected_state_m = selection.get_selected_state()
     if len(selection.states) == 1 and not selected_state_m.state.is_root_state:
-        if selected_state_m.state.get_library_root_state() is not None:
-            logger.warn("Toggle is start state is not performed because selected target state is inside of a "
+        if selected_state_m.state.get_next_upper_library_root_state() is not None:
+            logger.warning("Toggle is start state is not performed because selected target state is inside of a "
                         "library state.")
             return False
         try:
@@ -591,7 +726,7 @@ def selected_state_toggle_is_start_state():
                 selected_state_m.parent.state.start_state_id = None
                 logger.debug("Start state unset, no start state defined")
         except ValueError as e:
-            logger.warn("Could no change start state: {0}".format(e))
+            logger.warning("Could no change start state: {0}".format(e))
         return True
     else:
         logger.warning("To toggle the is start state flag you have to select exact on state.")
@@ -610,17 +745,17 @@ def add_new_state(state_machine_m, state_type):
         state_type = StateType.EXECUTION
 
     if len(state_machine_m.selection.states) != 1:
-        logger.warn("Please select exactly one desired parent state, before adding a new state")
+        logger.warning("Please select exactly one desired parent state, before adding a new state")
         return
     state_m = state_machine_m.selection.get_selected_state()
     if is_selection_inside_of_library_state(selected_elements=[state_m]):
-        logger.warn("Add new state is not performed because selected target state is inside of a library state.")
+        logger.warning("Add new state is not performed because selected target state is inside of a library state.")
         return
 
     if isinstance(state_m, StateModel):
         return gui_helper_state.add_state(state_m, state_type)
     else:
-        logger.warn("Add new state is not performed because target state indication has to be a {1} not {0}"
+        logger.warning("Add new state is not performed because target state indication has to be a {1} not {0}"
                     "".format(state_m.__class__.__name__, StateModel.__name__))
 
     # TODO this code can not be reached -> recover again? -> e.g. feature select transition add's state to parent
@@ -653,24 +788,24 @@ def insert_state_into_selected_state(state, as_template=False):
     smm_m = rafcon.gui.singleton.state_machine_manager_model
 
     if not isinstance(state, State):
-        logger.warn("A state is needed to be insert not {0}".format(state))
+        logger.warning("A state is needed to be insert not {0}".format(state))
         return False
 
     if not smm_m.selected_state_machine_id:
-        logger.warn("Please select a container state within a state machine first")
+        logger.warning("Please select a container state within a state machine first")
         return False
 
     selection = smm_m.state_machines[smm_m.selected_state_machine_id].selection
     if len(selection.states) > 1:
-        logger.warn("Please select exactly one state for the insertion")
+        logger.warning("Please select exactly one state for the insertion")
         return False
 
     if len(selection.states) == 0:
-        logger.warn("Please select a state for the insertion")
+        logger.warning("Please select a state for the insertion")
         return False
 
     if is_selection_inside_of_library_state(selected_elements=[selection.get_selected_state()]):
-        logger.warn("State is not insert because target state is inside of a library state.")
+        logger.warning("State is not insert because target state is inside of a library state.")
         return False
 
     gui_helper_state.insert_state_as(selection.get_selected_state(), state, as_template)
@@ -684,7 +819,7 @@ def add_state_by_drag_and_drop(state, data):
     state_machine_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller_by_path(ctrl_path)
     state_machine_editor_ctrl.perform_drag_and_drop = True
     if insert_state_into_selected_state(state, False):
-        data.set_text(state.state_id)
+        data.set_text(state.state_id, -1)
     state_machine_editor_ctrl.perform_drag_and_drop = False
 
 
@@ -693,10 +828,10 @@ def add_data_port_to_selected_states(data_port_type, data_type=None, selected_st
     if selected_states is None:
         selected_states = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection.states
     if is_selection_inside_of_library_state(selected_elements=selected_states):
-        logger.warn("The data port couldn't be added because target state is inside of a library state.")
+        logger.warning("The data port couldn't be added because target state is inside of a library state.")
         return
     if all([isinstance(state_m.state, LibraryState) for state_m in selected_states]):
-        logger.warn("The data port couldn't be added to state of type {0}"
+        logger.warning("The data port couldn't be added to state of type {0}"
                     "".format(LibraryState.__name__))
         return
     ids = {}
@@ -709,14 +844,14 @@ def add_data_port_to_selected_states(data_port_type, data_type=None, selected_st
                 state_m.state.add_input_data_port(name=name, data_type=data_type, data_port_id=data_port_id)
                 ids[state_m.state] = data_port_id
             except ValueError as e:
-                logger.warn("The input data port couldn't be added: {0}".format(e))
+                logger.warning("The input data port couldn't be added: {0}".format(e))
         elif data_port_type == 'OUTPUT':
             name = 'output_' + str(data_port_id)
             try:
                 state_m.state.add_output_data_port(name=name, data_type=data_type, data_port_id=data_port_id)
                 ids[state_m.state] = data_port_id
             except ValueError as e:
-                logger.warn("The output data port couldn't be added: {0}".format(e))
+                logger.warning("The output data port couldn't be added: {0}".format(e))
         else:
             return
     return ids
@@ -727,10 +862,10 @@ def add_scoped_variable_to_selected_states(data_type=None, selected_states=None)
     if selected_states is None:
         selected_states = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection.states
     if is_selection_inside_of_library_state(selected_elements=selected_states):
-        logger.warn("The scoped variable couldn't be added because target state is inside of a library state.")
+        logger.warning("The scoped variable couldn't be added because target state is inside of a library state.")
         return
     if all([not isinstance(state_m.state, ContainerState) for state_m in selected_states]):
-        logger.warn("The scoped variable couldn't be added to state of type {0}"
+        logger.warning("The scoped variable couldn't be added to state of type {0}"
                     "".format([state_m.state.__class__.__name__
                                for state_m in selected_states if not isinstance(state_m.state, ContainerState)]))
         return
@@ -743,7 +878,7 @@ def add_scoped_variable_to_selected_states(data_type=None, selected_states=None)
                 state_m.state.add_scoped_variable("scoped_{0}".format(data_port_id), data_type, 0)
                 ids[state_m.state] = data_port_id
             except ValueError as e:
-                logger.warn("The scoped variable couldn't be added: {0}".format(e))
+                logger.warning("The scoped variable couldn't be added: {0}".format(e))
 
     return ids
 
@@ -752,28 +887,28 @@ def add_outcome_to_selected_states(selected_states=None):
     if selected_states is None:
         selected_states = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection.states
     if is_selection_inside_of_library_state(selected_elements=selected_states):
-        logger.warn("The outcome couldn't be added because target state is inside of a library state.")
+        logger.warning("The outcome couldn't be added because target state is inside of a library state.")
         return
     if all([isinstance(state_m.state, LibraryState) for state_m in selected_states]):
-        logger.warn("The outcome couldn't be added to state of type {0}"
+        logger.warning("The outcome couldn't be added to state of type {0}"
                     "".format(LibraryState.__name__))
         return
     ids = {}
     for state_m in selected_states:
         # save name with generated outcome id
-        outcome_id = id_generator.generate_outcome_id(state_m.state.outcomes.keys())
+        outcome_id = id_generator.generate_outcome_id(list(state_m.state.outcomes.keys()))
         name = "success_" + str(outcome_id)
         try:
             state_m.state.add_outcome(name=name, outcome_id=outcome_id)
             ids[state_m.state] = outcome_id
         except ValueError as e:
-            logger.warn("The outcome couldn't be added: {0}".format(e))
+            logger.warning("The outcome couldn't be added: {0}".format(e))
     return ids
 
 
 def change_state_type_with_error_handling_and_logger_messages(state_m, target_class):
     if is_selection_inside_of_library_state(selected_elements=[state_m]):
-        logger.warn("Change state type is not performed because target state is inside of a library state.")
+        logger.warning("Change state type is not performed because target state is inside of a library state.")
         return
     if not isinstance(state_m.state, target_class):
         logger.debug("Change type of State '{0}' from {1} to {2}".format(state_m.state.name,
@@ -799,7 +934,7 @@ def substitute_selected_state_and_use_choice_dialog():
         root_window = rafcon.gui.singleton.main_window_controller.get_root_window()
         x, y = root_window.get_position()
         _width, _height = root_window.get_size()
-        # print "x, y, width, height, bit_depth", x, y, width, height
+        # print("x, y, width, height, bit_depth", x, y, width, height)
         pos = (x + _width/4, y + _height/6)
         StateSubstituteChooseLibraryDialog(rafcon.gui.singleton.library_manager_model, width=450, height=550, pos=pos,
                                            parent=root_window)
@@ -816,7 +951,7 @@ def substitute_selected_state(state, as_template=False, keep_name=False):
     :param bool as_template: The flag determines if a handed the state of type LibraryState is insert as template
     :return:
     """
-    # print "substitute_selected_state", state, as_template
+    # print("substitute_selected_state", state, as_template)
     assert isinstance(state, State)
     from rafcon.core.states.barrier_concurrency_state import DeciderState
     if isinstance(state, DeciderState):
@@ -833,7 +968,7 @@ def substitute_selected_state(state, as_template=False, keep_name=False):
         logger.error("Please select exactly one state for the substitution")
         return False
     if is_selection_inside_of_library_state(selected_elements=[selected_state_m]):
-        logger.warn("Substitute is not performed because target state is inside of a library state.")
+        logger.warning("Substitute is not performed because target state is inside of a library state.")
         return
 
     gui_helper_state.substitute_state_as(selected_state_m, state, as_template, keep_name)
@@ -845,10 +980,12 @@ def substitute_selected_library_state_with_template(keep_name=True):
     selection = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection
     selected_state_m = selection.get_selected_state()
     if len(selection.states) == 1 and isinstance(selected_state_m, LibraryStateModel):
-        # print "start substitute library state with template"
-        lib_state = LibraryState.from_dict(LibraryState.state_to_dict(selected_state_m.state))
+        # print("start substitute library state with template")
+        # TODO optimize this to not generate one more library state and model
+        lib_state = copy.deepcopy(selected_state_m.state)
         # lib_state_m = copy.deepcopy(selected_states[0].state)
         substitute_selected_state(lib_state, as_template=True, keep_name=keep_name)
+        # TODO think about to use as return value the inserted state
         return True
     else:
         logger.warning("Substitute library state with template needs exact one library state to be selected.")
@@ -866,17 +1003,21 @@ def group_selected_states_and_scoped_variables():
     selected_scoped_vars = list(selection.scoped_variables)
     selected_state_m = selection.get_selected_state()
     if len(selected_states) > 0 and isinstance(selected_state_m.parent, StateModel) or len(selected_scoped_vars):
-        # # check if all elements have the same parent or leave it to the parent
-        # parent_list = []
-        # for state_m in selected_state_m_list:
-        #     parent_list.append(state_m.state)
-        # for sv_m in selected_sv_m:
-        #     parent_list.append(sv_m.scoped_variable.parent)
-        # assert len(set(parent_list))
+        # check if all elements have the same parent or leave it to the parent
+        parent_list = []
+        for state_m in selected_states:
+            parent_list.append(state_m.state.parent)
+        for sv_m in selected_scoped_vars:
+            parent_list.append(sv_m.scoped_variable.parent)
+        if not len(set(parent_list)) == 1:
+            raise AttributeError("All elements that should be grouped have to have one direct parent state.")
         logger.debug("Group selected states: {0} scoped variables: {1}".format(selected_states, selected_scoped_vars))
         # TODO remove un-select workaround (used to avoid wrong selections in gaphas and inconsistent selection)
         sm_m.selection.clear()
-        gui_helper_state.group_states_and_scoped_variables(selected_states, selected_scoped_vars)
+        group_state = gui_helper_state.group_states_and_scoped_variables(selected_states, selected_scoped_vars)
+        if group_state:
+            sm_m.selection.add(sm_m.get_state_model_by_path(group_state.get_path()))
+        return group_state
 
 
 def ungroup_selected_state():
@@ -887,13 +1028,12 @@ def ungroup_selected_state():
             not selected_state_m.state.is_root_state:
         logger.debug("do ungroup")
         if is_selection_inside_of_library_state(selected_elements=[selected_state_m]):
-            logger.warn("Ungroup is not performed because target state is inside of a library state.")
+            logger.warning("Ungroup is not performed because target state is inside of a library state.")
             return
-        gui_helper_state.ungroup_state(selected_state_m)
+        return gui_helper_state.ungroup_state(selected_state_m)
 
 
 def get_root_state_name_of_sm_file_system_path(file_system_path):
-    import os
     if os.path.isdir(file_system_path) and os.path.exists(os.path.join(file_system_path, storage.STATEMACHINE_FILE)):
         try:
             sm_dict = storage.load_data_file(os.path.join(file_system_path, storage.STATEMACHINE_FILE))
@@ -903,9 +1043,7 @@ def get_root_state_name_of_sm_file_system_path(file_system_path):
             return
         root_state_folder = sm_dict['root_state_id'] if 'root_state_id' in sm_dict else sm_dict['root_state_storage_id']
         root_state_file = os.path.join(file_system_path, root_state_folder, storage.FILE_NAME_CORE_DATA)
-        root_state = storage.load_data_file(root_state_file)
-        if isinstance(root_state, tuple):
-            root_state = root_state[0]
-        if isinstance(root_state, State):
-            return root_state.name
+        state_dict = storage_utils.load_objects_from_json(root_state_file, as_dict=True)
+        if 'name' in state_dict:
+            return state_dict['name']
         return

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -10,8 +10,10 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Matthias Buettner <matthias.buettner@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from past.builtins import map
 from gaphas.aspect import InMotion, HandleInMotion
 from gaphas.guide import GuidedItemInMotion, GuidedItemHandleInMotion, Guide, GuideMixin
 
@@ -33,7 +35,7 @@ class GuidedStateMixin(GuideMixin):
         states_v = self._get_siblings_and_parent()
 
         try:
-            guides = map(Guide, states_v)
+            guides = list(map(Guide, states_v))
         except TypeError:
             guides = []
 
@@ -53,7 +55,7 @@ class GuidedStateMixin(GuideMixin):
         states_v = self._get_siblings_and_parent()
 
         try:
-            guides = map(Guide, states_v)
+            guides = list(map(Guide, states_v))
         except TypeError:
             guides = []
 
@@ -79,10 +81,14 @@ class GuidedStateMixin(GuideMixin):
 class GuidedStateInMotion(GuidedStateMixin, GuidedItemInMotion):
 
     def start_move(self, pos):
+        if self.item and self.item.model and self.item.model.state.is_root_state:
+            return
         super(GuidedStateInMotion, self).start_move(pos)
         self.item.moving = True
 
     def move(self, pos):
+        if not self.item.moving:
+            return
         super(GuidedStateInMotion, self).move(pos)
         parent_item = self.item.parent
         if parent_item:

@@ -16,10 +16,11 @@
 
 """
 
+from future.utils import string_types
 import datetime
 import time
 
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.state_elements.data_port import DataPort
@@ -162,7 +163,7 @@ class ScopedData(StateElement):
         }
 
     #########################################################################
-    # Properties for all class field that must be observed by the gtkmvc
+    # Properties for all class field that must be observed by the gtkmvc3
     #########################################################################
 
     @property
@@ -176,8 +177,8 @@ class ScopedData(StateElement):
     @lock_state_machine
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, basestring):
-            raise TypeError("key_name must be of type str")
+        if not isinstance(name, string_types):
+            raise TypeError("key_name must be a string")
         self._name = name
         # update key
         self._primary_key = self._name + self.from_state
@@ -199,12 +200,12 @@ class ScopedData(StateElement):
                 self.value_type, value, type(value)
             ))
         # if value is not None and str(type(value).__name__) != self._value_type:
-        #     print "types", value, str(type(value).__name__), self._value_type
+        #     print("types", value, str(type(value).__name__), self._value_type)
         #     #check for classes
         #     if not isinstance(value, getattr(sys.modules[__name__], self._value_type)):
         #         raise TypeError("result must be of type %s" % str(self._value_type))
         self._timestamp = generate_time_stamp()
-        # print "new scope data update {0}: {1} t:{2}".format(self.name+self.from_state, self._value, self._timestamp)
+        # print("new scope data update {0}: {1} t:{2}".format(self.name+self.from_state, self._value, self._timestamp))
         self._value = value
 
     @property
@@ -232,8 +233,8 @@ class ScopedData(StateElement):
     @Observable.observed
     def from_state(self, from_state):
         if from_state is not None:
-            if not isinstance(from_state, basestring):
-                raise TypeError("from_state must be of type str")
+            if not isinstance(from_state, string_types):
+                raise TypeError("from_state must be a string")
             if self.name is not None:  # this will just happen in __init__ when key_name is not yet initialized
                 # update key
                 self._primary_key = self.name + self._from_state

@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -20,16 +20,19 @@
 
 """
 
-import gobject
+from gi.repository import GObject
+from gi.repository import Gtk
+from gi.repository import Gdk
+
+from builtins import range
+from builtins import filter
+from past.builtins import map
+
 import itertools
 import sys
 import time
 from copy import copy
 from functools import partial
-from gtk import DEST_DEFAULT_ALL
-from gtk.gdk import ACTION_COPY, ModifierType
-from gtk.gdk import SCROLL_DOWN, SCROLL_UP, SHIFT_MASK, CONTROL_MASK, BUTTON1_MASK, BUTTON2_MASK, BUTTON3_MASK
-from gtk.gdk import keyval_name
 from math import sin, cos, atan2
 
 from rafcon.core.decorators import lock_state_machine
@@ -100,8 +103,8 @@ class GraphicalEditorController(ExtendedController):
         """Constructor"""
         assert isinstance(model, StateMachineModel)
         assert isinstance(view, GraphicalEditorView)
-        ExtendedController.__init__(self, model, view)
-        self.state_right_click_ctrl = StateRightClickMenuControllerOpenGLEditor(model, view)
+        super(GraphicalEditorController, self).__init__(model, view)
+        self.add_controller("state_right_click_ctrl", StateRightClickMenuControllerOpenGLEditor(model, view))
 
         self.root_state_m = model.root_state
 
@@ -131,12 +134,14 @@ class GraphicalEditorController(ExtendedController):
         self.changes_affect_children = False
         self._last_meta_data_changed = None
 
+        self._ongoing_complex_actions = []
         self._suspend_drawing = False
 
         self.last_time = time.time()
 
     def register_view(self, view):
         """Called when the View was registered"""
+        super(GraphicalEditorController, self).register_view(view)
         view.editor.connect('expose_event', self._on_expose_event)
         view.editor.connect('button-press-event', self._on_mouse_press)
         view.editor.connect('button-release-event', self._on_mouse_release)
@@ -145,7 +150,8 @@ class GraphicalEditorController(ExtendedController):
         view.editor.connect('key-press-event', self._on_key_press)
         view.editor.connect('key-release-event', self._on_key_release)
 
-        view.editor.drag_dest_set(DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
+        view.editor.drag_dest_set(Gtk.DestDefaults.ALL, None, Gdk.DragAction.COPY)
+        view.editor.drag_dest_add_text_targets()
         view.editor.connect("drag-data-received", self.on_drag_data_received)
         view.editor.connect("drag-motion", self.on_drag_motion)
 
@@ -207,32 +213,40 @@ class GraphicalEditorController(ExtendedController):
 
     @ExtendedController.observe("state_action_signal", signal=True)
     def state_action_signal_before(self, model, prop_name, info):
+        if not ('arg' in info and info['arg'].after is False):
+            return
+
+        action = info['arg'].action
         # from rafcon.gui.utils.notification_overview import NotificationOverview
         # logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
-        if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'ungroup_state',
-                                  'undo/redo']:
-            if not info['arg'].after:
-                self.suspend_drawing = True
-                # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
-                self.observe_model(info['arg'].affected_models[0])
-        if info['arg'].action in ['group_states', 'paste', 'cut']:
-            if not info['arg'].after:
-                self.suspend_drawing = True
-                # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
+        if action in ['change_root_state_type', 'change_state_type', 'substitute_state',
+                      'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
+            self._ongoing_complex_actions.append(action)
+            self.suspend_drawing = True
+            # print(self.__class__.__name__, 'add complex action', action)
+            # logger.info("drawing suspended: {0}".format(self.suspend_drawing))
+            if action in ['group_states', 'paste', 'cut']:
                 self.observe_model(info['arg'].action_parent_m)
+            else:
+                self.observe_model(info['arg'].affected_models[0])
 
     @ExtendedController.observe("action_signal", signal=True)
     def action_signal_after(self, model, prop_name, info):
+        if not ('arg' in info and info['arg'].after):
+            return
+
+        action = info['arg'].action
         # from rafcon.gui.utils.notification_overview import NotificationOverview
         # logger.info("OPENGL action signal {0}".format(NotificationOverview(info, False, self.__class__.__name__)))
-        if info['arg'].action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'group_states',
-                                  'ungroup_state', 'paste', 'cut', 'undo/redo']:
-            if info['arg'].after:
+        if action in ['change_state_type', 'change_root_state_type', 'substitute_state', 'group_states',
+                      'ungroup_state', 'paste', 'cut', 'undo/redo']:
+            self._ongoing_complex_actions.remove(action)
+            self.relieve_model(model)
+            # print(self.__class__.__name__, 'remove complex action', action)
+            if not self._ongoing_complex_actions:
                 self.suspend_drawing = False
-                self.relieve_model(model)
                 # logger.info("drawing suspended: {0} redraw".format(self.suspend_drawing))
-                if not info['arg'].action in ['paste', 'cut']:
-                    self._redraw()
+                self._redraw()
 
     @ExtendedController.observe("state_machine", after=True)
     @ExtendedController.observe("meta_signal", signal=True)  # meta data of state machine changed
@@ -248,6 +262,10 @@ class GraphicalEditorController(ExtendedController):
         :param dict info: Information about the change
         """
         if 'method_name' in info:
+            if isinstance(info['result'], Exception):
+                logger.info("Exception handling in opengl")
+                return
+
             if info['method_name'] == 'root_state_change':
                 self._redraw()
             elif info['method_name'] == 'marked_dirty' and info['args'][1]:
@@ -323,6 +341,9 @@ class GraphicalEditorController(ExtendedController):
         First triggers the configure event to cause the perspective to be updated, then trigger the actual expose
         event to redraw.
         """
+        if self.suspend_drawing:
+            return
+
         redraw_after = 1 / 50.  # sec
         # Check if initialized
         # and whether the last redraw was more than redraw_after ago
@@ -341,13 +362,13 @@ class GraphicalEditorController(ExtendedController):
         else:
             # Only set the timer, if no timer is existing
             if self.timer_id is None:
-                self.timer_id = gobject.timeout_add(int(redraw_after * 1000), self._redraw, True)
+                self.timer_id = GObject.timeout_add(int(redraw_after * 1000), self._redraw, True)
             else:
                 return True  # Causes the periodic timer to continue
 
     @lock_state_machine
     def _on_key_press(self, widget, event):
-        key_name = keyval_name(event.keyval)
+        key_name = Gdk.keyval_name(event.keyval)
         if key_name == "Control_L" or key_name == "Control_R":
             self.ctrl_modifier = True
         elif key_name == "Alt_L":
@@ -359,7 +380,7 @@ class GraphicalEditorController(ExtendedController):
 
     @lock_state_machine
     def _on_key_release(self, widget, event):
-        key_name = keyval_name(event.keyval)
+        key_name = Gdk.keyval_name(event.keyval)
         if key_name == "Control_L" or key_name == "Control_R":
             self.ctrl_modifier = False
         elif key_name == "Alt_L":
@@ -381,7 +402,7 @@ class GraphicalEditorController(ExtendedController):
         # Set the focus on the graphical editor, as this is not done automatically
         self.view.editor.grab_focus()
 
-        self.last_button_pressed = event.button
+        self.last_button_pressed = event.get_button()[1]
         self.selected_waypoint = None  # reset
         self.selected_resizer = None  # reset
         self.multi_selection_started = False  # reset
@@ -403,12 +424,12 @@ class GraphicalEditorController(ExtendedController):
 
         # Multi-selection is started when the user hold the shift key pressed while clicking the left mouse button,
         # and does this _not_ on a resize handler or waypoint
-        if event.button == 1 and event.state & SHIFT_MASK == 1 and \
+        if event.get_button()[1] == 1 and event.get_state()[1] & Gdk.ModifierType.SHIFT_MASK == 1 and \
                         self.selected_resizer is None and self.selected_waypoint is None:
             self.multi_selection_started = True
 
         # Left mouse button was clicked and no multi selection intended
-        if event.button == 1 and event.state & SHIFT_MASK == 0:
+        if event.get_button()[1] == 1 and event.get_state()[1] & Gdk.ModifierType.SHIFT_MASK == 0:
             if not self.mouse_move_redraw:
                 self.single_selection = new_selection
 
@@ -475,7 +496,7 @@ class GraphicalEditorController(ExtendedController):
             self._redraw()
 
         # Right mouse button was clicked on
-        elif event.button == 3:
+        elif event.get_button()[1] == 3:
             # Check if something was selected
             click = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
             clicked_model = self._find_selection(event.x, event.y)
@@ -507,7 +528,7 @@ class GraphicalEditorController(ExtendedController):
         # Check if something was selected
         new_selection = self._find_selection(event.x, event.y)
 
-        if event.button == 1:
+        if event.get_button()[1] == 1:
             # We do not want to change the current selection while creating a new transition or data flow
             if not self.mouse_move_redraw:
                 # In the case of multi selection, the user can add/remove elements to/from the selection
@@ -556,7 +577,7 @@ class GraphicalEditorController(ExtendedController):
 
         # If no mouse button is pressed while the mouse is moving, we only have to change whether another component
         # wants to redraw the editor on mouse move
-        if event.state & (BUTTON1_MASK | BUTTON2_MASK | BUTTON3_MASK) == 0:
+        if event.get_state()[1] & (Gdk.ModifierType.BUTTON1_MASK | Gdk.ModifierType.BUTTON2_MASK | Gdk.ModifierType.BUTTON3_MASK) == 0:
             if self.mouse_move_redraw:
                 mouse_current_coord = self.view.editor.screen_to_opengl_coordinates((event.x, event.y))
                 self.mouse_move_last_coords = mouse_current_coord
@@ -564,7 +585,7 @@ class GraphicalEditorController(ExtendedController):
             return
 
         # Move while middle button is clicked moves the view
-        if self.last_button_pressed == 2 or (self.space_bar and event.state & BUTTON1_MASK > 0):
+        if self.last_button_pressed == 2 or (self.space_bar and event.get_state()[1] & Gdk.ModifierType.BUTTON1_MASK > 0):
             delta_pos = subtract_pos((event.x, event.y), self.mouse_move_last_pos)
             self._move_view(delta_pos)
 
@@ -577,7 +598,7 @@ class GraphicalEditorController(ExtendedController):
             return
 
         # States and ports shell only be moved with the left mouse button clicked and the shift key not hold
-        if event.state & SHIFT_MASK == 0 and self.last_button_pressed == 1:
+        if event.get_state()[1] & Gdk.ModifierType.SHIFT_MASK == 0 and self.last_button_pressed == 1:
             # Move all selected states and data ports of thr multi-selection
             if len(self.model.selection) > 1 and self.selected_outcome is None and self.selected_resizer is None:
                 # When starting a move, two information are stored:
@@ -667,7 +688,7 @@ class GraphicalEditorController(ExtendedController):
                 self._last_meta_data_changed = "waypoint_position"
                 self.changes_affect_children = False
                 self.changed_models.append(connection_m)
-            snap = event.state & SHIFT_MASK != 0
+            snap = event.get_state()[1] & Gdk.ModifierType.SHIFT_MASK != 0
             self._move_waypoint(connection_m, waypoint_id, mouse_current_coord, snap)
 
         # Redraw to show the new transition/data flow the user is creating with drag and drop
@@ -685,9 +706,9 @@ class GraphicalEditorController(ExtendedController):
                                       state_m.get_meta_data_editor(for_gaphas=False)['size'][1])
                 self.drag_origin_offset = subtract_pos(self.mouse_move_start_coords, lower_right_corner)
             new_pos = subtract_pos(mouse_current_coord, self.drag_origin_offset)
-            modifier_keys = event.state
-            keep_ratio = int(modifier_keys & SHIFT_MASK) > 0
-            resize_content = int(modifier_keys & CONTROL_MASK) > 0
+            modifier_keys = event.get_state()[1]
+            keep_ratio = int(modifier_keys & Gdk.ModifierType.SHIFT_MASK) > 0
+            resize_content = int(modifier_keys & Gdk.ModifierType.CONTROL_MASK) > 0
             if resize_content:
                 self.changes_affect_children = True
             self._resize_state(state_m, new_pos, keep_ratio=keep_ratio, resize_content=resize_content)
@@ -768,7 +789,7 @@ class GraphicalEditorController(ExtendedController):
         given
         coordinates. If a waypoint is found, it is stored together with its current position.
 
-        :param gtkmvc.Model selected_model: The model that was clicked on
+        :param gtkmvc3.Model selected_model: The model that was clicked on
         :param tuple coords: Coordinates of the click to search for waypoints
         """
         if isinstance(selected_model, (TransitionModel, DataFlowModel)):
@@ -791,7 +812,7 @@ class GraphicalEditorController(ExtendedController):
         Checks whether the current selected_model is a state and if so looks for an outcome at the given coordinates.
         If an outcome is found, it is stored.
 
-        :param gtkmvc.Model selected_model: The model that was clicked on
+        :param gtkmvc3.Model selected_model: The model that was clicked on
         :param tuple coords: Coordinates to search for outcomes
         """
         if isinstance(selected_model, AbstractStateModel):  # and self.single_selection is not self.root_state_m:
@@ -815,7 +836,7 @@ class GraphicalEditorController(ExtendedController):
         we have to check the positions of all port connectors of that state. If it is a data port, we only have to
         look at the connector position of that port.
 
-        :param gtkmvc.Model selected_model: The selected_model that was clicked on
+        :param gtkmvc3.Model selected_model: The selected_model that was clicked on
         :param tuple coords: Coordinates to search for ports
         """
         if isinstance(selected_model, (DataPortModel, ScopedVariableModel)):
@@ -844,7 +865,7 @@ class GraphicalEditorController(ExtendedController):
         Checks whether the current selection is a state and if so looks the given coordinates are within the resizer
         of that state. If so, the resizer (or its state model) is stored.
 
-        :param gtkmvc.Model selected_model: The selected_model that was clicked on
+        :param gtkmvc3.Model selected_model: The selected_model that was clicked on
         :param tuple coords: Coordinates to check for the resizer
         """
         if isinstance(selected_model, AbstractStateModel):
@@ -960,7 +981,7 @@ class GraphicalEditorController(ExtendedController):
         parent_state_m = connection_m.parent
         # The waypoints should exist as list. If not (for any reason), we have to convert it to one
         if isinstance(connection_m.get_meta_data_editor(for_gaphas=False)['waypoints'], dict):
-            # logger.warn("Connection waypoints was of type dict, expected list")
+            # logger.warning("Connection waypoints was of type dict, expected list")
             # connection_m.meta['gui']['editor']['waypoints'] = connection_m.meta['waypoints'].items()
             connection_m.set_meta_data_editor('waypoints', [], from_gaphas=False)
         waypoint_list = copy(connection_m.get_meta_data_editor(for_gaphas=False)['waypoints'])
@@ -1018,7 +1039,7 @@ class GraphicalEditorController(ExtendedController):
 
         try:
             if not isinstance(responsible_parent_m, ContainerStateModel):
-                logger.warn("Only container states can have inner transitions.")
+                logger.warning("Only container states can have inner transitions.")
             else:
                 transition_id = responsible_parent_m.state.add_transition(from_state_id, from_outcome_id, to_state_id,
                                                                           to_outcome_id)
@@ -1030,7 +1051,7 @@ class GraphicalEditorController(ExtendedController):
                     insert_self_transition_meta_data(responsible_parent_m.states[from_state_id], transition_id,
                                                      combined_action=True)
         except (AttributeError, ValueError) as e:
-            logger.warn("Transition couldn't be added: {0}".format(e))
+            logger.warning("Transition couldn't be added: {0}".format(e))
             # import traceback
             # logger.debug("The graphical editor had an internal error: %s %s" % (str(e), str(traceback.format_exc())))
         except Exception as e:
@@ -1071,7 +1092,7 @@ class GraphicalEditorController(ExtendedController):
                     data_flow_m.set_meta_data_editor('waypoints', self.temporary_waypoints, from_gaphas=False)
                     self._meta_data_changed(model=data_flow_m, change='append_to_last_change')
             except AttributeError as e:
-                logger.warn("Data flow couldn't be added: {0}".format(e))
+                logger.warning("Data flow couldn't be added: {0}".format(e))
             except Exception as e:
                 logger.error("Unexpected exception while creating data flow: {0}".format(e))
 
@@ -1158,7 +1179,7 @@ class GraphicalEditorController(ExtendedController):
 
         def move_pos(pos, parent_size):
             scale_dist = 0.025
-            if modifier & SHIFT_MASK:
+            if modifier & Gdk.ModifierType.SHIFT_MASK:
                 scale_dist = 0.125
             if direction == Direction.left:
                 return pos[0] - parent_size[0] * scale_dist, pos[1]
@@ -1183,7 +1204,7 @@ class GraphicalEditorController(ExtendedController):
             self._move_data_port(port_m, new_pos, redraw, publish_changes)
 
         event = (key, modifier)
-        if react_to_event(self.view, self.view.editor, event) or (len(event) == 2 and not isinstance(event[1], ModifierType)):
+        if react_to_event(self.view, self.view.editor, event) or (len(event) == 2 and not isinstance(event[1], Gdk.ModifierType)):
             if self.model.selection:
                 for model in self.model.selection:
                     if isinstance(model, AbstractStateModel):
@@ -1237,7 +1258,7 @@ class GraphicalEditorController(ExtendedController):
                 def find_closest_snap_angle(angle):
                     multiple = angle // snap_angle
                     multiple = [multiple - 1, multiple, multiple + 1]
-                    diff = map(lambda mul: abs(abs(snap_angle * mul) - abs(angle)), multiple)
+                    diff = [abs(abs(snap_angle * mul) - abs(angle)) for mul in multiple]
                     min_index = diff.index(min(diff))
                     return snap_angle * multiple[min_index]
 
@@ -1325,7 +1346,7 @@ class GraphicalEditorController(ExtendedController):
         # minimum size of our state
         if not resize_content and isinstance(state_m, ContainerStateModel):
             # Check lower right corner of all child states
-            for child_state_m in state_m.states.itervalues():
+            for child_state_m in state_m.states.values():
                 _, child_right_edge, child_bottom_edge, _ = self.get_boundaries(child_state_m)
                 if child_right_edge is not None and child_bottom_edge is not None:
                     min_right_edge = child_right_edge if min_right_edge < child_right_edge else min_right_edge
@@ -1349,8 +1370,8 @@ class GraphicalEditorController(ExtendedController):
                     max_bottom_edge = port_bottom_edge if max_bottom_edge > port_bottom_edge else max_bottom_edge
 
         # Check for parent size limitation
-        max_right_edge = sys.maxint
-        min_bottom_edge = -sys.maxint - 1
+        max_right_edge = sys.maxsize
+        min_bottom_edge = -sys.maxsize - 1
         if not state_m.state.is_root_state:
             if state_m.state.is_root_state_of_library:
                 parent_state_m = state_m.parent.parent
@@ -1424,7 +1445,7 @@ class GraphicalEditorController(ExtendedController):
                         port_m.set_meta_data_editor('inner_rel_pos', new_rel_pos, from_gaphas=False)
 
                     # Resize all child states
-                    for child_state_m in state_m.states.itervalues():
+                    for child_state_m in state_m.states.values():
                         old_rel_pos = child_state_m.get_meta_data_editor(for_gaphas=False)['rel_pos']
                         new_rel_pos = calc_new_rel_pos(old_rel_pos, old_size, new_size)
                         child_state_m.set_meta_data_editor('rel_pos', new_rel_pos, from_gaphas=False)
@@ -1456,7 +1477,7 @@ class GraphicalEditorController(ExtendedController):
         if not opengl_coords:
             conversion = self.view.editor.pixel_to_size_ratio()
             rel_motion = (rel_motion[0] / conversion, -rel_motion[1] / conversion)
-            aspect = self.view.editor.allocation.width / float(self.view.editor.allocation.height)
+            aspect = self.view.editor.get_allocation().width / float(self.view.editor.get_allocation().height)
             if aspect > 1:
                 rel_motion = (rel_motion[0] / aspect, rel_motion[1])
             else:
@@ -1477,8 +1498,8 @@ class GraphicalEditorController(ExtendedController):
         :param tuple pos: The mouse position at which the zoom occured
         :param direction: The scroll direction
         """
-        zoom_in = direction == SCROLL_DOWN
-        zoom_out = direction == SCROLL_UP
+        zoom_in = direction == Gdk.ScrollDirection.DOWN
+        zoom_out = direction == Gdk.ScrollDirection.UP
 
         if zoom_in or zoom_out:
             old_mouse_pos = self.view.editor.screen_to_opengl_coordinates(pos)
@@ -1493,7 +1514,7 @@ class GraphicalEditorController(ExtendedController):
             self.view.editor.top *= zoom
 
             # Determine mouse offset to previous position
-            aspect = self.view.editor.allocation.width / float(self.view.editor.allocation.height)
+            aspect = self.view.editor.get_allocation().width / float(self.view.editor.get_allocation().height)
             new_mouse_pos = self.view.editor.screen_to_opengl_coordinates(pos)
             diff = subtract_pos(new_mouse_pos, old_mouse_pos)
             if aspect < 1:
@@ -1515,6 +1536,13 @@ class GraphicalEditorController(ExtendedController):
         frame = self.model.temp['gui']['editor']['selection_frame']
         if isinstance(frame, list):
             self.view.editor.draw_frame(frame[0], frame[1], 10)
+
+    @ExtendedController.observe("destruction_signal", signal=True)
+    def state_machine_destruction(self, model, prop_name, info):
+        """ Close state editor when state machine is being destroyed """
+        if self.model is model:
+            self.suspend_drawing = True
+            # self.relieve_all_models()
 
     @lock_state_machine
     def draw_state(self, state_m, rel_pos=(0, 0), size=(100, 100), depth=1):
@@ -1553,7 +1581,6 @@ class GraphicalEditorController(ExtendedController):
                     state_meta = state_m.set_meta_data_editor('size', size, from_gaphas=False)
 
         size = state_meta['size']
-
         # Root state is always in the origin
         if state_m.state.is_root_state:
             pos = (0, 0)
@@ -1642,7 +1669,7 @@ class GraphicalEditorController(ExtendedController):
             width = size[0]
             height = size[1]
 
-            for child_state in state_m.states.itervalues():
+            for child_state in state_m.states.values():
                 # Calculate default positions for the child states
                 # Make the inset from the top left corner
 
@@ -1679,32 +1706,22 @@ class GraphicalEditorController(ExtendedController):
 
         elif isinstance(state_m, LibraryStateModel):
 
-            show_content = state_m.show_content() is True
-            is_first_draw_of_lib_state = not contains_geometric_info(state_m.state_copy.temp['gui']['editor']['pos'])
-
-            if show_content or is_child_of_library:
+            if state_m.show_content() or is_child_of_library:
                 # Start calculation hierarchy level within a library
                 if not is_child_of_library:
                     state_temp['library_level'] = 1
 
                 # First draw inner states to generate meta data
-                self.draw_state(state_m.state_copy, (0, 0), size, depth)
-
-                # Resize inner states of library states if not done before
-                if is_first_draw_of_lib_state:
-                    new_corner_pos = add_pos(state_temp['pos'], state_meta['size'])
-                    if isinstance(state_m.state_copy, ContainerStateModel):
-                        import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+                if state_m.state_copy:
+                    import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+                    # logger.verbose("Scale meta data {0} {1}".format(not state_m.meta_data_was_scaled, state_m))
+                    if not state_m.meta_data_was_scaled:
                         gui_helper_meta_data.scale_library_content(state_m, gaphas_editor=False)
-                    else:
-                        self._resize_state(state_m.state_copy, new_corner_pos, keep_ratio=True, resize_content=True,
-                                           redraw=False)
-                        state_m.state_copy.set_meta_data_editor('size',
-                                                                state_m.get_meta_data_editor(for_gaphas=False)['size'],
-                                                                from_gaphas=False)
-                        state_m.state_copy.set_meta_data_editor('rel_pos', (0., 0.), from_gaphas=False)
-
-                    redraw = True
+                        state_m.meta_data_was_scaled = True
+                    if isinstance(state_m.state_copy, ContainerStateModel):
+                        self.draw_state(state_m.state_copy, (0, 0), size, depth)
+                else:
+                    redraw = False
 
         self._handle_new_transition(state_m, depth)
 
@@ -1880,11 +1897,11 @@ class GraphicalEditorController(ExtendedController):
             to_port = to_state.get_data_port_m(to_key)
 
             if from_port is None:
-                logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
+                logger.warning('Cannot find model of the from data port {0}, ({1})'.format(from_key,
                                                                                         data_flow_m.data_flow))
                 continue
             if to_port is None:
-                logger.warn('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
+                logger.warning('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
                 continue
 
             # For scoped variables, there is no inner and outer connector
@@ -2019,7 +2036,7 @@ class GraphicalEditorController(ExtendedController):
         :param bool find_transitions: Flag whether to find transitions
         :param bool find_data_flows: Flag whether to find data flows
         :param bool find_data_ports: Flag whether to find data ports
-        :return gtkmvc.Model: The uppermost model beneath the given position, None if nothing was found
+        :return gtkmvc3.Model: The uppermost model beneath the given position, None if nothing was found
         """
         # e.g. sets render mode to GL_SELECT
         self.view.editor.prepare_selection(pos_x, pos_y, width, height)
@@ -2039,8 +2056,8 @@ class GraphicalEditorController(ExtendedController):
             return None
 
         try:
-            selected_ids = map(get_id, hits)  # Get the OpenGL ids for the hits
-            selected_ids = filter(lambda opengl_id: opengl_id is not None, selected_ids)  # Filter out Nones
+            selected_ids = list(map(get_id, hits))  # Get the OpenGL ids for the hits
+            selected_ids = [opengl_id for opengl_id in selected_ids if opengl_id is not None]  # Filter out Nones
             (selection, selection_depth) = self._selection_ids_to_model(selected_ids, self.root_state_m, 1, None, 0,
                                                                         all,
                                                                         find_states, find_transitions,
@@ -2061,7 +2078,7 @@ class GraphicalEditorController(ExtendedController):
         :param ids: The ids to search for
         :param rafcon.gui.models.abstract_state.AbstractStateModel search_state_m: The state to search in
         :param float search_state_depth: The depth the search state is in
-        :param gtkmvc.Model selection: The currently found object
+        :param gtkmvc3.Model selection: The currently found object
         :param float selection_depth: The depth of the currently found object
         :return: The selected object and its depth
         """
@@ -2095,7 +2112,7 @@ class GraphicalEditorController(ExtendedController):
         # If it is a container state, check its transitions, data flows and child states
         if isinstance(search_state_m, ContainerStateModel):
 
-            for state in search_state_m.states.itervalues():
+            for state in search_state_m.states.values():
                 if len(ids) > 0:
                     (selection, selection_depth) = self._selection_ids_to_model(ids, state, search_state_depth + 1,
                                                                                 selection, selection_depth, all,

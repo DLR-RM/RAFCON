@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -22,7 +22,7 @@
 
 """
 
-import gtk
+from gi.repository import Gtk
 
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.state_editor.state_editor import StateEditorController
@@ -46,15 +46,15 @@ STATE_NAME_MAX_CHARS = 16
 
 def create_button(toggle, font, font_size, icon_code, release_callback=None, *additional_parameters):
     if toggle:
-        button = gtk.ToggleButton()
+        button = Gtk.ToggleButton()
     else:
-        button = gtk.Button()
+        button = Gtk.Button()
 
-    button.set_relief(gtk.RELIEF_NONE)
+    button.set_relief(Gtk.ReliefStyle.NONE)
     button.set_focus_on_click(False)
-    button.set_size_request(width=constants.GRID_SIZE*3, height=constants.GRID_SIZE*3)
+    button.set_size_request(width=constants.GRID_SIZE*3, height=-1)
 
-    label = gtk.Label()
+    label = Gtk.Label()
     label.set_markup("<span font_desc='{0} {1}'>&#x{2};</span>".format(font, font_size, icon_code))
     button.add(label)
 
@@ -81,15 +81,15 @@ def create_sticky_button(callback, *additional_parameters):
 def create_tab_header(title, close_callback, sticky_callback, *additional_parameters):
     def handle_middle_click(widget, event, callback, *additional_parameters):
         """Calls `callback` in case the middle mouse button was pressed"""
-        if event.button == 2 and callback:
+        if event.get_button()[1] == 2 and callback:
             callback(event, *additional_parameters)
 
     sticky_button = None
-    label = gtk.Label(title)
+    label = Gtk.Label(label=title)
     label.set_max_width_chars(STATE_NAME_MAX_CHARS)
     close_button = create_tab_close_button(close_callback, *additional_parameters)
 
-    hbox = gtk.HBox()
+    hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
     if global_gui_config.get_config_value('KEEP_ONLY_STICKY_STATES_OPEN', True):
         sticky_button = create_sticky_button(sticky_callback, *additional_parameters)
         sticky_button.set_name('sticky_button')
@@ -97,7 +97,7 @@ def create_tab_header(title, close_callback, sticky_callback, *additional_parame
     hbox.pack_start(label, expand=True, fill=True, padding=0)
     hbox.pack_start(close_button, expand=False, fill=False, padding=0)
 
-    event_box = gtk.EventBox()
+    event_box = Gtk.EventBox()
     event_box.set_name("tab_label")  # required for gtkrc
     event_box.connect('button-press-event', handle_middle_click, close_callback, *additional_parameters)
     event_box.tab_label = label
@@ -134,7 +134,7 @@ class StatesEditorController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         self.observe_model(gui_config_model)
 
-        for state_machine_m in self.model.state_machines.itervalues():
+        for state_machine_m in list(self.model.state_machines.values()):
             self.observe_model(state_machine_m)
 
         # TODO: Workaround used for tab-close on middle click
@@ -146,6 +146,7 @@ class StatesEditorController(ExtendedController):
         self.closed_tabs = {}
 
     def register_view(self, view):
+        super(StatesEditorController, self).register_view(view)
         self.view.notebook.connect('switch-page', self.on_switch_page)
         if self.current_state_machine_m:
             self.add_state_editor(self.current_state_machine_m.root_state)
@@ -158,6 +159,10 @@ class StatesEditorController(ExtendedController):
         """
         shortcut_manager.add_callback_for_action('rename', self.rename_selected_state)
         super(StatesEditorController, self).register_actions(shortcut_manager)
+
+    def prepare_destruction(self):
+        # -> do not generate new state editor TODO tbd (deleted)
+        self.relieve_model(self.model)
 
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
@@ -207,8 +212,9 @@ class StatesEditorController(ExtendedController):
         # TODO check if some models are the same in the new model - but only if widgets update if parent has changed
         def close_all_tabs_of_related_state_models_recursively(parent_state_m):
             if isinstance(parent_state_m, ContainerStateModel):
-                for child_state_m in parent_state_m.states.values():
-                    close_all_tabs_of_related_state_models_recursively(child_state_m)
+                if parent_state_m.states:  # maybe empty if the states editor is under destruction
+                    for child_state_m in parent_state_m.states.values():
+                        close_all_tabs_of_related_state_models_recursively(child_state_m)
             state_identifier = self.get_state_identifier(parent_state_m)
             self.close_page(state_identifier, delete=True)
 
@@ -227,10 +233,10 @@ class StatesEditorController(ExtendedController):
         """ Method remove state-tabs for those no state machine exists anymore.
         """
         tabs_to_close = []
-        for state_identifier, tab_dict in self.tabs.iteritems():
+        for state_identifier, tab_dict in list(self.tabs.items()):
             if tab_dict['sm_id'] not in self.model.state_machine_manager.state_machines:
                 tabs_to_close.append(state_identifier)
-        for state_identifier, tab_dict in self.closed_tabs.iteritems():
+        for state_identifier, tab_dict in list(self.closed_tabs.items()):
             if tab_dict['sm_id'] not in self.model.state_machine_manager.state_machines:
                 tabs_to_close.append(state_identifier)
         for state_identifier in tabs_to_close:
@@ -276,9 +282,11 @@ class StatesEditorController(ExtendedController):
                     state_editor_view['main_notebook_1'].page_num(state_editor_view.page_dict["Data Linkage"]))
             state_editor_ctrl = StateEditorController(state_m, state_editor_view)
             self.add_controller(state_identifier, state_editor_ctrl)
-            if state_editor_ctrl.get_controller('source_ctrl') and state_m.state.get_library_root_state() is None:
+            if state_editor_ctrl.get_controller('source_ctrl') and state_m.state.get_next_upper_library_root_state() is None:
+                # observe changed to set the mark dirty flag
                 handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
                                                                                 state_m)
+                self.view.get_top_widget().connect('draw', state_editor_view.source_view.on_draw)
             else:
                 handler_id = None
             source_code_view_is_dirty = False
@@ -311,13 +319,22 @@ class StatesEditorController(ExtendedController):
 
     def reload_style(self):
         tabs_to_delete = []
-        for state_identifier, tab_dict in self.tabs.iteritems():
+        for state_identifier, tab_dict in list(self.tabs.items()):
             tabs_to_delete.append(state_identifier)
         for state_identifier in tabs_to_delete:
             self.close_page(state_identifier, delete=True)
         self.add_state_editor(self.current_state_machine_m.root_state)
 
-    def script_text_changed(self, source, state_m):
+    def script_text_changed(self, text_buffer, state_m):
+        """ Update gui elements according text buffer changes
+
+        Checks if the dirty flag needs to be set and the tab label to be updated.
+
+        :param TextBuffer text_buffer: Text buffer of the edited script
+        :param rafcon.gui.models.state.StateModel state_m: The state model related to the text buffer
+        :return:
+        """
+
         state_identifier = self.get_state_identifier(state_m)
         if state_identifier in self.tabs:
             tab_list = self.tabs
@@ -333,7 +350,7 @@ class StatesEditorController(ExtendedController):
         old_is_dirty = tab_list[state_identifier]['source_code_view_is_dirty']
         source_script_state_m = state_m.state_copy if isinstance(state_m, LibraryStateModel) else state_m
         # remove next two lines and tab is also set dirty for source scripts inside of a LibraryState (maybe in future)
-        if isinstance(state_m, LibraryStateModel) or state_m.state.get_library_root_state() is not None:
+        if isinstance(state_m, LibraryStateModel) or state_m.state.get_next_upper_library_root_state() is not None:
             return
         if source_script_state_m.state.script_text == current_text:
             tab_list[state_identifier]['source_code_view_is_dirty'] = False
@@ -390,7 +407,7 @@ class StatesEditorController(ExtendedController):
         :param state_m: The state model to be searched
         :return: page containing the state and the state_identifier
         """
-        for state_identifier, page_info in self.tabs.iteritems():
+        for state_identifier, page_info in list(self.tabs.items()):
             if page_info['state_m'] is state_m:
                 return page_info['page'], state_identifier
         return None, None
@@ -439,7 +456,7 @@ class StatesEditorController(ExtendedController):
         page = notebook.get_nth_page(page_num)
 
         # find state of selected tab
-        for tab_info in self.tabs.values():
+        for tab_info in list(self.tabs.values()):
             if tab_info['page'] is page:
                 state_m = tab_info['state_m']
                 sm_id = state_m.state.get_state_machine().state_machine_id
@@ -492,7 +509,7 @@ class StatesEditorController(ExtendedController):
 
         states_to_be_closed = []
         # Iterate over all tabs
-        for state_identifier, tab_info in self.tabs.iteritems():
+        for state_identifier, tab_info in list(self.tabs.items()):
             # If the tab is currently open, keep it open
             if current_state_identifier == state_identifier:
                 continue
@@ -514,46 +531,6 @@ class StatesEditorController(ExtendedController):
         assert isinstance(state_machine_m.selection, Selection)
         if len(state_machine_m.selection.states) == 1 and len(state_machine_m.selection) == 1:
             self.activate_state_tab(state_machine_m.selection.get_selected_state())
-
-    @ExtendedController.observe("state_machine", after=True)
-    def notify_state_removal(self, model, prop_name, info):
-        """Close tabs of states that are being removed
-
-        'after' is used here in order to receive deletion events of children first. In addition, only successful
-        deletion events are handled. This has the drawback that the model of removed states are no longer existing in
-        the parent state model. Therefore, we use the helper method close_state_of_parent, which looks at all open
-        tabs as well as closed tabs and the ids of their states.
-        """
-        def close_state_of_parent(parent_state_m, state_id):
-
-            for tab_info in self.tabs.itervalues():
-                state_m = tab_info['state_m']
-                # The state id is only unique within the parent
-                # logger.debug("tabs: %s %s %s %s" % (state_m.state.state_id, state_id, state_m.parent, parent_state_m))
-                if state_m.state.state_id == state_id and state_m.parent is parent_state_m:
-                    state_identifier = self.get_state_identifier(state_m)
-                    self.close_page(state_identifier, delete=True)
-                    return True
-
-            for tab_info in self.closed_tabs.itervalues():
-                state_m = tab_info['controller'].model
-                # The state id is only unique within the parent
-                # logger.debug("closed_tabs: %s %s %s %s" % (state_m.state.state_id, state_id, state_m.parent,
-                # parent_state_m))
-                if state_m.state.state_id == state_id and state_m.parent is parent_state_m:
-                    # state_identifier in self.closed_tabs or state_identifier in self.tabs:
-                    state_identifier = self.get_state_identifier(state_m)
-                    self.close_page(state_identifier, delete=True)
-                    return True
-
-            return False
-
-        if not is_execution_status_update_notification_from_state_machine_model(prop_name, info):
-            overview = NotificationOverview(info, initiator_string='states-editor')
-            if overview['prop_name'][-1] in ['state', 'states'] and overview['method_name'][-1] == 'remove_state':
-                state_id = overview['args'][-1][1] if not len(overview['args'][-1]) == 1 else overview['kwargs'][-1]['state_id']
-                parent_state_m = overview['model'][-1]
-                close_state_of_parent(parent_state_m, state_id)
 
     @ExtendedController.observe("state_machine", after=True)
     def notify_state_name_change(self, model, prop_name, info):
@@ -584,7 +561,7 @@ class StatesEditorController(ExtendedController):
     def get_state_identifier_for_page(self, page):
         """Return the state identifier for a given page
         """
-        for identifier, page_info in self.tabs.iteritems():
+        for identifier, page_info in list(self.tabs.items()):
             if page_info["page"] is page:  # reference comparison on purpose
                 return identifier
 

@@ -7,5 +7,3 @@
 #
 # Contributors:
 # Sebastian Brunner <sebastian.brunner@dlr.de>
-
-import rafcon.core.config

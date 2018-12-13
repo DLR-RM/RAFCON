@@ -1,9 +1,11 @@
 TYPE: GUI_CONFIG
 
-SOURCE_EDITOR_STYLE: rafcon-dark
+SOURCE_EDITOR_STYLE: rafcon
 
 GAPHAS_EDITOR: True
+GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE: True
 ENABLE_CACHING: True    # Affects only Gaphas editor
+THEME_DARK_VARIANT: True
 DRAG_N_DROP_WITH_FOCUS: False
 
 WAYPOINT_SNAP_ANGLE: 45
@@ -12,10 +14,12 @@ WAYPOINT_SNAP_MAX_DIFF_PIXEL: 50
 
 PORT_SNAP_DISTANCE: 5
 
+LOGGING_SHOW_VERBOSE: False
 LOGGING_SHOW_DEBUG: False
 LOGGING_SHOW_INFO: True
 LOGGING_SHOW_WARNING: True
 LOGGING_SHOW_ERROR: True
+CONSOLE_FOLLOW_LOGGING: True
 
 LIBRARY_TREE_PATH_HUMAN_READABLE: False
 SUBSTITUTE_STATE_KEEPS_STATE_NAME: True
@@ -59,20 +63,24 @@ STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED: True
 ZOOM_WITH_CTRL: False
 
 SEMANTIC_DATA_MODE: False
+SHOW_PATH_NAMES_IN_EXECUTION_HISTORY: False
+
+# 300 is equal to glib.PRIORITY_LOW which is is lower than the default gtk priority
+LOGGING_CONSOLE_GTK_PRIORITY: 300
 
 SHORTCUTS:
     abort: Escape
     add: <Control>A
-    add_execution_state: <Alt>E
+    add_execution_state: <Control><Alt>E
     add_hierarchy_state: 
-    - <Alt>H
+    - <Control><Alt>H
     - <Control><Shift>A
-    add_preemptive_state: <Alt>C
-    add_barrier_state: <Alt>B
-    add_output: <Alt>U
-    add_input: <Alt>N
-    add_outcome: <Alt>T
-    add_scoped_variable: <Alt>V
+    add_preemptive_state: <Control><Alt>C
+    add_barrier_state: <Control><Alt>B
+    add_output: <Control><Alt>U
+    add_input: <Control><Alt>N
+    add_outcome: <Control><Alt>T
+    add_scoped_variable: <Control><Alt>V
     apply: <Control><Shift>E
     backward_step: F9
     close: <Control>W
@@ -86,13 +94,19 @@ SHORTCUTS:
     fit: <Control>space
     group: <Control>G
     info: <Control>I
-    is_start_state: <Control>E
+    is_start_state:
+    - <Control>E
+    - <Control><Shift>X
+    transition_from_closest_sibling_state: <Control><Shift>C
+    transition_to_closest_sibling_state: <Control><Shift>V
+    transition_to_parent_state: <Control><Shift>B
     left:
     - <Control>Left
     - <Control><Shift>Left
     new: <Control>N
     open: <Control>O
     open_external_editor: <Control><Shift>Q
+    open_library_state_separately: <Control><Shift>space
     paste: <Control>V
     pause: F7
     quit: <Control>Q

@@ -1,4 +1,5 @@
-# Copyright (C) 2016-2017 DLR
+from __future__ import print_function
+# Copyright (C) 2016-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -9,6 +10,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import str
 import datetime
 import time
 from rafcon.utils import constants
@@ -51,13 +53,14 @@ class NotificationOverview(dict):
     _generation_time = 0.
 
     def __init__(self, info=None, with_prints=False, initiator_string=None):
-
+        from weakref import ref
         NotificationOverview._count += 1
         start_time = time.time()
         if info is None:
             info = self.empty_info
         self.initiator = initiator_string
         self.info = info
+        # self._info = ref(info)
         self.__type = 'before'
         if 'after' in info:
             self.__type = 'after'
@@ -70,7 +73,7 @@ class NotificationOverview(dict):
         dict.__init__(self, overview_dict)
         self.__description = s
         if self.with_prints:
-            print "\nNotificationOverview {}\n".format(str(self))
+            print("\nNotificationOverview {}\n".format(str(self)))
         NotificationOverview._generation_time += time.time() - start_time
     #     self.store_debug_log_file("\nNotificationOverview {}\n".format(str(self)))
     #
@@ -78,6 +81,11 @@ class NotificationOverview(dict):
     #     with open(constants.RAFCON_TEMP_PATH_BASE + '/NO_debug_log_file.txt', 'a+') as f:
     #         f.write(string)
     #     f.closed
+
+    def prepare_destruction(self):
+        self.info = None
+        self. _overview_dict.clear()
+        dict.clear(self)
 
     def __str__(self):
         if self.initiator is not None:
@@ -101,10 +109,10 @@ class NotificationOverview(dict):
             dict.update(self, E)
 
     def print_overview(self, overview=None):
-        print self
+        print(self)
 
     def get_nice_info_dict_string(self, info, level='\t', overview=None):
-        """ Inserts all elements of a notification info-dictionary of gtkmvc or a Signal into one string and indicates
+        """ Inserts all elements of a notification info-dictionary of gtkmvc3 or a Signal into one string and indicates
         levels of calls defined by 'kwargs'. Additionally, the elements get structured into a dict that holds all levels
         of the general notification key-value pairs in faster accessible lists. The dictionary has the element 'type'
         and the general elements {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'args': [],
@@ -163,6 +171,9 @@ class NotificationOverview(dict):
             # change
             s += "\n{0}affected_models={1}".format(level + "\t", meta_signal_msg_tuple.affected_models)
             meta_signal_dict['affected_models'] = meta_signal_msg_tuple.affected_models
+            if meta_signal_msg_tuple.after:
+                s += "\n{0}result={1}".format(level + "\t", meta_signal_msg_tuple.result)
+                meta_signal_dict['result'] = meta_signal_msg_tuple.result
 
             return s
 
@@ -218,7 +229,7 @@ class NotificationOverview(dict):
                                                                                    overview))
             if overview['type'] == 'after':
                 s += "\n{0}'result': {1}".format(level, info['result'])
-            # additional elements not created by gtkmvc or common function calls
+            # additional elements not created by gtkmvc3 or common function calls
             overview['others'].append({})
             for key, value in info.items():
                 if key in ['before', 'after', 'model', 'prop_name', 'instance', 'method_name', 'args', 'kwargs', 'result']:
@@ -228,8 +239,8 @@ class NotificationOverview(dict):
                     overview['others'][len(overview['others'])-1][key] = info[key]
         else:
             overview['kwargs'].append({})
-            # print info
-            # print info['arg']
+            # print(info)
+            # print(info['arg'])
             if isinstance(info['arg'], MetaSignalMsg):
                 overview['signal'].append(info['arg'])
                 s += "\n{0}'arg': MetaSignalMsg({1}".format(level,

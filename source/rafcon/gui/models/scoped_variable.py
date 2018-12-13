@@ -11,7 +11,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from copy import copy, deepcopy
-from gtkmvc import ModelMT
+from gtkmvc3.model_mt import ModelMT
 
 from rafcon.gui.models.state_element import StateElementModel
 from rafcon.core.state_elements.scope import ScopedVariable
@@ -59,6 +59,10 @@ class ScopedVariableModel(StateElementModel):
     @ModelMT.observe("scoped_variable", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(ScopedVariableModel, self).model_changed(model, prop_name, info)
+
+    def prepare_destruction(self):
+        super(ScopedVariableModel, self).prepare_destruction()
+        self.scoped_variable = None
 
     def _meta_data_editor_gaphas2opengl(self, vividict):
         if 'rel_pos' in vividict:

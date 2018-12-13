@@ -11,7 +11,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from copy import copy, deepcopy
-from gtkmvc import ModelMT
+from gtkmvc3.model_mt import ModelMT
 
 from rafcon.gui.models.state_element import StateElementModel
 from rafcon.core.state_elements.transition import Transition
@@ -70,6 +70,10 @@ class TransitionModel(StateElementModel):
     @ModelMT.observe("transition", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(TransitionModel, self).model_changed(model, prop_name, info)
+
+    def prepare_destruction(self):
+        super(TransitionModel, self).prepare_destruction()
+        self.transition = None
 
     def _meta_data_editor_gaphas2opengl(self, vividict):
         return mirror_waypoints(vividict)

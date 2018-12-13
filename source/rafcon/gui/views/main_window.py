@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -16,7 +16,12 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import View
+from builtins import range
+import os
+
+from gi.repository import Gtk
+
+from gtkmvc3.view import View
 
 from rafcon.gui.config import global_gui_config
 import rafcon.gui.helpers.label as gui_helper_label
@@ -25,7 +30,7 @@ from rafcon.gui.utils import constants
 from rafcon.gui.views.execution_history import ExecutionHistoryView
 from rafcon.gui.views.global_variable_editor import GlobalVariableEditorView
 from rafcon.gui.views.library_tree import LibraryTreeView
-from rafcon.gui.views.logging_console import LoggingConsoleView
+from rafcon.gui.views.debug_console import DebugConsoleView
 from rafcon.gui.views.menu_bar import MenuBarView
 from rafcon.gui.views.modification_history import ModificationHistoryView
 from rafcon.gui.views.state_icons import StateIconView
@@ -33,9 +38,7 @@ from rafcon.gui.views.state_machine_tree import StateMachineTreeView
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
 from rafcon.gui.views.states_editor import StatesEditorView
 from rafcon.gui.views.tool_bar import ToolBarView
-from rafcon.gui.views.top_tool_bar import TopToolBarView
 from rafcon.gui.views.undocked_window import UndockedWindowView
-from rafcon.utils.i18n import _
 
 
 class MainWindowView(View):
@@ -44,6 +47,10 @@ class MainWindowView(View):
 
     def __init__(self):
         View.__init__(self)
+
+        if os.getenv("RAFCON_START_MINIMIZED", False):
+            self.get_top_widget().iconify()
+
         # Add gui components by removing their corresponding placeholders defined in the glade file first and then
         # adding the widgets.
         self.left_bar_notebooks = [self['upper_notebook'], self['lower_notebook']]
@@ -55,8 +62,6 @@ class MainWindowView(View):
         self['undock_left_bar_button'].set_tooltip_text("Undock left side bar widget")
         self['undock_right_bar_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
         self['undock_right_bar_button'].set_tooltip_text("Undock right side bar widget")
-        self['undock_console_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
-        self['undock_console_button'].set_tooltip_text("Undock debug console widget")
         self['collapse_tree_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_COLLAPSE))
         self['collapse_tree_button'].set_tooltip_text("Collapse tree of widget")
 
@@ -65,28 +70,28 @@ class MainWindowView(View):
         ######################################################
         self.library_tree = LibraryTreeView()
         self.library_tree.show()
-        self['libraries_alignment'].add(self.library_tree)
+        self['libraries_scrolledwindow'].add(self.library_tree)
 
         ######################################################
         # State Icons
         ######################################################
         self.state_icons = StateIconView()
         self.state_icons.show()
-        self["state_icons_box"].pack_start(self.state_icons.get_top_widget())
+        self["state_icons_box"].pack_start(self.state_icons.get_top_widget(), True, True, 0)
 
         ######################################################
         # State Machine Tree
         ######################################################
         self.state_machine_tree = StateMachineTreeView()
         self.state_machine_tree.show()
-        self['states_tree_alignment'].add(self.state_machine_tree)
+        self['states_tree_scrolledwindow'].add(self.state_machine_tree)
 
         ######################################################
         # Global Variable Manager
         ######################################################
         self.global_var_editor = GlobalVariableEditorView()
         self.global_var_editor.show()
-        self['global_variables_alignment'].add(self.global_var_editor.get_top_widget())
+        self['global_variables_eventbox'].add(self.global_var_editor.get_top_widget())
 
         ######################################################
         # State Machine History
@@ -118,15 +123,6 @@ class MainWindowView(View):
         self['graphical_editor_vbox'].pack_start(self.state_machines_editor.get_top_widget(), True, True, 0)
         self['graphical_editor_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 0)
 
-        self['graphical_editor_label_event_box'].remove(self['graphical_editor_label'])
-        self['graphical_editor_label_event_box'].set_border_width(constants.GRID_SIZE)
-        graphical_editor_label = gui_helper_label.create_label_with_text_and_spacing(_('GRAPHICAL EDITOR'),
-                                                                                     font_size=constants.FONT_SIZE_BIG,
-                                                                                     letter_spacing=constants.
-                                                                                     LETTER_SPACING_1PT)
-        graphical_editor_label.set_alignment(0, .5)
-        self['graphical_editor_label_event_box'].add(graphical_editor_label)
-
         ######################################################
         # States-editor
         ######################################################
@@ -134,49 +130,39 @@ class MainWindowView(View):
         self['state_editor_eventbox'].add(self.states_editor.get_top_widget())
         self.states_editor.show()
 
-        self['state_editor_label_hbox'].remove(self['state_editor_label'])
-        self['state_editor_label_hbox'].set_border_width(constants.GRID_SIZE)
-        state_editor_label = gui_helper_label.create_label_with_text_and_spacing(_('STATE EDITOR'),
-                                                                                 font_size=constants.FONT_SIZE_BIG,
-                                                                                 letter_spacing=constants.LETTER_SPACING_1PT)
-        state_editor_label.set_alignment(0., 0.)
-        self['state_editor_label_hbox'].add(state_editor_label)
-
         ######################################################
-        # Logging
+        # Debug Console
         ######################################################
-        self.logging_console_view = LoggingConsoleView()
-        self['console'].remove(self['console_scroller'])
-        self['console'].pack_start(self.logging_console_view.get_top_widget(), True, True, 0)
-        self.logging_console_view.get_top_widget().show()
+        self.debug_console_view = DebugConsoleView()
+        self['debug_console_viewport'].add(self.debug_console_view.get_top_widget())
+        self.debug_console_view.get_top_widget().show()
+        # map hide and undock buttons within and debug widget to be usable from main window view with generic naming
+        self['undock_console_button'] = self.debug_console_view['undock_console_button']
+        self['console_hide_button'] = self.debug_console_view['console_hide_button']
+        self['console_container'] = self.debug_console_view['console_container']
+        self['console'] = self.debug_console_view['console']
 
         ##################################################
-        # menu bar view
+        # HeaderBar with MenuBar
         ##################################################
-        self.top_tool_bar = TopToolBarView()
-        self.top_tool_bar.show()
-        self['top_menu_hbox'].remove(self['top_tool_bar_placeholder'])
-        self['top_menu_hbox'].pack_end(self.top_tool_bar.get_top_widget(), expand=True, fill=True, padding=0)
-        self['top_menu_hbox'].reorder_child(self.top_tool_bar.get_top_widget(), 1)
 
         self.menu_bar = MenuBarView(self)
         self.menu_bar.show()
-        self['top_menu_hbox'].remove(self['menu_bar_placeholder'])
-        self['top_menu_hbox'].pack_start(self.menu_bar.get_top_widget(), expand=False, fill=True, padding=0)
-        self['top_menu_hbox'].reorder_child(self.menu_bar.get_top_widget(), 0)
+
+        self['headerbar'].pack_start(self.menu_bar.get_top_widget())
+        self['headerbar'].show()
 
         self.tool_bar = ToolBarView()
         self.tool_bar.show()
         self['top_level_vbox'].remove(self['tool_bar_placeholder'])
         self['top_level_vbox'].pack_start(self.tool_bar.get_top_widget(), expand=False, fill=True, padding=0)
-        self['top_level_vbox'].reorder_child(self.tool_bar.get_top_widget(), 1)
+        self['top_level_vbox'].reorder_child(self.tool_bar.get_top_widget(), 0)
 
         ################################################
         # Hide Buttons
         ################################################
         self['left_bar_hide_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_LEFTA))
         self['right_bar_hide_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_RIGHTA))
-        self['console_hide_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_DOWNA))
 
         ################################################
         # Return Buttons
@@ -223,26 +209,19 @@ class MainWindowView(View):
 
         # --------------------------------------------------------------------------
 
-        self.get_top_widget().set_decorated(False)
-
-        self['upper_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        self['upper_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
-        if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
-            self['lower_notebook'].set_tab_hborder(int(constants.TAB_BORDER_WIDTH * 2 / 1.4))
-        else:
-            self['lower_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        self['lower_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
-
-        self['debug_eventbox'].set_border_width(0)
-
-        self['button_show_info'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_INFO', True))
-        self['button_show_debug'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True))
-        self['button_show_warning'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_WARNING', True))
-        self['button_show_error'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_ERROR', True))
+        # Gtk TODO: find replacement for methods set_tab_hborder and set_tab_vborder
+        # self['upper_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
+        # self['upper_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
+        # if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
+        #     self['lower_notebook'].set_tab_hborder(int(constants.TAB_BORDER_WIDTH * 2 / 1.4))
+        # else:
+        #     self['lower_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
+        # self['lower_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
 
         self.left_bar_window = UndockedWindowView('left_bar_window')
         self.right_bar_window = UndockedWindowView('right_bar_window')
         self.console_window = UndockedWindowView('console_window')
+
 
     def rotate_and_detach_tab_labels(self):
         """Rotates tab labels of a given notebook by 90 degrees and makes them detachable.

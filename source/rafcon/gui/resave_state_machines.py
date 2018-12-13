@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 DLR
+# Copyright (C) 2016-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -12,21 +12,23 @@
 
 #!/usr/bin/python
 
+from future import standard_library
+standard_library.install_aliases()
 import os
-import gtk
+from gi.repository import Gtk
 from os.path import join, expanduser
 import threading
 import time
 
 from rafcon.utils import log
-from rafcon.gui.utils import wait_for_gui
+from rafcon.utils.gui_functions import call_gui_callback
 
 from rafcon.core.config import global_config
 import rafcon.core.singleton as core_singletons
 
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
+import rafcon.gui.start
 import rafcon.gui.singleton as gui_singletons
+from rafcon.gui.utils import wait_for_gui
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
@@ -38,39 +40,17 @@ def setup_logger():
     import sys
     import logging
 
-    # Apply defaults to logger of gtkmvc
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
+    # Apply defaults to logger of gtkmvc3
+    for handler in logging.getLogger('gtkmvc3').handlers:
+        logging.getLogger('gtkmvc3').removeHandler(handler)
     stdout = logging.StreamHandler(sys.stdout)
     stdout.setFormatter(logging.Formatter("%(asctime)s: %(levelname)-8s - %(name)s:  %(message)s"))
     stdout.setLevel(logging.DEBUG)
-    logging.getLogger('gtkmvc').addHandler(stdout)
+    logging.getLogger('gtkmvc3').addHandler(stdout)
 
 
 setup_logger()
 logger = log.get_logger("Resave state machines script")
-
-
-def call_gui_callback(callback, *args):
-    import glib
-    import threading
-    condition = threading.Condition()
-
-    def fun():
-        """Call callback and notify condition variable
-        """
-        try:
-            callback(*args)
-        finally:  # Finally is also executed in the case of exceptions and reraises the exception at the end
-            condition.acquire()
-            condition.notify()
-            condition.release()
-
-    glib.idle_add(fun)
-    # Wait for the condition to be notified
-    condition.acquire()
-    condition.wait()
-    condition.release()
 
 
 def trigger_gui_signals(*args):
@@ -92,6 +72,9 @@ def trigger_gui_signals(*args):
 
 def convert(config_path, source_path, target_path=None):
     logger.info("RAFCON launcher")
+    rafcon.gui.start.setup_l10n()
+    from rafcon.gui.controllers.main_window import MainWindowController
+    from rafcon.gui.views.main_window import MainWindowView
 
     setup_environment()
 
@@ -135,17 +118,19 @@ def convert(config_path, source_path, target_path=None):
     sm_manager_model = gui_singletons.state_machine_manager_model
 
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
-    main_window = main_window_view.get_top_widget()
-    size = global_runtime_config.get_config_value("WINDOW_SIZE", None)
-    position = global_runtime_config.get_config_value("WINDOW_POS", None)
-    if size:
-        main_window.resize(size[0], size[1])
-    if position:
-        position = (max(0, position[0]), max(0, position[1]))
-        screen_width = gtk.gdk.screen_width()
-        screen_height = gtk.gdk.screen_height()
-        if position[0] < screen_width and position[1] < screen_height:
-            main_window.move(position[0], position[1])
+
+    if not os.getenv("RAFCON_START_MINIMIZED", False):
+        main_window = main_window_view.get_top_widget()
+        size = global_runtime_config.get_config_value("WINDOW_SIZE", None)
+        position = global_runtime_config.get_config_value("WINDOW_POS", None)
+        if size:
+            main_window.resize(size[0], size[1])
+        if position:
+            position = (max(0, position[0]), max(0, position[1]))
+            screen_width = Gdk.Screen.width()
+            screen_height = Gdk.Screen.height()
+            if position[0] < screen_width and position[1] < screen_height:
+                main_window.move(position[0], position[1])
 
     wait_for_gui()
     thread = threading.Thread(target=trigger_gui_signals, args=[sm_manager_model,
@@ -154,7 +139,7 @@ def convert(config_path, source_path, target_path=None):
                                                                 state_machine])
     thread.start()
 
-    gtk.main()
+    Gtk.main()
     logger.debug("Gtk main loop exited!")
     logger.debug("Conversion done")
 

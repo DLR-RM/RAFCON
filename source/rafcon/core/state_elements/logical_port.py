@@ -17,7 +17,8 @@
 
 """
 
-from gtkmvc import Observable
+from future.utils import string_types
+from gtkmvc3 import Observable
 
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.decorators import lock_state_machine
@@ -149,6 +150,7 @@ class Outcome(LogicalPort):
         name = dict_representation['name']
         return Outcome(outcome_id, name)
 
+# Properties for all class field that must be observed by the gtkmvc3
     @property
     def outcome_id(self):
         """ Returns the outcome_id """
@@ -163,8 +165,8 @@ class Outcome(LogicalPort):
     @lock_state_machine
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, basestring):
-            raise TypeError("name must be of type str")
+        if not isinstance(name, string_types):
+            raise TypeError("name must be a string")
 
         if len(name) < 1:
             raise ValueError("Name cannot be empty")

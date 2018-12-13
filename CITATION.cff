@@ -1,0 +1,62 @@
+# YAML 1.2
+---
+cff-version: "1.0.3"
+message: "If you use this software, please cite it using these metadata."
+title: RAFCON
+version: 0.13.0
+date-released: 2018-12-10
+license: EPL-1.0
+doi: "10.5281/zenodo.1493058"
+authors:
+  -
+    affiliation: "German Aerospace Center (DLR)"
+    family-names: Belder
+    given-names: Rico
+    orcid: "https://orcid.org/0000-0002-9733-4108"
+    email: "rico.belder@dlr.de"
+  -
+    affiliation: "German Aerospace Center (DLR)"
+    family-names: Brunner
+    given-names: "Sebastian Georg"
+    orcid: "https://orcid.org/0000-0001-9359-3703"
+    email: "sebastian.brunner@dlr.de"
+  -
+    affiliation: "German Aerospace Center (DLR)"
+    family-names: Steinmetz
+    given-names: Franz
+    orcid: "https://orcid.org/0000-0002-1481-9215"
+    email: "franz.steinmetz@dlr.de"
+repository-code: "https://github.com/DLR-RM/RAFCON/"
+url: "https://dlr-rm.github.io/RAFCON/"
+abstract: "RAFCON uses hierarchical state machines, featuring concurrent state execution, to represent robot programs. It ships with a graphical user interface supporting the creation of state machines and contains IDE like debugging mechanisms. Alternatively, state machines can programmatically be generated using RAFCON's API."
+keywords:
+  - "robot framework"
+  - "state machine"
+  - "visual programming"
+  - "graphical programming"
+  - development
+  - robotics
+  - FSM
+  - GUI
+references:
+  - type: proceedings
+    scope: "Cite this paper if you want to reference the general concepts of RAFCON."
+    authors:
+      - family-names: Brunner
+        given-names: "Sebastian Georg"
+      - family-names: Steinmetz
+        given-names: Franz
+      - family-names: Belder
+        given-names: Rico
+      - family-names: Dömel
+        given-names: Andreas
+    title: "RAFCON: A graphical tool for engineering complex, robotic tasks"
+    year: 2016
+    conference:
+        name: "IEEE Int. Conf. Intelligent Robots and Systems (IROS)"
+        date-start: 2016-10-09
+        date-end: 2016-10-14
+    doi: 10.1109/IROS.2016.7759506
+    start: 3283
+    end: 3290
+...

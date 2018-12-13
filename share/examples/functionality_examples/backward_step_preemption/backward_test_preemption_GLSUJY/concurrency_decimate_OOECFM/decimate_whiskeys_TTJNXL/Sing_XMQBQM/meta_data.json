@@ -1,0 +1,149 @@
+{
+    "gui": {
+        "editor_gaphas": {
+            "income": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        0.7902013662749233
+                    ]
+                }
+            }, 
+            "name": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.13091518510270658, 
+                        0.13091518510270658
+                    ]
+                }, 
+                "size": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1.3091518510270657, 
+                        0.19637277765405986
+                    ]
+                }
+            }, 
+            "outcome_pos": {
+                "-1": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1194.4370626983705, 
+                        -1128.7737065378658
+                    ]
+                }, 
+                "-2": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1190.0360352723708, 
+                        -1128.7737065378658
+                    ]
+                }, 
+                "0": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1196.6375764113704, 
+                        -1139.7762751028652
+                    ]
+                }
+            }, 
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    7.251518984210932, 
+                    2.385589875045369
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    1.5709822212324789, 
+                    1.5804027325498466
+                ]
+            }
+        }
+    }, 
+    "input_data_port1": {
+        "gui": {
+            "editor_gaphas": {
+                "outer_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1178.4318029173958, 
+                        -1152.9793573808647
+                    ]
+                }, 
+                "outer_connector_radius": 0.4584403568749798, 
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        1.4233045104265987
+                    ]
+                }
+            }
+        }
+    }, 
+    "input_data_port3": {
+        "gui": {
+            "editor_gaphas": {
+                "outer_connector_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1178.4318029173958, 
+                        -1157.0136325213646
+                    ]
+                }, 
+                "outer_connector_radius": 0.4584403568749798, 
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        1.2976259327280004
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome-1": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1.413883999109231, 
+                        0
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome-2": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1.0996875548627352, 
+                        0
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome0": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        1.5709822212324789, 
+                        0.7902013662749233
+                    ]
+                }
+            }
+        }
+    }
+}

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -18,13 +18,15 @@ import os
 import threading
 from copy import copy, deepcopy
 
-from gtkmvc import ModelMT, Signal
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Signal
 
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
 from rafcon.gui.config import global_gui_config
+from rafcon.gui.models.meta import MetaModel
 from rafcon.gui.models import ContainerStateModel, StateModel, LibraryStateModel
 from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.signals import MetaSignalMsg
@@ -36,7 +38,7 @@ from rafcon.utils.vividict import Vividict
 logger = log.get_logger(__name__)
 
 
-class StateMachineModel(ModelMT, Hashable):
+class StateMachineModel(MetaModel, Hashable):
     """This model class manages a :class:`rafcon.core.state_machine.StateMachine`
 
     The model class is part of the MVC architecture. It holds the data to be shown (in this case a state machine).
@@ -53,20 +55,22 @@ class StateMachineModel(ModelMT, Hashable):
     action_signal = Signal()
     state_action_signal = Signal()
     sm_selection_changed_signal = Signal()
+    destruction_signal = Signal()
 
     suppress_new_root_state_model_one_time = False
 
     __observables__ = ("state_machine", "root_state", "meta_signal", "state_meta_signal", "sm_selection_changed_signal",
-                       "action_signal", "state_action_signal")
+                       "action_signal", "state_action_signal", "destruction_signal")
 
     def __init__(self, state_machine, meta=None, load_meta_data=True):
         """Constructor
         """
-        ModelMT.__init__(self)  # pass columns as separate parameters
+        MetaModel.__init__(self)  # pass columns as separate parameters
 
         assert isinstance(state_machine, StateMachine)
 
         self.state_machine = state_machine
+        self.state_machine_id = state_machine.state_machine_id
 
         root_state = self.state_machine.root_state
         if isinstance(root_state, ContainerState):
@@ -83,6 +87,7 @@ class StateMachineModel(ModelMT, Hashable):
         self.action_signal = Signal()
         self.state_action_signal = Signal()
         self.sm_selection_changed_signal = Signal()
+        self.destruction_signal = Signal()
 
         self.temp = Vividict()
 
@@ -115,6 +120,9 @@ class StateMachineModel(ModelMT, Hashable):
         else:
             return False
 
+    def __hash__(self):
+        return id(self)
+
     def __copy__(self):
         sm_m = self.__class__(copy(self.state_machine))
         sm_m.root_state.copy_meta_data_from_state_m(self.root_state)
@@ -123,9 +131,6 @@ class StateMachineModel(ModelMT, Hashable):
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
-
-    def __del__(self):
-        self.destroy()
 
     @property
     def core_element(self):
@@ -144,6 +149,9 @@ class StateMachineModel(ModelMT, Hashable):
 
         Unregister itself as observer from the state machine and the root state
         """
+        if self.state_machine is None:
+            logger.verbose("Multiple calls of prepare destruction for {0}".format(self))
+        self.destruction_signal.emit()
         if self.history is not None:
             self.history.prepare_destruction()
         if self.auto_backup is not None:
@@ -155,10 +163,17 @@ class StateMachineModel(ModelMT, Hashable):
             pass
         with self.state_machine.modification_lock():
             self.root_state.prepare_destruction()
+        self.root_state = None
+        self.state_machine = None
+        super(StateMachineModel, self).prepare_destruction()
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.root_state)
         self.update_hash_from_dict(obj_hash, self.meta)
+
+    def update_meta_data_hash(self, obj_hash):
+        super(StateMachineModel, self).update_meta_data_hash(obj_hash)
+        self.root_state.update_meta_data_hash(obj_hash)
 
     @ModelMT.observe("state", before=True)
     @ModelMT.observe("outcomes", before=True)
@@ -200,19 +215,19 @@ class StateMachineModel(ModelMT, Hashable):
     @ModelMT.observe("action_signal", signal=True)
     def action_signal_triggered(self, model, prop_name, info):
         """When the action was performed, we have to set the dirty flag, as the changes are unsaved"""
-        # print "action_signal_triggered state machine: ", model, prop_name, info
+        # print("action_signal_triggered state machine: ", model, prop_name, info)
         self.state_machine.marked_dirty = True
         msg = info.arg
         if model is not self and msg.action.startswith('sm_notification_'):  # Signal was caused by the root state
             # Emit state_action_signal to inform observing controllers about changes made to the state within the
             # state machine
-            # print "DONE1 S", self.state_machine.state_machine_id, msg, model
+            # print("DONE1 S", self.state_machine.state_machine_id, msg, model)
             # -> removes mark of "sm_notification_"-prepend to mark root-state msg forwarded to state machine label
             msg = msg._replace(action=msg.action.replace('sm_notification_', '', 1))
             self.state_action_signal.emit(msg)
-            # print "FINISH DONE1 S", self.state_machine.state_machine_id, msg
+            # print("FINISH DONE1 S", self.state_machine.state_machine_id, msg)
         else:
-            # print "DONE2 S", self.state_machine.state_machine_id, msg
+            # print("DONE2 S", self.state_machine.state_machine_id, msg)
             pass
 
     @staticmethod
@@ -272,7 +287,7 @@ class StateMachineModel(ModelMT, Hashable):
         if self.suppress_new_root_state_model_one_time:
             self.suppress_new_root_state_model_one_time = False
             return
-        # print "ASSIGN ROOT_STATE", model, prop_name, info
+        # print("ASSIGN ROOT_STATE", model, prop_name, info)
         try:
             self.root_state.unregister_observer(self)
         except KeyError:
@@ -289,15 +304,12 @@ class StateMachineModel(ModelMT, Hashable):
         if info.method_name != 'change_root_state_type':
             return
 
-        self.change_root_state_type.__func__.last_notification_model = model
-        self.change_root_state_type.__func__.last_notification_prop_name = prop_name
-        self.change_root_state_type.__func__.last_notification_info = info
-
         if 'before' in info:
-            # logger.info("BEFORE {0}".format(info.method_name))
             self._send_root_state_notification(model, prop_name, info)
-        # else:
-        #     logger.info("AFTER {0}".format(info.method_name))
+        else:
+            # Do not forward the notification yet, but store its parameters locally at the function
+            # The function helpers.state.change_state_type will forward the notification after some preparation
+            self.change_root_state_type.__func__.suppressed_notification_parameters = [model, prop_name, info]
 
     def _send_root_state_notification(self, model, prop_name, info):
         cause = 'root_state_change'
@@ -306,10 +318,10 @@ class StateMachineModel(ModelMT, Hashable):
                 self.state_machine._notify_method_before(self.state_machine, cause, (self.state_machine, ), info)
             elif 'after' in info:
                 self.state_machine._notify_method_after(self.state_machine, cause, None, (self.state_machine, ), info)
-        except AssertionError:
+        except AssertionError as e:
             # This fixes an AssertionError raised by GTKMVC. It can probably occur, when a controller unregisters
             # itself from a model, while the notification chain still propagates upwards.
-            pass
+            logger.exception("A exception occurs in the _send_root_state_notification method {0}.".format(e))
 
     #######################################################
     # --------------------- meta data methods ---------------------

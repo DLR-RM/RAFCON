@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2017-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -6,15 +6,18 @@
 # http://www.eclipse.org/legal/epl-v10.html
 #
 # Contributors:
+# Franz Steinmetz <franz.steinmetz@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
-import gobject
+from gi.repository import Gtk
+from gi.repository import GObject
+from future.utils import string_types
 import copy
 import os
 from functools import partial
 
-from gtkmvc import ModelMT
+from gtkmvc3.model_mt import ModelMT
 
 from rafcon.core.id_generator import generate_semantic_data_key
 from rafcon.core.states.library_state import LibraryState
@@ -23,16 +26,13 @@ from rafcon.core.storage.storage import load_data_file
 
 from rafcon.gui.controllers.utils.tree_view_controller import TreeViewController
 from rafcon.gui.models import AbstractStateModel
-from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
 from rafcon.gui.views.state_editor.semantic_data_editor import SemanticDataEditorView
 from rafcon.gui.helpers.label import react_to_event
-from rafcon.gui.singleton import global_gui_config, state_machine_manager_model
+import rafcon.gui.clipboard
 from rafcon.gui.utils.external_editor import AbstractExternalEditor
 
 import rafcon.utils.storage_utils as storage_utils
 from rafcon.utils import log
-from rafcon.utils.vividict import Vividict
-from rafcon.utils import type_helpers
 from rafcon.utils import filesystem
 
 logger = log.get_logger(__name__)
@@ -46,6 +46,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
     VALUE_STORAGE_ID = 1
     IS_DICT_STORAGE_ID = 2
     ID_STORAGE_ID = 3
+    MODEL_STORAGE_ID = 3
 
     def __init__(self, model, view):
         """Constructor
@@ -59,9 +60,9 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
             model_to_observe = model
 
         # define tree store with the values in [key, value Is Dict]
-        tree_store = gtk.TreeStore(str, str, bool, gobject.TYPE_PYOBJECT)
+        tree_store = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_STRING, bool, GObject.TYPE_PYOBJECT)
 
-        # unfortunately this cannot be down with super, as gtkmvc does not use super() consistently
+        # unfortunately this cannot be down with super, as gtkmvc3 does not use super() consistently
         TreeViewController.__init__(self, model_to_observe, view,
                                     view["semantic_data_tree_view"], tree_store, logger)
         AbstractExternalEditor.__init__(self)
@@ -78,16 +79,16 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         """
         super(SemanticDataEditorController, self).register_view(view)
 
-        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
+        if isinstance(self.model.state, LibraryState) or self.model.state.get_next_upper_library_root_state():
             self.set_editor_lock(True)
 
         view['open_externally'].connect('clicked', self.open_externally_clicked)
         view['new_entry'].connect('clicked', self.on_add, False)
         view['new_dict_entry'].connect('clicked', self.on_add, True)
         view['delete_entry'].connect('clicked', self.on_remove)
-        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.KEY_COLUMN_ID].get_cell_renderers()[0],
+        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.KEY_COLUMN_ID].get_cells()[0],
                                                   self.key_edited)
-        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.VALUE_COLUMN_ID].get_cell_renderers()[0],
+        self._apply_value_on_edited_and_focus_out(self.widget_columns[view.VALUE_COLUMN_ID].get_cells()[0],
                                                   self.value_edited)
         self.reload_tree_store_data()
 
@@ -100,13 +101,15 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         # self.view['open_externally'].set_sensitive(not locked)
 
         for current_column in self.view['semantic_data_tree_view'].get_columns():
-            current_column.get_cell_renderers()[0].set_property('editable', not locked)
+            current_column.get_cells()[0].set_property('editable', not locked)
 
     def register_actions(self, shortcut_manager):
         shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)
         shortcut_manager.add_callback_for_action("add", self.add_action_callback)
         shortcut_manager.add_callback_for_action("add_hierarchy_state", partial(self.add_action_callback, True))
-        # TODO integrate into clipboard with cut, copy and paste
+        shortcut_manager.add_callback_for_action("copy", self.copy_action_callback)
+        shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
+        shortcut_manager.add_callback_for_action("cut", self.cut_action_callback)
 
     @ModelMT.observe("state", after=True)
     def model_changed(self, model, prop_name, info):
@@ -154,7 +157,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
 
         # generate key
         target_dict = self.model.state.get_semantic_data(target_dict_path_as_list)
-        new_key_string = generate_semantic_data_key(target_dict.keys())
+        new_key_string = generate_semantic_data_key(list(target_dict.keys()))
         self.model.state.add_semantic_data(target_dict_path_as_list, value, new_key_string)
 
         self.reload_tree_store_data()
@@ -250,6 +253,58 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         """
         return tuple([int(path_elem_str) for path_elem_str in path.split(":")])
 
+    def copy_action_callback(self, *event):
+        """Add a copy of all selected row dict value pairs to the clipboard"""
+        if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
+            _, dict_paths = self.get_view_selection()
+            selected_data_list = []
+            for dict_path_as_list in dict_paths:
+                value = self.model.state.semantic_data
+                for path_element in dict_path_as_list:
+                    value = value[path_element]
+                selected_data_list.append((path_element, value))
+            rafcon.gui.clipboard.global_clipboard.set_semantic_dictionary_list(selected_data_list)
+
+    def paste_action_callback(self, *event):
+        """Add clipboard key value pairs into all selected sub-dictionary"""
+        if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
+            _, dict_paths = self.get_view_selection()
+            selected_data_list = rafcon.gui.clipboard.global_clipboard.get_semantic_dictionary_list()
+
+            # enforce paste on root level if semantic data empty or nothing is selected
+            if not dict_paths and not self.model.state.semantic_data:
+                dict_paths = [[]]
+
+            for target_dict_path_as_list in dict_paths:
+                prev_value = self.model.state.semantic_data
+                value = self.model.state.semantic_data
+                for path_element in target_dict_path_as_list:
+                    prev_value = value
+                    value = value[path_element]
+                if not isinstance(value, dict) and len(dict_paths) <= 1:  # if one selection take parent
+                    target_dict_path_as_list.pop(-1)
+                    value = prev_value
+                if isinstance(value, dict):
+                    for key_to_paste, value_to_add in selected_data_list:
+                        self.model.state.add_semantic_data(target_dict_path_as_list, value_to_add, key_to_paste)
+            self.reload_tree_store_data()
+
+    def cut_action_callback(self, *event):
+        """Add a copy and cut all selected row dict value pairs to the clipboard"""
+        if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
+            _, dict_paths = self.get_view_selection()
+            stored_data_list = []
+            for dict_path_as_list in dict_paths:
+                if dict_path_as_list:
+                    value = self.model.state.semantic_data
+                    for path_element in dict_path_as_list:
+                        value = value[path_element]
+                    stored_data_list.append((path_element, value))
+                    self.model.state.remove_semantic_data(dict_path_as_list)
+
+            rafcon.gui.clipboard.global_clipboard.set_semantic_dictionary_list(stored_data_list)
+            self.reload_tree_store_data()
+
     def key_edited(self, path, new_key_str):
         """ Edits the key of a semantic data entry
 
@@ -257,7 +312,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         :param str new_key_str: The new value of the target cell
         :return:
         """
-        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, str) else path
+        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, string_types) else path
         if self.tree_store[tree_store_path][self.KEY_STORAGE_ID] == new_key_str:
             return
 
@@ -269,7 +324,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
             target_dict = self.model.state.semantic_data
             for element in dict_path[0:-1]:
                 target_dict = target_dict[element]
-            new_key_str = generate_semantic_data_key(target_dict.keys())
+            new_key_str = generate_semantic_data_key(list(target_dict.keys()))
 
         new_dict_path = self.model.state.add_semantic_data(dict_path[0:-1], old_value, key=new_key_str)
         self._changed_id_to = {':'.join(dict_path): new_dict_path}  # use hashable key (workaround for tree view ctrl)
@@ -282,7 +337,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         :param str new_value_str: The new value of the target cell
         :return:
         """
-        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, str) else path
+        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, string_types) else path
         if self.tree_store[tree_store_path][self.VALUE_STORAGE_ID] == new_value_str:
             return
 

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.20.0 -->
 <interface>
-  <requires lib="gtk+" version="2.16"/>
-  <!-- interface-naming-policy project-wide -->
+  <requires lib="gtk+" version="3.20"/>
   <object class="GtkToolbar" id="toolbar">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="toolbar_style">text</property>
-    <property name="icon_size_set">True</property>
     <child>
       <object class="GtkToolButton" id="button_new">
         <property name="visible">True</property>
@@ -29,6 +28,7 @@
       </object>
       <packing>
         <property name="expand">False</property>
+        <property name="homogeneous">False</property>
       </packing>
     </child>
     <child>
@@ -53,6 +53,7 @@
       </object>
       <packing>
         <property name="expand">False</property>
+        <property name="homogeneous">False</property>
       </packing>
     </child>
     <child>
@@ -77,6 +78,7 @@
       </object>
       <packing>
         <property name="expand">False</property>
+        <property name="homogeneous">False</property>
       </packing>
     </child>
     <child>
@@ -101,6 +103,7 @@
       </object>
       <packing>
         <property name="expand">False</property>
+        <property name="homogeneous">False</property>
       </packing>
     </child>
     <child>
@@ -132,6 +135,31 @@
         <property name="can_focus">False</property>
         <property name="is_important">True</property>
         <property name="label" translatable="yes">Refresh Libraries</property>
+        <property name="use_underline">True</property>
+        <property name="stock_id">gtk-refresh</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparatorToolItem" id="separatortoolitem6">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="draw">False</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkToolButton" id="button_bake_state_machine">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="is_important">True</property>
+        <property name="label" translatable="yes">Bake Selected</property>
         <property name="use_underline">True</property>
         <property name="stock_id">gtk-refresh</property>
       </object>

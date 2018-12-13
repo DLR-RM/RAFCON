@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -20,11 +20,14 @@ initialized with consistent arguments.
 This general Action (one procedure for all possible edition) procedure is expansive and complex, therefore it is aimed
 to define specific _-Action-Classes for simple/specific edit actions.
 """
+from future.utils import string_types
+from builtins import object
+from builtins import str
 import copy
 import json
 import difflib
 
-from gtkmvc import ModelMT
+from gtkmvc3.model_mt import ModelMT
 from jsonconversion.decoder import JSONObjectDecoder
 from jsonconversion.encoder import JSONObjectEncoder
 
@@ -45,7 +48,6 @@ from rafcon.core.states.hierarchy_state import HierarchyState, ContainerState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 from rafcon.core.states.state import State
-from rafcon.core.storage import storage
 from rafcon.gui.models import ContainerStateModel, LibraryStateModel
 from rafcon.gui.models.signals import MetaSignalMsg, ActionSignalMsg
 from rafcon.gui.utils.notification_overview import NotificationOverview
@@ -93,9 +95,9 @@ def get_state_tuple(state, state_m=None):
 
     state_tuples_dict = {}
     if isinstance(state, ContainerState):
-        # print state.states, "\n"
-        for child_state_id, child_state in state.states.iteritems():
-            # print "child_state: %s" % child_state_id, child_state, "\n"
+        # print(state.states, "\n")
+        for child_state_id, child_state in state.states.items():
+            # print("child_state: %s" % child_state_id, child_state, "\n")
             state_tuples_dict[child_state_id] = get_state_tuple(child_state)
 
     state_meta_dict = {} if state_m is None else get_state_element_meta(state_m)
@@ -122,14 +124,14 @@ def get_state_from_state_tuple(state_tuple):
         data_flows = state_info[2]
 
     state._file_system_path = state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX]
-    # print "got state tuple with sd", state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX], state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX]
+    # print("got state tuple with sd", state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX], state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX])
     state.semantic_data = state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX]
 
     if isinstance(state, BarrierConcurrencyState):
         # logger.debug("\n\ninsert decider_state\n\n")
         child_state = get_state_from_state_tuple(state_tuple[STATE_TUPLE_CHILD_STATES_INDEX][UNIQUE_DECIDER_STATE_ID])
         # do_storage_test(child_state)
-        for t in state.transitions.values():
+        for t in list(state.transitions.values()):
             if UNIQUE_DECIDER_STATE_ID in [t.from_state, t.to_state]:
                 state.remove_transition(t.transition_id)
         try:
@@ -141,12 +143,12 @@ def get_state_from_state_tuple(state_tuple):
 
     if isinstance(state, ExecutionState):
         state.script_text = state_tuple[STATE_TUPLE_SCRIPT_TEXT_INDEX]
-    # print "------------- ", state
-    for child_state_id, child_state_tuple in state_tuple[STATE_TUPLE_CHILD_STATES_INDEX].iteritems():
+    # print("------------- ", state)
+    for child_state_id, child_state_tuple in state_tuple[STATE_TUPLE_CHILD_STATES_INDEX].items():
         child_state = get_state_from_state_tuple(child_state_tuple)
         # do_storage_test(child_state)
 
-        # print "++++ new cild", child_state  # child_state_tuple, child_state
+        # print("++++ new cild", child_state  # child_state_tuple, child_state)
         if not child_state.state_id == UNIQUE_DECIDER_STATE_ID:
             try:
                 state.add_state(child_state)
@@ -157,10 +159,10 @@ def get_state_from_state_tuple(state_tuple):
 
         def print_states(state):
             if isinstance(state, ContainerState):
-                for state_id, child_state in state.states.iteritems():
-                    print child_state.get_path()
+                for state_id, child_state in state.states.items():
+                    logger.verbose(child_state.get_path())
                     print_states(child_state)
-                    # print "got from tuple:"
+                    # print("got from tuple:")
                     # print_states(state)
 
     # Child states were added, now we can add transitions and data flows
@@ -171,135 +173,74 @@ def get_state_from_state_tuple(state_tuple):
     return state
 
 
-def reference_free_check(v1, v2, prepend=[]):
-    """Returns elements of a dict that have the same memory addresses except strings."""
-    d = {'value': {}, 'same_ref': [], 'same_ref_value': [], 'missing_keys1': [], 'missing_keys2': []}
-    v1_keys = v1.keys()
-    v2_keys = v2.keys()
-    not_to_check = set(v1_keys).symmetric_difference(v2_keys)
-    d['missing_keys1'] = filter(lambda k: k in not_to_check, v1_keys)
-    d['missing_keys2'] = filter(lambda k: k in not_to_check, v2_keys)
-    for key in set(v1_keys + v2_keys):
-        if key not in not_to_check:
-            if not hasattr(v1[key], 'keys'):
-                if isinstance(v1[key], str):
-                    d['value'].update({key: v1[key]})
-                else:
-                    if id(v1[key]) == id(v2[key]):
-                        if not isinstance(v1[key], tuple):
-                            d['same_ref'].append(prepend + [key])
-                            d['same_ref_value'].append(str(v1[key]) + " == " + str(v2[key]) + ', ' + str(type(v1[key])) + " == " + str(type(v2[key])))
-                    else:
-                        d['value'].update({key: v1[key]})
-            else:
-                if id(v1[key]) == id(v2[key]):
-                    d['same_ref'].append(prepend + [key])
-                    d['same_ref_value'].append(str(v1[key]) + " == " + str(v2[key]) + ', ' + str(type(v1[key])) + " == " + str(type(v2[key])))
-                else:
-                    d['value'].update({key: reference_free_check(v1[key], v2[key], prepend=prepend + [key])})
-
-    return d
-
-
 def meta_dump_or_deepcopy(meta):
+    """Function to observe meta data vivi-dict copy process and to debug it at one point"""
     if DEBUG_META_REFERENCES:  # debug copy
-        meta_source = meta
-        meta_str = json.dumps(meta, cls=JSONObjectEncoder,
-                              indent=4, check_circular=False, sort_keys=True)
-        meta_dump_copy = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
-        meta_deepcopy = copy.deepcopy(meta)
-
-        meta_source_str = json.dumps(meta, cls=JSONObjectEncoder,
-                                     indent=4, check_circular=False, sort_keys=True)
-        meta_dump_copy_str = json.dumps(meta, cls=JSONObjectEncoder,
-                                        indent=4, check_circular=False, sort_keys=True)
-        meta_deepcopy_str = json.dumps(meta, cls=JSONObjectEncoder,
-                                       indent=4, check_circular=False, sort_keys=True)
-        assert meta_dump_copy_str == meta_source_str
-        assert meta_dump_copy_str == meta_deepcopy_str
-
-        def diff_print(diff):
-            if diff['same_ref']:
-                print "same_ref: ", diff['same_ref'], diff['same_ref_value']
-                assert False
-            for value in diff['value'].itervalues():
-                if isinstance(value, dict):
-                    diff_print(value)
-
-        source_dump_diff = reference_free_check(meta_source, meta_dump_copy)
-        source_deep_diff = reference_free_check(meta_source, meta_deepcopy)
-        print "source_dump_diff"
-        diff_print(source_dump_diff)
-        print "source_deep_diff"
-        diff_print(source_deep_diff)
-
-
-    # print meta_str
-    # if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR'):
-    #     meta_str = json.dumps(meta, cls=JSONObjectEncoder,
-    #                           indent=4, check_circular=False, sort_keys=True)
-    #     return json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
-    # else:
+        from rafcon.gui.helpers.meta_data import meta_data_reference_check
+        meta_data_reference_check(meta)
     return copy.deepcopy(meta)
 
 
-def get_state_element_meta(state_model, with_parent_linkage=True, with_prints=False, level=None):
+def get_state_element_meta(state_model, with_parent_linkage=True, with_verbose=False, level=None):
     meta_dict = {'state': copy.deepcopy(state_model.meta), 'is_start': False, 'data_flows': {}, 'transitions': {},
                  'outcomes': {}, 'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}, 'states': {},
                  'related_parent_transitions': {}, 'related_parent_data_flows': {}}
     if with_parent_linkage:
         with_parent_linkage = False
         if not state_model.state.is_root_state:
-            state_id = state_model.state.state_id
+            child_state_id = state_model.state.state_id
             for transition_m in state_model.parent.transitions:
                 transition = transition_m.transition
-                if transition.from_state == state_id or transition.to_state == state_id:
+                if transition.from_state == child_state_id or transition.to_state == child_state_id:
                     meta_dict['related_parent_transitions'][transition.transition_id] = meta_dump_or_deepcopy(transition_m.meta)
             for data_flow_m in state_model.parent.data_flows:
                 data_flow = data_flow_m.data_flow
-                if data_flow.from_state == state_id or data_flow.to_state == state_id:
+                if data_flow.from_state == child_state_id or data_flow.to_state == child_state_id:
                     meta_dict['related_parent_data_flows'][data_flow.data_flow_id] = meta_dump_or_deepcopy(data_flow_m.meta)
 
-    if with_prints:
-        print "STORE META for STATE: ", state_model.state.state_id, state_model.state.name
+    # logger.verbose("get meta {0} {1}".format(state_model.state.state_id, state_model.meta))
+    if with_verbose:
+        logger.verbose("STORE META for STATE: {0} {1}".format(state_model.state.state_id, state_model.state.name))
     meta_dict['is_start'] = state_model.is_start
     for elem in state_model.outcomes:
         meta_dict['outcomes'][elem.outcome.outcome_id] = meta_dump_or_deepcopy(elem.meta)
-        if with_prints:
-            print "outcome: ", elem.outcome.outcome_id, elem.parent.state.outcomes.keys(), meta_dict['outcomes'].keys()
+        if with_verbose:
+            logger.verbose("outcome: id {0} all ids {1} ids in dict {2}"
+                           "".format(elem.outcome.outcome_id, elem.parent.state.outcomes.keys(), meta_dict['outcomes'].keys()))
     for elem in state_model.input_data_ports:
         meta_dict['input_data_ports'][elem.data_port.data_port_id] = meta_dump_or_deepcopy(elem.meta)
-        if with_prints:
-            print "input: ", elem.data_port.data_port_id, elem.parent.state.input_data_ports.keys(), \
-                meta_dict['input_data_ports'].keys()
+        if with_verbose:
+            logger.verbose("input: id {0} all ids {1} ids in dict {2}"
+                           "".format(elem.data_port.data_port_id, elem.parent.state.input_data_ports.keys(), meta_dict['input_data_ports'].keys()))
     for elem in state_model.output_data_ports:
         meta_dict['output_data_ports'][elem.data_port.data_port_id] = meta_dump_or_deepcopy(elem.meta)
-        if with_prints:
-            print "output: ", elem.data_port.data_port_id, elem.parent.state.output_data_ports.keys(), \
-                meta_dict['output_data_ports'].keys()
+        if with_verbose:
+            logger.verbose("output: id {0} all ids {1} ids in dict {2}"
+                           "".format(elem.data_port.data_port_id, elem.parent.state.output_data_ports.keys(), meta_dict['output_data_ports'].keys()))
 
+    # logger.verbose("store meta of state id {0} data -> {1}".format(state_model.state.state_id, state_model.meta))
     meta_dict['state'] = meta_dump_or_deepcopy(state_model.meta)
     if isinstance(state_model, ContainerStateModel):
-        for state_id, state_m in state_model.states.iteritems():
-            meta_dict['states'][state_m.state.state_id] = get_state_element_meta(state_m, with_parent_linkage)
-            if with_prints:
-                print "FINISHED STORE META for STATE: ", state_id, meta_dict['states'].keys(), \
-                    state_model.state.state_id
+        for child_state_id, child_state_m in state_model.states.items():
+            meta_dict['states'][child_state_m.state.state_id] = get_state_element_meta(child_state_m, with_parent_linkage)
+            if with_verbose:
+                logger.verbose("FINISHED STORE META for STATE: id {0} other ids {1} parent state-id {2}"
+                               "".format(child_state_id, meta_dict['states'].keys(), state_model.state.state_id))
         for elem in state_model.transitions:
             meta_dict['transitions'][elem.transition.transition_id] = meta_dump_or_deepcopy(elem.meta)
-            if with_prints:
-                print "transition: ", elem.transition.transition_id, elem.parent.state.transitions.keys(), \
-                    meta_dict['transitions'].keys(), elem.parent.state.state_id
+            if with_verbose:
+                logger.verbose("transition: id {0} all ids {1} ids in dict {2}"
+                               "".format(elem.transition.transition_id, elem.parent.state.transitions.keys(), meta_dict['transitions'].keys()))
         for elem in state_model.data_flows:
             meta_dict['data_flows'][elem.data_flow.data_flow_id] = meta_dump_or_deepcopy(elem.meta)
-            if with_prints:
-                print "data_flow: ", elem.data_flow.data_flow_id, elem.parent.state.data_flows.keys(), \
-                    meta_dict['data_flows'].keys()
+            if with_verbose:
+                logger.verbose("data_flow: id {0} all ids {1} ids in dict {2}"
+                               "".format(elem.data_flow.data_flow_id, elem.parent.state.data_flows.keys(), meta_dict['data_flows'].keys()))
         for elem in state_model.scoped_variables:
             meta_dict['scoped_variables'][elem.scoped_variable.data_port_id] = meta_dump_or_deepcopy(elem.meta)
-            if with_prints:
-                print "scoped_variable: ", elem.scoped_variable.data_port_id, \
-                    elem.parent.state.scoped_variables.keys(), meta_dict['scoped_variables'].keys()
+            if with_verbose:
+                logger.verbose("scoped_variable: id {0} all ids {1} ids in dict {2}"
+                               "".format(elem.scoped_variable.data_port_id, elem.parent.state.scoped_variables.keys(), meta_dict['scoped_variables'].keys()))
 
     # store meta_data_was_scaled parameter to avoid repetitive port scaling
     if isinstance(state_model, LibraryStateModel):
@@ -319,7 +260,7 @@ def check_state_model_for_is_start_state(state_model):
                                                  state_model.state.state_id))
 
 
-def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None):
+def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=None):
     # meta_dict = {'state': state_model.meta, 'data_flows': {}, 'transitions': {}, 'outcomes': {},
     #              'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}}
 
@@ -332,9 +273,10 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
                                                               meta_dict[dict_key],
                                                               dict_key[:-1].replace('_', '-')))
 
+    # logger.verbose("insert meta data of state {0} data -> {1}".format(state_model.state.state_id, meta_dict['state']))
     state_model.meta = meta_dump_or_deepcopy(meta_dict['state'])
-    if with_prints:
-        print "INSERT META for STATE: ", state_model.state.state_id, state_model.state.name
+    if with_verbose:
+        logger.verbose("INSERT META for STATE: {0} {1}".format(state_model.state.state_id, state_model.state.name))
 
     for elem in state_model.outcomes:
         if elem.outcome.outcome_id in meta_dict['outcomes']:
@@ -357,23 +299,21 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
                                       [op_m.data_port.data_port_id for op_m in state_model.output_data_ports])
 
     if isinstance(state_model, ContainerStateModel):
-        for state_id, state_m in state_model.states.iteritems():
-            if with_prints:
-                print "FIN: ", state_id, state_m.state.state_id, meta_dict['states'].keys(), state_model.state.state_id
+        for state_id, state_m in state_model.states.items():
             # TODO check if decider miss the meta or it has to be like that UNDO, REDO?
             if state_m.state.state_id in meta_dict['states']:
                 if level is None:
-                    insert_state_meta_data(meta_dict['states'][state_m.state.state_id], state_m, with_prints)
+                    insert_state_meta_data(meta_dict['states'][state_m.state.state_id], state_m, with_verbose)
                 elif level > 0:
-                    insert_state_meta_data(meta_dict['states'][state_m.state.state_id], state_m, with_prints, level - 1)
+                    insert_state_meta_data(meta_dict['states'][state_m.state.state_id], state_m, with_verbose, level - 1)
                 else:
                     pass
             else:
                 if not UNIQUE_DECIDER_STATE_ID == state_m.state.state_id:
                     logger.warning("no meta data for STATE: '{0}' in storage".format(state_m.state.state_id))
 
-            if with_prints:
-                print "FINISHED META for STATE: ", state_m.state.state_id
+            if with_verbose:
+                logger.verbose("FINISHED META for STATE: ", state_m.state.state_id)
         for elem in state_model.transitions:
             if elem.transition.transition_id in meta_dict['transitions']:
                 elem.meta = meta_dump_or_deepcopy(meta_dict['transitions'][elem.transition.transition_id])
@@ -405,7 +345,7 @@ def insert_state_meta_data(meta_dict, state_model, with_prints=False, level=None
     check_state_model_for_is_start_state(state_model)
 
 
-class CoreObjectIdentifier:
+class CoreObjectIdentifier(object):
     # TODO generalize and include into utils
 
     type_related_list_name_dict = {InputDataPort.__name__: 'input_data_ports',
@@ -489,6 +429,12 @@ class AbstractAction(object):
         self.after_overview = None
         self.after_storage = None  # tuple of state and states-list of storage tuple
 
+    def prepare_destruction(self):
+        self.before_overview.prepare_destruction()
+        if self. after_overview:
+            self.after_overview.prepare_destruction()
+        self.state_machine_model = None
+
     @property
     def version_id(self):
         return self.__version_id
@@ -544,7 +490,7 @@ class MetaAction(AbstractAction):
 
         meta_str = json.dumps(overview['model'][-1].meta, cls=JSONObjectEncoder,
                               indent=4, check_circular=False, sort_keys=True)
-        # print meta_str
+        # print(meta_str)
         self.meta = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
 
     def get_storage(self):
@@ -643,9 +589,9 @@ class Action(ModelMT, AbstractAction):
                            "\n{0}\n{1}".format(previous_model, actual_model))
 
     def set_state_to_version(self, state, storage_version):
-        # print state.get_path(), '\n', storage_version[STATE_TUPLE_PATH_INDEX]
+        # print(state.get_path(), '\n', storage_version[STATE_TUPLE_PATH_INDEX])
         assert state.get_path() == storage_version[STATE_TUPLE_PATH_INDEX]
-        # print self.parent_path, self.parent_path.split('/'), len(self.parent_path.split('/'))
+        # print(self.parent_path, self.parent_path.split('/'), len(self.parent_path.split('/')))
         path_of_state = state.get_path()
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
@@ -709,37 +655,37 @@ class Action(ModelMT, AbstractAction):
 
         if isinstance(state, ContainerState):
 
-            # print state.data_flows.keys()
-            for data_flow_id in state.data_flows.keys():
+            # print(state.data_flows.keys())
+            for data_flow_id in list(state.data_flows.keys()):
                 state.remove_data_flow(data_flow_id)
 
             if not isinstance(state, BarrierConcurrencyState):
-                for t_id in state.transitions.keys():
+                for t_id in list(state.transitions.keys()):
                     # if not UNIQUE_DECIDER_STATE_ID in [state.transitions[t_id].from_state, state.transitions[t_id].to_state]: # funst nicht
                     state.remove_transition(t_id)
 
-            for old_state_id in state.states.keys():
+            for old_state_id in list(state.states.keys()):
                 # try:
                 state.remove_state(old_state_id, force=True)
                 # except Exception as e:
-                #     print "ERROR: ", old_state_id, UNIQUE_DECIDER_STATE_ID, state
+                #     print("ERROR: ", old_state_id, UNIQUE_DECIDER_STATE_ID, state)
                 #     raise
 
         if is_root:
-            for outcome_id in state.outcomes.keys():
+            for outcome_id in list(state.outcomes.keys()):
                 if not outcome_id < 0:
                     state.remove_outcome(outcome_id)
 
-            for dp_id in state.input_data_ports.keys():
+            for dp_id in list(state.input_data_ports.keys()):
                 state.remove_input_data_port(dp_id)
 
-            # print " \n\n\n ########### start removing output data_ports ", state.output_data_ports.keys(), "\n\n\n"
-            for dp_id in state.output_data_ports.keys():
+            # print(" \n\n\n ########### start removing output data_ports ", state.output_data_ports.keys(), "\n\n\n")
+            for dp_id in list(state.output_data_ports.keys()):
                 state.remove_output_data_port(dp_id)
 
         if isinstance(state, ContainerState):
-            for dp_id in state.scoped_variables.keys():
-                # print "scoped_variable ", dp_id
+            for dp_id in list(state.scoped_variables.keys()):
+                # print("scoped_variable ", dp_id)
                 state.remove_scoped_variable(dp_id)
 
         state.name = stored_state.name
@@ -750,43 +696,43 @@ class Action(ModelMT, AbstractAction):
             state.script_text = stored_state.script_text
 
         if is_root:
-            for dp_id, dp in stored_state.input_data_ports.iteritems():
-                # print "generate input data port", dp_id
+            for dp_id, dp in stored_state.input_data_ports.items():
+                # print("generate input data port", dp_id)
                 state.add_input_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
-                # print "got input data ports", dp_id, state.input_data_ports.keys()
-                assert dp_id in state.input_data_ports.keys()
+                # print("got input data ports", dp_id, state.input_data_ports.keys())
+                assert dp_id in state.input_data_ports
 
-            # print " \n\n\n ########### start adding output data_ports ", state.output_data_ports.keys(), "\n\n\n"
-            for dp_id, dp in stored_state.output_data_ports.iteritems():
+            # print(" \n\n\n ########### start adding output data_ports ", state.output_data_ports.keys(), "\n\n\n")
+            for dp_id, dp in stored_state.output_data_ports.items():
                 scoped_str = str([])
                 if isinstance(state, ContainerState):
-                    scoped_str = str(state.scoped_variables.keys())
-                # print "\n\n\n ------- ############ generate output data port", dp_id, state.input_data_ports.keys(), \
+                    scoped_str = str(list(state.scoped_variables.keys()))
+                # print("\n\n\n ------- ############ generate output data port", dp_id, state.input_data_ports.keys(), \)
                 #     state.output_data_ports.keys(), scoped_str, "\n\n\n"
                 state.add_output_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
-                # print "\n\n\n ------- ############ got output data ports", dp_id, state.output_data_ports.keys(), "\n\n\n"
-                assert dp_id in state.output_data_ports.keys()
+                # print("\n\n\n ------- ############ got output data ports", dp_id, state.output_data_ports.keys(), "\n\n\n")
+                assert dp_id in state.output_data_ports
 
-            for oc_id, oc in stored_state.outcomes.iteritems():
-                # print oc_id, state.outcomes, type(oc_id), oc_id < 0, oc_id == 0, oc_id == -1, oc_id == -2
+            for oc_id, oc in stored_state.outcomes.items():
+                # print(oc_id, state.outcomes, type(oc_id), oc_id < 0, oc_id == 0, oc_id == -1, oc_id == -2)
                 if not oc_id < 0:
-                    # print "add_outcome", oc_id
+                    # print("add_outcome", oc_id)
                     state.add_outcome(oc.name, oc_id)
-            # print "\n\n\n++++++++++++++++ ", stored_state.outcomes, state.outcomes, "\n\n\n++++++++++++++++ "
-            for oc_id, oc in stored_state.outcomes.iteritems():
-                # print oc_id, state.outcomes
+            # print("\n\n\n++++++++++++++++ ", stored_state.outcomes, state.outcomes, "\n\n\n++++++++++++++++ ")
+            for oc_id, oc in stored_state.outcomes.items():
+                # print(oc_id, state.outcomes)
                 assert oc_id in state.outcomes
 
         if isinstance(state, ContainerState):
             # logger.debug("UPDATE STATES")
-            for dp_id, sv in stored_state.scoped_variables.iteritems():
+            for dp_id, sv in stored_state.scoped_variables.items():
                 state.add_scoped_variable(sv.name, sv.data_type, sv.default_value, sv.data_port_id)
 
             if UNIQUE_DECIDER_STATE_ID in stored_state.states:
                 state.add_state(stored_state.states[UNIQUE_DECIDER_STATE_ID], storage_load=True)
 
             for new_state in stored_state.states.values():
-                # print "++++ new child", new_state
+                # print("++++ new child", new_state)
                 if not new_state.state_id == UNIQUE_DECIDER_STATE_ID:
                     state.add_state(new_state)
                     # state.states[new_state.state_id].script = new_state.script
@@ -795,20 +741,20 @@ class Action(ModelMT, AbstractAction):
                         state.states[new_state.state_id].script_text = new_state.script_text
 
             if isinstance(state, BarrierConcurrencyState):
-                for t_id in state.transitions.keys():
+                for t_id in list(state.transitions.keys()):
                     state.remove_transition(t_id)
 
-            for t_id, t in stored_state.transitions.iteritems():
+            for t_id, t in stored_state.transitions.items():
                 state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
 
             # logger.debug("CHECK self TRANSITIONS of unique state%s" % state.transitions.keys())
-            for t in state.transitions.values():
+            for t in list(state.transitions.values()):
                 # logger.debug(str([t.from_state, t.from_outcome, t.to_state, t.to_outcome]))
                 if UNIQUE_DECIDER_STATE_ID == t.from_state and UNIQUE_DECIDER_STATE_ID == t.to_state:
                     # logger.error("found DECIDER_STATE_SELF_TRANSITION")
                     state.remove_transition(t.transition_id)
 
-            for df_id, df in stored_state.data_flows.iteritems():
+            for df_id, df in stored_state.data_flows.items():
                 state.add_data_flow(df.from_state, df.from_key, df.to_state, df.to_key, df.data_flow_id)
 
     def add_core_object_to_state(self, state, core_obj):
@@ -866,7 +812,7 @@ class StateMachineAction(Action, ModelMT):
         assert isinstance(overview['model'][0].state_machine, StateMachine)
         Action.__init__(self, parent_path, state_machine_model, overview)
 
-        self.with_print = False
+        self.with_verbose = False
         self.storage_version_for_state_type_change_signal_hook = None
 
     def set_root_state_to_version(self, state, storage_version):
@@ -876,23 +822,20 @@ class StateMachineAction(Action, ModelMT):
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s || %s || %s || StateMachineAction\n\n\n\n\n\n\n" % (state.get_path(), state, root_state_version_fom_storage))
         # actual_state_model = self.state_machine_model.get_state_model_by_path(state.get_path())
 
-        if self.with_print:
-            print "\n#H# TRY STATE_HELPER ", type(root_state_version_from_storage), \
-                isinstance(root_state_version_from_storage, HierarchyState), "\n"
-        if isinstance(root_state_version_from_storage, (HierarchyState,
-                                                        BarrierConcurrencyState,
-                                                        PreemptiveConcurrencyState)):
-            new_state_class = root_state_version_from_storage.__class__
-        else:
-            if self.with_print:
-                logger.info("SM set_root_state_to_version: with NO type change")
-            new_state_class = ExecutionState
+        if self.with_verbose:
+            logger.verbose("#H# TRY STATE_HELPER storage type {0} current type {1}"
+                           "".format(type(root_state_version_from_storage), state.__class__))
+            if root_state_version_from_storage.__class__ == state.__class__:
+                logger.verbose("SM set_root_state_to_version: with NO type change")
+
+        new_state_class = root_state_version_from_storage.__class__
+
         logger.debug("DO root version change " + self.action_type)
-                 # logger.debug("DO root version change")
 
         previous_model = self.state_machine_model.root_state
+        affected_models = [previous_model, ]
         # TODO affected models should be more to allow recursive notification scheme and less updated elements
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=affected_models, after=False)
 
         if self.action_type == 'change_root_state_type':
             # observe root state model (type change signal)
@@ -918,12 +861,12 @@ class StateMachineAction(Action, ModelMT):
         #     insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
         #                            state_model=self.state_machine_model.root_state)
 
-        # TODO check if this ok ... see type change performance in graphical editor
-        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
+        affected_models.append(self.state_machine_model.root_state)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=affected_models, after=True)
 
     @ModelMT.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
-        # print "#H# STATE_MACHINE_REDO_UNDO: ", NotificationOverview(info, False, self.__class__.__name__)
+        # logger.verbose("#H# STATE_MACHINE_REDO_UNDO: " + str(NotificationOverview(info, False, self.__class__.__name__)))
         msg = info['arg']
         if msg.action == 'change_root_state_type' and msg.after:
             new_state_m = msg.affected_models[-1]
@@ -936,21 +879,21 @@ class StateMachineAction(Action, ModelMT):
             insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
 
     def redo(self):
-        # print "#H# STATE_MACHINE_REDO STARTED"
+        # logger.verbose("#H# STATE_MACHINE_REDO STARTED")
         state = self.state_machine.root_state
 
         self.set_root_state_to_version(state, self.after_storage)
-        # print "#H# STATE_MACHINE_REDO FINISHED"
+        # logger.verbose("#H# STATE_MACHINE_REDO FINISHED")
 
     def undo(self):
         """ General Undo, that takes all elements in the parent and
         :return:
         """
-        # print "#H# STATE_MACHINE_UNDO STARTED"
+        # logger.verbose("#H# STATE_MACHINE_UNDO STARTED")
         state = self.state_machine.root_state
 
         self.set_root_state_to_version(state, self.before_storage)
-        # print "#H# STATE_MACHINE_UNDO FINISHED"
+        # logger.verbose("#H# STATE_MACHINE_UNDO FINISHED")
 
 
 class AddObjectAction(Action):
@@ -1000,6 +943,7 @@ class AddObjectAction(Action):
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
         previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
@@ -1012,7 +956,8 @@ class AddObjectAction(Action):
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
-                               state_model=actual_state_model, level=1)
+                               state_model=actual_state_model, level=None if self.action_type == 'add_state' else 1)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     def undo(self):
 
@@ -1025,6 +970,7 @@ class AddObjectAction(Action):
         storage_version_of_state = get_state_from_state_tuple(storage_version)
 
         previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
             [state, storage_version_of_state] = self.correct_reference_state(state,
@@ -1042,6 +988,7 @@ class AddObjectAction(Action):
         self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
                                state_model=actual_state_model, level=1)
+        self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
     def correct_reference_state(self, state, storage_version_of_state, storage_path):
 
@@ -1148,7 +1095,7 @@ class RemoveObjectAction(Action):
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
-                               state_model=actual_state_model, level=1)
+                               state_model=actual_state_model, level=None if self.action_type == 'remove_state' else 1)
 
         self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
@@ -1198,23 +1145,23 @@ class RemoveObjectAction(Action):
 
         state = self.state_machine.get_state_by_path(self.instance_path)
         if isinstance(state, HierarchyState):
-            for t in state.transitions.itervalues():
+            for t in state.transitions.values():
                 t_dict = {'from_state': t.from_state, 'from_outcome': t.from_outcome,
                           'to_state': t.to_state, 'to_outcome': t.to_outcome, 'transition_id': t.transition_id}
                 linkage_dict['internal']['transitions'].append(t_dict)
 
-            for df in state.data_flows.itervalues():
+            for df in state.data_flows.values():
                 df_dict = {'from_state': df.from_state, 'from_key': df.from_key,
                            'to_state': df.to_state, 'to_key': df.to_key, 'data_flow_id': df.data_flow_id}
                 linkage_dict['internal']['data_flows'].append(df_dict)
 
         if isinstance(state.parent, State):
-            for t in state.parent.transitions.itervalues():
+            for t in state.parent.transitions.values():
                 t_dict = {'from_state': t.from_state, 'from_outcome': t.from_outcome,
                           'to_state': t.to_state, 'to_outcome': t.to_outcome, 'transition_id': t.transition_id}
                 linkage_dict['external']['transitions'].append(t_dict)
 
-            for df in state.parent.data_flows.itervalues():
+            for df in state.parent.data_flows.values():
                 df_dict = {'from_state': df.from_state, 'from_key': df.from_key,
                            'to_state': df.to_state, 'to_key': df.to_key, 'data_flow_id': df.data_flow_id}
                 linkage_dict['external']['data_flows'].append(df_dict)
@@ -1240,15 +1187,7 @@ class RemoveObjectAction(Action):
                                                         if kwargs not in self.before_linkage['external']['data_flows']]
 
     def adjust_linkage(self):
-        # print "before: \n", self.before_linkage
-        # print "after: \n", self.after_linkage
-        # print "REMOVED: \n", self.removed_linkage
-        # print "ADDED: \n", self.added_linkage
-
         state = self.state_machine.get_state_by_path(self.instance_path)
-        # print state.transitions.keys(), state.data_flows.keys()
-        # if isinstance(state.parent, State):
-        #     print state.parent.transitions.keys(), state.parent.data_flows.keys()
 
         for kwargs in self.removed_linkage['internal']['transitions']:
             state.add_transition(kwargs['from_state'], kwargs['from_outcome'], kwargs['to_state'], kwargs['to_outcome'], kwargs['transition_id'])
@@ -1334,7 +1273,7 @@ class DataFlowAction(StateElementAction):
 
     def set_data_flow_version(self, df, arguments):
         if self.action_type in self.possible_args:
-            exec "df.{0} = arguments['{0}']".format(self.action_type)
+            exec("df.{0} = arguments['{0}']".format(self.action_type))
         elif self.action_type == 'modify_origin':
             df.modify_origin(from_state=arguments['from_state'], from_key=arguments['from_key'])
         elif self.action_type == 'modify_target':
@@ -1369,7 +1308,7 @@ class TransitionAction(StateElementAction):
 
     def set_transition_version(self, t, arguments):
         if self.action_type in self.possible_args:
-            exec "t.{0} = arguments['{0}']".format(self.action_type)
+            exec("t.{0} = arguments['{0}']".format(self.action_type))
         elif self.action_type == 'modify_origin':
             t.modify_origin(from_state=arguments['from_state'], from_outcome=arguments['from_outcome'])
         elif self.action_type == 'modify_target':
@@ -1402,7 +1341,7 @@ class DataPortAction(StateElementAction):
 
     def set_data_port_version(self, dp, arguments):
         if self.action_type in self.possible_args:
-            exec "dp.{0} = arguments['{0}']".format(self.action_type)
+            exec("dp.{0} = arguments['{0}']".format(self.action_type))
         elif self.action_type == 'data_type':
             dp.data_type = arguments['data_type']
             dp.default_value = arguments['default_value']
@@ -1442,7 +1381,7 @@ class OutcomeAction(StateElementAction):
 
     def set_outcome_version(self, oc, arguments):
         if self.action_type in self.possible_args:
-            exec "oc.{0} = arguments['{0}']".format(self.action_type)
+            exec("oc.{0} = arguments['{0}']".format(self.action_type))
         else:
             raise TypeError("Only types of the following list are allowed. {0}".format(self.possible_method_names))
 
@@ -1499,7 +1438,7 @@ class StateAction(Action):
             assert self.parent_path == self.object_identifier._path
         self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
         self.after_arguments = None
-        if self.action_type == 'script_text' and isinstance(self.before_overview['args'][-1][1], str):
+        if self.action_type == 'script_text' and isinstance(self.before_overview['args'][-1][1], string_types):
             d = difflib.Differ()
             diff = list(d.compare(self.before_overview['args'][-1][0].script_text.split('\n'),
                                   self.before_overview['args'][-1][1].split('\n')))
@@ -1577,8 +1516,8 @@ class StateAction(Action):
 
     def set_attr_to_version(self, s, arguments):
         if self.action_type in self.possible_args:
-            exec "s.{0} = copy.deepcopy(arguments['{0}'])".format(self.substitute_dict.get(self.action_type,
-                                                                                           self.action_type))
+            exec("s.{0} = copy.deepcopy(arguments['{0}'])".format(self.substitute_dict.get(self.action_type,
+                                                                                           self.action_type)))
         else:
             assert False
 

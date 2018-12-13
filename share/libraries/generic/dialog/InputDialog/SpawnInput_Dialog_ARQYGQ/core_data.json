@@ -1,0 +1,89 @@
+{
+    "__jsonqualname__": "rafcon.core.states.execution_state.ExecutionState", 
+    "description": null, 
+    "input_data_ports": {
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 0, 
+            "data_type": {
+                "__type__": "__builtin__.bool"
+            }, 
+            "default_value": false, 
+            "name": "abort_on_quit"
+        }, 
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 1, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "Text", 
+            "name": "message_text"
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 2, 
+            "data_type": {
+                "__type__": "__builtin__.list"
+            }, 
+            "default_value": [
+                "Ok", 
+                "Cancel"
+            ], 
+            "name": "buttons"
+        }, 
+        "3": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 3, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": "Something to check? Leave Empty if not needed.", 
+            "name": "checkbox_text"
+        }
+    }, 
+    "name": "SpawnInput Dialog", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "button_1", 
+            "outcome_id": 0
+        }, 
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "button_2", 
+            "outcome_id": 1
+        }
+    }, 
+    "output_data_ports": {
+        "4": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.OutputDataPort", 
+            "data_port_id": 4, 
+            "data_type": {
+                "__type__": "__builtin__.str"
+            }, 
+            "default_value": null, 
+            "name": "entered_text"
+        }, 
+        "5": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.OutputDataPort", 
+            "data_port_id": 5, 
+            "data_type": {
+                "__type__": "__builtin__.bool"
+            }, 
+            "default_value": false, 
+            "name": "checkbox_state"
+        }
+    }, 
+    "state_id": "ARQYGQ"
+}

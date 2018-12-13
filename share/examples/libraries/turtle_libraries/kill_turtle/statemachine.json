@@ -1,6 +1,7 @@
 {
     "creation_time": "2015-06-03 16:11:18", 
-    "last_update": "2016-03-23 07:30:58", 
-    "root_state_id": "KILL_TURTLE", 
-    "version": "None"
+    "last_update": "2018-07-11 11:53:57", 
+    "root_state_storage_id": "kill_turtle_KILL_TURTLE", 
+    "state_machine_version": "None", 
+    "used_rafcon_version": "0.12.15a1"
 }

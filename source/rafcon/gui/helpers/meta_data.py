@@ -1,14 +1,35 @@
+# Copyright (C) 2017-2018 DLR
+#
+# All rights reserved. This program and the accompanying materials are made
+# available under the terms of the Eclipse Public License v1.0 which
+# accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+#
+# Contributors:
+# Franz Steinmetz <franz.steinmetz@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
+
+from future.utils import string_types
+from builtins import range
+from builtins import str
 from copy import deepcopy
+
+import json
+from jsonconversion.decoder import JSONObjectDecoder
+from jsonconversion.encoder import JSONObjectEncoder
 
 from rafcon.gui.models.transition import mirror_waypoints
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models import LibraryStateModel, ContainerStateModel
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils import constants
-from rafcon.utils import log
+from rafcon.utils import log, geometry
 
 
 logger = log.get_logger(__name__)
+
+ROOT_STATE_DEFAULT_REL_POS = (0, 0)
+STATE_DEFAULT_REL_POS = (10, 10)
 
 
 def add_pos(pos1, pos2):
@@ -41,49 +62,49 @@ def dict_has_empty_elements(d, ignored_keys=None, ignored_partial_keys=None):
     ignored_partial_keys = ['input_data_port', 'output_data_port'] if ignored_partial_keys is None else ignored_partial_keys
     empty = False
     if not d:
-        # print "dict check -> result empty", d
+        # print("dict check -> result empty", d)
         return True
     else:
-        for k, v in d.iteritems():
-            # print "check", k, " -> ", v
+        for k, v in d.items():
+            # print("check", k, " -> ", v)
             if isinstance(v, dict):
                 if dict_has_empty_elements(v):
                     if k not in ignored_keys and not any([key in k for key in ignored_partial_keys]):
                         empty = True
                         break
                     else:
-                        # print "ignore empty dict: ", k
+                        # print("ignore empty dict: ", k)
                         pass
             else:
                 if isinstance(v, bool):
                     pass
                 elif not len(v) > 0:
-                    # print k, v
+                    # print(k, v)
                     if k not in ignored_keys and not any([key in k for key in ignored_partial_keys]):
                         empty = True
                         break
                     else:
-                        # print "ignore empty list: ", k
+                        # print("ignore empty list: ", k)
                         pass
 
     return empty
 
 
 def model_has_empty_meta(m, ignored_keys=None, ignored_partial_keys=None):
-    # print m, m.meta
+    # print(m, m.meta)
     if dict_has_empty_elements(m.meta, ignored_keys, ignored_partial_keys):
-        # print "XXX", m, m.meta
+        # print("XXX", m, m.meta)
         return True
     if isinstance(m, ContainerStateModel):
-        for state_m in m.states.itervalues():
+        for state_m in m.states.values():
             if dict_has_empty_elements(state_m.meta, ignored_keys, ignored_partial_keys):
-                # print "LXXX", state_m, state_m.meta
+                # print("LXXX", state_m, state_m.meta)
                 return True
     return False
 
 
 def get_y_axis_and_gaphas_editor_flag():
-    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    gaphas_editor = global_gui_config.get_config_value('GAPHAS_EDITOR', True)
     y_axis_mirror = 1. if gaphas_editor else -1.
     return gaphas_editor, y_axis_mirror
 
@@ -126,7 +147,7 @@ def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_stat
     child_spacing = max(child_size) * 1.2
 
     parent_margin = cal_margin(parent_size)
-    # print "parent size", parent_size, parent_margin
+    # print("parent size", parent_size, parent_margin)
     max_cols = (parent_state_width - 2*parent_margin) // child_spacing
     (row, col) = divmod(num_child_state, max_cols)
 
@@ -150,7 +171,7 @@ def generate_default_state_meta_data(parent_state_m, canvas=None, num_child_stat
 
 
 def put_default_meta_on_state_m(state_m, parent_state_m, num_child_state=None):
-    # print state_m, parent_state_m, num_child_state
+    # print(state_m, parent_state_m, num_child_state)
     gaphas_editor, y_axis_mirror = get_y_axis_and_gaphas_editor_flag()
     rel_pos, size = generate_default_state_meta_data(parent_state_m,
                                                      num_child_state=num_child_state,
@@ -165,7 +186,7 @@ def put_default_meta_data_on_state_m_recursively(state_m, parent_state_m, num_ch
         put_default_meta_on_state_m(state_m, parent_state_m, num_child_state)
 
     if isinstance(state_m, ContainerStateModel):
-        for child_state_number, child_state_m in enumerate(state_m.states.itervalues()):
+        for child_state_number, child_state_m in enumerate(state_m.states.values()):
             put_default_meta_data_on_state_m_recursively(child_state_m, parent_state_m if only_child_states else state_m,
                                                          num_child_state=child_state_number)
     return True
@@ -231,7 +252,7 @@ def add_boundary_clearance(left, right, top, bottom, frame, clearance=0.1):
     :return:
     """
 
-    # print "old boundary", left, right, top, bottom
+    # print("old boundary", left, right, top, bottom)
     width = right - left
     width = frame['size'][0] if width < frame['size'][0] else width
     left -= 0.5 * clearance * width
@@ -243,7 +264,7 @@ def add_boundary_clearance(left, right, top, bottom, frame, clearance=0.1):
     top -= 0.5 * clearance * height
     top = 0 if top < 0 else top
     bottom += 0.5 * clearance * height
-    # print "new boundary", left, right, top, bottom
+    # print("new boundary", left, right, top, bottom)
     return left, right, top, bottom
 
 
@@ -264,14 +285,14 @@ def get_boundaries_of_elements_in_dict(models_dict, clearance=0.):
     right = 0.
     bottom = 0.
     if 'states' in models_dict and models_dict['states']:
-        left = models_dict['states'].items()[0][1].get_meta_data_editor(gaphas_editor)['rel_pos'][0]
-        top = y_axis_mirror * models_dict['states'].items()[0][1].get_meta_data_editor(gaphas_editor)['rel_pos'][1]
+        left = list(models_dict['states'].items())[0][1].get_meta_data_editor(gaphas_editor)['rel_pos'][0]
+        top = y_axis_mirror * list(models_dict['states'].items())[0][1].get_meta_data_editor(gaphas_editor)['rel_pos'][1]
     elif 'scoped_variables' in models_dict and models_dict['scoped_variables']:
-        left = models_dict['scoped_variables'].items()[0][1].get_meta_data_editor(gaphas_editor)['inner_rel_pos'][0]
-        top = y_axis_mirror * models_dict['scoped_variables'].items()[0][1].get_meta_data_editor(gaphas_editor)['inner_rel_pos'][1]
+        left = list(models_dict['scoped_variables'].items())[0][1].get_meta_data_editor(gaphas_editor)['inner_rel_pos'][0]
+        top = y_axis_mirror * list(models_dict['scoped_variables'].items())[0][1].get_meta_data_editor(gaphas_editor)['inner_rel_pos'][1]
     else:
-        all_ports = models_dict['input_data_ports'].values() + models_dict['output_data_ports'].values() + \
-                    models_dict['scoped_variables'].values() + models_dict['outcomes'].values()
+        all_ports = list(models_dict['input_data_ports'].values()) + list(models_dict['output_data_ports'].values()) + \
+                    list(models_dict['scoped_variables'].values()) + list(models_dict['outcomes'].values())
         if len(set([port_m.core_element.parent for port_m in all_ports])) == 1:
             logger.info("Only one parent {0} {1}".format(all_ports[0].core_element.parent, all_ports[0].parent.get_meta_data_editor(gaphas_editor)))
         if all_ports:
@@ -301,28 +322,31 @@ def get_boundaries_of_elements_in_dict(models_dict, clearance=0.):
     for key in parts:
         elems_dict = models_dict[key]
         rel_positions = []
-        for model in elems_dict.itervalues():
+        for model in elems_dict.values():
             _size = (0., 0.)
             if key == 'states':
                 rel_positions = [model.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']]
                 _size = model.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
-                # print key, rel_positions, _size
+                # print(key, rel_positions, _size)
             elif key in ['scoped_variables', 'input_data_ports', 'output_data_ports']:
                 rel_positions = [model.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']]
                 # TODO check to take the ports size into account
-                # print key, rel_positions, _size
+                # print(key, rel_positions, _size)
             elif key in ['transitions', 'data_flows']:
                 if gaphas_editor and key is "data_flows":
                     # take into account the meta data positions of opengl if there is some (always in opengl format)
                     rel_positions = mirror_waypoints(deepcopy(model.get_meta_data_editor(for_gaphas=gaphas_editor)))['waypoints']
                 else:
                     rel_positions = model.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
-                # print key, rel_positions, _size, model.meta
+                # print(key, rel_positions, _size, model.meta)
 
             for rel_position in rel_positions:
+                # check for empty fields and ignore them at this point
+                if not contains_geometric_info(rel_position):
+                    continue
                 right, bottom = cal_max(right, bottom, rel_position, _size)
                 left, top = cal_min(left, top, rel_position, _size)
-                # print "new edges:", left, right, top, bottom, key
+                # print("new edges:", left, right, top, bottom, key)
 
     # increase of boundary results into bigger estimated size and finally stronger reduction of original element sizes
     left, right, top, bottom = add_boundary_clearance(left, right, top, bottom, {'size': (0., 0.)}, clearance)
@@ -332,7 +356,7 @@ def get_boundaries_of_elements_in_dict(models_dict, clearance=0.):
 def cal_frame_according_boundaries(left, right, top, bottom, parent_size, gaphas_editor, group=True):
     """ Generate margin and relative position and size handed boundary parameter and parent size """
     y_axis_mirror = 1 if gaphas_editor else -1
-    # print "parent_size ->", parent_size
+    # print("parent_size ->", parent_size)
     margin = cal_margin(parent_size)
     # Add margin and ensure that the upper left corner is within the state
     if group:
@@ -352,22 +376,22 @@ def cal_frame_according_boundaries(left, right, top, bottom, parent_size, gaphas
 
 def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor):
     """ Add position offset to all handed models in dict"""
-    # print "\n", "#"*30, "offset models", pos_offset, "#"*30
+    # print("\n", "#"*30, "offset models", pos_offset, "#"*30)
     # Update relative position of states within the container in order to maintain their absolute position
-    for child_state_m in models_dict['states'].itervalues():
+    for child_state_m in models_dict['states'].values():
         old_rel_pos = child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
-        # print "old_rel_pos", old_rel_pos, child_state_m
+        # print("old_rel_pos", old_rel_pos, child_state_m)
         child_state_m.set_meta_data_editor('rel_pos', add_pos(old_rel_pos, pos_offset), from_gaphas=gaphas_editor)
-        # print "new_rel_pos", child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor), child_state_m
+        # print("new_rel_pos", child_state_m.get_meta_data_editor(for_gaphas=gaphas_editor), child_state_m)
 
     # Do the same for scoped variable
     if not gaphas_editor:
-        for scoped_variable_m in models_dict['scoped_variables'].itervalues():
+        for scoped_variable_m in models_dict['scoped_variables'].values():
             old_rel_pos = scoped_variable_m.get_meta_data_editor(for_gaphas=gaphas_editor)['inner_rel_pos']
             scoped_variable_m.set_meta_data_editor('inner_rel_pos', add_pos(old_rel_pos, pos_offset), gaphas_editor)
 
     # Do the same for all connections (transitions and data flows)
-    connection_models = models_dict['transitions'].values() + models_dict['data_flows'].values()
+    connection_models = list(models_dict['transitions'].values()) + list(models_dict['data_flows'].values())
     for connection_m in connection_models:
         old_waypoints = connection_m.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
         new_waypoints = []
@@ -378,7 +402,7 @@ def offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset, gaphas_editor)
             else:
                 new_waypoints.append(add_pos(waypoint, pos_offset))
         connection_m.set_meta_data_editor('waypoints', new_waypoints, from_gaphas=gaphas_editor)
-    # print "END", "#"*30, "offset models", pos_offset, "#"*30, "\n"
+    # print("END", "#"*30, "offset models", pos_offset, "#"*30, "\n")
 
 
 def scale_library_ports_meta_data(state_m, gaphas_editor=True):
@@ -391,12 +415,12 @@ def scale_library_ports_meta_data(state_m, gaphas_editor=True):
         return
     state_m.set_meta_data_editor('income.rel_pos',
                                  state_m.state_copy.get_meta_data_editor()['income']['rel_pos'])
-    # print "scale_library_ports_meta_data ", state_m.get_meta_data_editor()['size'], \
+    # print("scale_library_ports_meta_data ", state_m.get_meta_data_editor()['size'], \)
     #     state_m.state_copy.get_meta_data_editor()['size']
     factor = divide_two_vectors(state_m.get_meta_data_editor()['size'],
                                 state_m.state_copy.get_meta_data_editor()['size'])
 
-    # print "scale_library_ports_meta_data -> resize_state_port_meta", factor
+    # print("scale_library_ports_meta_data -> resize_state_port_meta", factor)
     if contains_geometric_info(factor):
         resize_state_port_meta(state_m, factor, True)
         state_m.meta_data_was_scaled = True
@@ -441,7 +465,7 @@ def scale_library_content(library_state_m, gaphas_editor=True):
     models_dict = {'state': library_state_m.state_copy}
     for state_element_key in library_state_m.state_copy.state.state_element_attrs:
         state_element_list = getattr(library_state_m.state_copy, state_element_key)
-        # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
+        # Some models are hold in a gtkmvc3.support.wrappers.ObsListWrapper, not a list
         if hasattr(state_element_list, 'keys'):
             state_element_list = state_element_list.values()
         models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
@@ -469,25 +493,25 @@ def _resize_port_models_list(port_models, rel_pos_key, factor, gaphas_editor):
 def _resize_connection_models_list(connection_models, factor, gaphas_editor):
     """ Resize relative positions of way points of a list of connection/linkage models """
     for connection_m in connection_models:
-        # print "old_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element
+        # print("old_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element)
         old_waypoints = connection_m.get_meta_data_editor(for_gaphas=gaphas_editor)['waypoints']
         new_waypoints = []
         for waypoint in old_waypoints:
             new_waypoints.append(mult_two_vectors(factor, waypoint))
         connection_m.set_meta_data_editor('waypoints', new_waypoints, from_gaphas=gaphas_editor)
-    #     print "new_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element
+    #     print("new_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element)
 
 
 def resize_income_of_state_m(state_m, factor, gaphas_editor):
     if gaphas_editor:
         old_rel_pos = state_m.get_meta_data_editor(for_gaphas=True)['income']['rel_pos']
         state_m.set_meta_data_editor('income.rel_pos', mult_two_vectors(factor, old_rel_pos), from_gaphas=True)
-        # print "income", old_rel_pos, state_m.get_meta_data_editor(for_gaphas=True)['income']
+        # print("income", old_rel_pos, state_m.get_meta_data_editor(for_gaphas=True)['income'])
 
 
 def resize_state_port_meta(state_m, factor, gaphas_editor):
     """ Resize data and logical ports relative positions """
-    # print "scale ports", factor, state_m, gaphas_editor
+    # print("scale ports", factor, state_m, gaphas_editor)
     if not gaphas_editor and isinstance(state_m, ContainerStateModel):
         port_models = state_m.input_data_ports[:] + state_m.output_data_ports[:] + state_m.scoped_variables[:]
     else:
@@ -501,17 +525,17 @@ def resize_state_port_meta(state_m, factor, gaphas_editor):
 def resize_state_meta(state_m, factor, gaphas_editor):
     """ Resize state meta data recursive what includes also LibraryStateModels meta data and its internal state_copy
     """
-    # print "START RESIZE OF STATE", state_m.get_meta_data_editor(for_gaphas=gaphas_editor), state_m
+    # print("START RESIZE OF STATE", state_m.get_meta_data_editor(for_gaphas=gaphas_editor), state_m)
     old_rel_pos = state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
-    # print "old_rel_pos state", old_rel_pos, state_m.core_element
+    # print("old_rel_pos state", old_rel_pos, state_m.core_element)
     state_m.set_meta_data_editor('rel_pos', mult_two_vectors(factor, old_rel_pos), from_gaphas=gaphas_editor)
-    # print "new_rel_pos state", state_m.get_meta_data_editor(for_gaphas=gaphas_editor), state_m.core_element
+    # print("new_rel_pos state", state_m.get_meta_data_editor(for_gaphas=gaphas_editor), state_m.core_element)
 
-    # print "resize factor", factor,  state_m, state_m.meta
+    # print("resize factor", factor,  state_m, state_m.meta)
     old_size = state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
-    # print "old_size", old_size, type(old_size)
+    # print("old_size", old_size, type(old_size))
     state_m.set_meta_data_editor('size', mult_two_vectors(factor, old_size), from_gaphas=gaphas_editor)
-    # print "new_size", state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
+    # print("new_size", state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['size'])
     if gaphas_editor:
         old_rel_pos = state_m.get_meta_data_editor(for_gaphas=gaphas_editor)['name']['rel_pos']
         state_m.set_meta_data_editor('name.rel_pos', mult_two_vectors(factor, old_rel_pos), from_gaphas=gaphas_editor)
@@ -519,7 +543,7 @@ def resize_state_meta(state_m, factor, gaphas_editor):
         state_m.set_meta_data_editor('name.size', mult_two_vectors(factor, old_size), from_gaphas=gaphas_editor)
 
     if isinstance(state_m, LibraryStateModel):
-        # print "LIBRARY", state_m
+        # print("LIBRARY", state_m)
         if gaphas_editor and state_m.state_copy_initialized:
             if state_m.meta_data_was_scaled:
                 resize_state_port_meta(state_m, factor, gaphas_editor)
@@ -528,34 +552,34 @@ def resize_state_meta(state_m, factor, gaphas_editor):
 
         if state_m.state_copy_initialized:
             resize_state_meta(state_m.state_copy, factor, gaphas_editor)
-        # print "END LIBRARY RESIZE"
+        # print("END LIBRARY RESIZE")
     else:
-        # print "resize_state_meta -> resize_state_port_meta"
+        # print("resize_state_meta -> resize_state_port_meta")
         resize_state_port_meta(state_m, factor, gaphas_editor)
         if isinstance(state_m, ContainerStateModel):
             _resize_connection_models_list(state_m.transitions[:] + state_m.data_flows[:], factor, gaphas_editor)
-            for child_state_m in state_m.states.itervalues():
+            for child_state_m in state_m.states.values():
                 resize_state_meta(child_state_m, factor, gaphas_editor)
-    # print "re-sized state", state_m.get_meta_data_editor(for_gaphas=gaphas_editor), state_m.core_element
+    # print("re-sized state", state_m.get_meta_data_editor(for_gaphas=gaphas_editor), state_m.core_element)
 
 
 def resize_of_all_models_in_dict(models_dict, factor, gaphas_editor):
-    # print "\n", "#"*30, "resize models", factor, "#"*30,
+    # print("\n", "#"*30, "resize models", factor, "#"*30,)
 
     # Update relative position of states within the container in order to maintain their absolute position
-    for child_state_m in models_dict['states'].itervalues():
+    for child_state_m in models_dict['states'].values():
         resize_state_meta(child_state_m, factor, gaphas_editor)
 
     # Do the same for data and logic ports
-    port_models = models_dict.get('scoped_variables', {}).values() + models_dict['input_data_ports'].values() + \
-                  models_dict['output_data_ports'].values()
-    port_models += models_dict['outcomes'].values() if gaphas_editor else []
+    port_models = list(models_dict.get('scoped_variables', {}).values()) + list(models_dict['input_data_ports'].values()) + \
+                  list(models_dict['output_data_ports'].values())
+    port_models += list(models_dict['outcomes'].values()) if gaphas_editor else []
     _resize_port_models_list(port_models, 'rel_pos' if gaphas_editor else 'inner_rel_pos', factor, gaphas_editor)
 
     # Do the same for all connections (transitions and data flows)
-    connection_models = models_dict['transitions'].values() + models_dict['data_flows'].values()
+    connection_models = list(models_dict['transitions'].values()) + list(models_dict['data_flows'].values())
     _resize_connection_models_list(connection_models, factor, gaphas_editor)
-    # print "END", "#"*30, "resize models", factor, "#"*30, "\n"
+    # print("END", "#"*30, "resize models", factor, "#"*30, "\n")
 
 
 def offset_rel_pos_of_models_meta_data_according_parent_state(models_dict):
@@ -567,7 +591,7 @@ def offset_rel_pos_of_models_meta_data_according_parent_state(models_dict):
     :param models_dict: dict that hold lists of meta data with state attribute consistent keys
     :return:
     """
-    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    gaphas_editor = global_gui_config.get_config_value('GAPHAS_EDITOR', True)
     old_parent_rel_pos = models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos']
     offset_rel_pos_of_all_models_in_dict(models_dict, pos_offset=old_parent_rel_pos, gaphas_editor=gaphas_editor)
 
@@ -585,7 +609,7 @@ def scale_meta_data_according_states(models_dict):
     :param models_dict: dictionary that hold lists of meta data with state attribute consistent keys
     :return:
     """
-    gaphas_editor = True if global_gui_config.get_config_value('GAPHAS_EDITOR') else False
+    gaphas_editor = global_gui_config.get_config_value('GAPHAS_EDITOR', True)
 
     left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)
 
@@ -625,14 +649,14 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
 
         assert parent_size[0] > rel_pos[0]
         assert parent_size[1] > rel_pos[1]
-        # print "edges:", left, right, top, bottom
-        # print "margin:", margin, "rel_pos:", rel_pos, "old_rel_pos", old_rel_pos, "size:", size
+        # print("edges:", left, right, top, bottom)
+        # print("margin:", margin, "rel_pos:", rel_pos, "old_rel_pos", old_rel_pos, "size:", size)
 
         parent_width, parent_height = parent_size
 
         boundary_width, boundary_height = size
-        # print "parent width:   {0}, parent_height:   {1}".format(parent_width, parent_height)
-        # print "boundary width: {0}, boundary_height: {1}".format(boundary_width, boundary_height)
+        # print("parent width:   {0}, parent_height:   {1}".format(parent_width, parent_height))
+        # print("boundary width: {0}, boundary_height: {1}".format(boundary_width, boundary_height))
 
         # no site scale
         if parent_width - rel_pos[0] > boundary_width * clearance_scale and \
@@ -640,12 +664,12 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
             if automatic_mode:
                 resize_factor = 1.
                 boundary_width_in_parent = boundary_width*resize_factor
-                # print boundary_width, resize_factor, boundary_width*resize_factor, boundary_height*resize_factor + margin*2, parent_height
-                # print "left over width: ", parent_width - boundary_width_in_parent - rel_pos[0] - margin
+                # print(boundary_width, resize_factor, boundary_width*resize_factor, boundary_height*resize_factor + margin*2, parent_height)
+                # print("left over width: ", parent_width - boundary_width_in_parent - rel_pos[0] - margin)
                 width_pos_offset_to_middle = (parent_width - boundary_width_in_parent - rel_pos[0] - margin)/2.
                 rel_pos = add_pos(rel_pos, (width_pos_offset_to_middle, 0.))
                 boundary_height_in_parent = boundary_height*resize_factor
-                # print "left over height: ", parent_height - boundary_height_in_parent - rel_pos[0] - margin
+                # print("left over height: ", parent_height - boundary_height_in_parent - rel_pos[0] - margin)
                 height_pos_offset_to_middle = (parent_height - boundary_height_in_parent - rel_pos[1] - margin)/2.
                 rel_pos = add_pos(rel_pos, (0., height_pos_offset_to_middle))
             offset = subtract_pos((0., 0.), subtract_pos(old_rel_pos, rel_pos))
@@ -663,35 +687,37 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
             rel_pos = (margin, margin) if rel_pos is None else rel_pos
             assert parent_size[0] > rel_pos[0]
             assert parent_size[1] > rel_pos[1]
-            # print "edges:", left, right, top, bottom
-            # print "margin:", margin, "rel_pos:", rel_pos, "old_rel_pos", old_rel_pos, "size:", size
+            # print("edges:", left, right, top, bottom)
+            # print("margin:", margin, "rel_pos:", rel_pos, "old_rel_pos", old_rel_pos, "size:", size)
 
             parent_width, parent_height = parent_size
 
             boundary_width, boundary_height = size
             if (parent_height - rel_pos[1] - margin)/boundary_height < \
                     (parent_width - rel_pos[0] - margin)/boundary_width:
-                # print "#2"*20, 1, "#"*20, rel_pos
+                # print("#2"*20, 1, "#"*20, rel_pos)
                 resize_factor = (parent_height - rel_pos[1] - margin)/boundary_height
                 boundary_width_in_parent = boundary_width*resize_factor
-                # print boundary_width, resize_factor, boundary_width*resize_factor
-                # print "left over width: ", parent_width - boundary_width_in_parent - rel_pos[0] - margin
+                # print(boundary_width, resize_factor, boundary_width*resize_factor)
+                # print("left over width: ", parent_width - boundary_width_in_parent - rel_pos[0] - margin)
                 width_pos_offset_to_middle = (parent_width - boundary_width_in_parent - rel_pos[0] - margin)/2.
                 rel_pos = add_pos(rel_pos, (width_pos_offset_to_middle, 0.))
-                # print resize_factor, rel_pos
+                # print(resize_factor, rel_pos)
             else:
-                # print "#2"*20, 2, "#"*20, rel_pos
+                # print("#2"*20, 2, "#"*20, rel_pos)
                 resize_factor = (parent_width - rel_pos[0] - margin)/boundary_width
                 boundary_height_in_parent = boundary_height*resize_factor
-                # print boundary_width, resize_factor, boundary_width*resize_factor
-                # print "left over height: ", parent_height - boundary_height_in_parent - rel_pos[0] - margin
+                # print(boundary_width, resize_factor, boundary_width*resize_factor)
+                # print("left over height: ", parent_height - boundary_height_in_parent - rel_pos[0] - margin)
                 height_pos_offset_to_middle = (parent_height - boundary_height_in_parent - rel_pos[1] - margin)/2.
                 rel_pos = add_pos(rel_pos, (0., height_pos_offset_to_middle))
-                # print resize_factor, rel_pos
+                # print(resize_factor, rel_pos)
+            if not global_gui_config.get_config_value('GAPHAS_ENABLED'):
+                resize_factor *= 0.9  # TODO check it again (needed to hold child elements in bounds of parent state)
             frame = {'rel_pos': rel_pos, 'size': mult_two_vectors((resize_factor, resize_factor), size)}
-            # print models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos'], \
+            # print(models_dict['state'].get_meta_data_editor(for_gaphas=gaphas_editor)['rel_pos'], \)
             #     parent_size, models_dict['state'].parent.get_meta_data_editor(for_gaphas=gaphas_editor)['size']
-            # print "frame", frame, resize_factor
+            # print("frame", frame, resize_factor)
             # # rel_pos = mult_two_vectors((1, -1), frame['rel_pos'])
             offset = subtract_pos((0., 0.), mult_two_vectors((1., y_axis_mirror), old_rel_pos))
             offset_rel_pos_of_all_models_in_dict(models_dict, offset, gaphas_editor)
@@ -730,6 +756,162 @@ def scale_meta_data_according_frame(models_dict, frame):
     resize_of_all_models_in_dict(models_dict, (resize_factor, resize_factor), gaphas_editor)
     offset_rel_pos_of_all_models_in_dict(models_dict, mult_two_vectors((1., y_axis_mirror), frame['rel_pos']), gaphas_editor)
     return True
+
+
+def meta_data_reference_check(meta):
+
+    def reference_free_check(v1, v2, prepend=[]):
+        """Returns elements of a dict that have the same memory addresses except strings."""
+        d = {'value': {}, 'same_ref': [], 'same_ref_value': [], 'missing_keys1': [], 'missing_keys2': []}
+        v1_keys = v1.keys()
+        v2_keys = v2.keys()
+        not_to_check = set(v1_keys).symmetric_difference(v2_keys)
+        d['missing_keys1'] = [k for k in v1_keys if k in not_to_check]
+        d['missing_keys2'] = [k for k in v2_keys if k in not_to_check]
+        for key in set(v1_keys + v2_keys):
+            if key not in not_to_check:
+                if not hasattr(v1[key], 'keys'):
+                    if isinstance(v1[key], string_types):
+                        d['value'].update({key: v1[key]})
+                    else:
+                        if id(v1[key]) == id(v2[key]):
+                            if not isinstance(v1[key], tuple):
+                                d['same_ref'].append(prepend + [key])
+                                d['same_ref_value'].append(str(v1[key]) + " == " + str(v2[key]) + ', ' + str(type(v1[key])) + " == " + str(type(v2[key])))
+                        else:
+                            d['value'].update({key: v1[key]})
+                else:
+                    if id(v1[key]) == id(v2[key]):
+                        d['same_ref'].append(prepend + [key])
+                        d['same_ref_value'].append(str(v1[key]) + " == " + str(v2[key]) + ', ' + str(type(v1[key])) + " == " + str(type(v2[key])))
+                    else:
+                        d['value'].update({key: reference_free_check(v1[key], v2[key], prepend=prepend + [key])})
+
+        return d
+
+    meta_source = meta
+    meta_str = json.dumps(meta, cls=JSONObjectEncoder,
+                          indent=4, check_circular=False, sort_keys=True)
+    meta_dump_copy = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
+    meta_deepcopy = deepcopy(meta)
+
+    meta_source_str = json.dumps(meta, cls=JSONObjectEncoder,
+                                 indent=4, check_circular=False, sort_keys=True)
+    meta_dump_copy_str = json.dumps(meta_dump_copy, cls=JSONObjectEncoder,
+                                    indent=4, check_circular=False, sort_keys=True)
+    meta_deepcopy_str = json.dumps(meta_deepcopy, cls=JSONObjectEncoder,
+                                   indent=4, check_circular=False, sort_keys=True)
+    assert meta_dump_copy_str == meta_source_str
+    assert meta_dump_copy_str == meta_deepcopy_str
+
+    def diff_print(diff):
+        if diff['same_ref']:
+            logger.verbose("same_ref: {0} {1}".format(diff['same_ref'], diff['same_ref_value']))
+            assert False
+        for value in diff['value'].values():
+            if isinstance(value, dict):
+                diff_print(value)
+
+    source_dump_diff = reference_free_check(meta_source, meta_dump_copy)
+    source_deep_diff = reference_free_check(meta_source, meta_deepcopy)
+    logger.verbose("source_dump_diff")
+    diff_print(source_dump_diff)
+    logger.verbose("source_deep_diff")
+    diff_print(source_deep_diff)
+
+
+def get_closest_sibling_state(state_m, from_logical_port=None):
+    """ Calculate the closest sibling also from optional logical port of handed state model
+
+    :param StateModel state_m: Reference State model the closest sibling state should be find for
+    :param str from_logical_port: The logical port of handed state model to be used as reference.
+    :rtype: tuple
+    :return: distance, StateModel of closest state
+    """
+    if not state_m.parent:
+        logger.warning("A state can not have a closest sibling state if it has not parent as {0}".format(state_m))
+        return
+
+    margin = cal_margin(state_m.parent.get_meta_data_editor()['size'])
+    pos = state_m.get_meta_data_editor()['rel_pos']
+    size = state_m.get_meta_data_editor()['size']  # otherwise measure from reference state itself
+    if from_logical_port in ["outcome", "income"]:
+        size = (margin, margin)
+    if from_logical_port == "outcome":
+        outcomes_m = [outcome_m for outcome_m in state_m.outcomes if outcome_m.outcome.outcome_id >= 0]
+        free_outcomes_m = [oc_m for oc_m in outcomes_m
+                           if not state_m.state.parent.get_transition_for_outcome(state_m.state, oc_m.outcome)]
+        if free_outcomes_m:
+            outcome_m = free_outcomes_m[0]
+        else:
+            outcome_m = outcomes_m[0]
+        pos = add_pos(pos, outcome_m.get_meta_data_editor()['rel_pos'])
+    elif from_logical_port == "income":
+        pos = add_pos(pos, state_m.get_meta_data_editor()['income']['rel_pos'])
+
+    min_distance = None
+    for sibling_state_m in state_m.parent.states.values():
+        if sibling_state_m is state_m:
+            continue
+
+        sibling_pos = sibling_state_m.get_meta_data_editor()['rel_pos']
+        sibling_size = sibling_state_m.get_meta_data_editor()['size']
+
+        distance = geometry.cal_dist_between_2_coord_frame_aligned_boxes(pos, size, sibling_pos, sibling_size)
+
+        if not min_distance or min_distance[0] > distance:
+            min_distance = (distance, sibling_state_m)
+
+    return min_distance
+
+
+def check_gaphas_state_meta_data_consistency(state_m, canvas, recursive=True, with_logger_messages=False):
+    from rafcon.core.states.container_state import ContainerState
+    from rafcon.utils.geometry import equal
+
+    state_v = canvas.get_view_for_model(state_m)
+    if not state_v:
+        logger.verbose("There is no corresponding gaphas view for the state model {}".format(state_m))
+        return
+    if with_logger_messages:
+        logger.verbose("Check state model {0} and Canvas view {1}".format(state_m, state_v))
+
+    meta_rel_pos = state_m.get_meta_data_editor()["rel_pos"]
+    meta_size = state_m.get_meta_data_editor()["size"]
+    view_rel_pos = state_v.position
+    view_size = (state_v.width, state_v.height)
+
+    if not equal(meta_rel_pos, view_rel_pos, digit=5):
+        error_msg = "{}: meta rel pos == {} != {} == view rel pos".format(state_m.state.name, meta_rel_pos,
+                                                                          view_rel_pos)
+        if not with_logger_messages:
+            assert False, error_msg
+        logger.error(error_msg)
+
+    if not equal(meta_size, view_size, digit=5):
+        error_msg = "{}: meta size == {} != {} == view size".format(state_m.state.name, meta_size, view_size)
+        if not with_logger_messages:
+            assert False, error_msg
+        logger.error(error_msg)
+
+    if recursive and isinstance(state_m.state, ContainerState):
+        for child_state_m in state_m.states.values():
+            check_gaphas_state_meta_data_consistency(child_state_m, canvas, True, with_logger_messages)
+
+
+def check_gaphas_state_machine_meta_data_consistency(state_machine_m, with_logger_messages=False):
+    import rafcon.gui.singleton
+    sm_id = state_machine_m.state_machine.state_machine_id
+    if rafcon.gui.singleton.main_window_controller is None:
+        return
+    state_machines_ctrl = rafcon.gui.singleton.main_window_controller.get_controller("state_machines_editor_ctrl")
+    sm_gaphas_ctrl = state_machines_ctrl.get_controller(sm_id)
+    if sm_gaphas_ctrl is None or sm_gaphas_ctrl.canvas is None:
+        logger.verbose("Wait for gaphas.canvas of state machine {0}.".format(sm_id))
+        return
+
+    check_gaphas_state_meta_data_consistency(state_machine_m.root_state, sm_gaphas_ctrl.canvas, True, with_logger_messages)
+
 
 # Something to remember maybe
 #

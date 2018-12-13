@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -12,13 +12,14 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import ModelMT
+from gtkmvc3.model_mt import ModelMT
+from builtins import range
 
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.logical_port import IncomeModel, OutcomeModel
 from rafcon.core.state_elements.logical_port import Income, Outcome
-from rafcon.utils import log
+from rafcon.utils import log, type_helpers
 from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 
 logger = log.get_logger(__name__)
@@ -37,11 +38,10 @@ class StateModel(AbstractStateModel):
 
     expected_future_models = None
 
-    def __init__(self, state, parent=None, meta=None, load_meta_data=True):
+    def __init__(self, state, parent=None, meta=None, load_meta_data=True, expected_future_models=None):
         """Constructor"""
+        self.expected_future_models = set() if expected_future_models is None else set(expected_future_models)
         super(StateModel, self).__init__(state, parent, meta)
-
-        self.expected_future_models = set()
 
         if load_meta_data and type(self) == StateModel:
             self.load_meta_data()
@@ -144,7 +144,7 @@ class StateModel(AbstractStateModel):
             output-data-port models
             outcome models
         """
-        model_list = None
+
         if info.method_name in ["add_input_data_port", "remove_input_data_port", "input_data_ports"]:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("input_data_port")
         elif info.method_name in ["add_output_data_port", "remove_output_data_port", "output_data_ports"]:
@@ -153,28 +153,32 @@ class StateModel(AbstractStateModel):
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("income")
         elif info.method_name in ["add_outcome", "remove_outcome", "outcomes"]:
             (model_list, data_list, model_name, model_class, model_key) = self.get_model_info("outcome")
+        else:
+            return
 
-        if model_list is not None:
-            if "add" in info.method_name:
-                self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
-            elif "remove" in info.method_name:
-                self.remove_additional_model(model_list, data_list, model_name, model_key)
-            elif info.method_name in ["input_data_ports", "output_data_ports", "income", "outcomes"]:
-                self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
+        if "add" in info.method_name:
+            self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
+        elif "remove" in info.method_name:
+            destroy = info.kwargs.get('destroy', True)
+            # print(self.__class__.__name__, "remove", info.method_name, 'destroy: ', destroy)
+            # print("remove", info.method_name, 'destroy', info.kwargs.get('destroy', False), info.args, info.kwargs)
+            self.remove_specific_model(model_list, info.result, model_key, destroy)
+        elif info.method_name in ["input_data_ports", "output_data_ports", "income", "outcomes"]:
+            self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
 
     def _load_input_data_port_models(self):
         """Reloads the input data port models directly from the the state
         """
         self.input_data_ports = []
-        for input_data_port in self.state.input_data_ports.itervalues():
-            self.input_data_ports.append(DataPortModel(input_data_port, self))
+        for input_data_port in self.state.input_data_ports.values():
+            self._add_model(self.input_data_ports, input_data_port, DataPortModel)
 
     def _load_output_data_port_models(self):
         """Reloads the output data port models directly from the the state
         """
         self.output_data_ports = []
-        for output_data_port in self.state.output_data_ports.itervalues():
-            self.output_data_ports.append(DataPortModel(output_data_port, self))
+        for output_data_port in self.state.output_data_ports.values():
+            self._add_model(self.output_data_ports, output_data_port, DataPortModel)
 
     def _load_income_model(self):
         """ Create income model from core income """
@@ -183,8 +187,8 @@ class StateModel(AbstractStateModel):
     def _load_outcome_models(self):
         """ Create outcome models from core outcomes """
         self.outcomes = []
-        for outcome in self.state.outcomes.itervalues():
-            self.outcomes.append(OutcomeModel(outcome, self))
+        for outcome in self.state.outcomes.values():
+            self._add_model(self.outcomes, outcome, OutcomeModel)
 
     def re_initiate_model_list(self, model_list_or_dict, core_objects_dict, model_name, model_class, model_key):
         """Recreate model list
@@ -211,6 +215,32 @@ class StateModel(AbstractStateModel):
             for _ in core_objects_dict:
                 self.add_missing_model(model_list_or_dict, core_objects_dict, model_name, model_class, model_key)
 
+    def _add_model(self, model_list_or_dict, core_element, model_class, model_key=None, load_meta_data=True):
+        """Adds one model for a given core element.
+
+        The method will add a model for a given core object and checks if there is a corresponding model object in the
+        future expected model list. The method does not check if an object with corresponding model has already been
+        inserted.
+
+        :param model_list_or_dict:  could be a list or dictionary of one model type
+        :param core_element: the core element to a model for, can be state or state element
+        :param model_class: model-class of the elements that should be insert
+        :param model_key: if model_list_or_dict is a dictionary the key is the id of the respective element
+                          (e.g. 'state_id')
+        :param load_meta_data: specific argument for loading meta data
+        :return:
+        """
+
+        found_model = self._get_future_expected_model(core_element)
+        if found_model:
+            found_model.parent = self
+
+        if model_key is None:
+            model_list_or_dict.append(found_model if found_model else model_class(core_element, self))
+        else:
+            model_list_or_dict[model_key] = found_model if found_model else model_class(core_element, self,
+                                                                                        load_meta_data=load_meta_data)
+
     def add_missing_model(self, model_list_or_dict, core_elements_dict, model_name, model_class, model_key):
         """Adds one missing model
 
@@ -228,6 +258,8 @@ class StateModel(AbstractStateModel):
         :return: True, is a new model was added, False else
         :rtype: bool
         """
+        # print(self.__class__.__name__, "try to add_missing_model")
+
         def core_element_has_model(core_object):
             for model_or_key in model_list_or_dict:
                 model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
@@ -238,13 +270,20 @@ class StateModel(AbstractStateModel):
         if model_name == "income":
             self.income = self._create_model(self.state.income, IncomeModel)
             return
-
-        for core_element in core_elements_dict.itervalues():
+            
+        for core_element in core_elements_dict.values():
             if core_element_has_model(core_element):
                 continue
 
             new_model = self._create_model(core_element, model_class)
+            if type_helpers.type_inherits_of_type(model_class, StateModel):
+                new_model = model_class(core_element, self, expected_future_models=self.expected_future_models)
+                self.expected_future_models = new_model.expected_future_models  # update reused models
+                new_model.expected_future_models = set()  # clean the field because should not be used further
+            else:
+                new_model = model_class(core_element, self)
             # insert new model into list or dict
+            # print(self.__class__.__name__, "add_missing_model", new_model, core_element, id(self), self)
             if model_key is None:
                 model_list_or_dict.append(new_model)
             else:
@@ -252,7 +291,23 @@ class StateModel(AbstractStateModel):
             return True
         return False
 
-    def remove_additional_model(self, model_list_or_dict, core_objects_dict, model_name, model_key):
+    def remove_specific_model(self, model_list_or_dict, core_element, model_key=None, recursive=True, destroy=True):
+        # print(self.__class__.__name__, "try to remove", "|",  core_element, "|", model_list_or_dict, model_key, destroy)
+        for model_or_key in model_list_or_dict:
+            model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
+            if model.core_element is core_element:
+                if model_key is None:
+                    if destroy:
+                        model.prepare_destruction()
+                    model_list_or_dict.remove(model)
+                else:
+                    if destroy:
+                        model_list_or_dict[model_or_key].prepare_destruction(recursive)
+                    del model_list_or_dict[model_or_key]
+                return
+        # print(self.__class__.__name__, "failed to remove", "|",  core_element, "|", model_list_or_dict, model_key, destroy)
+
+    def remove_additional_model(self, model_list_or_dict, core_objects_dict, model_name, model_key, destroy=True):
         """Remove one unnecessary model
 
         The method will search for the first model-object out of
@@ -274,16 +329,18 @@ class StateModel(AbstractStateModel):
         for model_or_key in model_list_or_dict:
             model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
             found = False
-            for core_object in core_objects_dict.itervalues():
+            for core_object in core_objects_dict.values():
                 if core_object is getattr(model, model_name):
                     found = True
                     break
             if not found:
                 if model_key is None:
-                    model.prepare_destruction()
+                    if destroy:
+                        model.prepare_destruction()
                     model_list_or_dict.remove(model)
                 else:
-                    model_list_or_dict[model_or_key].prepare_destruction()
+                    if destroy:
+                        model_list_or_dict[model_or_key].prepare_destruction()
                     del model_list_or_dict[model_or_key]
                 return
 
@@ -307,6 +364,7 @@ class StateModel(AbstractStateModel):
         """Hand model for an core element from expected model list and remove the model from this list"""
         for model in self.expected_future_models:
             if model.core_element is core_element:
+                # print("expected_future_model found -> remove model:", model, [model], id(model))
                 self.expected_future_models.remove(model)
                 return model
         return None

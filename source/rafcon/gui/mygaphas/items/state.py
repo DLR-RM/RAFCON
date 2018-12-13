@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -13,8 +13,12 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from future.utils import string_types
+from builtins import str
 from weakref import ref
-from pango import SCALE, FontDescription, WRAP_WORD
+from gi.repository.Pango import SCALE, FontDescription, WrapMode
+from gi.repository import PangoCairo
+# from cairo import Antialias
 from copy import copy
 import cairo
 
@@ -22,6 +26,7 @@ from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
 from gaphas.matrix import Matrix
 from gaphas.solver import Variable
+from gaphas.painter import CairoBoundingBoxContext
 
 from rafcon.core.states.state import StateExecutionStatus
 
@@ -34,7 +39,6 @@ from rafcon.gui.mygaphas.utils.enums import SnappedSide
 from rafcon.gui.mygaphas.utils.gap_draw_helper import get_col_rgba
 from rafcon.gui.mygaphas.utils import gap_draw_helper
 from rafcon.gui.mygaphas.utils.cache.image_cache import ImageCache
-from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
 
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
 from rafcon.gui.helpers.meta_data import contains_geometric_info
@@ -43,6 +47,9 @@ from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+
+# Fixed width of the Pango layout. The higher this value, the better is the accuracy, but the more memory is consumed
+BASE_WIDTH = 100.
 
 
 class StateView(Element):
@@ -61,6 +68,11 @@ class StateView(Element):
         self.width = size[0]
         self.height = size[1]
 
+        self._c_min_w = self._constraints[0]
+        self._c_min_h = self._constraints[1]
+
+        self.is_root_state_of_library = state_m.state.is_root_state_of_library
+
         self._state_m = ref(state_m)
         self.hierarchy_level = hierarchy_level
 
@@ -77,11 +89,16 @@ class StateView(Element):
         self._moving = False
 
         self._view = None
-        self._parent = None
 
         self.__symbol_size_cache = {}
         self._image_cache = ImageCache()
 
+        self._border_width = Variable(min(self.width, self.height) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
+        border_width_constraint = BorderWidthConstraint(self._handles[NW].pos, self._handles[SE].pos,
+                                                        self._border_width, constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
+        self._constraints.append(border_width_constraint)
+
+        # Initialize NameView
         name_meta = state_m.get_meta_data_editor()['name']
         if not contains_geometric_info(name_meta['size']):
             name_width = self.width * 0.8
@@ -92,14 +109,9 @@ class StateView(Element):
         self._name_view = NameView(state_m.state.name, name_size)
 
         if not contains_geometric_info(name_meta['rel_pos']):
-            name_meta['rel_pos'] = (0, 0)
+            name_meta['rel_pos'] = (self.border_width, self.border_width)
         name_pos = name_meta['rel_pos']
         self.name_view.matrix.translate(*name_pos)
-
-        self._border_width = Variable(min(self.width, self.height) / constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
-        border_width_constraint = BorderWidthConstraint(self._handles[NW].pos, self._handles[SE].pos,
-                                                        self._border_width, constants.BORDER_WIDTH_STATE_SIZE_FACTOR)
-        self._constraints.append(border_width_constraint)
 
     @property
     def selected(self):
@@ -117,7 +129,7 @@ class StateView(Element):
 
     def setup_canvas(self):
         canvas = self.canvas
-        parent = canvas.get_parent(self)
+        parent = self.parent
 
         self.update_minimum_size()
 
@@ -148,10 +160,7 @@ class StateView(Element):
 
     def update_minimum_size_of_children(self):
         if self.canvas:
-            for constraint in self.constraints:
-                self.canvas.solver.request_resolve_constraint(constraint)
-            if not self.canvas.solver._solving:
-                self.canvas.solver.solve()
+            self.canvas.resolve_item_constraints(self)
             for item in self.canvas.get_all_children(self):
                 if isinstance(item, (StateView, NameView)):
                     item.update_minimum_size()
@@ -179,15 +188,24 @@ class StateView(Element):
         """Remove recursively all children and then the StateView itself
         """
         self.canvas.get_first_view().unselect_item(self)
-        children = self.canvas.get_children(self)[:]
-        for child in children:
-            if isinstance(child, StateView):
-                child.remove()
-            if isinstance(child, NameView):
-                self.canvas.remove(child)
+
+        for child in self.canvas.get_children(self)[:]:
+            child.remove()
+
+        self.remove_income()
+        for outcome_v in self.outcomes[:]:
+            self.remove_outcome(outcome_v)
+        for input_port_v in self.inputs[:]:
+            self.remove_input_port(input_port_v)
+        for output_port_v in self.outputs[:]:
+            self.remove_output_port(output_port_v)
+        for scoped_variable_port_v in self.scoped_variables[:]:
+            self.remove_scoped_variable(scoped_variable_port_v)
+
         self.remove_keep_rect_within_constraint_from_parent()
-        for constraint in self._constraints:
+        for constraint in self._constraints[:]:
             self.canvas.solver.remove_constraint(constraint)
+            self._constraints.remove(constraint)
         self.canvas.remove(self)
 
     @staticmethod
@@ -205,13 +223,19 @@ class StateView(Element):
         canvas = self.canvas
         solver = canvas.solver
 
-        name_constraint = self.keep_rect_constraints[self.name_view]
+        name_constraint = self.keep_rect_constraints.pop(self.name_view)
         solver.remove_constraint(name_constraint)
 
-        parent_state_v = canvas.get_parent(self)
+        parent_state_v = self.parent
         if parent_state_v is not None and isinstance(parent_state_v, StateView):
-            constraint = parent_state_v.keep_rect_constraints[self]
+            constraint = parent_state_v.keep_rect_constraints.pop(self)
             solver.remove_constraint(constraint)
+
+    def set_enable_flag_keep_rect_within_constraints(self, enable):
+        """ Enable/disables the KeepRectangleWithinConstraint for child states """
+        for child_state_v in self.child_state_views():
+            self.keep_rect_constraints[child_state_v].enable = enable
+            child_state_v.keep_rect_constraints[child_state_v._name_view].enable = enable
 
     def has_selected_child(self):
         for child in self.canvas.get_children(self):
@@ -250,11 +274,7 @@ class StateView(Element):
 
     @property
     def parent(self):
-        if not self._parent:
-            if not self.canvas:
-                return None
-            self._parent = self.canvas.get_parent(self)
-        return self._parent
+        return self.canvas.get_parent(self)
 
     @property
     def corner_handles(self):
@@ -339,6 +359,8 @@ class StateView(Element):
         return state_nw_pos, state_se_pos
 
     def apply_meta_data(self, recursive=False):
+        # Do not check KeepRectWithin constraints when applying meta data, as this causes issues in recursive operations
+        self.set_enable_flag_keep_rect_within_constraints(False)
         state_meta = self.model.get_meta_data_editor()
 
         self.position = state_meta['rel_pos']
@@ -370,19 +392,24 @@ class StateView(Element):
                 for state_v in self.canvas.get_children(self):
                     if isinstance(state_v, StateView):
                         state_v.apply_meta_data(recursive=True)
+        self.set_enable_flag_keep_rect_within_constraints(True)
 
     def draw(self, context):
         # Do not draw if
         # * state (or its parent) is currently moved
+        # * core element is no longer existing (must have just been removed)
         # * is root state of a library (drawing would hide the LibraryState itself)
-        if self.moving and self.parent and self.parent.moving or self.model.state.is_root_state_of_library:
-            return
+        if not self.model.state or self.moving and self.parent and self.parent.moving or \
+                self.model.state.is_root_state_of_library:
+            if not context.draw_all:
+                return
 
         width = self.width
         height = self.height
         border_width = self.border_width
         view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
-        if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY and self.parent:
+        if min(view_width, view_height) < constants.MINIMUM_STATE_SIZE_FOR_DISPLAY and self.parent and not \
+                context.draw_all:
             return
 
         c = context.cairo
@@ -392,7 +419,8 @@ class StateView(Element):
             'selected': self.selected,
             'moving': self.moving,
             'border_width': border_width,
-            'transparency': self.transparency
+            'transparency': self.transparency,
+            'draw_all': context.draw_all
         }
 
         upper_left_corner = (nw.x.value, nw.y.value)
@@ -467,12 +495,15 @@ class StateView(Element):
 
     def _draw_symbol(self, context, symbol, color, transparency=0.):
         c = context.cairo
+        cairo_context = c
+        if isinstance(c, CairoBoundingBoxContext):
+            cairo_context = c._cairo
         width = self.width
         height = self.height
 
-        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+        # c.set_antialias(Antialias.GOOD)
 
-        layout = c.create_layout()
+        layout = PangoCairo.create_layout(cairo_context)
 
         font_name = constants.ICON_FONT
 
@@ -503,8 +534,8 @@ class StateView(Element):
                   height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
-        c.update_layout(layout)
-        c.show_layout(layout)
+        PangoCairo.update_layout(cairo_context, layout)
+        PangoCairo.show_layout(cairo_context, layout)
 
     def get_transitions(self):
         transitions = []
@@ -601,14 +632,26 @@ class StateView(Element):
             # For backward compatibility to older state machines, storing meta data of the income in the state
             port_meta = self.model.get_meta_data_editor()['income']
         if not contains_geometric_info(port_meta['rel_pos']):
+            # print("generate rel_pos")
             # Position income on the top of the left state side
             income_v.side = SnappedSide.LEFT
             pos_x = 0
             pos_y = self._calculate_port_pos_on_line(1, self.height)
             port_meta = income_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
+        # print("add income", self.model, self.model.parent, port_meta['rel_pos'])
         income_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(income_v)
         return income_v
+
+    def remove_income(self):
+        income_v = self._income
+        del self._map_handles_port_v[income_v.handle]
+        self._income = None
+        self._ports.remove(income_v.port)
+        self._handles.remove(income_v.handle)
+
+        if income_v in self.port_constraints:
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(income_v))
 
     def add_outcome(self, outcome_m):
         outcome_v = OutcomeView(outcome_m, self)
@@ -620,6 +663,7 @@ class StateView(Element):
 
         port_meta = outcome_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
+            # print("generate rel_pos")
             if outcome_m.outcome.outcome_id < 0:
                 # Position aborted/preempted in upper right corner
                 outcome_v.side = SnappedSide.TOP
@@ -633,6 +677,7 @@ class StateView(Element):
                 number_of_outcome = [o.model for o in self.outcomes if o.model.outcome.outcome_id >= 0].index(outcome_m) + 1
                 pos_y = self._calculate_port_pos_on_line(number_of_outcome, self.height)
             port_meta = outcome_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
+        # print("add outcome", self.model, self.model.parent, port_meta['rel_pos'])
         outcome_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(outcome_v)
 
@@ -642,8 +687,9 @@ class StateView(Element):
         self._ports.remove(outcome_v.port)
         self._handles.remove(outcome_v.handle)
 
+        self.canvas.remove_port(outcome_v)
         if outcome_v in self.port_constraints:
-            self.canvas.solver.remove_constraint(self.port_constraints[outcome_v])
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(outcome_v))
 
     def add_input_port(self, port_m):
         input_port_v = InputPortView(self, port_m)
@@ -655,14 +701,14 @@ class StateView(Element):
 
         port_meta = port_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
-            # print "generate rel_pos"
+            # print("generate rel_pos")
             # Distribute input ports on the left side of the state, starting from bottom
             input_port_v.side = SnappedSide.LEFT
             number_of_input = self.model.input_data_ports.index(port_m) + 1
             pos_x = 0
             pos_y = self.height - self._calculate_port_pos_on_line(number_of_input, self.height)
             port_meta = port_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
-        # print "add input_port", self.model, self.model.parent, port_meta['rel_pos']
+        # print("add input_port", self.model, self.model.parent, port_meta['rel_pos'])
         input_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(input_port_v)
 
@@ -672,8 +718,9 @@ class StateView(Element):
         self._ports.remove(input_port_v.port)
         self._handles.remove(input_port_v.handle)
 
+        self.canvas.remove_port(input_port_v)
         if input_port_v in self.port_constraints:
-            self.canvas.solver.remove_constraint(self.port_constraints[input_port_v])
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(input_port_v))
 
     def add_output_port(self, port_m):
         output_port_v = OutputPortView(self, port_m)
@@ -686,13 +733,13 @@ class StateView(Element):
         port_meta = port_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
             # Distribute output ports on the right side of the state, starting from bottom
-            # print "generate rel_pos"
+            # print("generate rel_pos")
             output_port_v.side = SnappedSide.RIGHT
             number_of_output = self.model.output_data_ports.index(port_m) + 1
             pos_x = self.width
             pos_y = self.height - self._calculate_port_pos_on_line(number_of_output, self.height)
             port_meta = port_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
-        # print "add output_port", self.model, self.model.parent, port_meta['rel_pos']
+        # print("add output_port", self.model, self.model.parent, port_meta['rel_pos'])
         output_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(output_port_v)
 
@@ -702,8 +749,9 @@ class StateView(Element):
         self._ports.remove(output_port_v.port)
         self._handles.remove(output_port_v.handle)
 
+        self.canvas.remove_port(output_port_v)
         if output_port_v in self.port_constraints:
-            self.canvas.solver.remove_constraint(self.port_constraints[output_port_v])
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(output_port_v))
 
     def add_scoped_variable(self, scoped_variable_m):
         scoped_variable_port_v = ScopedVariablePortView(self, scoped_variable_m)
@@ -718,7 +766,7 @@ class StateView(Element):
         port_meta = scoped_variable_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
             # Distribute scoped variables on the top side of the state, starting from left
-            # print "generate rel_pos"
+            # print("generate rel_pos")
             scoped_variable_port_v.side = SnappedSide.BOTTOM
 
             number_of_scoped_var = self.model.scoped_variables.index(scoped_variable_m) + 1
@@ -726,7 +774,7 @@ class StateView(Element):
                                                      port_width=self.border_width * 4)
             pos_y = self.height
             port_meta = scoped_variable_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
-        # print "add scoped_variable", self.model, self.model.parent, port_meta['rel_pos']
+        # print("add scoped_variable", self.model, self.model.parent, port_meta['rel_pos'])
         scoped_variable_port_v.handle.pos = port_meta['rel_pos']
 
         self.add_rect_constraint_for_port(scoped_variable_port_v)
@@ -737,8 +785,9 @@ class StateView(Element):
         self._ports.remove(scoped_variable_port_v.port)
         self._handles.remove(scoped_variable_port_v.handle)
 
+        self.canvas.remove_port(scoped_variable_port_v)
         if scoped_variable_port_v in self.port_constraints:
-            self.canvas.solver.remove_constraint(self.port_constraints[scoped_variable_port_v])
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(scoped_variable_port_v))
 
     def add_rect_constraint_for_port(self, port):
         constraint = PortRectConstraint((self.handles()[NW].pos, self.handles()[SE].pos), port.pos, port)
@@ -766,6 +815,7 @@ class StateView(Element):
         return pos
 
     def resize_all_children(self, old_size, paste=False):
+
         def calc_new_rel_pos(old_rel_pos, old_parent_size, new_parent_size):
             new_rel_pos_x = old_rel_pos[0] * new_parent_size[0] / old_parent_size[0]
             new_rel_pos_y = old_rel_pos[1] * new_parent_size[1] / old_parent_size[1]
@@ -784,6 +834,9 @@ class StateView(Element):
                 item.update_minimum_size_of_children()
 
         def resize_state_v(state_v, old_state_size, new_state_size, use_meta_data):
+
+            state_v.set_enable_flag_keep_rect_within_constraints(enable=False)
+
             width_factor = float(new_state_size[0]) / old_state_size[0]
             height_factor = float(new_state_size[1]) / old_state_size[1]
 
@@ -796,10 +849,11 @@ class StateView(Element):
             name_v = state_v.name_view
             if use_meta_data:
                 old_name_size = state_v.model.get_meta_data_editor()['name']['size']
+                old_name_rel_pos = state_v.model.get_meta_data_editor()['name']['rel_pos']
             else:
                 old_name_size = (name_v.width, name_v.height)
+                old_name_rel_pos = name_v.position
             new_name_size = (old_name_size[0] * width_factor, old_name_size[1] * height_factor)
-            old_name_rel_pos = state_v.model.get_meta_data_editor()['name']['rel_pos']
             new_name_rel_pos = calc_new_rel_pos(old_name_rel_pos, old_state_size, new_state_size)
             set_item_properties(name_v, new_name_size, new_name_rel_pos)
 
@@ -810,6 +864,8 @@ class StateView(Element):
                     old_child_size = (child_state_v.width, child_state_v.height)
 
                 new_child_size = (old_child_size[0] * width_factor, old_child_size[1] * height_factor)
+                new_child_size = (max(new_child_size[0], child_state_v.min_width),
+                                  max(new_child_size[1], child_state_v.min_height))
                 resize_state_v(child_state_v, old_child_size, new_child_size, use_meta_data)
 
             # Set new port view properties
@@ -832,8 +888,19 @@ class StateView(Element):
                 state_copy_v = self.canvas.get_view_for_model(state_v.model.state_copy)
                 resize_child_state_v(state_copy_v)
 
+            state_v.set_enable_flag_keep_rect_within_constraints(enable=True)
+
+        # Deactivate KeepRectangleWithin constraints for child states
+        self.set_enable_flag_keep_rect_within_constraints(enable=False)
+        # Now we can solve the KeepRectangleWithin constraints of this state without being called recursively
+        # We also force the solving of the minimal size constraints
+        if self.parent:
+            self.view.canvas.resolve_constraint((self.parent.keep_rect_constraints[self], self._c_min_w, self._c_min_h))
+        else:
+            self.view.canvas.resolve_constraint((self._c_min_w, self._c_min_h))
         new_size = (self.width, self.height)
         resize_state_v(self, old_size, new_size, paste)
+
 
 
 class NameView(Element):
@@ -853,7 +920,9 @@ class NameView(Element):
         self._view = None
 
         self._image_cache = ImageCache(multiplicator=1.5)
-        self._value_cache = ValueCache()
+
+    def remove(self):
+        self.canvas.remove(self)
 
     def update_minimum_size(self):
         min_side_length = min(self.parent.width, self.parent.height) / constants.MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO
@@ -868,7 +937,7 @@ class NameView(Element):
 
     @name.setter
     def name(self, name):
-        assert isinstance(name, basestring)
+        assert isinstance(name, string_types)
         self._name = name
 
     @property
@@ -905,20 +974,22 @@ class NameView(Element):
         # logger.info("name rel_pos {}".format(name_meta['rel_pos']))
         # logger.info("name size {}".format(name_meta['size']))
         self.position = name_meta['rel_pos']
+        # print("name pos from meta", name_meta['rel_pos'])
         self.width = name_meta['size'][0]
         self.height = name_meta['size'][1]
 
     def draw(self, context):
         # Do not draw if
         # * state (or its parent) is currently moved
+        # * core element is no longer existing (must have just been removed)
         # * is root state of a library (drawing would hide the LibraryState itself)
-        if self.moving or self.parent.model.state.is_root_state_of_library:
+        if not self.model.state or self.moving or self.parent.model.state.is_root_state_of_library:
             return
 
         width = self.width
         height = self.height
         view_width, view_height = self.view.get_matrix_i2v(self).transform_distance(width, height)
-        if min(view_width, view_height) < constants.MINIMUM_SIZE_FOR_DISPLAY:
+        if min(view_width, view_height) < constants.MINIMUM_NAME_SIZE_FOR_DISPLAY and not context.draw_all:
             return
         font_transparency = self.transparency
 
@@ -934,12 +1005,10 @@ class NameView(Element):
         from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
-            # print "from cache"
             self._image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
         else:
-            # print "draw"
             c = self._image_cache.get_context_for_image(current_zoom)
 
             if context.selected:
@@ -950,12 +1019,16 @@ class NameView(Element):
                 c.set_source_rgba(0, 0, 0, 0)
                 c.stroke()
 
-            c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+            # c.set_antialias(Antialias.GOOD)
 
-            layout = c.create_layout()
-            layout.set_wrap(WRAP_WORD)
-            layout.set_width(int(width) * SCALE)
-            layout.set_text(self.name)
+            cairo_context = c
+            if isinstance(c, CairoBoundingBoxContext):
+                cairo_context = c._cairo
+
+            layout = PangoCairo.create_layout(cairo_context)
+            layout.set_wrap(WrapMode.WORD)
+            layout.set_width(int(round(BASE_WIDTH * SCALE)))
+            layout.set_text(self.name, -1)
 
             def set_font_description(font_size):
                 font = FontDescription(font_name + " " + str(font_size))
@@ -963,24 +1036,63 @@ class NameView(Element):
 
             font_name = constants.INTERFACE_FONT
 
-            font_size_parameters = {"text": self.name, "width": width, "height": height}
-            font_size = self._value_cache.get_value("font_size", font_size_parameters)
+            zoom_scale = BASE_WIDTH / width
+            scaled_height = height * zoom_scale
+            font_size_parameters = {"text": self.name, "height": scaled_height}
+            font_size = self.view.value_cache.get_value("font_size", font_size_parameters)
 
             if font_size:
                 set_font_description(font_size)
             else:
-                font_size = height * 0.8
-                set_font_description(font_size)
-                pango_size = (width * SCALE, height * SCALE)
-                while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
-                    font_size *= 0.9
-                    set_font_description(font_size)
-                self._value_cache.store_value("font_size", font_size, font_size_parameters)
+                available_size = (BASE_WIDTH * SCALE, scaled_height * SCALE)
+                word_count = len(self.name.split(" "))
+                # Set max font size to available height
+                max_font_size = scaled_height * 0.9
+                # Calculate minimum size that is still to be drawn
+                min_name_height = max_font_size / 10.
+                # Calculate line height if all words are wrapped
+                line_height = max_font_size / word_count
+                # Use minimum if previous values and add safety margin
+                min_font_size = min(line_height * 0.5, min_name_height)
+
+                # Iteratively calculate font size by always choosing the average of the maximum and minimum size
+                working_font_size = None
+                current_font_size = (max_font_size + min_font_size) / 2.
+                set_font_description(current_font_size)
+
+                while True:
+                    logical_extents = layout.get_size()
+                    width_factor = logical_extents[0] / available_size[0]
+                    height_factor = logical_extents[1] / available_size[1]
+                    max_factor = max(width_factor, height_factor)
+
+                    if max_factor > 1:  # font size too large
+                        max_font_size = current_font_size
+                    elif max_factor > 0.9:  # font size fits!
+                        break
+                    else:  # font size too small
+                        # Nevertheless store the font size in case we do not find anything better
+                        if not working_font_size or current_font_size > working_font_size:
+                            working_font_size = current_font_size
+                        min_font_size = current_font_size
+                    if 0.99 < min_font_size / max_font_size < 1.01:  # Stop criterion: changes too small
+                        if working_font_size:
+                            current_font_size = working_font_size
+                            set_font_description(current_font_size)
+                        break
+                    current_font_size = (max_font_size + min_font_size) / 2.
+                    set_font_description(current_font_size)
+                self.view.value_cache.store_value("font_size", current_font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
-            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
-            c.update_layout(layout)
-            c.show_layout(layout)
+            cairo_context.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
+            c.save()
+            # The pango layout has a fixed width and needs to be fitted to the context size
+            cairo_context.scale(1. / zoom_scale, 1. / zoom_scale)
+
+            PangoCairo.update_layout(cairo_context, layout)
+            PangoCairo.show_layout(cairo_context, layout)
+            c.restore()
 
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)

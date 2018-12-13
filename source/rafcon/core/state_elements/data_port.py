@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -17,8 +17,9 @@
    :synopsis: A module to represent data ports the state machine
 
 """
+from future.utils import string_types
 from enum import Enum
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.id_generator import generate_data_port_id
 from rafcon.core.state_elements.state_element import StateElement
@@ -58,7 +59,7 @@ class DataPort(StateElement):
         self._was_forced_type = force_type
         if data_port_id is None:
             self._data_port_id = generate_data_port_id([])
-            logger.warn("Look out: Instantiation of a data port without specifying its id is not recommended! The "
+            logger.warning("Look out: Instantiation of a data port without specifying its id is not recommended! The "
                         "add_data_port* functions of the State/ContainerState class should be used!")
         else:
             self._data_port_id = data_port_id
@@ -115,7 +116,7 @@ class DataPort(StateElement):
         }
 
     #########################################################################
-    # Properties for all class fields that must be observed by gtkmvc
+    # Properties for all class fields that must be observed by gtkmvc3
     #########################################################################
 
     @property
@@ -136,14 +137,14 @@ class DataPort(StateElement):
     @lock_state_machine
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, basestring):
-            raise TypeError("Name must be of type str")
+        if not isinstance(name, string_types):
+            raise TypeError("Name must be a string")
 
         if len(name) < 1:
             raise ValueError("Name cannot be empty")
 
         if name == "error":
-            logger.warn("The name of the created data port is 'error'. "
+            logger.warning("The name of the created data port is 'error'. "
                         "This name is internally used for error propagation as well. "
                         "Only proceed if you know, what you are doing, otherwise rename the data port.")
         self._change_property_with_validity_check('_name', name)
@@ -205,9 +206,15 @@ class DataPort(StateElement):
         else:
 
             if old_data_type.__name__ == "float" and data_type == "int":
-                self._default_value = int(default_value)
+                if self.default_value:
+                    self._default_value = int(default_value)
+                else:
+                    self._default_value = 0
             elif old_data_type.__name__ == "int" and data_type == "float":
-                self._default_value = float(default_value)
+                if self.default_value:
+                    self._default_value = float(default_value)
+                else:
+                    self._default_value = 0.0
             else:
                 self._default_value = None
 
@@ -226,7 +233,7 @@ class DataPort(StateElement):
 
         if default_value is not None:
             # If the default value is passed as string, we have to convert it to the data type
-            if isinstance(default_value, basestring):
+            if isinstance(default_value, string_types):
                 if len(default_value) > 1 and default_value[0] == '$':
                     return default_value
                 if default_value == "None":

@@ -7,11 +7,14 @@
 #
 # Contributors:
 # Franz Steinmetz <franz.steinmetz@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+import hashlib
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Signal
 
-from gtkmvc import ModelMT, Signal
-
+from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
 
 
@@ -110,3 +113,31 @@ class MetaModel(ModelMT):
                 meta_gui = meta_gui[key]
 
         return self.get_meta_data_editor(for_gaphas=from_gaphas)
+
+    def meta_data_hash(self, obj_hash=None):
+        """Creates a hash with the meta data of the model
+
+        :param obj_hash: The hash object (see Python hashlib)
+        :return: The updated hash object
+        """
+        if obj_hash is None:
+            obj_hash = hashlib.sha256()
+        self.update_meta_data_hash(obj_hash)
+        return obj_hash
+
+    def update_meta_data_hash(self, obj_hash):
+        """Should be implemented by derived classes to update the hash with their meta data fields
+
+        :param obj_hash: The hash object (see Python hashlib)
+        """
+        Hashable.update_hash_from_dict(obj_hash, self.meta)
+
+    def prepare_destruction(self):
+        """Prepares the model for destruction
+
+        """
+        self._Observer__PROP_TO_METHS.clear()
+        self._Observer__METH_TO_PROPS.clear()
+        self._Observer__PAT_TO_METHS.clear()
+        self._Observer__METH_TO_PAT.clear()
+        self._Observer__PAT_METH_TO_KWARGS.clear()

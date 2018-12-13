@@ -1,9 +1,10 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.20.0 -->
 <interface>
-  <requires lib="gtk+" version="2.16"/>
-  <!-- interface-naming-policy project-wide -->
+  <requires lib="gtk+" version="3.20"/>
   <object class="GtkTable" id="network_connections_view">
     <property name="visible">True</property>
+    <property name="can_focus">False</property>
     <property name="n_rows">2</property>
     <property name="n_columns">3</property>
     <child>
@@ -13,7 +14,7 @@
         <property name="can_focus">False</property>
         <property name="receives_default">True</property>
         <property name="border_width">5</property>
-        <signal name="clicked" handler="on_udp_register_button_clicked"/>
+        <signal name="clicked" handler="on_udp_register_button_clicked" swapped="no"/>
       </object>
       <packing>
         <property name="x_options">GTK_FILL</property>
@@ -27,7 +28,7 @@
         <property name="can_focus">False</property>
         <property name="receives_default">True</property>
         <property name="border_width">5</property>
-        <signal name="clicked" handler="on_tcp_connect_button_clicked"/>
+        <signal name="clicked" handler="on_tcp_connect_button_clicked" swapped="no"/>
       </object>
       <packing>
         <property name="top_attach">1</property>
@@ -39,8 +40,9 @@
     <child>
       <object class="GtkLabel" id="udp_connection_label">
         <property name="visible">True</property>
-        <property name="xalign">1</property>
+        <property name="can_focus">False</property>
         <property name="label" translatable="yes">Registered:</property>
+        <property name="xalign">1</property>
       </object>
       <packing>
         <property name="left_attach">1</property>
@@ -51,8 +53,9 @@
     <child>
       <object class="GtkLabel" id="tcp_connection_label">
         <property name="visible">True</property>
-        <property name="xalign">1</property>
+        <property name="can_focus">False</property>
         <property name="label" translatable="yes">Connected:</property>
+        <property name="xalign">1</property>
       </object>
       <packing>
         <property name="left_attach">1</property>
@@ -65,6 +68,7 @@
     <child>
       <object class="GtkLabel" id="udp_connection_registered_label">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="label" translatable="yes">NO</property>
       </object>
       <packing>
@@ -76,6 +80,7 @@
     <child>
       <object class="GtkLabel" id="tcp_connection_connected_label">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
         <property name="label" translatable="yes">NO</property>
       </object>
       <packing>

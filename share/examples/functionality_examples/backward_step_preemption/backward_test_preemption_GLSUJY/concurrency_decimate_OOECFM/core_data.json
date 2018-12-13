@@ -1,0 +1,168 @@
+{
+    "__jsonqualname__": "rafcon.core.states.preemptive_concurrency_state.PreemptiveConcurrencyState", 
+    "data_flows": {
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 1, 
+            "from_key": 16, 
+            "from_state": "OOECFM", 
+            "to_key": 1, 
+            "to_state": "YVNWJU"
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 2, 
+            "from_key": 12, 
+            "from_state": "YVNWJU", 
+            "to_key": 19, 
+            "to_state": "OOECFM"
+        }, 
+        "3": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 3, 
+            "from_key": 17, 
+            "from_state": "OOECFM", 
+            "to_key": 1, 
+            "to_state": "GOLRUX"
+        }, 
+        "4": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 4, 
+            "from_key": 12, 
+            "from_state": "GOLRUX", 
+            "to_key": 20, 
+            "to_state": "OOECFM"
+        }, 
+        "27": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 27, 
+            "from_key": 18, 
+            "from_state": "OOECFM", 
+            "to_key": 1, 
+            "to_state": "TTJNXL"
+        }, 
+        "28": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 28, 
+            "from_key": 12, 
+            "from_state": "TTJNXL", 
+            "to_key": 21, 
+            "to_state": "OOECFM"
+        }
+    }, 
+    "description": null, 
+    "input_data_ports": {
+        "16": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 16, 
+            "data_type": {
+                "__type__": "__builtin__.int"
+            }, 
+            "default_value": 10, 
+            "name": "beer_number_in"
+        }, 
+        "17": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 17, 
+            "data_type": {
+                "__type__": "__builtin__.int"
+            }, 
+            "default_value": 10, 
+            "name": "wine_number_in"
+        }, 
+        "18": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.InputDataPort", 
+            "data_port_id": 18, 
+            "data_type": {
+                "__type__": "__builtin__.int"
+            }, 
+            "default_value": 10, 
+            "name": "whiskey_number_in"
+        }
+    }, 
+    "name": "concurrency decimate", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "beer_first", 
+            "outcome_id": 0
+        }, 
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "wine_first", 
+            "outcome_id": 1
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "whiskey_first", 
+            "outcome_id": 2
+        }
+    }, 
+    "output_data_ports": {
+        "19": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.OutputDataPort", 
+            "data_port_id": 19, 
+            "data_type": {
+                "__type__": "__builtin__.int"
+            }, 
+            "default_value": null, 
+            "name": "beer_number_out"
+        }, 
+        "20": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.OutputDataPort", 
+            "data_port_id": 20, 
+            "data_type": {
+                "__type__": "__builtin__.int"
+            }, 
+            "default_value": null, 
+            "name": "wine_number_out"
+        }, 
+        "21": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_port.OutputDataPort", 
+            "data_port_id": 21, 
+            "data_type": {
+                "__type__": "__builtin__.int"
+            }, 
+            "default_value": null, 
+            "name": "whiskey_number_out"
+        }
+    }, 
+    "scoped_variables": {}, 
+    "state_id": "OOECFM", 
+    "transitions": {
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "YVNWJU", 
+            "to_outcome": 2, 
+            "to_state": "OOECFM", 
+            "transition_id": 1
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "GOLRUX", 
+            "to_outcome": 1, 
+            "to_state": "OOECFM", 
+            "transition_id": 2
+        }, 
+        "3": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "TTJNXL", 
+            "to_outcome": 0, 
+            "to_state": "OOECFM", 
+            "transition_id": 3
+        }
+    }
+}

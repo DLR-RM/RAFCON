@@ -1,6 +1,7 @@
 {
     "creation_time": "2015-04-28 14:53:40", 
-    "last_update": "2017-01-11 10:51:32", 
-    "root_state_storage_id": "99 Bottles of Beer_GLSUJY", 
-    "version": "None"
+    "last_update": "2018-10-26 08:51:06", 
+    "root_state_storage_id": "99_Bottles_of_Beer_GLSUJY", 
+    "state_machine_version": "None", 
+    "used_rafcon_version": "0.12.24"
 }

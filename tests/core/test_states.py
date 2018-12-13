@@ -1,3 +1,4 @@
+from builtins import str
 from pytest import raises
 
 # state machine
@@ -75,6 +76,12 @@ def test_create_state(caplog):
 
     assert_logger_warnings_and_errors(caplog)
 
+    a = ExecutionState("test", state_id=10)
+    b = ExecutionState("test", state_id=10)
+    
+    assert a == b
+    assert a is not b
+
 
 def test_create_container_state(caplog):
 
@@ -90,10 +97,11 @@ def test_create_container_state(caplog):
     container.add_state(state1)
     assert len(container.states) == 1
 
-    with raises(AttributeError):
-        # As the ID of two states is identical, the add method should raise an AttributeError
-        container.add_state(ExecutionState("test_execution_state", state_id=state1.state_id))
-        assert len(container.states) == 1
+    # As the ID of two states is identical, the add method should adapt the state_id and return the new state_id
+    new_state_id = container.add_state(ExecutionState("test_execution_state", state_id=state1.state_id))
+    assert len(container.states) == 2
+    assert not new_state_id == state1.state_id
+    container.remove_state(new_state_id)
 
     state2 = ExecutionState("2nd State", state_id=container.state_id)
     logger.debug("Old state id: {0}".format(str(state2.state_id)))
@@ -204,7 +212,7 @@ def test_create_container_state(caplog):
 
     barrier_state_id = container.add_state(BarrierConcurrencyState())
     with raises(AttributeError):
-        container.states[barrier_state_id].remove(container.states[barrier_state_id].states.values()[0])
+        container.states[barrier_state_id].remove(list(container.states[barrier_state_id].states.values())[0])
     container.remove_state(barrier_state_id)
     ###########################################
 

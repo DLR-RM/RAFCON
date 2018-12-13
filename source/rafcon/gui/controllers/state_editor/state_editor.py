@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -39,6 +39,7 @@ from rafcon.gui.views.state_editor.state_editor import StateEditorView
 from rafcon.gui.config import global_gui_config
 
 from rafcon.utils import log
+from rafcon.utils import plugins
 logger = log.get_logger(__name__)
 
 
@@ -56,6 +57,10 @@ class StateEditorController(ExtendedController):
         assert isinstance(view, StateEditorView)
         ExtendedController.__init__(self, model, view)
 
+        if isinstance(model, LibraryStateModel) and not model.state_copy_initialized:
+            model.enforce_generation_of_state_copy_model()
+            logger.info("Respective state editor's state is most likely not drawn in the graphical editor. -> {0}"
+                        "".format(model))
         sv_and_source_script_state_m = model.state_copy if isinstance(model, LibraryStateModel) else model
 
         self.add_controller('properties_ctrl', StateOverviewController(model, view.properties_view))
@@ -77,6 +82,8 @@ class StateEditorController(ExtendedController):
         if not isinstance(model, ContainerStateModel) and not isinstance(model, LibraryStateModel) or \
                 isinstance(model, LibraryStateModel) and not isinstance(model.state_copy, ContainerStateModel):
             self.add_controller('source_ctrl', SourceEditorController(sv_and_source_script_state_m, view.source_view))
+        else:
+            view.source_view.get_top_widget().destroy()
         self.add_controller('semantic_data_ctrl', SemanticDataEditorController(model, view.semantic_data_view))
 
     def register_view(self, view):
@@ -84,15 +91,19 @@ class StateEditorController(ExtendedController):
 
         Can be used e.g. to connect signals. Here, the destroy signal is connected to close the application
         """
+        super(StateEditorController, self).register_view(view)
+        view.prepare_the_labels()  # the preparation of the labels is done here to take into account plugin hook changes
         view['add_input_port_button'].connect('clicked', self.inputs_ctrl.on_add)
         view['add_output_port_button'].connect('clicked', self.outputs_ctrl.on_add)
-        view['add_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_add)
+        if isinstance(self.model, ContainerStateModel):
+            view['add_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_add)
 
         view['remove_input_port_button'].connect('clicked', self.inputs_ctrl.on_remove)
         view['remove_output_port_button'].connect('clicked', self.outputs_ctrl.on_remove)
-        view['remove_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_remove)
+        if isinstance(self.model, ContainerStateModel):
+            view['remove_scoped_variable_button'].connect('clicked', self.scopes_ctrl.on_remove)
 
-        if isinstance(self.model, LibraryStateModel) or self.model.state.get_library_root_state():
+        if isinstance(self.model, LibraryStateModel) or self.model.state.get_next_upper_library_root_state():
             view['add_input_port_button'].set_sensitive(False)
             view['remove_input_port_button'].set_sensitive(False)
             view['add_output_port_button'].set_sensitive(False)
@@ -141,6 +152,8 @@ class StateEditorController(ExtendedController):
         if isinstance(self.model, ContainerStateModel):
             self.scopes_ctrl.reload_scoped_variables_list_store()
 
+        plugins.run_hook("post_state_editor_register_view", self)
+
     def rename(self):
         state_overview_controller = self.get_controller('properties_ctrl')
         state_overview_controller.rename()
@@ -170,11 +183,19 @@ class StateEditorController(ExtendedController):
         depends on the kind of model. Therefore, we have to destroy this editor and open a new one with the new model.
         """
         msg = info['arg']
-        # print self.__class__.__name__, "state_type_changed check", info
+        # print(self.__class__.__name__, "state_type_changed check", info)
         if msg.action in ['change_state_type', 'change_root_state_type'] and msg.after:
-            # print self.__class__.__name__, "state_type_changed"
+            # print(self.__class__.__name__, "state_type_changed")
             import rafcon.gui.singleton as gui_singletons
             msg = info['arg']
             new_state_m = msg.affected_models[-1]
             states_editor_ctrl = gui_singletons.main_window_controller.get_controller('states_editor_ctrl')
             states_editor_ctrl.recreate_state_editor(self.model, new_state_m)
+
+    @ExtendedController.observe("destruction_signal", signal=True)
+    def state_destruction(self, model, prop_name, info):
+        """ Close state editor when state is being destructed """
+        import rafcon.gui.singleton as gui_singletons
+        states_editor_ctrl = gui_singletons.main_window_controller.get_controller('states_editor_ctrl')
+        state_identifier = states_editor_ctrl.get_state_identifier(self.model)
+        states_editor_ctrl.close_page(state_identifier, delete=True)

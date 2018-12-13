@@ -1,3 +1,14 @@
+# Copyright (C) 2017-2018 DLR
+#
+# All rights reserved. This program and the accompanying materials are made
+# available under the terms of the Eclipse Public License v1.0 which
+# accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+#
+# Contributors:
+# Franz Steinmetz <franz.steinmetz@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
+
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController
 from rafcon.gui.utils.notification_overview import NotificationOverview, \
     is_execution_status_update_notification_from_state_machine_model, \
@@ -70,7 +81,7 @@ class LinkageListController(ListViewController):
 
     def check_info_on_no_update_flags(self, info):
         """Stop updates while multi-actions"""
-        #TODO that could need a second clean up
+        # TODO that could need a second clean up
         # avoid updates because of state destruction
         if 'before' in info and info['method_name'] == "remove_state":
             if info.instance is self.model.state:
@@ -78,7 +89,7 @@ class LinkageListController(ListViewController):
             else:
                 # if the state it self is removed lock the widget to never run updates and relieve all models
                 removed_state_id = info.args[1] if len(info.args) > 1 else info.kwargs['state_id']
-                if  removed_state_id == self.model.state.state_id or \
+                if removed_state_id == self.model.state.state_id or \
                         not self.model.state.is_root_state and removed_state_id == self.model.parent.state.state_id:
                     self.no_update_self_or_parent_state_destruction = True
                     self.relieve_all_models()
@@ -105,7 +116,7 @@ class LinkageListController(ListViewController):
             instance_is_self = self.model.state is overview['instance'][-1]
             instance_is_parent = self.model.parent and self.model.parent.state is overview['instance'][-1]
             instance_is_parent_parent = self.model.parent and self.model.parent.parent and self.model.parent.parent.state is overview['instance'][-1]
-            # print "no update flag: ", True if 'before' in info and (instance_is_self or instance_is_parent or instance_is_parent_parent) else False
+            # print("no update flag: ", True if 'before' in info and (instance_is_self or instance_is_parent or instance_is_parent_parent) else False)
             if instance_is_self or instance_is_parent or instance_is_parent_parent:
                 self.no_update = True if 'before' in info else False
 
@@ -129,12 +140,16 @@ class LinkageListController(ListViewController):
     @ListViewController.observe("action_signal", signal=True)
     def notification_state_type_changed(self, model, prop_name, info):
         msg = info['arg']
-        # print self.__class__.__name__, "state_type_changed check", info
+        # print(self.__class__.__name__, "state_type_changed check", info)
         if msg.action in ['change_state_type', 'change_root_state_type', 'group_states', 'ungroup_state'] and msg.after:
-            # print self.__class__.__name__, msg.action
+            # print(self.__class__.__name__, msg.action)
             if model not in self._model_observed:
                 self.relieve_model(model)
             self.register_models_to_observe()
+
+        # TODO think about to remove this -> this a work around for the recreate state-editor assert __observer_threads
+        if msg.action in ['change_state_type', 'change_root_state_type'] and not msg.after:
+            self.relieve_all_models()
 
     @ListViewController.observe("state_machine", before=True)
     def before_notification_state_machine_observation_control(self, model, prop_name, info):
@@ -143,15 +158,6 @@ class LinkageListController(ListViewController):
             return
         # do not update while multi-actions
         self.check_info_on_no_update_flags(info)
-
-    @ListViewController.observe("root_state", assign=True)
-    def root_state_changed(self, model, prop_name, info):
-        """ Relieve all observed models to avoid updates on old root state.
-        """
-        # TODO may re-observe if the states-editor supports this feature
-        if self.model.state.is_root_state:
-            # self.relieve_all_models()
-            self.destroy()
 
     def store_debug_log_file(self, string):
         with open('{1}/{0}_debug_log_file.txt'.format(self.__class__.__name__, RAFCON_TEMP_PATH_BASE), 'a+') as f:

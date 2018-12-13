@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -19,12 +19,14 @@
 
 """
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
+from builtins import str
 
 from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers.label import react_to_event
+from rafcon.gui.helpers.meta_data import check_gaphas_state_machine_meta_data_consistency
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
 from rafcon.gui.singleton import global_gui_config
@@ -52,7 +54,7 @@ class ModificationHistoryTreeController(ExtendedController):
         self.tree_folded = False
 
         assert self._mode in ['trail', 'branch']
-        self.history_tree_store = gtk.TreeStore(str, str, str, str, str, str, gobject.TYPE_PYOBJECT, str, str)
+        self.history_tree_store = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_PYOBJECT, GObject.TYPE_STRING, GObject.TYPE_STRING)
         if view is not None:
             view['history_tree'].set_model(self.history_tree_store)
         view['history_tree'].set_tooltip_column(8)
@@ -65,6 +67,7 @@ class ModificationHistoryTreeController(ExtendedController):
         self.doing_update = False
         self.no_cursor_observation = False
         self.next_activity_focus_self = True
+        self.on_toggle_mode_check_gaphas_view_is_meta_data_consistent = True
 
         self.register()
 
@@ -100,11 +103,14 @@ class ModificationHistoryTreeController(ExtendedController):
                                          self._selected_sm_model.state_machine.file_system_path))
         else:
             if self.__my_selected_sm_id is not None:
+                self.doing_update = True
                 self.history_tree_store.clear()
+                self.doing_update = False
             self.__my_selected_sm_id = None
             self._selected_sm_model = None
 
     def register_view(self, view):
+        super(ModificationHistoryTreeController, self).register_view(view)
         view['history_tree'].connect('cursor-changed', self.on_cursor_changed)
         view['undo_button'].connect('clicked', self.on_undo_button_clicked)
         view['redo_button'].connect('clicked', self.on_redo_button_clicked)
@@ -142,6 +148,8 @@ class ModificationHistoryTreeController(ExtendedController):
             self._mode = 'branch'
         else:
             self._mode = 'trail'
+        if self.on_toggle_mode_check_gaphas_view_is_meta_data_consistent:
+            check_gaphas_state_machine_meta_data_consistency(self._selected_sm_model, with_logger_messages=True)
         logger.info("modification history mode: {0}".format(self._mode))
         self.update(None, None, None)
 
@@ -175,7 +183,7 @@ class ModificationHistoryTreeController(ExtendedController):
         :rtype: bool
         """
         # TODO re-organize as request to controller which holds source-editor-view or any parent to it
-        for key, tab in gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
+        for key, tab in gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.items():
             if tab['controller'].get_controller('source_ctrl') is not None and \
                     react_to_event(self.view, tab['controller'].get_controller('source_ctrl').view.textview,
                                    (key_value, modifier_mask)) or \
@@ -196,7 +204,7 @@ class ModificationHistoryTreeController(ExtendedController):
         :rtype: bool
         """
         # TODO re-organize as request to controller which holds source-editor-view or any parent to it
-        for key, tab in gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.iteritems():
+        for key, tab in gui_singletons.main_window_controller.get_controller('states_editor_ctrl').tabs.items():
             if tab['controller'].get_controller('source_ctrl') is not None and \
                     react_to_event(self.view, tab['controller'].get_controller('source_ctrl').view.textview,
                                    (key_value, modifier_mask)) or \
@@ -212,7 +220,7 @@ class ModificationHistoryTreeController(ExtendedController):
 
     @ExtendedController.observe("modifications", after=True)
     def update(self, model, prop_name, info):
-        """ The method updates the history (a gtk.TreeStore) which is the model of respective TreeView.
+        """ The method updates the history (a Gtk.TreeStore) which is the model of respective TreeView.
         It functionality is strongly depends on a consistent history-tree hold by a ChangeHistory-Class.
         """
         # logger.debug("History changed %s\n%s\n%s" % (model, prop_name, info))
@@ -250,12 +258,12 @@ class ModificationHistoryTreeController(ExtendedController):
                 else:
                     logger.warning("no parameters defined for signal: {0}".format(action.before_overview['signal']))
                     # for index, signal in enumerate(action.before_overview['signal']):
-                    #     print "\n", index, signal
+                    #     print("\n", index, signal)
             else:
                 for index, value in enumerate(action.before_overview['args'][-1]):
                     if not index == 0:
                         parameters.append(str(value))
-            for name, value in action.before_overview['kwargs'][-1].iteritems():
+            for name, value in action.before_overview['kwargs'][-1].items():
                 parameters.append("{0}: {1}".format(name, value))
 
             if hasattr(action, 'action_type') and action.action_type == "script_text" and hasattr(action, 'script_diff'):
@@ -300,7 +308,7 @@ class ModificationHistoryTreeController(ExtendedController):
                 return
             next_id = version_id
             while next_id is not None:
-                # print next_id, len(self._selected_sm_model.history.modifications.all_time_history)
+                # print(next_id, len(self._selected_sm_model.history.modifications.all_time_history))
                 version_id = next_id
                 history_tree_elem = self._selected_sm_model.history.modifications.all_time_history[next_id]
                 next_id = history_tree_elem.next_id
@@ -389,13 +397,13 @@ class ModificationHistoryTreeController(ExtendedController):
         if parent_tree_item is not None:
             used_func = self.history_tree_store.append
         history_row_iter = used_func(parent_tree_item, ('',
-                                                        version_id,  # '',  # version
+                                                        str(version_id),  # '',  # version
                                                         method_name,
-                                                        instance,
-                                                        info,
+                                                        str(instance),
+                                                        str(info),
                                                         foreground,
-                                                        model,
-                                                        parameters,
+                                                        str(model),
+                                                        str(parameters),
                                                         tool_tip))
 
         # handle expand-mode

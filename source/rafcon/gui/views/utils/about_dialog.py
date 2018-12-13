@@ -13,13 +13,14 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
+from gi.repository import Gtk
+from gi.repository import GObject
 import rafcon
 
 
-class AboutDialogView(gtk.AboutDialog):
+class AboutDialogView(Gtk.AboutDialog):
     def __init__(self):
-        gtk.AboutDialog.__init__(self)
+        super(AboutDialogView, self).__init__()
 
         self.set_program_name("RAFCON")
         self.set_version(rafcon.__version__)
@@ -28,4 +29,4 @@ class AboutDialogView(gtk.AboutDialog):
         # TODO: set copyright/license
         # self.set_copyright("Copyright: DLR")
         # self.set_license("Copyright: DLR")
-        self.set_website("https://rmintra01.robotic.dlr.de/wiki/RAFCON")
+        self.set_website("https://github.com/DLR-RM/RAFCON")

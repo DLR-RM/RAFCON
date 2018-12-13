@@ -13,7 +13,10 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import ModelMT, Signal
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Signal
+from past.builtins import map
+from builtins import next, str
 
 from rafcon.core.states.state import State
 from rafcon.core.state_elements.logical_port import Outcome
@@ -134,13 +137,13 @@ class Selection(ModelMT):
         ModelMT.__init__(self)
 
         self._selected = set()
-        self._input_data_ports = []
-        self._output_data_ports = []
-        self._outcomes = []
-        self._data_flows = []
-        self._transitions = []
-        self._states = []
-        self._scoped_variables = []
+        self._input_data_ports = set()
+        self._output_data_ports = set()
+        self._outcomes = set()
+        self._data_flows = set()
+        self._transitions = set()
+        self._states = set()
+        self._scoped_variables = set()
         self.selection_changed_signal = Signal()
         self.focus_signal = Signal()
         self.parent_signal = parent_signal

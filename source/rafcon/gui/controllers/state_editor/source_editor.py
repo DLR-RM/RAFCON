@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -18,14 +18,16 @@
 
 """
 
+from future import standard_library
+standard_library.install_aliases()
 import os
 import subprocess
-import gtk
+from gi.repository import Gtk
 import shlex
 import contextlib
 from pylint import lint
 from pylint.reporters.json import JSONReporter
-from cStringIO import StringIO
+from io import StringIO
 from astroid import MANAGER
 from rafcon.utils.resources import resource_filename
 
@@ -38,7 +40,7 @@ from rafcon.gui.singleton import state_machine_manager_model
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel
-from rafcon.gui.views.utils.editor import EditorView
+from rafcon.gui.views.state_editor.source_editor import SourceEditorView
 from rafcon.gui.utils.external_editor import AbstractExternalEditor
 
 from rafcon.utils import filesystem
@@ -62,11 +64,11 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
 
     def __init__(self, model, view):
         assert isinstance(model, AbstractStateModel)
-        assert isinstance(view, EditorView)
+        assert isinstance(view, SourceEditorView)
         lib_with_show_content = isinstance(model, LibraryStateModel) and not model.show_content()
         model = model.state_copy if lib_with_show_content else model
 
-        # unfortunately this cannot be down with super, as gtkmvc does not use super() consistently
+        # unfortunately this cannot be down with super, as gtkmvc3 does not use super() consistently
         EditorController.__init__(self, model, view, observed_method="script_text")
         AbstractExternalEditor.__init__(self)
         self.saved_initial = False
@@ -85,7 +87,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
         view['open_external_button'].set_tooltip_text("Open source in external editor. " +
                                                       global_gui_config.get_config_value('SHORTCUTS')['open_external_editor'][0])
 
-        if isinstance(self.model.state, LibraryState) or self.model.state.get_library_root_state():
+        if isinstance(self.model.state, LibraryState) or self.model.state.get_next_upper_library_root_state():
             view['pylint_check_button'].set_sensitive(False)
             view.textview.set_editable(False)
             view['apply_button'].set_sensitive(False)
@@ -110,7 +112,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
     def save_file_data(self, path):
         """ Implements the abstract method of the ExternalEditor class.
         """
-        sm = state_machine_manager_model.state_machine_manager.get_active_state_machine()
+        sm = self.model.state.get_state_machine()
         if sm.marked_dirty and not self.saved_initial:
             try:
                 # Save the file before opening it to update the applied changes. Use option create_full_path=True
@@ -143,7 +145,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
 
         """
         if isinstance(self.model.state, LibraryState):
-            logger.warn("It is not allowed to modify libraries.")
+            logger.warning("It is not allowed to modify libraries.")
             self.view.set_text("")
             return
 
@@ -151,8 +153,8 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
         # Without the loop, this function would block the GTK main loop and the log message would appear after the
         # function has finished
         # TODO: run parser in separate thread
-        while gtk.events_pending():
-            gtk.main_iteration_do()
+        while Gtk.events_pending():
+            Gtk.main_iteration_do(False)
 
         # get script
         current_text = self.view.get_text()
@@ -200,6 +202,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
                 start_iter.set_line(int(line)-1)
                 tbuffer.place_cursor(start_iter)
                 message_string += "\n\nThe line was focused in the source editor."
+                self.view.scroll_to_cursor_onscreen()
 
             # select state to show source editor
             sm_m = state_machine_manager_model.get_state_machine_model(self.model)
@@ -208,7 +211,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
 
             RAFCONButtonDialog(message_string, ["Save with errors", "Do not save"],
                                on_message_dialog_response_signal,
-                               message_type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+                               message_type=Gtk.MessageType.WARNING, parent=self.get_root_window())
         else:
             self.set_script_text(current_text)
 

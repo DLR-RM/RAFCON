@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 DLR
+# Copyright (C) 2016-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -7,15 +7,19 @@
 #
 # Contributors:
 # Franz Steinmetz <franz.steinmetz@dlr.de>
+# Lukas Becker <lukas.becker@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import os
 import time
 import threading
 
-import gtk
-from gtkmvc import ModelMT
+from gi.repository import Gtk
+from gtkmvc3.model_mt import ModelMT
 
 from rafcon.core.storage import storage
 import rafcon.core.singleton as core_singletons
@@ -23,12 +27,10 @@ import rafcon.core.singleton as core_singletons
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.utils.dialog import RAFCONCheckBoxTableDialog
-import rafcon.gui.singleton as gui_singletons
 
 from rafcon.gui.utils.constants import RAFCON_INSTANCE_LOCK_FILE_PATH
 from rafcon.utils.vividict import Vividict
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
-from rafcon.utils.i18n import _
 from rafcon.utils import log
 from rafcon.utils.storage_utils import get_time_string_for_float
 logger = log.get_logger(__name__)
@@ -96,7 +98,7 @@ def move_dirty_lock_file(dirty_lock_file, sm_path):
         os.rename(dirty_lock_file, os.path.join(sm_path, dirty_lock_file.split(os.sep)[-1]))
 
 
-def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=None):
+def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=None, with_gui_wait=False):
 
     if full_path_dirty_lock is None:
         full_path_dirty_lock = find_dirty_lock_file_for_state_machine_path(sm_path)
@@ -129,7 +131,13 @@ def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=No
     # move dirty lock file
     move_dirty_lock_file(full_path_dirty_lock, sm_path)
 
+    import rafcon.gui.singleton as gui_singletons
     gui_singletons.state_machine_manager.add_state_machine(state_machine)
+
+    # TODO check this gui wait again
+    # avoids that models are not generated and state machines are open without having the root state selected
+    import rafcon.gui.utils
+    rafcon.gui.utils.wait_for_gui()
     sm_m = gui_singletons.state_machine_manager_model.state_machines[state_machine.state_machine_id]
     assert sm_m.state_machine is state_machine
 
@@ -219,10 +227,10 @@ def check_for_crashed_rafcon_instances():
                                 os.remove(full_path)
 
     # if restorable_sm:
-    #     print "Restorable state machines: \n" + '\n'.join([elem[0] for elem in restorable_sm if elem[0] is not None])
+    #     print("Restorable state machines: \n" + '\n'.join([elem[0] for elem in restorable_sm if elem[0] is not None]))
 
     if restorable_sm and any([path is not None for path, pid, lock_file, m_time, full_path_dirty_lock in restorable_sm]):
-        message_string = "There have been found state machines of not correctly closed rafcon instances?\n\n" \
+        message_string = "State machines of not correctly closed RAFCON instances have been found.\n\n" \
                          "This check and dialog can be disabled by setting 'AUTO_RECOVERY_CHECK': False " \
                          "in the GUI configuration file.\n\n" \
                          "The following state machines have been modified and not saved: \n"
@@ -244,11 +252,12 @@ def check_for_crashed_rafcon_instances():
                 logger.info("Those lock is removed anytime because for instances without state machine lock "
                             "there is no recovery procedure, for now.")
 
+        import rafcon.gui.singleton as gui_singletons
         dialog = RAFCONCheckBoxTableDialog(message_string,
                                            button_texts=("Apply", "Remind me Later.", "Ignore -> Remove all Notifications/Locks."),
                                            callback=on_message_dialog_response_signal, callback_args=[restorable_sm],
                                            table_header=table_header, table_data=table_data, toggled_callback=on_toggled,
-                                           message_type=gtk.MESSAGE_QUESTION,
+                                           message_type=Gtk.MessageType.QUESTION,
                                            parent=gui_singletons.main_window_controller.view.get_top_widget(),
                                            width=800, standalone=False)
         dialog.activate()
@@ -301,7 +310,7 @@ class AutoBackupModel(ModelMT):
         self.__perform_storage = False
         self._timer_request_time = None
         self.timer_request_lock = threading.Lock()
-        self.tmp_storage_timed_thread = None
+        self.tmp_timed_storage_thread = None
         self.meta = Vividict()
         if state_machine_model.state_machine.file_system_path is not None:
             # logger.info("store meta data of {0} to {1}".format(self, meta_data_path))
@@ -326,7 +335,6 @@ class AutoBackupModel(ModelMT):
         self.destroy()
 
     def destroy(self):
-        logger.info('destroy auto backup ' + str(self.state_machine_model.state_machine.state_machine_id))
         self.cancel_timed_thread()
         if not core_singletons.shut_down_signal:
             self.clean_lock_file(True)
@@ -343,10 +351,10 @@ class AutoBackupModel(ModelMT):
         self.cancel_timed_thread()
 
     def cancel_timed_thread(self):
-        if self.tmp_storage_timed_thread is not None:
-            self.tmp_storage_timed_thread.cancel()
-            self.tmp_storage_timed_thread.join()
-            self.tmp_storage_timed_thread = None
+        if self.tmp_timed_storage_thread is not None:
+            self.tmp_timed_storage_thread.cancel()
+            self.tmp_timed_storage_thread.join()
+            self.tmp_timed_storage_thread = None
 
     def check_lock_file(self):
         if self.__destroyed:
@@ -453,9 +461,9 @@ class AutoBackupModel(ModelMT):
 
     def set_timed_thread(self, duration, func, *args):
         # logger.info("start timed thread duration: {0} func: {1}".format(duration, func))
-        self.tmp_storage_timed_thread = threading.Timer(duration, func, args)
-        self.tmp_storage_timed_thread.daemon = True
-        self.tmp_storage_timed_thread.start()
+        self.tmp_timed_storage_thread = threading.Timer(duration, func, args)
+        self.tmp_timed_storage_thread.daemon = True
+        self.tmp_timed_storage_thread.start()
 
     def perform_temp_storage(self):
         if self.__perform_storage:
@@ -480,7 +488,7 @@ class AutoBackupModel(ModelMT):
         self.timer_request_lock.acquire()
         self._timer_request_time = None
         self.timer_request_lock.release()
-        self.tmp_storage_timed_thread = None
+        self.tmp_timed_storage_thread = None
         self.__perform_storage = False
         self.marked_dirty = False
         self.check_lock_file()

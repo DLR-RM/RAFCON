@@ -15,23 +15,27 @@
    :synopsis: A module to represent the state machine status
 
 """
+from builtins import str
 from enum import Enum
-from gtkmvc import Observable
-from threading import _Condition
+import sys
+if sys.version_info[0] == 2:
+    from threading import _Condition as Condition
+else:
+    from threading import Condition
 
-from execution_history import ExecutionHistory
+from gtkmvc3.observable import Observable
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
 
-class CustomCondition(_Condition):
+class CustomCondition(Condition):
     """
     A class which inherits from Condition but can tell the outside world on how many threads are currently waiting.
     """
 
-    def __init__(self, lock=None, verbose=None):
-        super(CustomCondition, self).__init__(lock, verbose)
+    def __init__(self, lock=None):
+        super(CustomCondition, self).__init__(lock)
 
     def get_number_of_waiting_threads(self):
         """
@@ -65,7 +69,7 @@ class ExecutionStatus(Observable):
         self.execution_condition_variable = CustomCondition()
 
     #########################################################################
-    # Properties for all class fields that must be observed by gtkmvc
+    # Properties for all class fields that must be observed by gtkmvc3
     #########################################################################
 
     @property

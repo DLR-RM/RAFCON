@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -20,8 +20,11 @@
 
 """
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
+from gi.repository import Gdk
+from future.utils import string_types
+from builtins import str
 import os
 from functools import partial
 
@@ -30,7 +33,8 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.library_manager import LibraryManagerModel
-from rafcon.gui.helpers.label import create_image_menu_item, append_sub_menu_to_parent_menu
+from rafcon.gui.helpers.label import create_menu_item, append_sub_menu_to_parent_menu
+from rafcon.gui.helpers.text_formatting import format_folder_name_human_readable
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
@@ -50,13 +54,14 @@ class LibraryTreeController(ExtendedController):
 
     def __init__(self, model, view):
         assert isinstance(model, LibraryManagerModel)
-        assert isinstance(view, gtk.TreeView)
+        assert isinstance(view, Gtk.TreeView)
         ExtendedController.__init__(self, model, view)
-        self.tree_store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT, str, str, str)
+        self.tree_store = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_PYOBJECT, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING)
         view.set_model(self.tree_store)
         view.set_tooltip_column(3)
 
-        view.drag_source_set(gtk.gdk.BUTTON1_MASK, [('STRING', 0, 0)], gtk.gdk.ACTION_COPY)
+        # Gtk TODO: solve via Gtk.TargetList? https://python-gtk-3-tutorial.readthedocs.io/en/latest/drag_and_drop.html
+        view.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [Gtk.TargetEntry.new('STRING', 0, 0)], Gdk.DragAction.COPY)
 
         self.library_row_iter_dict_by_library_path = {}
         self.__expansion_state = None
@@ -64,52 +69,53 @@ class LibraryTreeController(ExtendedController):
         self.update()
 
     def register_view(self, view):
+        super(LibraryTreeController, self).register_view(view)
         self.view.connect('button_press_event', self.mouse_click)
 
         self.view.connect("drag-data-get", self.on_drag_data_get)
         self.view.connect("drag-begin", self.on_drag_begin)
 
     def generate_right_click_menu(self, kind='library'):
-        menu = gtk.Menu()
+        menu = Gtk.Menu()
         if kind == 'library':
-            menu.append(create_image_menu_item("Add as library (link)", constants.BUTTON_ADD,
-                                               partial(self.insert_button_clicked, as_template=False)))
-            menu.append(create_image_menu_item("Add as template (copy)", constants.BUTTON_COPY,
-                                               partial(self.insert_button_clicked, as_template=True)))
-            menu.append(gtk.SeparatorMenuItem())
-            menu.append(create_image_menu_item("Open", constants.BUTTON_OPEN, self.open_button_clicked))
-            menu.append(create_image_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
-            menu.append(gtk.SeparatorMenuItem())
-            menu.append(create_image_menu_item("Remove library", constants.BUTTON_DEL, self.delete_button_clicked))
+            menu.append(create_menu_item("Add as library (link)", constants.BUTTON_ADD,
+                                         partial(self.insert_button_clicked, as_template=False)))
+            menu.append(create_menu_item("Add as template (copy)", constants.BUTTON_COPY,
+                                         partial(self.insert_button_clicked, as_template=True)))
+            menu.append(Gtk.SeparatorMenuItem())
+            menu.append(create_menu_item("Open", constants.BUTTON_OPEN, self.open_button_clicked))
+            menu.append(create_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
+            menu.append(Gtk.SeparatorMenuItem())
+            menu.append(create_menu_item("Remove library", constants.BUTTON_DEL, self.delete_button_clicked))
 
             sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute as library", menu,
                                                                      constants.BUTTON_REFR)
 
-            sub_menu.append(create_image_menu_item("Keep state name", constants.BUTTON_LEFTA,
-                            partial(self.substitute_as_library_clicked, keep_name=True)))
-            sub_menu.append(create_image_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
-                            partial(self.substitute_as_library_clicked, keep_name=False)))
+            sub_menu.append(create_menu_item("Keep state name", constants.BUTTON_LEFTA,
+                                             partial(self.substitute_as_library_clicked, keep_name=True)))
+            sub_menu.append(create_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
+                                             partial(self.substitute_as_library_clicked, keep_name=False)))
 
             sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute as template", menu,
                                                                      constants.BUTTON_REFR)
 
-            sub_menu.append(create_image_menu_item("Keep state name", constants.BUTTON_LEFTA,
-                            partial(self.substitute_as_template_clicked, keep_name=True)))
-            sub_menu.append(create_image_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
-                            partial(self.substitute_as_template_clicked, keep_name=False)))
+            sub_menu.append(create_menu_item("Keep state name", constants.BUTTON_LEFTA,
+                                             partial(self.substitute_as_template_clicked, keep_name=True)))
+            sub_menu.append(create_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
+                                             partial(self.substitute_as_template_clicked, keep_name=False)))
         elif kind == 'library root':
-            menu.append(create_image_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
-            menu.append(create_image_menu_item("Remove library root", constants.BUTTON_DEL, self.delete_button_clicked))
+            menu.append(create_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
+            menu.append(create_menu_item("Remove library root", constants.BUTTON_DEL, self.delete_button_clicked))
         elif kind == 'libraries':
-            menu.append(create_image_menu_item("Remove libraries", constants.BUTTON_DEL, self.delete_button_clicked))
+            menu.append(create_menu_item("Remove libraries", constants.BUTTON_DEL, self.delete_button_clicked))
         elif kind == 'library tree':
-            menu.append(create_image_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
+            menu.append(create_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
 
         return menu
 
     def mouse_click(self, widget, event=None):
         # Double click with left mouse button
-        if event.type == gtk.gdk._2BUTTON_PRESS and event.button == 1:
+        if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
             (model, row) = self.view.get_selection().get_selected()
             if isinstance(model[row][self.ITEM_STORAGE_ID], dict):  # double click on folder, not library
                 state_row_path = self.tree_store.get_path(row)
@@ -123,7 +129,7 @@ class LibraryTreeController(ExtendedController):
             return True
 
         # Single right click
-        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 3:
 
             x = int(event.x)
             y = int(event.y)
@@ -145,7 +151,7 @@ class LibraryTreeController(ExtendedController):
             else:
                 menu = self.generate_right_click_menu('library tree')
             menu.show_all()
-            menu.popup(None, None, None, event.button, time)
+            menu.popup(None, None, None, None, event.get_button()[1], time)
             return True
 
     @ExtendedController.observe("library_manager", after=True)
@@ -153,37 +159,37 @@ class LibraryTreeController(ExtendedController):
         self.update()
 
     def store_expansion_state(self):
-        # print "\n\n store of state machine {0} \n\n".format(self.__my_selected_sm_id)
+        # print("\n\n store of state machine {0} \n\n".format(self.__my_selected_sm_id))
         try:
             act_expansion_library = {}
-            for library_path, library_row_iter in self.library_row_iter_dict_by_library_path.iteritems():
+            for library_path, library_row_iter in self.library_row_iter_dict_by_library_path.items():
                 library_row_path = self.tree_store.get_path(library_row_iter)
                 act_expansion_library[library_path] = self.view.row_expanded(library_row_path)
                 # if act_expansion_library[library_path]:
-                #     print library_path
+                #     print(library_path)
             self.__expansion_state = act_expansion_library
         except TypeError:
-            logger.warn("expansion state of library could not be stored")
+            logger.warning("expansion state of library could not be stored")
 
     def redo_expansion_state(self):
         if self.__expansion_state:
-            # print "\n\n redo of state machine {0} \n\n".format(self.__my_selected_sm_id)
+            # print("\n\n redo of state machine {0} \n\n".format(self.__my_selected_sm_id))
             try:
-                for library_path, library_row_expanded in self.__expansion_state.iteritems():
+                for library_path, library_row_expanded in self.__expansion_state.items():
                     library_row_iter = self.library_row_iter_dict_by_library_path[library_path]
                     if library_row_iter:  # may elements are missing afterwards
                         library_row_path = self.tree_store.get_path(library_row_iter)
                         if library_row_expanded:
                             self.view.expand_to_path(library_row_path)
-                            # print library_path
+                            # print(library_path)
             except (TypeError, KeyError):
-                logger.warn("expansion state of library tree could not be re-done")
+                logger.warning("expansion state of library tree could not be re-done")
 
     def update(self):
         self.store_expansion_state()
         self.tree_store.clear()
         self.library_row_iter_dict_by_library_path.clear()
-        for library_key, library_item in self.model.library_manager.libraries.iteritems():
+        for library_key, library_item in self.model.library_manager.libraries.items():
             self.insert_rec(None, library_key, library_item, "")
         self.redo_expansion_state()
         if self.__expansion_state:
@@ -194,7 +200,8 @@ class LibraryTreeController(ExtendedController):
     @staticmethod
     def convert_if_human_readable(s):
         """Converts a string to format which is more human readable"""
-        return s.replace('_', ' ') if global_gui_config.get_config_value('LIBRARY_TREE_PATH_HUMAN_READABLE', False) else s
+        return format_folder_name_human_readable(s) \
+            if global_gui_config.get_config_value('LIBRARY_TREE_PATH_HUMAN_READABLE', False) else s
 
     def insert_rec(self, parent, library_key, library_item, library_path, library_root_path=None):
         """
@@ -207,7 +214,7 @@ class LibraryTreeController(ExtendedController):
         :return:
         """
         _library_key = self.convert_if_human_readable(library_key)
-        tool_tip = library_item if isinstance(library_item, str) else ''
+        tool_tip = library_item if isinstance(library_item, string_types) else ''
         if not tool_tip and parent is None:
             library_root_path = tool_tip = self.model.library_manager._library_root_paths.get(library_key, '')
         if not tool_tip:
@@ -225,7 +232,7 @@ class LibraryTreeController(ExtendedController):
             library_path = os.path.join(library_path, library_key)
         self.library_row_iter_dict_by_library_path[library_path] = tree_item
         if isinstance(library_item, dict):
-            for child_library_key, child_library_item in library_item.iteritems():
+            for child_library_key, child_library_item in library_item.items():
                 self.insert_rec(tree_item, child_library_key, child_library_item, library_path, library_root_path)
 
     def on_drag_data_get(self, widget, context, data, info, time):
@@ -247,7 +254,7 @@ class LibraryTreeController(ExtendedController):
         :param widget:
         :param context:
         """
-        self.view.drag_source_set_icon_stock(gtk.STOCK_NEW)
+        self.view.drag_source_set_icon_stock(Gtk.STOCK_NEW)
 
     def insert_button_clicked(self, widget, as_template=False):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
@@ -278,15 +285,22 @@ class LibraryTreeController(ExtendedController):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         (model, row) = self.view.get_selection().get_selected()
         physical_library_path = model[row][self.ITEM_STORAGE_ID]
-        assert isinstance(physical_library_path, str)
+        assert isinstance(physical_library_path, string_types)
 
         logger.debug("Opening library as state-machine from path '{0}'".format(physical_library_path))
         state_machine = gui_helper_state_machine.open_state_machine(physical_library_path)
         global_runtime_config.update_recently_opened_state_machines_with(state_machine)
         return state_machine
 
+    def get_text_of_menu_item(self, menu_item):
+        assert isinstance(menu_item, Gtk.MenuItem)
+        menu_box = menu_item.get_child()
+        assert isinstance(menu_box, Gtk.Box)
+        return menu_box.get_children()[1].get_text()
+
     def add_button_clicked(self, widget):
-        if "library root" in widget.get_label():
+        menu_item_text = self.get_text_of_menu_item(widget)
+        if "library root" in menu_item_text:
             logger.info("Get new path and mounting key.")
             from rafcon.gui import interface
             from rafcon.gui.singleton import global_config, global_runtime_config
@@ -308,19 +322,23 @@ class LibraryTreeController(ExtendedController):
 
     def delete_button_clicked(self, widget):
         """Removes library from hard drive after request second confirmation"""
-        logger.info("delete library" + str(widget) + str(widget.get_label()))
+
+        menu_item_text = self.get_text_of_menu_item(widget)
+
+        logger.info("delete library" + str(widget) + str(menu_item_text))
         model, path = self.view.get_selection().get_selected()
         if path:
             # Second confirmation to delete library
             tree_m_row = self.tree_store[path]
+            library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
             # assert isinstance(tree_m_row[self.ITEM_STORAGE_ID], str)
-            library_file_system_path = tree_m_row[self.OS_PATH_STORAGE_ID]
+            library_file_system_path = library_os_path
 
-            if "root" in widget.get_label():
-                button_texts = [widget.get_label() + "from tree and config", "Cancel"]
+            if "root" in menu_item_text:
+                button_texts = [menu_item_text + "from tree and config", "Cancel"]
                 partial_message = "This will remove the library root from your configuration (config.yaml)."
             else:
-                button_texts = [widget.get_label(), "Cancel"]
+                button_texts = [menu_item_text, "Cancel"]
                 partial_message = "This folder will be removed from hard drive! You really wanna do that?"
 
             message_string = "You choose to {2} with " \
@@ -328,33 +346,34 @@ class LibraryTreeController(ExtendedController):
                              "\n\nphysical path:        {1}.\n\n\n"\
                              "{3}" \
                              "".format(os.path.join(self.convert_if_human_readable(tree_m_row[self.LIB_PATH_STORAGE_ID]),
-                                                    tree_m_row[self.ID_STORAGE_ID]),
+                                                    item_key),
                                        library_file_system_path,
-                                       widget.get_label().lower(),
+                                       menu_item_text.lower(),
                                        partial_message)
 
             width = 8*len("physical path:        " + library_file_system_path)
-            dialog = RAFCONButtonDialog(message_string, button_texts, message_type=gtk.MESSAGE_QUESTION,
+            dialog = RAFCONButtonDialog(message_string, button_texts, message_type=Gtk.MessageType.QUESTION,
                                         parent=self.get_root_window(), width=min(width, 1400))
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:
-                if "root" in widget.get_label():
-                    logger.info("Remove library root key '{0}' from config.".format(tree_m_row[self.ID_STORAGE_ID]))
+                if "root" in menu_item_text:
+                    logger.info("Remove library root key '{0}' from config.".format(item_key))
                     from rafcon.gui.singleton import global_config
                     library_paths = global_config.get_config_value('LIBRARY_PATHS')
                     del library_paths[tree_m_row[self.LIB_KEY_STORAGE_ID]]
                     global_config.save_configuration()
                     self.model.library_manager.refresh_libraries()
-                elif "libraries" in widget.get_label():
-                    logger.debug("Remove of all libraries in {} is triggered.".format(tree_m_row[self.OS_PATH_STORAGE_ID]))
+                elif "libraries" in menu_item_text:
+                    logger.debug("Remove of all libraries in {} is triggered.".format(library_os_path))
                     import shutil
-                    shutil.rmtree(tree_m_row[self.OS_PATH_STORAGE_ID])
+                    shutil.rmtree(library_os_path)
                     self.model.library_manager.refresh_libraries()
                 else:
-                    logger.debug("Remove of Library {} is triggered.".format(tree_m_row[self.ITEM_STORAGE_ID]))
-                    self.model.library_manager.remove_library_from_file_system(tree_m_row[self.LIB_PATH_STORAGE_ID],
-                                                                               tree_m_row[self.ID_STORAGE_ID])
+
+                    logger.debug("Remove of Library {} is triggered.".format(library_os_path))
+                    self.model.library_manager.remove_library_from_file_system(library_path,
+                                                                               library_name)
             elif response_id in [2, -4]:
                 pass
             else:
@@ -373,24 +392,34 @@ class LibraryTreeController(ExtendedController):
         gui_helper_state_machine.substitute_selected_state(self._get_selected_library_state(), as_template=True,
                                                            keep_name=keep_name)
 
+    def extract_library_properties_from_selected_row(self):
+        """ Extracts properties library_os_path, library_path, library_name and tree_item_key from tree store row """
+        (model, row) = self.view.get_selection().get_selected()
+        tree_item_key = model[row][self.ID_STORAGE_ID]
+        library_item = model[row][self.ITEM_STORAGE_ID]
+        library_path = model[row][self.LIB_PATH_STORAGE_ID]
+        if isinstance(library_item, dict):  # sub-tree
+            os_path = model[row][self.OS_PATH_STORAGE_ID]
+            return os_path, None, None, tree_item_key  # relevant elements of sub-tree
+        assert isinstance(library_item, string_types)
+        library_os_path = library_item
+
+        library_name = library_os_path.split(os.path.sep)[-1]
+
+        return library_os_path, library_path, library_name, tree_item_key
+
     def _get_selected_library_state(self):
         """Returns the LibraryState which was selected in the LibraryTree
 
         :return: selected state in TreeView
         :rtype: LibraryState
         """
-        (model, row) = self.view.get_selection().get_selected()
-        library_item_key = model[row][self.ID_STORAGE_ID]
-        library_item = model[row][self.ITEM_STORAGE_ID]
-        library_path = model[row][self.LIB_PATH_STORAGE_ID]
-
-        if isinstance(library_item, dict):
+        library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
+        if library_path is None:
             return None
-        assert isinstance(library_item, str)
-        library_file_system_path = library_item
 
         logger.debug("Link library state '{0}' (with library tree path: {2} and file system path: {1}) into state "
-                     "machine.".format(str(library_item_key), library_file_system_path,
-                                       self.convert_if_human_readable(str(library_path)) + "/" + str(library_item_key)))
-        library_name = library_file_system_path.split(os.path.sep)[-1]
-        return LibraryState(library_path, library_name, "0.1", library_name)
+                     "machine.".format(str(item_key), library_os_path,
+                                       self.convert_if_human_readable(str(library_path)) + "/" + str(item_key)))
+        library_name = library_os_path.split(os.path.sep)[-1]
+        return LibraryState(library_path, library_name, "0.1", format_folder_name_human_readable(library_name))

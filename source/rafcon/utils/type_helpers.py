@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -21,9 +21,13 @@
 
 
 
-import __builtin__
+from future import standard_library
+standard_library.install_aliases()
+from past.builtins import str
+from builtins import str
 from pydoc import locate, ErrorDuringImport
 from inspect import isclass
+import sys
 
 
 def convert_string_to_type(string_value):
@@ -40,8 +44,12 @@ def convert_string_to_type(string_value):
 
     # Get object associated with string
     # First check whether we are having a built in type (int, str, etc)
-    if hasattr(__builtin__, string_value):
-        obj = getattr(__builtin__, string_value)
+    if sys.version_info >= (3,):
+        import builtins as builtins23
+    else:
+        import __builtin__ as builtins23
+    if hasattr(builtins23, string_value):
+        obj = getattr(builtins23, string_value)
         if type(obj) is type:
             return obj
     # If not, try to locate the module
@@ -72,10 +80,8 @@ def convert_string_value_to_type_value(string_value, data_type):
     from ast import literal_eval
 
     try:
-        if data_type in (str, basestring, type(None)):
+        if data_type in (str, type(None)):
             converted_value = str(string_value)
-        elif data_type == unicode:
-            converted_value = unicode(string_value)
         elif data_type == int:
             converted_value = int(string_value)
         elif data_type == float:
@@ -89,7 +95,7 @@ def convert_string_value_to_type_value(string_value, data_type):
         elif data_type == object:
             try:
                 converted_value = literal_eval(string_value)
-            except ValueError:
+            except (ValueError, SyntaxError):
                 converted_value = literal_eval('"' + string_value + '"')
         elif isinstance(data_type, type):  # Try native type conversion
             converted_value = data_type(string_value)
@@ -97,9 +103,9 @@ def convert_string_value_to_type_value(string_value, data_type):
             converted_value = data_type(string_value)
         else:
             raise ValueError("No conversion from string '{0}' to data type '{0}' defined".format(
-                string_value, data_type))
+                string_value, data_type.__name__))
     except (ValueError, SyntaxError, TypeError) as e:
-        raise AttributeError("Can't convert '{0}' to type '{1}': {2}".format(string_value, data_type, e))
+        raise AttributeError("Can't convert '{0}' to type '{1}': {2}".format(string_value, data_type.__name__, e))
     return converted_value
 
 

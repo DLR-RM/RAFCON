@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.1
+Name=RAFCON
+Exec=rafcon
+Comment=Develop your robotic tasks using an intuitive graphical user interface
+Icon=rafcon
+Terminal=false
+Categories=Development;IDE;GTK
+Keywords=robot,state-machine
+StartupNotify=true
+StartupWMClass=RAFCON

@@ -1,36 +1,20 @@
-import gtk
-import threading
-from os.path import join
-
-# gui elements
-import rafcon.gui.singleton
-from rafcon.gui.controllers.main_window import MainWindowController
-from rafcon.gui.views.main_window import MainWindowView
-from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
-from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
-import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-
-# core elements
-import rafcon.core.config
-from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.library_state import LibraryState
-from rafcon.core.state_machine import StateMachine
-import rafcon.core.singleton
-
+from __future__ import print_function
 # general tool elements
 from rafcon.utils import log
 
 # test environment elements
 import testing_utils
-from testing_utils import call_gui_callback
+from testing_utils import call_gui_callback, focus_graphical_editor_in_page
 
 import pytest
 
 logger = log.get_logger(__name__)
 
 
-def create_state_machine(*args, **kargs):
+def create_state_machine():
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    from rafcon.core.states.execution_state import ExecutionState
+    from rafcon.core.state_machine import StateMachine
 
     state1 = ExecutionState('State1', state_id='STATE1')
     state2 = ExecutionState('State2')
@@ -60,13 +44,6 @@ def create_state_machine(*args, **kargs):
     return StateMachine(ctr_state)
 
 
-def focus_graphical_editor_in_page(page):
-    graphical_controller = page.children()[0]
-    if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
-        graphical_controller = graphical_controller.children()[0]
-    graphical_controller.grab_focus()
-
-
 def select_and_paste_state(state_machine_model, source_state_model, target_state_model, menu_bar_ctrl, operation,
                            main_window_controller, page):
     """Select a particular state and perform an operation on it (Copy or Cut) and paste it somewhere else. At the end,
@@ -81,17 +58,17 @@ def select_and_paste_state(state_machine_model, source_state_model, target_state
     :param page: The notebook page of the corresponding state machine in the state machines editor
     :return: The target state model, and the child state count before pasting
     """
-    print "\n\n %s \n\n" % source_state_model.state.name
+    print("\n\n %s \n\n" % source_state_model.state.name)
     call_gui_callback(state_machine_model.selection.set, [source_state_model])
     call_gui_callback(getattr(menu_bar_ctrl, 'on_{}_selection_activate'.format(operation)), None, None)
-    print "\n\n %s \n\n" % target_state_model.state.name
+    print("\n\n %s \n\n" % target_state_model.state.name)
     call_gui_callback(state_machine_model.selection.set, [target_state_model])
     old_child_state_count = len(target_state_model.state.states)
     main_window_controller.view['main_window'].grab_focus()
     focus_graphical_editor_in_page(page)
     call_gui_callback(menu_bar_ctrl.on_paste_clipboard_activate, None, None)
     testing_utils.wait_for_gui()
-    print target_state_model.state.states.keys()
+    print(list(target_state_model.state.states.keys()))
     assert len(target_state_model.state.states) == old_child_state_count + 1
     return target_state_model, old_child_state_count
 
@@ -108,7 +85,7 @@ def copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menu_bar_ctrl)
 
 
 @log.log_exceptions(None, gtk_quit=True)
-def trigger_gui_signals(*args):
+def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     """The function triggers and test basic functions of the menu bar.
 
     At the moment those functions are tested:
@@ -123,43 +100,95 @@ def trigger_gui_signals(*args):
     - Stop State Machine
     - Quit GUI
     """
+    from os.path import join
+    from rafcon.core.states.library_state import LibraryState
+    import rafcon.core.singleton
+    import rafcon.gui.singleton
     import rafcon.gui.helpers.state as gui_helper_state
-    sm_manager_model = args[0]
-    main_window_controller = args[1]
+    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    main_window_controller = rafcon.gui.singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
+    state_machine = create_state_machine()
+    first_sm_id = state_machine.state_machine_id
+    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, state_machine)
+
     current_sm_length = len(sm_manager_model.state_machines)
-    first_sm_id = sm_manager_model.state_machines.keys()[0]
     call_gui_callback(menubar_ctrl.on_new_activate, None)
+
+    # test decider state removal of barrier state
+    sm_m = sm_manager_model.state_machines[first_sm_id + 1]
+    call_gui_callback(sm_m.selection.set, [sm_m.root_state])
+    from rafcon.core.states.barrier_concurrency_state import UNIQUE_DECIDER_STATE_ID
+    from rafcon.core.states.state import StateType
+    call_gui_callback(gui_helper_state_machine.add_new_state, sm_m, StateType.BARRIER_CONCURRENCY)
+    decider_state_path = "/".join([list(sm_m.root_state.states.values())[0].state.get_path(), UNIQUE_DECIDER_STATE_ID])
+    call_gui_callback(sm_m.selection.set, sm_m.get_state_model_by_path(decider_state_path))
+    call_gui_callback(menubar_ctrl.on_delete_activate, None, None)
 
     assert len(sm_manager_model.state_machines) == current_sm_length + 1
     call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TUTORIAL_PATH,
                                                                       "basic_turtle_demo_sm"))
+    call_gui_callback(testing_utils.wait_for_gui)
     assert len(sm_manager_model.state_machines) == current_sm_length + 2
 
     sm_m = sm_manager_model.state_machines[first_sm_id + 2]
     testing_utils.wait_for_gui()
     # MAIN_WINDOW NEEDS TO BE FOCUSED (for global input focus) TO OPERATE PASTE IN GRAPHICAL VIEWER
     main_window_controller.view['main_window'].grab_focus()
-    sm_manager_model.selected_state_machine_id = first_sm_id + 2
+    call_gui_callback(sm_manager_model.__setattr__, "selected_state_machine_id", first_sm_id + 2)
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
     page_id = state_machines_ctrl.get_page_num(first_sm_id + 2)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
-    focus_graphical_editor_in_page(page)
-    testing_utils.wait_for_gui()
+    call_gui_callback(focus_graphical_editor_in_page, page)
+
+    # TODO keep core interface, too
+    # ##########################################################
+    # # group states
+    # # TODO improve test to related data flows
+    # state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
+    # state_ids_old = [state_id for state_id in state_m_parent.state.states]
+    # call_gui_callback(state_m_parent.state.group_states, ['PAYECU', 'UEPNNW', 'KQDJYS'])
+    #
+    # ##########################################################
+    # # ungroup new state
+    # state_new = None
+    # for state_id in state_m_parent.state.states:
+    #     if state_id not in state_ids_old:
+    #         state_new = state_m_parent.state.states[state_id]
+    # call_gui_callback(state_m_parent.state.ungroup_state, state_new.state_id)
+
+    ##########################################################
+    # group states
+    # TODO improve test to related data flows
+    print("#"*30, "\n", '#### group states \n', "#"*30, "\n")
+    state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
+    state_ids_old = [state_id for state_id in state_m_parent.state.states]
+    state_m_list = [state_m_parent.states[child_state_id] for child_state_id in ['PAYECU', 'UEPNNW', 'KQDJYS']]
+    call_gui_callback(gui_helper_state.group_states_and_scoped_variables, state_m_list, [])
+
+    ##########################################################
+    # ungroup new state
+    print("#"*30, "\n", '#### ungroup state \n', "#"*30, "\n")
+    new_state = None
+    for state_id in state_m_parent.state.states:
+        if state_id not in state_ids_old:
+            new_state = state_m_parent.state.states[state_id]
+    call_gui_callback(gui_helper_state.ungroup_state, sm_m.get_state_model_by_path(new_state.get_path()))
 
     #########################################################
-    print "select & copy an execution state -> and paste it somewhere"
+    print("select & copy an execution state -> and paste it somewhere")
     select_and_paste_state(sm_m, sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ'), sm_m.get_state_model_by_path(
         'CDMJPK/RMKGEW'), menubar_ctrl, 'copy', main_window_controller, page)
 
     ###########################################################
-    print "select & copy a hierarchy state -> and paste it some where"
+    print("select & copy a hierarchy state -> and paste it some where")
     select_and_paste_state(sm_m, sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY'),
                            sm_m.get_state_model_by_path('CDMJPK'), menubar_ctrl, 'copy', main_window_controller, page)
 
     ##########################################################
-    print "select a library state -> and paste it some where WITH CUT !!!"
+    print("select a library state -> and paste it some where WITH CUT !!!")
     state_m, old_child_state_count = select_and_paste_state(sm_m,
                                                             sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ/VCWTIY'),
                                                             sm_m.get_state_model_by_path('CDMJPK'), menubar_ctrl, 'cut',
@@ -182,48 +211,16 @@ def trigger_gui_signals(*args):
     state_m_to_copy = sm_m.get_state_model_by_path('CDMJPK/' + new_template_state.state_id)
 
     ##########################################################
-    print "copy & paste complex state into itself"
+    print("copy & paste complex state into itself")
 
     copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menubar_ctrl)
-    print "increase complexity by doing it twice -> increase the hierarchy-level"
+    print("increase complexity by doing it twice -> increase the hierarchy-level")
     copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menubar_ctrl)
-
-    # TODO keep core interface, too
-    # ##########################################################
-    # # group states
-    # # TODO improve test to related data flows
-    # state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
-    # state_ids_old = [state_id for state_id in state_m_parent.state.states]
-    # call_gui_callback(state_m_parent.state.group_states, ['PAYECU', 'UEPNNW', 'KQDJYS'])
-    #
-    # ##########################################################
-    # # ungroup new state
-    # state_new = None
-    # for state_id in state_m_parent.state.states:
-    #     if state_id not in state_ids_old:
-    #         state_new = state_m_parent.state.states[state_id]
-    # call_gui_callback(state_m_parent.state.ungroup_state, state_new.state_id)
-
-    ##########################################################
-    # group states
-    # TODO improve test to related data flows
-    state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
-    state_ids_old = [state_id for state_id in state_m_parent.state.states]
-    state_m_list = [state_m_parent.states[child_state_id] for child_state_id in ['PAYECU', 'UEPNNW', 'KQDJYS']]
-    call_gui_callback(gui_helper_state.group_states_and_scoped_variables, state_m_list, [])
-
-    ##########################################################
-    # ungroup new state
-    new_state = None
-    for state_id in state_m_parent.state.states:
-        if state_id not in state_ids_old:
-            new_state = state_m_parent.state.states[state_id]
-    call_gui_callback(gui_helper_state.ungroup_state, sm_m.get_state_model_by_path(new_state.get_path()))
 
     ##########################################################
     # substitute state with template
     lib_state = rafcon.gui.singleton.library_manager.get_library_instance('generic', 'wait')
-    old_keys = state_m_parent.state.states.keys()
+    old_keys = list(state_m_parent.state.states.keys())
     transitions_before, data_flows_before = state_m_parent.state.related_linkage_state('RQXPAI')
     call_gui_callback(state_m_parent.state.substitute_state, 'RQXPAI', lib_state.state_copy)
     new_state_id = None
@@ -239,20 +236,20 @@ def trigger_gui_signals(*args):
     call_gui_callback(state_m_parent.state.add_transition, new_state_id, 0, 'MCOLIQ', None)
 
     # modify the template with other data type and respective data flows to parent
-    state_m_parent.states[new_state_id].state.input_data_ports.items()[0][1].data_type = "int"
+    call_gui_callback(list(state_m_parent.states[new_state_id].state.input_data_ports.items())[0][1].__setattr__, "data_type", "int")
     call_gui_callback(state_m_parent.state.add_input_data_port, 'in_time', "int")
     call_gui_callback(state_m_parent.state.add_data_flow,
                       state_m_parent.state.state_id,
-                      state_m_parent.state.input_data_ports.items()[0][1].data_port_id,
+                      list(state_m_parent.state.input_data_ports.items())[0][1].data_port_id,
                       new_state_id,
-                      state_m_parent.states[new_state_id].state.input_data_ports.items()[0][1].data_port_id)
+                      list(state_m_parent.states[new_state_id].state.input_data_ports.items())[0][1].data_port_id)
 
-    old_keys = state_m_parent.state.states.keys()
+    old_keys = list(state_m_parent.state.states.keys())
     transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
     lib_state = rafcon.gui.singleton.library_manager.get_library_instance('generic', 'wait')
     call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state)
     new_state_id = None
-    for state_id in state_m_parent.state.states.keys():
+    for state_id in list(state_m_parent.state.states.keys()):
         if state_id not in old_keys:
             new_state_id = state_id
     transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
@@ -265,27 +262,27 @@ def trigger_gui_signals(*args):
     assert len(data_flows_after['external']['ingoing']) == 0
 
     # data flow is preserved if right data type and name is used
-    state_m_parent.state.input_data_ports.items()[0][1].data_type = "float"
+    call_gui_callback(list(state_m_parent.state.input_data_ports.items())[0][1].__setattr__, "data_type", "float")
     if isinstance(state_m_parent.state.states[new_state_id], LibraryState):
-        data_port_id = state_m_parent.state.states[new_state_id].input_data_ports.items()[0][0]
+        data_port_id = list(state_m_parent.state.states[new_state_id].input_data_ports.items())[0][0]
         state_m_parent.state.states[new_state_id].use_runtime_value_input_data_ports[data_port_id] = True
         state_m_parent.state.states[new_state_id].input_data_port_runtime_values[data_port_id] = 2.0
-        print
+        print()
     else:
         raise
         # state_m_parent.state.states[new_state_id].input_data_ports.items()[0][1].default_value = 2.0
     call_gui_callback(state_m_parent.state.add_data_flow,
                       state_m_parent.state.state_id,
-                      state_m_parent.state.input_data_ports.items()[0][1].data_port_id,
+                      list(state_m_parent.state.input_data_ports.items())[0][1].data_port_id,
                       new_state_id,
-                      state_m_parent.states[new_state_id].state.input_data_ports.items()[0][1].data_port_id)
+                      list(state_m_parent.states[new_state_id].state.input_data_ports.items())[0][1].data_port_id)
 
-    old_keys = state_m_parent.state.states.keys()
+    old_keys = list(state_m_parent.state.states.keys())
     transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
     lib_state = rafcon.gui.singleton.library_manager.get_library_instance('generic', 'wait')
     call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state.state_copy)
     new_state_id = None
-    for state_id in state_m_parent.state.states.keys():
+    for state_id in list(state_m_parent.state.states.keys()):
         if state_id not in old_keys:
             new_state_id = state_id
     transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
@@ -296,42 +293,61 @@ def trigger_gui_signals(*args):
     assert len(transitions_after['external']['outgoing']) == 1
     assert len(data_flows_before['external']['ingoing']) == 1
     assert len(data_flows_after['external']['ingoing']) == 1
-    assert state_m_parent.state.states[new_state_id].input_data_ports.items()[0][1].default_value == 2.0
+    assert list(state_m_parent.state.states[new_state_id].input_data_ports.items())[0][1].default_value == 2.0
 
-    call_gui_callback(menubar_ctrl.on_refresh_libraries_activate)
-    call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
-    assert len(sm_manager_model.state_machines) == 1
+    ##########################################################
+    # open separately
+    call_gui_callback(sm_m.selection.set, [sm_m.get_state_model_by_path('CDMJPK'), ])
+    lib_state = LibraryState(join("generic", "dialog"), "Dialog [3 options]", "0.1", "Dialog [3 options]")
+    call_gui_callback(gui_helper_state_machine.insert_state_into_selected_state, lib_state, False)
 
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
-    call_gui_callback(menubar_ctrl.on_stop_activate, None)
-    call_gui_callback(menubar_ctrl.on_quit_activate, None)
+    lib_hash = lib_state.state_copy.mutable_hash()
+    # assert lib_state.mutable_hash().hexdigest() == lib_hash.hexdigest()
+    sm_m = sm_manager_model.state_machines[lib_state.get_state_machine().state_machine_id]
+    call_gui_callback(sm_m.selection.set, [sm_m.get_state_model_by_path(lib_state.get_path())])
+    call_gui_callback(gui_helper_state_machine.open_library_state_separately)
+    sm_m = sm_manager_model.get_selected_state_machine_model()
+    assert sm_m.root_state.state.mutable_hash().hexdigest() == lib_hash.hexdigest()
+    ##########################################################
+
+    if with_substitute_library:
+        ##########################################################
+        # check substitute library state as template -> keep name
+        old_parent = lib_state.parent
+        state_ids = list(old_parent.states.keys())
+        call_gui_callback(lib_state.__setattr__, 'name', 'DIALOG_X')
+        call_gui_callback(sm_manager_model.__setattr__, 'selected_state_machine_id',
+                          lib_state.get_state_machine().state_machine_id)
+        call_gui_callback(gui_helper_state_machine.substitute_selected_library_state_with_template, True)  # keep_name=True
+        new_states = [state for state in list(old_parent.states.values()) if state.state_id not in state_ids]
+        assert new_states and len(new_states) == 1 and new_states[0].name == 'DIALOG_X'
+        ##########################################################
+
+    if with_refresh:
+        call_gui_callback(menubar_ctrl.on_refresh_libraries_activate)
+        call_gui_callback(testing_utils.wait_for_gui)
+        call_gui_callback(menubar_ctrl.on_refresh_all_activate, None, None, True)
+        call_gui_callback(testing_utils.wait_for_gui)
+        assert len(sm_manager_model.state_machines) == 2
 
 
 def test_gui(caplog):
+    from os.path import join
+
     change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False}
 
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
                  "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
-    testing_utils.initialize_environment(gui_config=change_in_gui_config, libraries=libraries)
+    testing_utils.run_gui(gui_config=change_in_gui_config, libraries=libraries)
 
-    state_machine = create_state_machine()
-    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-
-    main_window_controller = MainWindowController(rafcon.gui.singleton.state_machine_manager_model, MainWindowView())
-
-    # Wait for GUI to initialize
-    testing_utils.wait_for_gui()
-
-    thread = threading.Thread(target=trigger_gui_signals, args=[rafcon.gui.singleton.state_machine_manager_model,
-                                                                main_window_controller])
-    thread.start()
-    gtk.main()
-    logger.debug("after gtk main")
-    thread.join()
-
-    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+    try:
+        trigger_gui_signals()
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 
 if __name__ == '__main__':
+    # test_gui(None)
     pytest.main(['-s', __file__])

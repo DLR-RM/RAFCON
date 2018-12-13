@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -12,12 +12,13 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import View
+from gtkmvc3.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.views.utils.tree import TreeView
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.utils import constants
+import weakref
 
 
 class LinkageOverviewDataView(TreeView):
@@ -34,8 +35,11 @@ class LinkageOverviewLogicView(TreeView):
 
     def __init__(self):
         super(LinkageOverviewLogicView, self).__init__()
+        self._treeView = weakref.ref(self)
 
-        self.treeView = self
+    @property
+    def treeView(self):
+        return self._treeView()
 
 
 class LinkageOverviewView(View):
@@ -58,8 +62,3 @@ class LinkageOverviewView(View):
         self.outputs_view.scrollbar_widget = self['outputs_scroller']
         self.scope_view.scrollbar_widget = self['scoped_scroller']
         self.outcomes_view.scrollbar_widget = self['outcomes_scroller']
-
-        gui_helper_label.set_label_markup(self['data_linkage_label'], 'DATA LINKAGE',
-                                          letter_spacing=constants.LETTER_SPACING_1PT)
-        gui_helper_label.set_label_markup(self['logical_linkage_label'], 'LOGICAL LINKAGE',
-                                          letter_spacing=constants.LETTER_SPACING_1PT)

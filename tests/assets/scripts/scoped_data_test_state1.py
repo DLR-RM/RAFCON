@@ -1,6 +1,7 @@
+from __future__ import print_function
 def execute(self, inputs, outputs, gvm):
-    print "Executing scoped data test state 1 ..."
-    print inputs
+    print("Executing scoped data test state 1 ...")
+    print(inputs)
     outputs["data_output_port1"] = inputs["data_input_port1"] + 10.0
-    print outputs
+    print(outputs)
     return 3

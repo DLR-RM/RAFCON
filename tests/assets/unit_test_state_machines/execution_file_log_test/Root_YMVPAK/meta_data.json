@@ -32,8 +32,8 @@
             "rel_pos": {
                 "__jsonqualname__": "__builtin__.tuple", 
                 "items": [
-                    9.920808859692054, 
-                    10.143579597538373
+                    0, 
+                    0
                 ]
             }, 
             "size": {

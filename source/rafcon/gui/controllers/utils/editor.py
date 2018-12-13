@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2017 DLR
+# Copyright (C) 2016-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -17,6 +17,7 @@
 
 """
 
+from future.utils import string_types
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers.label import react_to_event
@@ -34,11 +35,12 @@ class EditorController(ExtendedController):
 
     def __init__(self, model, view, observed_method="script_text"):
         """Constructor"""
-        assert isinstance(observed_method, str)
+        assert isinstance(observed_method, string_types)
         self._observed_method = observed_method
-        ExtendedController.__init__(self, model, view)
+        super(EditorController, self).__init__(model, view)
 
     def register_view(self, view):
+        super(EditorController, self).register_view(view)
         view.get_buffer().connect('changed', self.code_changed)
 
         if hasattr(view.get_buffer(), 'begin_not_undoable_action'):

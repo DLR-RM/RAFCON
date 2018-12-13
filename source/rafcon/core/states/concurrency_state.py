@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -8,16 +8,20 @@
 # Contributors:
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+# Sebastian Riedel <sebastian.riedel@dlr.de>
 
 """
 .. module:: concurrency_state
    :synopsis: A module to represent a concurrency state for the state machine
 
 """
-import Queue
+from future import standard_library
+standard_library.install_aliases()
+import queue
 
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
+import rafcon.core.singleton as singleton
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.execution.execution_history import CallType
 from rafcon.core.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
@@ -85,16 +89,15 @@ class ConcurrencyState(ContainerState):
         self.state_execution_status = StateExecutionStatus.EXECUTE_CHILDREN
         # actually the queue is not needed in the barrier concurrency case
         # to avoid code duplication both concurrency states have the same start child function
-        concurrency_queue = Queue.Queue(maxsize=0)  # infinite Queue size
+        concurrency_queue = queue.Queue(maxsize=0)  # infinite Queue size
 
-        for index, state in enumerate(self.states.itervalues()):
+        for index, state in enumerate(self.states.values()):
             if state is not do_not_start_state:
 
                 state.input_data = self.get_inputs_for_state(state)
                 state.output_data = self.create_output_dictionary_for_state(state)
                 state.concurrency_queue = concurrency_queue
                 state.concurrency_queue_id = index
-
 
                 state.generate_run_id()
                 if not self.backward_execution:
@@ -119,6 +122,9 @@ class ConcurrencyState(ContainerState):
         :return:
         """
         state.join()
+        if state.backward_execution:
+            self.backward_execution = True
+
         state.state_execution_status = StateExecutionStatus.INACTIVE
         # care for the history items
         if not self.backward_execution:
@@ -158,6 +164,8 @@ class ConcurrencyState(ContainerState):
         self.check_output_data_type()
         self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
         self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
+
+        singleton.state_machine_execution_engine.modify_run_to_states(self)
 
         if self.preempted:
             final_outcome = Outcome(-2, "preempted")

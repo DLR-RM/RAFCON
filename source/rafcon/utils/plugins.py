@@ -18,9 +18,11 @@
 
 """
 
+from builtins import str
 import sys
 import os
 import importlib
+import traceback
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -53,7 +55,7 @@ def load_plugins():
                 plugin_dict[plugin_name] = module
                 logger.info("Successfully loaded plugin '{}'".format(plugin_name))
             except ImportError as e:
-                logger.error("Could not import plugin '{}': {}".format(plugin_name, e))
+                logger.error("Could not import plugin '{}': {}\n{}".format(plugin_name, e, str(traceback.format_exc())))
 
 
 def run_hook(hook_name, *args, **kwargs):
@@ -65,7 +67,7 @@ def run_hook(hook_name, *args, **kwargs):
     :param args: Arguments
     :param kwargs: Keyword arguments
     """
-    for module in plugin_dict.itervalues():
+    for module in plugin_dict.values():
         if hasattr(module, "hooks") and callable(getattr(module.hooks, hook_name, None)):
             getattr(module.hooks, hook_name)(*args, **kwargs)
 

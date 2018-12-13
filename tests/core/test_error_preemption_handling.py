@@ -1,3 +1,4 @@
+from builtins import object
 import os
 import pytest
 import testing_utils
@@ -17,7 +18,7 @@ def assert_all_false(*elements):
         assert not elem
 
 
-class TestErrorPreemptionHandling():
+class TestErrorPreemptionHandling(object):
 
     state_machine = None
 
@@ -29,12 +30,10 @@ class TestErrorPreemptionHandling():
             testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "action_block_execution_test")))
         cls.state_machine = state_machine
         state_machine_manager.add_state_machine(state_machine)
-        state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
     @classmethod
     def teardown_class(cls):
-        testing_utils.test_multithreading_lock.release()
-        pass
+        testing_utils.shutdown_environment_only_core()
 
     def setup(self):
         # This methods runs before each test method and resets the global variables
@@ -65,7 +64,8 @@ class TestErrorPreemptionHandling():
         pass
 
     def run_state_machine(self):
-        state_machine_execution_engine.start()
+        sms = state_machine_manager.state_machines
+        state_machine_execution_engine.start(sms[sms.keys()[0]].state_machine_id)
         state_machine_execution_engine.join()
 
     @staticmethod

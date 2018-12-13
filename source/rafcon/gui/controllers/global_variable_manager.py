@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -21,7 +21,9 @@
 
 """
 
-import gtk
+from builtins import str
+from gi.repository import Gtk
+from gi.repository import GObject
 
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -47,7 +49,7 @@ class GlobalVariableManagerController(ListViewController):
     :param rafcon.gui.views.global_variable_editor.GlobalVariableEditorView view: The GTK view showing the list of
         global variables.
     :ivar int global_variable_counter: Counter for global variables to ensure unique names for new global variables.
-    :ivar gtk.ListStore list_store: A gtk list store storing the rows of data of respective global variables in.
+    :ivar Gtk.ListStore list_store: A gtk list store storing the rows of data of respective global variables in.
     """
     ID_STORAGE_ID = 0
     MODEL_STORAGE_ID = 0
@@ -60,14 +62,14 @@ class GlobalVariableManagerController(ListViewController):
         # list store order -> gv_name, data_type, data_value, is_locked
         super(GlobalVariableManagerController, self).__init__(model, view,
                                                               view['global_variable_tree_view'],
-                                                              gtk.ListStore(str, str, str, str), logger)
+                                                              Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING), logger)
 
         self.global_variable_counter = 0
         self.list_store_iterators = {}
 
     def register_view(self, view):
         """Called when the View was registered"""
-        ExtendedController.register_view(self, view)
+        ExtendedController.register_view(self, view)  # no super to avoid sm based selection initialization
         view['name_text'].set_property('editable', True)
         view['value_text'].set_property('editable', True)
         view['type_text'].set_property('editable', True)
@@ -78,7 +80,9 @@ class GlobalVariableManagerController(ListViewController):
         self._apply_value_on_edited_and_focus_out(view['type_text'], self.apply_new_global_variable_type)
         view['new_global_variable_button'].connect('clicked', self.on_add)
         view['delete_global_variable_button'].connect('clicked', self.on_remove)
-        self._tree_selection.set_mode(gtk.SELECTION_MULTIPLE)
+        view['lock_global_variable_button'].connect('clicked', self.on_lock)
+        view['unlock_global_variable_button'].connect('clicked', self.on_unlock)
+        self._tree_selection.set_mode(Gtk.SelectionMode.MULTIPLE)
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -115,6 +119,42 @@ class GlobalVariableManagerController(ListViewController):
         self.select_entry(gv_name)
         return True
 
+    def on_lock(self, widget, data=None):
+        """Locks respective selected core element"""
+        path_list = None
+        if self.view is not None:
+            model, path_list = self.tree_view.get_selection().get_selected_rows()
+        models = [self.list_store[path][self.MODEL_STORAGE_ID] for path in path_list] if path_list else []
+        if models:
+            if len(models) > 1:
+                self._logger.warning("Please select only one element to be locked.")
+            try:
+                self.model.global_variable_manager.lock_variable(models[0])
+            except AttributeError as e:
+                self._logger.warning("The respective core element of {1}.list_store couldn't be locked. -> {0}"
+                                  "".format(e, self.__class__.__name__))
+            return True
+        else:
+            self._logger.warning("Please select an element to be locked.")
+
+    def on_unlock(self, widget, data=None):
+        """Locks respective selected core element"""
+        path_list = None
+        if self.view is not None:
+            model, path_list = self.tree_view.get_selection().get_selected_rows()
+        models = [self.list_store[path][self.MODEL_STORAGE_ID] for path in path_list] if path_list else []
+        if models:
+            if len(models) > 1:
+                self._logger.warning("Please select only one element to be unlocked.")
+            try:
+                self.model.global_variable_manager.unlock_variable(models[0], None, force=True)
+            except AttributeError as e:
+                self._logger.warning("The respective core element of {1}.list_store couldn't be unlocked. -> {0}"
+                                  "".format(e, self.__class__.__name__))
+            return True
+        else:
+            self._logger.warning("Please select an element to be unlocked.")
+
     def remove_core_element(self, model):
         """Remove respective core element of handed global variable name
 
@@ -126,7 +166,7 @@ class GlobalVariableManagerController(ListViewController):
             try:
                 self.model.global_variable_manager.delete_variable(gv_name)
             except AttributeError as e:
-                logger.warn("The respective global variable '{1}' couldn't be removed. -> {0}"
+                logger.warning("The respective global variable '{1}' couldn't be removed. -> {0}"
                             "".format(e, model))
 
     def apply_new_global_variable_name(self, path, new_gv_name):
@@ -232,7 +272,7 @@ class GlobalVariableManagerController(ListViewController):
                 new_value = new_data_type(old_value)
             except (ValueError, TypeError) as e:
                 new_value = new_data_type()
-                logger.warn("Old value '{}' of global variable '{}' could not be parsed to new type '{}' and is "
+                logger.warning("Old value '{}' of global variable '{}' could not be parsed to new type '{}' and is "
                             "therefore resetted: {}".format(old_value, gv_name, new_data_type.__name__, e))
 
         # set value in global variable manager
@@ -244,7 +284,7 @@ class GlobalVariableManagerController(ListViewController):
 
     @ListViewController.observe("global_variable_manager", after=True)
     def assign_notification_from_gvm(self, model, prop_name, info):
-        """Handles gtkmvc notification from global variable manager
+        """Handles gtkmvc3 notification from global variable manager
 
         Calls update of whole list store in case new variable was added. Avoids to run updates without reasonable change.
         Holds tree store and updates row elements if is-locked or global variable value changes.
@@ -258,14 +298,14 @@ class GlobalVariableManagerController(ListViewController):
             if key in self.list_store_iterators:
                 gv_row_path = self.list_store.get_path(self.list_store_iterators[key])
                 self.list_store[gv_row_path][self.IS_LOCKED_AS_STRING_STORAGE_ID] = \
-                    self.model.global_variable_manager.is_locked(key)
+                    str(self.model.global_variable_manager.is_locked(key))
         elif info['method_name'] in ['set_variable', 'delete_variable']:
             if info['method_name'] == 'set_variable':
                 key = info.kwargs.get('key', info.args[1]) if len(info.args) > 1 else info.kwargs['key']
                 if key in self.list_store_iterators:
                     gv_row_path = self.list_store.get_path(self.list_store_iterators[key])
                     self.list_store[gv_row_path][self.VALUE_AS_STRING_STORAGE_ID] = \
-                        self.model.global_variable_manager.get_representation(key)
+                        str(self.model.global_variable_manager.get_representation(key))
                     self.list_store[gv_row_path][self.DATA_TYPE_AS_STRING_STORAGE_ID] = \
                         self.model.global_variable_manager.get_data_type(key).__name__
                     return
@@ -287,6 +327,6 @@ class GlobalVariableManagerController(ListViewController):
             iter = self.list_store.append([key,
                                            self.model.global_variable_manager.get_data_type(key).__name__,
                                            str(self.model.global_variable_manager.get_representation(key)),
-                                           self.model.global_variable_manager.is_locked(key),
+                                           str(self.model.global_variable_manager.is_locked(key)),
                                            ])
             self.list_store_iterators[key] = iter

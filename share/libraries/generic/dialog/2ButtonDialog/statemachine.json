@@ -1,7 +1,7 @@
 {
     "creation_time": "2017-02-22 12:35:39", 
-    "last_update": "2017-09-21 16:25:26", 
-    "root_state_storage_id": "SpawnButtonDialog_TARYGH", 
+    "last_update": "2018-11-27 17:42:59", 
+    "root_state_storage_id": "Spawn_2_Button_Dialog_TARYGH", 
     "state_machine_version": null, 
-    "used_rafcon_version": "0.11.1"
+    "used_rafcon_version": "0.13.0"
 }

@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -16,6 +16,8 @@
 
 """
 
+from future.utils import string_types
+from builtins import str
 import os
 import re
 import math
@@ -30,6 +32,7 @@ import rafcon
 from rafcon.utils.filesystem import read_file, write_file
 from rafcon.utils import storage_utils
 from rafcon.utils import log
+from rafcon.utils.timer import measure_time
 
 from rafcon.core.custom_exceptions import LibraryNotFoundException
 from rafcon.core.constants import DEFAULT_SCRIPT_PATH
@@ -42,7 +45,7 @@ LIBRARY_NOT_FOUND_DUMMY_STATE_NAME = "LIBRARY NOT FOUND DUMMY STATE"
 
 #: File names for various purposes
 FILE_NAME_META_DATA = 'meta_data.json'
-FILE_NAME_META_DATA_OLD = 'gui_gtk.json'
+FILE_NAME_META_DATA_OLD = 'gui_Gtk.json'
 FILE_NAME_CORE_DATA = 'core_data.json'
 FILE_NAME_CORE_DATA_OLD = 'meta.json'
 SCRIPT_FILE = 'script.py'
@@ -235,7 +238,6 @@ def save_semantic_data_for_state(state, state_path_full):
         raise
 
 
-
 def save_state_recursively(state, base_path, parent_path, as_copy=False):
     """Recursively saves a state to a json file
 
@@ -267,10 +269,11 @@ def save_state_recursively(state, base_path, parent_path, as_copy=False):
     # create yaml files for all children
     if isinstance(state, ContainerState):
         remove_obsolete_folders(state.states.values(), os.path.join(base_path, state_path))
-        for state in state.states.itervalues():
+        for state in state.states.values():
             save_state_recursively(state, base_path, state_path, as_copy)
 
 
+@measure_time
 def load_state_machine_from_path(base_path, state_machine_id=None):
     """Loads a state machine from the given path
 
@@ -295,68 +298,59 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
         if not os.path.exists(state_machine_file_path) and not os.path.exists(state_machine_file_path_old):
             raise ValueError("Provided path doesn't contain a valid state machine: {0}".format(base_path))
 
-    if os.path.exists(state_machine_file_path):
-        state_machine_dict = storage_utils.load_objects_from_json(state_machine_file_path)
-        if 'used_rafcon_version' in state_machine_dict:
-            previously_used_rafcon_version = StrictVersion(state_machine_dict['used_rafcon_version']).version
-            active_rafcon_version = StrictVersion(rafcon.__version__).version
+    state_machine_dict = storage_utils.load_objects_from_json(state_machine_file_path)
+    if 'used_rafcon_version' in state_machine_dict:
+        previously_used_rafcon_version = StrictVersion(state_machine_dict['used_rafcon_version']).version
+        active_rafcon_version = StrictVersion(rafcon.__version__).version
 
-            rafcon_newer_than_sm_version = "You are trying to load a state machine that was stored with an older " \
-                                           "version of RAFCON ({0}) than the one you are using ({1}).".format(
-                                            state_machine_dict['used_rafcon_version'], rafcon.__version__)
-            rafcon_older_than_sm_version = "You are trying to load a state machine that was stored with an newer " \
-                                           "version of RAFCON ({0}) than the one you are using ({1}).".format(
-                                            state_machine_dict['used_rafcon_version'], rafcon.__version__)
-            note_about_possible_incompatibility = "The state machine will be loaded with no guarantee of success."
+        rafcon_newer_than_sm_version = "You are trying to load a state machine that was stored with an older " \
+                                       "version of RAFCON ({0}) than the one you are using ({1}).".format(
+                                        state_machine_dict['used_rafcon_version'], rafcon.__version__)
+        rafcon_older_than_sm_version = "You are trying to load a state machine that was stored with an newer " \
+                                       "version of RAFCON ({0}) than the one you are using ({1}).".format(
+                                        state_machine_dict['used_rafcon_version'], rafcon.__version__)
+        note_about_possible_incompatibility = "The state machine will be loaded with no guarantee of success."
 
-            if active_rafcon_version[0] > previously_used_rafcon_version[0]:
-                logger.warn(rafcon_newer_than_sm_version)
-                logger.warn(note_about_possible_incompatibility)
-            elif active_rafcon_version[0] == previously_used_rafcon_version[0]:
-                if active_rafcon_version[1] > previously_used_rafcon_version[1]:
-                    logger.info(rafcon_newer_than_sm_version)
-                    logger.info(note_about_possible_incompatibility)
-                elif active_rafcon_version[1] == previously_used_rafcon_version[1]:
-                    # Major and minor version of RAFCON and the state machine match
-                    # It should be safe to load the state machine, as the patch level does not change the format
-                    pass
-                else:
-                    logger.warn(rafcon_older_than_sm_version)
-                    logger.warn(note_about_possible_incompatibility)
+        if active_rafcon_version[0] > previously_used_rafcon_version[0]:
+            # this is the default case
+            # for a list of breaking changes please see: doc/breaking_changes.rst
+            # logger.warning(rafcon_newer_than_sm_version)
+            # logger.warning(note_about_possible_incompatibility)
+            pass
+        if active_rafcon_version[0] == previously_used_rafcon_version[0]:
+            if active_rafcon_version[1] > previously_used_rafcon_version[1]:
+                # this is the default case
+                # for a list of breaking changes please see: doc/breaking_changes.rst
+                # logger.info(rafcon_newer_than_sm_version)
+                # logger.info(note_about_possible_incompatibility)
+                pass
+            elif active_rafcon_version[1] == previously_used_rafcon_version[1]:
+                # Major and minor version of RAFCON and the state machine match
+                # It should be safe to load the state machine, as the patch level does not change the format
+                pass
             else:
-                logger.warn(rafcon_older_than_sm_version)
-                logger.warn(note_about_possible_incompatibility)
+                logger.warning(rafcon_older_than_sm_version)
+                logger.warning(note_about_possible_incompatibility)
+        else:
+            logger.warning(rafcon_older_than_sm_version)
+            logger.warning(note_about_possible_incompatibility)
 
-        state_machine = StateMachine.from_dict(state_machine_dict, state_machine_id)
-        if "root_state_storage_id" not in state_machine_dict:
-            root_state_storage_id = state_machine_dict['root_state_id']
-            state_machine.supports_saving_state_names = False
-        else:
-            root_state_storage_id = state_machine_dict['root_state_storage_id']
-
-    # TODO: Remove this with next minor release
-    else:
-        stream = file(state_machine_file_path_old, 'r')
-        tmp_dict = yaml.load(stream)
-        if "root_state" in tmp_dict:
-            root_state_storage_id = tmp_dict['root_state']
-        else:
-            root_state_storage_id = tmp_dict['root_state_id']
-        version = tmp_dict['version']
-        # Prevents storage as datetime object
-        creation_time = str(tmp_dict['creation_time'])
-        if 'last_update' not in tmp_dict:
-            last_update = creation_time
-        else:
-            last_update = tmp_dict['last_update']
-        state_machine = StateMachine(version=version, creation_time=creation_time, last_update=last_update,
-                                     state_machine_id=state_machine_id)
+    state_machine = StateMachine.from_dict(state_machine_dict, state_machine_id)
+    if "root_state_storage_id" not in state_machine_dict:
+        root_state_storage_id = state_machine_dict['root_state_id']
         state_machine.supports_saving_state_names = False
+    else:
+        root_state_storage_id = state_machine_dict['root_state_storage_id']
 
     root_state_path = os.path.join(base_path, root_state_storage_id)
     state_machine.file_system_path = base_path
-    state_machine.root_state = load_state_recursively(parent=state_machine, state_path=root_state_path)
-    state_machine.marked_dirty = False
+    dirty_states = []
+    state_machine.root_state = load_state_recursively(parent=state_machine, state_path=root_state_path,
+                                                      dirty_states=dirty_states)
+    if len(dirty_states) > 0:
+        state_machine.marked_dirty = True
+    else:
+        state_machine.marked_dirty = False
 
     hierarchy_level = 0
     number_of_states, hierarchy_level = state_machine.root_state.get_states_statistics(hierarchy_level)
@@ -377,13 +371,14 @@ def load_state_from_path(state_path):
     return load_state_recursively(parent=None, state_path=state_path)
 
 
-def load_state_recursively(parent, state_path=None):
+def load_state_recursively(parent, state_path=None, dirty_states=[]):
     """Recursively loads the state
 
     It calls this method on each sub-state of a container state.
 
     :param parent:  the root state of the last load call to which the loaded state will be added
     :param state_path: the path on the filesystem where to find the meta file for the state
+    :param dirty_states: a dict of states which changed during loading
     :return:
     """
     from rafcon.core.states.execution_state import ExecutionState
@@ -400,12 +395,12 @@ def load_state_recursively(parent, state_path=None):
 
     try:
         state_info = load_data_file(path_core_data)
-    except ValueError, e:
+    except ValueError as e:
         logger.exception("Error while loading state data: {0}".format(e))
         return
-    except LibraryNotFoundException, e:
+    except LibraryNotFoundException as e:
         logger.error("Library could not be loaded: {0}\n"
-                     "Skipping library and continuing loading the state machine".format(str(e.message)))
+                     "Skipping library and continuing loading the state machine".format(e))
         state_info = storage_utils.load_objects_from_json(path_core_data, as_dict=True)
         state_id = state_info["state_id"]
         dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id)
@@ -441,11 +436,9 @@ def load_state_recursively(parent, state_path=None):
     try:
         semantic_data = load_data_file(os.path.join(state_path, SEMANTIC_DATA_FILE))
         state.semantic_data = semantic_data
-    except Exception, e:
+    except Exception as e:
         # semantic data file does not have to be there
         pass
-
-
 
     one_of_my_child_states_not_found = False
 
@@ -453,7 +446,7 @@ def load_state_recursively(parent, state_path=None):
     for p in os.listdir(state_path):
         child_state_path = os.path.join(state_path, p)
         if os.path.isdir(child_state_path):
-            child_state = load_state_recursively(state, child_state_path)
+            child_state = load_state_recursively(state, child_state_path, dirty_states)
             if child_state.name is LIBRARY_NOT_FOUND_DUMMY_STATE_NAME:
                 one_of_my_child_states_not_found = True
 
@@ -467,6 +460,9 @@ def load_state_recursively(parent, state_path=None):
             state.data_flows = data_flows
 
     state.file_system_path = state_path
+
+    if state.marked_dirty:
+        dirty_states.append(state)
 
     return state
 
@@ -495,7 +491,7 @@ def limit_text_max_length(text, max_length, separator='_'):
     :return: the shortened input string
     """
     if max_length is not None:
-        if isinstance(text, basestring) and len(text) > max_length:
+        if isinstance(text, string_types) and len(text) > max_length:
             max_length = int(max_length)
             half_length = float(max_length - 1) / 2
             return text[:int(math.ceil(half_length))] + separator + text[-int(math.floor(half_length)):]
@@ -511,7 +507,7 @@ def clean_path_element(text, max_length=None, separator='_'):
     :return:
     """
     elements_to_replace = REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION
-    for elem, replace_with in elements_to_replace.iteritems():
+    for elem, replace_with in elements_to_replace.items():
         text = text.replace(elem, replace_with)
     if max_length is not None:
         text = limit_text_max_length(text, max_length, separator)
@@ -528,7 +524,7 @@ def limit_text_to_be_path_element(text, max_length=None, separator='_'):
     """
     # TODO: Should there not only be one method i.e. either this one or "clean_path_element"
     elements_to_replace = {' ': '_', '*': '_'}
-    for elem, replace_with in elements_to_replace.iteritems():
+    for elem, replace_with in elements_to_replace.items():
         text = text.replace(elem, replace_with)
     text = re.sub('[^a-zA-Z0-9-_]', '', text)
     if max_length is not None:
@@ -545,7 +541,8 @@ def get_storage_id_for_state(state):
         max_length = global_config.get_config_value('MAX_LENGTH_FOR_STATE_NAME_IN_STORAGE_PATH')
 
         max_length_of_state_name_in_folder_name = 255 - len(ID_NAME_DELIMITER + state.state_id)
-        if max_length is None or max_length > max_length_of_state_name_in_folder_name:
+        # TODO: should we allow "None" in config file?
+        if max_length is None or max_length == "None" or max_length > max_length_of_state_name_in_folder_name:
             if max_length_of_state_name_in_folder_name < len(state.name):
                 logger.info("The storage folder name is forced to be maximal 255 characters in length.")
             max_length = max_length_of_state_name_in_folder_name

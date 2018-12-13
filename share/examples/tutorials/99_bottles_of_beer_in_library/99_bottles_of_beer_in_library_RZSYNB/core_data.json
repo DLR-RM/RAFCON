@@ -1,0 +1,45 @@
+{
+    "__jsonqualname__": "rafcon.core.states.hierarchy_state.HierarchyState", 
+    "data_flows": {}, 
+    "description": null, 
+    "input_data_ports": {}, 
+    "name": "99_bottles_of_beer_in_library", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.outcome.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {}, 
+    "scoped_variables": {}, 
+    "state_id": "RZSYNB", 
+    "transitions": {
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": null, 
+            "from_state": null, 
+            "to_outcome": null, 
+            "to_state": "UNBQOS", 
+            "transition_id": 1
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "UNBQOS", 
+            "to_outcome": 0, 
+            "to_state": "RZSYNB", 
+            "transition_id": 2
+        }
+    }
+}

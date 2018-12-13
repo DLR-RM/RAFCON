@@ -9,6 +9,7 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+# Sebastian Riedel <sebastian.riedel@dlr.de>
 
 """
 .. module:: id_generator
@@ -16,6 +17,8 @@
 
 """
 
+from builtins import str
+from builtins import range
 import string
 import random
 import uuid
@@ -32,7 +35,6 @@ run_id_counter = 0
 history_item_id_counter = 0
 semantic_data_id_counter = 0
 
-used_state_ids = []
 used_run_ids = []
 used_global_variable_ids = []
 
@@ -71,6 +73,12 @@ def generate_outcome_id(used_outcome_ids):
 
 
 def generate_data_port_id(used_data_port_ids):
+    """ Create a new and unique data port id
+
+    :param list used_data_port_ids: Handed list of ids already in use
+    :rtype: int
+    :return: data_port_id
+    """
     data_port_id_counter = -1
     while True:
         data_port_id_counter += 1
@@ -80,6 +88,12 @@ def generate_data_port_id(used_data_port_ids):
 
 
 def generate_semantic_data_key(used_semantic_keys):
+    """ Create a new and unique semantic data key
+
+    :param list used_semantic_keys: Handed list of keys already in use
+    :rtype: str
+    :return: semantic_data_id
+    """
     semantic_data_id_counter = -1
     while True:
         semantic_data_id_counter += 1
@@ -100,6 +114,7 @@ def run_id_generator():
     final_run_id = experiment_id + ".run_id." + '%020d' % run_id_counter
     return final_run_id
 
+
 def history_item_id_generator():
     global history_item_id_counter
     history_item_id_counter += 1
@@ -107,24 +122,30 @@ def history_item_id_generator():
     return final_id
 
 
-def state_id_generator(size=STATE_ID_LENGTH, chars=string.ascii_uppercase):
-    """
+def state_id_generator(size=STATE_ID_LENGTH, chars=string.ascii_uppercase, used_state_ids=None):
+    """ Create a new and unique state id
+
     Generates an id for a state. It randomly samples from random ascii uppercase letters size times
     and concatenates them. If the id already exists it draws a new one.
+
     :param size: the length of the generated keys
     :param chars: the set of characters a sample draws from
+    :param list used_state_ids: Handed list of ids already in use
+    :rtype: str
+    :return: new_state_id
     """
     new_state_id = ''.join(random.choice(chars) for x in range(size))
-    while new_state_id in used_state_ids:
+    while used_state_ids is not None and new_state_id in used_state_ids:
         new_state_id = ''.join(random.choice(chars) for x in range(size))
-    used_state_ids.append(new_state_id)
     return new_state_id
 
 
 def global_variable_id_generator(size=10, chars=string.ascii_uppercase):
-    """
+    """ Create a new and unique global variable id
+
     Generates an id for a global variable. It randomly samples from random ascii uppercase letters size times
     and concatenates them. If the id already exists it draws a new one.
+
     :param size: the length of the generated keys
     :param chars: the set of characters a sample draws from
     """

@@ -1,0 +1,132 @@
+{
+    "gui": {
+        "editor_gaphas": {
+            "income": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        6.556247413700492, 
+                        1.5019030554953436
+                    ]
+                }
+            }, 
+            "name": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.26218942192819217, 
+                        0.5783100951832125
+                    ]
+                }, 
+                "size": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        6.164685017731569, 
+                        2.8890881255083243
+                    ]
+                }
+            }, 
+            "rel_pos": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    6.115096571247179, 
+                    26.85749053136756
+                ]
+            }, 
+            "size": {
+                "__jsonqualname__": "__builtin__.tuple", 
+                "items": [
+                    6.685620387741222, 
+                    6.46864870203653
+                ]
+            }
+        }, 
+        "show_content": {}
+    }, 
+    "income": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        5.877996494848334, 
+                        1.2319968278795361
+                    ]
+                }
+            }
+        }
+    }, 
+    "input13": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.3125, 
+                        5.060659507376025
+                    ]
+                }
+            }
+        }
+    }, 
+    "input_data_port13": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.12937297404073062, 
+                        5.327181717912837
+                    ]
+                }
+            }
+        }
+    }, 
+    "name": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {}, 
+                "size": {}
+            }
+        }
+    }, 
+    "outcome-1": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        5.42320783149105, 
+                        0.12937297404073062
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome-2": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        6.061390438708498, 
+                        0.12937297404073062
+                    ]
+                }
+            }
+        }
+    }, 
+    "outcome0": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        2.393949653031628, 
+                        6.339275727995799
+                    ]
+                }
+            }
+        }
+    }
+}

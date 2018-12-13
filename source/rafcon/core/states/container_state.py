@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2017 DLR
+# Copyright (C) 2014-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -19,11 +19,12 @@
    :synopsis: A module to represent a generic container state in the state machine
 
 """
+from builtins import str
 import traceback
 from copy import copy, deepcopy
 from threading import Condition
 
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.custom_exceptions import RecoveryModeException
 from rafcon.core.decorators import lock_state_machine
@@ -98,8 +99,10 @@ class ContainerState(State):
     @lock_state_machine
     def update_hash(self, obj_hash):
         super(ContainerState, self).update_hash(obj_hash)
-        for child in self.states.itervalues():
-            child.update_hash(obj_hash)
+        for state_element in sorted(self.states.values()) + sorted(list(self.transitions.values()) +
+                                                                   list(self.data_flows.values()) +
+                                                                   list(self.scoped_variables.values())):
+            self.update_hash_from_dict(obj_hash, state_element)
 
     @staticmethod
     def state_to_dict(state):
@@ -153,30 +156,34 @@ class ContainerState(State):
     def __str__(self):
         return "{0} [{1} child states]".format(super(ContainerState, self).__str__(), len(self.states))
 
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
         # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}".format(self, other))
         if not isinstance(other, self.__class__):
             return False
         try:
-            diff_states = [self.states[state_id] == state for state_id, state in other.states.iteritems()]
+            diff_states = [self.states[state_id] == state for state_id, state in list(other.states.items())]
             diff_states.append(len(self.states) == len(other.states))
         except KeyError:
             return False
         return all(diff_states) and str(self) == str(other)
 
     def __copy__(self):
-        input_data_ports = {elem_id: copy(elem) for elem_id, elem in self._input_data_ports.iteritems()}
-        output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.iteritems()}
+        input_data_ports = {elem_id: copy(elem) for elem_id, elem in self._input_data_ports.items()}
+        output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.items()}
         income = self._income
-        outcomes = {elem_id: copy(elem) for elem_id, elem in self._outcomes.iteritems()}
-        states = {elem_id: copy(elem) for elem_id, elem in self._states.iteritems()}
-        scoped_variables = {elem_id: copy(elem) for elem_id, elem in self._scoped_variables.iteritems()}
-        data_flows = {elem_id: copy(elem) for elem_id, elem in self._data_flows.iteritems()}
-        transitions = {elem_id: copy(elem) for elem_id, elem in self._transitions.iteritems()}
+        outcomes = {elem_id: copy(elem) for elem_id, elem in self._outcomes.items()}
+        states = {elem_id: copy(elem) for elem_id, elem in self._states.items()}
+        scoped_variables = {elem_id: copy(elem) for elem_id, elem in self._scoped_variables.items()}
+        data_flows = {elem_id: copy(elem) for elem_id, elem in self._data_flows.items()}
+        transitions = {elem_id: copy(elem) for elem_id, elem in self._transitions.items()}
 
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, states,
                                transitions, data_flows, None, scoped_variables)
         state.description = deepcopy(self.description)
+        state.semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
         return state
 
@@ -219,21 +226,21 @@ class ContainerState(State):
         self._transitions_cv.acquire()
         self._transitions_cv.notify_all()
         self._transitions_cv.release()
-        for state in self.states.itervalues():
+        for state in self.states.values():
             state.recursively_preempt_states()
 
     def recursively_pause_states(self):
         """ Pause the state and all of it child states.
         """
         super(ContainerState, self).recursively_pause_states()
-        for state in self.states.itervalues():
+        for state in self.states.values():
             state.recursively_pause_states()
 
     def recursively_resume_states(self):
         """ Resume the state and all of it child states.
         """
         super(ContainerState, self).recursively_resume_states()
-        for state in self.states.itervalues():
+        for state in self.states.values():
             state.recursively_resume_states()
 
     def setup_run(self):
@@ -281,13 +288,13 @@ class ContainerState(State):
             if execution_signal is StateMachineExecutionStatus.STOPPED:
                 # this will be caught at the end of the run method
                 self.last_child.state_execution_status = StateExecutionStatus.INACTIVE
-                logger.warn("State machine was stopped, while state {} waited for the next transition.".format(
+                logger.warning("State machine was stopped, while state {} waited for the next transition.".format(
                     state.name
                 ))
                 return None
 
             # wait until the user connects the outcome of the state with a transition
-            logger.warn("Waiting for new transition at {1} of {0} ".format(state, state.final_outcome))
+            logger.warning("Waiting for new transition at {1} of {0} ".format(state, state.final_outcome))
             self._transitions_cv.acquire()
             self._transitions_cv.wait(3.0)
             self._transitions_cv.release()
@@ -350,15 +357,6 @@ class ContainerState(State):
         [related_transitions, related_data_flows] = self.related_linkage_states_and_scoped_variables(state_ids,
                                                                                                      scoped_variable_ids)
 
-        # all states
-        states_to_group = {state_id: self.states[state_id] for state_id in state_ids}
-        # all internal scoped variables
-        scoped_variables_to_group = {dp_id: self.scoped_variables[dp_id] for dp_id in scoped_variable_ids}
-        # all internal transitions
-        transitions_internal = {t.transition_id: t for t in related_transitions['enclosed']}
-        # all internal data flows
-        data_flows_internal = {df.data_flow_id: df for df in related_data_flows['enclosed']}
-
         def assign_ingoing_outgoing(df, going_data_linkage_for_port, ingoing=True):
             internal = 'internal' if ingoing else 'external'
             external = 'external' if ingoing else 'internal'
@@ -372,22 +370,22 @@ class ContainerState(State):
                 going_data_linkage_for_port['from'][(df.from_state, df.from_key)] = {external: [df], internal: [df]}
 
         def print_df_from_and_to(going_data_linkage_for_port):
-            print 'FROM: \n'
-            for port, port_dfs in going_data_linkage_for_port['from'].iteritems():
-                print "\tport: ", port, '' if 'args' not in port_dfs else port_dfs['args']
-                print "\t\texternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['external']])
-                print "\t\tinternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['internal']])
-            print 'TO: \n'
-            for port, port_dfs in going_data_linkage_for_port['to'].iteritems():
-                print "\tport: ", port, '' if 'args' not in port_dfs else port_dfs['args']
-                print "\t\texternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['external']])
-                print "\t\tinternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['internal']])
+            logger.verbose('data linkage FROM: ')
+            for port, port_dfs in going_data_linkage_for_port['from'].items():
+                logger.verbose("\tport: {0} {1}".format(port, '' if 'args' not in port_dfs else port_dfs['args']))
+                logger.verbose("\t\texternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['external']]))
+                logger.verbose("\t\tinternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['internal']]))
+            logger.verbose('data linkage TO: ')
+            for port, port_dfs in going_data_linkage_for_port['to'].items():
+                logger.verbose("\tport: {0} {1}".format(port, '' if 'args' not in port_dfs else port_dfs['args']))
+                logger.verbose("\t\texternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['external']]))
+                logger.verbose("\t\tinternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['internal']]))
 
         def reduce_dfs(port_data_linkages, df_id):
-            for port_key in port_data_linkages.keys():
+            for port_key in list(port_data_linkages.keys()):
                 port_df = port_data_linkages[port_key]
-                port_df['internal'] = filter(lambda df: df.data_flow_id != df_id, port_df['internal'])
-                port_df['external'] = filter(lambda df: df.data_flow_id != df_id, port_df['external'])
+                port_df['internal'] = [df for df in port_df['internal'] if df.data_flow_id != df_id]
+                port_df['external'] = [df for df in port_df['external'] if df.data_flow_id != df_id]
                 if not port_df['internal'] and not port_df['external']:
                     del port_data_linkages[port_key]
 
@@ -395,37 +393,37 @@ class ContainerState(State):
             # logger.info("PRIOR IN OUT {0}, {1}".format(prior_port_key, prior_locate_key))
             minor_port_key = 'from' if prior_port_key == 'to' else 'to'
             minor_locate_key = 'external' if prior_locate_key == 'internal' else 'internal'
-            for port_key in going_data_linkage_for_port[prior_port_key].keys():
+            for port_key in list(going_data_linkage_for_port[prior_port_key].keys()):
                 port_dfs = going_data_linkage_for_port[prior_port_key][port_key]
-                # print prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key])
+                # print(prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key]))
                 if len(port_dfs[prior_locate_key]) > 1:
                     for df in port_dfs[prior_locate_key]:
-                        # print "remove: ", df.data_flow_id, prior_locate_key, minor_port_key
+                        # print("remove: ", df.data_flow_id, prior_locate_key, minor_port_key)
                         reduce_dfs(going_data_linkage_for_port[minor_port_key], df.data_flow_id)
-            for port_key in going_data_linkage_for_port[minor_port_key].keys():
+            for port_key in list(going_data_linkage_for_port[minor_port_key].keys()):
                 port_dfs = going_data_linkage_for_port[minor_port_key][port_key]
-                # print minor_port_key, ": check: ", port_key, " length: ", len(port_dfs[minor_locate_key])
+                # print(minor_port_key, ": check: ", port_key, " length: ", len(port_dfs[minor_locate_key]))
                 if len(port_dfs[minor_locate_key]) > 1:
                     for df in port_dfs[minor_locate_key]:
-                        # print "remove: ", df.data_flow_id, minor_locate_key, prior_port_key
+                        # print("remove: ", df.data_flow_id, minor_locate_key, prior_port_key)
                         reduce_dfs(going_data_linkage_for_port[prior_port_key], df.data_flow_id)
-            for port_key in going_data_linkage_for_port[prior_port_key].keys():
+            for port_key in list(going_data_linkage_for_port[prior_port_key].keys()):
                 port_dfs = going_data_linkage_for_port[prior_port_key][port_key]
-                # print prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key])
+                # print(prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key]))
                 if len(port_dfs[prior_locate_key]) == 1:
                     for df in port_dfs[prior_locate_key]:
-                        # print "remove: ", df.data_flow_id, prior_locate_key, minor_port_key
+                        # print("remove: ", df.data_flow_id, prior_locate_key, minor_port_key)
                         reduce_dfs(going_data_linkage_for_port[minor_port_key], df.data_flow_id)
 
         def create_data_port_args(going_data_linkage_for_port):
             names = []
-            for goal, data_port_linkage in going_data_linkage_for_port['to'].iteritems():
+            for goal, data_port_linkage in going_data_linkage_for_port['to'].items():
                 state = self.states[goal[0]] if goal[0] != self.state_id else self
                 port = state.get_data_port_by_id(goal[1])
                 data_port_linkage['args'] = port.state_element_to_dict(port)
                 data_port_linkage['args']['name'] = create_name(data_port_linkage['args']['name'], names)
                 names.append(data_port_linkage['args']['name'])
-            for goal, data_port_linkage in going_data_linkage_for_port['from'].iteritems():
+            for goal, data_port_linkage in going_data_linkage_for_port['from'].items():
                 state = self.states[goal[0]] if goal[0] != self.state_id else self
                 port = state.get_data_port_by_id(goal[1])
                 data_port_linkage['args'] = port.state_element_to_dict(port)
@@ -473,12 +471,34 @@ class ContainerState(State):
         # print_df_from_and_to(outgoing_data_linkage_for_port)
 
         ############################# CREATE NEW STATE #############################
-        [self.remove_state(state_id, recursive_deletion=False, destruct=False) for state_id in state_ids]
-        [self.remove_scoped_variable(sv_id) for sv_id in scoped_variable_ids]
-        # TODO if the version is final create the ingoing and outgoing internal linkage before and hand it while state creation
+        # all internal transitions
+        transitions_internal = {t.transition_id: self.remove_transition(t.transition_id, destroy=False)
+                                for t in related_transitions['enclosed']}
+        # all internal data flows
+        data_flows_internal = {df.data_flow_id: self.remove_data_flow(df.data_flow_id, destroy=False)
+                               for df in related_data_flows['enclosed']}
+        # TODO add warning if a data-flow is connected to scoped variables which has ingoing and outgoing data flows
+        # TODO linked with selected states -> group would change behavior and scoped would need to be selected or
+        # TODO                                local scoped variable need to be introduced in new hierarchy state
+        # all internal scoped variables
+        scoped_variables_to_group = {dp_id: self.remove_scoped_variable(dp_id, destroy=False)
+                                     for dp_id in scoped_variable_ids}
+        # all states
+        states_to_group = {state_id: self.remove_state(state_id, recursive=False, destroy=False)
+                           for state_id in state_ids}
         from rafcon.core.states.hierarchy_state import HierarchyState
+        # secure state id conflicts for the taken transitions
+        from rafcon.core.id_generator import state_id_generator
+        state_id = state_id_generator(used_state_ids=state_ids + [self.state_id])
+        # if scoped variables are used all data flows have to be checked if those link to those and correct the state_id
+        if scoped_variable_ids:
+            for data_flow in data_flows_internal.values():
+                if data_flow.from_state == self.state_id:
+                    data_flow.from_state = state_id
+                if data_flow.to_state == self.state_id:
+                    data_flow.to_state = state_id
         s = HierarchyState(states=states_to_group, transitions=transitions_internal, data_flows=data_flows_internal,
-                           scoped_variables=scoped_variables_to_group, state_id=self.state_id)
+                           scoped_variables=scoped_variables_to_group, state_id=state_id)
         state_id = self.add_state(s)
 
         def find_logical_destinations_of_transitions(transitions):
@@ -499,7 +519,7 @@ class ContainerState(State):
                            "".format('\n'.join([str(destination) for destination in ingoing_logical_destinations.items()[1:]])))
         ingoing_transitions = None
         if len(ingoing_logical_destinations) > 0:
-            ingoing_transitions = ingoing_logical_destinations.items()[0][1]
+            ingoing_transitions = list(ingoing_logical_destinations.items())[0][1]
         # transitions from outgoing transitions
         transitions_outgoing = {t.transition_id: t for t in related_transitions['outgoing']}
         outgoing_logical_destinations = find_logical_destinations_of_transitions(related_transitions['outgoing'])
@@ -515,19 +535,19 @@ class ContainerState(State):
         # outcomes from outgoing transitions
         outcomes_outgoing_transitions = {}
         new_outcome_ids = {}
-        state_outcomes_by_name = {oc.name: oc_id for oc_id, oc in s.outcomes.iteritems()}
-        for goal, transitions in outgoing_logical_destinations.iteritems():
+        state_outcomes_by_name = {oc.name: oc_id for oc_id, oc in s.outcomes.items()}
+        for goal, transitions in list(outgoing_logical_destinations.items()):
             t = transitions[0]
             name = s.states[t.from_state].outcomes[t.from_outcome].name
-            # print (t.to_state, t.to_outcome)
-            # print outcomes_outgoing_transitions
+            # print((t.to_state, t.to_outcome))
+            # print(outcomes_outgoing_transitions)
             if goal in outcomes_outgoing_transitions:
                 # logger.info("old outcome {}".format((t.to_state, t.to_outcome)))
                 name = outcomes_outgoing_transitions[goal]
             else:
-                name = create_name(name, new_outcome_ids.keys())
+                name = create_name(name, list(new_outcome_ids.keys()))
                 outcomes_outgoing_transitions[goal] = name
-            # print outcomes_outgoing_transitions, "\n", new_outcome_ids
+            # print(outcomes_outgoing_transitions, "\n", new_outcome_ids)
             if name not in new_outcome_ids:
                 if name in state_outcomes_by_name:
                     new_outcome_ids[name] = state_outcomes_by_name[name]
@@ -540,15 +560,20 @@ class ContainerState(State):
 
         ################## DO OUTGOING TRANSITIONS ###################
         # external outgoing transitions
-        for goal, name in outcomes_outgoing_transitions.iteritems():
+        # print("external transitions to create", outcomes_outgoing_transitions)
+        for goal, name in outcomes_outgoing_transitions.items():
             try:
+                # avoid to use a outcome twice
+                if any([t for t in s.parent.transitions.values()
+                        if t.from_state == s.state_id and t.from_outcome == new_outcome_ids[name]]):
+                    continue
+                # add the transition for the outcome
                 self.add_transition(s.state_id, new_outcome_ids[name], goal[0], goal[1])
             except ValueError:
-                from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
-                if not isinstance(self, BarrierConcurrencyState):
-                    logger.exception("Error while recreation of logical linkage.")
+                logger.exception("Error while recreation of logical linkage.")
         # internal outgoing transitions
-        for t_id, t in transitions_outgoing.iteritems():
+        # print("internal transitions to create", transitions_outgoing)
+        for t_id, t in transitions_outgoing.items():
             name = outcomes_outgoing_transitions[(t.to_state, t.to_outcome)]
             s.add_transition(t.from_state, t.from_outcome, s.state_id, new_outcome_ids[name], t_id)
 
@@ -556,22 +581,22 @@ class ContainerState(State):
         ############## REBUILD INGOING DATA LINKAGE ################
         full_linkage = copy(ingoing_data_linkage_for_port['from'])
         full_linkage.update(ingoing_data_linkage_for_port['to'])
-        for port, data_port_linkage in full_linkage.iteritems():
+        for port, data_port_linkage in full_linkage.items():
             # input data ports from ingoing data flows
             args = data_port_linkage['args']
             args['data_port_id'] = None
             args['data_port_id'] = s.add_input_data_port(**args)
             # internal data flows from ingoing data flows
-            # print "ingoing internal data flows"
+            # print("ingoing internal data flows")
             for df in data_port_linkage['internal']:
-                # print df
+                # print(df)
                 s.add_data_flow(from_state_id=s.state_id, from_data_port_id=args['data_port_id'],
                                 to_state_id=new_state_ids.get(df.to_state, df.to_state),
                                 to_data_port_id=df.to_key, data_flow_id=df.data_flow_id)
             # external data flows from ingoing data flows
-            # print "ingoing external data flows"
+            # print("ingoing external data flows")
             for df in data_port_linkage['external']:
-                # print df
+                # print(df)
                 self.add_data_flow(from_state_id=df.from_state,
                                    from_data_port_id=df.from_key, to_state_id=s.state_id,
                                    to_data_port_id=args['data_port_id'], data_flow_id=df.data_flow_id)
@@ -579,22 +604,22 @@ class ContainerState(State):
         ############## REBUILD OUTGOING DATA LINKAGE ################
         full_linkage = copy(outgoing_data_linkage_for_port['from'])
         full_linkage.update(outgoing_data_linkage_for_port['to'])
-        for port, data_port_linkage in full_linkage.iteritems():
+        for port, data_port_linkage in full_linkage.items():
             # output data ports from outgoing data flows
             args = data_port_linkage['args']
             args['data_port_id'] = None
             args['data_port_id'] = s.add_output_data_port(**args)
             # internal data flows from outgoing data flows
-            # print "outgoing internal data flows"
+            # print("outgoing internal data flows")
             for df in data_port_linkage['internal']:
-                # print df
+                # print(df)
                 s.add_data_flow(from_state_id=new_state_ids.get(df.from_state, df.from_state),
                                 from_data_port_id=df.from_key, to_state_id=s.state_id,
                                 to_data_port_id=args['data_port_id'], data_flow_id=df.data_flow_id)
             # external data flows from outgoing data flows
-            # print "outgoing external data flows"
+            # print("outgoing external data flows")
             for df in data_port_linkage['external']:
-                # print df
+                # print(df)
                 self.add_data_flow(from_state_id=s.state_id, from_data_port_id=args['data_port_id'],
                                    to_state_id=df.to_state, to_data_port_id=df.to_key, data_flow_id=df.data_flow_id)
 
@@ -612,6 +637,7 @@ class ContainerState(State):
         :return:
         """
         state = self.states[state_id]
+        assert isinstance(state, ContainerState)
         from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, UNIQUE_DECIDER_STATE_ID
         if isinstance(state, BarrierConcurrencyState):
             state.remove_state(state_id=UNIQUE_DECIDER_STATE_ID, force=True)
@@ -627,7 +653,7 @@ class ContainerState(State):
             else:
                 ingoing_data_linkage_for_port[(df.from_state, df.from_key)] = {'external': [], 'internal': [df]}
             if not ingoing_data_linkage_for_port[(df.from_state, df.from_key)]['external']:
-                for ext_df in self.data_flows.itervalues():
+                for ext_df in self.data_flows.values():
                     if (ext_df.to_state, ext_df.to_key) == (df.from_state, df.from_key):
                         ingoing_data_linkage_for_port[(df.from_state, df.from_key)]['external'].append(ext_df)
         # outgoing data linkage to rebuild
@@ -638,17 +664,15 @@ class ContainerState(State):
             else:
                 outgoing_data_linkage_for_port[(df.to_state, df.to_key)] = {'external': [], 'internal': [df]}
             if not outgoing_data_linkage_for_port[(df.to_state, df.to_key)]['external']:
-                for ext_df in self.data_flows.itervalues():
+                for ext_df in self.data_flows.values():
                     if (ext_df.from_state, ext_df.from_key) == (df.to_state, df.to_key):
                         outgoing_data_linkage_for_port[(df.to_state, df.to_key)]['external'].append(ext_df)
         # hold states and scoped variables to rebuild
-        from rafcon.core.states.barrier_concurrency_state import DeciderState
-        child_states = [state.states[child_state_id] for child_state_id in state.states
-                        if not isinstance(state.states[child_state_id], DeciderState)]
-        child_scoped_variables = [sv for sv_id, sv in state.scoped_variables.iteritems()]
+        child_states = [state.remove_state(s_id, recursive=False, destroy=False) for s_id in list(state.states.keys())]
+        child_scoped_variables = [sv for sv_id, sv in list(state.scoped_variables.items())]
 
         # remove state that should be ungrouped
-        self.remove_state(state_id, recursive_deletion=False)
+        old_state = self.remove_state(state_id, recursive=False, destroy=False)
 
         # fill elements into parent state and remember id mapping from child to parent state to map other properties
         state_id_dict = {}
@@ -657,13 +681,24 @@ class ContainerState(State):
         enclosed_t_id_dict = {}
 
         # re-create states
-        for state in child_states:
-            new_state_id = self.add_state(state)
-            state_id_dict[state.state_id] = new_state_id
+        old_state_ids = [state.state_id for state in child_states]
+        for child_state in child_states:
+            old_state_id = child_state.state_id
+            # needed to change state id here because not handled in add state and to avoid old state ids
+            new_id = None
+            if child_state.state_id in list(self.states.keys()):
+                new_id = state_id_generator(used_state_ids=list(self.states.keys()) + old_state_ids + [self.state_id])
+                child_state.change_state_id(new_id)
+            new_state_id = self.add_state(child_state)
+            if new_id is not None and not new_id == new_state_id:
+                logger.error("In ungroup state the changed state id should not be changed again by add_state because it"
+                             " could become a old_state_id again and screw data flows and transitions.")
+            # remember new and old state id relations
+            state_id_dict[old_state_id] = new_state_id
         # re-create scoped variables
         for sv in child_scoped_variables:
             name = sv.name
-            if name in [parent_sv.name for parent_sv in self.scoped_variables.itervalues()]:
+            if name in [parent_sv.name for parent_sv in self.scoped_variables.values()]:
                 name = state_id + name
             new_sv_id = self.add_scoped_variable(name, sv.data_type, sv.default_value)
             sv_id_dict[sv.data_port_id] = new_sv_id
@@ -692,24 +727,24 @@ class ContainerState(State):
 
         # re-create data flow linkage
         for df in related_data_flows['internal']['enclosed']:
-            # print "enclosed: ", df
+            # print("enclosed: ", df)
             new_df_id = self.add_data_flow(self.state_id if state_id == df.from_state else state_id_dict[df.from_state],
                                            sv_id_dict[df.from_key] if state_id == df.from_state else df.from_key,
                                            self.state_id if state_id == df.to_state else state_id_dict[df.to_state],
                                            sv_id_dict[df.to_key] if state_id == df.to_state else df.to_key)
             enclosed_df_id_dict[df.data_flow_id] = new_df_id
-        for data_port_linkage in ingoing_data_linkage_for_port.itervalues():
+        for data_port_linkage in ingoing_data_linkage_for_port.values():
             for ext_df in data_port_linkage['external']:
                 for df in data_port_linkage['internal']:
-                    # print "ingoing: ", ext_df, df
+                    # print("ingoing: ", ext_df, df)
                     if df.to_state not in state_id_dict and df.to_state == state_id:
                         self.add_data_flow(ext_df.from_state, ext_df.from_key, self.state_id, sv_id_dict[df.to_key])
                     else:
                         self.add_data_flow(ext_df.from_state, ext_df.from_key, state_id_dict[df.to_state], df.to_key)
-        for data_port_linkage in outgoing_data_linkage_for_port.itervalues():
+        for data_port_linkage in outgoing_data_linkage_for_port.values():
             for ext_df in data_port_linkage['external']:
                 for df in data_port_linkage['internal']:
-                    # print "outgoing: ", ext_df, df
+                    # print("outgoing: ", ext_df, df)
                     if df.from_state not in state_id_dict and df.from_state == state_id:
                         self.add_data_flow(self.state_id, sv_id_dict[df.from_key], ext_df.to_state, ext_df.to_key)
                     else:
@@ -719,6 +754,9 @@ class ContainerState(State):
         self.ungroup_state.__func__.sv_id_dict = sv_id_dict
         self.ungroup_state.__func__.enclosed_df_id_dict = enclosed_df_id_dict
         self.ungroup_state.__func__.enclosed_t_id_dict = enclosed_t_id_dict
+
+        old_state.destroy(recursive=True)
+        return old_state
 
     @lock_state_machine
     @Observable.observed
@@ -733,12 +771,12 @@ class ContainerState(State):
         assert isinstance(state, State)
         # logger.info("add state {}".format(state))
 
-        # handle the case that the child state id is the same as the container state id
-        while state.state_id == self.state_id:
+        # handle the case that the child state id is the same as the container state id or future sibling state id
+        while state.state_id == self.state_id or state.state_id in self.states:
             state.change_state_id()
 
         # TODO: add validity checks for states and then remove this check => to discuss
-        if state.state_id in self._states.iterkeys():
+        if state.state_id in self._states.keys():
             raise AttributeError("State id %s already exists in the container state", state.state_id)
         else:
             state.parent = self
@@ -748,18 +786,17 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_state(self, state_id, recursive_deletion=True, force=True, destruct=True):
+    def remove_state(self, state_id, recursive=True, force=False, destroy=True):
         """Remove a state from the container state.
 
         :param state_id: the id of the state to remove
-        :param recursive_deletion: a flag to indicate a recursive deletion of all substates
+        :param recursive: a flag to indicate a recursive disassembling of all substates
         :param force: a flag to indicate forcefully deletion of all states (important for the decider state in the
                 barrier concurrency state)
-        :param destruct: a flag which indicates if the state should not only be disconnected from the state but also
-                destructed, including all its state elements
+        :param destroy: a flag which indicates if the state should not only be disconnected from the state but also
+                destroyed, including all its state elements
         :raises exceptions.AttributeError: if state.state_id does not
         """
-        from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
         if state_id not in self.states:
             raise AttributeError("State_id %s does not exist" % state_id)
 
@@ -768,39 +805,48 @@ class ContainerState(State):
 
         # first delete all transitions and data_flows, which are connected to the state to be deleted
         keys_to_delete = []
-        for key, transition in self.transitions.iteritems():
+        for key, transition in self.transitions.items():
             if transition.from_state == state_id or transition.to_state == state_id:
                 keys_to_delete.append(key)
         for key in keys_to_delete:
             self.remove_transition(key, True)
 
         keys_to_delete = []
-        for key, data_flow in self.data_flows.iteritems():
+        for key, data_flow in self.data_flows.items():
             if data_flow.from_state == state_id or data_flow.to_state == state_id:
                 keys_to_delete.append(key)
         for key in keys_to_delete:
             self.remove_data_flow(key)
 
-        if recursive_deletion:
-            # Recursively delete all transitions, data flows and states within the state to be deleted
-            if isinstance(self.states[state_id], ContainerState):
-                for transition_id in self.states[state_id].transitions.keys():
-                    self.states[state_id].remove_transition(transition_id)
-                for data_flow_id in self.states[state_id].data_flows.keys():
-                    self.states[state_id].remove_data_flow(data_flow_id)
-                for child_state_id in self.states[state_id].states.keys():
-                    is_barrier_state = isinstance(self.states[state_id], BarrierConcurrencyState)
-                    self.states[state_id].remove_state(child_state_id,
-                                                       recursive_deletion=recursive_deletion,
-                                                       force=True if force or not force and is_barrier_state else False,
-                                                       destruct=destruct)
+        if recursive and not destroy:
+            raise AttributeError("The recursive flag requires the destroy flag to be set, too.")
 
-        if destruct:
-            self.states[state_id].destruct()
-        else:
-            self.states[state_id].parent = None
+        if destroy:
+            # Recursively delete all transitions, data flows and states within the state to be deleted
+            self.states[state_id].destroy(recursive)
+
         # final delete the state it self
+        self.states[state_id].parent = None
         return self.states.pop(state_id)
+
+    # do not observe
+    def destroy(self, recursive):
+        """ Removes all the state elements.
+
+        :param recursive: Flag whether to destroy all state elements which are removed
+        """
+        for transition_id in list(self.transitions.keys()):
+            self.remove_transition(transition_id, destroy=recursive)
+        for data_flow_id in list(self.data_flows.keys()):
+            self.remove_data_flow(data_flow_id, destroy=recursive)
+        for scoped_variable_id in list(self.scoped_variables.keys()):
+            self.remove_scoped_variable(scoped_variable_id, destroy=recursive)
+        for state_id in list(self.states.keys()):
+            if recursive:
+                self.remove_state(state_id, recursive, force=True, destroy=recursive)
+            else:
+                del self.states[state_id]
+        super(ContainerState, self).destroy(recursive)
 
     def related_linkage_state(self, state_id):
         """ TODO: document
@@ -811,19 +857,19 @@ class ContainerState(State):
         related_data_flows = {'external': {'ingoing': [], 'outgoing': []},
                               'internal': {'enclosed': [], 'ingoing': [], 'outgoing': []}}
         # ingoing logical linkage to rebuild
-        related_transitions['external']['ingoing'] = [t for t in self.transitions.itervalues() if t.to_state == state_id]
+        related_transitions['external']['ingoing'] = [t for t in self.transitions.values() if t.to_state == state_id]
         # outgoing logical linkage to rebuild
-        related_transitions['external']['outgoing'] = [t for t in self.transitions.itervalues() if t.from_state == state_id]
+        related_transitions['external']['outgoing'] = [t for t in self.transitions.values() if t.from_state == state_id]
         # ingoing data linkage to rebuild
-        related_data_flows['external']['ingoing'] = [df for df in self.data_flows.itervalues() if df.to_state == state_id]
+        related_data_flows['external']['ingoing'] = [df for df in self.data_flows.values() if df.to_state == state_id]
         # outgoing outgoing linkage to rebuild
-        related_data_flows['external']['outgoing'] = [df for df in self.data_flows.itervalues() if df.from_state == state_id]
+        related_data_flows['external']['outgoing'] = [df for df in self.data_flows.values() if df.from_state == state_id]
 
         state = self.states[state_id]
         if not isinstance(state, ContainerState):
             return related_transitions, related_data_flows
 
-        for t_id, t in state.transitions.iteritems():
+        for t_id, t in state.transitions.items():
             # check if internal of new hierarchy state
             if t.from_state in state.states and t.to_state in state.states:
                 related_transitions['internal']['enclosed'].append(t)
@@ -834,7 +880,7 @@ class ContainerState(State):
             else:
                 raise AttributeError("All transition have to be ingoing, outgoing or internal.")
 
-        for df_id, df in state.data_flows.iteritems():
+        for df_id, df in state.data_flows.items():
             # check if internal of hierarchy state
             if df.from_state in state.states and df.to_state in state.states or \
                     df.from_state in state.states and state.state_id == df.to_state and df.to_key in state.scoped_variables or \
@@ -859,7 +905,7 @@ class ContainerState(State):
 
         # find all related transitions
         related_transitions = {'enclosed': [], 'ingoing': [], 'outgoing': []}
-        for t in self.transitions.itervalues():
+        for t in self.transitions.values():
             # check if internal of new hierarchy state
             if t.from_state in state_ids and t.to_state in state_ids:
                 related_transitions['enclosed'].append(t)
@@ -870,7 +916,7 @@ class ContainerState(State):
 
         # find all related data flows
         related_data_flows = {'enclosed': [], 'ingoing': [], 'outgoing': []}
-        for df in self.data_flows.itervalues():
+        for df in self.data_flows.values():
             # check if internal of new hierarchy state
             if df.from_state in state_ids and df.to_state in state_ids or \
                     df.from_state in state_ids and self.state_id == df.to_state and df.to_key in scoped_variables or \
@@ -902,9 +948,9 @@ class ContainerState(State):
 
         [related_transitions, related_data_flows] = self.related_linkage_state(state_id)
 
-        readjust_parent_of_ports = True if state.state_id != state.outcomes.items()[0][1].parent.state_id else False
+        readjust_parent_of_ports = True if state.state_id != list(state.outcomes.items())[0][1].parent.state_id else False
 
-        old_outcome_names = {oc_id: oc.name for oc_id, oc in self.states[state_id].outcomes.iteritems()}
+        old_outcome_names = {oc_id: oc.name for oc_id, oc in self.states[state_id].outcomes.items()}
         old_input_data_ports = copy(self.states[state_id].input_data_ports)
         old_output_data_ports = copy(self.states[state_id].output_data_ports)
         old_state_was_library = False
@@ -922,9 +968,9 @@ class ContainerState(State):
         re_create_io_going_t_ids = []
         re_create_io_going_df_ids = []
 
-        act_outcome_ids_by_name = {oc.name: oc_id for oc_id, oc in state.outcomes.iteritems()}
-        act_input_data_port_by_name = {ip.name: ip for ip in state.input_data_ports.itervalues()}
-        act_output_data_port_by_name = {op.name: op for op in state.output_data_ports.itervalues()}
+        act_outcome_ids_by_name = {oc.name: oc_id for oc_id, oc in state.outcomes.items()}
+        act_input_data_port_by_name = {ip.name: ip for ip in state.input_data_ports.values()}
+        act_output_data_port_by_name = {op.name: op for op in state.output_data_ports.values()}
 
         for t in related_transitions['external']['ingoing']:
             new_t_id = self.add_transition(t.from_state, t.from_outcome, state_id, t.to_outcome, t.transition_id)
@@ -938,7 +984,7 @@ class ContainerState(State):
                 re_create_io_going_t_ids.append(new_t_id)
                 assert new_t_id == t.transition_id
 
-        for old_ip in old_input_data_ports.itervalues():
+        for old_ip in old_input_data_ports.values():
             ip = act_input_data_port_by_name.get(old_input_data_ports[old_ip.data_port_id].name, None)
             if ip is not None and ip.data_type == old_input_data_ports[old_ip.data_port_id].data_type:
                 if isinstance(state, LibraryState) and old_state_was_library:
@@ -961,7 +1007,7 @@ class ContainerState(State):
                 re_create_io_going_df_ids.append(new_df_id)
                 assert new_df_id == df.data_flow_id
 
-        for old_op in old_output_data_ports.itervalues():
+        for old_op in old_output_data_ports.values():
             op = act_output_data_port_by_name.get(old_output_data_ports[old_op.data_port_id].name, None)
             if op is not None and op.data_type == old_output_data_ports[old_op.data_port_id].data_type:
                 if isinstance(state, LibraryState) and old_state_was_library:
@@ -1047,7 +1093,7 @@ class ContainerState(State):
 
         # overwrite the start state in the case that a specific start state is specific e.g. by start_from_state
         if self.get_path() in state_machine_execution_engine.start_state_paths:
-            for state_id, state in self.states.iteritems():
+            for state_id, state in self.states.items():
                 if state.get_path() in state_machine_execution_engine.start_state_paths:
                     state_machine_execution_engine.start_state_paths.remove(self.get_path())
                     return state
@@ -1069,22 +1115,25 @@ class ContainerState(State):
         return self.states[self.start_state_id]
 
     @lock_state_machine
-    def remove(self, state_element, force=False):
+    def remove(self, state_element, recursive=True, force=False, destroy=True):
         """Remove item from state
 
         :param StateElement state_element: State or state element to be removed
+        :param bool recursive: Only applies to removal of state and decides whether the removal should be called
+            recursively on all child states
         :param bool force: if the removal should be forced without checking constraints
+        :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, State):
-            self.remove_state(state_element.state_id, force=force)
+            return self.remove_state(state_element.state_id, recursive=recursive, force=force, destroy=destroy)
         elif isinstance(state_element, Transition):
-            self.remove_transition(state_element.transition_id, force)
+            return self.remove_transition(state_element.transition_id, destroy=destroy)
         elif isinstance(state_element, DataFlow):
-            self.remove_data_flow(state_element.data_flow_id)
+            return self.remove_data_flow(state_element.data_flow_id, destroy=destroy)
         elif isinstance(state_element, ScopedVariable):
-            self.remove_scoped_variable(state_element.data_port_id)
+            return self.remove_scoped_variable(state_element.data_port_id, destroy=destroy)
         else:
-            super(ContainerState, self).remove(state_element, force)
+            super(ContainerState, self).remove(state_element, force=force, destroy=destroy)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------- transition functions -------------------------------------
@@ -1098,11 +1147,11 @@ class ContainerState(State):
         :raises exceptions.AttributeError: if transition.transition_id already exists
         """
         if transition_id is not None:
-            if transition_id in self._transitions.iterkeys():
+            if transition_id in self._transitions.keys():
                 raise AttributeError("The transition id %s already exists. Cannot add transition!", transition_id)
         else:
             transition_id = generate_transition_id()
-            while transition_id in self._transitions.iterkeys():
+            while transition_id in self._transitions.keys():
                 transition_id = generate_transition_id()
         return transition_id
 
@@ -1117,7 +1166,7 @@ class ContainerState(State):
         :raises exceptions.AttributeError: if the outcome of the state with the state_id==from_state_id
                                             is already connected
         """
-        for trans_key, transition in self.transitions.iteritems():
+        for trans_key, transition in self.transitions.items():
             if transition.from_state == from_state_id:
                 if transition.from_outcome == from_outcome:
                     raise AttributeError("Outcome %s of state %s is already connected" %
@@ -1214,14 +1263,14 @@ class ContainerState(State):
         if not isinstance(outcome, Outcome):
             raise TypeError("outcome must be of type Outcome")
         result_transition = None
-        for key, transition in self.transitions.iteritems():
+        for key, transition in self.transitions.items():
             if transition.from_state == state.state_id and transition.from_outcome == outcome.outcome_id:
                 result_transition = transition
         return result_transition
 
     @lock_state_machine
     @Observable.observed
-    def remove_transition(self, transition_id, force=False):
+    def remove_transition(self, transition_id, destroy=True):
         """Removes a transition from the container state
 
         :param transition_id: the id of the transition to remove
@@ -1231,13 +1280,15 @@ class ContainerState(State):
             raise AttributeError("The transition_id must not be -1 (Aborted) or -2 (Preempted)")
         if transition_id not in self._transitions:
             raise AttributeError("The transition_id %s does not exist" % str(transition_id))
-        return self._transitions.pop(transition_id)
+
+        self.transitions[transition_id].parent = None
+        return self.transitions.pop(transition_id)
 
     @lock_state_machine
     def remove_outcome_hook(self, outcome_id):
         """Removes internal transition going to the outcome
         """
-        for transition_id in self.transitions.keys():
+        for transition_id in list(self.transitions.keys()):
             transition = self.transitions[transition_id]
             if transition.to_outcome == outcome_id and transition.to_state == self.state_id:
                 self.remove_transition(transition_id)
@@ -1258,11 +1309,11 @@ class ContainerState(State):
         :raises exceptions.AttributeError: if data_flow.data_flow_id already exists
         """
         if data_flow_id is not None:
-            if data_flow_id in self._data_flows.iterkeys():
+            if data_flow_id in self._data_flows.keys():
                 raise AttributeError("The data_flow id %s already exists. Cannot add data_flow!", data_flow_id)
         else:
             data_flow_id = generate_data_flow_id()
-            while data_flow_id in self._data_flows.iterkeys():
+            while data_flow_id in self._data_flows.keys():
                 data_flow_id = generate_data_flow_id()
         return data_flow_id
 
@@ -1286,15 +1337,17 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_data_flow(self, data_flow_id):
+    def remove_data_flow(self, data_flow_id, destroy=True):
         """ Removes a data flow from the container state
 
         :param int data_flow_id: the id of the data_flow to remove
         :raises exceptions.AttributeError: if the data_flow_id does not exist
         """
-        if data_flow_id not in self.data_flows:
+        if data_flow_id not in self._data_flows:
             raise AttributeError("The data_flow_id %s does not exist" % str(data_flow_id))
-        return self.data_flows.pop(data_flow_id)
+
+        self._data_flows[data_flow_id].parent = None
+        return self._data_flows.pop(data_flow_id)
 
     @lock_state_machine
     def remove_data_flows_with_data_port_id(self, data_port_id):
@@ -1304,10 +1357,12 @@ class ContainerState(State):
                             output data port id
 
         """
-        # delete all data flows in parent related to data_port_id and self.state_id
-        if not self.is_root_state:
+        # delete all data flows in parent related to data_port_id and self.state_id = external data flows
+        # checking is_root_state_of_library is only necessary in case of scoped variables, as the scoped variables
+        # they are not destroyed by the library state, as the library state does not have a reference to the scoped vars
+        if not self.is_root_state and not self.is_root_state_of_library:
             data_flow_ids_to_remove = []
-            for data_flow_id, data_flow in self.parent.data_flows.iteritems():
+            for data_flow_id, data_flow in self.parent.data_flows.items():
                 if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
                                         data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
                     data_flow_ids_to_remove.append(data_flow_id)
@@ -1315,9 +1370,9 @@ class ContainerState(State):
             for data_flow_id in data_flow_ids_to_remove:
                 self.parent.remove_data_flow(data_flow_id)
 
-        # delete all data flows in self related to data_port_id and self.state_id
+        # delete all data flows in self related to data_port_id and self.state_id = internal data flows
         data_flow_ids_to_remove = []
-        for data_flow_id, data_flow in self.data_flows.iteritems():
+        for data_flow_id, data_flow in self.data_flows.items():
             if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
                                     data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
                 data_flow_ids_to_remove.append(data_flow_id)
@@ -1336,7 +1391,7 @@ class ContainerState(State):
         :return: the scoped variable specified by the name
         :raises exceptions.AttributeError: if the name is not in the the scoped_variables dictionary
         """
-        for scoped_variable_id, scoped_variable in self.scoped_variables.iteritems():
+        for scoped_variable_id, scoped_variable in self.scoped_variables.items():
             if scoped_variable.name == name:
                 return scoped_variable_id
         raise AttributeError("Name %s is not in scoped_variables dictionary", name)
@@ -1362,6 +1417,7 @@ class ContainerState(State):
         # Check for name uniqueness
         valid, message = self._check_data_port_name(self._scoped_variables[scoped_variable_id])
         if not valid:
+            self._scoped_variables[scoped_variable_id].parent = None
             del self._scoped_variables[scoped_variable_id]
             raise ValueError(message)
 
@@ -1369,7 +1425,7 @@ class ContainerState(State):
 
     @lock_state_machine
     @Observable.observed
-    def remove_scoped_variable(self, scoped_variable_id):
+    def remove_scoped_variable(self, scoped_variable_id, destroy=True):
         """Remove a scoped variable from the container state
 
         :param scoped_variable_id: the id of the scoped variable to remove
@@ -1379,10 +1435,12 @@ class ContainerState(State):
             raise AttributeError("A scoped variable with id %s does not exist" % str(scoped_variable_id))
 
         # delete all data flows connected to scoped_variable
-        self.remove_data_flows_with_data_port_id(self._scoped_variables[scoped_variable_id].data_port_id)
+        if destroy:
+            self.remove_data_flows_with_data_port_id(scoped_variable_id)
 
         # delete scoped variable
-        del self._scoped_variables[scoped_variable_id]
+        self._scoped_variables[scoped_variable_id].parent = None
+        return self._scoped_variables.pop(scoped_variable_id)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------- scoped variables functions end ---------------------------------
@@ -1409,7 +1467,7 @@ class ContainerState(State):
         """
         if state_id == self.state_id:
             return self.get_data_port_by_id(port_id)
-        for child_state_id, child_state in self.states.iteritems():
+        for child_state_id, child_state in self.states.items():
             if state_id != child_state_id:
                 continue
             port = child_state.get_data_port_by_id(port_id)
@@ -1433,7 +1491,7 @@ class ContainerState(State):
         return None
 
     def get_data_port_ids(self):
-        return self._scoped_variables.keys() + self._input_data_ports.keys() + self._output_data_ports.keys()
+        return list(self._scoped_variables.keys()) + list(self._input_data_ports.keys()) + list(self._output_data_ports.keys())
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------- input data handling --------------------------------------
@@ -1451,11 +1509,11 @@ class ContainerState(State):
         tmp_dict = self.get_default_input_values_for_state(state)
         result_dict.update(tmp_dict)
 
-        for input_port_key, value in state.input_data_ports.iteritems():
+        for input_port_key, value in state.input_data_ports.items():
             # for all input keys fetch the correct data_flow connection and read data into the result_dict
             actual_value = None
             actual_value_time = 0
-            for data_flow_key, data_flow in self.data_flows.iteritems():
+            for data_flow_key, data_flow in self.data_flows.items():
 
                 if data_flow.to_key == input_port_key:
                     if data_flow.to_state == state.state_id:
@@ -1485,13 +1543,13 @@ class ContainerState(State):
         :param dictionary: The dictionary that is added to the scoped data
         :param state: The state to which the input_data was passed (should be self in most cases)
         """
-        for dict_key, value in dictionary.iteritems():
-            for input_data_port_key, data_port in self.input_data_ports.iteritems():
+        for dict_key, value in dictionary.items():
+            for input_data_port_key, data_port in list(self.input_data_ports.items()):
                 if dict_key == data_port.name:
                     self.scoped_data[str(input_data_port_key) + self.state_id] = \
                         ScopedData(data_port.name, value, type(value), self.state_id, ScopedVariable, parent=self)
                     # forward the data to scoped variables
-                    for data_flow_key, data_flow in self.data_flows.iteritems():
+                    for data_flow_key, data_flow in self.data_flows.items():
                         if data_flow.from_key == input_data_port_key and data_flow.from_state == self.state_id:
                             if data_flow.to_state == self.state_id and data_flow.to_key in self.scoped_variables:
                                 current_scoped_variable = self.scoped_variables[data_flow.to_key]
@@ -1506,8 +1564,8 @@ class ContainerState(State):
         :param dictionary: The dictionary that is added to the scoped data
         :param state: The state that finished execution and provide the dictionary
         """
-        for output_name, value in dictionary.iteritems():
-            for output_data_port_key, data_port in state.output_data_ports.iteritems():
+        for output_name, value in dictionary.items():
+            for output_data_port_key, data_port in list(state.output_data_ports.items()):
                 if output_name == data_port.name:
                     if not isinstance(value, data_port.data_type):
                         if (not ((type(value) is float or type(value) is int) and
@@ -1523,7 +1581,7 @@ class ContainerState(State):
         """Add the scoped variables default values to the scoped_data dictionary
 
         """
-        for key, scoped_var in self.scoped_variables.iteritems():
+        for key, scoped_var in self.scoped_variables.items():
             self.scoped_data[str(scoped_var.data_port_id) + self.state_id] = \
                 ScopedData(scoped_var.name, scoped_var.default_value, scoped_var.data_type, self.state_id,
                            ScopedVariable, parent=self)
@@ -1535,10 +1593,10 @@ class ContainerState(State):
         :param: the dictionary to update the scoped variables with
         :param: the state the output dictionary belongs to
         """
-        for key, value in dictionary.iteritems():
+        for key, value in dictionary.items():
             output_data_port_key = None
             # search for the correct output data port key of the source state
-            for o_key, o_port in state.output_data_ports.iteritems():
+            for o_key, o_port in state.output_data_ports.items():
                 if o_port.name == key:
                     output_data_port_key = o_key
                     break
@@ -1546,10 +1604,10 @@ class ContainerState(State):
                 if not key == "error":
                     logger.warning("Output variable %s was written during state execution, "
                                    "that has no data port connected to it.", str(key))
-            for data_flow_key, data_flow in self.data_flows.iteritems():
+            for data_flow_key, data_flow in self.data_flows.items():
                 if data_flow.from_key == output_data_port_key and data_flow.from_state == state.state_id:
                     if data_flow.to_state == self.state_id:  # is target of data flow own state id?
-                        if data_flow.to_key in self.scoped_variables.iterkeys():  # is target data port scoped?
+                        if data_flow.to_key in self.scoped_variables.keys():  # is target data port scoped?
                             current_scoped_variable = self.scoped_variables[data_flow.to_key]
                             self.scoped_data[str(data_flow.to_key) + self.state_id] = \
                                 ScopedData(current_scoped_variable.name, value, type(value), state.state_id,
@@ -1571,14 +1629,14 @@ class ContainerState(State):
         super(ContainerState, self).change_state_id(state_id)
         # Use private variables to change ids to prevent validity checks
         # change id in all transitions
-        for transition in self.transitions.itervalues():
+        for transition in self.transitions.values():
             if transition.from_state == old_state_id:
                 transition._from_state = self.state_id
             if transition.to_state == old_state_id:
                 transition._to_state = self.state_id
 
         # change id in all data_flows
-        for data_flow in self.data_flows.itervalues():
+        for data_flow in self.data_flows.values():
             if data_flow.from_state == old_state_id:
                 data_flow._from_state = self.state_id
             if data_flow.to_state == old_state_id:
@@ -1599,15 +1657,23 @@ class ContainerState(State):
         else:
             return self.states[transition.to_state]
 
-    def write_output_data(self):
+    def write_output_data(self, specific_output_dictionary=None):
         """ Write the scoped data to output of the state. Called before exiting the container state.
 
+        :param specific_output_dictionary: an optional dictionary to write the output data in
+        :return:
         """
-        for output_name, value in self.output_data.iteritems():
+        if isinstance(specific_output_dictionary, dict):
+            output_dict = specific_output_dictionary
+        else:
+            output_dict = self.output_data
+
+        for output_name, value in self.output_data.items():
             output_port_id = self.get_io_data_port_id_from_name_and_type(output_name, OutputDataPort)
             actual_value = None
+            actual_value_was_written = False
             actual_value_time = 0
-            for data_flow_id, data_flow in self.data_flows.iteritems():
+            for data_flow_id, data_flow in self.data_flows.items():
                 if data_flow.to_state == self.state_id:
                     if data_flow.to_key == output_port_id:
                         scoped_data_key = str(data_flow.from_key) + data_flow.from_state
@@ -1617,6 +1683,7 @@ class ContainerState(State):
                             if actual_value is None or self.scoped_data[scoped_data_key].timestamp > actual_value_time:
                                 actual_value = deepcopy(self.scoped_data[scoped_data_key].value)
                                 actual_value_time = self.scoped_data[scoped_data_key].timestamp
+                                actual_value_was_written = True
                         else:
                             if not self.backward_execution:
                                 logger.debug(
@@ -1625,8 +1692,8 @@ class ContainerState(State):
                                     "This can mean a state machine design error.".format(
                                         str(output_name), str(self.states[data_flow.from_state].get_path()),
                                         self.get_path()))
-            if actual_value is not None:
-                self.output_data[output_name] = actual_value
+            if actual_value_was_written:
+                output_dict[output_name] = actual_value
 
     # ---------------------------------------------------------------------------------------------
     # -------------------------------------- check methods ---------------------------------------
@@ -1665,7 +1732,7 @@ class ContainerState(State):
         :param rafcon.core.data_port.DataPort check_data_port: The port to check
         :return: valid, message
         """
-        for data_flow in self.data_flows.itervalues():
+        for data_flow in self.data_flows.values():
             # Check whether the data flow connects the given port
             from_port = self.get_data_port(data_flow.from_state, data_flow.from_key)
             to_port = self.get_data_port(data_flow.to_state, data_flow.to_key)
@@ -1689,7 +1756,7 @@ class ContainerState(State):
         if not valid:
             return False, message
         # Container state also has scoped variables
-        for scoped_variable_id, scoped_variable in self.scoped_variables.iteritems():
+        for scoped_variable_id, scoped_variable in self.scoped_variables.items():
             if data_port.data_port_id == scoped_variable_id and data_port is not scoped_variable:
                 return False, "data port id already existing in state"
         return True, message
@@ -1710,7 +1777,7 @@ class ContainerState(State):
             return False, message
 
         if data_port.data_port_id in self.scoped_variables:
-            for scoped_variable in self.scoped_variables.itervalues():
+            for scoped_variable in self.scoped_variables.values():
                 if data_port.name == scoped_variable.name and data_port is not scoped_variable:
                     return False, "scoped variable name already existing in state's scoped variables"
 
@@ -1772,9 +1839,9 @@ class ContainerState(State):
             return False, "Data flow target not existing -> {0}".format(data_flow)
 
         # Data_ports without parents are not allowed to be connected twice
-        if not to_data_port.parent:
-            return False, "Source data port does not have a parent -> {0}".format(data_flow)
         if not from_data_port.parent:
+            return False, "Source data port does not have a parent -> {0}".format(data_flow)
+        if not to_data_port.parent:
             return False, "Target data port does not have a parent -> {0}".format(data_flow)
 
         # Check if data ports are identical
@@ -1806,7 +1873,7 @@ class ContainerState(State):
             return False, "Data flows must not connect two scoped variables -> {}".format(data_flow)
 
         # Check, whether the target port is already connected
-        for existing_data_flow in self.data_flows.itervalues():
+        for existing_data_flow in self.data_flows.values():
             to_data_port_existing = self.get_data_port(existing_data_flow.to_state, existing_data_flow.to_key)
             from_data_port_existing = self.get_data_port(existing_data_flow.from_state, existing_data_flow.from_key)
             if to_data_port is to_data_port_existing and data_flow is not existing_data_flow:
@@ -1827,13 +1894,20 @@ class ContainerState(State):
         # Check whether the data types or origin and target fit
         from_data_port = self.get_data_port(check_data_flow.from_state, check_data_flow.from_key)
         to_data_port = self.get_data_port(check_data_flow.to_state, check_data_flow.to_key)
+        # Connections from the data port type "object" are always allowed
+        if from_data_port.data_type is object:
+            return True, "valid"
         if not type_inherits_of_type(from_data_port.data_type, to_data_port.data_type):
-            return False, "Data flow (id: {0}) origin ({1}) and target ({2}) do not have matching data types " \
-                          "(from '{3}' to '{4}')".format(check_data_flow.data_flow_id,
-                                                         from_data_port.parent.name,
-                                                         to_data_port.parent.name,
-                                                         from_data_port.data_type,
-                                                         to_data_port.data_type)
+            return False, "Data flow (id: {0}) with origin state \"{1}\" (from data port name: {2}) " \
+                          "and target state \"{3}\" (to data port name: {4}) " \
+                          "do not have matching data types (from '{5}' to '{6}')".format(
+                              check_data_flow.data_flow_id,
+                              from_data_port.parent.name,
+                              from_data_port.name,
+                              to_data_port.parent.name,
+                              to_data_port.name,
+                              from_data_port.data_type,
+                              to_data_port.data_type)
         return True, "valid"
 
     def _check_transition_validity(self, check_transition):
@@ -1886,7 +1960,7 @@ class ContainerState(State):
         :return bool validity, str message: validity is True, when the transition is valid, False else. message gives
             more information especially if the transition is not valid
         """
-        for transition in self.transitions.itervalues():
+        for transition in self.transitions.values():
             if transition.from_state is None:
                 if start_transition is not transition:
                     return False, "Only one start transition is allowed"
@@ -1960,7 +2034,7 @@ class ContainerState(State):
         to_outcome_id = check_transition.to_outcome
 
         # check for connected origin
-        for transition in self.transitions.itervalues():
+        for transition in self.transitions.values():
             if transition.from_state == from_state_id:
                 if transition.from_outcome == from_outcome_id:
                     if check_transition is not transition:
@@ -1982,7 +2056,7 @@ class ContainerState(State):
         """
         number_of_all_child_states = 0
         max_child_hierarchy_level = 0
-        for s in self.states.itervalues():
+        for s in self.states.values():
             child_hierarchy_level = 0
             number_of_child_states, child_hierarchy_level = s.get_states_statistics(child_hierarchy_level)
             number_of_all_child_states += number_of_child_states
@@ -1997,12 +2071,12 @@ class ContainerState(State):
         :return:
         """
         number_of_all_transitions = 0
-        for s in self.states.itervalues():
+        for s in self.states.values():
             number_of_all_transitions += s.get_number_of_transitions()
         return number_of_all_transitions + len(self.transitions)
 
     # ---------------------------------------------------------------------------------------------
-    # ------------ Properties for all class fields that must be observed by gtkmvc ----------------
+    # ------------ Properties for all class fields that must be observed by gtkmvc3 ----------------
     # ---------------------------------------------------------------------------------------------
 
     @property
@@ -2030,19 +2104,24 @@ class ContainerState(State):
         """
         if not isinstance(states, dict):
             raise TypeError("states must be of type dict")
-        if [state_id for state_id, state in states.iteritems() if not isinstance(state, State)]:
+        if [state_id for state_id, state in states.items() if not isinstance(state, State)]:
             raise TypeError("element of container_state.states must be of type State")
-        if [state_id for state_id, state in states.iteritems() if not state_id == state.state_id]:
+        if [state_id for state_id, state in states.items() if not state_id == state.state_id]:
             raise AttributeError("The key of the state dictionary and the id of the state do not match")
 
         old_states = self._states
         self._states = states
-        for state_id, state in states.iteritems():
+        for state_id, state in states.items():
             try:
                 state.parent = self
             except ValueError:
                 self._states = old_states
                 raise
+
+        # check that all old_states are no more referencing self as there parent
+        for old_state in old_states.values():
+            if old_state not in self._states.values() and old_state.parent is self:
+                old_state.parent = None
 
     @property
     def transitions(self):
@@ -2073,15 +2152,15 @@ class ContainerState(State):
         """
         if not isinstance(transitions, dict):
             raise TypeError("transitions must be of type dict")
-        if [t_id for t_id, transition in transitions.iteritems() if not isinstance(transition, Transition)]:
+        if [t_id for t_id, transition in transitions.items() if not isinstance(transition, Transition)]:
             raise TypeError("element of transitions must be of type Transition")
-        if [t_id for t_id, transition in transitions.iteritems() if not t_id == transition.transition_id]:
+        if [t_id for t_id, transition in transitions.items() if not t_id == transition.transition_id]:
             raise AttributeError("The key of the transition dictionary and the id of the transition do not match")
 
         old_transitions = self._transitions
         self._transitions = transitions
         transition_ids_to_delete = []
-        for transition_id, transition in transitions.iteritems():
+        for transition_id, transition in transitions.items():
             try:
                 transition.parent = self
             except (ValueError, RecoveryModeException) as e:
@@ -2093,8 +2172,13 @@ class ContainerState(State):
                     self._transitions = old_transitions
                     raise
 
-        self._transitions = dict((transition_id, d) for (transition_id, d) in self._transitions.iteritems()
-                                if not transition_id in transition_ids_to_delete)
+        self._transitions = dict((transition_id, t) for (transition_id, t) in self._transitions.items()
+                                 if transition_id not in transition_ids_to_delete)
+
+        # check that all old_transitions are no more referencing self as there parent
+        for old_transition in old_transitions.values():
+            if old_transition not in self._transitions.values() and old_transition.parent is self:
+                old_transition.parent = None
 
     @property
     def data_flows(self):
@@ -2125,15 +2209,15 @@ class ContainerState(State):
         """
         if not isinstance(data_flows, dict):
             raise TypeError("data_flows must be of type dict")
-        if [df_id for df_id, data_flow in data_flows.iteritems() if not isinstance(data_flow, DataFlow)]:
+        if [df_id for df_id, data_flow in data_flows.items() if not isinstance(data_flow, DataFlow)]:
             raise TypeError("element of data_flows must be of type DataFlow")
-        if [df_id for df_id, data_flow in data_flows.iteritems() if not df_id == data_flow.data_flow_id]:
+        if [df_id for df_id, data_flow in data_flows.items() if not df_id == data_flow.data_flow_id]:
             raise AttributeError("The key of the data flow dictionary and the id of the data flow do not match")
 
         old_data_flows = self._data_flows
         self._data_flows = data_flows
         data_flow_ids_to_delete = []
-        for data_flow_id, data_flow in data_flows.iteritems():
+        for data_flow_id, data_flow in data_flows.items():
             try:
                 data_flow.parent = self
             except (ValueError, RecoveryModeException) as e:
@@ -2145,8 +2229,13 @@ class ContainerState(State):
                     self._data_flows = old_data_flows
                     raise
 
-        self._data_flows= dict((data_flow_id, d) for (data_flow_id, d) in self._data_flows.iteritems()
-                               if not data_flow_id in data_flow_ids_to_delete)
+        self._data_flows = dict((data_flow_id, d) for (data_flow_id, d) in self._data_flows.items()
+                                if data_flow_id not in data_flow_ids_to_delete)
+
+        # check that all old_data_flows are no more referencing self as there parent
+        for old_data_flow in old_data_flows.values():
+            if old_data_flow not in self._data_flows.values() and old_data_flow.parent is self:
+                old_data_flow.parent = None
 
     @property
     def start_state_id(self):
@@ -2227,20 +2316,25 @@ class ContainerState(State):
         """
         if not isinstance(scoped_variables, dict):
             raise TypeError("scoped_variables must be of type dict")
-        if [sv_id for sv_id, sv in scoped_variables.iteritems() if not isinstance(sv, ScopedVariable)]:
+        if [sv_id for sv_id, sv in scoped_variables.items() if not isinstance(sv, ScopedVariable)]:
             raise TypeError("element of scope variable must be of type ScopedVariable")
-        if [sv_id for sv_id, sv in scoped_variables.iteritems() if not sv_id == sv.data_port_id]:
+        if [sv_id for sv_id, sv in scoped_variables.items() if not sv_id == sv.data_port_id]:
             raise AttributeError("The key of the scope variable dictionary and "
                                  "the id of the scope variable do not match")
 
         old_scoped_variables = self._scoped_variables
         self._scoped_variables = scoped_variables
-        for port_id, scoped_variable in scoped_variables.iteritems():
+        for port_id, scoped_variable in scoped_variables.items():
             try:
                 scoped_variable.parent = self
             except ValueError:
                 self._scoped_variables = old_scoped_variables
                 raise
+
+        # check that all old_scoped_variables are no more referencing self as there parent
+        for old_scoped_variable in old_scoped_variables.values():
+            if old_scoped_variable not in self._scoped_variables.values() and old_scoped_variable.parent is self:
+                old_scoped_variable.parent = None
 
     @property
     def scoped_data(self):
@@ -2255,7 +2349,7 @@ class ContainerState(State):
     def scoped_data(self, scoped_data):
         if not isinstance(scoped_data, dict):
             raise TypeError("scoped_results must be of type dict")
-        for key, s in scoped_data.iteritems():
+        for key, s in scoped_data.items():
             if not isinstance(s, ScopedData):
                 raise TypeError("element of scoped_data must be of type ScopedData")
         self._scoped_data = scoped_data

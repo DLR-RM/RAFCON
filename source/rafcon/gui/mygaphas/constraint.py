@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DLR
+# Copyright (C) 2015-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -48,6 +48,8 @@ class KeepRectangleWithinConstraint(Constraint):
         self.child_se = child_se
         self.child = child
 
+        self.enable = True
+
         if not margin_method:
             margin_method = lambda: 0
         self.margin_method = margin_method
@@ -55,6 +57,9 @@ class KeepRectangleWithinConstraint(Constraint):
     def solve_for(self, var=None):
         """Ensure that the children is within its parent
         """
+        if not self.enable:
+            return
+
         margin = self.margin_method()
 
         def parent_width():
@@ -77,25 +82,25 @@ class KeepRectangleWithinConstraint(Constraint):
 
         updated = False
         # Left edge (west)
-        if self.parent_nw[0].value > self.child_nw[0].value - margin:
+        if self.parent_nw[0].value > self.child_nw[0].value - margin + EPSILON:
             width = child_width()
             _update(self.child_nw[0], self.parent_nw[0].value + margin)
             _update(self.child_se[0], self.child_nw[0].value + width)
             updated = True
         # Right edge (east)
-        elif self.parent_se[0].value < self.child_se[0].value + margin:
+        elif self.parent_se[0].value < self.child_se[0].value + margin - EPSILON:
             width = child_width()
             _update(self.child_se[0], self.parent_se[0].value - margin)
             _update(self.child_nw[0], self.child_se[0].value - width)
             updated = True
         # Upper edge (north)
-        if self.parent_nw[1].value > self.child_nw[1].value - margin:
+        if self.parent_nw[1].value > self.child_nw[1].value - margin + EPSILON:
             height = child_height()
             _update(self.child_nw[1], self.parent_nw[1].value + margin)
             _update(self.child_se[1], self.child_nw[1].value + height)
             updated = True
         # Lower edge (south)
-        elif self.parent_se[1].value < self.child_se[1].value + margin:
+        elif self.parent_se[1].value < self.child_se[1].value + margin - EPSILON:
             height = child_height()
             _update(self.child_se[1], self.parent_se[1].value - margin)
             _update(self.child_nw[1], self.child_se[1].value - height)

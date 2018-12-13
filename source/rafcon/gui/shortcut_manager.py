@@ -12,7 +12,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
+from gi.repository import Gtk
+from builtins import str, object
 from functools import partial
 
 from rafcon.gui.config import global_gui_config
@@ -20,7 +21,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class ShortcutManager:
+class ShortcutManager(object):
     """Handles shortcuts
 
     Holds a mapping between shortcuts and action. Actions can be subscribed to. When a listed shortcut is triggered,
@@ -30,7 +31,7 @@ class ShortcutManager:
     def __init__(self, window):
         # Setup window to listen for accelerators
         self.main_window = window
-        self.accel_group = gtk.AccelGroup()
+        self.accel_group = Gtk.AccelGroup()
         self.main_window.add_accel_group(self.accel_group)
 
         self.__action_to_callbacks = {}
@@ -47,12 +48,12 @@ class ShortcutManager:
                 self.__action_to_shortcuts[action] = shortcuts
             # Now register the shortcuts in the window to trigger the shortcut signal
             for shortcut in shortcuts:
-                keyval, modifier_mask = gtk.accelerator_parse(shortcut)
+                keyval, modifier_mask = Gtk.accelerator_parse(shortcut)
                 if keyval == 0 and modifier_mask == 0:  # No valid shortcut
-                    logger.warn("No valid shortcut for shortcut %s" % str(shortcut))
+                    logger.warning("No valid shortcut for shortcut %s" % str(shortcut))
                     continue
                 callback = partial(self.__on_shortcut, action)  # Bind the action to the callback function
-                self.accel_group.connect_group(keyval, modifier_mask, gtk.ACCEL_VISIBLE, callback)
+                self.accel_group.connect(keyval, modifier_mask, Gtk.AccelFlags.VISIBLE, callback)
 
     def __on_shortcut(self, action, accel_group, window, key_value, modifier_mask):
         res = self.trigger_action(action, key_value, modifier_mask)
@@ -158,10 +159,21 @@ class ShortcutManager:
         for action in self.__action_to_shortcuts:
             shortcuts = self.__action_to_shortcuts[action]
             for shortcut in shortcuts:
-                keyval, modifier_mask = gtk.accelerator_parse(shortcut)
+                keyval, modifier_mask = Gtk.accelerator_parse(shortcut)
                 self.accel_group.disconnect_key(keyval, modifier_mask)
 
     def update_shortcuts(self):
         logger.info("Updating Shortcuts")
         self.__action_to_shortcuts = global_gui_config.get_config_value('SHORTCUTS', {})
         self.register_shortcuts()
+
+    def destroy(self):
+        self.remove_shortcuts()
+        self.__controller_action_callbacks.clear()
+        self.main_window.remove_accel_group(self.accel_group)
+        self.main_window = None
+        self.accel_group = None
+
+        self.__action_to_callbacks.clear()
+        self.__action_to_shortcuts.clear()
+

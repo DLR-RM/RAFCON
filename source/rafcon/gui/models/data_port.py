@@ -13,7 +13,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from copy import copy, deepcopy
-from gtkmvc import ModelMT
+from gtkmvc3.model_mt import ModelMT
 
 from rafcon.gui.models.state_element import StateElementModel
 from rafcon.core.state_elements.data_port import DataPort, InputDataPort
@@ -61,6 +61,10 @@ class DataPortModel(StateElementModel):
     @ModelMT.observe("data_port", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         super(DataPortModel, self).model_changed(model, prop_name, info)
+
+    def prepare_destruction(self):
+        super(DataPortModel, self).prepare_destruction()
+        self.data_port = None
 
     def _meta_data_editor_gaphas2opengl(self, vividict):
         if 'rel_pos' in vividict:

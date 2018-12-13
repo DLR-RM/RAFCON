@@ -1,6 +1,7 @@
 {
     "creation_time": "2016-06-06 11:23:58", 
-    "last_update": "2016-06-07 06:44:05", 
-    "root_state_id": "NVVTYR", 
-    "version": null
+    "last_update": "2018-01-11 08:57:17", 
+    "root_state_storage_id": "backward_stepping_execution_state_NVVTYR", 
+    "state_machine_version": null, 
+    "used_rafcon_version": "0.12.1a1"
 }

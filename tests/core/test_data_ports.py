@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import pytest
 # test for expected exceptions
@@ -78,7 +79,7 @@ def create_state_machine2():
 def test_default_values_of_data_ports(caplog):
 
     storage_path = testing_utils.get_unique_temp_path()
-    print storage_path
+    print(storage_path)
 
     sm = create_state_machine()
 
@@ -91,12 +92,11 @@ def test_default_values_of_data_ports(caplog):
     testing_utils.test_multithreading_lock.acquire()
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
 
-    print root_state.output_data
+    print(root_state.output_data)
     try:
         assert root_state.output_data["output_data_port1"] == "default_value"
     finally:
@@ -114,8 +114,7 @@ def test_last_wins_value_collection_for_data_ports(caplog):
     testing_utils.test_multithreading_lock.acquire()
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     testing_utils.shutdown_environment_only_core(caplog=caplog)
@@ -199,7 +198,7 @@ def test_unique_port_names(caplog):
 def test_runtime_checks_for_data_port_data_types(caplog):
 
     storage_path = testing_utils.get_unique_temp_path()
-    print storage_path
+    print(storage_path)
 
     sm = create_state_machine2()
 
@@ -220,13 +219,35 @@ def test_runtime_checks_for_data_port_data_types(caplog):
     testing_utils.test_multithreading_lock.acquire()
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     # 6 errors -> IN ORDER output port-, root state scoped-, input port-, output port-, root state scoped- and
     # root state output port-data-type-errors
     testing_utils.shutdown_environment_only_core(caplog=caplog, expected_errors=6)
+
+
+def test_connections_from_object_type(caplog):
+    parent_state = HierarchyState("parent")
+    child_state = ExecutionState("child")
+    parent_state.add_state(child_state)
+
+    parent_obj_port_id = parent_state.add_input_data_port("obj", data_type=object, default_value=None)
+    parent_int_port_id = parent_state.add_input_data_port("int", data_type=int, default_value=None)
+    child_obj_port_id = child_state.add_input_data_port("obj", data_type=object, default_value=0)
+    child_int_port_id = child_state.add_input_data_port("int", data_type=int, default_value=0)
+
+    # Connection from specific type int to generic type object
+    parent_state.add_data_flow(parent_state.state_id, parent_int_port_id,
+                               child_state.state_id, child_obj_port_id)
+
+    # Connection from generic type object to specific type int
+    parent_state.add_data_flow(parent_state.state_id, parent_obj_port_id,
+                               child_state.state_id, child_int_port_id)
+
+    testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_errors=0)
+
+
 
 
 if __name__ == '__main__':

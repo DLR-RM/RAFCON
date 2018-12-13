@@ -7,6 +7,7 @@
 
 
 """
+from __future__ import print_function
 
 from multiprocessing import Process, Queue
 import multiprocessing
@@ -52,14 +53,14 @@ def custom_assert(statement1, statement2):
     try:
         assert statement1 == statement2
     except Exception as e:
-        print statement1 + " is not equal " + statement2
+        print(statement1 + " is not equal " + statement2)
         exit()
 
 
 def print_highlight(statement):
-    print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-    print statement
-    print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    print(statement)
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
 
 def reset_global_variable_manager(global_variable_manager):
@@ -79,14 +80,14 @@ def synchronize_with_root_state(root_state, execution_engine, state_id_to_join_f
         time.sleep(sleep_time)
 
 
-def synchronize_with_clients_threads(queue_dict, execution_engine):
+def synchronize_with_clients_threads(queue_dict, execution_engine, state_machine_id):
     from rafcon.core.singleton import global_variable_manager as gvm
     from rafcon.core.execution.execution_status import StateMachineExecutionStatus
     from rafcon.core.singleton import state_machine_manager
     from rafcon.core.execution.execution_engine import ExecutionEngine
     assert isinstance(execution_engine, ExecutionEngine)
-    active_sm = state_machine_manager.get_active_state_machine()
-    root_state = active_sm.root_state
+    sm = state_machine_manager.state_machines[state_machine_id]
+    root_state = sm.root_state
     sleep_time = 0.01
 
     # check when run to is finished
@@ -98,41 +99,41 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     queue_dict[CLIENT1_TO_SERVER_QUEUE].get()
 
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put("start stepping")
-    print "starting tests\n\n"
+    print("starting tests\n\n")
 
-    print "server: cp0"
+    print("server: cp0")
     # step test
     while gvm.get_variable("decimate_counter") < 1:
         time.sleep(sleep_time)  # sleep just to prevent busy loop
     synchronize_with_root_state(root_state, execution_engine, "NDIVLD")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[0])  # step mode also means a step into
 
-    print "server: cp1"
+    print("server: cp1")
     while gvm.get_variable("count_counter") < 1:
         time.sleep(sleep_time)
     synchronize_with_root_state(root_state, execution_engine, "SFZGMH")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[1])  # step over
 
-    print "server: cp2"
+    print("server: cp2")
     while gvm.get_variable("sing_counter") < 2:
         time.sleep(sleep_time)
     synchronize_with_root_state(root_state, execution_engine, "PXTKIH")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[2])  # step into
 
-    print "server: cp3"
+    print("server: cp3")
     while gvm.get_variable("sing_counter") > 1:
         time.sleep(sleep_time)
     # wait until the backward execution of the state is done
     synchronize_with_root_state(root_state, execution_engine, "PXTKIH")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[3])  # backward step
 
-    print "server: cp4"
+    print("server: cp4")
     while not execution_engine.finished_or_stopped():
         time.sleep(sleep_time)
     execution_engine.join()
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[4])  # step out and run until the end
     reset_global_variable_manager(gvm)
-    print "server: step test successful\n\n"
+    print("server: step test successful\n\n")
 
     # start and finish execution test
     while execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
@@ -145,7 +146,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     execution_engine.stop()  # reset state machine before the next test
     # do not notify the client before the state machine is really stopped
     execution_engine.join()
-    print "server: start and wait until finished test successful\n\n"
+    print("server: start and wait until finished test successful\n\n")
     # old_sync_counter = execution_engine.synchronization_counter
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[5])  # run until end
 
@@ -168,7 +169,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
         time.sleep(sleep_time)
     execution_engine.join()
     reset_global_variable_manager(gvm)
-    print "server: run until test successful\n\n"
+    print("server: run until test successful\n\n")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[7])
 
     # start from test
@@ -181,16 +182,16 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     # as the state machine run to the end this is safe
     execution_engine.stop()
     execution_engine.join()
-    print "server: start from test successful\n"
+    print("server: start from test successful\n")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put(TestSteps[8])
 
     execution_engine.stop()
     execution_engine.join()
-    print "server: wait for sync message from client\n"
+    print("server: wait for sync message from client\n")
     queue_dict[CLIENT1_TO_SERVER_QUEUE].get()
-    print "server: send sync message to client\n"
+    print("server: send sync message to client\n")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].put("sync")
-    print "server: wait for kill command from main queue\n"
+    print("server: wait for kill command from main queue\n")
     # set a timeout of 3 seconds
     queue_dict[KILL_SERVER_QUEUE].get(3)
     os._exit(0)
@@ -198,42 +199,45 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     # exit(0)
 
 
-def interacting_function_server(queue_dict):
+def interacting_function_server(queue_dict, state_machine_id):
     from rafcon.utils import log
     logger = log.get_logger("Interacting server")
 
-    for id, queue in queue_dict.iteritems():
+    for id, queue in queue_dict.items():
         assert isinstance(queue, multiprocessing.queues.Queue)
 
     import rafcon.core.singleton as core_singletons
     execution_engine = core_singletons.state_machine_execution_engine
 
-    sm_thread = threading.Thread(target=synchronize_with_clients_threads, args=[queue_dict, execution_engine])
+    sm_thread = threading.Thread(target=synchronize_with_clients_threads,
+                                 args=[queue_dict, execution_engine, state_machine_id])
     sm_thread.start()
 
-    active_sm = core_singletons.state_machine_manager.get_active_state_machine()
+    sm = core_singletons.state_machine_manager.state_machines[state_machine_id]
+
     # root state is a hierarchy state
-    for key, sv in active_sm.root_state.scoped_variables.iteritems():
+    for key, sv in sm.root_state.scoped_variables.items():
         if sv.name == "bottles":
             sv.default_value = 3
     # execution_engine.run_to_selected_state("GLSUJY/PXTKIH") # wait before Sing
-    execution_engine.run_to_selected_state("GLSUJY/NDIVLD")  # wait before Decimate Bottles
+    # wait before Decimate Bottles
+    execution_engine.run_to_selected_state("GLSUJY/NDIVLD", state_machine_id=sm.state_machine_id)
     # execution_engine.run_to_selected_state("GLSUJY/SFZGMH")  # wait before Count Bottles
     sm_thread.join()
     print_highlight("Joined server worker thread")
 
 
-def interacting_function_client1(main_window_controller, global_monitoring_manager, queue_dict):
+def interacting_function_client1(main_window_controller, global_monitoring_manager, queue_dict, state_machine_id):
     from rafcon.utils import log
     logger = log.get_logger("Interacting client1")
 
     logger.info("Start interacting with server\n\n")
 
-    for id, queue in queue_dict.iteritems():
+    for id, queue in queue_dict.items():
         assert isinstance(queue, multiprocessing.queues.Queue)
 
     while not global_monitoring_manager.endpoint_initialized:
-        logger.warn("global_monitoring_manager not initialized yet!")
+        logger.warning("global_monitoring_manager not initialized yet!")
         time.sleep(0.01)
 
     import rafcon.core.singleton as core_singletons
@@ -245,7 +249,9 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
 
     # test stepping
     # print "client: cp0"
-    remote_execution_engine.step_mode()  # this will trigger a step into = triggers decimate
+
+    # this will trigger a step into = triggers decimate
+    remote_execution_engine.step_mode(state_machine_id=state_machine_id)
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[0])
 
     # print "client: cp1"
@@ -266,12 +272,12 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[4])
 
     # start execution test
-    remote_execution_engine.start()
+    remote_execution_engine.start(state_machine_id)
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[5])
     queue_dict[MAIN_QUEUE].put(STOP_START_SUCCESSFUL)
 
     # run-until test
-    remote_execution_engine.run_to_selected_state("GLSUJY/SFZGMH")  # run to decimate bottles inclusively
+    remote_execution_engine.run_to_selected_state("GLSUJY/SFZGMH", state_machine_id=state_machine_id)  # run to decimate bottles inclusively
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[6])
     remote_execution_engine.stop()
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[7])
@@ -279,16 +285,16 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
 
     # start from test
     # directly start with decimate bottles and jump over the sing state
-    remote_execution_engine.start(start_state_path="GLSUJY/NDIVLD")
+    remote_execution_engine.start(state_machine_id, start_state_path="GLSUJY/NDIVLD")
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[8])
 
-    print "client: send sync message to server\n"
+    print("client: send sync message to server\n")
     queue_dict[CLIENT1_TO_SERVER_QUEUE].put("sync")
-    print "client: wait for sync message from server\n"
+    print("client: wait for sync message from server\n")
     queue_dict[SERVER_TO_CLIENT1_QUEUE].get()
-    print "client: tell the main queue that tests were successful\n"
+    print("client: tell the main queue that tests were successful\n")
     queue_dict[MAIN_QUEUE].put(START_FROM_SUCCESSFUL)
-    print "client: wait for kill command from main queue\n"
+    print("client: wait for kill command from main queue\n")
     # set a timeout of 3 seconds
     queue_dict[KILL_CLIENT1_QUEUE].get(3)
     os._exit(0)
@@ -302,6 +308,10 @@ def launch_client(interacting_function_client, multiprocessing_queue_dict):
         del os.environ['RAFCON_PLUGIN_PATH']
     os.environ['RAFCON_PLUGIN_PATH'] = \
         "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
+    
+    # this is kept in for debugging purposes
+    # os.environ['RAFCON_PLUGIN_PATH'] = \
+    #     "/home_local/brun_sb/develop/rafcon_monitoring_plugin/python/monitoring"
 
     import network.start_client
     network.start_client.start_client(interacting_function_client, multiprocessing_queue_dict)
@@ -316,6 +326,10 @@ def launch_server(interacting_function_handle_server_, multiprocessing_queue_dic
         del os.environ['RAFCON_PLUGIN_PATH']
     os.environ['RAFCON_PLUGIN_PATH'] = \
         "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
+
+    # this is kept in for debugging purposes
+    # os.environ['RAFCON_PLUGIN_PATH'] = \
+    #     "/home_local/brun_sb/develop/rafcon_monitoring_plugin/python/monitoring"
 
     import network.start_server
     server = Process(target=network.start_server.start_server,
@@ -338,7 +352,7 @@ def check_if_ports_are_open():
 def test_single_client():
 
     if not check_if_ports_are_open():
-        print "Address already in use by another server!"
+        print("Address already in use by another server!")
         assert True == False
 
     test_successful = True
@@ -380,15 +394,15 @@ def test_single_client():
         raise
     try:
         assert data == START_FROM_SUCCESSFUL
-        print "Test successful"
-    except AssertionError, e:
-        print "Test not successful"
+        print("Test successful")
+    except AssertionError as e:
+        print("Test not successful")
         test_successful = False
 
     queue_dict[KILL_SERVER_QUEUE].put("Kill", timeout=10)
     queue_dict[KILL_CLIENT1_QUEUE].put("Kill", timeout=10)
 
-    print "Joining processes"
+    print("Joining processes")
 
     # wait for each process a maximum of 10 seconds
     client1.join(timeout=10)

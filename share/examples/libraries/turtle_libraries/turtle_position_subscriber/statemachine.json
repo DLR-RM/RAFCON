@@ -1,6 +1,7 @@
 {
     "creation_time": "2015-06-03 16:11:18", 
-    "last_update": "2016-09-26 06:48:05", 
-    "root_state_id": "TURTLE_POSITION_SUBSCRIBER", 
-    "version": "None"
+    "last_update": "2018-07-11 11:54:41", 
+    "root_state_storage_id": "turtle_position_subscriber_TURTLE_POSITION_SUBSCRIBER", 
+    "state_machine_version": "None", 
+    "used_rafcon_version": "0.12.15a1"
 }

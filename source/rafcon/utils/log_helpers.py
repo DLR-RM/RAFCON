@@ -1,3 +1,14 @@
+# Copyright (C) 2017-2018 DLR
+#
+# All rights reserved. This program and the accompanying materials are made
+# available under the terms of the Eclipse Public License v1.0 which
+# accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+#
+# Contributors:
+# Franz Steinmetz <franz.steinmetz@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
+
 import logging
 import sys
 
@@ -26,9 +37,9 @@ class NoHigherLevelFilter(logging.Filter):
 
 
 class LoggingViewHandler(logging.Handler):
-    """A LoggingHandler for gtk.TextViews
+    """A LoggingHandler for Gtk.TextViews
     
-    The `LoggingViewHandler` prints log messages in special `gtk.TextView`s that provide a `print_message` method. 
+    The `LoggingViewHandler` prints log messages in special `Gtk.TextView`s that provide a `print_message` method. 
     The views must register themselves to the handler. There can be multiple views registered for one handler.
     """
 
@@ -36,13 +47,6 @@ class LoggingViewHandler(logging.Handler):
 
     def __init__(self):
         super(LoggingViewHandler, self).__init__()
-
-        try:
-            # noinspection PyStatementEffect
-            unicode
-            self._unicode = True
-        except NameError:
-            self._unicode = False
 
     @classmethod
     def add_logging_view(cls, name, text_view):
@@ -68,22 +72,16 @@ class LoggingViewHandler(logging.Handler):
                 record.__setattr__("name", record.name.replace("rafcon.", ""))
             msg = self.format(record)
             fs = "%s"
-            if not self._unicode:  # if no unicode support...
-                entry = fs % msg
-            else:
+            try:
+                ufs = u'%s'
                 try:
-                    if isinstance(msg, unicode):
-                        ufs = u'%s'
-                        try:
-                            entry = ufs % msg
-                        except UnicodeEncodeError:
-                            entry = fs % msg
-                    else:
-                            entry = fs % msg
-                except UnicodeError:
+                    entry = ufs % msg
+                except UnicodeEncodeError:
                     entry = fs % msg
+            except UnicodeError:
+                entry = fs % msg
 
-            for logging_view in self._logging_views.itervalues():
+            for logging_view in self._logging_views.values():
                 logging_view.print_message(entry, record.levelno)
         except (KeyboardInterrupt, SystemExit):
             raise

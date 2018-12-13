@@ -1,13 +1,18 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.20.0 -->
 <interface>
-  <requires lib="gtk+" version="2.16"/>
-  <!-- interface-naming-policy project-wide -->
+  <requires lib="gtk+" version="3.20"/>
   <object class="GtkTreeView" id="tree_view">
     <property name="visible">True</property>
     <property name="can_focus">True</property>
     <property name="headers_clickable">False</property>
+    <property name="enable_grid_lines">horizontal</property>
+    <child internal-child="selection">
+      <object class="GtkTreeSelection"/>
+    </child>
     <child>
       <object class="GtkTreeViewColumn" id="from_state_col">
+        <property name="sizing">autosize</property>
         <property name="title">Source State</property>
         <property name="expand">True</property>
         <child>
@@ -23,6 +28,7 @@
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="from_outcome_col">
+        <property name="sizing">autosize</property>
         <property name="title">Source Outcome</property>
         <property name="expand">True</property>
         <child>
@@ -38,6 +44,7 @@
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="to_state_col">
+        <property name="sizing">autosize</property>
         <property name="title">Target State</property>
         <property name="expand">True</property>
         <child>
@@ -53,6 +60,7 @@
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="to_outcome_col">
+        <property name="sizing">autosize</property>
         <property name="title">Target Outcome</property>
         <property name="expand">True</property>
         <child>
@@ -68,6 +76,7 @@
     </child>
     <child>
       <object class="GtkTreeViewColumn" id="external_col">
+        <property name="sizing">autosize</property>
         <property name="title">External</property>
         <property name="expand">True</property>
         <child>

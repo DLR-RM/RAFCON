@@ -1,8 +1,6 @@
-import os
-from timeit import default_timer as timer
-
-
 # core elements
+from builtins import range
+from builtins import str
 import rafcon.core.singleton
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState
@@ -12,16 +10,9 @@ from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.state_machine import StateMachine
 
-import testing_utils
+from rafcon.utils.timer import measure_time
 
-def measure_time(func):
-    def func_wrapper(*args, **kwargs):
-        start = timer()
-        return_value = func(*args, **kwargs)
-        end = timer()
-        print "{0} (args: {1}; kwargs: {2}): {3}".format(func.__name__, str(args), str(kwargs), str((end - start)))
-        return return_value
-    return func_wrapper
+import testing_utils
 
 
 @measure_time
@@ -85,8 +76,7 @@ def create_barrier_concurrency_state(number_child_states=10, number_childs_per_c
 def execute_state(root_state):
     state_machine = StateMachine(root_state)
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
 

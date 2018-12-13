@@ -34,7 +34,7 @@ def test_load_data_ports_not_existing(caplog):
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_execution_engine.stop()
 
@@ -55,7 +55,7 @@ def test_load_wrong_data_types(caplog):
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_execution_engine.stop()
 
@@ -86,7 +86,8 @@ def test_load_not_existing_outcome(caplog):
 
 
 if __name__ == '__main__':
-    test_load_not_existing_outcome(None)
-    # test_load_wrong_data_types(None)
+    setup_function(None)
+    # test_load_not_existing_outcome(None)
+    test_load_wrong_data_types(None)
     # test_load_data_ports_not_existing(None)
     # pytest.main(['-s', __file__])

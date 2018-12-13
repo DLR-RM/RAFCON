@@ -1,6 +1,19 @@
+# Copyright (C) 2017-2018 DLR
+#
+# All rights reserved. This program and the accompanying materials are made
+# available under the terms of the Eclipse Public License v1.0 which
+# accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+#
+# Contributors:
+# Franz Steinmetz <franz.steinmetz@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
+
 """ Module collects methods and function to be integrated into a respective class if that is of advantage, in future.
 """
+from builtins import range
 import os
+import time
 
 from rafcon.core.storage import storage
 from rafcon.gui.utils import wait_for_gui
@@ -19,7 +32,7 @@ def store_session():
     from rafcon.gui.models import AbstractStateModel
     from rafcon.gui.singleton import main_window_controller
     # check if there are dirty state machines -> use backup file structure maybe it is already stored
-    for sm_m in state_machine_manager_model.state_machines.itervalues():
+    for sm_m in state_machine_manager_model.state_machines.values():
         if sm_m.auto_backup:
             if sm_m.state_machine.marked_dirty:
                 sm_m.auto_backup.perform_temp_storage()
@@ -82,6 +95,7 @@ def restore_session_from_runtime_config():
     # load and restore state machines like they were opened before
     open_sm = []
     for idx, tab_meta_dict in enumerate(open_tabs):
+        start_time = time.time()
         backup_meta_dict = tab_meta_dict['backup_meta']
         from_backup_path = None
         open_sm.append(None)
@@ -98,7 +112,7 @@ def restore_session_from_runtime_config():
             else:
                 from_backup_path = backup_meta_dict['last_backup']['file_system_path']
         elif 'last_saved' in backup_meta_dict:
-            # print "### open last saved", sm_meta_dict['last_saved']['file_system_path']
+            # print("### open last saved", sm_meta_dict['last_saved']['file_system_path'])
             pass
         else:
             logger.error("A tab was stored into session storage dictionary {0} without any recovery path"
@@ -128,13 +142,18 @@ def restore_session_from_runtime_config():
             # logger.info("backup from last saved", path, sm_meta_dict)
             state_machine = storage.load_state_machine_from_path(path)
             state_machine_manager_model.state_machine_manager.add_state_machine(state_machine)
+            wait_for_gui()
             state_machine_m = state_machine_manager_model.state_machines[state_machine.state_machine_id]
+
+        duration = time.time() - start_time
+        stat = state_machine_m.state_machine.root_state.get_states_statistics(0)
+        logger.info("It took {0:.3}s to restore {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
 
         open_sm[idx] = state_machine_m
 
     global_runtime_config.extend_recently_opened_by_current_open_state_machines()
 
-    if global_gui_config.get_config_value('GAPHAS_EDITOR'):
+    if global_gui_config.get_config_value('GAPHAS_EDITOR', True):
         wait_for_gui()
 
     # restore all state machine selections separate to avoid states-editor and state editor creation problems

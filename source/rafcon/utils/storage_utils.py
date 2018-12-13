@@ -7,6 +7,7 @@
 #
 # Contributors:
 # Franz Steinmetz <franz.steinmetz@dlr.de>
+# Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 """
@@ -118,7 +119,7 @@ def load_objects_from_json(path, as_dict=False):
     :param path: The relative path of the json file.
     :return: The dictionary specified in the json file
     """
-    f = file(path, 'r')
+    f = open(path, 'r')
     if as_dict:
         result = json.load(f)
     else:
