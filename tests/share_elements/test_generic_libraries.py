@@ -28,11 +28,6 @@ def execute_all_generic_libraries_with_keyboard_only():
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "all_generic_libraries"))
     )
     testing_utils.wait_for_gui()
-    # reset the synchronization counter; although the tests run in different processes they share their memory
-    # as the import statements are at the top of the file and not inside the parallel called functions
-    state_machine_execution_engine.synchronization_lock.acquire()
-    state_machine_execution_engine.synchronization_counter = 0
-    state_machine_execution_engine.synchronization_lock.release()
 
     call_gui_callback(menubar_ctrl.on_start_activate, None, None)
     import time
@@ -45,7 +40,9 @@ def execute_all_generic_libraries_with_keyboard_only():
 
 
 def test_all_generic_libraries_in_a_row(caplog):
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
+                          libraries={'generic': os.path.join(testing_utils.LIBRARY_SM_PATH, 'generic')}
+    )
     call_gui_callback(initialize_global_variables)
     try:
 
@@ -67,18 +64,23 @@ def execute_preemption_of_all_state_machines_at_once():
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "all_dialogs_parallel_preempted"))
     )
     testing_utils.wait_for_gui()
-    # reset the synchronization counter; although the tests run in different processes they share their memory
-    # as the import statements are at the top of the file and not inside the parallel called functions
-    state_machine_execution_engine.synchronization_lock.acquire()
-    state_machine_execution_engine.synchronization_counter = 0
-    state_machine_execution_engine.synchronization_lock.release()
 
     call_gui_callback(menubar_ctrl.on_start_activate, None, None)
-    wait_for_execution_engine_sync_counter(1, logger)
+    duration_waited = 0.
+    period = 0.1
+    while not state_machine_execution_engine.finished_or_stopped():
+        time.sleep(period)
+        duration_waited += period
+        if duration_waited > 3.:
+            call_gui_callback(menubar_ctrl.on_stop_activate, None, None)
+            raise RuntimeError("The state machine should finish in less then {0}".format(duration_waited))
+    print("Run duration of execute_preemption_of_all_state_machines_at_once was: {0}".format(duration_waited))
 
 
 def test_preemption_of_all_state_machines_at_once(caplog):
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
+                          libraries={'generic': os.path.join(testing_utils.LIBRARY_SM_PATH, 'generic')}
+    )
     call_gui_callback(initialize_global_variables)
     try:
         execute_preemption_of_all_state_machines_at_once()
@@ -90,6 +92,6 @@ def test_preemption_of_all_state_machines_at_once(caplog):
 
 if __name__ == '__main__':
     import pytest
-    test_preemption_of_all_state_machines_at_once(None)
-    test_all_generic_libraries_in_a_row(None)
-    # pytest.main(['-s', __file__])
+    # test_preemption_of_all_state_machines_at_once(None)
+    # test_all_generic_libraries_in_a_row(None)
+    pytest.main(['-s', __file__])
