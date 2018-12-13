@@ -13,7 +13,7 @@ def execute(self, inputs, outputs, gvm):
     s = LibraryState(libary_path, libary_name, name=libary_name)
     self.parent.add_state(s)
     self.parent.add_transition(self.state_id, 0, s.state_id, None)
-    self.parent.add_transition(s.state_id, 0, "VBOFVC", None)
+    self.parent.add_transition(s.state_id, 0, "CXVBON", None)
     parent_id = None
     for d_id, d in self.parent.input_data_ports.items():
         if d.name == "str_variable":
