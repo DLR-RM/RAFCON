@@ -120,13 +120,8 @@ class MenuBarController(ExtendedController):
         show_aborted_preempted = global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
         view["show_aborted_preempted"].set_active(show_aborted_preempted)
 
-        if not global_gui_config.get_config_value('GAPHAS_EDITOR', True):
-            view["data_flow_mode"].hide()
         view["expert_view"].hide()
         view["grid"].hide()
-
-        if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
-            view["show_data_values"].hide()
 
         # use dedicated function to connect the buttons to be able to access the handler id later on
         self.connect_button_to_function('new', 'activate', self.on_new_activate)

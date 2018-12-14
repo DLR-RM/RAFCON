@@ -37,7 +37,7 @@ class GuiConfig(ObservableConfig):
     Class to hold and load the global GUI configurations.
     """
 
-    keys_requiring_state_machine_refresh = ('GAPHAS_EDITOR', 'MAX_VISIBLE_LIBRARY_HIERARCHY', 'HISTORY_ENABLED',
+    keys_requiring_state_machine_refresh = ('MAX_VISIBLE_LIBRARY_HIERARCHY', 'HISTORY_ENABLED',
                                             'AUTO_BACKUP_ENABLED', 'AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL',
                                             'AUTO_BACKUP_FORCED_STORAGE_INTERVAL',
                                             'AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL',
