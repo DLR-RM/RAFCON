@@ -173,7 +173,8 @@ class AbstractStateModel(MetaModel, Hashable):
         from rafcon.gui.models.state_element import StateElementModel
         if not isinstance(item, StateElementModel):
             return False
-        return item in self.outcomes or item in self.input_data_ports or item in self.output_data_ports
+        return item is self.income or item in self.outcomes or \
+               item in self.input_data_ports or item in self.output_data_ports
 
     def __copy__(self):
         state = copy(self.state)
@@ -224,7 +225,6 @@ class AbstractStateModel(MetaModel, Hashable):
                 port.prepare_destruction()
         del self.input_data_ports[:]
         del self.output_data_ports[:]
-        self.income = None
         del self.outcomes[:]
         self.state = None
         self.input_data_ports = None
@@ -240,14 +240,14 @@ class AbstractStateModel(MetaModel, Hashable):
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.core_element)
-        for state_element in sorted(self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
+        for state_element in sorted([self.income], self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
             self.update_hash_from_dict(obj_hash, state_element)
         if not self.state.get_next_upper_library_root_state():
             self.update_hash_from_dict(obj_hash, self.meta)
 
     def update_meta_data_hash(self, obj_hash):
         super(AbstractStateModel, self).update_meta_data_hash(obj_hash)
-        for state_element in sorted(self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
+        for state_element in sorted([self.income], self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
             state_element.update_meta_data_hash(obj_hash)
 
     @property
@@ -564,6 +564,7 @@ class AbstractStateModel(MetaModel, Hashable):
         for outcome_m in self.outcomes:
             source_outcome_m = source_state_m.get_outcome_m(outcome_m.outcome.outcome_id)
             outcome_m.meta = deepcopy(source_outcome_m.meta)
+        self.income.meta = deepcopy(source_state_m.income.meta)
 
         self.meta_signal.emit(MetaSignalMsg("copy_state_m", "all", True))
 
@@ -586,6 +587,8 @@ class AbstractStateModel(MetaModel, Hashable):
         for outcome_m in self.outcomes:
             self._copy_element_meta_data_from_meta_file_data(meta_data, outcome_m, "outcome",
                                                              outcome_m.outcome.outcome_id)
+
+        self._copy_element_meta_data_from_meta_file_data(meta_data, self.income, "income", "")
 
     @staticmethod
     def _copy_element_meta_data_from_meta_file_data(meta_data, element_m, element_name, element_id):
@@ -622,6 +625,8 @@ class AbstractStateModel(MetaModel, Hashable):
         for outcome_m in self.outcomes:
             self._copy_element_meta_data_to_meta_file_data(meta_data, outcome_m, "outcome",
                                                            outcome_m.outcome.outcome_id)
+
+        self._copy_element_meta_data_to_meta_file_data(meta_data, self.income, "income", "")
 
     @staticmethod
     def _copy_element_meta_data_to_meta_file_data(meta_data, element_m, element_name, element_id):
