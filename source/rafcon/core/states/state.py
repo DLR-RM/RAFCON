@@ -963,7 +963,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         for out_key in list(self.output_data_ports.keys()):
             self.remove_output_data_port(out_key, force=True, destroy=recursive)
 
-        self.remove_income(True)
+        self.remove_income(force=True)
 
         for outcome_key in list(self.outcomes.keys()):
             self.remove_outcome(outcome_key, force=True, destroy=recursive)
