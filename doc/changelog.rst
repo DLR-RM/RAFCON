@@ -36,6 +36,7 @@ Next release
 - Changes
 
   - No more "+"-icon next to state machine tabs to add a new state machine (related to :issue:`639`)
+  - Remove deprecated entry points ``rafcon_start`` and ``rafcon_start_gui``
 
 Patch releases 0.12.\*
 ----------------------
