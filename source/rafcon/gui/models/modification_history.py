@@ -348,10 +348,11 @@ class ModificationsHistoryModel(ModelMT):
                                                          state_machine_model=self.state_machine_model,
                                                          overview=overview)
                 elif "remove_" in cause:
-                    assert cause in ["remove_transition", "remove_data_flow", "remove_outcome", "remove_input_data_port",
-                                     "remove_output_data_port", "remove_scoped_variable", "remove_state"]
+                    assert cause in ["remove_transition", "remove_data_flow", "remove_income", "remove_outcome",
+                                     "remove_input_data_port", "remove_output_data_port", "remove_scoped_variable",
+                                     "remove_state"]
                     if ("transition" in cause or "data_flow" in cause or "scoped_variable" in cause or "state" in cause) or\
-                            (("data_port" in cause or "outcome" in cause) and not isinstance(overview['model'][-1].state.parent, State)):
+                            (("data_port" in cause or "outcome" in cause or "income" in cause) and not isinstance(overview['model'][-1].state.parent, State)):
                         if self.with_debug_logs:
                             self.store_test_log_file("#4 REMOVE1 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
                         # if "transition" in cause:
@@ -359,7 +360,7 @@ class ModificationsHistoryModel(ModelMT):
                         self.active_action = RemoveObjectAction(parent_path=overview['instance'][-1].get_path(),
                                                                 state_machine_model=self.state_machine_model,
                                                                 overview=overview)
-                    elif "data_port" in cause or "outcome" in cause:
+                    elif "data_port" in cause or "outcome" in cause or "income" in cause:
 
                         if isinstance(overview['instance'][-1].parent, State):
                             if self.with_debug_logs:
