@@ -81,7 +81,6 @@ class MainWindowController(ExtendedController):
 
         self.state_machine_execution_model = gui_singletons.state_machine_execution_model
         self.observe_model(self.state_machine_execution_model)
-        self.state_machine_execution_model.register_observer(self)
 
         # shortcut manager
         self.shortcut_manager = ShortcutManager(view['main_window'])

@@ -15,28 +15,32 @@ Next release
 
   - gtk2 to gtk3 conversion of the RAFCON GUI
   - :issue:`117` Make GUI resizeable on all edges and corners
-  - :issue:`640` Backward compatibility test runs with various python versions now
   - :issue:`610` Provide CITATION.cff to make software citable
   - :issue:`619` Provide and install *.desktop file
+  - :issue:`621` Provide full license text
   - :issue:`636` No exception when closing RAFCON and a state machine is still running
   - :issue:`637` No exception when closing a state machine tab, when it still runs
-  - :issue:`621` Provide full license text
+  - :issue:`640` Backward compatibility test runs with various python versions now
+  - :issue:`646` Library roots can be added and removed inside the library tree
   - The installation should now work from a blank virtualenv
   - The documentation about the release steps has been extended
 
 - Bug Fixes:
 
+  - :issue:`596` External editor does not remember the handed command and also does not lock the embedded editor
   - :issue:`617` Invalid DataFlow by DataFlowWidget
   - :issue:`618` semantic data strings get scrambled/obfuscated in execution history log
                  fixed by pull request :issue:`626` fix(execution_log): unpickle semantic data
-  - :issue:`596` External editor does not remember the handed command and also does not lock the embedded editor
   - :issue:`624` Debug console: cursor is not positioned at the point were it is clicked on
+  - :issue:`627` Generic library state machines need Gtk2 to gtk3 conversion
   - :issue:`638` Exiting Fullscreen mode hides the graphical editor
 
-- Changes
+- Changes:
 
+  - Redundant libraries are marked as deprecated
   - No more "+"-icon next to state machine tabs to add a new state machine (related to :issue:`639`)
   - Remove deprecated entry points ``rafcon_start`` and ``rafcon_start_gui``
+
 
 Patch releases 0.12.\*
 ----------------------
