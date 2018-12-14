@@ -460,14 +460,14 @@ def scale_library_content(library_state_m, gaphas_editor=True):
         resize_income_of_state_m(library_state_m.state_copy, resize_factor, gaphas_editor)
 
 
-def _resize_port_models_list(port_models, rel_pos_key, factor, gaphas_editor):
+def _resize_port_models_list(port_models, rel_pos_key, factor, gaphas_editor=True):
     """ Resize relative positions a list of (data or logical) port models """
     for port_m in port_models:
         old_rel_pos = port_m.get_meta_data_editor(for_gaphas=gaphas_editor)[rel_pos_key]
         port_m.set_meta_data_editor(rel_pos_key, mult_two_vectors(factor, old_rel_pos), from_gaphas=gaphas_editor)
 
 
-def _resize_connection_models_list(connection_models, factor, gaphas_editor):
+def _resize_connection_models_list(connection_models, factor, gaphas_editor=True):
     """ Resize relative positions of way points of a list of connection/linkage models """
     for connection_m in connection_models:
         # print("old_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element)
@@ -479,14 +479,14 @@ def _resize_connection_models_list(connection_models, factor, gaphas_editor):
     #     print("new_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element)
 
 
-def resize_income_of_state_m(state_m, factor, gaphas_editor):
+def resize_income_of_state_m(state_m, factor, gaphas_editor=True):
     if gaphas_editor:
         old_rel_pos = state_m.get_meta_data_editor(for_gaphas=True)['income']['rel_pos']
         state_m.set_meta_data_editor('income.rel_pos', mult_two_vectors(factor, old_rel_pos), from_gaphas=True)
         # print("income", old_rel_pos, state_m.get_meta_data_editor(for_gaphas=True)['income'])
 
 
-def resize_state_port_meta(state_m, factor, gaphas_editor):
+def resize_state_port_meta(state_m, factor, gaphas_editor=True):
     """ Resize data and logical ports relative positions """
     # print("scale ports", factor, state_m, gaphas_editor)
     if not gaphas_editor and isinstance(state_m, ContainerStateModel):
@@ -499,7 +499,7 @@ def resize_state_port_meta(state_m, factor, gaphas_editor):
     resize_income_of_state_m(state_m, factor, gaphas_editor)
 
 
-def resize_state_meta(state_m, factor, gaphas_editor):
+def resize_state_meta(state_m, factor, gaphas_editor=True):
     """ Resize state meta data recursive what includes also LibraryStateModels meta data and its internal state_copy
     """
     # print("START RESIZE OF STATE", state_m.get_meta_data_editor(for_gaphas=gaphas_editor), state_m)
@@ -540,7 +540,7 @@ def resize_state_meta(state_m, factor, gaphas_editor):
     # print("re-sized state", state_m.get_meta_data_editor(for_gaphas=gaphas_editor), state_m.core_element)
 
 
-def resize_of_all_models_in_dict(models_dict, factor, gaphas_editor):
+def resize_of_all_models_in_dict(models_dict, factor, gaphas_editor=True):
     # print("\n", "#"*30, "resize models", factor, "#"*30,)
 
     # Update relative position of states within the container in order to maintain their absolute position
