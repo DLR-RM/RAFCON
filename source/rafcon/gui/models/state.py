@@ -160,8 +160,6 @@ class StateModel(AbstractStateModel):
             self.add_missing_model(model_list, data_list, model_name, model_class, model_key)
         elif "remove" in info.method_name:
             destroy = info.kwargs.get('destroy', True)
-            # print(self.__class__.__name__, "remove", info.method_name, 'destroy: ', destroy)
-            # print("remove", info.method_name, 'destroy', info.kwargs.get('destroy', False), info.args, info.kwargs)
             self.remove_specific_model(model_list, info.result, model_key, destroy)
         elif info.method_name in ["input_data_ports", "output_data_ports", "income", "outcomes"]:
             self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
@@ -182,7 +180,7 @@ class StateModel(AbstractStateModel):
 
     def _load_income_model(self):
         """ Create income model from core income """
-        self.income = IncomeModel(self.state.income, self)
+        self._add_model(self.income, self.state.income, IncomeModel)
 
     def _load_outcome_models(self):
         """ Create outcome models from core outcomes """
@@ -205,7 +203,7 @@ class StateModel(AbstractStateModel):
         """
         if model_name == "income":
             if self.income.income != self.state.income:
-                self.income = self._create_model(self.state.income, IncomeModel)
+                self._add_model(self.income, self.state.income, IncomeModel)
             return
 
         for _ in range(len(model_list_or_dict)):
@@ -235,6 +233,10 @@ class StateModel(AbstractStateModel):
         if found_model:
             found_model.parent = self
 
+        if model_class is IncomeModel:
+            self.income = found_model if found_model else IncomeModel(core_element, self)
+            return
+
         if model_key is None:
             model_list_or_dict.append(found_model if found_model else model_class(core_element, self))
         else:
@@ -258,8 +260,6 @@ class StateModel(AbstractStateModel):
         :return: True, is a new model was added, False else
         :rtype: bool
         """
-        # print(self.__class__.__name__, "try to add_missing_model")
-
         def core_element_has_model(core_object):
             for model_or_key in model_list_or_dict:
                 model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
@@ -268,22 +268,26 @@ class StateModel(AbstractStateModel):
             return False
 
         if model_name == "income":
-            self.income = self._create_model(self.state.income, IncomeModel)
+            self._add_model(self.income, self.state.income, IncomeModel)
             return
             
         for core_element in core_elements_dict.values():
             if core_element_has_model(core_element):
                 continue
 
-            new_model = self._create_model(core_element, model_class)
-            if type_helpers.type_inherits_of_type(model_class, StateModel):
-                new_model = model_class(core_element, self, expected_future_models=self.expected_future_models)
-                self.expected_future_models = new_model.expected_future_models  # update reused models
-                new_model.expected_future_models = set()  # clean the field because should not be used further
+            # get expected model and connect it to self or create a new model
+            new_model = self._get_future_expected_model(core_element)
+            if new_model:
+                new_model.parent = self
             else:
-                new_model = model_class(core_element, self)
+                if type_helpers.type_inherits_of_type(model_class, StateModel):
+                    new_model = model_class(core_element, self, expected_future_models=self.expected_future_models)
+                    self.expected_future_models = new_model.expected_future_models  # update reused models
+                    new_model.expected_future_models = set()  # clean the field because should not be used further
+                else:
+                    new_model = model_class(core_element, self)
+
             # insert new model into list or dict
-            # print(self.__class__.__name__, "add_missing_model", new_model, core_element, id(self), self)
             if model_key is None:
                 model_list_or_dict.append(new_model)
             else:
@@ -292,7 +296,11 @@ class StateModel(AbstractStateModel):
         return False
 
     def remove_specific_model(self, model_list_or_dict, core_element, model_key=None, recursive=True, destroy=True):
-        # print(self.__class__.__name__, "try to remove", "|",  core_element, "|", model_list_or_dict, model_key, destroy)
+        if isinstance(model_list_or_dict, IncomeModel):
+            model = model_list_or_dict
+            if destroy:
+                model.prepare_destruction()
+            return
         for model_or_key in model_list_or_dict:
             model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
             if model.core_element is core_element:
@@ -305,7 +313,6 @@ class StateModel(AbstractStateModel):
                         model_list_or_dict[model_or_key].prepare_destruction(recursive)
                     del model_list_or_dict[model_or_key]
                 return
-        # print(self.__class__.__name__, "failed to remove", "|",  core_element, "|", model_list_or_dict, model_key, destroy)
 
     def remove_additional_model(self, model_list_or_dict, core_objects_dict, model_name, model_key, destroy=True):
         """Remove one unnecessary model
@@ -343,22 +350,6 @@ class StateModel(AbstractStateModel):
                         model_list_or_dict[model_or_key].prepare_destruction()
                     del model_list_or_dict[model_or_key]
                 return
-
-    def _create_model(self, core_element, model_class):
-        """Get model from future_expected_models or create it
-
-        :param core_element: Core element which model is to be created
-        :param model_class: The model class
-        :return: Model for the core element
-        :rtype: model_class
-        """
-        new_model = self._get_future_expected_model(core_element)
-        if new_model:
-            new_model.parent = self
-        else:
-            new_model = model_class(core_element, self)
-
-        return new_model
 
     def _get_future_expected_model(self, core_element):
         """Hand model for an core element from expected model list and remove the model from this list"""
