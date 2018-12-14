@@ -16,9 +16,9 @@ import threading
 import time
 import os
 import pytest
-from .test_single_client import reset_global_variable_manager
-from .test_single_client import launch_client
-from .test_single_client import launch_server
+from network.test_single_client import reset_global_variable_manager
+from network.test_single_client import launch_client
+from network.test_single_client import launch_server
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -36,19 +36,19 @@ TEST_ERROR = "Test error"
 APPLY_CONFIG_SUCCESSFUL = "Apply test successful"
 
 
-def server_interaction_worker(queue_dict, execution_engine):
+def server_interaction_worker(queue_dict, execution_engine, state_machine_id):
     from rafcon.core.singleton import global_variable_manager as gvm
     from rafcon.core.execution.execution_status import StateMachineExecutionStatus
     from rafcon.core.singleton import state_machine_manager
     from monitoring import server
     from monitoring.monitoring_manager import global_monitoring_manager
 
-    active_sm = state_machine_manager.get_active_state_machine()
-    print("active_sm", active_sm)
-    root_state = active_sm.root_state
+    sm = state_machine_manager.state_machines[state_machine_id]
+    print("current state machine", sm)
+    root_state = sm.root_state
     sleep_time = 0.99
 
-    for key, sv in active_sm.root_state.scoped_variables.items():
+    for key, sv in sm.root_state.scoped_variables.items():
         if sv.name == "bottles":
             sv.default_value = 3
 
@@ -60,7 +60,8 @@ def server_interaction_worker(queue_dict, execution_engine):
     assert queue_element == "start_test_1"
     print("received: ", queue_element)
 
-    execution_engine.run_to_selected_state("GLSUJY/NDIVLD")  # wait before Decimate Bottles
+    # wait before Decimate Bottles
+    execution_engine.run_to_selected_state("GLSUJY/NDIVLD", state_machine_id=state_machine_id)
     # check when run to is finished; run_to is issued from the server thread
     while gvm.get_variable("sing_counter") < 1:
         print("wait for client")
@@ -224,21 +225,22 @@ def server_interaction_worker(queue_dict, execution_engine):
     os._exit(0)
 
 
-def interacting_function_server(queue_dict):
+def interacting_function_server(queue_dict, state_machine_id):
     for id, queue in queue_dict.items():
         assert isinstance(queue, multiprocessing.queues.Queue)
 
     import rafcon.core.singleton as core_singletons
     execution_engine = core_singletons.state_machine_execution_engine
 
-    sm_thread = threading.Thread(target=server_interaction_worker, args=[queue_dict, execution_engine])
+    sm_thread = threading.Thread(target=server_interaction_worker,
+                                 args=[queue_dict, execution_engine, state_machine_id])
     sm_thread.start()
 
     sm_thread.join()
     print("sm_thread joined!")
 
 
-def client_interaction(main_window_controller, global_monitoring_manager, queue_dict):
+def client_interaction(main_window_controller, global_monitoring_manager, queue_dict, state_machine_id):
     import rafcon.core.singleton as core_singletons  # be careful, could be replaced before
     import rafcon.gui.singleton as gui_singletons
     from monitoring.monitoring_execution_engine import MonitoringExecutionEngine
@@ -288,7 +290,7 @@ def client_interaction(main_window_controller, global_monitoring_manager, queue_
     print("received: ", queue_element)
 
     # step 2: start sm and synchronize
-    remote_execution_engine.start()
+    remote_execution_engine.start(state_machine_id)
     queue_element = queue_dict[SERVER_TO_CLIENT].get()  # synchronize, when to start stepping
     assert queue_element == "restarted"
     print("received: ", queue_element)
@@ -328,7 +330,7 @@ def client_interaction(main_window_controller, global_monitoring_manager, queue_
         time.sleep(sleep_time)
 
     # the start command won't do anything
-    remote_execution_engine.start()
+    remote_execution_engine.start(state_machine_id)
     while remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
         time.sleep(sleep_time)
 
@@ -355,7 +357,7 @@ def client_interaction(main_window_controller, global_monitoring_manager, queue_
         time.sleep(sleep_time)
 
     print("sm monitoring")
-    remote_execution_engine.start()
+    remote_execution_engine.start(state_machine_id)
     while remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
         time.sleep(sleep_time)
     print("sm started")
@@ -397,7 +399,7 @@ def client_interaction(main_window_controller, global_monitoring_manager, queue_
         time.sleep(sleep_time)
 
     print("start remote_execution_engine 2")
-    remote_execution_engine.start()
+    remote_execution_engine.start(state_machine_id)
 
     print("wait for started")
     while remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
@@ -430,7 +432,7 @@ def client_interaction(main_window_controller, global_monitoring_manager, queue_
         remote_execution_engine = core_singletons.state_machine_execution_engine
         time.sleep(sleep_time)
 
-    remote_execution_engine.start()
+    remote_execution_engine.start(state_machine_id)
     print("started enabled sm")
     while remote_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
         time.sleep(sleep_time)
@@ -494,7 +496,7 @@ def client_interaction(main_window_controller, global_monitoring_manager, queue_
 
 def test_network_gui():
 
-    from .test_single_client import check_if_ports_are_open
+    from network.test_single_client import check_if_ports_are_open
     assert check_if_ports_are_open(), "Address already in use by another server!"
 
     test_successful = True

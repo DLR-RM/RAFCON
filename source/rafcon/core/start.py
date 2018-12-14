@@ -165,8 +165,7 @@ def open_state_machine(state_machine_path):
 
 
 def start_state_machine(sm, start_state_path=None):
-    core_singletons.state_machine_manager.active_state_machine_id = sm.state_machine_id
-    core_singletons.state_machine_execution_engine.start(start_state_path=start_state_path)
+    core_singletons.state_machine_execution_engine.start(sm.state_machine_id, start_state_path=start_state_path)
 
     if reactor_required():
         sm_thread = threading.Thread(target=stop_reactor_on_state_machine_finish, args=[sm, ])

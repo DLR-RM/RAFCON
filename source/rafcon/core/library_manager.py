@@ -110,9 +110,15 @@ class LibraryManager(Observable):
                 continue
             _, library_root_key = os.path.split(library_root_path)
             if library_root_key in self._libraries:
-                logger.warning("The library '{}' is already existing and will be overridden with '{}'".format(
-                    library_root_key, library_root_path))
-            self._load_libraries_from_root_path(library_root_key, library_root_path)
+                if os.path.realpath(self._library_root_paths[library_root_key]) == os.path.realpath(library_root_path):
+                    logger.info("The library root key '{}' and root path '{}' exists multiple times in your environment"
+                                " and will be skipped.".format(library_root_key, library_root_path))
+                else:
+                    logger.warning("The library '{}' is already existing and will be overridden with '{}'".format(
+                        library_root_key, library_root_path))
+                    self._load_libraries_from_root_path(library_root_key, library_root_path)
+            else:
+                self._load_libraries_from_root_path(library_root_key, library_root_path)
             logger.debug("Adding library '{1}' from {0}".format(library_root_path, library_root_key))
 
         self._libraries = OrderedDict(sorted(self._libraries.items()))

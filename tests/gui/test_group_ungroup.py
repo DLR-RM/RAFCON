@@ -58,7 +58,6 @@ def trigger_ungroup_signals():
     state_machine = create_state_machine()
     first_sm_id = state_machine.state_machine_id
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, state_machine)
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.__setattr__, "active_state_machine_id", first_sm_id)
 
     call_gui_callback(main_window_controller.view['main_window'].grab_focus)
     call_gui_callback(sm_manager_model.__setattr__, "selected_state_machine_id", first_sm_id)

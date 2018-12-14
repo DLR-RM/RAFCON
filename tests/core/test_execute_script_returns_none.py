@@ -16,12 +16,10 @@ def test_execute_script_returns_none(caplog):
 
     state_machine = storage.load_state_machine_from_path(state_machine_path)
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
-    state_machine = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
     assert state_machine.file_system_path == state_machine_path
 
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
 
     try:
@@ -31,4 +29,5 @@ def test_execute_script_returns_none(caplog):
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    test_execute_script_returns_none(None)
+    # pytest.main([__file__])

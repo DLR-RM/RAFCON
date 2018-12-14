@@ -25,7 +25,7 @@ def trigger_exectuion_engine(gvm, execution_engine):
     while gvm.get_variable("sm_status") != 1:
         time.sleep(0.1)
 
-    execution_engine.start()
+    execution_engine.start()  # resume
     while gvm.get_variable("sm_status") != 2:
         time.sleep(0.1)
 

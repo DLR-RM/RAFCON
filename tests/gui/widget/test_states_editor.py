@@ -151,7 +151,6 @@ def trigger_state_type_change_tests(with_gui=True):
     # add new state machine
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
     call_gui_callback(testing_utils.wait_for_gui)
-    # call_gui_callback(rafcon.core.singleton.state_machine_manager.__setattr__, "active_state_machine_id", first_sm_id)
     # select state machine
     call_gui_callback(rafcon.gui.singleton.state_machine_manager_model.__setattr__, "selected_state_machine_id", first_sm_id)
     # get state machine model

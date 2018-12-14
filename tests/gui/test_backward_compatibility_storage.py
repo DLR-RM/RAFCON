@@ -1,6 +1,7 @@
 from __future__ import print_function
 import pytest
 import os
+import sys
 import hashlib
 from distutils.version import StrictVersion
 
@@ -45,27 +46,52 @@ def run_state_machine(state_machine_path):
 
     print("Loading state machine from path: {}".format(state_machine_path))
 
-    call_gui_callback(gui_helper_statemachine.open_state_machine, state_machine_path)
+    state_machine = call_gui_callback(gui_helper_statemachine.open_state_machine, state_machine_path)
     call_gui_callback(testing_utils.remove_all_gvm_variables)
-    call_gui_callback(execution_engine.start)
+    call_gui_callback(execution_engine.start, state_machine.state_machine_id)
 
     if not execution_engine.join(3):
         raise RuntimeError("State machine did not finish within the given time")
 
     call_gui_callback(assert_correctness_of_execution)
-    call_gui_callback(state_machine_manager.remove_state_machine, state_machine_manager.active_state_machine_id)
+    call_gui_callback(state_machine_manager.remove_state_machine, state_machine.state_machine_id)
+
+
+def get_backward_compatibility_state_machines_path():
+    python_version = "python" + str(sys.version_info.major) + "." + str(sys.version_info.minor)
+    path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines",
+                                                       "backward_compatibility",
+                                                       python_version))
+    return path
 
 
 def test_backward_compatibility_storage(caplog):
     """This test ensures that old state machines storage formats can still be opened with the current RAFCON version"""
-    path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_compatibility"))
+    path = get_backward_compatibility_state_machines_path()
+
+    if not os.path.exists(path):
+        logger.info("test_backward_compatibility_storage: the current python interpreter version is not supported")
+        return
 
     run_gui(gui_config={'HISTORY_ENABLED': False,
                         'AUTO_BACKUP_ENABLED': False},
             libraries={'unit_test_state_machines': testing_utils.get_test_sm_path("unit_test_state_machines")})
 
     try:
+        logger.info("Run backward compatibility state machine for own version")
         run_backward_compatibility_state_machines(path)
+
+        logger.info("Run backward compatibility state machine for other versions")
+        all_versions_path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines",
+                                                                        "backward_compatibility"))
+        for python_version_folder in os.listdir(all_versions_path):
+            full_python_version_path = os.path.join(all_versions_path, python_version_folder)
+            if os.path.isdir(full_python_version_path):
+                if full_python_version_path == path:
+                    pass
+                else:
+                    run_backward_compatibility_state_machines(full_python_version_path)
+
     except Exception:
         raise
     finally:
@@ -82,7 +108,10 @@ def test_unchanged_storage_format(caplog):
     from rafcon.gui.models.state_machine import StateMachineModel
     import rafcon
 
-    path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_compatibility"))
+    path = get_backward_compatibility_state_machines_path()
+    if not os.path.exists(path):
+        logger.info("test_unchanged_storage_format: the current python interpreter version is not supported")
+        return
 
     testing_utils.initialize_environment(
         gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
@@ -138,6 +167,7 @@ def calculate_state_machine_hash(path):
     for path in paths_to_hash:
         hash.update(open(path, 'rb').read())
     return hash
+
 
 if __name__ == '__main__':
     test_backward_compatibility_storage(None)

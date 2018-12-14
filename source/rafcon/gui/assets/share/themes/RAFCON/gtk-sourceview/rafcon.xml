@@ -11,6 +11,7 @@
   <color name="number-fg" value="#f5a623"/>
   <color name="string-fg" value="#43d88f"/>
   <color name="error" value="#ff3300"/>
+  <color name="reserved" value="#57a4c6"/>
 
   <style name="bracket-match" foreground="special-fg" bold="true"/>
   <style name="bracket-mismatch" background="error" underline="true"/>
@@ -20,14 +21,14 @@
   <style name="cursor" foreground="#5b5b60"/>
   <style name="def:base-n-integer" foreground="number-fg"/>
   <style name="def:boolean" foreground="special-fg"/>
-  <style name="def:builtin" foreground="#57a4c6"/>
+  <style name="def:builtin" foreground="reserved"/>
   <style name="def:character" foreground="string-fg"/>
   <style name="def:comment" foreground="#a3a3a3"/>
   <style name="def:complex" foreground="number-fg"/>
   <style name="def:decimal" foreground="number-fg"/>
   <style name="def:floating-point" foreground="number-fg"/>
   <style name="def:function" foreground="#64afb3"/>
-  <style name="def:keyword" foreground="#57a4c6"/> <!-- def, pass, return -->
+  <style name="def:keyword" foreground="reserved" bold="true"/> <!-- def, pass, return -->
   <style name="def:number" foreground="number-fg"/>
   <style name="def:operator" foreground="text"/>
   <style name="def:special-constant" foreground="#64afb3"/>
@@ -37,7 +38,7 @@
   <style name="python:builtin-constant" foreground="special-fg"/>
   <style name="python:builtin-function" foreground="special-fg"/>
   <style name="python:builtin-object" foreground="special-fg"/>
-  <style name="python:module-handler" foreground="text"/>
+  <style name="python:module-handler" foreground="reserved" bold="true"/>
   <style name="python:boolean" foreground="special-fg"/>
   <style name="python:decorator" foreground="numbers"/>
   <style name="python:special-variable" foreground="special-fg"/> <!-- self -->

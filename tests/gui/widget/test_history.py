@@ -1,6 +1,5 @@
 from __future__ import print_function
 from __future__ import absolute_import
-from future.utils import string_types
 from builtins import str
 import logging
 import threading
@@ -1748,7 +1747,6 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
         root_state = HierarchyState("new root state", state_id="ROOT")
         state_machine = StateMachine(root_state)
         sm_manager_model.state_machine_manager.add_state_machine(state_machine)
-        sm_manager_model.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
         return state_machine
 
     state_machine_path = TEST_PATH + '_state_type_change_bug_tests'
@@ -1815,29 +1813,12 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
     import rafcon.gui.singleton
     sm = StateMachine(HierarchyState())
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.__setattr__,
-                      "active_state_machine_id", sm.state_machine_id)
     sm_m = list(rafcon.gui.singleton.state_machine_manager_model.state_machines.values())[-1]
 
     call_gui_callback(sm_m.selection.set, [sm_m.root_state])
 
     try:
-        import time
-        import pykeyboard
-
-        keyboard = pykeyboard.PyKeyboard()
-
-        def press_key(characters, duration=0.05):
-            assert all([isinstance(character, (int, string_types)) for character in characters])
-            assert isinstance(duration, (int, float))
-            for character in characters:
-                print("press_key: ", character)
-                keyboard.press_key(character=character)
-            print("for {0} seconds".format(duration))
-            time.sleep(duration)
-            for character in characters:
-                print("release_key: ", character)
-                keyboard.release_key(character=character)
+        from keyboard_utils import press_key, keyboard
 
         sm_id = sm_m.state_machine.state_machine_id
         state_machines_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('state_machines_editor_ctrl')

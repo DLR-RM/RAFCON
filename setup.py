@@ -91,8 +91,8 @@ readme_file_path = os.path.join(rafcon_root_path, "README.rst")
 with open(readme_file_path, "r") as f:
     long_description = f.read()
 
-global_requirements = ['pylint>=1.6,<2', 'pyyaml~=3.10', 'psutil', 'jsonconversion~=0.2.7', 'yaml_configuration~=0.1',
-                       'python-gtkmvc3-dlr~=1.0.0', 'gaphas~=1.0', 'future~=0.16']
+global_requirements = ['pylint>=1.6,<2', 'pyyaml~=3.10', 'psutil', 'jsonconversion~=0.2.9', 'yaml_configuration~=0.1',
+                       'python-gtkmvc3-dlr~=1.0.0', 'gaphas~=1.0.0rc1', 'future>=0.16,<0.18.0']
 
 setup(
     name='rafcon',
@@ -132,18 +132,12 @@ setup(
         }
     },
 
-    dependency_links=[
-        "https://github.com/gaphor/gaphas/tarball/master#egg=gaphas-1.0.0"
-    ],
-
     entry_points={
         'console_scripts': [
-            'rafcon_start = rafcon.core.start:main',
             'rafcon_core = rafcon.core.start:main'
         ],
         'gui_scripts': [
             'rafcon_execution_log_viewer = rafcon.gui.execution_log_viewer:main',
-            'rafcon_start_gui = rafcon.gui.start:main',
             'rafcon = rafcon.gui.start:main'
         ]
     },

@@ -14,7 +14,7 @@
           <object class="GtkLabel" id="data_flows_label">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Data Flows</property>
+            <property name="label" translatable="yes">DATA FLOWS</property>
             <property name="halign">start</property>
           </object>
         </child>

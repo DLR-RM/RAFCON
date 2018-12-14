@@ -80,14 +80,14 @@ def synchronize_with_root_state(root_state, execution_engine, state_id_to_join_f
         time.sleep(sleep_time)
 
 
-def synchronize_with_clients_threads(queue_dict, execution_engine):
+def synchronize_with_clients_threads(queue_dict, execution_engine, state_machine_id):
     from rafcon.core.singleton import global_variable_manager as gvm
     from rafcon.core.execution.execution_status import StateMachineExecutionStatus
     from rafcon.core.singleton import state_machine_manager
     from rafcon.core.execution.execution_engine import ExecutionEngine
     assert isinstance(execution_engine, ExecutionEngine)
-    active_sm = state_machine_manager.get_active_state_machine()
-    root_state = active_sm.root_state
+    sm = state_machine_manager.state_machines[state_machine_id]
+    root_state = sm.root_state
     sleep_time = 0.01
 
     # check when run to is finished
@@ -199,7 +199,7 @@ def synchronize_with_clients_threads(queue_dict, execution_engine):
     # exit(0)
 
 
-def interacting_function_server(queue_dict):
+def interacting_function_server(queue_dict, state_machine_id):
     from rafcon.utils import log
     logger = log.get_logger("Interacting server")
 
@@ -209,22 +209,25 @@ def interacting_function_server(queue_dict):
     import rafcon.core.singleton as core_singletons
     execution_engine = core_singletons.state_machine_execution_engine
 
-    sm_thread = threading.Thread(target=synchronize_with_clients_threads, args=[queue_dict, execution_engine])
+    sm_thread = threading.Thread(target=synchronize_with_clients_threads,
+                                 args=[queue_dict, execution_engine, state_machine_id])
     sm_thread.start()
 
-    active_sm = core_singletons.state_machine_manager.get_active_state_machine()
+    sm = core_singletons.state_machine_manager.state_machines[state_machine_id]
+
     # root state is a hierarchy state
-    for key, sv in active_sm.root_state.scoped_variables.items():
+    for key, sv in sm.root_state.scoped_variables.items():
         if sv.name == "bottles":
             sv.default_value = 3
     # execution_engine.run_to_selected_state("GLSUJY/PXTKIH") # wait before Sing
-    execution_engine.run_to_selected_state("GLSUJY/NDIVLD")  # wait before Decimate Bottles
+    # wait before Decimate Bottles
+    execution_engine.run_to_selected_state("GLSUJY/NDIVLD", state_machine_id=sm.state_machine_id)
     # execution_engine.run_to_selected_state("GLSUJY/SFZGMH")  # wait before Count Bottles
     sm_thread.join()
     print_highlight("Joined server worker thread")
 
 
-def interacting_function_client1(main_window_controller, global_monitoring_manager, queue_dict):
+def interacting_function_client1(main_window_controller, global_monitoring_manager, queue_dict, state_machine_id):
     from rafcon.utils import log
     logger = log.get_logger("Interacting client1")
 
@@ -246,7 +249,9 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
 
     # test stepping
     # print "client: cp0"
-    remote_execution_engine.step_mode()  # this will trigger a step into = triggers decimate
+
+    # this will trigger a step into = triggers decimate
+    remote_execution_engine.step_mode(state_machine_id=state_machine_id)
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[0])
 
     # print "client: cp1"
@@ -267,12 +272,12 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[4])
 
     # start execution test
-    remote_execution_engine.start()
+    remote_execution_engine.start(state_machine_id)
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[5])
     queue_dict[MAIN_QUEUE].put(STOP_START_SUCCESSFUL)
 
     # run-until test
-    remote_execution_engine.run_to_selected_state("GLSUJY/SFZGMH")  # run to decimate bottles inclusively
+    remote_execution_engine.run_to_selected_state("GLSUJY/SFZGMH", state_machine_id=state_machine_id)  # run to decimate bottles inclusively
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[6])
     remote_execution_engine.stop()
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[7])
@@ -280,7 +285,7 @@ def interacting_function_client1(main_window_controller, global_monitoring_manag
 
     # start from test
     # directly start with decimate bottles and jump over the sing state
-    remote_execution_engine.start(start_state_path="GLSUJY/NDIVLD")
+    remote_execution_engine.start(state_machine_id, start_state_path="GLSUJY/NDIVLD")
     custom_assert(queue_dict[SERVER_TO_CLIENT1_QUEUE].get(), TestSteps[8])
 
     print("client: send sync message to server\n")
@@ -303,6 +308,10 @@ def launch_client(interacting_function_client, multiprocessing_queue_dict):
         del os.environ['RAFCON_PLUGIN_PATH']
     os.environ['RAFCON_PLUGIN_PATH'] = \
         "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
+    
+    # this is kept in for debugging purposes
+    # os.environ['RAFCON_PLUGIN_PATH'] = \
+    #     "/home_local/brun_sb/develop/rafcon_monitoring_plugin/python/monitoring"
 
     import network.start_client
     network.start_client.start_client(interacting_function_client, multiprocessing_queue_dict)
@@ -317,6 +326,10 @@ def launch_server(interacting_function_handle_server_, multiprocessing_queue_dic
         del os.environ['RAFCON_PLUGIN_PATH']
     os.environ['RAFCON_PLUGIN_PATH'] = \
         "/volume/software/common/packages/rafcon_monitoring_plugin/latest/lib/python2.7/monitoring"
+
+    # this is kept in for debugging purposes
+    # os.environ['RAFCON_PLUGIN_PATH'] = \
+    #     "/home_local/brun_sb/develop/rafcon_monitoring_plugin/python/monitoring"
 
     import network.start_server
     server = Process(target=network.start_server.start_server,

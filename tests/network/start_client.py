@@ -93,6 +93,8 @@ def start_client(interacting_function, queue_dict):
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "99_bottles_of_beer_monitoring")))
 
     sm_id = rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+    # the active_state_machine_id must be set here, as the state machine can be active (e.g. if the server started the sm already)
+    # although it is not yet started on the client
     rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm_id
 
     sm_manager_model = gui_singletons.state_machine_manager_model
@@ -105,7 +107,8 @@ def start_client(interacting_function, queue_dict):
     from monitoring.monitoring_manager import global_monitoring_manager
     interacting_thread = threading.Thread(target=interacting_function, args=[main_window_controller,
                                                                              global_monitoring_manager,
-                                                                             queue_dict])
+                                                                             queue_dict,
+                                                                             sm_id])
     testing_utils.wait_for_gui()
     interacting_thread.start()
 

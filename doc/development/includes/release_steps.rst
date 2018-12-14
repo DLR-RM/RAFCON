@@ -47,8 +47,11 @@ institute):
 
 7. Apply the version number
 
-  Update the version number in ``[project directory]/VERSION``.
-  Commit your changes.
+  1. Update the version number in ``[project directory]/VERSION``.
+  2. Update the ``version`` in ``[project directory]/CITATION.cff``.
+  3. Update the ``date-released`` in ``[project directory]/VERSION``.
+  4. Run ``cffconvert --ignore-suspect-keys --outputformat zenodo --outfile .zenodo.json`` (see `"Making software citable" <https://guide.esciencecenter.nl/citable_software/making_software_citable.html>`__, requires Python 3)
+  5. Commit and push your changes.
 
 8. Merge to master
 
@@ -78,3 +81,36 @@ institute):
 
      $ git checkout develop
      $ git merge release-[new version number]]
+
+11. Publish to GitHub
+
+  Publish the changes to GitHub and GitHub Enterprise (assuming ``github`` is your GitHub remote name):
+
+  .. code:: bash
+
+     $ git push
+     $ git push github
+
+  Make a release on GitHub by navigating to `https://github.com/DLR-RM/RAFCON/releases/new`. Enter the new version
+  number in the "Tag version" field. Optioanlly add a release title and decription. Click "Publish release".
+
+12. Force build of GitHub pages
+
+  Push an empty commit to the ``gh-pages`` branch:
+
+  .. code:: bash
+
+     $ git checkout gh-pages
+     $ git commit -m 'rebuild pages' --allow-empty
+     $ git push
+     $ git push guthub
+
+11. Publish new release to PyPi
+
+  Create a new distribution file and publish it on PyPi:
+
+  .. code:: bash
+
+     $ rm dist/*
+     $ python setup.py sdist
+     $ twine upload dist/*
