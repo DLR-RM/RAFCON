@@ -726,6 +726,7 @@ class ModificationsHistoryModel(ModelMT):
                 logger.error("HISTORY after not count [states] -> For every before there should be a after.")
 
     @ModelMT.observe("state", before=True)
+    @ModelMT.observe("income", before=True)
     @ModelMT.observe("outcomes", before=True)
     @ModelMT.observe("is_start", before=True)
     @ModelMT.observe("transitions", before=True)
@@ -766,6 +767,7 @@ class ModificationsHistoryModel(ModelMT):
                     logger.error("FAILED to start NEW HISTORY ELEMENT [root_state]")
 
     @ModelMT.observe("state", after=True)
+    @ModelMT.observe("income", after=True)
     @ModelMT.observe("outcomes", after=True)
     @ModelMT.observe("is_start", after=True)
     @ModelMT.observe("transitions", after=True)
