@@ -19,24 +19,17 @@ MANTIS_PROJECT      = DLR Flow-Control
 SUPPORTED_LANGUAGES = python
 
 DEPENDS             =
-DEPENDS.sled11*     = gtk_etc==0,
-                      gtk_etc_python==0,
-                      python-jsonconversion==0.2,
-                      python_yaml_configuration==0.0
-DEPENDS.osl*        = python-gtkmvc3==1.99,
+DEPENDS.osl*        = python-gtkmvc3==1.0,
                       python-gaphas==0.7,
                       python-jsonconversion==0.2,
-                      python_yaml_configuration==0.0,
+                      python_yaml_configuration==0.1,
                       sw.common.pango==1.40
 
-ARCHS               = sled11-x86-gcc4.x, sled11-x86_64-gcc4.x, osl42-x86_64
+ARCHS               = osl42-x86_64
 PYTHON_PATHS        = ${PKGROOT}/source
 ADDITIONAL_ENV.osl* = RAFCON_LIB_PATH=${PKGROOT}/share/libraries,
                       RAFCON_CHECK_INSTALLATION=True,
                       PATH=${PKGROOT}/bin:$${PATH}
-ADDITIONAL_ENV.sled11* = RAFCON_LIB_PATH=${PKGROOT}/share/libraries,
-                         RAFCON_CHECK_INSTALLATION=True,
-                         PATH=${PKGROOT}/bin:/opt/python/python2.7/bin:$${PATH}
 
 [pre-install]
 python -m compileall -fq ./source/rafcon
@@ -48,7 +41,7 @@ tests => tests
 share | !*.pyc | !.gitignore => share
 doc => doc
 ./VERSION => ./VERSION
-bin/ | !rafcon_core | !rafcon_start | !rafcon| !rafcon_start_gui | !resave_state_machines | !execution_log_viewer.py | !rafcon_execution_log_viewer | !*.pyc => bin # Symlinks are recreated in post_install step
+bin/ | !rafcon_core | !rafcon| !resave_state_machines | !execution_log_viewer.py | !rafcon_execution_log_viewer | !*.pyc => bin # Symlinks are recreated in post_install step
 
 [post-install]
-cd ${RMPM_INSTALL_DIR}/bin && ln -s ../source/rafcon/core/start.py rafcon_core && ln -s ../source/rafcon/core/start.py rafcon_start && ln -s ../source/rafcon/gui/start.py rafcon && ln -s ../source/rafcon/gui/start.py rafcon_start_gui && ln -s ../source/rafcon/gui/resave_state_machines.py resave_state_machines && ln -s ../source/rafcon/gui/execution_log_viewer.py execution_log_viewer.py && ln -s ../source/rafcon/gui/execution_log_viewer.py rafcon_execution_log_viewer
+cd ${RMPM_INSTALL_DIR}/bin && ln -s ../source/rafcon/core/start.py rafcon_core && ln -s ../source/rafcon/gui/start.py rafcon && ln -s ../source/rafcon/gui/resave_state_machines.py resave_state_machines && ln -s ../source/rafcon/gui/execution_log_viewer.py execution_log_viewer.py && ln -s ../source/rafcon/gui/execution_log_viewer.py rafcon_execution_log_viewer

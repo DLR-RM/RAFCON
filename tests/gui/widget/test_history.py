@@ -1,6 +1,5 @@
 from __future__ import print_function
 from __future__ import absolute_import
-from future.utils import string_types
 from builtins import str
 import logging
 import threading
@@ -1818,22 +1817,7 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
     call_gui_callback(sm_m.selection.set, [sm_m.root_state])
 
     try:
-        import time
-        import pykeyboard
-
-        keyboard = pykeyboard.PyKeyboard()
-
-        def press_key(characters, duration=0.05):
-            assert all([isinstance(character, (int, string_types)) for character in characters])
-            assert isinstance(duration, (int, float))
-            for character in characters:
-                print("press_key: ", character)
-                keyboard.press_key(character=character)
-            print("for {0} seconds".format(duration))
-            time.sleep(duration)
-            for character in characters:
-                print("release_key: ", character)
-                keyboard.release_key(character=character)
+        from keyboard_utils import press_key, keyboard
 
         sm_id = sm_m.state_machine.state_machine_id
         state_machines_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('state_machines_editor_ctrl')

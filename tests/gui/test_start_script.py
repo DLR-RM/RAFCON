@@ -97,9 +97,8 @@ def test_start_script_valid_config():
 
 
 def test_start_script_valid_rmpm_env():
-    """Tests the execution of rafcon_start in an environment created by RMPM
+    """Tests the execution of ``rafcon_core`` in an environment created by RMPM
     """
-    # TODO: replace rafcon_start with rafcon_core after the next release
     testing_utils.dummy_gui(None)
     import distutils.spawn
     rmpm_env = os.environ.copy()
@@ -109,7 +108,7 @@ def test_start_script_valid_rmpm_env():
         print("Could not find rmpm_do, skipping test")
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     config = join(testing_utils.TESTS_PATH, "assets", "configs", "valid_config", "config.yaml")
-    cmd = "eval `rmpm_do env --env-format=embed_sh sw.common.rafcon` && rafcon_start -o {0} -c {1}" \
+    cmd = "eval `rmpm_do env --env-format=embed_sh sw.common.rafcon` && rafcon_core -o {0} -c {1}" \
           "".format(start_path, config)
     print("\ntest_start_script_valid_config: \n", cmd)
     rafcon_process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, env=rmpm_env)
@@ -120,7 +119,7 @@ def test_start_script_valid_rmpm_env():
 
 
 def test_start_script_print_help_with_gui():
-    """ Test rafcon_start_gui console call which run a RAFCON instance and let it print the helper message and checks
+    """ Test ``rafcon`` console call which run a RAFCON instance and let it print the helper message and checks
     if the process terminates correctly.
     """
     testing_utils.dummy_gui(None)
