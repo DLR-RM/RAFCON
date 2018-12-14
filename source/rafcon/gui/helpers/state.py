@@ -87,6 +87,23 @@ def check_expected_future_model_list_is_empty(target_state_m, msg, delete=True, 
     return True
 
 
+def update_models_recursively(state_m):
+    """ If a state model is reused the model depth maybe is to low. Therefore this method checks if all 
+    library state models are created with reliable depth"""
+
+    assert isinstance(state_m, AbstractStateModel)
+
+    if isinstance(state_m, LibraryStateModel):
+        if not state_m.state_copy_initialized:
+            state_m.recursive_generate_models(load_meta_data=False)
+            import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+            gui_helper_meta_data.scale_library_content(state_m)
+
+    if isinstance(state_m, ContainerStateModel):
+        for child_state_m in state_m.states.values():
+            update_models_recursively(child_state_m)
+
+
 def add_state(container_state_m, state_type):
     """Add a state to a container state
 
@@ -520,16 +537,16 @@ def substitute_state(target_state_m, state_m_to_insert, as_template=False):
     new_state = e = None
     # print("state to insert", state_to_insert)
     try:
-        if as_template:  # TODO remove this work around if the models are loaded correctly
-            # the following enforce the creation of a new model (in needed depth) and transfer of meta data
-            import rafcon.gui.action
-            meta_dict = rafcon.gui.action.get_state_element_meta(state_m_to_insert)
-            new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
-            sm_m = action_parent_m.get_state_machine_m()
-            rafcon.gui.action.insert_state_meta_data(meta_dict, sm_m.get_state_model_by_path(new_state.get_path()))
-        else:
-            action_parent_m.expected_future_models.add(state_m_to_insert)
-            new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
+        # if as_template:  # TODO remove this work around if the models are loaded correctly
+        #     # the following enforce the creation of a new model (in needed depth) and transfer of meta data
+        #     import rafcon.gui.action
+        #     meta_dict = rafcon.gui.action.get_state_element_meta(state_m_to_insert)
+        #     new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
+        #     sm_m = action_parent_m.get_state_machine_m()
+        #     rafcon.gui.action.insert_state_meta_data(meta_dict, sm_m.get_state_model_by_path(new_state.get_path()))
+        # else:
+        action_parent_m.expected_future_models.add(state_m_to_insert)
+        new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
         # assert new_state.state_id is state_id
         assert new_state is state_to_insert
     except Exception as e:
@@ -539,6 +556,7 @@ def substitute_state(target_state_m, state_m_to_insert, as_template=False):
         # AFTER MODEL
         # print("AFTER MODEL", new_state)
         new_state_m = action_parent_m.states[new_state.state_id]
+        update_models_recursively(state_m=new_state_m)
         tmp_meta_data = action_parent_m.substitute_state.__func__.tmp_meta_data_storage
         old_state_m = action_parent_m.substitute_state.__func__.old_state_m
         changed_models = []

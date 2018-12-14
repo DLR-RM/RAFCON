@@ -37,12 +37,17 @@ class LibraryStateModel(AbstractStateModel):
 
     def __init__(self, state, parent=None, meta=None, load_meta_data=True):
         assert isinstance(state, LibraryState)
-        # TODO maybe find a different way to load the meta data of ports correctly
-        # at the moment the models of state_copy get initialized and the meta data taken from there if not found in
-        # state itself
+
         self.state_copy_initialized = False
         self.meta_data_was_scaled = False
         super(LibraryStateModel, self).__init__(state, parent, meta)
+
+        self.recursive_generate_models(load_meta_data)
+
+    def recursive_generate_models(self, load_meta_data):
+        # TODO maybe find a different way to load the meta data of ports correctly
+        # at the moment the models of state_copy get initialized and the meta data taken from there if not found in
+        # state itself
 
         # regulate depth of library model generation to reduce resource consumption
         current_hierarchy_depth = self.state.library_hierarchy_depth
