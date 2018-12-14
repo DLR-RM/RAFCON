@@ -445,7 +445,7 @@ class ComplexActionObserver(Observer):
             return
 
         msg = info['arg']
-        action = msg.actions
+        action = msg.action
 
         if isinstance(msg.result, Exception) and action in self.ongoing_complex_actions:
             self.nested_action_already_in.append((action, self.ongoing_complex_actions.pop(action)))
