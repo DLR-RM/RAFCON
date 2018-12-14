@@ -668,6 +668,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def remove_income(self, force=False):
         if not force:
             raise AttributeError("The income of a state cannot be removed")
+        self._income.parent = None
         self._income = None
 
     @lock_state_machine
