@@ -650,6 +650,7 @@ class StateView(Element):
         self._ports.remove(income_v.port)
         self._handles.remove(income_v.handle)
 
+        self.canvas.remove_port(income_v)
         if income_v in self.port_constraints:
             self.canvas.solver.remove_constraint(self.port_constraints.pop(income_v))
 
