@@ -653,7 +653,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
         if isinstance(state_element, Income):
-            self.remove_income(force)
+            self.remove_income(force, destroy=destroy)
         if isinstance(state_element, Outcome):
             return self.remove_outcome(state_element.outcome_id, force=force, destroy=destroy)
         elif isinstance(state_element, InputDataPort):
@@ -665,7 +665,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @lock_state_machine
     @Observable.observed
-    def remove_income(self, force=False):
+    def remove_income(self, force=False, destroy=True):
         if not force:
             raise AttributeError("The income of a state cannot be removed")
         self._income.parent = None
@@ -964,7 +964,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         for out_key in list(self.output_data_ports.keys()):
             self.remove_output_data_port(out_key, force=True, destroy=recursive)
 
-        self.remove_income(force=True)
+        self.remove_income(force=True, destroy=recursive)
 
         for outcome_key in list(self.outcomes.keys()):
             self.remove_outcome(outcome_key, force=True, destroy=recursive)
