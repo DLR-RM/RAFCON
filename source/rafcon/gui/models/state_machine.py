@@ -176,6 +176,7 @@ class StateMachineModel(MetaModel, Hashable):
         self.root_state.update_meta_data_hash(obj_hash)
 
     @ModelMT.observe("state", before=True)
+    @ModelMT.observe("income", before=True)
     @ModelMT.observe("outcomes", before=True)
     @ModelMT.observe("is_start", before=True)
     @ModelMT.observe("states", before=True)
@@ -188,6 +189,7 @@ class StateMachineModel(MetaModel, Hashable):
             self._send_root_state_notification(model, prop_name, info)
 
     @ModelMT.observe("state", after=True)
+    @ModelMT.observe("income", after=True)
     @ModelMT.observe("outcomes", after=True)
     @ModelMT.observe("is_start", after=True)
     @ModelMT.observe("states", after=True)
