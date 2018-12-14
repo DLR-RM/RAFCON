@@ -173,7 +173,7 @@ class ContainerState(State):
     def __copy__(self):
         input_data_ports = {elem_id: copy(elem) for elem_id, elem in self._input_data_ports.items()}
         output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.items()}
-        income = self._income
+        income = copy(self._income)
         outcomes = {elem_id: copy(elem) for elem_id, elem in self._outcomes.items()}
         states = {elem_id: copy(elem) for elem_id, elem in self._states.items()}
         scoped_variables = {elem_id: copy(elem) for elem_id, elem in self._scoped_variables.items()}
