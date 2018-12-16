@@ -23,7 +23,7 @@
             "from_key": 2, 
             "from_state": "QRRWWV", 
             "to_key": 0, 
-            "to_state": "VBOFVC"
+            "to_state": "CXVBON"
         }
     }, 
     "description": null, 
@@ -88,29 +88,29 @@
             "from_outcome": null, 
             "from_state": null, 
             "to_outcome": null, 
-            "to_state": "DUQFMX", 
+            "to_state": "PHTTXK", 
             "transition_id": 1
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "CXVBON", 
+            "to_outcome": null, 
+            "to_state": "YBXBCD", 
+            "transition_id": 2
         }, 
         "3": {
             "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
             "from_outcome": 0, 
-            "from_state": "DUQFMX", 
+            "from_state": "PHTTXK", 
             "to_outcome": null, 
             "to_state": "QRRWWV", 
             "transition_id": 3
         }, 
-        "6": {
-            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
-            "from_outcome": 0, 
-            "from_state": "VBOFVC", 
-            "to_outcome": null, 
-            "to_state": "JJDVSN", 
-            "transition_id": 6
-        }, 
         "28": {
             "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
             "from_outcome": 0, 
-            "from_state": "JJDVSN", 
+            "from_state": "YBXBCD", 
             "to_outcome": 0, 
             "to_state": "QUSEKE", 
             "transition_id": 28
