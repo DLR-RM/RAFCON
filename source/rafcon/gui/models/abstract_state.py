@@ -588,9 +588,11 @@ class AbstractStateModel(MetaModel, Hashable):
             self._copy_element_meta_data_from_meta_file_data(meta_data, outcome_m, "outcome",
                                                              outcome_m.outcome.outcome_id)
         if "income" in meta_data:
-            if "income" in meta_data["gui"]["editor_gaphas"]:
+            if "gui" in meta_data and "editor_gaphas" in meta_data["gui"] and \
+                    "income" in meta_data["gui"]["editor_gaphas"]:  # chain necessary to prevent key generation
                 del meta_data["gui"]["editor_gaphas"]["income"]
-        elif "income" in meta_data["gui"]["editor_gaphas"]:
+        elif "gui" in meta_data and "editor_gaphas" in meta_data["gui"] and \
+                "income" in meta_data["gui"]["editor_gaphas"]:  # chain necessary to prevent key generation in meta data
             meta_data["income"]["gui"]["editor_gaphas"] = meta_data["gui"]["editor_gaphas"]["income"]
             del meta_data["gui"]["editor_gaphas"]["income"]
         self._copy_element_meta_data_from_meta_file_data(meta_data, self.income, "income", "")
