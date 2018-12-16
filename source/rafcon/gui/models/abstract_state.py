@@ -247,7 +247,7 @@ class AbstractStateModel(MetaModel, Hashable):
 
     def update_meta_data_hash(self, obj_hash):
         super(AbstractStateModel, self).update_meta_data_hash(obj_hash)
-        for state_element in sorted([self.income], self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
+        for state_element in sorted([self.income] + self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
             state_element.update_meta_data_hash(obj_hash)
 
     @property
