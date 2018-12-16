@@ -629,9 +629,6 @@ class StateView(Element):
 
         port_meta = income_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
-            # For backward compatibility to older state machines, storing meta data of the income in the state
-            port_meta = self.model.get_meta_data_editor()['income']
-        if not contains_geometric_info(port_meta['rel_pos']):
             # print("generate rel_pos")
             # Position income on the top of the left state side
             income_v.side = SnappedSide.LEFT
