@@ -487,13 +487,15 @@ def insert_state_as(target_state_m, state, as_template):
 
 
 def substitute_state(target_state_m, state_m_to_insert, as_template=False):
-    """ Substitute the target state with a the handed state
+    """ Substitutes the target state
 
-    Both states are handed by there state models. The insert state adapts the size and position of the target state.
-    State elements of the state handed to be insert became resize by keeping there proportion.
+    Both, the state to be replaced (the target state) and the state to be inserted (the new state) are passed via
+    parameters.
+    The new state adapts the size and position of the target state.
+    State elements of the new state are resized but kepp their proportion.
 
     :param rafcon.gui.models.container_state.AbstractStateModel target_state_m: State Model of state to be substituted
-    :param rafcon.gui.models.container_state.StateModel state_m_to_insert: State Model of state to be insert instate
+    :param rafcon.gui.models.container_state.StateModel state_m_to_insert: State Model of state to be inserted
     :return:
     """
     # print("substitute_state")
