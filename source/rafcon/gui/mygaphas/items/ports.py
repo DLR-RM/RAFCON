@@ -30,7 +30,7 @@ from rafcon.utils.geometry import deg2rad
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.runtime_config import global_runtime_config
-from rafcon.gui.models.outcome import OutcomeModel
+from rafcon.gui.models.logical_port import IncomeModel, OutcomeModel
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.container_state import ContainerStateModel
@@ -613,14 +613,21 @@ class LogicPortView(PortView):
 
 
 class IncomeView(LogicPortView):
-    def __init__(self, parent):
+    def __init__(self, income_m, parent):
         super(IncomeView, self).__init__(in_port=True, parent=parent, side=SnappedSide.LEFT)
 
+        assert isinstance(income_m, IncomeModel)
+        self._income_m = ref(income_m)
+        
         self.text_color = gui_config.gtk_colors['OUTCOME_PORT']
         self.fill_color = gui_config.gtk_colors['OUTCOME_PORT']
 
     def draw(self, context, state, highlight=False):
         self.draw_port(context, self.fill_color, state.transparency)
+
+    @property
+    def model(self):
+        return self._income_m()
 
 
 class OutcomeView(LogicPortView):

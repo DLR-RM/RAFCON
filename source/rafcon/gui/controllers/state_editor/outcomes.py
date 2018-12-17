@@ -25,7 +25,7 @@ from gi.repository import Gtk
 from builtins import str
 
 from rafcon.gui.helpers.meta_data import insert_self_transition_meta_data
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController

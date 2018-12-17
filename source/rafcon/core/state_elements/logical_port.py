@@ -22,19 +22,73 @@ from gtkmvc3 import Observable
 
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.decorators import lock_state_machine
+
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class Outcome(StateElement):
-    """A class for representing an outcome of a state
+class LogicalPort(StateElement):
+    """Base class for the logical ports"""
 
-    It inherits from Observable to make a change of its fields observable.
+    def __init__(self, parent=None):
+        if self.__class__.__name__ == "LogicalPort":
+            raise RuntimeError("The class LogicalPort is only a base class and must not be instantiated")
+        super(LogicalPort, self).__init__(parent)
+
+
+class Income(LogicalPort):
+    """A class for representing an income of a state
+
+    There can only be one Income within a state, which is why no income_id is required.
+
+    :ivar rafcon.core.states.state.State StateElement.parent: reference to the parent state
+    """
+
+    yaml_tag = u'!Outcome'
+
+    def __init__(self, parent=None):
+        super(Income, self).__init__()
+
+        # Checks for validity
+        self.parent = parent
+
+    def __str__(self):
+        return "Income"
+
+    def __copy__(self):
+        return self.__class__()
+
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
+
+    @property
+    def state_element_id(self):
+        """Always returns 0
+
+        Only required for consistent handling of all state elements.
+
+        :return: 0
+        """
+        return 0
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        return Income()
+
+    @staticmethod
+    def state_element_to_dict(state_element):
+        return {}
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        return Income()
+
+
+class Outcome(LogicalPort):
+    """A class for representing an outcome of a state
 
     As the name of an outcome can be changes without modifying the transitions the primary key of an outcome is its
     id and not its name.
-
-    The constructor raises an exceptions.TypeError if the outcome_id is not of type int.
 
     :ivar int Outcome.outcome_id: the id of the outcome, must be unique on one hierarchy level
     :ivar str Outcome.name: the human readable name of the outcome
@@ -47,6 +101,13 @@ class Outcome(StateElement):
     _name = None
 
     def __init__(self, outcome_id=None, name=None, parent=None):
+        """Constructor
+
+        :param int outcome_id: State-wide unique Outcome ID
+        :param str name: Name of the outcome
+        :param rafcon.core.states.state.State parent: Reference to the parental state
+        :raises TypeError: If `outcome_id` is not of type `int`
+        """
         super(Outcome, self).__init__()
 
         if not isinstance(outcome_id, int):
@@ -57,8 +118,6 @@ class Outcome(StateElement):
 
         # Checks for validity
         self.parent = parent
-
-        # logger.debug("Outcome with name %s and id %s initialized" % (self.name, self.outcome_id))
 
     def __str__(self):
         return "Outcome '{0}' [{1}]".format(self.name, self.outcome_id)
@@ -91,22 +150,15 @@ class Outcome(StateElement):
         name = dict_representation['name']
         return Outcome(outcome_id, name)
 
-
-#########################################################################
 # Properties for all class field that must be observed by the gtkmvc3
-#########################################################################
-
     @property
     def outcome_id(self):
-        """Property for the _outcome_id field
-
-        """
+        """ Returns the outcome_id """
         return self._outcome_id
 
     @property
     def name(self):
-        """Property for the _name field
-        """
+        """ Returns the Outcome's name """
         return self._name
 
     @name.setter

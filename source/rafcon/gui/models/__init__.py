@@ -17,7 +17,7 @@ from rafcon.gui.models.library_state import LibraryStateModel
 from rafcon.gui.models.transition import TransitionModel
 from rafcon.gui.models.data_flow import DataFlowModel
 from rafcon.gui.models.data_port import DataPortModel
-from rafcon.gui.models.outcome import OutcomeModel
+from rafcon.gui.models.logical_port import OutcomeModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.global_variable_manager import GlobalVariableManagerModel
 from rafcon.gui.models.library_manager import LibraryManagerModel

@@ -21,11 +21,11 @@ from rafcon.utils import log
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
-from .test_state_type_change import store_state_elements, check_state_elements, \
+from gui.widget.test_state_type_change import store_state_elements, check_state_elements, \
      check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
      check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
      get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
-from .test_states_editor import check_state_editor_models
+from gui.widget.test_states_editor import check_state_editor_models
 import pytest
 
 NO_SAVE = False
@@ -1234,16 +1234,11 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
 def test_multiple_undo_redo_bug_with_gui(caplog):
 
     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
-    e = None
     try:
         trigger_multiple_undo_redo_bug_tests(with_gui=True)
-    except Exception as e:
-        pass
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
-        if e:
-            raise e
 
 
 def do_type_change(target_sm_m, target_state_m, drop_down_combo_label_of_new_target_state_type, logger=None):
@@ -1814,7 +1809,6 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
     sm = StateMachine(HierarchyState())
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
     sm_m = list(rafcon.gui.singleton.state_machine_manager_model.state_machines.values())[-1]
-
     call_gui_callback(sm_m.selection.set, [sm_m.root_state])
 
     try:

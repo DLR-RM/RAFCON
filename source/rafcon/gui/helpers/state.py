@@ -19,6 +19,7 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.state_elements.logical_port import Income
 from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.gui import singleton as gui_singletons
 
@@ -170,11 +171,13 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
         input_data_ports = dict(source_state.input_data_ports)
         output_data_ports = dict(source_state.output_data_ports)
         scoped_variables = dict(source_state.scoped_variables)
+        income = source_state.income
         outcomes = dict(source_state.outcomes)
         source_state.input_data_ports = {}
         source_state.output_data_ports = {}
         source_state.scoped_variables = {}
         source_state.transitions = {}  # before remove of outcomes related transitions should be gone
+        source_state.income = Income()
         source_state.outcomes = {}
         states = dict(source_state.states)
         # TODO check why next line can not be performed
@@ -184,6 +187,7 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
                                        input_data_ports=input_data_ports,
                                        output_data_ports=output_data_ports,
                                        scoped_variables=scoped_variables,
+                                       income=income,
                                        outcomes=outcomes,
                                        transitions=state_transitions,
                                        data_flows=data_flows,
@@ -203,15 +207,17 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
         # separate state-elements from source state
         input_data_ports = dict(source_state.input_data_ports)
         output_data_ports = dict(source_state.output_data_ports)
+        income = source_state.income
         outcomes = dict(source_state.outcomes)
         source_state.input_data_ports = {}
         source_state.output_data_ports = {}
+        source_state.income = Income()
         source_state.outcomes = {}
 
         new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
                                        input_data_ports=input_data_ports,
                                        output_data_ports=output_data_ports,
-                                       outcomes=outcomes)
+                                       income=income, outcomes=outcomes)
 
     if source_state.description is not None and len(source_state.description) > 0:
         new_state.description = source_state.description
@@ -238,7 +244,7 @@ def extract_child_models_of_state(state_m, new_state_class):
     new_state_is_container = issubclass(new_state_class, ContainerState)
 
     # define which model references to hold for new state
-    required_model_properties = ['input_data_ports', 'output_data_ports', 'outcomes']
+    required_model_properties = ['input_data_ports', 'output_data_ports', 'outcomes', 'income']
     obsolete_model_properties = []
     if current_state_is_container and new_state_is_container:  # hold some additional references
         # transition are removed when changing the state type, thus do not copy them
@@ -248,6 +254,8 @@ def extract_child_models_of_state(state_m, new_state_class):
         obsolete_model_properties.extend(['states', 'transitions', 'data_flows', 'scoped_variables'])
 
     def get_element_list(state_m, prop_name):
+        if prop_name == 'income':
+            return [state_m.income]
         wrapper = getattr(state_m, prop_name)
         # ._obj is needed as gaphas wraps observable lists and dicts into a gaphas.support.ObsWrapper
         list_or_dict = wrapper._obj

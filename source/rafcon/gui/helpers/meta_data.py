@@ -196,7 +196,7 @@ def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', c
 
         origin_port_m = state_m.get_outcome_m(transition_m.transition.from_outcome)
         origin_port_x, origin_port_y = origin_port_m.get_meta_data_editor()['rel_pos']
-        target_port_x, target_port_y = state_m.get_meta_data_editor()['income']['rel_pos']
+            target_port_x, target_port_y = state_m.income.get_meta_data_editor()['rel_pos']
         x_osign = 1 if origin_port_x/state_meta['size'][0] > 0.5 else -1
         x_tsign = -1 if target_port_x/state_meta['size'][0] < 0.5 else 1
         y_osign = 1 if origin_port_y/state_meta['size'][1] > 0.5 else -1
@@ -390,8 +390,7 @@ def scale_library_ports_meta_data(state_m, gaphas_editor=True):
     """
     if state_m.meta_data_was_scaled:
         return
-    state_m.set_meta_data_editor('income.rel_pos',
-                                 state_m.state_copy.get_meta_data_editor()['income']['rel_pos'])
+    state_m.income.set_meta_data_editor('rel_pos', state_m.state_copy.income.get_meta_data_editor()['rel_pos'])
     # print("scale_library_ports_meta_data ", state_m.get_meta_data_editor()['size'], \)
     #     state_m.state_copy.get_meta_data_editor()['size']
     factor = divide_two_vectors(state_m.get_meta_data_editor()['size'],
@@ -481,8 +480,8 @@ def _resize_connection_models_list(connection_models, factor, gaphas_editor=True
 
 def resize_income_of_state_m(state_m, factor, gaphas_editor=True):
     if gaphas_editor:
-        old_rel_pos = state_m.get_meta_data_editor(for_gaphas=True)['income']['rel_pos']
-        state_m.set_meta_data_editor('income.rel_pos', mult_two_vectors(factor, old_rel_pos), from_gaphas=True)
+        old_rel_pos = state_m.income.get_meta_data_editor(for_gaphas=True)['rel_pos']
+        state_m.income.set_meta_data_editor('rel_pos', mult_two_vectors(factor, old_rel_pos), from_gaphas=True)
         # print("income", old_rel_pos, state_m.get_meta_data_editor(for_gaphas=True)['income'])
 
 
@@ -815,7 +814,7 @@ def get_closest_sibling_state(state_m, from_logical_port=None):
             outcome_m = outcomes_m[0]
         pos = add_pos(pos, outcome_m.get_meta_data_editor()['rel_pos'])
     elif from_logical_port == "income":
-        pos = add_pos(pos, state_m.get_meta_data_editor()['income']['rel_pos'])
+        pos = add_pos(pos, state_m.income.get_meta_data_editor()['rel_pos'])
 
     min_distance = None
     for sibling_state_m in state_m.parent.states.values():

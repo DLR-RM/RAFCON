@@ -19,7 +19,7 @@
 from builtins import str
 import traceback
 
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.states.concurrency_state import ConcurrencyState
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.utils import log
@@ -35,10 +35,11 @@ class PreemptiveConcurrencyState(ConcurrencyState):
 
     yaml_tag = u'!PreemptiveConcurrencyState'
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                 income=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None):
 
-        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, states,
+        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, states,
                                   transitions, data_flows, start_state_id, scoped_variables)
 
     def run(self):

@@ -14,7 +14,7 @@ data_port
 
 outcome
 -------
-.. automodule:: rafcon.core.state_elements.outcome
+.. automodule:: rafcon.core.state_elements.logical_port
 
 scope
 -----

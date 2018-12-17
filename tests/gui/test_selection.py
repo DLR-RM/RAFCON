@@ -133,7 +133,7 @@ def test_all_models():
     from rafcon.core.states.state import State
     from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
     from rafcon.core.state_elements.scope import ScopedVariable
-    from rafcon.core.state_elements.outcome import Outcome
+    from rafcon.core.state_elements.logical_port import Outcome
     from rafcon.core.state_elements.transition import Transition
     from rafcon.core.state_elements.data_flow import DataFlow
 

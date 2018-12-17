@@ -25,7 +25,7 @@ import traceback
 from gtkmvc3.observable import Observable
 
 from rafcon.core.custom_exceptions import RecoveryModeException
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.concurrency_state import ConcurrencyState
 from rafcon.core.states.state import StateExecutionStatus
@@ -62,7 +62,8 @@ class BarrierConcurrencyState(ConcurrencyState):
     """
     yaml_tag = u'!BarrierConcurrencyState'
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                 income=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None,
                  decider_state=None, load_from_storage=False):
         self.__init_running = True
@@ -78,7 +79,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             states[UNIQUE_DECIDER_STATE_ID] = DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID)
 
         # TODO figure out how to solve those two clinch better of copy/add state and already existing transitions #1 #2
-        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes,
+        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes,
                                   states, transitions, data_flows, start_state_id, scoped_variables)
 
         for state_id, state in self.states.items():
@@ -336,12 +337,13 @@ class DeciderState(ExecutionState):
 
     yaml_tag = u'!DeciderState'
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                 income=None, outcomes=None,
                  path=None, filename=None, check_path=True):
 
         if state_id is None:
             state_id = UNIQUE_DECIDER_STATE_ID
-        ExecutionState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path,
+        ExecutionState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, path,
                                 filename, check_path)
 
         self.child_errors = {}
