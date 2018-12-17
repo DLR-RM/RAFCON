@@ -60,6 +60,7 @@ institute):
   .. code:: bash
 
      $ git checkout master
+     $ git pull master
      $ git merge release-[new version number]]
 
 
