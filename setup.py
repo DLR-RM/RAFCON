@@ -105,8 +105,8 @@ setup(
                 'interface',
     long_description=long_description,
 
-    packages=find_packages(os.path.join(rafcon_root_path, "source")),
-    package_dir={'': os.path.join(rafcon_root_path, "source")},  # tell distutils packages are under source
+    packages=find_packages("source"),
+    package_dir={'': "source"},  # tell distutils packages are under source
 
     package_data={
         # Include pylint and logging config
