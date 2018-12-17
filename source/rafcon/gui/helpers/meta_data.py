@@ -196,7 +196,7 @@ def insert_self_transition_meta_data(state_m, t_id, origin='graphical_editor', c
 
         origin_port_m = state_m.get_outcome_m(transition_m.transition.from_outcome)
         origin_port_x, origin_port_y = origin_port_m.get_meta_data_editor()['rel_pos']
-            target_port_x, target_port_y = state_m.income.get_meta_data_editor()['rel_pos']
+        target_port_x, target_port_y = state_m.income.get_meta_data_editor()['rel_pos']
         x_osign = 1 if origin_port_x/state_meta['size'][0] > 0.5 else -1
         x_tsign = -1 if target_port_x/state_meta['size'][0] < 0.5 else 1
         y_osign = 1 if origin_port_y/state_meta['size'][1] > 0.5 else -1
