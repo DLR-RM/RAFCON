@@ -81,6 +81,13 @@ Installing RAFCON
 
 The ``--user`` flag is optional. If not set, RAFCON is installed globally (in this case you normaly need to have root privileges).
 
+If during the installation the error ``ImportError: No module named cairo`` occurs, please install pycairo directly
+via:
+
+.. code-block:: bash
+
+   pip install --user pycairo<2.0.0,>=1.10.0
+
 Of course you can also directly use the RAFCON sources from GitHub.
 
 .. code-block:: bash
