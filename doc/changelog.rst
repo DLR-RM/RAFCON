@@ -34,6 +34,7 @@ Next release
   - :issue:`624` Debug console: cursor is not positioned at the point were it is clicked on
   - :issue:`627` Generic library state machines need Gtk2 to gtk3 conversion
   - :issue:`638` Exiting Fullscreen mode hides the graphical editor
+  - :issue:`644` "Substitute state as template" creates problems if not all models are recursive created
 
 - Changes:
 
