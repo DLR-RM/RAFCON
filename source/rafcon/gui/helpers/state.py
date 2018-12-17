@@ -390,7 +390,6 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
     if isinstance(state_m_to_insert, AbstractStateModel) and \
             not gui_helper_meta_data.model_has_empty_meta(state_m_to_insert):
 
-        gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
         if isinstance(state_m_to_insert, ContainerStateModel):
             # print("TARGET1", state_m_to_insert.state.state_element_attrs)
             models_dict = {'state': state_m_to_insert}
@@ -403,16 +402,16 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
                 models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
 
             resize_factor = gui_helper_meta_data.scale_meta_data_according_state(models_dict, as_template=True)
-            gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor, gaphas_editor)
+            gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor)
 
         elif isinstance(state_m_to_insert, StateModel):
             # print("TARGET2", state_m_to_insert.state.state_element_attrs)
 
             if previous_state_size:
-                current_size = state_m_to_insert.get_meta_data_editor(gaphas_editor)['size']
+                current_size = state_m_to_insert.get_meta_data_editor()['size']
                 factor = gui_helper_meta_data.divide_two_vectors(current_size, previous_state_size)
                 factor = (min(*factor), min(*factor))
-                gui_helper_meta_data.resize_state_meta(state_m_to_insert, factor, gaphas_editor)
+                gui_helper_meta_data.resize_state_meta(state_m_to_insert, factor)
 
             else:
                 logger.debug("For insert as template of {0} no resize of state meta data is performed because "
@@ -452,8 +451,7 @@ def insert_state_as(target_state_m, state, as_template):
         old_lib_state_m = state_m
         state_m = state_m.state_copy
 
-        gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
-        previous_state_size = state_m.get_meta_data_editor(gaphas_editor)['size']
+        previous_state_size = state_m.get_meta_data_editor()['size']
         gui_helper_meta_data.put_default_meta_on_state_m(state_m, target_state_m)
         # TODO check if the not as template case maybe has to be run with the prepare call
         prepare_state_m_for_insert_as(state_m, previous_state_size)
@@ -481,13 +479,11 @@ def substitute_state(target_state_m, state_m_to_insert):
     """
     # print("substitute_state")
 
-    gaphas_editor = gui_singletons.global_gui_config.get_config_value('GAPHAS_EDITOR', True)
     state_to_insert = state_m_to_insert.state
     action_parent_m = target_state_m.parent
     old_state_m = target_state_m
     old_state = old_state_m.state
     state_id = old_state.state_id
-    # print("TARGET", old_state_m.get_meta_data_editor(gaphas_editor))
 
     # BEFORE MODEL
     tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'state': None}
@@ -508,11 +504,9 @@ def substitute_state(target_state_m, state_m_to_insert):
     action_parent_m.substitute_state.__func__.old_state_m = old_state_m
 
     # put old state size and rel_pos onto new state
-    previous_state_size = state_m_to_insert.get_meta_data_editor(gaphas_editor)['size']
-    state_m_to_insert.set_meta_data_editor('size', old_state_m.get_meta_data_editor(gaphas_editor)['size'],
-                                           gaphas_editor)
-    state_m_to_insert.set_meta_data_editor('rel_pos', old_state_m.get_meta_data_editor(gaphas_editor)['rel_pos'],
-                                           gaphas_editor)
+    previous_state_size = state_m_to_insert.get_meta_data_editor()['size']
+    state_m_to_insert.set_meta_data_editor('size', old_state_m.get_meta_data_editor()['size'])
+    state_m_to_insert.set_meta_data_editor('rel_pos', old_state_m.get_meta_data_editor()['rel_pos'])
     # scale the meta data according new size
     prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size)
 
