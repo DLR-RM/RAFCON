@@ -120,9 +120,8 @@ A typical config file looks like this:
 
     SOURCE_EDITOR_STYLE: rafcon
 
-    GAPHAS_EDITOR: True
     GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE: True
-    ENABLE_CACHING: True    # Affects only Gaphas editor
+    ENABLE_CACHING: True
     THEME_DARK_VARIANT: True
     DRAG_N_DROP_WITH_FOCUS: False
 
@@ -283,14 +282,6 @@ SOURCE\_EDITOR\_STYLE
     ~/.local/share/gtksourceview-2.0/styles. "rafcon" is a style
     created to fit to the design of RAFCON.
 
-GAPHAS\_EDITOR
-  | Type: boolean
-  | Default: ``True``
-  | Determines if RAFCON is started with a graphical editor using Gaphas. The develment of OpenGL
-    has been stopped (except bugfixes) in favor of a new editor using
-    GTK cairo and the library Gaphas. The flag decides whether to use
-    the old OpenGL editor (False) or the new Gaphas one (True).
-
 GAPHAS\_EDITOR\_AUTO\_FOCUS\_OF\_ROOT\_STATE
   | Type: boolean
   | Default: ``True``
@@ -300,41 +291,17 @@ GAPHAS\_EDITOR\_AUTO\_FOCUS\_OF\_ROOT\_STATE
 
 ENABLE\_CACHING:
   | Default: ``True``
-  | Affects only Gaphas editor and enables a accelerating caching feature.
+  | Enables a accelerating caching feature.
 
 THEME\_DARK\_VARIANT:
   | Default: ``True``
   | If ``True``, a dark theme will be used, else a light theme
 
-WAYPOINT\_SNAP\_ANGLE
-  | Default: ``45``
-  | Unit: Degree
-  | Base angle, to which waypoints are snapped to when moving them with
-    the Shift key pressed. For a value of 45, waypoints are snapped to
-    e. g. 0°, 45°, 90°, 135°, ... Only used in the old editor (OpenGL).
-
-WAYPOINT\_SNAP\_MAX\_DIFF\_ANGLE
-  | Default: ``10``
-  | Unit: Degree
-  | Max deviation to a snap angle, at which the waypoint is still
-    snapped. For a value of 10 with a snap angle of 45, the waypoint is
-    snapped if the angle of the actual transition/data flow is 99, but
-    not if the angle is 102. Only used in the old editor (OpenGL).
-
-WAYPOINT\_SNAP\_MAX\_DIFF\_PIXEL
-  | Default: ``50``
-  | Unit: px
-  | Max snap point distance to the mouse cursor that is still allowed.
-    If the waypoint would be snapped according to snap angle and its
-    deviation, but the resulting waypoint is too far away from the mouse
-    cursor, snapping is aborted. Only used in the old editor (OpenGL).
-
 PORT\_SNAP\_DISTANCE
   | Default: ``5``
   | Unit: Pixel
   | Maximum distane to a port, at which the moved end of a connection is
-    snapped to a port (outcome, input, output, scoped variable). Only
-    used in Gaphas editor.
+    snapped to a port (outcome, input, output, scoped variable).
 
 LOGGING\_SHOW\_VERBOSE
   | Type: boolean

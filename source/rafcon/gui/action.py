@@ -264,8 +264,8 @@ def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=Non
     # meta_dict = {'state': state_model.meta, 'data_flows': {}, 'transitions': {}, 'outcomes': {},
     #              'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}}
 
-    def missing_meta_data_warning(state_model, elem, meta_dict, dict_key, existing_model_list):
-        logger.warning("Storage Dict seems to miss Meta-Data of {5} in State: {0} {1} for {5}:"
+    def missing_meta_data_log_msg(state_model, elem, meta_dict, dict_key, existing_model_list):
+        logger.verbose("Storage Dict seems to miss Meta-Data of {5} in State: {0} {1} for {5}:"
                        " {2}\nreal: {3}\nstorage: {4}".format(state_model.state.state_id,
                                                               state_model.state.name,
                                                               elem,
@@ -282,20 +282,20 @@ def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=Non
         if elem.outcome.outcome_id in meta_dict['outcomes']:
             elem.meta = meta_dump_or_deepcopy(meta_dict['outcomes'][elem.outcome.outcome_id])
         else:
-            missing_meta_data_warning(state_model, elem.outcome, meta_dict, 'outcomes',
+            missing_meta_data_log_msg(state_model, elem.outcome, meta_dict, 'outcomes',
                                       [oc_m.outcome.outcome_id for oc_m in state_model.outcomes])
     for elem in state_model.input_data_ports:
         if elem.data_port.data_port_id in meta_dict['input_data_ports']:
             elem.meta = meta_dump_or_deepcopy(meta_dict['input_data_ports'][elem.data_port.data_port_id])
         else:
-            missing_meta_data_warning(state_model, elem.data_port, meta_dict, 'input_data_ports',
+            missing_meta_data_log_msg(state_model, elem.data_port, meta_dict, 'input_data_ports',
                                       [ip_m.data_port.data_port_id for ip_m in state_model.input_data_ports])
 
     for elem in state_model.output_data_ports:
         if elem.data_port.data_port_id in meta_dict['output_data_ports']:
             elem.meta = meta_dump_or_deepcopy(meta_dict['output_data_ports'][elem.data_port.data_port_id])
         else:
-            missing_meta_data_warning(state_model, elem.data_port, meta_dict, 'output_data_ports',
+            missing_meta_data_log_msg(state_model, elem.data_port, meta_dict, 'output_data_ports',
                                       [op_m.data_port.data_port_id for op_m in state_model.output_data_ports])
 
     if isinstance(state_model, ContainerStateModel):
@@ -320,21 +320,21 @@ def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=Non
             else:
                 # TODO check if BarrierState miss the meta or it has to be like that UNDO, REDO?
                 if not isinstance(state_model.state, BarrierConcurrencyState):
-                    missing_meta_data_warning(state_model, elem.transition, meta_dict, 'transitions',
+                    missing_meta_data_log_msg(state_model, elem.transition, meta_dict, 'transitions',
                                               [t_m.transition.transition_id for t_m in state_model.transitions])
 
         for elem in state_model.data_flows:
             if elem.data_flow.data_flow_id in meta_dict['data_flows']:
                 elem.meta = meta_dump_or_deepcopy(meta_dict['data_flows'][elem.data_flow.data_flow_id])
             else:
-                missing_meta_data_warning(state_model, elem.data_flow, meta_dict, 'data_flows',
+                missing_meta_data_log_msg(state_model, elem.data_flow, meta_dict, 'data_flows',
                                           [df_m.data_flow.data_flow_id for df_m in state_model.data_flows])
 
         for elem in state_model.scoped_variables:
             if elem.scoped_variable.data_port_id in meta_dict['scoped_variables']:
                 elem.meta = meta_dump_or_deepcopy(meta_dict['scoped_variables'][elem.scoped_variable.data_port_id])
             else:
-                missing_meta_data_warning(state_model, elem.scoped_variable, meta_dict, 'scoped_variables',
+                missing_meta_data_log_msg(state_model, elem.scoped_variable, meta_dict, 'scoped_variables',
                                           [sv_m.scoped_variable.data_port_id for sv_m in state_model.scoped_variables])
 
     # set meta_data_was_scaled parameter to avoid repetitive port scaling

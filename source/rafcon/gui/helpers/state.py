@@ -88,6 +88,23 @@ def check_expected_future_model_list_is_empty(target_state_m, msg, delete=True, 
     return True
 
 
+def update_models_recursively(state_m):
+    """ If a state model is reused the model depth maybe is to low. Therefore this method checks if all 
+    library state models are created with reliable depth"""
+
+    assert isinstance(state_m, AbstractStateModel)
+
+    if isinstance(state_m, LibraryStateModel):
+        if not state_m.state_copy_initialized:
+            state_m.recursive_generate_models(load_meta_data=False)
+            import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+            gui_helper_meta_data.scale_library_content(state_m)
+
+    if isinstance(state_m, ContainerStateModel):
+        for child_state_m in state_m.states.values():
+            update_models_recursively(child_state_m)
+
+
 def add_state(container_state_m, state_type):
     """Add a state to a container state
 
@@ -396,7 +413,6 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
     if isinstance(state_m_to_insert, AbstractStateModel) and \
             not gui_helper_meta_data.model_has_empty_meta(state_m_to_insert):
 
-        gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
         if isinstance(state_m_to_insert, ContainerStateModel):
             # print("TARGET1", state_m_to_insert.state.state_element_attrs)
             models_dict = {'state': state_m_to_insert}
@@ -409,16 +425,16 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
                 models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
 
             resize_factor = gui_helper_meta_data.scale_meta_data_according_state(models_dict, as_template=True)
-            gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor, gaphas_editor)
+            gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor)
 
         elif isinstance(state_m_to_insert, StateModel):
             # print("TARGET2", state_m_to_insert.state.state_element_attrs)
 
             if previous_state_size:
-                current_size = state_m_to_insert.get_meta_data_editor(gaphas_editor)['size']
+                current_size = state_m_to_insert.get_meta_data_editor()['size']
                 factor = gui_helper_meta_data.divide_two_vectors(current_size, previous_state_size)
                 factor = (min(*factor), min(*factor))
-                gui_helper_meta_data.resize_state_meta(state_m_to_insert, factor, gaphas_editor)
+                gui_helper_meta_data.resize_state_meta(state_m_to_insert, factor)
 
             else:
                 logger.debug("For insert as template of {0} no resize of state meta data is performed because "
@@ -458,8 +474,7 @@ def insert_state_as(target_state_m, state, as_template):
         old_lib_state_m = state_m
         state_m = state_m.state_copy
 
-        gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
-        previous_state_size = state_m.get_meta_data_editor(gaphas_editor)['size']
+        previous_state_size = state_m.get_meta_data_editor()['size']
         gui_helper_meta_data.put_default_meta_on_state_m(state_m, target_state_m)
         # TODO check if the not as template case maybe has to be run with the prepare call
         prepare_state_m_for_insert_as(state_m, previous_state_size)
@@ -475,25 +490,25 @@ def insert_state_as(target_state_m, state, as_template):
     target_state_m.state.add_state(state_m.state)
 
 
-def substitute_state(target_state_m, state_m_to_insert):
-    """ Substitute the target state with a the handed state
+def substitute_state(target_state_m, state_m_to_insert, as_template=False):
+    """ Substitutes the target state
 
-    Both states are handed by there state models. The insert state adapts the size and position of the target state.
-    State elements of the state handed to be insert became resize by keeping there proportion.
+    Both, the state to be replaced (the target state) and the state to be inserted (the new state) are passed via
+    parameters.
+    The new state adapts the size and position of the target state.
+    State elements of the new state are resized but kepp their proportion.
 
     :param rafcon.gui.models.container_state.AbstractStateModel target_state_m: State Model of state to be substituted
-    :param rafcon.gui.models.container_state.StateModel state_m_to_insert: State Model of state to be insert instate
+    :param rafcon.gui.models.container_state.StateModel state_m_to_insert: State Model of state to be inserted
     :return:
     """
     # print("substitute_state")
 
-    gaphas_editor = gui_singletons.global_gui_config.get_config_value('GAPHAS_EDITOR', True)
     state_to_insert = state_m_to_insert.state
     action_parent_m = target_state_m.parent
     old_state_m = target_state_m
     old_state = old_state_m.state
     state_id = old_state.state_id
-    # print("TARGET", old_state_m.get_meta_data_editor(gaphas_editor))
 
     # BEFORE MODEL
     tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'state': None}
@@ -514,11 +529,9 @@ def substitute_state(target_state_m, state_m_to_insert):
     action_parent_m.substitute_state.__func__.old_state_m = old_state_m
 
     # put old state size and rel_pos onto new state
-    previous_state_size = state_m_to_insert.get_meta_data_editor(gaphas_editor)['size']
-    state_m_to_insert.set_meta_data_editor('size', old_state_m.get_meta_data_editor(gaphas_editor)['size'],
-                                           gaphas_editor)
-    state_m_to_insert.set_meta_data_editor('rel_pos', old_state_m.get_meta_data_editor(gaphas_editor)['rel_pos'],
-                                           gaphas_editor)
+    previous_state_size = state_m_to_insert.get_meta_data_editor()['size']
+    state_m_to_insert.set_meta_data_editor('size', old_state_m.get_meta_data_editor()['size'])
+    state_m_to_insert.set_meta_data_editor('rel_pos', old_state_m.get_meta_data_editor()['rel_pos'])
     # scale the meta data according new size
     prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size)
 
@@ -526,6 +539,14 @@ def substitute_state(target_state_m, state_m_to_insert):
     new_state = e = None
     # print("state to insert", state_to_insert)
     try:
+        # if as_template:  # TODO remove this work around if the models are loaded correctly
+        #     # the following enforce the creation of a new model (in needed depth) and transfer of meta data
+        #     import rafcon.gui.action
+        #     meta_dict = rafcon.gui.action.get_state_element_meta(state_m_to_insert)
+        #     new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
+        #     sm_m = action_parent_m.get_state_machine_m()
+        #     rafcon.gui.action.insert_state_meta_data(meta_dict, sm_m.get_state_model_by_path(new_state.get_path()))
+        # else:
         action_parent_m.expected_future_models.add(state_m_to_insert)
         new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
         # assert new_state.state_id is state_id
@@ -537,6 +558,7 @@ def substitute_state(target_state_m, state_m_to_insert):
         # AFTER MODEL
         # print("AFTER MODEL", new_state)
         new_state_m = action_parent_m.states[new_state.state_id]
+        update_models_recursively(state_m=new_state_m)
         tmp_meta_data = action_parent_m.substitute_state.__func__.tmp_meta_data_storage
         old_state_m = action_parent_m.substitute_state.__func__.old_state_m
         changed_models = []
@@ -590,7 +612,7 @@ def substitute_state_as(target_state_m, state, as_template, keep_name=False):
         state_m.state.name = target_state_m.state.name
 
     assert target_state_m.parent.states[target_state_m.state.state_id] is target_state_m
-    substitute_state(target_state_m, state_m)
+    substitute_state(target_state_m, state_m, as_template)
 
 
 def group_states_and_scoped_variables(state_m_list, sv_m_list):

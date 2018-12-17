@@ -34,11 +34,14 @@ Next release
   - :issue:`624` Debug console: cursor is not positioned at the point were it is clicked on
   - :issue:`627` Generic library state machines need Gtk2 to gtk3 conversion
   - :issue:`638` Exiting Fullscreen mode hides the graphical editor
+  - :issue:`644` "Substitute state as template" creates problems if not all models are recursive created
 
 - Changes:
 
   - Redundant libraries are marked as deprecated
   - No more "+"-icon next to state machine tabs to add a new state machine (related to :issue:`639`)
+  - Remove old OpenGL GraphicalEditor
+  - Remove deprecated entry points ``rafcon_start`` and ``rafcon_start_gui``
 
 
 Patch releases 0.12.\*
