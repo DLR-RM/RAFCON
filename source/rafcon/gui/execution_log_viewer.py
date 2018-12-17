@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # Example 1: execution_log_viewer.py your_execution_log.shelve xxxxxxx.run_id.00000000000000000003
 # Example 2: rafcon_execution_log_viewer your_execution_log.shelve xxxxxxx.run_id.00000000000000000003
-
-import gtk
-import argparse
-
 from rafcon.gui.views.utils.single_widget_window import SingleWidgetWindowView
 from rafcon.gui.views.execution_log_viewer import ExecutionLogTreeView
 from rafcon.gui.controllers.utils.single_widget_window import SingleWidgetWindowController
@@ -12,7 +8,8 @@ from rafcon.gui.controllers.execution_log_viewer import ExecutionLogTreeControll
 
 
 if __name__ == "__main__":
-
+    from gi.repository import Gtk  # import here to avoid warning
+    import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("file", help="path to the log file")
     parser.add_argument("run_id", help="optional run_id of history item to select", default=None, nargs='?')
@@ -28,4 +25,4 @@ if __name__ == "__main__":
 
     # log_tree_ctrl = SingleWidgetWindowController(None, single_view, ExecutionLogTreeController, file, run_id)
 
-    gtk.main()
+    Gtk.main()

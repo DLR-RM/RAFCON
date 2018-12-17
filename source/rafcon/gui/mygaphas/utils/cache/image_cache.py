@@ -9,8 +9,13 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import object
 from cairo import ImageSurface, FORMAT_ARGB32, Context, Error
-from gtk.gdk import CairoContext
+from gi.repository import Gtk
+from gi.repository import Gdk
+# Gtk TODO
+# from Gtk.gdk import CairoContext
+
 
 from math import ceil, sqrt
 
@@ -110,9 +115,8 @@ class ImageCache(object):
         :return: Cairo context to draw on
         """
         cairo_context = Context(self.__image)
-        c = CairoContext(cairo_context)
-        c.scale(zoom * self.multiplicator, zoom * self.multiplicator)
-        return c
+        cairo_context.scale(zoom * self.multiplicator, zoom * self.multiplicator)
+        return cairo_context
 
     def __set_cached_image(self, image, width, height, zoom, parameters):
         self.__image = image
@@ -155,7 +159,19 @@ class ImageCache(object):
 
         # Changed drawing parameter
         for key in parameters:
-            if key not in self.__last_parameters or self.__last_parameters[key] != parameters[key]:
+            try:
+                if key not in self.__last_parameters or self.__last_parameters[key] != parameters[key]:
+                    return False
+            except (AttributeError, ValueError):
+                # Some values cannot be compared and raise an exception on comparison (e.g. numpy.ndarray). In this
+                # case, just return False and do not cache.
+                try:
+                    # Catch at least the ndarray-case, as this could occure relatively often
+                    import numpy
+                    if isinstance(self.__last_parameters[key], numpy.ndarray):
+                        return numpy.array_equal(self.__last_parameters[key], parameters[key])
+                except ImportError:
+                    return False
                 return False
 
         return True

@@ -39,6 +39,7 @@ from rafcon.gui.views.state_editor.state_editor import StateEditorView
 from rafcon.gui.config import global_gui_config
 
 from rafcon.utils import log
+from rafcon.utils import plugins
 logger = log.get_logger(__name__)
 
 
@@ -151,6 +152,8 @@ class StateEditorController(ExtendedController):
         if isinstance(self.model, ContainerStateModel):
             self.scopes_ctrl.reload_scoped_variables_list_store()
 
+        plugins.run_hook("post_state_editor_register_view", self)
+
     def rename(self):
         state_overview_controller = self.get_controller('properties_ctrl')
         state_overview_controller.rename()
@@ -180,9 +183,9 @@ class StateEditorController(ExtendedController):
         depends on the kind of model. Therefore, we have to destroy this editor and open a new one with the new model.
         """
         msg = info['arg']
-        # print self.__class__.__name__, "state_type_changed check", info
+        # print(self.__class__.__name__, "state_type_changed check", info)
         if msg.action in ['change_state_type', 'change_root_state_type'] and msg.after:
-            # print self.__class__.__name__, "state_type_changed"
+            # print(self.__class__.__name__, "state_type_changed")
             import rafcon.gui.singleton as gui_singletons
             msg = info['arg']
             new_state_m = msg.affected_models[-1]

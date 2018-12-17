@@ -21,23 +21,26 @@
 
 """
 
-import Queue
+from future import standard_library
+standard_library.install_aliases()
+from future.utils import string_types
+import queue
 import copy
 import os
 import threading
-from __builtin__ import staticmethod
+from builtins import staticmethod
 from weakref import ref
 import copy
 
 from enum import Enum
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
 from rafcon.core.id_generator import *
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.state_elements.data_port import DataPort, InputDataPort, OutputDataPort
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Income, Outcome
 from rafcon.core.state_elements.scope import ScopedData
 from rafcon.core.storage import storage
 from rafcon.utils import classproperty
@@ -70,16 +73,17 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     """
 
     _parent = None
-    _state_element_attrs = ['outcomes', 'input_data_ports', 'output_data_ports']
+    _state_element_attrs = ['income', 'outcomes', 'input_data_ports', 'output_data_ports']
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
-                 parent=None):
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                 income=None, outcomes=None, parent=None):
 
         Observable.__init__(self)
         self._state_id = None
         self._name = None
         self._input_data_ports = {}
         self._output_data_ports = {}
+        self._income = None
         self._outcomes = {}
         # the input data of the state during execution
         self._input_data = {}
@@ -124,6 +128,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.input_data_ports = input_data_ports if input_data_ports is not None else {}
         self.output_data_ports = output_data_ports if output_data_ports is not None else {}
 
+        self.income = income if income is not None else Income()
         self.outcomes = outcomes if outcomes is not None else {0: Outcome(outcome_id=0, name="success")}
         self.state_execution_status = StateExecutionStatus.INACTIVE
 
@@ -133,7 +138,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         self.marked_dirty = False
 
-        # logger.debug("New {0} created".format(self))
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- generic methods -----------------------------------------
@@ -144,6 +148,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     def id(self):
         return self
+
+    def __hash__(self):
+        return id(self)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -172,6 +179,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             if self.state_id == other.state_id:
                 return 0
             return -1 if self.state_id < other.state_id else 1
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
 
     @property
     def core_element_id(self):
@@ -202,6 +212,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             'description': state.description,
             'input_data_ports': state.input_data_ports,
             'output_data_ports': state.output_data_ports,
+            'income': state.income,
             'outcomes': state.outcomes
         }
         return dict_representation
@@ -320,7 +331,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         from rafcon.core.states.library_state import LibraryState
         result_dict = {}
-        for input_port_key, value in state.input_data_ports.iteritems():
+        for input_port_key, value in state.input_data_ports.items():
             if isinstance(state, LibraryState):
                 if state.use_runtime_value_input_data_ports[input_port_key]:
                     default = state.input_data_port_runtime_values[input_port_key]
@@ -330,7 +341,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 default = value.default_value
             # if the user sets the default value to a string starting with $, try to retrieve the value
             # from the global variable manager
-            if isinstance(default, basestring) and len(default) > 0 and default[0] == '$':
+            if isinstance(default, string_types) and len(default) > 0 and default[0] == '$':
                 from rafcon.core.singleton import global_variable_manager as gvm
                 var_name = default[1:]
                 if not gvm.variable_exist(var_name):
@@ -353,7 +364,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         from rafcon.core.states.library_state import LibraryState
         result_dict = {}
-        for key, data_port in state.output_data_ports.iteritems():
+        for key, data_port in state.output_data_ports.items():
             if isinstance(state, LibraryState) and state.use_runtime_value_output_data_ports[key]:
                 result_dict[data_port.name] = copy.copy(state.output_data_port_runtime_values[key])
             else:
@@ -419,7 +430,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if not self.is_root_state:
             # delete all data flows in parent related to data_port_id and self.state_id
             data_flow_ids_to_remove = []
-            for data_flow_id, data_flow in self.parent.data_flows.iteritems():
+            for data_flow_id, data_flow in self.parent.data_flows.items():
                 if data_flow.from_state == self.state_id and data_flow.from_key == data_port_id or \
                         data_flow.to_state == self.state_id and data_flow.to_key == data_port_id:
                     data_flow_ids_to_remove.append(data_flow_id)
@@ -480,12 +491,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :raises exceptions.AttributeError: if the specified data port does not exist in the input or output data ports
         """
         if data_port_type is InputDataPort:
-            for ip_id, output_port in self.input_data_ports.iteritems():
+            for ip_id, output_port in self.input_data_ports.items():
                 if output_port.name == name:
                     return ip_id
             raise AttributeError("Name '{0}' is not in input_data_ports".format(name))
         elif data_port_type is OutputDataPort:
-            for op_id, output_port in self.output_data_ports.iteritems():
+            for op_id, output_port in self.output_data_ports.items():
                 if output_port.name == name:
                     return op_id
             # 'error' is an automatically generated output port in case of errors and exception and doesn't have an id
@@ -507,7 +518,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         return None
 
     def get_data_port_ids(self):
-        return self._input_data_ports.keys() + self._output_data_ports.keys()
+        return list(self._input_data_ports.keys()) + list(self._output_data_ports.keys())
 
     # ---------------------------------------------------------------------------------------------
     # ------------------------------------ outcome functions --------------------------------------
@@ -597,8 +608,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param str file_system_path:
         :return:
         """
-        if not isinstance(file_system_path, basestring):
-            raise TypeError("file_system_path must be of type basestring")
+        if not isinstance(file_system_path, string_types):
+            raise TypeError("file_system_path must be a string")
         self._file_system_path = file_system_path
 
     def get_temp_file_system_path(self):
@@ -620,7 +631,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :rtype: int
         """
         if outcome_id is None:
-            outcome_id = generate_outcome_id(self.outcomes.keys())
+            outcome_id = generate_outcome_id(list(self.outcomes.keys()))
         if name in self._outcomes:
             logger.error("Two outcomes cannot have the same names")
             return
@@ -641,6 +652,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param bool force: if the removal should be forced without checking constraints
         :param bool destroy: a flag that signals that the state element will be fully removed and disassembled
         """
+        if isinstance(state_element, Income):
+            self.remove_income(force, destroy=destroy)
         if isinstance(state_element, Outcome):
             return self.remove_outcome(state_element.outcome_id, force=force, destroy=destroy)
         elif isinstance(state_element, InputDataPort):
@@ -649,6 +662,14 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             return self.remove_output_data_port(state_element.data_port_id, force, destroy=destroy)
         else:
             raise ValueError("Cannot remove state_element with invalid type")
+
+    @lock_state_machine
+    @Observable.observed
+    def remove_income(self, force=False, destroy=True):
+        if not force:
+            raise AttributeError("The income of a state cannot be removed")
+        self._income.parent = None
+        self._income = None
 
     @lock_state_machine
     @Observable.observed
@@ -671,7 +692,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         # delete possible transition connected to this outcome
         if destroy and not self.is_root_state:
-            for transition_id, transition in self.parent.transitions.iteritems():
+            for transition_id, transition in self.parent.transitions.items():
                 if transition.from_outcome == outcome_id and transition.from_state == self.state_id:
                     self.parent.remove_transition(transition_id)
                     break  # found the one outgoing transition
@@ -706,6 +727,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             information especially if the child is not valid
         """
         # Check type of child and call appropriate validity test
+        if isinstance(child, Income):
+            return self._check_income_validity(child)
         if isinstance(child, Outcome):
             return self._check_outcome_validity(child)
         if isinstance(child, DataPort):
@@ -714,16 +737,27 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             return self._check_scoped_data_validity(child)
         return False, "Invalid state element for state of type {}".format(self.__class__.__name__)
 
+    def _check_income_validity(self, check_income):
+        """Checks the validity of an income
+
+        Currently, an income cannot be invalid
+
+        :param Income check_income: Income to check for validity
+        :return: Validity of Income
+        :rtype: bool
+        """
+        return True, "valid"
+
     def _check_outcome_validity(self, check_outcome):
         """Checks the validity of an outcome
 
         Checks whether the id or the name of the outcome is already used by another outcome within the state.
 
-        :param rafcon.core.outcome.Outcome check_outcome: The outcome to be checked
+        :param rafcon.core.logical_port.Outcome check_outcome: The outcome to be checked
         :return bool validity, str message: validity is True, when the outcome is valid, False else. message gives more
             information especially if the outcome is not valid
         """
-        for outcome_id, outcome in self.outcomes.iteritems():
+        for outcome_id, outcome in self.outcomes.items():
             # Do not compare outcome with itself when checking for existing name/id
             if check_outcome is not outcome:
                 if check_outcome.outcome_id == outcome_id:
@@ -772,10 +806,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :return bool validity, str message: validity is True, when the data port is valid, False else. message gives
             more information especially if the data port is not valid
         """
-        for input_data_port_id, input_data_port in self.input_data_ports.iteritems():
+        for input_data_port_id, input_data_port in self.input_data_ports.items():
             if data_port.data_port_id == input_data_port_id and data_port is not input_data_port:
                 return False, "data port id already existing in state"
-        for output_data_port_id, output_data_port in self.output_data_ports.iteritems():
+        for output_data_port_id, output_data_port in self.output_data_ports.items():
             if data_port.data_port_id == output_data_port_id and data_port is not output_data_port:
                 return False, "data port id already existing in state"
         return True, "valid"
@@ -791,12 +825,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             more information especially if the data port is not valid
         """
         if data_port.data_port_id in self.input_data_ports:
-            for input_data_port in self.input_data_ports.itervalues():
+            for input_data_port in self.input_data_ports.values():
                 if data_port.name == input_data_port.name and data_port is not input_data_port:
                     return False, "data port name already existing in state's input data ports"
 
         elif data_port.data_port_id in self.output_data_ports:
-            for output_data_port in self.output_data_ports.itervalues():
+            for output_data_port in self.output_data_ports.values():
                 if data_port.name == output_data_port.name and data_port is not output_data_port:
                     return False, "data port name already existing in state's output data ports"
 
@@ -808,7 +842,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         Checks all input data ports if the handed data is not of the specified type and generate an error logger message
         with details of the found type conflict.
         """
-        for data_port in self.input_data_ports.itervalues():
+        for data_port in self.input_data_ports.values():
             if data_port.name in self.input_data and self.input_data[data_port.name] is not None:
                 #check for class
                 if not isinstance(self.input_data[data_port.name], data_port.data_type):
@@ -823,7 +857,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         Checks all output data ports if the handed data is not of the specified type and generate an error logger
         message with details of the found type conflict.
         """
-        for data_port in self.output_data_ports.itervalues():
+        for data_port in self.output_data_ports.values():
             if data_port.name in self.output_data and self.output_data[data_port.name] is not None:
                 # check for class
                 if not isinstance(self.output_data[data_port.name], data_port.data_type):
@@ -851,7 +885,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if state_id is None:
             state_id = state_id_generator(used_state_ids=[self.state_id])
         if not self.is_root_state and not self.is_root_state_of_library:
-            used_ids = self.parent.states.keys() + [self.parent.state_id, self.state_id]
+            used_ids = list(self.parent.states.keys()) + [self.parent.state_id, self.state_id]
             if state_id in used_ids:
                 state_id = state_id_generator(used_state_ids=used_ids)
 
@@ -898,7 +932,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param key: The key of the new entry.
         :return:
         """
-        assert isinstance(key, basestring)
+        assert isinstance(key, string_types)
         target_dict = self.get_semantic_data(path_as_list)
         target_dict[key] = value
         return path_as_list + [key]
@@ -924,17 +958,20 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         :param recursive: Flag wether to destroy all state elements which are removed
         """
-        for in_key in self.input_data_ports.keys():
+        for in_key in list(self.input_data_ports.keys()):
             self.remove_input_data_port(in_key, force=True, destroy=recursive)
 
-        for out_key in self.output_data_ports.keys():
+        for out_key in list(self.output_data_ports.keys()):
             self.remove_output_data_port(out_key, force=True, destroy=recursive)
 
-        for outcome_key in self.outcomes.keys():
+        if self._income:
+            self.remove_income(force=True, destroy=recursive)
+
+        for outcome_key in list(self.outcomes.keys()):
             self.remove_outcome(outcome_key, force=True, destroy=recursive)
 
 #########################################################################
-# Properties for all class fields that must be observed by gtkmvc
+# Properties for all class fields that must be observed by gtkmvc3
 #########################################################################
 
     @property
@@ -962,8 +999,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 raise ValueError("Name must not include the \"" + PATH_SEPARATOR + "\" character")
             # if ID_NAME_DELIMITER in name:
             #     raise ValueError("Name must not include the \"" + ID_NAME_DELIMITER + "\" character")
-            if not isinstance(name, basestring):
-                raise TypeError("Name must be of type str")
+            if not isinstance(name, string_types):
+                raise TypeError("Name must be a string")
             if len(name) < 1:
                 raise ValueError("Name must have at least one character")
 
@@ -1024,11 +1061,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         if not isinstance(input_data_ports, dict):
             raise TypeError("input_data_ports must be of type dict")
-        if [port_id for port_id, port in input_data_ports.iteritems() if not port_id == port.data_port_id]:
+        if [port_id for port_id, port in input_data_ports.items() if not port_id == port.data_port_id]:
             raise AttributeError("The key of the input dictionary and the id of the data port do not match")
 
         # This is a fix for older state machines, which didn't distinguish between input and output ports
-        for port_id, port in input_data_ports.iteritems():
+        for port_id, port in input_data_ports.items():
             if not isinstance(port, InputDataPort):
                 if isinstance(port, DataPort):
                     port = InputDataPort(port.name, port.data_type, port.default_value, port.data_port_id)
@@ -1039,7 +1076,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         old_input_data_ports = self._input_data_ports
         self._input_data_ports = input_data_ports
-        for port_id, port in input_data_ports.iteritems():
+        for port_id, port in input_data_ports.items():
             try:
                 port.parent = self
             except ValueError:
@@ -1047,8 +1084,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 raise
 
         # check that all old_input_data_ports are no more referencing self as there parent
-        for old_input_data_port in old_input_data_ports.itervalues():
-            if old_input_data_port not in self._input_data_ports.itervalues() and old_input_data_port.parent is self:
+        for old_input_data_port in old_input_data_ports.values():
+            if old_input_data_port not in self._input_data_ports.values() and old_input_data_port.parent is self:
                 old_input_data_port.parent = None
 
     @property
@@ -1082,11 +1119,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         if not isinstance(output_data_ports, dict):
             raise TypeError("output_data_ports must be of type dict")
-        if [port_id for port_id, port in output_data_ports.iteritems() if not port_id == port.data_port_id]:
+        if [port_id for port_id, port in output_data_ports.items() if not port_id == port.data_port_id]:
             raise AttributeError("The key of the output dictionary and the id of the data port do not match")
 
         # This is a fix for older state machines, which didn't distinguish between input and output ports
-        for port_id, port in output_data_ports.iteritems():
+        for port_id, port in output_data_ports.items():
             if not isinstance(port, OutputDataPort):
                 if isinstance(port, DataPort):
                     port = OutputDataPort(port.name, port.data_type, port.default_value, port.data_port_id)
@@ -1097,7 +1134,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         old_output_data_ports = self._output_data_ports
         self._output_data_ports = output_data_ports
-        for port_id, port in output_data_ports.iteritems():
+        for port_id, port in output_data_ports.items():
             try:
                 port.parent = self
             except ValueError:
@@ -1105,9 +1142,34 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 raise
 
         # check that all old_output_data_ports are no more referencing self as there parent
-        for old_output_data_port in old_output_data_ports.itervalues():
-            if old_output_data_port not in self._output_data_ports.itervalues() and old_output_data_port.parent is self:
+        for old_output_data_port in old_output_data_ports.values():
+            if old_output_data_port not in self._output_data_ports.values() and old_output_data_port.parent is self:
                 old_output_data_port.parent = None
+
+    @property
+    def income(self):
+        """Returns the Income of the state
+
+        :return: Income of the state
+        :rtype: Income
+        """
+        return self._income
+
+    @income.setter
+    @lock_state_machine
+    @Observable.observed
+    def income(self, income):
+        """Setter for the state's income"""
+        if not isinstance(income, Income):
+            raise ValueError("income must be of type Income")
+
+        old_income = self.income
+        self._income = income
+        try:
+            income.parent = self
+        except ValueError:
+            self._income = old_income
+            raise
 
     @property
     def outcomes(self):
@@ -1118,7 +1180,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         The method does check validity of the elements by calling the parent-setter and in case of failure cancel
         the operation and recover old outcomes.
 
-        :return: Dictionary outcomes[:class:`int`, :class:`rafcon.core.state_elements.outcome.Outcome`]
+        :return: Dictionary outcomes[:class:`int`, :class:`rafcon.core.state_elements.logical_port.Outcome`]
                  that maps :class:`int` outcome_ids onto values of type Outcome
         :rtype: dict
         """
@@ -1133,20 +1195,20 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         See property.
 
         :param dict outcomes: Dictionary outcomes[outcome_id] that maps :class:`int` outcome_ids onto values of type
-                              :class:`rafcon.core.state_elements.outcome.Outcome`
+                              :class:`rafcon.core.state_elements.logical_port.Outcome`
         :raises exceptions.TypeError: if outcomes parameter has the wrong type
         :raises exceptions.AttributeError: if the key of the outcome dictionary and the id of the outcome do not match
         """
         if not isinstance(outcomes, dict):
             raise TypeError("outcomes must be of type dict")
-        if [outcome_id for outcome_id, outcome in outcomes.iteritems() if not isinstance(outcome, Outcome)]:
+        if [outcome_id for outcome_id, outcome in outcomes.items() if not isinstance(outcome, Outcome)]:
             raise TypeError("element of outcomes must be of type Outcome")
-        if [outcome_id for outcome_id, outcome in outcomes.iteritems() if not outcome_id == outcome.outcome_id]:
+        if [outcome_id for outcome_id, outcome in outcomes.items() if not outcome_id == outcome.outcome_id]:
             raise AttributeError("The key of the outcomes dictionary and the id of the outcome do not match")
 
         old_outcomes = self.outcomes
         self._outcomes = outcomes
-        for outcome_id, outcome in outcomes.iteritems():
+        for outcome_id, outcome in outcomes.items():
             try:
                 outcome.parent = self
             except ValueError:
@@ -1160,8 +1222,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self._outcomes[-2] = Outcome(outcome_id=-2, name="preempted", parent=self)
 
         # check that all old_outcomes are no more referencing self as there parent
-        for old_outcome in old_outcomes.itervalues():
-            if old_outcome not in self._outcomes.itervalues() and old_outcome.parent is self:
+        for old_outcome in old_outcomes.values():
+            if old_outcome not in iter(list(self._outcomes.values())) and old_outcome.parent is self:
                 old_outcome.parent = None
 
     @property
@@ -1271,7 +1333,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     @lock_state_machine
     #@Observable.observed
     def concurrency_queue(self, concurrency_queue):
-        if not isinstance(concurrency_queue, Queue.Queue):
+        if not isinstance(concurrency_queue, queue.Queue):
             if not concurrency_queue is None:
                 raise TypeError("concurrency_queue must be of type Queue or None")
             else:
@@ -1309,9 +1371,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self._description = None
             return
 
-        if not isinstance(description, (str, unicode)):
-            if not isinstance(description, unicode):
-                raise TypeError("Description must be of type str or unicode")
+        if not isinstance(description, string_types):
+            raise TypeError("Description must be a string")
 
         self._description = description
 
@@ -1402,7 +1463,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         This method is called when the run method finishes
 
-        :param rafcon.core.outcome.Outcome outcome: final outcome of the state
+        :param rafcon.core.logical_port.Outcome outcome: final outcome of the state
         :return: Nothing for the moment
         """
 

@@ -17,7 +17,7 @@ def trigger_gvm_signals():
     gvm_controller = rafcon.gui.singleton.main_window_controller.get_controller('global_variable_manager_ctrl')
 
     view = gvm_controller.view['global_variable_tree_view']
-    view.grab_focus()
+    call_gui_callback(view.grab_focus)
 
     call_gui_callback(gvm.set_variable, 'new_0', 0)
 
@@ -44,7 +44,6 @@ def trigger_gvm_signals():
     call_gui_callback(gvm_controller.apply_new_global_variable_type, 0, 'float')
     call_gui_callback(run_gvm_method1, gvm.get_data_type, 'changed_global_0', return_list)
     assert return_list[-1] is float
-
 
     call_gui_callback(run_gvm_method1, gvm.lock_variable, 'changed_global_0', return_list)
     access_key = return_list[-1]

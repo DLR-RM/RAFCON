@@ -1,3 +1,5 @@
+from future import standard_library
+standard_library.install_aliases()
 import os
 import time
 import threading
@@ -38,13 +40,12 @@ def test_preemption_behaviour_during_stop(caplog):
     path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "preemption_behaviour_during_stop"))
     state_machine = storage.load_state_machine_from_path(path)
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
     thread = threading.Thread(target=trigger_stop, args=[state_machine,
                                                          rafcon.core.singleton.state_machine_execution_engine])
     thread.start()
 
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
 
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)

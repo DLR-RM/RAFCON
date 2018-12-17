@@ -17,12 +17,13 @@
    :synopsis: A module to represent a hierarchy state for the state machine
 
 """
+from builtins import str
 import traceback
 import copy
 
 from rafcon.utils import log
 from rafcon.core.states.container_state import ContainerState
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 import rafcon.core.singleton as singleton
 from rafcon.core.execution.execution_history import CallItem, ReturnItem
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
@@ -41,10 +42,11 @@ class HierarchyState(ContainerState):
 
     yaml_tag = u'!HierarchyState'
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                 income=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None):
 
-        ContainerState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, states,
+        ContainerState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, states,
                                 transitions, data_flows, start_state_id, scoped_variables)
         self.handling_execution_mode = False
 
@@ -93,14 +95,14 @@ class HierarchyState(ContainerState):
         try:
             self._initialize_hierarchy()
             while self.child_state is not self:
-                # print "hs1", self.name
+                # print("hs1", self.name)
                 self.handling_execution_mode = True
                 execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, self.child_state)
                 self.handling_execution_mode = False
                 if self.state_execution_status is not StateExecutionStatus.EXECUTE_CHILDREN:
                     self.state_execution_status = StateExecutionStatus.EXECUTE_CHILDREN
 
-                # print "hs2", self.name
+                # print("hs2", self.name)
 
                 self.backward_execution = False
                 if self.preempted:
@@ -117,25 +119,25 @@ class HierarchyState(ContainerState):
                 if self.child_state is None:
                     break
 
-                # print "hs3", self.name
+                # print("hs3", self.name)
 
                 self._execute_current_child()
 
                 if self.backward_execution:
-                    # print "hs4", self.name
+                    # print("hs4", self.name)
                     break_loop = self._handle_backward_execution_after_child_execution()
                     if break_loop:
-                        # print "hs4.1", self.name
+                        # print("hs4.1", self.name)
                         break
                 else:
-                    # print "hs5", self.name
+                    # print("hs5", self.name)
                     break_loop = self._handle_forward_execution_after_child_execution()
                     if break_loop:
                         break
-                # print "hs6", self.name
+                # print("hs6", self.name)
             return self._finalize_hierarchy()
 
-        except Exception, e:
+        except Exception as e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
@@ -188,11 +190,11 @@ class HierarchyState(ContainerState):
         # this line is important to indicate the parent the current execution status
         # it may also change during the execution of an hierarchy state
         # e.g. a hierarchy state may be started in forward execution mode but can leave in backward execution mode
-        # print self.child_state
-        # print self.child_state.backward_execution
+        # print(self.child_state)
+        # print(self.child_state.backward_execution)
         self.backward_execution = self.child_state.backward_execution
         # for h in self.execution_history._history_items:
-        #     print h
+        #     print(h)
 
         if self.preempted:
             if self.backward_execution:

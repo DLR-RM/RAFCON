@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 import pytest
 from pytest import raises
@@ -47,9 +48,8 @@ def test_library_relocation(caplog):
         os.path.join("unit_test_state_machines", "library_relocation_test")))
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
 
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_execution_engine.stop()
 
@@ -64,7 +64,7 @@ def test_library_relocation(caplog):
 def test_library_relocation_exception():
     logger.info("Load not existing library, expect exception to be raised...")
     with raises(LibraryNotFoundException):
-        print LibraryState('aasdasd', 'basdasd', allow_user_interaction=False)
+        print(LibraryState('aasdasd', 'basdasd', allow_user_interaction=False))
 
 
 if __name__ == '__main__':

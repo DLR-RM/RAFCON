@@ -70,7 +70,7 @@ def south_east_coordinates_of_model(gaphas_view):
 
 
 def create_and_resize_state():
-    import gtk
+    from gi.repository import Gtk
     from rafcon.gui.singleton import main_window_controller
     # gvm = rafcon.core.singleton.global_variable_manager
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
@@ -88,8 +88,8 @@ def create_and_resize_state():
     sm_ctrls = main_window_controller.get_controller('state_machines_editor_ctrl')
     graphical_editor_controller = sm_ctrls.get_controller(1)
     # get first state machine page in state machines notebook
-    sm_page = sm_ctrls.tabs.items()[0][1]['page']
-    sm_model = sm_ctrls.tabs.items()[0][1]['state_machine_m']
+    sm_page = list(sm_ctrls.tabs.items())[0][1]['page']
+    sm_model = list(sm_ctrls.tabs.items())[0][1]['state_machine_m']
 
     state_view_for_root_state = graphical_editor_controller.canvas.get_view_for_model(sm_model.root_state)
     x, y = south_east_coordinates_of_model(state_view_for_root_state)
@@ -125,7 +125,7 @@ def test_user_input_gaphas(caplog):
             libraries={'unit_test_state_machines': testing_utils.get_test_sm_path("unit_test_state_machines")})
     try:
         create_and_resize_state()
-    except Exception, e:
+    except Exception as e:
         raise
     finally:
         testing_utils.close_gui()

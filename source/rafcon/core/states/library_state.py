@@ -17,9 +17,11 @@
    :synopsis: A module to represent a library state in the state machine
 
 """
+from future.utils import string_types
+from builtins import str
 from copy import copy, deepcopy
 
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.singleton import library_manager
 from rafcon.core.states.state import State, PATH_SEPARATOR
@@ -65,7 +67,8 @@ class LibraryState(State):
 
     def __init__(self, library_path=None, library_name=None, version=None,  # library state specific attributes
                  # the following are the container state specific attributes
-                 name=None, state_id=None, outcomes=None,
+                 name=None, state_id=None,
+                 income=None, outcomes=None,
                  input_data_port_runtime_values=None, use_runtime_value_input_data_ports=None,
                  output_data_port_runtime_values=None, use_runtime_value_output_data_ports=None,
                  allow_user_interaction=True):
@@ -73,7 +76,7 @@ class LibraryState(State):
         # this variable is set to true if the state initialization is finished! after initialization no change to the
         # library state is allowed any more
         self.initialized = False
-        State.__init__(self, name, state_id, None, None, outcomes)
+        State.__init__(self, name, state_id, None, None, income, outcomes)
 
         self.library_path = library_path
         self.library_name = library_name
@@ -111,13 +114,13 @@ class LibraryState(State):
         # handle input runtime values
         self.input_data_port_runtime_values = input_data_port_runtime_values
         self.use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
-        for data_port_id, data_port in self.input_data_ports.iteritems():
+        for data_port_id, data_port in self.input_data_ports.items():
             # Ensure that all input data ports have a runtime value
-            if data_port_id not in self.input_data_port_runtime_values.iterkeys():
+            if data_port_id not in self.input_data_port_runtime_values.keys():
                 self.input_data_port_runtime_values[data_port_id] = data_port.default_value
                 self.use_runtime_value_input_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
-            elif isinstance(self.input_data_port_runtime_values[data_port_id], basestring):
+            elif isinstance(self.input_data_port_runtime_values[data_port_id], string_types):
                 try:
                     self.input_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
                         self.input_data_port_runtime_values[data_port_id], data_port.data_type)
@@ -139,13 +142,13 @@ class LibraryState(State):
         # handle output runtime values
         self.output_data_port_runtime_values = output_data_port_runtime_values
         self.use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
-        for data_port_id, data_port in self.output_data_ports.iteritems():
+        for data_port_id, data_port in self.output_data_ports.items():
             # Ensure that all output data ports have a runtime value
-            if data_port_id not in self.output_data_port_runtime_values.iterkeys():
+            if data_port_id not in self.output_data_port_runtime_values.keys():
                 self.output_data_port_runtime_values[data_port_id] = data_port.default_value
                 self.use_runtime_value_output_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
-            elif isinstance(self.output_data_port_runtime_values[data_port_id], basestring):
+            elif isinstance(self.output_data_port_runtime_values[data_port_id], string_types):
                 try:
                     self.output_data_port_runtime_values[data_port_id] = \
                         type_helpers.convert_string_value_to_type_value(
@@ -158,8 +161,8 @@ class LibraryState(State):
                     self.marked_dirty = True
 
         # if there is a key existing in the runtime values but not in the output_data_ports we delete it
-        for key in self.use_runtime_value_output_data_ports.keys():
-            if key not in self.output_data_ports.keys():
+        for key in list(self.use_runtime_value_output_data_ports.keys()):
+            if key not in list(self.output_data_ports.keys()):
                 del self.use_runtime_value_output_data_ports[key]
                 del self.output_data_port_runtime_values[key]
                 # state machine cannot be marked dirty directly, as it does not exist yet
@@ -167,17 +170,20 @@ class LibraryState(State):
 
         self.initialized = True
 
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
-        # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}".format(self, other))
         if not isinstance(other, self.__class__):
             return False
         return str(self) == str(other) and self._state_copy == other.state_copy
 
     def __copy__(self):
-        outcomes = {elem_id: copy(elem) for elem_id, elem in self.outcomes.iteritems()}
+        income = self._income
+        outcomes = {elem_id: copy(elem) for elem_id, elem in self.outcomes.items()}
         state = self.__class__(self._library_path, self._library_name, self._version,  # library specific attributes
                                # the following are the container state specific attributes
-                               self._name, self._state_id, outcomes,
+                               self._name, self._state_id, income, outcomes,
                                copy(self.input_data_port_runtime_values), copy(self.use_runtime_value_input_data_ports),
                                copy(self.output_data_port_runtime_values), copy(self.use_runtime_value_output_data_ports),
                                False)
@@ -342,6 +348,7 @@ class LibraryState(State):
         version = dictionary['version']
         name = dictionary['name']
         state_id = dictionary['state_id']
+        income = dictionary.get('income', None)  # older state machine versions don't have this set
         outcomes = dictionary['outcomes']
 
         input_data_port_runtime_values = {}
@@ -350,11 +357,11 @@ class LibraryState(State):
         use_runtime_value_output_data_ports = {}
 
         if 'input_data_ports' in dictionary:  # this case is for backward compatibility
-            for idp_id, input_data_port in dictionary['input_data_ports'].iteritems():
+            for idp_id, input_data_port in dictionary['input_data_ports'].items():
                 input_data_port_runtime_values[idp_id] = input_data_port.default_value
                 use_runtime_value_input_data_ports[idp_id] = True
 
-            for odp_id, output_data_port in dictionary['output_data_ports'].iteritems():
+            for odp_id, output_data_port in dictionary['output_data_ports'].items():
                 output_data_port_runtime_values[odp_id] = output_data_port.default_value
                 use_runtime_value_output_data_ports[odp_id] = True
         else:  # this is the default case
@@ -363,7 +370,7 @@ class LibraryState(State):
             output_data_port_runtime_values = dictionary['output_data_port_runtime_values']
             use_runtime_value_output_data_ports = dictionary['use_runtime_value_output_data_ports']
 
-        return cls(library_path, library_name, version, name, state_id, outcomes,
+        return cls(library_path, library_name, version, name, state_id, income, outcomes,
                    input_data_port_runtime_values, use_runtime_value_input_data_ports,
                    output_data_port_runtime_values, use_runtime_value_output_data_ports)
 
@@ -402,7 +409,7 @@ class LibraryState(State):
         return self.state_copy.get_number_of_transitions()
 
     #########################################################################
-    # Properties for all class fields that must be observed by gtkmvc
+    # Properties for all class fields that must be observed by gtkmvc3
     #########################################################################
 
     @property
@@ -416,8 +423,8 @@ class LibraryState(State):
     @lock_state_machine
     @Observable.observed
     def library_path(self, library_path):
-        if not isinstance(library_path, basestring):
-            raise TypeError("library_path must be of type str")
+        if not isinstance(library_path, string_types):
+            raise TypeError("library_path must be a string")
 
         self._library_path = library_path
 
@@ -432,8 +439,8 @@ class LibraryState(State):
     @lock_state_machine
     @Observable.observed
     def library_name(self, library_name):
-        if not isinstance(library_name, basestring):
-            raise TypeError("library_name must be of type str")
+        if not isinstance(library_name, string_types):
+            raise TypeError("library_name must be a string")
 
         self._library_name = library_name
 
@@ -448,8 +455,8 @@ class LibraryState(State):
     @lock_state_machine
     @Observable.observed
     def version(self, version):
-        if version is not None and not isinstance(version, (basestring, int, float)):
-            raise TypeError("version must be of type str, got: {}, {}".format(type(version), version))
+        if version is not None and not isinstance(version, (string_types, int, float)):
+            raise TypeError("version must be a string, got: {}, {}".format(type(version), version))
 
         self._version = str(version)
 

@@ -18,7 +18,8 @@ import os
 import threading
 from copy import copy, deepcopy
 
-from gtkmvc import ModelMT, Signal
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Signal
 
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.container_state import ContainerState
@@ -119,6 +120,9 @@ class StateMachineModel(MetaModel, Hashable):
         else:
             return False
 
+    def __hash__(self):
+        return id(self)
+
     def __copy__(self):
         sm_m = self.__class__(copy(self.state_machine))
         sm_m.root_state.copy_meta_data_from_state_m(self.root_state)
@@ -161,6 +165,7 @@ class StateMachineModel(MetaModel, Hashable):
             self.root_state.prepare_destruction()
         self.root_state = None
         self.state_machine = None
+        super(StateMachineModel, self).prepare_destruction()
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.root_state)
@@ -171,6 +176,7 @@ class StateMachineModel(MetaModel, Hashable):
         self.root_state.update_meta_data_hash(obj_hash)
 
     @ModelMT.observe("state", before=True)
+    @ModelMT.observe("income", before=True)
     @ModelMT.observe("outcomes", before=True)
     @ModelMT.observe("is_start", before=True)
     @ModelMT.observe("states", before=True)
@@ -183,6 +189,7 @@ class StateMachineModel(MetaModel, Hashable):
             self._send_root_state_notification(model, prop_name, info)
 
     @ModelMT.observe("state", after=True)
+    @ModelMT.observe("income", after=True)
     @ModelMT.observe("outcomes", after=True)
     @ModelMT.observe("is_start", after=True)
     @ModelMT.observe("states", after=True)
@@ -210,19 +217,19 @@ class StateMachineModel(MetaModel, Hashable):
     @ModelMT.observe("action_signal", signal=True)
     def action_signal_triggered(self, model, prop_name, info):
         """When the action was performed, we have to set the dirty flag, as the changes are unsaved"""
-        # print "action_signal_triggered state machine: ", model, prop_name, info
+        # print("action_signal_triggered state machine: ", model, prop_name, info)
         self.state_machine.marked_dirty = True
         msg = info.arg
         if model is not self and msg.action.startswith('sm_notification_'):  # Signal was caused by the root state
             # Emit state_action_signal to inform observing controllers about changes made to the state within the
             # state machine
-            # print "DONE1 S", self.state_machine.state_machine_id, msg, model
+            # print("DONE1 S", self.state_machine.state_machine_id, msg, model)
             # -> removes mark of "sm_notification_"-prepend to mark root-state msg forwarded to state machine label
             msg = msg._replace(action=msg.action.replace('sm_notification_', '', 1))
             self.state_action_signal.emit(msg)
-            # print "FINISH DONE1 S", self.state_machine.state_machine_id, msg
+            # print("FINISH DONE1 S", self.state_machine.state_machine_id, msg)
         else:
-            # print "DONE2 S", self.state_machine.state_machine_id, msg
+            # print("DONE2 S", self.state_machine.state_machine_id, msg)
             pass
 
     @staticmethod
@@ -282,7 +289,7 @@ class StateMachineModel(MetaModel, Hashable):
         if self.suppress_new_root_state_model_one_time:
             self.suppress_new_root_state_model_one_time = False
             return
-        # print "ASSIGN ROOT_STATE", model, prop_name, info
+        # print("ASSIGN ROOT_STATE", model, prop_name, info)
         try:
             self.root_state.unregister_observer(self)
         except KeyError:

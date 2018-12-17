@@ -12,6 +12,9 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import object
+from builtins import next
+from past.builtins import map
 import gaphas.canvas
 from gaphas.item import Item
 
@@ -42,14 +45,14 @@ class MyCanvas(gaphas.canvas.Canvas):
         model = view.model
         del self._model_view_map[model]
         # Do not retrieve core element from model, as the model could have already been destroyed
-        core_element = self._core_view_map.keys()[self._core_view_map.values().index(view)]
+        core_element = list(self._core_view_map.keys())[list(self._core_view_map.values()).index(view)]
         del self._core_view_map[core_element]
 
     def add(self, item, parent=None, index=None):
         from rafcon.gui.mygaphas.items.state import StateView
         from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView
         if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
-            # print "add view", item
+            # print("add view", item)
             self._add_view_maps(item)
         super(MyCanvas, self).add(item, parent, index)
 
@@ -57,9 +60,14 @@ class MyCanvas(gaphas.canvas.Canvas):
         from rafcon.gui.mygaphas.items.state import StateView
         from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, DataFlowView
         if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
-            # print "remove", item
+            # print("remove", item)
             self._remove_view_maps(item)
-        super(MyCanvas, self).remove(item)
+
+        # Gtk TODO: fix destruct of gaphas
+        try:
+            super(MyCanvas, self).remove(item)
+        except KeyError as e:
+            logger.info("The destruct of gaphas items has to be fixed!")
 
     def add_port(self, port_v):
         # The LibraryState and its state_copy share the same port core_elements
@@ -72,7 +80,7 @@ class MyCanvas(gaphas.canvas.Canvas):
             self._remove_view_maps(port_v)
 
     def exchange_model(self, old_model, new_model):
-        # print "exchange model", old_model, new_model
+        # print("exchange model", old_model, new_model)
         view = self._core_view_map[old_model.core_element]
         del self._core_view_map[old_model.core_element]
         del self._model_view_map[old_model]
@@ -96,7 +104,7 @@ class MyCanvas(gaphas.canvas.Canvas):
     def get_view_for_model(self, model):
         """Searches and return the View for the given model
 
-        :param gtkmvc.ModelMT model: The model of the searched view
+        :param gtkmvc3.ModelMT model: The model of the searched view
         :return: The view for the given model or None if not found
         """
         return self._model_view_map.get(model)
@@ -143,21 +151,21 @@ class MyCanvas(gaphas.canvas.Canvas):
         if trigger_update:
             self.update_now()
 
-        import gtk
-        import gobject
+        from gi.repository import Gtk
+        from gi.repository import GLib
         from threading import Event
         event = Event()
 
-        # Handle all events from gaphas, but not from gtkmvc
-        # Make use of the priority, which is higher for gaphas then for gtkmvc
+        # Handle all events from gaphas, but not from gtkmvc3
+        # Make use of the priority, which is higher for gaphas then for gtkmvc3
         def priority_handled(event):
             event.set()
-        priority = (gobject.PRIORITY_HIGH_IDLE + gobject.PRIORITY_DEFAULT_IDLE) / 2
+        priority = (GLib.PRIORITY_HIGH_IDLE + GLib.PRIORITY_DEFAULT_IDLE) / 2
         # idle_add is necessary here, as we do not want to block the user from interacting with the GUI
         # while gaphas is redrawing
-        gobject.idle_add(priority_handled, event, priority=priority)
+        GLib.idle_add(priority_handled, event, priority=priority)
         while not event.is_set():
-            gtk.main_iteration(False)
+            Gtk.main_iteration()
 
     def resolve_constraint(self, constraints):
         constraints = constraints if hasattr(constraints, "__iter__") else [constraints]
@@ -210,9 +218,9 @@ class ItemProjection(object):
                                                                     self._item_target).transform_point(x, y)
         return self._px, self._py
 
-    pos = property(lambda self: map(gaphas.canvas.VariableProjection,
+    pos = property(lambda self: list(map(gaphas.canvas.VariableProjection,
                                     self._point, self._get_value(),
-                                    (self._on_change_x, self._on_change_y)))
+                                    (self._on_change_x, self._on_change_y))))
 
     def __getitem__(self, key):
         # Note: we can not use bound methods as callbacks, since that will

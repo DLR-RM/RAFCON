@@ -19,12 +19,13 @@
 
 """
 
+from builtins import str
 import traceback
 
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.custom_exceptions import RecoveryModeException
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.decorators import lock_state_machine
 from rafcon.core.states.concurrency_state import ConcurrencyState
 from rafcon.core.states.state import StateExecutionStatus
@@ -61,7 +62,8 @@ class BarrierConcurrencyState(ConcurrencyState):
     """
     yaml_tag = u'!BarrierConcurrencyState'
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                 income=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None,
                  decider_state=None, load_from_storage=False):
         self.__init_running = True
@@ -77,14 +79,14 @@ class BarrierConcurrencyState(ConcurrencyState):
             states[UNIQUE_DECIDER_STATE_ID] = DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID)
 
         # TODO figure out how to solve those two clinch better of copy/add state and already existing transitions #1 #2
-        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes,
+        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes,
                                   states, transitions, data_flows, start_state_id, scoped_variables)
 
-        for state_id, state in self.states.iteritems():
+        for state_id, state in self.states.items():
             if state_id != UNIQUE_DECIDER_STATE_ID:
                 for outcome in self.states[state_id].outcomes.values():
                     # TODO figure out how to solve this clinch better #3
-                    match = [t.from_state == state_id and t.from_outcome == outcome.outcome_id for t in self.transitions.itervalues()]
+                    match = [t.from_state == state_id and t.from_outcome == outcome.outcome_id for t in self.transitions.values()]
                     if not outcome.outcome_id < 0 and not any(match):
                         try:
                             self.add_transition(from_state_id=state_id, from_outcome=outcome.outcome_id,
@@ -112,12 +114,12 @@ class BarrierConcurrencyState(ConcurrencyState):
             concurrency_history_item = self.setup_forward_or_backward_execution()
             self.start_child_states(concurrency_history_item, decider_state)
 
-            # print "bcs1"
+            # print("bcs1")
 
             #######################################################
             # wait for all child threads to finish
             #######################################################
-            for history_index, state in enumerate(self.states.itervalues()):
+            for history_index, state in enumerate(self.states.values()):
                 # skip the decider state
                 if state is not decider_state:
                     self.join_state(state, history_index, concurrency_history_item)
@@ -128,26 +130,26 @@ class BarrierConcurrencyState(ConcurrencyState):
                         child_errors[state.state_id] = (state.name, state.output_data['error'])
                     final_outcomes_dict[state.state_id] = (state.name, state.final_outcome)
 
-            # print "bcs2"
+            # print("bcs2")
 
             #######################################################
             # handle backward execution case
             #######################################################
             if self.backward_execution:
-                # print "bcs2.1."
+                # print("bcs2.1.")
                 return self.finalize_backward_execution()
             else:
-                # print "bcs2.2."
+                # print("bcs2.2.")
                 self.backward_execution = False
 
-            # print "bcs3"
+            # print("bcs3")
 
             #######################################################
             # execute decider state
             #######################################################
             decider_state_error = self.run_decider_state(decider_state, child_errors, final_outcomes_dict)
 
-            # print "bcs4"
+            # print("bcs4")
 
             #######################################################
             # handle no transition
@@ -159,7 +161,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             # if the transition is still None, then the child_state was preempted or aborted, in this case return
             decider_state.state_execution_status = StateExecutionStatus.INACTIVE
 
-            # print "bcs5"
+            # print("bcs5")
 
             if transition is None:
                 self.output_data["error"] = RuntimeError("state aborted")
@@ -168,11 +170,11 @@ class BarrierConcurrencyState(ConcurrencyState):
                     self.output_data["error"] = decider_state_error
                 self.final_outcome = self.outcomes[transition.to_outcome]
 
-            # print "bcs6"
+            # print("bcs6")
 
             return self.finalize_concurrency_state(self.final_outcome)
 
-        except Exception, e:
+        except Exception as e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
@@ -250,7 +252,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         state_id = super(BarrierConcurrencyState, self).add_state(state)
         if not storage_load and not self.__init_running and not state.state_id == UNIQUE_DECIDER_STATE_ID:
             # the transitions must only be created for the initial add_state call and not during each load procedure
-            for o_id, o in state.outcomes.iteritems():
+            for o_id, o in list(state.outcomes.items()):
                 if not o_id == -1 and not o_id == -2:
                     self.add_transition(state.state_id, o_id, self.states[UNIQUE_DECIDER_STATE_ID].state_id, None)
         return state_id
@@ -265,7 +267,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         :raises exceptions.TypeError: if the states parameter is not of type dict
         """
         # First safely remove all existing states (recursively!), as they will be replaced
-        state_ids = self.states.keys()
+        state_ids = list(self.states.keys())
         for state_id in state_ids:
             # Do not remove decider state, if teh new list of states doesn't contain an alternative one
             if state_id == UNIQUE_DECIDER_STATE_ID and UNIQUE_DECIDER_STATE_ID not in states:
@@ -279,7 +281,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             decider_state = states.pop(UNIQUE_DECIDER_STATE_ID, None)
             if decider_state is not None:
                 self.add_state(decider_state)
-            for state in states.itervalues():
+            for state in states.values():
                 self.add_state(state)
 
     def remove_state(self, state_id, recursive=True, force=False, destroy=True):
@@ -335,12 +337,13 @@ class DeciderState(ExecutionState):
 
     yaml_tag = u'!DeciderState'
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                 income=None, outcomes=None,
                  path=None, filename=None, check_path=True):
 
         if state_id is None:
             state_id = UNIQUE_DECIDER_STATE_ID
-        ExecutionState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, path,
+        ExecutionState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, path,
                                 filename, check_path)
 
         self.child_errors = {}
@@ -357,7 +360,7 @@ class DeciderState(ExecutionState):
         :return:
         """
         return_value = None
-        for state_id, name_outcome_tuple in self.final_outcomes_dict.iteritems():
+        for state_id, name_outcome_tuple in self.final_outcomes_dict.items():
             if name_outcome_tuple[0] == name:
                 return_value = name_outcome_tuple[1]
                 break
@@ -370,7 +373,7 @@ class DeciderState(ExecutionState):
         :return:
         """
         return_value = None
-        for s_id, name_outcome_tuple in self.final_outcomes_dict.iteritems():
+        for s_id, name_outcome_tuple in self.final_outcomes_dict.items():
             if s_id == state_id:
                 return_value = name_outcome_tuple[1]
                 break
@@ -387,7 +390,7 @@ class DeciderState(ExecutionState):
         :return:
         """
         return_value = None
-        for state_id, name_outcome_tuple in self.child_errors.iteritems():
+        for state_id, name_outcome_tuple in self.child_errors.items():
             if name_outcome_tuple[0] == name:
                 return_value = name_outcome_tuple[1]
                 break

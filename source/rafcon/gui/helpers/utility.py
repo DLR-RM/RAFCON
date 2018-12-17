@@ -40,7 +40,7 @@ def remove_transitions_if_target_is_the_same(from_outcomes):
 
 
 def get_all_outcomes_except_of_abort_and_preempt(state):
-    return [outcome for outcome in state.outcomes.itervalues() if outcome.outcome_id >= 0]
+    return [outcome for outcome in state.outcomes.values() if outcome.outcome_id >= 0]
 
 
 def get_selected_single_state_model_and_check_for_its_parent():

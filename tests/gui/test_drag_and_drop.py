@@ -1,25 +1,13 @@
+from __future__ import print_function
 
+import time
 from rafcon.utils import log
 
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
-import pytest
 
 logger = log.get_logger(__name__)
-
-
-class StructHelper:
-    def __init__(self, x, y, text):
-        self.x = x
-        self.y = y
-        self.text = text
-
-    def set_text(self, text):
-        self.text = text
-
-    def get_text(self):
-        return self.text
 
 
 def create_models(*args, **kargs):
@@ -45,6 +33,23 @@ def create_models(*args, **kargs):
 
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_drag_and_drop_tests(*args):
+
+    # TODO test should use real SelectionData objects and motion to provide selection
+    # -> currently very limited test scenario
+
+    class StructHelper:
+        """Used to imitate a SelectionData Class"""
+        def __init__(self, x, y, text):
+            self.x = x
+            self.y = y
+            self.text = text
+
+        def set_text(self, text, length):
+            self.text = text
+
+        def get_text(self):
+            return self.text
+
     # TODO test needs check on position -> is the state drawn where it was dropped?
     sm_manager_model = args[0]
     main_window_controller = args[1]
@@ -58,7 +63,9 @@ def trigger_drag_and_drop_tests(*args):
     while not graphical_editor_controller.view:
         testing_utils.wait_for_gui()
 
-    call_gui_callback(graphical_editor_controller.view.editor.set_size_request, 500, 500)
+    # wait for root state to be focused
+    time.sleep(.5)
+
     call_gui_callback(library_tree_controller.view.expand_all)
     # generic and unit_test_state_machines in library tree index 1 is unit_test_state_machines
     call_gui_callback(library_tree_controller.view.get_selection().select_path, (1, 0))
@@ -67,7 +74,7 @@ def trigger_drag_and_drop_tests(*args):
     state_machine_m = sm_manager_model.get_selected_state_machine_model()
 
     # insert state in root_state
-    print "insert state in root_state"
+    print("insert state in root_state")
     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 200, 200, None)
     # Override selection
     state_m = state_machine_m.root_state
@@ -77,7 +84,7 @@ def trigger_drag_and_drop_tests(*args):
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 2
 
     # insert state from IconView
-    print "insert state from IconView"
+    print("insert state from IconView")
     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 300, 300, None)
     # Override selection
     state_m = state_machine_m.root_state
@@ -88,14 +95,14 @@ def trigger_drag_and_drop_tests(*args):
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states) == 3
 
     # insert state next to root state
-    print "insert state next to root state"
+    print("insert state next to root state")
     # Position (0, 0) in left above the root state
     call_gui_callback(graphical_editor_controller.on_drag_motion, None, None, 0, 0, None)
     call_gui_callback(state_icon_controller.on_mouse_motion, None, StructHelper(30, 15, None))
     call_gui_callback(state_icon_controller.on_drag_data_get, None, None, selection_data, None, None)
 
     # insert state in state1
-    print "insert state in state1"
+    print("insert state in state1")
     state_m = state_machine_m.root_state.states['State1']
     call_gui_callback(state_machine_m.selection.set, [state_m])
     # Selecting a state using the drag_motion event is too unreliable, as the exact position depends on the size of
@@ -112,6 +119,17 @@ def trigger_drag_and_drop_tests(*args):
 def test_drag_and_drop_test(caplog):
     testing_utils.run_gui(
         gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False},
+        runtime_config={
+            'MAIN_WINDOW_MAXIMIZED': False,
+            'MAIN_WINDOW_SIZE': (1500, 800),
+            'MAIN_WINDOW_POS': (0, 0),
+            'LEFT_BAR_WINDOW_UNDOCKED': False,
+            'RIGHT_BAR_WINDOW_UNDOCKED': False,
+            'CONSOLE_WINDOW_UNDOCKED': False,
+            'LEFT_BAR_HIDDEN': True,
+            'RIGHT_BAR_HIDDEN': True,
+            'CONSOLE_HIDDEN': True,
+        },
         libraries={"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
     )
     import rafcon.core.singleton

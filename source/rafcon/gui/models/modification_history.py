@@ -22,9 +22,12 @@ The HistoryChanges-Class provides the functionalities to organize and access all
 Hereby the branching of the edit process is stored and should be accessible, too.
 
 """
+from builtins import object
+from builtins import str
 import copy
 
-from gtkmvc import ModelMT, Observable
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Observable
 
 from rafcon.gui.action import ActionDummy, Action, StateMachineAction, StateAction, DataPortAction, \
     ScopedVariableAction, OutcomeAction, TransitionAction, DataFlowAction, AddObjectAction, RemoveObjectAction, \
@@ -35,7 +38,7 @@ from rafcon.core.states.state import State
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.state_elements.data_flow import DataFlow
 from rafcon.core.state_elements.data_port import DataPort, InputDataPort
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.state_elements.scope import ScopedVariable
 from rafcon.core.state_elements.transition import Transition
 
@@ -140,11 +143,11 @@ class ModificationsHistoryModel(ModelMT):
     def get_state_element_meta_from_internal_tmp_storage(self, state_path):
         path_elements = state_path.split('/')
         path_elements.pop(0)
-        # print path_elements
+        # print(path_elements)
         act_state_elements_meta = self.tmp_meta_storage
         for path_elem in path_elements:
             act_state_elements_meta = act_state_elements_meta['states'][path_elem]
-        # print act_state_elements_meta
+        # print(act_state_elements_meta)
         return act_state_elements_meta
 
     def recover_specific_version(self, pointer_on_version_to_recover):
@@ -177,7 +180,7 @@ class ModificationsHistoryModel(ModelMT):
 
     def _undo(self, version_id):
         self.busy = True
-        # print "undo 1", self.modifications, self.modifications.all_time_history[version_id].action
+        # print("undo 1", self.modifications, self.modifications.all_time_history[version_id].action)
         self.modifications.all_time_history[version_id].action.undo()
         self.modifications.trail_pointer -= 1
         self.busy = False
@@ -198,7 +201,7 @@ class ModificationsHistoryModel(ModelMT):
         self.state_machine_model.storage_lock.acquire()
         # logger.debug("acquired lock 2 - for undo {0}".format(self.modifications.trail_pointer))
         self.busy = True
-        # print "undo 2", self.modifications
+        # print("undo 2", self.modifications)
         self.modifications.undo()
         self.busy = False
         if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
@@ -345,10 +348,11 @@ class ModificationsHistoryModel(ModelMT):
                                                          state_machine_model=self.state_machine_model,
                                                          overview=overview)
                 elif "remove_" in cause:
-                    assert cause in ["remove_transition", "remove_data_flow", "remove_outcome", "remove_input_data_port",
-                                     "remove_output_data_port", "remove_scoped_variable", "remove_state"]
+                    assert cause in ["remove_transition", "remove_data_flow", "remove_income", "remove_outcome",
+                                     "remove_input_data_port", "remove_output_data_port", "remove_scoped_variable",
+                                     "remove_state"]
                     if ("transition" in cause or "data_flow" in cause or "scoped_variable" in cause or "state" in cause) or\
-                            (("data_port" in cause or "outcome" in cause) and not isinstance(overview['model'][-1].state.parent, State)):
+                            (("data_port" in cause or "outcome" in cause or "income" in cause) and not isinstance(overview['model'][-1].state.parent, State)):
                         if self.with_debug_logs:
                             self.store_test_log_file("#4 REMOVE1 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
                         # if "transition" in cause:
@@ -356,7 +360,7 @@ class ModificationsHistoryModel(ModelMT):
                         self.active_action = RemoveObjectAction(parent_path=overview['instance'][-1].get_path(),
                                                                 state_machine_model=self.state_machine_model,
                                                                 overview=overview)
-                    elif "data_port" in cause or "outcome" in cause:
+                    elif "data_port" in cause or "outcome" in cause or "income" in cause:
 
                         if isinstance(overview['instance'][-1].parent, State):
                             if self.with_debug_logs:
@@ -506,7 +510,7 @@ class ModificationsHistoryModel(ModelMT):
         # logger.info("meta_changed: \n{0}".format(overview))
         # filter self emit and avoid multiple signals of the root_state, by comparing first and last model in overview
         if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:
-            # print "ALL", overview['signal'][0].change.startswith('sm_notification')
+            # print("ALL", overview['signal'][0].change.startswith('sm_notification'))
             return
         if self.busy:
             return
@@ -573,7 +577,7 @@ class ModificationsHistoryModel(ModelMT):
 
         if self.busy:  # if proceeding undo or redo
             return
-        # print "state: ", NotificationOverview(info, self.with_verbose, self.__class__.__name__)
+        # print("state: ", NotificationOverview(info, self.with_verbose, self.__class__.__name__))
         if isinstance(model, StateMachineModel) and isinstance(info['arg'], ActionSignalMsg) and \
                 not info['arg'].after and info['arg'].action in ['change_root_state_type', 'change_state_type',
                                                                  'paste', 'cut',
@@ -587,12 +591,12 @@ class ModificationsHistoryModel(ModelMT):
             overview['model'].insert(0, self.state_machine_model)
             if info['arg'].action == 'change_root_state_type':
                 assert info['arg'].action_parent_m is self.state_machine_model
-                # print "CREATE STATE MACHINE ACTION:", self.active_action
+                # print("CREATE STATE MACHINE ACTION:", self.active_action)
                 self.active_action = StateMachineAction(parent_path=info['arg'].action_parent_m.root_state.state.get_path(),
                                                         state_machine_model=info['arg'].action_parent_m,
                                                         overview=overview)
             else:
-                # print "CREATE STATE ACTION:", self.active_action
+                # print("CREATE STATE ACTION:", self.active_action)
                 self.active_action = StateAction(parent_path=info['arg'].action_parent_m.state.get_path(),
                                                  state_machine_model=self.state_machine_model,
                                                  overview=overview)
@@ -600,10 +604,10 @@ class ModificationsHistoryModel(ModelMT):
             self.before_count()
             if info['arg'].action in ['group_states', 'paste', 'cut']:
                 self.observe_model(info['arg'].action_parent_m)
-                # print "OBSERVE MODEL", info['arg'].action_parent_m
+                # print("OBSERVE MODEL", info['arg'].action_parent_m)
             else:
                 self.observe_model(info['arg'].affected_models[0])
-                # print "OBSERVE MODEL", info['arg'].affected_models[0]
+                # print("OBSERVE MODEL", info['arg'].affected_models[0])
 
     @ModelMT.observe("action_signal", signal=True)
     def action_signal_after_complex_action(self, model, prop_name, info):
@@ -615,7 +619,7 @@ class ModificationsHistoryModel(ModelMT):
                 info['arg'].after and info['arg'].action in ['change_root_state_type', 'change_state_type',
                                                              'paste', 'cut',
                                                              'substitute_state', 'group_states', 'ungroup_state']:
-            # print "\n\nIN AFTER\n\n", info['arg'].action, type(info['arg'].result), self.count_before
+            # print("\n\nIN AFTER\n\n", info['arg'].action, type(info['arg'].result), self.count_before)
 
             overview = NotificationOverview(info, self.with_verbose, "History state_machine_AFTER")
             if info['arg'].action in ['change_state_type', 'paste', 'cut',
@@ -635,7 +639,7 @@ class ModificationsHistoryModel(ModelMT):
             if self.locked:
                 self.after_count()
                 if self.count_before == 0:
-                    # print "\n\nAFTER\n\n"
+                    # print("\n\nAFTER\n\n")
                     self.finish_new_action(overview)
                     if info['arg'].action == 'change_root_state_type':
                         self._re_initiate_observation()
@@ -723,6 +727,7 @@ class ModificationsHistoryModel(ModelMT):
                 logger.error("HISTORY after not count [states] -> For every before there should be a after.")
 
     @ModelMT.observe("state", before=True)
+    @ModelMT.observe("income", before=True)
     @ModelMT.observe("outcomes", before=True)
     @ModelMT.observe("is_start", before=True)
     @ModelMT.observe("transitions", before=True)
@@ -763,6 +768,7 @@ class ModificationsHistoryModel(ModelMT):
                     logger.error("FAILED to start NEW HISTORY ELEMENT [root_state]")
 
     @ModelMT.observe("state", after=True)
+    @ModelMT.observe("income", after=True)
     @ModelMT.observe("outcomes", after=True)
     @ModelMT.observe("is_start", after=True)
     @ModelMT.observe("transitions", after=True)
@@ -938,7 +944,7 @@ class ModificationsHistory(Observable):
     #             for a in self.trail_history:
     #                 h_elem = self.all_time_history[a.version_id]
     #                 s = str(h_elem.summary()) + "--{#}--" + h_elem.as_json_string() + '\n'
-    #                 # print '\n'.join(s.split("--{#}--"))
+    #                 # print('\n'.join(s.split("--{#}--")))
     #                 f.write(s)
 
     @Observable.observed
@@ -946,7 +952,7 @@ class ModificationsHistory(Observable):
         if not self.trail_history or self.trail_pointer == 0 or not self.trail_pointer < len(self.trail_history):
             logger.debug("There is no more action that can be undone")
             return
-        # print "MODEHISTORY UNDO", self.trail_history[self.trail_pointer]
+        # print("MODEHISTORY UNDO", self.trail_history[self.trail_pointer])
         self.trail_history[self.trail_pointer].undo()
         self.trail_pointer -= 1
         if self.with_verbose:
@@ -957,7 +963,7 @@ class ModificationsHistory(Observable):
         if not self.trail_history or self.trail_history and not self.trail_pointer + 1 < len(self.trail_history):
             logger.debug("There is no more action that can be redone")
             return
-        # print "MODEHISTORY REDO", self.trail_history[self.trail_pointer]
+        # print("MODEHISTORY REDO", self.trail_history[self.trail_pointer])
         self.trail_history[self.trail_pointer + 1].redo()
         self.trail_pointer += 1
         if self.with_verbose:

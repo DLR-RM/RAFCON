@@ -20,12 +20,14 @@
 
 """
 
-import gtk
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GLib
+from future.utils import string_types
 import time
 from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
 from gaphas.item import Item
-from gtk.gdk import ACTION_COPY
 import math
 
 from rafcon.core.decorators import lock_state_machine
@@ -88,8 +90,9 @@ class GraphicalEditorController(ExtendedController):
         self._nested_action_already_in = {}
         view.setup_canvas(self.canvas, self.zoom)
 
-        view.editor.drag_dest_set(gtk.DEST_DEFAULT_ALL, [('STRING', 0, 0)], ACTION_COPY)
-        logger.verbose("Time spent in 'init': {0:.3}s (state machine {1})"
+        view.editor.drag_dest_set(Gtk.DestDefaults.ALL, None, Gdk.DragAction.COPY)
+        view.editor.drag_dest_add_text_targets()
+        logger.verbose("Time spent in init {0} seconds for state machine {1}"
                        "".format(time.time() - start_time, self.model.state_machine_id))
 
     def destroy(self):
@@ -139,6 +142,7 @@ class GraphicalEditorController(ExtendedController):
 
         shortcut_manager.add_callback_for_action('show_data_flows', self.update_view)
         shortcut_manager.add_callback_for_action('show_data_values', self.update_view)
+        shortcut_manager.add_callback_for_action('data_flow_mode', self.data_flow_mode)
         shortcut_manager.add_callback_for_action('show_aborted_preempted', self.update_view)
 
     @ExtendedController.observe('config', after=True)
@@ -170,6 +174,8 @@ class GraphicalEditorController(ExtendedController):
         """
         state_id_insert = data.get_text()
         parent_m = self.model.selection.get_selected_state()
+        if not isinstance(parent_m, ContainerStateModel):
+            return
         state_v = self.canvas.get_view_for_model(parent_m.states[state_id_insert])
         pos_start = state_v.model.get_meta_data_editor()['rel_pos']
         motion = InMotion(state_v, self.view.editor)
@@ -209,6 +215,10 @@ class GraphicalEditorController(ExtendedController):
 
     def update_view(self, *args):
         self.canvas.update_root_items()
+
+    @lock_state_machine
+    def data_flow_mode(self, *args):
+        pass
 
     @lock_state_machine
     def _add_new_state(self, *event, **kwargs):
@@ -275,7 +285,7 @@ class GraphicalEditorController(ExtendedController):
             state_v = self.canvas.get_parent(item)
         else:
             state_v = item
-        viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
+        viewport_size = self.view.editor.get_allocation().width, self.view.editor.get_allocation().height
         state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
         min_relative_size = min(viewport_size[i] / state_size[i] for i in [HORIZONTAL, VERTICAL])
 
@@ -293,7 +303,7 @@ class GraphicalEditorController(ExtendedController):
 
         state_pos = self.view.editor.get_matrix_i2v(state_v).transform_point(0, 0)
         state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
-        viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
+        viewport_size = self.view.editor.get_allocation().width, self.view.editor.get_allocation().height
 
         # Calculate offset around state so that the state is centered in the viewport
         padding_offset_horizontal = (viewport_size[HORIZONTAL] - state_size[HORIZONTAL]) / 2.
@@ -374,7 +384,7 @@ class GraphicalEditorController(ExtendedController):
         if action in ['change_root_state_type', 'change_state_type', 'substitute_state',
                       'group_states', 'ungroup_state', 'paste', 'cut', 'undo/redo']:
 
-            # print self.__class__.__name__, 'add complex action', action
+            # print(self.__class__.__name__, 'add complex action', action)
             if not self._ongoing_complex_actions:
                 self._nested_action_already_in = {}
 
@@ -413,7 +423,7 @@ class GraphicalEditorController(ExtendedController):
 
         old_state_m = self._ongoing_complex_actions[action]['target']
 
-        # print self.__class__.__name__, 'remove complex action', action, \
+        # print(self.__class__.__name__, 'remove complex action', action, \)
         #     id(old_state_m), id(new_state_m), old_state_m, new_state_m
         self._nested_action_already_in.update({action: self._ongoing_complex_actions.pop(action)})
 
@@ -442,7 +452,7 @@ class GraphicalEditorController(ExtendedController):
                 return
 
             # The method causing the change raised an exception, thus nothing was changed
-            if (isinstance(result, str) and "CRASH" in result) or isinstance(result, Exception):
+            if (isinstance(result, string_types) and "CRASH" in result) or isinstance(result, Exception):
                 return
 
             # avoid to remove views of elements of states which parent state is destroyed recursively
@@ -661,7 +671,8 @@ class GraphicalEditorController(ExtendedController):
                                      'set_output_runtime_value', 'set_use_output_runtime_value',
                                      'input_data_port_runtime_values', 'use_runtime_value_input_data_ports',
                                      'output_data_port_runtime_values', 'use_runtime_value_output_data_ports',
-                                     'semantic_data', 'add_semantic_data', 'remove_semantic_data']
+                                     'semantic_data', 'add_semantic_data', 'remove_semantic_data',
+                                     'remove_income']
                 if method_name not in known_ignore_list:
                     logger.warning("Method {0} not caught in GraphicalViewer, details: {1}".format(method_name, info))
 
@@ -762,7 +773,7 @@ class GraphicalEditorController(ExtendedController):
         # check_relative size in view and call it again if the state is still very small
         state_v = self.canvas.get_view_for_model(state_machine_m.root_state)
         state_size = self.view.editor.get_matrix_i2v(state_v).transform_distance(state_v.width, state_v.height)
-        viewport_size = self.view.editor.allocation[2], self.view.editor.allocation[3]
+        viewport_size = self.view.editor.get_allocation().width, self.view.editor.get_allocation().height
         if state_size[0] < ratio_requested*viewport_size[0] and state_size[1] < ratio_requested*viewport_size[1]:
             self.set_focus_to_state_model(state_m, ratio_requested)
 
@@ -781,12 +792,12 @@ class GraphicalEditorController(ExtendedController):
                 self._meta_data_changed(None, self.root_state_m, 'append_initial_change', True)
                 logger.info("Opening the state machine caused some meta data to be generated, which will be stored "
                             " when the state machine is being saved.")
-        logger.verbose("Time spent in 'setup_canvas': {0:.3}s (state machine {1})".format(time.time() - start_time_view_generation,
+        logger.verbose("Time spent in setup canvas {0} state machine {1}".format(time.time() - start_time_view_generation,
                                                                                  self.model.state_machine_id))
 
         # finally set the focus to the root state (needs to be idle add to be executed after gaphas drawing is finished)
         if rafcon.gui.singleton.global_gui_config.get_config_value('GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE', True):
-            gtk.idle_add(self.set_focus_to_state_model, self.root_state_m)
+            GLib.idle_add(self.set_focus_to_state_model, self.root_state_m)
 
     @lock_state_machine
     def add_state_view_for_model(self, state_m, parent_v=None, rel_pos=(0, 0), size=(100, 100), hierarchy_level=1):
@@ -828,16 +839,17 @@ class GraphicalEditorController(ExtendedController):
         num_data_flows = len(state_m.state.parent.data_flows) if isinstance(state_m.parent, ContainerStateModel) else 0
         index = 1 if not parent_v else num_data_flows + 1
         # if self.model.root_state is state_m:
-        #     print "init root_state", state_m, state_v
+        #     print("init root_state", state_m, state_v)
         # else:
-        #     print "init state", state_m, state_v
-        # print [hash(elem) for elem in state_m.state.outcomes.itervalues()]
+        #     print("init state", state_m, state_v)
+        # print([hash(elem) for elem in state_m.state.outcomes.values()])
         self.canvas.add(state_v, parent_v, index=index)
         state_v.matrix.translate(*rel_pos)
 
+        state_v.add_income(state_m.income)
+
         for outcome_m in state_m.outcomes:
             state_v.add_outcome(outcome_m)
-            # state_v.add_double_port_outcome(outcome_m)
 
         for input_port_m in state_m.input_data_ports:
             state_v.add_input_port(input_port_m)
@@ -859,7 +871,7 @@ class GraphicalEditorController(ExtendedController):
             for scoped_variable_m in state_m.scoped_variables:
                 state_v.add_scoped_variable(scoped_variable_m)
 
-            for child_state_m in state_m.states.itervalues():
+            for child_state_m in state_m.states.values():
                 # generate optional meta data for child state - not used if valid meta data already in child state model
                 child_rel_pos, child_size = gui_helper_meta_data.generate_default_state_meta_data(state_m, self.canvas,
                                                                                                   num_child_state)
@@ -1012,13 +1024,13 @@ class GraphicalEditorController(ExtendedController):
             # One case, for which there is no from_port_m is when the the from-port is a ScopedVariable of a
             # LibraryState
             if not isinstance(from_state_m, LibraryStateModel):
-                logger.warn('Cannot find model of the from data port {0}, ({1})'.format(from_key,
+                logger.warning('Cannot find model of the from data port {0}, ({1})'.format(from_key,
                                                                                         data_flow_m.data_flow))
             return
         if to_port_m is None:
             # One case, for which there is no to_port_m is when the the to-port is a ScopedVariable of a LibraryState
             if not isinstance(to_state_m, LibraryStateModel):
-                logger.warn('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
+                logger.warning('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
             return
 
         # For scoped variables, there is no inner and outer connector

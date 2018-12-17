@@ -11,7 +11,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from weakref import ref
-from gtkmvc import ModelMT, Signal
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Signal
 
 from rafcon.gui.models.signals import Notification
 from rafcon.gui.models.meta import MetaModel
@@ -56,12 +57,18 @@ class StateElementModel(MetaModel, Hashable):
             return False
         return True
 
+    def __hash__(self):
+        return id(self)
+
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __cmp__(self, other):
         if isinstance(other, StateElementModel):
             return self.core_element.__cmp__(other.core_element)
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.core_element)
@@ -116,6 +123,7 @@ class StateElementModel(MetaModel, Hashable):
             self.unregister_observer(self)
         except KeyError:  # Might happen if the observer was already unregistered
             pass
+        super(StateElementModel, self).prepare_destruction()
 
     def model_changed(self, model, prop_name, info):
         """This method notifies the parent state about changes made to the state element

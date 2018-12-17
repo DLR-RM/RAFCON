@@ -1,5 +1,7 @@
+from __future__ import print_function
 
 
+from builtins import str
 def execute(self, inputs, outputs, gvm):
     import time
     
@@ -19,7 +21,7 @@ def execute(self, inputs, outputs, gvm):
     return "done"
     
 def backward_execute(self, inputs, outputs, gvm):
-    print "Backward stepping sing state"
+    print("Backward stepping sing state")
     gvm.set_variable("sing_counter", gvm.get_variable("sing_counter") - 1)
     
     

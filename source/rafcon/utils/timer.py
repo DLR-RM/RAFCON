@@ -1,3 +1,5 @@
+from builtins import object
+from builtins import str
 import time
 from timeit import default_timer as timer
 
@@ -15,7 +17,7 @@ def measure_time(func):
     return func_wrapper
 
 
-class Timer:
+class Timer(object):
     # TODO make it look beautiful and cut it maybe down -> therefore description of intended behavior would be great :)
     def __init__(self, logger, name='', continues=True):
         self._logger = logger
@@ -28,7 +30,7 @@ class Timer:
         self.count = 0
 
     def start(self):
-        # print "start", self.count + 1
+        # print("start", self.count + 1)
         if self.__status == 'stopped':
             pass
         else:
@@ -41,7 +43,7 @@ class Timer:
         return self.count
 
     def stop(self, key):
-        # print "stop", key, self.count, self.count == key
+        # print("stop", key, self.count, self.count == key)
         if self.__status == 'running':
             if self.count == key:
                 pass

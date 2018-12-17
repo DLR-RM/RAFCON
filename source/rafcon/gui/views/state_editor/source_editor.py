@@ -12,20 +12,22 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
+from gi.repository import Gtk
+from gi.repository import GtkSource
 
 from rafcon.gui.utils import constants
-from rafcon.gui.views.utils.editor import EditorView, gtksourceview2
+from rafcon.gui.helpers import label
+from rafcon.gui.views.utils.editor import EditorView
 
 
 class SourceEditorView(EditorView):
 
     def __init__(self):
         super(SourceEditorView, self).__init__(name='SOURCE EDITOR', language='python',
-                                               editor_style="SOURCE_EDITOR_STYLE", run_with_spacer=True)
+                                               editor_style="SOURCE_EDITOR_STYLE", run_with_spacer=False)
 
         try:
-            if isinstance(self.textview, gtksourceview2.View):
+            if isinstance(self.textview, GtkSource.View):
                 self.textview.set_tab_width(4)
                 self.textview.set_insert_spaces_instead_of_tabs(True)
                 self.textview.set_show_line_numbers(True)
@@ -33,34 +35,33 @@ class SourceEditorView(EditorView):
                 self.textview.set_highlight_current_line(True)
         except NameError:
             pass
-        hbox = gtk.HBox()
-        pylint_check_button = gtk.CheckButton("Validate")
+        hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+        hbox.get_style_context().add_class("widget-toolbar")
+        pylint_check_button = Gtk.CheckButton(label="Validate")
         pylint_check_button.set_focus_on_click(False)
-        # pylint_check_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        # print "size", pylint_check_button.get_allocation(), constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT
-        # pylint_check_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
+        pylint_check_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
+        pylint_check_button.get_style_context().add_class("secondary")
 
-        open_external_button = gtk.ToggleButton("Open externally")
+        open_external_button = Gtk.ToggleButton(label="Open externally")
         open_external_button.set_focus_on_click(False)
-        # open_external_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        # open_external_button.set_size_request(130, constants.BUTTON_MIN_HEIGHT)
+        open_external_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
-        apply_button = gtk.Button("Apply")
+        apply_button = Gtk.Button(label="Apply")
         apply_button.set_focus_on_click(False)
-        # apply_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        apply_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
+        apply_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
-        cancel_button = gtk.Button("Reset")
+        cancel_button = Gtk.Button(label="Reset")
         cancel_button.set_focus_on_click(False)
-        # cancel_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
-        cancel_button.set_size_request(constants.BUTTON_MIN_WIDTH, constants.BUTTON_MIN_HEIGHT)
+        cancel_button.set_border_width(constants.BUTTON_BORDER_WIDTH)
 
-        hbox.pack_start(pylint_check_button, False, False, constants.PADDING)
-        hbox.pack_end(open_external_button, False, True, constants.PADDING)
-        hbox.pack_end(cancel_button, False, True, constants.PADDING)
-        hbox.pack_end(apply_button, False, True, constants.PADDING)
-        hbox.set_border_width(constants.BORDER_WIDTH)
-        self['editor_frame'].pack_start(hbox, expand=False, fill=True)
+        hbox.pack_start(pylint_check_button, False, False, 0)
+        hbox.pack_end(open_external_button, False, True, 0)
+        hbox.pack_end(cancel_button, False, True, 0)
+        hbox.pack_end(apply_button, False, True, 0)
+
+        label.ellipsize_labels_recursively(hbox)
+
+        self['editor_frame'].pack_start(hbox, expand=False, fill=True, padding=0)
         self['pylint_check_button'] = pylint_check_button
         self['apply_button'] = apply_button
         self['open_external_button'] = open_external_button
@@ -78,18 +79,22 @@ class SourceEditorView(EditorView):
         if self.spacer_frame is not None:
             self.textview.connect("key-press-event", self.on_text_view_event)
 
-    def on_expose_event(self, widget, event):
-        right_bar_width_of_all = self.button_container_min_width + self.tab_width + self.line_numbers_width
-        if right_bar_width_of_all > event.area[2]:
-            spacer_width = right_bar_width_of_all - event.area[2]
-            self.spacer_frame.set_size_request(width=spacer_width, height=-1)
-        else:
-            self.spacer_frame.set_size_request(width=-1, height=-1)
+    def on_draw(self, widget, event):
+        # Gtk TODO: Produces warnings and does not work properly
+        # Warnings should not be related to the flickering of the spacer_frame
+        # https://developer.gnome.org/gtk3/stable/ch26s02.html#id-1.6.3.4.11
+        if self.run_with_spacer:
+            right_bar_width_of_all = self.button_container_min_width + self.tab_width + self.line_numbers_width
+            if right_bar_width_of_all > event.clip_extents()[2]:
+                spacer_width = right_bar_width_of_all - event.clip_extents()[2]
+                self.spacer_frame.set_size_request(width=spacer_width, height=-1)
+            else:
+                self.spacer_frame.set_size_request(width=-1, height=-1)
 
     @property
     def button_container_min_width(self):
-        return self['pylint_check_button'].get_allocation()[2] + self['apply_button'].get_size_request()[0] + \
-               self['open_external_button'].get_allocation()[2] + self['cancel_button'].get_size_request()[0]
+        return self['pylint_check_button'].get_allocation().width + self['apply_button'].get_size_request()[0] + \
+               self['open_external_button'].get_allocation().width + self['cancel_button'].get_size_request()[0]
 
     def on_text_view_event(self, *args):
         self.pane_position_check()

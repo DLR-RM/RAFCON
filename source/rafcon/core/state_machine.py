@@ -22,12 +22,14 @@
 
 """
 
+from future.utils import string_types
+from builtins import range
 from contextlib import contextmanager
 from copy import copy
 from threading import RLock
 from datetime import datetime
 
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 from jsonconversion.jsonobject import JSONObject
 
 import rafcon
@@ -184,7 +186,7 @@ class StateMachine(Observable, JSONObject, Hashable):
         self._modification_lock.release()
 
     #########################################################################
-    # Properties for all class fields that must be observed by gtkmvc
+    # Properties for all class fields that must be observed by gtkmvc3
     #########################################################################
 
     @property
@@ -259,7 +261,7 @@ class StateMachine(Observable, JSONObject, Hashable):
     @marked_dirty.setter
     @Observable.observed
     def marked_dirty(self, marked_dirty):
-        # print "sm-core: marked dirty changed from ", self._marked_dirty, " to ", marked_dirty
+        # print("sm-core: marked dirty changed from ", self._marked_dirty, " to ", marked_dirty)
         if not isinstance(marked_dirty, bool):
             raise AttributeError("marked_dirty has to be of type bool")
         self.old_marked_dirty = self._marked_dirty
@@ -315,8 +317,8 @@ class StateMachine(Observable, JSONObject, Hashable):
     @file_system_path.setter
     @Observable.observed
     def file_system_path(self, file_system_path):
-        if not isinstance(file_system_path, basestring):
-            raise AttributeError("file_system_path has to be of type str")
+        if not isinstance(file_system_path, string_types):
+            raise AttributeError("file_system_path has to be a string")
         self._file_system_path = file_system_path
 
     @property

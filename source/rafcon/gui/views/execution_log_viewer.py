@@ -2,8 +2,8 @@
 
 # example basictreeview.py
 
-import gtk
-from gtkmvc import View
+from gi.repository import Gtk
+from gtkmvc3.view import View
 
 
 class ExecutionLogTreeView(View):
@@ -12,44 +12,44 @@ class ExecutionLogTreeView(View):
 
         View.__init__(self)
         # Create a new window
-        # self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        # self.get_window() = Gtk.Window(Gtk.WindowType.TOPLEVEL)
 
-        # self.window.set_title("Execution Log Viewer")
+        # self.get_window().set_title("Execution Log Viewer")
 
-        # self.window.set_default_size(1024, 786)
+        # self.get_window().set_default_size(1024, 786)
 
-        # self.window.connect("delete_event", self.delete_event)
+        # self.get_window().connect("delete_event", self.delete_event)
 
         # Setting up the self.grid in which the elements are to be positioned
-        self.paned = gtk.HPaned()
-        # self.window.add(self.paned)
+        self.paned = Gtk.HPaned()
+        # self.get_window().add(self.paned)
 
         # setting up the layout, putting the tree_view in a scrollwindow, and the buttons in a row
-        self.scrollable_treelist = gtk.ScrolledWindow()
+        self.scrollable_treelist = Gtk.ScrolledWindow()
         # self.scrollable_treelist.set_expand(True)
         self.paned.add1(self.scrollable_treelist)
 
         # setting up text view
-        self.scrollable_textview = gtk.ScrolledWindow()
+        self.scrollable_textview = Gtk.ScrolledWindow()
         self.paned.add2(self.scrollable_textview)
 
         self.paned.set_position(300)
 
-        self.text_view = gtk.TextView(buffer=None)
+        self.text_view = Gtk.TextView(buffer=None)
         self.scrollable_textview.add(self.text_view)
 
-        self.tree_view = gtk.TreeView()
+        self.tree_view = Gtk.TreeView()
         self.selection = self.tree_view.get_selection()
         self.scrollable_treelist.add(self.tree_view)
 
         # create the TreeViewColumn to display the data
-        self.tvcolumn = gtk.TreeViewColumn('Execution History')
+        self.tvcolumn = Gtk.TreeViewColumn('Execution History')
 
         # add tvcolumn to tree_view
         self.tree_view.append_column(self.tvcolumn)
 
         # create a CellRendererText to render the data
-        self.cell = gtk.CellRendererText()
+        self.cell = Gtk.CellRendererText()
 
         # add the cell to the tvcolumn and allow it to expand
         self.tvcolumn.pack_start(self.cell, True)

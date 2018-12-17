@@ -20,8 +20,7 @@ def test_execution_log(caplog):
                                                         "execution_file_log_test")))
 
         rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-        rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-        rafcon.core.singleton.state_machine_execution_engine.start()
+        rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
         rafcon.core.singleton.state_machine_execution_engine.join()
 
         import shelve
@@ -37,6 +36,7 @@ def test_execution_log(caplog):
         assert prod1['scoped_data_ins']['product'] == 2
         assert prod1['scoped_data_outs']['product'] == 2
         assert prod1['outcome_name'] == 'success'
+        assert prod1['semantic_data']['test_key'] == 'TestValue'
 
         prod2_id = [k for k, v in collapsed_items.items() if v['state_name'] == 'MakeProd2' ][0]
         prod2 = collapsed_items[prod2_id]
@@ -57,8 +57,11 @@ def test_execution_log(caplog):
         assert list(all_starts['outcome_name']) == ['success', 'success', 'done']
 
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
+    except ImportError:  # if pandas is not installed
+        pass
     finally:
         testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=0)
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    test_execution_log(None)
+    # pytest.main([__file__])

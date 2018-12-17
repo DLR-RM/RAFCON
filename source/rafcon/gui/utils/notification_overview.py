@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (C) 2016-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
@@ -9,6 +10,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import str
 import datetime
 import time
 from rafcon.utils import constants
@@ -71,7 +73,7 @@ class NotificationOverview(dict):
         dict.__init__(self, overview_dict)
         self.__description = s
         if self.with_prints:
-            print "\nNotificationOverview {}\n".format(str(self))
+            print("\nNotificationOverview {}\n".format(str(self)))
         NotificationOverview._generation_time += time.time() - start_time
     #     self.store_debug_log_file("\nNotificationOverview {}\n".format(str(self)))
     #
@@ -107,10 +109,10 @@ class NotificationOverview(dict):
             dict.update(self, E)
 
     def print_overview(self, overview=None):
-        print self
+        print(self)
 
     def get_nice_info_dict_string(self, info, level='\t', overview=None):
-        """ Inserts all elements of a notification info-dictionary of gtkmvc or a Signal into one string and indicates
+        """ Inserts all elements of a notification info-dictionary of gtkmvc3 or a Signal into one string and indicates
         levels of calls defined by 'kwargs'. Additionally, the elements get structured into a dict that holds all levels
         of the general notification key-value pairs in faster accessible lists. The dictionary has the element 'type'
         and the general elements {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'args': [],
@@ -227,7 +229,7 @@ class NotificationOverview(dict):
                                                                                    overview))
             if overview['type'] == 'after':
                 s += "\n{0}'result': {1}".format(level, info['result'])
-            # additional elements not created by gtkmvc or common function calls
+            # additional elements not created by gtkmvc3 or common function calls
             overview['others'].append({})
             for key, value in info.items():
                 if key in ['before', 'after', 'model', 'prop_name', 'instance', 'method_name', 'args', 'kwargs', 'result']:
@@ -237,8 +239,8 @@ class NotificationOverview(dict):
                     overview['others'][len(overview['others'])-1][key] = info[key]
         else:
             overview['kwargs'].append({})
-            # print info
-            # print info['arg']
+            # print(info)
+            # print(info['arg'])
             if isinstance(info['arg'], MetaSignalMsg):
                 overview['signal'].append(info['arg'])
                 s += "\n{0}'arg': MetaSignalMsg({1}".format(level,

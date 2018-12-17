@@ -11,10 +11,10 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
-import gobject
+from gi.repository import Gtk
+from gi.repository import GObject
 
-from gtkmvc import View
+from gtkmvc3.view import View
 
 from gaphas import tool
 from gaphas import painter
@@ -30,7 +30,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class GraphicalEditorView(View, gobject.GObject):
+class GraphicalEditorView(View, GObject.GObject):
 
     def __init__(self, selection_m):
         """View holding the graphical editor
@@ -38,14 +38,13 @@ class GraphicalEditorView(View, gobject.GObject):
         The purpose of the view is only to hold the graphical editor. The class ob the actual editor with the OpenGL
         functionality is GraphicalEditor
         """
-        gobject.GObject.__init__(self)
+        GObject.GObject.__init__(self)
         View.__init__(self)
 
-        self.v_box = gtk.VBox()
-        self.scroller = gtk.ScrolledWindow()
+        self.v_box = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
+        self.scroller = Gtk.ScrolledWindow()
         self.scroller.set_name('graphical_editor_scroller')
         self.editor = ExtendedGtkView(self, selection_m)
-        self.editor.modify_bg(gtk.STATE_NORMAL, global_gui_config.gtk_colors['INPUT_BACKGROUND'])
         self.editor.tool = ToolChain(self.editor). \
             append(HoverItemTool()). \
             append(MoveHandleTool()). \
@@ -62,7 +61,7 @@ class GraphicalEditorView(View, gobject.GObject):
             append(painter.FocusedItemPainter()). \
             append(painter.ToolPainter())
         self.scroller.add(self.editor)
-        self.v_box.pack_end(self.scroller)
+        self.v_box.pack_end(self.scroller, True, True, 0)
 
         self['main_frame'] = self.v_box
         self.top = 'main_frame'
@@ -73,6 +72,6 @@ class GraphicalEditorView(View, gobject.GObject):
         self.editor.set_size_request(0, 0)
 
 
-gobject.type_register(GraphicalEditorView)
-gobject.signal_new('meta_data_changed', GraphicalEditorView, gobject.SIGNAL_RUN_FIRST, None,
-                   (gobject.TYPE_PYOBJECT, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN,))
+GObject.type_register(GraphicalEditorView)
+GObject.signal_new('meta_data_changed', GraphicalEditorView, GObject.SignalFlags.RUN_FIRST, None,
+                   (GObject.TYPE_PYOBJECT, GObject.TYPE_STRING, GObject.TYPE_BOOLEAN,))

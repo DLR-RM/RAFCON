@@ -18,14 +18,16 @@
    :synopsis: A module that cares for the execution of the state machine
 
 """
+from future import standard_library
+standard_library.install_aliases()
 import copy
 import threading
 import time
-import Queue
+import queue
 from threading import Lock, RLock
 import sys
 
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.utils import log
@@ -110,7 +112,7 @@ class ExecutionEngine(Observable):
         else:
             # do not start another state machine before the old one did not finish its execution
             if self.state_machine_running:
-                logger.warn("An old state machine is still running! Make sure that it terminates,"
+                logger.warning("An old state machine is still running! Make sure that it terminates,"
                             " before you can start another state machine!")
                 return
 
@@ -161,10 +163,17 @@ class ExecutionEngine(Observable):
         :rtype: bool
         """
         if self.__wait_for_finishing_thread:
-            self.__wait_for_finishing_thread.join(timeout)
+            if not timeout:
+                # signal handlers won't work if timeout is None and the thread is joined
+                while True:
+                    self.__wait_for_finishing_thread.join(0.5)
+                    if not self.__wait_for_finishing_thread.isAlive():
+                        break
+            else:
+                self.__wait_for_finishing_thread.join(timeout)
             return not self.__wait_for_finishing_thread.is_alive()
         else:
-            logger.warn("Cannot join as state machine was not started yet.")
+            logger.warning("Cannot join as state machine was not started yet.")
             return False
 
     def __set_execution_mode_to_stopped(self):
@@ -199,7 +208,9 @@ class ExecutionEngine(Observable):
 
         # Create new concurrency queue for root state to be able to synchronize with the execution
         self.__running_state_machine = self.state_machine_manager.get_active_state_machine()
-        self.__running_state_machine.root_state.concurrency_queue = Queue.Queue(maxsize=0)
+        if not self.__running_state_machine:
+            logger.error("The running state machine must not be None")
+        self.__running_state_machine.root_state.concurrency_queue = queue.Queue(maxsize=0)
 
         if self.__running_state_machine:
             self.__running_state_machine.start()
@@ -207,7 +218,7 @@ class ExecutionEngine(Observable):
             self.__wait_for_finishing_thread = threading.Thread(target=self._wait_for_finishing)
             self.__wait_for_finishing_thread.start()
         else:
-            logger.warn("Currently no active state machine! Please create a new state machine.")
+            logger.warning("Currently no active state machine! Please create a new state machine.")
             self.set_execution_mode(StateMachineExecutionStatus.STOPPED)
 
     def _wait_for_finishing(self):
@@ -215,6 +226,7 @@ class ExecutionEngine(Observable):
         self.state_machine_running = True
         self.__running_state_machine.join()
         self.__set_execution_mode_to_finished()
+        self.state_machine_manager.active_state_machine_id = None
         plugins.run_on_state_machine_execution_finished()
         # self.__set_execution_mode_to_stopped()
         self.state_machine_running = False
@@ -444,7 +456,7 @@ class ExecutionEngine(Observable):
         if wait_for_execution_finished:
             self.join()
             self.stop()
-        return rafcon.core.singleton.state_machine_manager.get_active_state_machine()
+        return state_machine
 
     @Observable.observed
     def set_execution_mode(self, execution_mode, notify=True):
@@ -463,7 +475,7 @@ class ExecutionEngine(Observable):
             self._status.execution_condition_variable.release()
 
     #########################################################################
-    # Properties for all class fields that must be observed by gtkmvc
+    # Properties for all class fields that must be observed by gtkmvc3
     #########################################################################
 
     @property

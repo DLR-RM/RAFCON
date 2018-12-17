@@ -16,10 +16,12 @@
 
 """
 
+from future.utils import string_types
+from builtins import str
 import os
 import imp
 import yaml
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core.id_generator import generate_script_id
 import rafcon.core.singleton
@@ -36,7 +38,7 @@ DEFAULT_SCRIPT = filesystem.read_file(os.path.dirname(__file__), DEFAULT_SCRIPT_
 
 
 class Script(Observable, yaml.YAMLObject):
-    """A class for representing the script file for each state in a state machine
+    """A class for representing the script file for all execution states in a state machine.
 
     It inherits from Observable to make a change of its fields observable.
 
@@ -72,8 +74,8 @@ class Script(Observable, yaml.YAMLObject):
 
     @script.setter
     def script(self, value):
-        if not isinstance(value, str):
-            raise ValueError("The script text of  Script class needs to be string it was handed {0}".format(value))
+        if not isinstance(value, string_types):
+            raise ValueError("The script text needs to be string")
         self._script = value
 
     def execute(self, state, inputs=None, outputs=None, backward_execution=False):
@@ -129,8 +131,8 @@ class Script(Observable, yaml.YAMLObject):
             code = compile(self.script, '%s (%s)' % (self.filename, self._script_id), 'exec')
 
             try:
-                exec code in tmp_module.__dict__
-            except RuntimeError, e:
+                exec(code, tmp_module.__dict__)
+            except RuntimeError as e:
                 raise IOError("The compilation of the script module failed - error message: %s" % str(e))
 
             # return the module
@@ -174,7 +176,7 @@ class Script(Observable, yaml.YAMLObject):
 
     @filename.setter
     def filename(self, value):
-        if value is not None and not isinstance(value, str):
+        if value is not None and not isinstance(value, string_types):
             raise TypeError("The filename of a script has to be a string or None to use the default value.")
         self._filename = value
 
@@ -187,12 +189,12 @@ class Script(Observable, yaml.YAMLObject):
 
     @path.setter
     def path(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, string_types):
             raise TypeError("The path of a script has to be a string or None to use the default value.")
         self._path = value
 
     def load_script_from_path_and_take_over_path(self, path, with_build_module=True):
-        if not isinstance(path, basestring):
+        if not isinstance(path, string_types):
             raise TypeError("The path of a script has to be a string or None to use the default value.")
 
         if self._check_path:
@@ -213,7 +215,7 @@ class Script(Observable, yaml.YAMLObject):
                 raise
 
 #########################################################################
-# Properties for all class fields that must be observed by gtkmvc
+# Properties for all class fields that must be observed by gtkmvc3
 #########################################################################
 
     @property

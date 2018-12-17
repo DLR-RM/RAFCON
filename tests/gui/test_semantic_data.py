@@ -29,9 +29,8 @@ def change_semantic_data_values():
     # All executions from a thread which is not the gtk main thread must be called via "idle_add" or call_gui_callback
     # see https://developer.gnome.org/gdk3/stable/gdk3-Threads.html#gdk-threads-add-idle-full
     # and https://stackoverflow.com/questions/35700140/pygtk-run-gtk-main-loop-in-a-seperate-thread
-    call_gui_callback(menu_bar_controller.on_new_activate)
+    state_machine = call_gui_callback(menu_bar_controller.on_new_activate)
 
-    state_machine = state_machine_manager.get_active_state_machine()
     root_state = state_machine.root_state
     call_gui_callback(initialize_data, root_state)
 
@@ -67,26 +66,26 @@ def change_semantic_data_values():
     # print root_state.semantic_data
 
     # test delete
-    assert len(root_state.semantic_data.keys()) == 5
+    assert len(list(root_state.semantic_data.keys())) == 5
     call_gui_callback(semantic_data_controller.select_entry, ['dict 2'])
     # semantic_data_controller.select_entry(['dict 2'])
     call_gui_callback(semantic_data_controller.on_remove, None)
-    assert len(root_state.semantic_data.keys()) == 4 and 'dict 2' not in root_state.semantic_data.keys()
+    assert len(list(root_state.semantic_data.keys())) == 4 and 'dict 2' not in list(root_state.semantic_data.keys())
 
     # test add normal entry into first hierarchy
     call_gui_callback(semantic_data_controller.tree_view.get_selection().select_path, tree_test_path)
     call_gui_callback(semantic_data_controller.on_add, None, False)
-    assert len(root_state.semantic_data.keys()) == 5
+    assert len(list(root_state.semantic_data.keys())) == 5
 
     # test add dictionary entry in second hierarchy
     # tree_test_path = semantic_data_controller.get_path_for_core_element(["dict 1"])
     # print "second hierarchy: ", tree_test_path
-    assert len(root_state.semantic_data["dict 1"].keys()) == 2
+    assert len(list(root_state.semantic_data["dict 1"].keys())) == 2
     # call_gui_callback(semantic_data_controller.tree_view.get_selection().select_path, tree_test_path)
     call_gui_callback(semantic_data_controller.select_entry, ['dict 1'])
     call_gui_callback(semantic_data_controller.on_add, None, False)
-    assert len(root_state.semantic_data.keys()) == 5
-    assert len(root_state.semantic_data["dict 1"].keys()) == 3
+    assert len(list(root_state.semantic_data.keys())) == 5
+    assert len(list(root_state.semantic_data["dict 1"].keys())) == 3
 
 
 def test_semantic_data(caplog):

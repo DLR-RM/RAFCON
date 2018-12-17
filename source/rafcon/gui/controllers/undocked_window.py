@@ -33,9 +33,7 @@ class UndockedWindowController(ExtendedController):
         ExtendedController.__init__(self, state_machine_manager_model, view)
 
         self.top_tool_bar_undocked_window_controller = TopToolBarUndockedWindowController(state_machine_manager_model,
-                                                                                          view.top_tool_bar,
-                                                                                          view['undock_window'],
-                                                                                          redock_method)
+                                                                                          view, redock_method)
 
         self.add_controller('top_tool_bar_undocked_window_controller', self.top_tool_bar_undocked_window_controller)
 

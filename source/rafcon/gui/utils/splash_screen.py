@@ -11,7 +11,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import os
-import gtk
+from gi.repository import Gtk
+from gi.repository import GdkPixbuf
 import random
 from rafcon.utils.resources import resource_filename, resource_listdir
 
@@ -21,11 +22,11 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-class SplashScreen(gtk.Window):
+class SplashScreen(Gtk.Window):
 
     def __init__(self, width=530, height=350, contains_image=False):
-        # init gtk.Window with type popup
-        super(SplashScreen, self).__init__(type=gtk.WINDOW_POPUP)
+        # init Gtk.Window with type popup
+        super(SplashScreen, self).__init__(type=Gtk.WindowType.POPUP)
 
         # index for the image rotator
         self.image_index = 0
@@ -34,11 +35,11 @@ class SplashScreen(gtk.Window):
         # set width and height to parameter values and position the window in the center
         self.set_title('RAFCON')
         self.set_default_size(width, height)
-        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_position(Gtk.WindowPosition.CENTER)
 
-        main_vbox = gtk.VBox(False, 1)
+        main_vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.add(main_vbox)
-        self.image = gtk.Image()
+        self.image = Gtk.Image()
         # If an img path was defined, create a gtk img and fill it from a pixelbuffer which is created from the
         # set file path
         if contains_image:
@@ -46,7 +47,7 @@ class SplashScreen(gtk.Window):
 
         # add label to display text, the text can be changed by the text() method.
         # Align it in the middle of the gtk window
-        self.label = gtk.Label("")
+        self.label = Gtk.Label(label="")
         self.label.set_alignment(0.5, 0.5)
         main_vbox.pack_start(self.label, False, True, 10)
         main_vbox.set_spacing(0)
@@ -59,16 +60,16 @@ class SplashScreen(gtk.Window):
         # include this to give more time to watch
         # import time
         # time.sleep(1)
-        while gtk.events_pending():
-            gtk.main_iteration_do(True)
+        while Gtk.events_pending():
+            Gtk.main_iteration_do(False)
         return
 
     def load_image(self, image_path):
         if image_path:
-            pixbuf = gtk.gdk.pixbuf_new_from_file_at_size(image_path, self.get_size()[0] - 50, self.get_size()[1] - 50)
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(image_path, self.get_size()[0] - 50, self.get_size()[1] - 50)
             self.image.set_from_pixbuf(pixbuf)
-            while gtk.events_pending():
-                gtk.main_iteration_do(True)
+            while Gtk.events_pending():
+                Gtk.main_iteration_do(False)
         else:
             logger.debug("Splash screen image path is None")
 

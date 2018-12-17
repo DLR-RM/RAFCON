@@ -38,7 +38,7 @@
             "data_type": {
                 "__type__": "__builtin__.str"
             }, 
-            "default_value": null, 
+            "default_value": "Something to check? Leave Empty if not needed.", 
             "name": "checkbox_text"
         }
     }, 

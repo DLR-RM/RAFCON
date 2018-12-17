@@ -1,5 +1,6 @@
 
 
+from builtins import str
 def execute(self, inputs, outputs, gvm):
     import time
     

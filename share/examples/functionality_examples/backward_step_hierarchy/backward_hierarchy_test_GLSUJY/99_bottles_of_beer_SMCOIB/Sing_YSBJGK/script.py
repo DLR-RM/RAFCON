@@ -1,4 +1,6 @@
+from __future__ import print_function
 # State "Sing"
+from builtins import str
 def execute(self, inputs, outputs, gvm):
     import time   
  
@@ -14,5 +16,5 @@ def execute(self, inputs, outputs, gvm):
     return 0
     
 def backward_execute(self, inputs, outputs, gvm):
-    print "This is the second backward step test"
+    print("This is the second backward step test")
     return execute(self, inputs, outputs, gvm)

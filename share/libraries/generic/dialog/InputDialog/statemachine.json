@@ -1,7 +1,7 @@
 {
     "creation_time": "2017-02-21 16:53:17", 
-    "last_update": "2018-07-11 12:14:23", 
+    "last_update": "2018-11-28 13:49:47", 
     "root_state_storage_id": "SpawnInput_Dialog_ARQYGQ", 
     "state_machine_version": null, 
-    "used_rafcon_version": "0.12.15a1"
+    "used_rafcon_version": "0.13.0"
 }

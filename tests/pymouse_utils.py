@@ -1,5 +1,7 @@
 """The module uses the module pymouse of pypi package PyMouse or the equivalent element of the package PyUserInput."""
+from __future__ import print_function
 
+from builtins import range
 import os
 import time
 from math import *
@@ -27,12 +29,12 @@ def move(target_pos, speed=1000):
         num_of_steps = int(ceil(distance/(speed*TIME_STEP)))
         positions = [start_pos_vec + distance_vec/float(num_of_steps)*(pos_index + 1.0)
                      for pos_index in range(num_of_steps)]
-        print "position start: ", start_pos
+        print("position start: ", start_pos)
         for pos in positions:
             mouse.move(int(pos[0]), int(pos[1]))
             # print "with index: ", pos
             time.sleep(TIME_STEP)
-    print "last index: ", target_pos[0], target_pos[1]
+    print("last index: ", target_pos[0], target_pos[1])
     mouse.move(target_pos[0], target_pos[1])
     time.sleep(TIME_STEP)
 

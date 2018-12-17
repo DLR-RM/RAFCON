@@ -18,11 +18,10 @@
 
 
 # default libraries
+from __future__ import print_function
 import os
 import sys
 import logging
-import gtk
-import glib
 import threading
 import signal
 from yaml_configuration.config import config_path
@@ -32,26 +31,28 @@ import rafcon
 from rafcon.gui.config import global_gui_config
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.runtime_config import global_runtime_config
-import rafcon.gui.models.auto_backup
 from rafcon.gui.utils.splash_screen import SplashScreen
-from rafcon.gui.helpers import installation
 import rafcon.gui.backup.session as backup_session
 
 # state machine
 from rafcon.core.start import parse_state_machine_path, setup_environment, reactor_required, \
-    setup_configuration, post_setup_plugins, register_signal_handlers
+    setup_configuration, post_setup_plugins
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.hierarchy_state import HierarchyState
 import rafcon.core.singleton as core_singletons
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
-from rafcon.core.config import global_config
 
 # utils
 from rafcon.gui.utils import wait_for_gui
 import rafcon.utils.filesystem as filesystem
-from rafcon.utils import plugins
+from rafcon.utils import plugins, installation
 from rafcon.utils.i18n import setup_l10n
 from rafcon.utils import log
+
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GLib
+
 
 logger = log.get_logger("rafcon.start.gui")
 
@@ -72,22 +73,22 @@ def setup_installation():
         installation.install_libraries(logger, overwrite=False)
 
 
-def setup_gtkmvc_logger():
-    # Apply defaults to logger of gtkmvc
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
+def setup_gtkmvc3_logger():
+    # Apply defaults to logger of gtkmvc3
+    for handler in logging.getLogger('gtkmvc3').handlers:
+        logging.getLogger('gtkmvc3').removeHandler(handler)
     stdout = logging.StreamHandler(sys.stdout)
     stdout.setFormatter(logging.Formatter("%(asctime)s: %(levelname)-8s - %(name)s:  %(message)s"))
     stdout.setLevel(logging.DEBUG)
-    logging.getLogger('gtkmvc').addHandler(stdout)
+    logging.getLogger('gtkmvc3').addHandler(stdout)
 
 
 def install_reactor():
-    from twisted.internet import gtk2reactor
+    from twisted.internet import gtk3reactor
     from twisted.internet.error import ReactorAlreadyInstalledError
     try:
-        # needed for glib.idle_add, and signals
-        gtk2reactor.install()
+        # needed for GLib.idle_add, and signals
+        gtk3reactor.install()
     except ReactorAlreadyInstalledError:
         pass
 
@@ -95,7 +96,7 @@ def install_reactor():
 def pre_setup_plugins():
     """Loads plugins and calls the pre init hooks
 
-    If twisted has been imported by a plugin, the gtk2reactor is installed
+    If twisted has been imported by a plugin, the gtk3reactor is installed
     """
     # load all plugins specified in the RAFCON_PLUGIN_PATH
     plugins.load_plugins()
@@ -184,7 +185,7 @@ def setup_gui():
 
     # set the gravity of the main window controller to static to ignore window manager decorations and get
     # a correct position of the main window on the screen (else there are offsets for some window managers)
-    main_window_view.get_top_widget().set_gravity(gtk.gdk.GRAVITY_STATIC)
+    main_window_view.get_top_widget().set_gravity(Gdk.Gravity.STATIC)
 
     sm_manager_model = gui_singletons.state_machine_manager_model
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
@@ -199,7 +200,7 @@ def start_gtk():
         is_main_thread = isinstance(threading.current_thread(), threading._MainThread)
         reactor.run(installSignalHandlers=is_main_thread)
     else:
-        gtk.main()
+        Gtk.main()
 
 
 def stop_gtk():
@@ -210,10 +211,10 @@ def stop_gtk():
             reactor.callFromThread(reactor.stop)
         # Twisted can be imported without the reactor being used
         # => check if GTK main loop is running
-        elif gtk.main_level() > 0:
-            glib.idle_add(gtk.main_quit)
+        elif Gtk.main_level() > 0:
+            GLib.idle_add(Gtk.main_quit)
     else:
-        glib.idle_add(gtk.main_quit)
+        GLib.idle_add(Gtk.main_quit)
 
     # Run the GTK loop until no more events are being generated and thus the GUI is fully destroyed
     wait_for_gui()
@@ -223,6 +224,7 @@ def post_gui_destruction():
     plugins.run_hook("post_destruction")
 
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
+        import rafcon.gui.models.auto_backup
         rafcon.gui.models.auto_backup.remove_rafcon_instance_lock_file()
 
 
@@ -248,13 +250,13 @@ def create_new_state_machine():
 SIGNALS_TO_NAMES_DICT = dict((getattr(signal, n), n) for n in dir(signal) if n.startswith('SIG') and '_' not in n)
 
 
-def signal_handler(signal, frame):
+def signal_handler(signal, frame=None):
     state_machine_execution_engine = core_singletons.state_machine_execution_engine
     core_singletons.shut_down_signal = signal
 
-    # in this case the print is on purpose the see more easily if the interrupt signal reached the thread
-    print _("Signal '{}' received.\nExecution engine will be stopped and program will be shutdown!").format(
-        SIGNALS_TO_NAMES_DICT.get(signal, "[unknown]"))
+    # in this case the print is on purpose to see more easily if the interrupt signal reached the thread
+    print(_("Signal '{}' received.\nExecution engine will be stopped and program will be shutdown!").format(
+        SIGNALS_TO_NAMES_DICT.get(signal, "[unknown]")))
 
     try:
         if not state_machine_execution_engine.finished_or_stopped():
@@ -262,12 +264,12 @@ def signal_handler(signal, frame):
             state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
     except Exception as e:
         import traceback
-        print _("Could not stop state machine: {0} {1}").format(e.message, traceback.format_exc())
+        print(_("Could not stop state machine: {0} {1}").format(e, traceback.format_exc()))
 
     try:
         gui_singletons.main_window_controller.prepare_destruction()
     except Exception as e:
-        print "Exception while preparing destruction", e
+        print("Exception while preparing destruction", e)
         os._exit(1)
 
     stop_gtk()
@@ -276,7 +278,30 @@ def signal_handler(signal, frame):
 
     # Do not use sys.exit() in signal handler:
     # http://thushw.blogspot.de/2010/12/python-dont-use-sysexit-inside-signal.html
+    # noinspection PyProtectedMember
     os._exit(0)
+
+
+def register_signal_handlers(callback):
+    # When using plain signal.signal to install a signal handler, the GUI will not shutdown until it receives the
+    # focus again. The following logic (inspired from https://stackoverflow.com/a/26457317) fixes this
+    def install_glib_handler(sig):
+        unix_signal_add = None
+
+        if hasattr(GLib, "unix_signal_add"):
+            unix_signal_add = GLib.unix_signal_add
+        elif hasattr(GLib, "unix_signal_add_full"):
+            unix_signal_add = GLib.unix_signal_add_full
+
+        if unix_signal_add:
+            unix_signal_add(GLib.PRIORITY_HIGH, sig, callback, sig)
+
+    def idle_handler(*args):
+        GLib.idle_add(callback, *args, priority=GLib.PRIORITY_HIGH)
+
+    for signal_code in [signal.SIGHUP, signal.SIGINT, signal.SIGTERM]:
+        signal.signal(signal_code, idle_handler)
+        GLib.idle_add(install_glib_handler, signal_code, priority=GLib.PRIORITY_HIGH)
 
 
 def main():
@@ -293,13 +318,13 @@ def main():
     splash_screen = SplashScreen(contains_image=True, width=530, height=350)
     splash_screen.rotate_image(random_=True)
     splash_screen.set_text(_("Starting RAFCON..."))
-    while gtk.events_pending():
-        gtk.main_iteration()
+    while Gtk.events_pending():
+        Gtk.main_iteration()
 
     setup_installation()
 
     splash_screen.set_text("Setting up logger...")
-    setup_gtkmvc_logger()
+    setup_gtkmvc3_logger()
 
     splash_screen.set_text("Initializing plugins...")
     pre_setup_plugins()
@@ -315,6 +340,7 @@ def main():
 
     # create lock file -> keep behavior for hole instance
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
+        import rafcon.gui.models.auto_backup
         rafcon.gui.models.auto_backup.generate_rafcon_instance_lock_file()
 
     # setup the gui before loading the state machine as then the debug console shows the errors that emerged during
@@ -335,8 +361,9 @@ def main():
 
     # initiate stored session # TODO think about a controller for this
     if not user_input.new and not user_input.state_machine_paths \
-            and rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
-        glib.idle_add(backup_session.restore_session_from_runtime_config, priority=glib.PRIORITY_LOW)
+            and global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
+        # do in background in order not to block GUI
+        GLib.idle_add(backup_session.restore_session_from_runtime_config, priority=GLib.PRIORITY_LOW)
 
     if state_machine and (user_input.start_state_machine_flag or state_machine.get_state_by_path(user_input.start_state_path)):
         start_state_machine(state_machine, user_input.start_state_path, user_input.quit_flag)
@@ -352,8 +379,12 @@ def main():
 
     if core_singletons.state_machine_execution_engine.status.execution_mode == StateMachineExecutionStatus.STARTED:
         logger.info(_("Waiting for the state machine execution to finish"))
+        # overwriting signal handlers here does not work either
+        import rafcon
+        rafcon.core.start.register_signal_handlers(rafcon.core.start.signal_handler)
         core_singletons.state_machine_execution_engine.join()
         logger.info(_("State machine execution has finished"))
+        core_singletons.state_machine_manager.delete_all_state_machines()
 
     logger.info(_("Exiting ..."))
 

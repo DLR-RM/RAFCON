@@ -10,10 +10,13 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import str
 import os.path
 from copy import copy, deepcopy
 from weakref import ref
-from gtkmvc import ModelMT, Signal
+from gtkmvc3.model_mt import ModelMT
+from gtkmvc3.observable import Signal
+import gtkmvc3.support.wrappers as wrappers
 
 from rafcon.gui.models.signals import MetaSignalMsg, Notification
 from rafcon.gui.models.meta import MetaModel
@@ -76,6 +79,7 @@ class AbstractStateModel(MetaModel, Hashable):
     _is_about_to_be_destroyed_recursively = False
     is_start = None
     state = None
+    income = None
     outcomes = []
     input_data_ports = []
     output_data_ports = []
@@ -83,8 +87,8 @@ class AbstractStateModel(MetaModel, Hashable):
     action_signal = Signal()
     destruction_signal = Signal()
 
-    __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start", "meta_signal",
-                       "action_signal", "destruction_signal")
+    __observables__ = ("state", "input_data_ports", "output_data_ports", "income", "outcomes", "is_start",
+                       "meta_signal", "action_signal", "destruction_signal")
 
     def __init__(self, state, parent=None, meta=None):
         if type(self) == AbstractStateModel:
@@ -109,6 +113,7 @@ class AbstractStateModel(MetaModel, Hashable):
         self.outcomes = []
         self._load_input_data_port_models()
         self._load_output_data_port_models()
+        self._load_income_model()
         self._load_outcome_models()
 
     def __str__(self):
@@ -122,18 +127,29 @@ class AbstractStateModel(MetaModel, Hashable):
         if self.meta != other.meta:
             return False
         for attr in self.state.state_element_attrs:
-            # E.g. compare lists of outcomes and data ports. The lists are converted to sets, as those are unordered
-            if hasattr(getattr(self, attr), "__radd__"):  # elements are stored in a list (ObsListWrapper)
-                elements = getattr(self, attr)
-                other_elements = getattr(other, attr)
-            else:  # elements are stored in a dict (ObsMapWrapper)
-                elements = getattr(self, attr).items()
-                other_elements = getattr(other, attr).items()
-            if len(elements) != len(other_elements):
-                return False
-            if not all([element in other_elements for element in other_elements]):
-                return False
+            # some state element attributes are wrapped in a wrappers.ObsWrapperBase class, some of which are held in
+            # lists or dicts. Those need to be compared element-wise.
+            my_attr = getattr(self, attr)
+            other_attr = getattr(other, attr)
+            if isinstance(my_attr, wrappers.ObsSeqWrapper):
+                if isinstance(my_attr, wrappers.ObsListWrapper):  # elements are stored in a list
+                    elements = my_attr
+                    other_elements = other_attr
+                elif isinstance(my_attr, wrappers.ObsMapWrapper):  # elements are stored in a dict
+                    elements = my_attr.items()
+                    other_elements = other_attr.items()
+                else:
+                    raise ValueError("Unsupported state element type: " + str(type(my_attr)))
+                if len(elements) != len(other_elements):
+                    return False
+                if not all([element in other_elements for element in other_elements]):
+                    return False
+            else:
+                return my_attr == other_attr
         return True
+
+    def __hash__(self):
+        return id(self)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -141,6 +157,9 @@ class AbstractStateModel(MetaModel, Hashable):
     def __cmp__(self, other):
         if isinstance(other, AbstractStateModel):
             return self.core_element.__cmp__(other.core_element)
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
 
     def __contains__(self, item):
         """Checks whether `item` is an element of the state model
@@ -154,7 +173,8 @@ class AbstractStateModel(MetaModel, Hashable):
         from rafcon.gui.models.state_element import StateElementModel
         if not isinstance(item, StateElementModel):
             return False
-        return item in self.outcomes or item in self.input_data_ports or item in self.output_data_ports
+        return item is self.income or item in self.outcomes or \
+               item in self.input_data_ports or item in self.output_data_ports
 
     def __copy__(self):
         state = copy(self.state)
@@ -185,10 +205,6 @@ class AbstractStateModel(MetaModel, Hashable):
         # TODO rewrite it to be more efficient -> try a recursive pattern on parent
         return len(self.state.get_path().split('/'))
 
-    @property
-    def hierarchy_level(self):
-        return len(self.state.get_path().split('/'))
-
     def prepare_destruction(self, recursive=True):
         """Prepares the model for destruction
 
@@ -200,25 +216,38 @@ class AbstractStateModel(MetaModel, Hashable):
         try:
             self.unregister_observer(self)
         except KeyError:  # Might happen if the observer was already unregistered
+            logger.verbose("Observer already unregistered!")
             pass
         if recursive:
+            if self.income:
+                self.income.prepare_destruction()
             for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
                 port.prepare_destruction()
         del self.input_data_ports[:]
         del self.output_data_ports[:]
         del self.outcomes[:]
         self.state = None
+        self.input_data_ports = None
+        self.output_data_ports = None
+        self.income = None
+        self.outcomes = None
+        # History TODO: these are needed by the modification history
+        # self.action_signal = None
+        # self.meta_signal = None
+        # self.destruction_signal = None
+        self.observe = None
+        super(AbstractStateModel, self).prepare_destruction()
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.core_element)
-        for state_element in sorted(self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
+        for state_element in sorted([self.income] + self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
             self.update_hash_from_dict(obj_hash, state_element)
         if not self.state.get_next_upper_library_root_state():
             self.update_hash_from_dict(obj_hash, self.meta)
 
     def update_meta_data_hash(self, obj_hash):
         super(AbstractStateModel, self).update_meta_data_hash(obj_hash)
-        for state_element in sorted(self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
+        for state_element in sorted([self.income] + self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
             state_element.update_meta_data_hash(obj_hash)
 
     @property
@@ -322,6 +351,9 @@ class AbstractStateModel(MetaModel, Hashable):
     def _load_output_data_port_models(self):
         raise NotImplementedError
 
+    def _load_income_model(self):
+        raise NotImplementedError
+
     def _load_outcome_models(self):
         raise NotImplementedError
 
@@ -342,14 +374,14 @@ class AbstractStateModel(MetaModel, Hashable):
         """This method notifies the parent state and child state models about complex actions
         """
         msg = info.arg
-        # print "action_signal_triggered state: ", self.state.state_id, model, prop_name, info
+        # print("action_signal_triggered state: ", self.state.state_id, model, prop_name, info)
         if msg.action.startswith('sm_notification_'):
             return
         # # affected child propagation from state
         # if hasattr(self, 'states'):
         #     for m in info['arg'].affected_models:
-        #         print m, self.states
-        #         print [m is mm for mm in self.states.itervalues()], [m in self for m in info['arg'].affected_models], \
+        #         print(m, self.states)
+        #         print([m is mm for mm in self.states.values()], [m in self for m in info['arg'].affected_models], \)
         #             [m in self.states.values() for m in info['arg'].affected_models]
         if any([m in self for m in info['arg'].affected_models]):
             if not msg.action.startswith('parent_notification_'):
@@ -357,9 +389,9 @@ class AbstractStateModel(MetaModel, Hashable):
             else:
                 new_msg = msg
             for m in info['arg'].affected_models:
-                # print '???propagate it to', m, m.parent
+                # print('???propagate it to', m, m.parent)
                 if isinstance(m, AbstractStateModel) and m in self:
-                    # print '!!!propagate it from {0} to {1} {2}'.format(self.state.state_id, m.state.state_id, m)
+                    # print('!!!propagate it from {0} to {1} {2}'.format(self.state.state_id, m.state.state_id, m))
                     m.action_signal.emit(new_msg)
 
         if msg.action.startswith('parent_notification_'):
@@ -369,20 +401,20 @@ class AbstractStateModel(MetaModel, Hashable):
         if self.parent is not None:
             # Notify parent about change of meta data
             info.arg = msg
-            # print "DONE1", self.state.state_id, msg
+            # print("DONE1", self.state.state_id, msg)
             self.parent.action_signal_triggered(model, prop_name, info)
-            # print "FINISH DONE1", self.state.state_id, msg
+            # print("FINISH DONE1", self.state.state_id, msg)
         # state machine propagation of action signal (indirect) TODO remove finally
         elif not msg.action.startswith('sm_notification_'):  # Prevent recursive call
             # If we are the root state, inform the state machine model by emitting our own meta signal.
             # To make the signal distinguishable for a change of meta data to our state, the change property of
             # the message is prepended with 'sm_notification_'
-            # print "DONE2", self.state.state_id, msg
+            # print("DONE2", self.state.state_id, msg)
             new_msg = msg._replace(action='sm_notification_' + msg.action)
             self.action_signal.emit(new_msg)
-            # print "FINISH DONE2", self.state.state_id, msg
+            # print("FINISH DONE2", self.state.state_id, msg)
         else:
-            # print "DONE3 NOTHING"
+            # print("DONE3 NOTHING")
             pass
 
     @ModelMT.observe("meta_signal", signal=True)
@@ -390,27 +422,27 @@ class AbstractStateModel(MetaModel, Hashable):
         """This method notifies the parent state about changes made to the meta data
         """
         msg = info.arg
-        # print "meta_changed state: ", model, prop_name, info
+        # print("meta_changed state: ", model, prop_name, info)
         if msg.notification is None:
             # Meta data of this state was changed, add information about notification to the signal message
             notification = Notification(model, prop_name, info)
             msg = msg._replace(notification=notification)
-            # print "DONE0 ", msg
+            # print("DONE0 ", msg)
 
         if self.parent is not None:
             # Notify parent about change of meta data
             info.arg = msg
             self.parent.meta_changed(model, prop_name, info)
-            # print "DONE1 ", msg
+            # print("DONE1 ", msg)
         elif not msg.change.startswith('sm_notification_'):  # Prevent recursive call
             # If we are the root state, inform the state machine model by emitting our own meta signal.
             # To make the signal distinguishable for a change of meta data to our state, the change property of
             # the message is prepended with 'sm_notification_'
             msg = msg._replace(change='sm_notification_' + msg.change)
             self.meta_signal.emit(msg)
-            # print "DONE2 ", msg
+            # print("DONE2 ", msg)
         else:
-            # print "DONE3 NOTHING"
+            # print("DONE3 NOTHING")
             pass
 
     def _mark_state_machine_as_dirty(self):
@@ -444,10 +476,10 @@ class AbstractStateModel(MetaModel, Hashable):
         :rtype: bool
         """
         # TODO: for an Execution state this method is called for each hierarchy level again and again, still?? check it!
-        # print "1AbstractState_load_meta_data: ", path, not path
+        # print("1AbstractState_load_meta_data: ", path, not path)
         if not path:
             path = self.state.file_system_path
-        # print "2AbstractState_load_meta_data: ", path
+        # print("2AbstractState_load_meta_data: ", path)
         if path is None:
             self.meta = Vividict({})
             return False
@@ -463,7 +495,7 @@ class AbstractStateModel(MetaModel, Hashable):
             #     logger.info("path not found {0}".format(path_meta_data))
 
         try:
-            # print "try to load meta data from {0} for state {1}".format(path_meta_data, self.state)
+            # print("try to load meta data from {0} for state {1}".format(path_meta_data, self.state))
             tmp_meta = storage.load_data_file(path_meta_data)
         except ValueError as e:
             # if no element which is newly generated log a warning
@@ -483,7 +515,7 @@ class AbstractStateModel(MetaModel, Hashable):
             self.meta_signal.emit(MetaSignalMsg("load_meta_data", "all", True))
             return True
         else:
-            # print "nothing to parse", tmp_meta
+            # print("nothing to parse", tmp_meta)
             return False
 
     def store_meta_data(self, copy_path=None):
@@ -532,6 +564,7 @@ class AbstractStateModel(MetaModel, Hashable):
         for outcome_m in self.outcomes:
             source_outcome_m = source_state_m.get_outcome_m(outcome_m.outcome.outcome_id)
             outcome_m.meta = deepcopy(source_outcome_m.meta)
+        self.income.meta = deepcopy(source_state_m.income.meta)
 
         self.meta_signal.emit(MetaSignalMsg("copy_state_m", "all", True))
 
@@ -544,7 +577,7 @@ class AbstractStateModel(MetaModel, Hashable):
 
         :param meta_data: Dictionary of loaded meta data
         """
-        # print "_parse meta data", meta_data
+        # print("_parse meta data", meta_data)
         for data_port_m in self.input_data_ports:
             self._copy_element_meta_data_from_meta_file_data(meta_data, data_port_m, "input_data_port",
                                                              data_port_m.data_port.data_port_id)
@@ -554,6 +587,15 @@ class AbstractStateModel(MetaModel, Hashable):
         for outcome_m in self.outcomes:
             self._copy_element_meta_data_from_meta_file_data(meta_data, outcome_m, "outcome",
                                                              outcome_m.outcome.outcome_id)
+        if "income" in meta_data:
+            if "gui" in meta_data and "editor_gaphas" in meta_data["gui"] and \
+                    "income" in meta_data["gui"]["editor_gaphas"]:  # chain necessary to prevent key generation
+                del meta_data["gui"]["editor_gaphas"]["income"]
+        elif "gui" in meta_data and "editor_gaphas" in meta_data["gui"] and \
+                "income" in meta_data["gui"]["editor_gaphas"]:  # chain necessary to prevent key generation in meta data
+            meta_data["income"]["gui"]["editor_gaphas"] = meta_data["gui"]["editor_gaphas"]["income"]
+            del meta_data["gui"]["editor_gaphas"]["income"]
+        self._copy_element_meta_data_from_meta_file_data(meta_data, self.income, "income", "")
 
     @staticmethod
     def _copy_element_meta_data_from_meta_file_data(meta_data, element_m, element_name, element_id):
@@ -569,7 +611,7 @@ class AbstractStateModel(MetaModel, Hashable):
         """
         meta_data_element_id = element_name + str(element_id)
         meta_data_element = meta_data[meta_data_element_id]
-        # print meta_data_element_id, element_m, meta_data_element
+        # print(meta_data_element_id, element_m, meta_data_element)
         element_m.meta = meta_data_element
         del meta_data[meta_data_element_id]
 
@@ -590,6 +632,8 @@ class AbstractStateModel(MetaModel, Hashable):
         for outcome_m in self.outcomes:
             self._copy_element_meta_data_to_meta_file_data(meta_data, outcome_m, "outcome",
                                                            outcome_m.outcome.outcome_id)
+
+        self._copy_element_meta_data_to_meta_file_data(meta_data, self.income, "income", "")
 
     @staticmethod
     def _copy_element_meta_data_to_meta_file_data(meta_data, element_m, element_name, element_id):
@@ -620,9 +664,7 @@ class AbstractStateModel(MetaModel, Hashable):
         vividict = mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
         if contains_geometric_info(vividict['size']):
             self.temp['conversion_from_opengl'] = True
-            # Determine income position
             size = vividict['size']
-            vividict['income']['rel_pos'] = (0, size[1] / 2.)
 
             # Determine size and position of NameView
             margin = min(size) / 12.

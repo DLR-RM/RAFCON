@@ -15,16 +15,18 @@
    :synopsis: A module to represent a concurrency state for the state machine
 
 """
-import Queue
+from future import standard_library
+standard_library.install_aliases()
+import queue
 
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
 import rafcon.core.singleton as singleton
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.execution.execution_history import CallType
 from rafcon.core.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
 from rafcon.core.states.state import StateExecutionStatus
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 
 
 class ConcurrencyState(ContainerState):
@@ -33,9 +35,10 @@ class ConcurrencyState(ContainerState):
     The concurrency state holds several child states, that can be container states again
     """
 
-    def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None, outcomes=None,
+    def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None,
+                 income=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None):
-        ContainerState.__init__(self, name, state_id, input_keys, output_keys, outcomes, states, transitions,
+        ContainerState.__init__(self, name, state_id, input_keys, output_keys, income, outcomes, states, transitions,
                                 data_flows, start_state_id, scoped_variables)
 
     def run(self, *args, **kwargs):
@@ -86,9 +89,9 @@ class ConcurrencyState(ContainerState):
         self.state_execution_status = StateExecutionStatus.EXECUTE_CHILDREN
         # actually the queue is not needed in the barrier concurrency case
         # to avoid code duplication both concurrency states have the same start child function
-        concurrency_queue = Queue.Queue(maxsize=0)  # infinite Queue size
+        concurrency_queue = queue.Queue(maxsize=0)  # infinite Queue size
 
-        for index, state in enumerate(self.states.itervalues()):
+        for index, state in enumerate(self.states.values()):
             if state is not do_not_start_state:
 
                 state.input_data = self.get_inputs_for_state(state)

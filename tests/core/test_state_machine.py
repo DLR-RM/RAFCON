@@ -1,3 +1,4 @@
+from __future__ import print_function
 # state machine
 from rafcon.core.states.state import State
 from rafcon.core.decorators import global_lock_counter, lock_state_machine
@@ -24,9 +25,9 @@ def test_lock_state_machine(caplog):
 
     try:
         state1.custom_method(5)
-    except Exception, e:
+    except Exception as e:
         import traceback
-        print "Could not stop state machine: {0} {1}".format(e.message, traceback.format_exc())
+        print("Could not stop state machine: {0} {1}".format(e, traceback.format_exc()))
 
     assert global_lock_counter == 0
 

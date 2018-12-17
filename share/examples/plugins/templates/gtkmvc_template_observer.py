@@ -1,5 +1,5 @@
 import rafcon.gui.singleton
-from gtkmvc import Observer
+from gtkmvc3.observer import Observer
 from rafcon.gui.utils.notification_overview import NotificationOverview
 
 from rafcon.utils import log
@@ -10,13 +10,13 @@ class RootStateModificationObserver(Observer):
 
     def __init__(self):
         self.logger = log.get_logger(type(self).__name__)
-        self.logger.info("Initiate gtkmvc observer")
+        self.logger.info("Initiate gtkmvc3 observer")
         # register self as observer of rafcon.gui.singleton.state_machine_manager_model
         Observer.__init__(self, rafcon.gui.singleton.state_machine_manager_model)
         self.state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
         # register self as observer of already existing StateMachineModels in state_machines list
-        for sm_id, sm_m in self.state_machine_manager_model.state_machines.iteritems():
+        for sm_id, sm_m in list(self.state_machine_manager_model.state_machines.items()):
             self.observe_model(sm_m)
 
     @Observer.observe("state_machines", after=True)
@@ -62,13 +62,13 @@ class MetaSignalModificationObserver(Observer):
 
     def __init__(self):
         self.logger = log.get_logger(type(self).__name__)
-        self.logger.info("Initiate gtkmvc meta-signal observer")
+        self.logger.info("Initiate gtkmvc3 meta-signal observer")
         # register self as observer of rafcon.gui.singleton.state_machine_manager_model
         Observer.__init__(self, rafcon.gui.singleton.state_machine_manager_model)
         self.state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
         # register self as observer of already existing StateMachineModels in state_machines list
-        for sm_id, sm_m in self.state_machine_manager_model.state_machines.iteritems():
+        for sm_id, sm_m in list(self.state_machine_manager_model.state_machines.items()):
             self.observe_model(sm_m)
             self.observe_model(sm_m.root_state)
 

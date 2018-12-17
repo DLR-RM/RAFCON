@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import logging
 import shutil
@@ -17,11 +18,11 @@ def create_state_machine():
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.state_machine import StateMachine
 
-    print "create models"
+    print("create models")
 
     logger.setLevel(logging.VERBOSE)
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
+    for handler in logging.getLogger('gtkmvc3').handlers:
+        logging.getLogger('gtkmvc3').removeHandler(handler)
     state1 = ExecutionState('State1', state_id='STATE1')
     output_state1 = state1.add_output_data_port("output", "int")
     input_state1 = state1.add_input_data_port("input", "str", "zero")
@@ -89,14 +90,14 @@ def create_models():
     # give gui time to create the state machine
     testing_utils.wait_for_gui()
 
-    for sm_in in rafcon.core.singleton.state_machine_manager.state_machines.values():
+    for sm_in in list(rafcon.core.singleton.state_machine_manager.state_machines.values()):
         rafcon.core.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
     # give the gui time to remove the state machine
     testing_utils.wait_for_gui()
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
     # wait until model is created, otherwise gui will crash
     testing_utils.wait_for_gui()
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm.state_machine_id
+    return sm
 
 
 def on_save_activate(state_machine_m, logger):
@@ -124,11 +125,10 @@ def save_state_machine(with_gui=True):
 
     path = testing_utils.get_unique_temp_path()
     if with_gui:
-        call_gui_callback(create_models)
+        state_machine = call_gui_callback(create_models)
     else:
-        create_models()
+        state_machine = create_models()
 
-    state_machine = rafcon.core.singleton.state_machine_manager.get_active_state_machine()
     if with_gui:
         sm_model = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
         menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
@@ -212,7 +212,7 @@ def check_state_storage(state, parent_path, missing_elements, existing_elements=
         check_file(file_path, "meta data", missing_elements, existing_elements)
 
     if isinstance(state, ContainerState):
-        for key, child_state in state.states.iteritems():
+        for key, child_state in state.states.items():
             check_state_storage(child_state, folder_path, missing_elements, existing_elements, check_meta_data)
 
 
@@ -281,7 +281,7 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
 
 @pytest.mark.parametrize("with_gui", [True, False])
 def test_storage_with_gui(with_gui, caplog):
-    print "test storage with gui", with_gui
+    print("test storage with gui", with_gui)
 
     testing_utils.dummy_gui(None)
 
@@ -305,7 +305,7 @@ def test_storage_with_gui(with_gui, caplog):
 
     if e:
         raise e
-    print "test storage with gui {0} finished".format(with_gui)
+    print("test storage with gui {0} finished".format(with_gui))
 
 
 # TODO add examples of bad naming that cause before problems \n or [ ] and so on
@@ -313,7 +313,7 @@ def check_state_recursively_if_state_scripts_are_valid(state):
     from rafcon.core.states.container_state import ContainerState
     from rafcon.core.states.execution_state import ExecutionState
     if isinstance(state, ContainerState):
-        for child_state in state.states.itervalues():
+        for child_state in state.states.values():
             check_state_recursively_if_state_scripts_are_valid(child_state)
     else:
         if isinstance(state, ExecutionState):
@@ -321,7 +321,7 @@ def check_state_recursively_if_state_scripts_are_valid(state):
 
 
 def test_on_clean_storing_with_name_in_path(caplog):
-    print "test_on_clean_storing_with_name_in_path"
+    print("test_on_clean_storing_with_name_in_path")
 
     testing_utils.dummy_gui(None)
 

@@ -17,7 +17,8 @@
 
 """
 
-from gtkmvc import Observable
+from future.utils import string_types
+from gtkmvc3.observable import Observable
 
 from rafcon.core.id_generator import generate_data_flow_id
 from rafcon.core.state_elements.state_element import StateElement
@@ -119,7 +120,7 @@ class DataFlow(StateElement):
         }
 
 #########################################################################
-# Properties for all class field that must be observed by the gtkmvc
+# Properties for all class field that must be observed by the gtkmvc3
 #########################################################################
 
     @lock_state_machine
@@ -131,8 +132,8 @@ class DataFlow(StateElement):
         :param int from_key: Data port id of the origin port
         :raises exceptions.ValueError: If parameters have wrong types or the new data flow is not valid
         """
-        if not isinstance(from_state, basestring):
-            raise ValueError("Invalid data flow origin port: from_state must be of type str")
+        if not isinstance(from_state, string_types):
+            raise ValueError("Invalid data flow origin port: from_state must be a string")
         if not isinstance(from_key, int):
             raise ValueError("Invalid data flow origin port: from_key must be of type int")
 
@@ -157,8 +158,8 @@ class DataFlow(StateElement):
     @lock_state_machine
     # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
-        if not isinstance(from_state, basestring):
-            raise ValueError("from_state must be of type str")
+        if not isinstance(from_state, string_types):
+            raise ValueError("from_state must be a string")
 
         self._change_property_with_validity_check('_from_state', from_state)
 
@@ -186,8 +187,8 @@ class DataFlow(StateElement):
         :param int to_key: Data port id of the target port
         :raises exceptions.ValueError: If parameters have wrong types or the new data flow is not valid
         """
-        if not isinstance(to_state, basestring):
-            raise ValueError("Invalid data flow target port: from_state must be of type str")
+        if not isinstance(to_state, string_types):
+            raise ValueError("Invalid data flow target port: from_state must be a string")
         if not isinstance(to_key, int):
             raise ValueError("Invalid data flow target port: from_outcome must be of type int")
 
@@ -212,8 +213,8 @@ class DataFlow(StateElement):
     @lock_state_machine
     # @Observable.observed  # should not be observed to stay consistent
     def to_state(self, to_state):
-        if not isinstance(to_state, basestring):
-            raise ValueError("to_state must be of type str")
+        if not isinstance(to_state, string_types):
+            raise ValueError("to_state must be a string")
 
         self._change_property_with_validity_check('_to_state', to_state)
 

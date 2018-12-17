@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.20.0 -->
 <interface>
-  <requires lib="gtk+" version="2.16"/>
-  <!-- interface-naming-policy project-wide -->
+  <requires lib="gtk+" version="3.20"/>
   <object class="GtkWindow" id="preferences_window">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Preferences</property>
     <property name="default_width">1000</property>
     <property name="default_height">600</property>
     <child>
-      <object class="GtkVBox" id="vbox1">
+      <object class="GtkBox" id="vbox1">
+        <property name="orientation">vertical</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
@@ -16,13 +17,10 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="tab_pos">left</property>
-            <property name="homogeneous">True</property>
             <child>
               <object class="GtkScrolledWindow" id="scrolledwindow1">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="hscrollbar_policy">automatic</property>
-                <property name="vscrollbar_policy">automatic</property>
                 <child>
                   <object class="GtkViewport" id="viewport1">
                     <property name="visible">True</property>
@@ -37,12 +35,15 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="enable_grid_lines">vertical</property>
+                            <child internal-child="selection">
+                              <object class="GtkTreeSelection"/>
+                            </child>
                             <child>
                               <object class="GtkTreeViewColumn" id="config_col">
                                 <property name="spacing">1</property>
+                                <property name="sizing">autosize</property>
                                 <property name="title">Configuration</property>
                                 <property name="expand">True</property>
-                                <property name="sizing">autosize</property>
                                 <child>
                                   <object class="GtkCellRendererText" id="core_config_key_renderer"/>
                                   <attributes>
@@ -53,9 +54,9 @@
                             </child>
                             <child>
                               <object class="GtkTreeViewColumn" id="value_col">
+                                <property name="sizing">autosize</property>
                                 <property name="title">Value</property>
                                 <property name="expand">True</property>
-                                <property name="sizing">autosize</property>
                                 <child>
                                   <object class="GtkCellRendererToggle" id="core_config_toggle_renderer"/>
                                   <attributes>
@@ -103,27 +104,29 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkVBox" id="hbox2">
+                      <object class="GtkBox" id="hbox2">
+                        <property name="orientation">vertical</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <child>
                           <object class="GtkScrolledWindow" id="scrolledwindow4">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="hscrollbar_policy">automatic</property>
-                            <property name="vscrollbar_policy">automatic</property>
                             <child>
                               <object class="GtkTreeView" id="library_tree_view">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="headers_clickable">False</property>
                                 <property name="enable_grid_lines">vertical</property>
+                                <child internal-child="selection">
+                                  <object class="GtkTreeSelection"/>
+                                </child>
                                 <child>
                                   <object class="GtkTreeViewColumn" id="lib_col">
                                     <property name="spacing">1</property>
+                                    <property name="sizing">autosize</property>
                                     <property name="title">Library</property>
                                     <property name="expand">True</property>
-                                    <property name="sizing">autosize</property>
                                     <child>
                                       <object class="GtkCellRendererText" id="library_config_key_renderer"/>
                                       <attributes>
@@ -134,9 +137,9 @@
                                 </child>
                                 <child>
                                   <object class="GtkTreeViewColumn" id="lib_path_col">
+                                    <property name="sizing">autosize</property>
                                     <property name="title">Path</property>
                                     <property name="expand">True</property>
-                                    <property name="sizing">autosize</property>
                                     <child>
                                       <object class="GtkCellRendererText" id="library_config_value_renderer"/>
                                       <attributes>
@@ -155,7 +158,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkHBox" id="hbox3">
+                          <object class="GtkBox" id="hbox3">
                             <property name="width_request">0</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
@@ -225,8 +228,6 @@
               <object class="GtkScrolledWindow" id="scrolledwindow2">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="hscrollbar_policy">automatic</property>
-                <property name="vscrollbar_policy">automatic</property>
                 <child>
                   <object class="GtkViewport" id="viewport2">
                     <property name="visible">True</property>
@@ -241,12 +242,15 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="headers_clickable">False</property>
+                            <child internal-child="selection">
+                              <object class="GtkTreeSelection"/>
+                            </child>
                             <child>
                               <object class="GtkTreeViewColumn" id="config_col1">
                                 <property name="spacing">1</property>
+                                <property name="sizing">autosize</property>
                                 <property name="title">Configuration</property>
                                 <property name="expand">True</property>
-                                <property name="sizing">autosize</property>
                                 <child>
                                   <object class="GtkCellRendererText" id="gui_config_key_renderer"/>
                                   <attributes>
@@ -257,9 +261,9 @@
                             </child>
                             <child>
                               <object class="GtkTreeViewColumn" id="value_col1">
+                                <property name="sizing">autosize</property>
                                 <property name="title">Value</property>
                                 <property name="expand">True</property>
-                                <property name="sizing">autosize</property>
                                 <child>
                                   <object class="GtkCellRendererToggle" id="gui_config_toggle_renderer"/>
                                   <attributes>
@@ -305,8 +309,6 @@
               <object class="GtkScrolledWindow" id="scrolledwindow3">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="hscrollbar_policy">automatic</property>
-                <property name="vscrollbar_policy">automatic</property>
                 <child>
                   <object class="GtkViewport" id="viewport3">
                     <property name="visible">True</property>
@@ -322,12 +324,15 @@
                             <property name="can_focus">True</property>
                             <property name="headers_clickable">False</property>
                             <property name="enable_grid_lines">vertical</property>
+                            <child internal-child="selection">
+                              <object class="GtkTreeSelection"/>
+                            </child>
                             <child>
                               <object class="GtkTreeViewColumn" id="action_col">
                                 <property name="spacing">1</property>
+                                <property name="sizing">autosize</property>
                                 <property name="title">Action</property>
                                 <property name="expand">True</property>
-                                <property name="sizing">autosize</property>
                                 <child>
                                   <object class="GtkCellRendererText" id="shortcut_config_key_renderer"/>
                                   <attributes>
@@ -338,9 +343,9 @@
                             </child>
                             <child>
                               <object class="GtkTreeViewColumn" id="shortcut">
+                                <property name="sizing">autosize</property>
                                 <property name="title">Shortcut</property>
                                 <property name="expand">True</property>
-                                <property name="sizing">autosize</property>
                                 <child>
                                   <object class="GtkCellRendererText" id="shortcut_config_value_renderer"/>
                                   <attributes>
@@ -380,7 +385,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkHBox" id="hbox1">
+          <object class="GtkBox" id="hbox1">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="border_width">4</property>
@@ -470,17 +475,18 @@
           </packing>
         </child>
         <child>
-          <object class="GtkVBox" id="vbox2">
+          <object class="GtkBox" id="vbox2">
+            <property name="orientation">vertical</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
               <object class="GtkLabel" id="core_label">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="xpad">10</property>
                 <property name="ypad">3</property>
                 <property name="label" translatable="yes">Core Config Path: </property>
+                <property name="halign">start</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -492,11 +498,11 @@
               <object class="GtkLabel" id="gui_label">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0</property>
                 <property name="xpad">10</property>
                 <property name="ypad">3</property>
                 <property name="label" translatable="yes">GUI Config Path: </property>
                 <property name="single_line_mode">True</property>
+                <property name="halign">start</property>
               </object>
               <packing>
                 <property name="expand">True</property>

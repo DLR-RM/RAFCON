@@ -20,7 +20,7 @@
 import os
 import shutil
 import copy
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 
 from rafcon.core import interface
 from rafcon.core.storage import storage
@@ -88,14 +88,14 @@ class LibraryManager(Observable):
         self._skipped_library_roots = []
 
         # 1. Load libraries from config.yaml
-        for library_root_key, library_root_path in config.global_config.get_config_value("LIBRARY_PATHS").iteritems():
+        for library_root_key, library_root_path in config.global_config.get_config_value("LIBRARY_PATHS").items():
             library_root_path = self._clean_path(library_root_path)
             if os.path.exists(library_root_path):
                 logger.debug("Adding library root key '{0}' from path '{1}'".format(
                     library_root_key, library_root_path))
                 self._load_libraries_from_root_path(library_root_key, library_root_path)
             else:
-                logger.warn("Configured path for library root key '{}' does not exist: {}".format(
+                logger.warning("Configured path for library root key '{}' does not exist: {}".format(
                     library_root_key, library_root_path))
 
         # 2. Load libraries from RAFCON_LIBRARY_PATH
@@ -106,13 +106,19 @@ class LibraryManager(Observable):
                 continue
             library_root_path = self._clean_path(library_root_path)
             if not os.path.exists(library_root_path):
-                logger.warn("The library specified in RAFCON_LIBRARY_PATH does not exist: {}".format(library_root_path))
+                logger.warning("The library specified in RAFCON_LIBRARY_PATH does not exist: {}".format(library_root_path))
                 continue
             _, library_root_key = os.path.split(library_root_path)
             if library_root_key in self._libraries:
-                logger.warn("The library '{}' is already existing and will be overridden with '{}'".format(
-                    library_root_key, library_root_path))
-            self._load_libraries_from_root_path(library_root_key, library_root_path)
+                if os.path.realpath(self._library_root_paths[library_root_key]) == os.path.realpath(library_root_path):
+                    logger.info("The library root key '{}' and root path '{}' exists multiple times in your environment"
+                                " and will be skipped.".format(library_root_key, library_root_path))
+                else:
+                    logger.warning("The library '{}' is already existing and will be overridden with '{}'".format(
+                        library_root_key, library_root_path))
+                    self._load_libraries_from_root_path(library_root_key, library_root_path)
+            else:
+                self._load_libraries_from_root_path(library_root_key, library_root_path)
             logger.debug("Adding library '{1}' from {0}".format(library_root_path, library_root_key))
 
         self._libraries = OrderedDict(sorted(self._libraries.items()))
@@ -181,7 +187,7 @@ class LibraryManager(Observable):
         self.initialize()
 
     #########################################################################
-    # Properties for all class fields that must be observed by gtkmvc
+    # Properties for all class fields that must be observed by gtkmvc3
     #########################################################################
 
     @property
@@ -321,7 +327,7 @@ class LibraryManager(Observable):
         """Return library root key if path is within library root paths"""
         path = os.path.realpath(path)
         library_root_key = None
-        for library_root_key, library_root_path in self._library_root_paths.iteritems():
+        for library_root_key, library_root_path in self._library_root_paths.items():
             rel_path = os.path.relpath(path, library_root_path)
             if rel_path.startswith('..'):
                 library_root_key = None

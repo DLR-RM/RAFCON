@@ -1,13 +1,13 @@
+from builtins import range
 import os
 from contextlib import contextmanager
 
-from rafcon.utils import i18n
+from rafcon.utils import i18n, installation
 
 import testing_utils
 
 
 def create_mo_files():
-    from rafcon.gui.helpers import installation
     curdir = os.path.abspath(os.curdir)
     while "setup.py" not in os.listdir(os.curdir):
         os.chdir("..")

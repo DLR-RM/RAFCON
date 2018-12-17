@@ -14,12 +14,12 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
-from gtkmvc import View
+from gi.repository import Gtk
+from gtkmvc3.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.helpers.label import set_label_markup
+from rafcon.gui.helpers.label import set_icon_and_text_box_of_menu_item
 from rafcon.gui.utils import constants
 
 
@@ -85,26 +85,31 @@ class MenuBarView(View):
         'about':                constants.BUTTON_ABOUT
         }
 
+    sub_menus = ['submenu_file', 'submenu_edit', 'submenu_view', 'submenu_execution', 'submenu_help']
+
     def __init__(self, top_window):
         View.__init__(self)
 
         self.win = top_window['main_window']
-        self.insert_accelerators = {'new': gtk.accelerator_parse('<control>N'),
-                                    'open': gtk.accelerator_parse('<control>O'),
-                                    'save': gtk.accelerator_parse('<control>S'),
-                                    # 'save_as': gtk.accelerator_parse('<shift><control>S'),  # no default accelerator insert
-                                    'quit': gtk.accelerator_parse('<control>Q'),
-                                    'cut': gtk.accelerator_parse('<control>X'),
-                                    'copy': gtk.accelerator_parse('<control>C'),
-                                    'paste': gtk.accelerator_parse('<control>V'),
-                                    # 'delete': gtk.accelerator_parse('Delete'),  # no default accelerator insert
-                                    # 'undo': gtk.accelerator_parse('<control>Z'),  # no default accelerator insert
-                                    # 'redo': gtk.accelerator_parse('<control>Y'),  # no default accelerator insert
+        self.insert_accelerators = {'new': Gtk.accelerator_parse('<control>N'),
+                                    'open': Gtk.accelerator_parse('<control>O'),
+                                    'save': Gtk.accelerator_parse('<control>S'),
+                                    # 'save_as': Gtk.accelerator_parse('<shift><control>S'),  # no default accelerator insert
+                                    'quit': Gtk.accelerator_parse('<control>Q'),
+                                    'cut': Gtk.accelerator_parse('<control>X'),
+                                    'copy': Gtk.accelerator_parse('<control>C'),
+                                    'paste': Gtk.accelerator_parse('<control>V'),
+                                    # 'delete': Gtk.accelerator_parse('Delete'),  # no default accelerator insert
+                                    # 'undo': Gtk.accelerator_parse('<control>Z'),  # no default accelerator insert
+                                    # 'redo': Gtk.accelerator_parse('<control>Y'),  # no default accelerator insert
                                     }
-        self.sub_menu_open_recently = gtk.Menu()
+        self.sub_menu_open_recently = Gtk.Menu()
         self['open_recent'].set_submenu(self.sub_menu_open_recently)
 
-        for menu_item_name in self.buttons.iterkeys():
+        # Gtk TODO: Unfortunately does not help against not showing Accel Keys
+        # self.win.add_accel_group(self['accelgroup1'])
+
+        for menu_item_name in self.buttons:
             # set icon
             self.set_menu_item_icon(menu_item_name, self.buttons[menu_item_name])
             # set accelerator if in shortcuts dictionary with menu_item_name == key
@@ -114,25 +119,27 @@ class MenuBarView(View):
                     main_shortcut = shortcuts[0] if isinstance(shortcuts, list) else shortcuts
                     self.set_menu_item_accelerator(menu_item_name, main_shortcut)
 
+        for sub_menu_name in self.sub_menus:
+            sub_menu = self[sub_menu_name]
+            sub_menu.set_reserve_toggle_size(False)
+
     def set_menu_item_icon(self, menu_item_name, uni_code=None):
         menu_item = self[menu_item_name]
-
-        if uni_code is not None:
-            label = gtk.Label()
-            set_label_markup(label, '&#x' + uni_code + ';',
-                             font=constants.ICON_FONT, font_size=constants.FONT_SIZE_BIG)
-            menu_item.set_image(label)
-            menu_item.set_always_show_image(True)
+        # do not touch e.g. CheckMenuItems, only Gtk.MenuItem
+        if type(menu_item) == Gtk.MenuItem:
+            set_icon_and_text_box_of_menu_item(menu_item, uni_code)
 
     def set_menu_item_sensitive(self, menu_item_name, sensitive):
         self[menu_item_name].set_sensitive(sensitive)
 
-    def set_menu_item_accelerator(self, menu_item_name, accel_code):
+    def set_menu_item_accelerator(self, menu_item_name, accel_code, remove_old=False):
         menu_item = self[menu_item_name]
-        if menu_item_name in self.insert_accelerators:
-            key, mod = self.insert_accelerators[menu_item_name]
-            menu_item.remove_accelerator(self['accelgroup1'], key, mod)
+        # the accelerator group is not defined any more in the glade file
+        if remove_old:
+            if menu_item_name in self.insert_accelerators:
+                key, mod = self.insert_accelerators[menu_item_name]
+                menu_item.remove_accelerator(self['accelgroup1'], key, mod)
 
-        key, mod = gtk.accelerator_parse(accel_code)
-        menu_item.add_accelerator("activate", self['accelgroup1'], key, mod, gtk.ACCEL_VISIBLE)
+        key, mod = Gtk.accelerator_parse(accel_code)
+        menu_item.add_accelerator("activate", self['accelgroup1'], key, mod, Gtk.AccelFlags.VISIBLE)
         self.insert_accelerators[menu_item_name] = (key, mod)

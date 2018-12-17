@@ -23,9 +23,7 @@ def test_run_to_selected_state(caplog):
     sm = storage.load_state_machine_from_path(sm_path)
     # select state machine for this purpose
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm.state_machine_id
-    rafcon.core.singleton.state_machine_execution_engine.run_to_selected_state("VVBPOY/AOZXRY",
-                                                                                       sm.state_machine_id)
+    rafcon.core.singleton.state_machine_execution_engine.run_to_selected_state("VVBPOY/AOZXRY", sm.state_machine_id)
     # run the statemachine to the state before AOYXRY, this is an asynchronous task
     timeout = time.time()
     while not sm.get_state_by_path("VVBPOY/ABNQFK").state_execution_status is StateExecutionStatus.WAIT_FOR_NEXT_STATE:

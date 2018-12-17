@@ -11,6 +11,7 @@
 
 """ Module collects methods and function to be integrated into a respective class if that is of advantage, in future.
 """
+from builtins import range
 import os
 import time
 
@@ -31,7 +32,7 @@ def store_session():
     from rafcon.gui.models import AbstractStateModel
     from rafcon.gui.singleton import main_window_controller
     # check if there are dirty state machines -> use backup file structure maybe it is already stored
-    for sm_m in state_machine_manager_model.state_machines.itervalues():
+    for sm_m in state_machine_manager_model.state_machines.values():
         if sm_m.auto_backup:
             if sm_m.state_machine.marked_dirty:
                 sm_m.auto_backup.perform_temp_storage()
@@ -111,7 +112,7 @@ def restore_session_from_runtime_config():
             else:
                 from_backup_path = backup_meta_dict['last_backup']['file_system_path']
         elif 'last_saved' in backup_meta_dict:
-            # print "### open last saved", sm_meta_dict['last_saved']['file_system_path']
+            # print("### open last saved", sm_meta_dict['last_saved']['file_system_path'])
             pass
         else:
             logger.error("A tab was stored into session storage dictionary {0} without any recovery path"
@@ -152,8 +153,7 @@ def restore_session_from_runtime_config():
 
     global_runtime_config.extend_recently_opened_by_current_open_state_machines()
 
-    if global_gui_config.get_config_value('GAPHAS_EDITOR'):
-        wait_for_gui()
+    wait_for_gui()
 
     # restore all state machine selections separate to avoid states-editor and state editor creation problems
     for idx, tab_meta_dict in enumerate(open_tabs):

@@ -1,67 +1,41 @@
+from gi.repository import Gtk
+from rafcon.gui.utils.dialog import get_root_window, RAFCONButtonDialog
 
-def on_dialog_key_press(dialog, event, key_mapping, buttons):
-    from gtk.gdk import keyval_name
-    key_name = str.lower(str(keyval_name(event.keyval)))
-    for i, desired_key in enumerate(key_mapping):
-        if i >= len(buttons):
-            break
-        if isinstance(desired_key, list):
-            key_list = desired_key
+
+class RAFCONShowDialog(RAFCONButtonDialog):
+
+    def __init__(self, text, subtext, options, key_mapping, logger):
+        subtext = subtext or text
+        RAFCONButtonDialog.__init__(self, message_type=Gtk.MessageType.INFO, flags=Gtk.DialogFlags.MODAL,
+                                    parent=get_root_window(),
+                                    title=text, markup_text=subtext,
+                                    button_texts=options)
+
+        if key_mapping:
+            self.connect('key-press-event', self.on_dialog_key_press, key_mapping, options)
+
+    def on_dialog_key_press(self, dialog, event, key_mapping, buttons):
+        from gi.repository import Gdk
+        key_name = Gdk.keyval_name(event.keyval).lower()
+        for i, key_list in enumerate(key_mapping, 1):
+            if i > len(buttons):
+                break
+            if not isinstance(key_list, list):
+                key_list = [key_list]
             for desired_key in key_list:
-                if str.lower(str(desired_key)) == key_name:
-                    buttons[i].clicked()
-        elif str.lower(desired_key) == key_name:
-            buttons[i].clicked()
-    pass
+                if desired_key.lower() == key_name:
+                    self.response(i)
 
 
-def show_dialog(event, text, subtext, options, key_mapping, result):
-    import gtk
-    try:
-        from rafcon.gui.singleton import main_window_controller
-    except ImportError:
-        main_window_controller = None
-    dialog = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_NONE, flags=gtk.DIALOG_MODAL)
-    if main_window_controller:
-        dialog.set_transient_for(main_window_controller.view.get_top_widget())
-    dialog.set_geometry_hints(min_width=700)
+def show_dialog(event, text, subtext, options, key_mapping, result, logger):
+
+    dialog = RAFCONShowDialog(text, subtext, options, key_mapping, logger)
+
     result[1] = dialog
-    text = "<span size='50000'>" + text + "</span>"
-    dialog.set_markup(text)
-    hbox = dialog.get_action_area()
-    vbox = hbox.parent
-    msg_ctr = vbox.get_children()[0]
-    text_ctr = msg_ctr.get_children()[1]
-    text_ctr.get_children()[0].set_size_request(600, -1)
-    text_ctr.get_children()[1].set_size_request(600, -1)
-
-    align_action_area = gtk.Alignment(xalign=0.5, yalign=0.0, xscale=0.0, yscale=0.0)
-    vbox.pack_end(child=align_action_area)
-    align_action_area.show()
-    hbox.reparent(new_parent=align_action_area)
-    
-    if isinstance(subtext, basestring) and len(subtext) > 0:
-        subtext = "<span size='20000'>" + subtext + "</span>"
-        dialog.format_secondary_markup(subtext)
-        
-    buttons = {}
-    for i, option in enumerate(options):
-        button = gtk.Button()
-        label = gtk.Label("<span size='20000'>" + option + "</span>")
-        label.set_use_markup(True)
-        label.show()
-        button.add(label)
-        button.set_size_request(300, 300)
-        button.show()
-        dialog.add_action_widget(button, i)
-        buttons[i] = button
-        
-    dialog.add_events(gtk.gdk.KEY_PRESS_MASK)
-    dialog.connect('key-press-event', on_dialog_key_press, key_mapping, buttons)
 
     res = dialog.run()
     dialog.destroy()
-    
+
     # Group all default response type to -1
     if res < 0:
         res = -1
@@ -71,36 +45,35 @@ def show_dialog(event, text, subtext, options, key_mapping, result):
 
 
 def execute(self, inputs, outputs, gvm):
-    import gobject
+    from gi.repository import GLib
 
     # self_preempted is a threading.Event object
     event = self._preempted
     result = [None, None]  # first entry is the dialog return value, second one is the dialog object
     
-    text = inputs['text']
-    subtext = inputs['subtext']
+    text = '' if inputs['text'] is None else inputs['text']
+    subtext = '' if inputs['subtext'] is None else inputs['subtext']
     options = inputs['options']
     key_mapping = inputs['key_mapping']
-    
-    gobject.idle_add(show_dialog, event, text, subtext, options, key_mapping, result)
-    
+
+    GLib.idle_add(show_dialog, event, text, subtext, options, key_mapping, result, self.logger)
+
     # Event is either set by the dialog or by an external preemption request
     event.wait()
 
-    option = result[0]
-    dialog = result[1]
-    
+    option, dialog = result
+
     # The dialog was not closed by the user, but we got a preemption request
     if option is None:
-        dialog.destroy()
+        GLib.idle_add(dialog.destroy)
         return "preempted"
-        
+
     event.clear()
     if option < 0:
         return "aborted"
-        
+
+    option -= 1  # output numeration starts with 0, response id starts with 1
     self.logger.debug("User decided: {0} => {1}".format(option, options[option]))
     outputs['option'] = option
-    
-    return "done"
 
+    return "done"

@@ -13,7 +13,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import View
+from gtkmvc3.view import View
+from builtins import range
 
 from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label
@@ -51,9 +52,6 @@ class StateEditorView(View):
         self.page_dict = {}
         self.notebook_names = ['main_notebook_1', 'main_notebook_2']
 
-        gui_helper_label.set_label_markup(self['data_ports_label'], 'DATA PORTS',
-                                          letter_spacing=constants.LETTER_SPACING_1PT)
-
         self.properties_view = StateOverviewView()
         self.inputs_view = InputPortsListView()
         self.outputs_view = OutputPortsListView()
@@ -85,12 +83,14 @@ class StateEditorView(View):
         self['description_text_view'] = self.description_view.textview
         self['description_scroller'] = self.description_view.scrollable
 
-        self['main_notebook_1'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        self['main_notebook_1'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
-        self['main_notebook_2'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        self['main_notebook_2'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
-        self['ports_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        self['ports_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
+        # Gtk TODO
+        # self['main_notebook_1'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
+        # self['main_notebook_1'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
+        # self['main_notebook_2'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
+        # self['main_notebook_2'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
+        # self['ports_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
+        # self['ports_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
+
         self.page_dict["Source"] = self['main_notebook_1'].get_nth_page(0)
         self.page_dict["Logical Linkage"] = self['main_notebook_1'].get_nth_page(1)
         self.page_dict["Data Linkage"] = self['main_notebook_1'].get_nth_page(2)
@@ -119,7 +119,7 @@ class StateEditorView(View):
     def prepare_the_labels(self):
         for notebook_name in self.notebook_names:
             notebook = self[notebook_name]
-            for i in xrange(notebook.get_n_pages()):
+            for i in range(notebook.get_n_pages()):
                 child = notebook.get_nth_page(i)
                 tab_label = notebook.get_tab_label(child)
                 if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):

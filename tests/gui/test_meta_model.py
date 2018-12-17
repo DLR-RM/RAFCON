@@ -3,7 +3,7 @@ import testing_utils
 
 
 def assert_single_editor_meta_data(model, gaphas):
-    editor_keys = model.meta["gui"].keys()
+    editor_keys = list(model.meta["gui"].keys())
     if gaphas:
         assert 'editor_opengl' not in editor_keys
     else:

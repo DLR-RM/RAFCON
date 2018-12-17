@@ -13,11 +13,16 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import object
+from builtins import str
 from weakref import ref
-from pango import SCALE, FontDescription
+from gi.repository.Pango import SCALE, FontDescription
+from gi.repository import PangoCairo
+# from cairo import Antialias
 
 from gaphas.state import observed
 from gaphas.connector import Handle
+from gaphas.painter import CairoBoundingBoxContext
 import cairo
 
 from rafcon.gui.utils import constants
@@ -25,7 +30,7 @@ from rafcon.utils.geometry import deg2rad
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.runtime_config import global_runtime_config
-from rafcon.gui.models.outcome import OutcomeModel
+from rafcon.gui.models.logical_port import IncomeModel, OutcomeModel
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.container_state import ContainerStateModel
@@ -113,7 +118,7 @@ class PortView(object):
     def port_side_size(self):
         parent = self.parent
         if not parent:
-            logger.warn("PortView without parent: {}".format(self))
+            logger.warning("PortView without parent: {}".format(self))
             return 1
         return parent.border_width
 
@@ -252,9 +257,9 @@ class PortView(object):
         center = (position.x.value, position.y.value)
         view_center = matrix_i2v.transform_point(*center)
         if view_center[0] + view_length / 2. < 0 or \
-                view_center[0] - view_length / 2. > view.allocation[2] or \
+                view_center[0] - view_length / 2. > view.get_allocation().width or \
                 view_center[1] + view_length / 2. < 0 or \
-                view_center[1] - view_length / 2. > view.allocation[3]:
+                view_center[1] - view_length / 2. > view.get_allocation().height:
             if not context.draw_all:
                 return
 
@@ -280,12 +285,12 @@ class PortView(object):
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
-            # print "from cache"
+            # print("from cache")
             self._port_image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
         else:
-            # print "draw"
+            # print("draw")
             c = self._port_image_cache.get_context_for_image(current_zoom)
 
             c.move_to(0, 0)
@@ -335,12 +340,12 @@ class PortView(object):
                                                                            current_zoom, parameters)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache and not context.draw_all:
-            # print "draw port name from cache"
+            # print("draw port name from cache")
             self._label_image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
         else:
-            # print "draw port name"
+            # print("draw port name")
 
             # First we have to do a "dry run", in order to determine the size of the new label
             c.move_to(position.x.value, position.y.value)
@@ -352,7 +357,7 @@ class PortView(object):
             relative_pos = label_pos[0] - position[0], label_pos[1] - position[1]
             label_size = extents[2] - extents[0], extents[3] - extents[1]
 
-            # print label_size[0], self.name, self.parent.model.state.name
+            # print(label_size[0], self.name, self.parent.model.state.name)
             # if label_size[0] < constants.MINIMUM_PORT_NAME_SIZE_FOR_DISPLAY and self.parent:
             #     return
             self._last_label_relative_pos = relative_pos
@@ -406,7 +411,7 @@ class PortView(object):
         if self.connected:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgb(*gui_config.gtk_colors['PORT_UNCONNECTED'].to_floats())
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -438,7 +443,7 @@ class PortView(object):
         if self.connected_incoming:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgb(*gui_config.gtk_colors['PORT_UNCONNECTED'].to_floats())
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -453,7 +458,7 @@ class PortView(object):
         if self.connected_outgoing:
             c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         else:
-            c.set_source_color(gui_config.gtk_colors['BLACK'])
+            c.set_source_rgb(*gui_config.gtk_colors['PORT_UNCONNECTED'].to_floats())
         c.fill_preserve()
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
         c.stroke()
@@ -608,11 +613,21 @@ class LogicPortView(PortView):
 
 
 class IncomeView(LogicPortView):
-    def __init__(self, parent):
+    def __init__(self, income_m, parent):
         super(IncomeView, self).__init__(in_port=True, parent=parent, side=SnappedSide.LEFT)
+
+        assert isinstance(income_m, IncomeModel)
+        self._income_m = ref(income_m)
+        
+        self.text_color = gui_config.gtk_colors['OUTCOME_PORT']
+        self.fill_color = gui_config.gtk_colors['OUTCOME_PORT']
 
     def draw(self, context, state, highlight=False):
         self.draw_port(context, self.fill_color, state.transparency)
+
+    @property
+    def model(self):
+        return self._income_m()
 
 
 class OutcomeView(LogicPortView):
@@ -654,7 +669,7 @@ class OutcomeView(LogicPortView):
         elif self.outcome_id == -1:
             fill_color = gui_config.gtk_colors['ABORTED']
         else:
-            fill_color = gui_config.gtk_colors['LABEL']
+            fill_color = gui_config.gtk_colors['OUTCOME_PORT']
 
         self.draw_port(context, fill_color, state.transparency)
 
@@ -765,19 +780,23 @@ class ScopedVariablePortView(PortView):
         :rtype: float, float
         """
         c = context
-        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+        cairo_context = c
+        if isinstance(c, CairoBoundingBoxContext):
+            cairo_context = c._cairo
+        # c.set_antialias(Antialias.GOOD)
 
         side_length = self.port_side_size
 
-        layout = c.create_layout()
+        layout = PangoCairo.create_layout(cairo_context)
         font_name = constants.INTERFACE_FONT
         font_size = gap_draw_helper.FONT_SIZE
         font = FontDescription(font_name + " " + str(font_size))
         layout.set_font_description(font)
-        layout.set_text(self.name)
+        layout.set_text(self.name, -1)
 
         ink_extents, logical_extents = layout.get_extents()
-        extents = [extent / float(SCALE) for extent in logical_extents]
+        extents = [extent / float(SCALE) for extent in [logical_extents.x, logical_extents.y,
+                                                        logical_extents.width, logical_extents.height]]
         real_name_size = extents[2], extents[3]
         desired_height = side_length * 0.75
         scale_factor = real_name_size[1] / desired_height
@@ -800,8 +819,8 @@ class ScopedVariablePortView(PortView):
         c.rel_move_to(-extents[0], -extents[1])
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(self.text_color, transparency))
-        c.update_layout(layout)
-        c.show_layout(layout)
+        PangoCairo.update_layout(cairo_context, layout)
+        PangoCairo.show_layout(cairo_context, layout)
         c.restore()
 
         return name_size_with_margin
@@ -901,7 +920,7 @@ class InputPortView(DataPortView):
 
     def draw(self, context, state):
         input_data = self.parent.model.state.input_data
-        if len(self.parent.model.state.input_data) > 0 and self.name in input_data.iterkeys():
+        if len(self.parent.model.state.input_data) > 0 and self.name in input_data:
             self._value = input_data[self.name]
         super(InputPortView, self).draw(context, state)
 
@@ -913,6 +932,6 @@ class OutputPortView(DataPortView):
 
     def draw(self, context, state):
         output_data = self.parent.model.state.output_data
-        if len(self.parent.model.state.input_data) > 0 and self.name in output_data.iterkeys():
+        if len(self.parent.model.state.input_data) > 0 and self.name in output_data:
             self._value = output_data[self.name]
         super(OutputPortView, self).draw(context, state)

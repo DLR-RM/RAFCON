@@ -1,7 +1,7 @@
 import pytest
 import testing_utils
 
-from gtkmvc.observer import Observer
+from gtkmvc3.observer import Observer
 
 
 class SignalCounter(Observer):
@@ -34,7 +34,7 @@ def get_models():
         return [outcome_m for outcome_m in state_m.outcomes if outcome_m.outcome.name == outcome_name][0]
 
     def get_state_with_name(parent_state_m, state_name):
-        return [state_m for state_m in parent_state_m.states.itervalues() if state_m.state.name == state_name][0]
+        return [state_m for state_m in parent_state_m.states.values() if state_m.state.name == state_name][0]
 
     execution_state = ExecutionState("ex1")
     execution_state.add_outcome("oe1")
@@ -133,7 +133,7 @@ def test_all_models():
     from rafcon.core.states.state import State
     from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
     from rafcon.core.state_elements.scope import ScopedVariable
-    from rafcon.core.state_elements.outcome import Outcome
+    from rafcon.core.state_elements.logical_port import Outcome
     from rafcon.core.state_elements.transition import Transition
     from rafcon.core.state_elements.data_flow import DataFlow
 

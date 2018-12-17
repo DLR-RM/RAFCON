@@ -10,7 +10,9 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from cairo import ANTIALIAS_NONE, Matrix
+# from cairo import Antialias
+from cairo import Matrix
+from builtins import zip
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.utils import constants
@@ -54,7 +56,7 @@ class CornerHandlePainter(ItemPaintHovered):
                 break
             # Reset the current transformation
             cairo.identity_matrix()
-            cairo.set_antialias(ANTIALIAS_NONE)
+            #cairo.set_antialias(Antialias.NONE)
             # Move to center of handle
             cairo.translate(*i2v.transform_point(*handle.pos))
             cairo.rectangle(-side_length / 2., -side_length / 2., side_length, side_length)
@@ -75,7 +77,7 @@ class CornerHandlePainter(ItemPaintHovered):
 
         cr = context.cairo
         view = self.view
-        allocation = view.allocation
+        allocation = view.get_allocation()
         w, h = allocation.width, allocation.height
 
         cr.save()
@@ -148,7 +150,7 @@ class LineSegmentPainter(ItemPaintHovered):
             cr.identity_matrix()
             m = Matrix(*view.get_matrix_i2v(item))
 
-            cr.set_antialias(ANTIALIAS_NONE)
+            # cr.set_antialias(Antialias.NONE)
             cr.translate(*m.transform_point(cx, cy))
             cr.rectangle(-side_length / 2., -side_length / 2., side_length, side_length)
             cr.set_source_rgba(*get_col_rgba(self.fill_color))

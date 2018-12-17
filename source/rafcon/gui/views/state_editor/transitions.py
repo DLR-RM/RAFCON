@@ -12,7 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import View
+from gtkmvc3.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.views.utils.tree import TreeView
@@ -39,9 +39,6 @@ class StateTransitionsEditorView(View):
     def __init__(self):
         View.__init__(self)
 
-        gui_helper_label.set_label_markup(self['transitions_label'], 'TRANSITIONS',
-                                          letter_spacing=constants.LETTER_SPACING_1PT)
-
         self.transitions_listView = StateTransitionsListView()
         self['transitions_scroller'].add(self.transitions_listView.get_top_widget())
         self.transitions_listView.scrollbar_widget = self['transitions_scroller']
@@ -50,3 +47,5 @@ class StateTransitionsEditorView(View):
         self['connected_to_t_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['add_t_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['remove_t_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+
+        gui_helper_label.ellipsize_labels_recursively(self['transitions_toolbar'])

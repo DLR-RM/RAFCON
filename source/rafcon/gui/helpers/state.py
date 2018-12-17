@@ -11,6 +11,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import str
 from rafcon.core.states.state import State, StateType
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.execution_state import ExecutionState
@@ -18,6 +19,7 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.state_elements.logical_port import Income
 from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.gui import singleton as gui_singletons
 
@@ -86,6 +88,23 @@ def check_expected_future_model_list_is_empty(target_state_m, msg, delete=True, 
     return True
 
 
+def update_models_recursively(state_m):
+    """ If a state model is reused the model depth maybe is to low. Therefore this method checks if all 
+    library state models are created with reliable depth"""
+
+    assert isinstance(state_m, AbstractStateModel)
+
+    if isinstance(state_m, LibraryStateModel):
+        if not state_m.state_copy_initialized:
+            state_m.recursive_generate_models(load_meta_data=False)
+            import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+            gui_helper_meta_data.scale_library_content(state_m)
+
+    if isinstance(state_m, ContainerStateModel):
+        for child_state_m in state_m.states.values():
+            update_models_recursively(child_state_m)
+
+
 def add_state(container_state_m, state_type):
     """Add a state to a container state
 
@@ -152,11 +171,13 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
         input_data_ports = dict(source_state.input_data_ports)
         output_data_ports = dict(source_state.output_data_ports)
         scoped_variables = dict(source_state.scoped_variables)
+        income = source_state.income
         outcomes = dict(source_state.outcomes)
         source_state.input_data_ports = {}
         source_state.output_data_ports = {}
         source_state.scoped_variables = {}
         source_state.transitions = {}  # before remove of outcomes related transitions should be gone
+        source_state.income = Income()
         source_state.outcomes = {}
         states = dict(source_state.states)
         # TODO check why next line can not be performed
@@ -166,6 +187,7 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
                                        input_data_ports=input_data_ports,
                                        output_data_ports=output_data_ports,
                                        scoped_variables=scoped_variables,
+                                       income=income,
                                        outcomes=outcomes,
                                        transitions=state_transitions,
                                        data_flows=data_flows,
@@ -179,21 +201,23 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
             if isinstance(source_state, BarrierConcurrencyState):
                 source_state.remove_state(UNIQUE_DECIDER_STATE_ID, force=True)
                 assert UNIQUE_DECIDER_STATE_ID not in source_state.states
-            for state_id in source_state.states.keys():
+            for state_id in list(source_state.states.keys()):
                 source_state.remove_state(state_id)
 
         # separate state-elements from source state
         input_data_ports = dict(source_state.input_data_ports)
         output_data_ports = dict(source_state.output_data_ports)
+        income = source_state.income
         outcomes = dict(source_state.outcomes)
         source_state.input_data_ports = {}
         source_state.output_data_ports = {}
+        source_state.income = Income()
         source_state.outcomes = {}
 
         new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
                                        input_data_ports=input_data_ports,
                                        output_data_ports=output_data_ports,
-                                       outcomes=outcomes)
+                                       income=income, outcomes=outcomes)
 
     if source_state.description is not None and len(source_state.description) > 0:
         new_state.description = source_state.description
@@ -220,7 +244,7 @@ def extract_child_models_of_state(state_m, new_state_class):
     new_state_is_container = issubclass(new_state_class, ContainerState)
 
     # define which model references to hold for new state
-    required_model_properties = ['input_data_ports', 'output_data_ports', 'outcomes']
+    required_model_properties = ['input_data_ports', 'output_data_ports', 'outcomes', 'income']
     obsolete_model_properties = []
     if current_state_is_container and new_state_is_container:  # hold some additional references
         # transition are removed when changing the state type, thus do not copy them
@@ -230,12 +254,14 @@ def extract_child_models_of_state(state_m, new_state_class):
         obsolete_model_properties.extend(['states', 'transitions', 'data_flows', 'scoped_variables'])
 
     def get_element_list(state_m, prop_name):
+        if prop_name == 'income':
+            return [state_m.income]
         wrapper = getattr(state_m, prop_name)
         # ._obj is needed as gaphas wraps observable lists and dicts into a gaphas.support.ObsWrapper
         list_or_dict = wrapper._obj
         if isinstance(list_or_dict, list):
             return list_or_dict[:]  # copy list
-        return list_or_dict.values()  # dict
+        return list(list_or_dict.values())  # dict
 
     required_child_models = {}
     for prop_name in required_model_properties:
@@ -251,8 +277,6 @@ def extract_child_models_of_state(state_m, new_state_class):
             if new_state_is_container:
                 required_child_models['states'].remove(decider_state_m)
                 obsolete_child_models['states'] = [decider_state_m]
-            else:
-                obsolete_child_models['states'].append(decider_state_m)
 
     return required_child_models, obsolete_child_models
 
@@ -293,10 +317,10 @@ def change_state_type(state_m, target_class):
     affected_models = [old_state_m]
     state_element_models = []
     obsolete_state_element_models = []
-    for state_elements in required_child_models.itervalues():
+    for state_elements in required_child_models.values():
         affected_models.extend(state_elements)
         state_element_models.extend(state_elements)
-    for state_elements in obsolete_child_models.itervalues():
+    for state_elements in obsolete_child_models.values():
         affected_models.extend(state_elements)
         obsolete_state_element_models.extend(state_elements)
 
@@ -389,29 +413,28 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
     if isinstance(state_m_to_insert, AbstractStateModel) and \
             not gui_helper_meta_data.model_has_empty_meta(state_m_to_insert):
 
-        gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
         if isinstance(state_m_to_insert, ContainerStateModel):
-            # print "TARGET1", state_m_to_insert.state.state_element_attrs
+            # print("TARGET1", state_m_to_insert.state.state_element_attrs)
             models_dict = {'state': state_m_to_insert}
 
             for state_element_key in state_m_to_insert.state.state_element_attrs:
                 state_element_list = getattr(state_m_to_insert, state_element_key)
-                # Some models are hold in a gtkmvc.support.wrappers.ObsListWrapper, not a list
+                # Some models are hold in a gtkmvc3.support.wrappers.ObsListWrapper, not a list
                 if hasattr(state_element_list, 'keys'):
                     state_element_list = state_element_list.values()
                 models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
 
             resize_factor = gui_helper_meta_data.scale_meta_data_according_state(models_dict, as_template=True)
-            gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor, gaphas_editor)
+            gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor)
 
         elif isinstance(state_m_to_insert, StateModel):
-            # print "TARGET2", state_m_to_insert.state.state_element_attrs
+            # print("TARGET2", state_m_to_insert.state.state_element_attrs)
 
             if previous_state_size:
-                current_size = state_m_to_insert.get_meta_data_editor(gaphas_editor)['size']
+                current_size = state_m_to_insert.get_meta_data_editor()['size']
                 factor = gui_helper_meta_data.divide_two_vectors(current_size, previous_state_size)
                 factor = (min(*factor), min(*factor))
-                gui_helper_meta_data.resize_state_meta(state_m_to_insert, factor, gaphas_editor)
+                gui_helper_meta_data.resize_state_meta(state_m_to_insert, factor)
 
             else:
                 logger.debug("For insert as template of {0} no resize of state meta data is performed because "
@@ -451,8 +474,7 @@ def insert_state_as(target_state_m, state, as_template):
         old_lib_state_m = state_m
         state_m = state_m.state_copy
 
-        gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
-        previous_state_size = state_m.get_meta_data_editor(gaphas_editor)['size']
+        previous_state_size = state_m.get_meta_data_editor()['size']
         gui_helper_meta_data.put_default_meta_on_state_m(state_m, target_state_m)
         # TODO check if the not as template case maybe has to be run with the prepare call
         prepare_state_m_for_insert_as(state_m, previous_state_size)
@@ -468,37 +490,37 @@ def insert_state_as(target_state_m, state, as_template):
     target_state_m.state.add_state(state_m.state)
 
 
-def substitute_state(target_state_m, state_m_to_insert):
-    """ Substitute the target state with a the handed state
+def substitute_state(target_state_m, state_m_to_insert, as_template=False):
+    """ Substitutes the target state
 
-    Both states are handed by there state models. The insert state adapts the size and position of the target state.
-    State elements of the state handed to be insert became resize by keeping there proportion.
+    Both, the state to be replaced (the target state) and the state to be inserted (the new state) are passed via
+    parameters.
+    The new state adapts the size and position of the target state.
+    State elements of the new state are resized but kepp their proportion.
 
     :param rafcon.gui.models.container_state.AbstractStateModel target_state_m: State Model of state to be substituted
-    :param rafcon.gui.models.container_state.StateModel state_m_to_insert: State Model of state to be insert instate
+    :param rafcon.gui.models.container_state.StateModel state_m_to_insert: State Model of state to be inserted
     :return:
     """
-    # print "substitute_state"
+    # print("substitute_state")
 
-    gaphas_editor = True if gui_singletons.global_gui_config.get_config_value('GAPHAS_EDITOR') else False
     state_to_insert = state_m_to_insert.state
     action_parent_m = target_state_m.parent
     old_state_m = target_state_m
     old_state = old_state_m.state
     state_id = old_state.state_id
-    # print "TARGET", old_state_m.get_meta_data_editor(gaphas_editor)
 
     # BEFORE MODEL
     tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'state': None}
     old_state_m = action_parent_m.states[state_id]
-    # print "EMIT-BEFORE ON OLD_STATE ", state_id
+    # print("EMIT-BEFORE ON OLD_STATE ", state_id)
     old_state_m.action_signal.emit(ActionSignalMsg(action='substitute_state', origin='model',
                                                    action_parent_m=action_parent_m,
                                                    affected_models=[old_state_m, ], after=False,
                                                    kwargs={'state_id': state_id, 'state': state_to_insert}))
     related_transitions, related_data_flows = action_parent_m.state.related_linkage_state(state_id)
     tmp_meta_data['state'] = old_state_m.meta
-    # print "old state meta", old_state_m.meta
+    # print("old state meta", old_state_m.meta)
     for t in related_transitions['external']['ingoing'] + related_transitions['external']['outgoing']:
         tmp_meta_data['transitions'][t.transition_id] = action_parent_m.get_transition_m(t.transition_id).meta
     for df in related_data_flows['external']['ingoing'] + related_data_flows['external']['outgoing']:
@@ -507,18 +529,24 @@ def substitute_state(target_state_m, state_m_to_insert):
     action_parent_m.substitute_state.__func__.old_state_m = old_state_m
 
     # put old state size and rel_pos onto new state
-    previous_state_size = state_m_to_insert.get_meta_data_editor(gaphas_editor)['size']
-    state_m_to_insert.set_meta_data_editor('size', old_state_m.get_meta_data_editor(gaphas_editor)['size'],
-                                           gaphas_editor)
-    state_m_to_insert.set_meta_data_editor('rel_pos', old_state_m.get_meta_data_editor(gaphas_editor)['rel_pos'],
-                                           gaphas_editor)
+    previous_state_size = state_m_to_insert.get_meta_data_editor()['size']
+    state_m_to_insert.set_meta_data_editor('size', old_state_m.get_meta_data_editor()['size'])
+    state_m_to_insert.set_meta_data_editor('rel_pos', old_state_m.get_meta_data_editor()['rel_pos'])
     # scale the meta data according new size
     prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size)
 
     # CORE
     new_state = e = None
-    # print "state to insert", state_to_insert
+    # print("state to insert", state_to_insert)
     try:
+        # if as_template:  # TODO remove this work around if the models are loaded correctly
+        #     # the following enforce the creation of a new model (in needed depth) and transfer of meta data
+        #     import rafcon.gui.action
+        #     meta_dict = rafcon.gui.action.get_state_element_meta(state_m_to_insert)
+        #     new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
+        #     sm_m = action_parent_m.get_state_machine_m()
+        #     rafcon.gui.action.insert_state_meta_data(meta_dict, sm_m.get_state_model_by_path(new_state.get_path()))
+        # else:
         action_parent_m.expected_future_models.add(state_m_to_insert)
         new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
         # assert new_state.state_id is state_id
@@ -528,20 +556,21 @@ def substitute_state(target_state_m, state_m_to_insert):
 
     if new_state:
         # AFTER MODEL
-        # print "AFTER MODEL", new_state
+        # print("AFTER MODEL", new_state)
         new_state_m = action_parent_m.states[new_state.state_id]
+        update_models_recursively(state_m=new_state_m)
         tmp_meta_data = action_parent_m.substitute_state.__func__.tmp_meta_data_storage
         old_state_m = action_parent_m.substitute_state.__func__.old_state_m
         changed_models = []
         new_state_m.meta = tmp_meta_data['state']
         changed_models.append(new_state_m)
-        for t_id, t_meta in tmp_meta_data['transitions'].iteritems():
+        for t_id, t_meta in tmp_meta_data['transitions'].items():
             if action_parent_m.get_transition_m(t_id) is not None:
                 action_parent_m.get_transition_m(t_id).meta = t_meta
                 changed_models.append(action_parent_m.get_transition_m(t_id))
             elif t_id in action_parent_m.state.substitute_state.__func__.re_create_io_going_t_ids:
                 logger.warning("Transition model with id {0} to set meta data could not be found.".format(t_id))
-        for df_id, df_meta in tmp_meta_data['data_flows'].iteritems():
+        for df_id, df_meta in tmp_meta_data['data_flows'].items():
             if action_parent_m.get_data_flow_m(df_id) is not None:
                 action_parent_m.get_data_flow_m(df_id).meta = df_meta
                 changed_models.append(action_parent_m.get_data_flow_m(df_id))
@@ -550,7 +579,7 @@ def substitute_state(target_state_m, state_m_to_insert):
 
         msg = ActionSignalMsg(action='substitute_state', origin='model', action_parent_m=action_parent_m,
                               affected_models=changed_models, after=True, result=e)
-        # print "EMIT-AFTER OLDSTATE", msg
+        # print("EMIT-AFTER OLDSTATE", msg)
         old_state_m.action_signal.emit(msg)
 
     del action_parent_m.substitute_state.__func__.tmp_meta_data_storage
@@ -583,7 +612,7 @@ def substitute_state_as(target_state_m, state, as_template, keep_name=False):
         state_m.state.name = target_state_m.state.name
 
     assert target_state_m.parent.states[target_state_m.state.state_id] is target_state_m
-    substitute_state(target_state_m, state_m)
+    substitute_state(target_state_m, state_m, as_template)
 
 
 def group_states_and_scoped_variables(state_m_list, sv_m_list):
@@ -610,13 +639,13 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         tmp_models_dict['data_flows'][df.data_flow_id] = action_parent_m.get_data_flow_m(df.data_flow_id)
 
     affected_models = []
-    for elemets_dict in tmp_models_dict.itervalues():
+    for elemets_dict in tmp_models_dict.values():
         if isinstance(elemets_dict, dict):
-            affected_models.extend(elemets_dict.itervalues())
+            affected_models.extend(elemets_dict.values())
         elif isinstance(elemets_dict, AbstractStateModel):
             affected_models.extend(elemets_dict)
 
-    # print "EMIT-BEFORE ON ACTION PARENT"
+    # print("EMIT-BEFORE ON ACTION PARENT")
     action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
                                                        action_parent_m=action_parent_m,
                                                        affected_models=affected_models, after=False,
@@ -636,7 +665,8 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
     try:
         assert isinstance(action_parent_m.state, ContainerState)
         new_state = action_parent_m.state.group_states(state_ids, sv_ids)
-    except Exception as e:
+    except Exception as e2:
+        e = e2
         logger.exception("State group failed")
 
     # AFTER MODEL
@@ -655,7 +685,7 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
             grouped_state_m.insert_meta_data_from_models_dict(tmp_models_dict, logger.error)
 
         affected_models = action_parent_m.group_states.__func__.affected_models
-        # print "EMIT-AFTER ON ACTION PARENT"
+        # print("EMIT-AFTER ON ACTION PARENT")
         affected_models.append(grouped_state_m)
 
     action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
@@ -680,7 +710,7 @@ def ungroup_state(state_m):
 
     related_transitions, related_data_flows = action_parent_m.state.related_linkage_state(state_id)
     tmp_models_dict['state'] = action_parent_m.states[state_id]
-    for s_id, s_m in action_parent_m.states[state_id].states.iteritems():
+    for s_id, s_m in action_parent_m.states[state_id].states.items():
         tmp_models_dict['states'][s_id] = s_m
     for sv_m in action_parent_m.states[state_id].scoped_variables:
         tmp_models_dict['scoped_variables'][sv_m.scoped_variable.data_port_id] = sv_m
@@ -689,14 +719,14 @@ def ungroup_state(state_m):
     for df in related_data_flows['internal']['enclosed']:
         tmp_models_dict['data_flows'][df.data_flow_id] = action_parent_m.states[state_id].get_data_flow_m(df.data_flow_id)
     affected_models = [action_parent_m.states[state_id], ]
-    # print "EMIT-BEFORE ON OLD_STATE ", state_id
+    # print("EMIT-BEFORE ON OLD_STATE ", state_id)
     old_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
                                                    action_parent_m=action_parent_m,
                                                    affected_models=affected_models, after=False,
                                                    kwargs={'state_id': state_id}))
     action_parent_m.ungroup_state.__func__.tmp_models_storage = tmp_models_dict
     action_parent_m.ungroup_state.__func__.affected_models = affected_models
-    # print "ungroup", id(old_state_m), [id(m) for m in tmp_models_dict['states']]
+    # print("ungroup", id(old_state_m), [id(m) for m in tmp_models_dict['states']])
 
     error_msg = "Un-Group action has not started with empty expected future models list."
     check_expected_future_model_list_is_empty(action_parent_m, msg=error_msg)
@@ -709,7 +739,8 @@ def ungroup_state(state_m):
     e = None
     try:
         state_m.parent.state.ungroup_state(state_m.state.state_id)
-    except Exception as e:
+    except Exception as e2:
+        e = e2
         logger.exception("State ungroup failed")
 
     error_msg = "Un-Group action has not re-used all models of grouped elements."
@@ -729,32 +760,32 @@ def ungroup_state(state_m):
             # correct state element ids with new state element ids to set meta data on right state element
             tmp_models_dict['states'] = \
                 {new_state_id: tmp_models_dict['states'][old_state_id]
-                 for old_state_id, new_state_id in action_parent_m.state.ungroup_state.__func__.state_id_dict.iteritems()}
+                 for old_state_id, new_state_id in action_parent_m.state.ungroup_state.__func__.state_id_dict.items()}
             tmp_models_dict['scoped_variables'] = \
                 {new_sv_id: tmp_models_dict['scoped_variables'][old_sv_id]
-                 for old_sv_id, new_sv_id in action_parent_m.state.ungroup_state.__func__.sv_id_dict.iteritems()}
+                 for old_sv_id, new_sv_id in action_parent_m.state.ungroup_state.__func__.sv_id_dict.items()}
             tmp_models_dict['transitions'] = \
                 {new_t_id: tmp_models_dict['transitions'][old_t_id]
-                 for old_t_id, new_t_id in action_parent_m.state.ungroup_state.__func__.enclosed_t_id_dict.iteritems()}
+                 for old_t_id, new_t_id in action_parent_m.state.ungroup_state.__func__.enclosed_t_id_dict.items()}
             tmp_models_dict['data_flows'] = \
                 {new_df_id: tmp_models_dict['data_flows'][old_df_id]
-                 for old_df_id, new_df_id in action_parent_m.state.ungroup_state.__func__.enclosed_df_id_dict.iteritems()}
+                 for old_df_id, new_df_id in action_parent_m.state.ungroup_state.__func__.enclosed_df_id_dict.items()}
 
             action_parent_m.insert_meta_data_from_models_dict(tmp_models_dict, logger.info)
 
         affected_models = action_parent_m.ungroup_state.__func__.affected_models
-        for elemets_dict in tmp_models_dict.itervalues():
-            affected_models.extend(elemets_dict.itervalues())
+        for elemets_dict in tmp_models_dict.values():
+            affected_models.extend(elemets_dict.values())
 
     old_state_m.action_signal.emit(ActionSignalMsg(action='ungroup_state', origin='model',
                                                    action_parent_m=action_parent_m,
                                                    affected_models=affected_models, after=True, result=e))
 
     old_state_m.prepare_destruction(recursive=True)
-    # print "prepare destruction finished"
+    # print("prepare destruction finished")
     del action_parent_m.ungroup_state.__func__.tmp_models_storage
     del action_parent_m.ungroup_state.__func__.affected_models
-    # print "## ungroup finished"
+    # print("## ungroup finished")
     return old_state_m
 
 

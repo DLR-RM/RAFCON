@@ -11,35 +11,47 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import gtk
-from gtkmvc import View
+from gi.repository import Gtk
+from gi.repository import GObject
+from gtkmvc3.view import View
 from rafcon.gui.utils import constants
+from rafcon.gui.config import global_gui_config
+
+from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
+from rafcon.core.states.execution_state import ExecutionState
+from rafcon.core.states.hierarchy_state import HierarchyState
+from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
 
 
-class StateIconView(View, gtk.IconView):
-    icon_label = ["HS", "ES", "PS", "BS"]
-    tooltips = {"HS": "Hierarchy State", "ES": "Execution State",
-                "PS": "Preemptive Concurrency State", "BS": "Barrier Concurrency State"}
+class StateIconView(View, Gtk.IconView):
+    states = [("HS", HierarchyState), ("ES", ExecutionState),
+              ("PS", PreemptiveConcurrencyState), ("BS", BarrierConcurrencyState)]
 
     def __init__(self):
         View.__init__(self)
-        gtk.IconView.__init__(self)
+        Gtk.IconView.__init__(self)
+        self.props.item_orientation = Gtk.Orientation.HORIZONTAL
 
-        self.set_columns(len(self.icon_label))
+        self.set_columns(len(self.states))
         self.set_margin(0)
+        self.set_item_width(23)
         self.set_spacing(0)
         self.set_row_spacing(0)
         self.set_column_spacing(0)
 
-        liststore = gtk.ListStore(str, str)
+        liststore = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
         self.set_model(liststore)
         self.set_markup_column(0)
         self.set_tooltip_column(1)
 
-        for state in self.icon_label:
-            liststore.append(['<span font_desc="%s %s">&#x%s; ' % (constants.ICON_FONT, constants.FONT_SIZE_NORMAL,
-                                                                   constants.BUTTON_ADD) + state + '</span>',
-                              "Add/Drag and Drop " + self.tooltips[state]])
+        for shorthand, state_class in self.states:
+            liststore.append(['<span font_desc="{font} {size}" color="{color}">&#x{icon};</span> {text}'.format(
+                font=constants.ICON_FONT,
+                size=constants.FONT_SIZE_NORMAL,
+                color=global_gui_config.colors['BUTTON_TEXT_COLOR'],
+                icon=constants.BUTTON_ADD,
+                text=shorthand
+            ), "Add/Drag and Drop " + state_class.__name__])
 
         self['state_icon_view'] = self
         self.top = 'state_icon_view'

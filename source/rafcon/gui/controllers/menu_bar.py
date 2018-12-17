@@ -21,9 +21,11 @@
 
 """
 
+from builtins import str
 import os
-import glib
-import gtk
+from gi.repository import GLib
+from gi.repository import Gtk
+from gi.repository import Gdk
 from functools import partial
 
 import rafcon.core.singleton as core_singletons
@@ -81,7 +83,7 @@ class MenuBarController(ExtendedController):
         # of the monitoring plugin
         self.state_machine_execution_engine = sm_execution_engine
         self.full_screen_flag = False
-        self.full_screen_window = gtk.Window(type=gtk.WINDOW_TOPLEVEL)
+        self.full_screen_window = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
         self.main_position = None
         self.sm_notebook = self.main_window_view.state_machines_editor['notebook']
         self.full_screen_window.add_accel_group(self.shortcut_manager.accel_group)
@@ -99,7 +101,7 @@ class MenuBarController(ExtendedController):
         shortcut_key_patterns = [elem for l in shortcut_dict.values() for elem in l]
         for key in ['E', 'F', 'V', 'X', 'H', 'e', 'f', 'v', 'x', 'h']:
             if '<Alt>' + key in shortcut_key_patterns:
-                dict_pair = {k: v for k, v_list in shortcut_dict.iteritems() for v in v_list if '<Alt>' + key == v}
+                dict_pair = {k: v for k, v_list in shortcut_dict.items() for v in v_list if '<Alt>' + key == v}
                 logger.warning("Your current shortcut {0} is not working because a menu-bar access key "
                                "is overwriting it.".format(dict_pair))
 
@@ -118,13 +120,8 @@ class MenuBarController(ExtendedController):
         show_aborted_preempted = global_runtime_config.get_config_value("SHOW_ABORTED_PREEMPTED", False)
         view["show_aborted_preempted"].set_active(show_aborted_preempted)
 
-        # Hide all menu items without function (yet)
-        view["data_flow_mode"].hide()
         view["expert_view"].hide()
         view["grid"].hide()
-
-        if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
-            view["show_data_values"].hide()
 
         # use dedicated function to connect the buttons to be able to access the handler id later on
         self.connect_button_to_function('new', 'activate', self.on_new_activate)
@@ -170,7 +167,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('step_out', 'activate', self.on_step_out_activate)
         self.connect_button_to_function('backward_step', 'activate', self.on_backward_step_activate)
         self.connect_button_to_function('about', 'activate', self.on_about_activate)
-        self.full_screen_window.connect('key_press_event', self.on_key_press_event)
+        self.full_screen_window.connect('key_press_event', self.on_escape_key_press_event_leave_full_screen)
         self.view['menu_edit'].connect('select', self.check_edit_menu_items_status)
         self.registered_view = True
         self._update_recently_opened_state_machines()
@@ -208,10 +205,10 @@ class MenuBarController(ExtendedController):
         for item in self.view.sub_menu_open_recently.get_children():
             self.view.sub_menu_open_recently.remove(item)
 
-        menu_item = gui_helper_label.create_image_menu_item("remove invalid paths", constants.ICON_ERASE,
-                                                            global_runtime_config.clean_recently_opened_state_machines)
+        menu_item = gui_helper_label.create_menu_item("remove invalid paths", constants.ICON_ERASE,
+                                                      global_runtime_config.clean_recently_opened_state_machines)
         self.view.sub_menu_open_recently.append(menu_item)
-        self.view.sub_menu_open_recently.append(gtk.SeparatorMenuItem())
+        self.view.sub_menu_open_recently.append(Gtk.SeparatorMenuItem())
 
         for sm_path in global_runtime_config.get_config_value("recently_opened_state_machines", []):
             # define label string
@@ -228,24 +225,19 @@ class MenuBarController(ExtendedController):
             sm_open_function = partial(self.on_open_activate, path=sm_path)
 
             # create and insert new menu item
-            menu_item = gui_helper_label.create_image_menu_item(label_string, button_image, sm_open_function)
+            menu_item = gui_helper_label.create_menu_item(label_string, button_image, sm_open_function)
             self.view.sub_menu_open_recently.append(menu_item)
 
         self.view.sub_menu_open_recently.show_all()
 
     def on_toggle_full_screen_mode(self, *args):
-        if self.view["full_screen"].get_active():
-            self.view["full_screen"].toggle()
-            self.view["full_screen"].set_active(False)  # because toggle is not always working
-        else:
-            self.view["full_screen"].toggle()  # because set active is not always working
-            self.view["full_screen"].set_active(True)
+            self.view["full_screen"].set_active(False if self.view["full_screen"].get_active() else True)
 
     def on_full_screen_mode_toggled(self, *args):
-        if self.full_screen_flag == self.view["full_screen"].active:
+        if self.full_screen_flag == self.view["full_screen"].get_active():
             return False
 
-        if self.view["full_screen"].active and not self.full_screen_flag:
+        if self.view["full_screen"].get_active() and not self.full_screen_flag:
             self.full_screen_flag = True
             self.on_full_screen_activate()
         else:
@@ -253,9 +245,9 @@ class MenuBarController(ExtendedController):
             self.on_full_screen_deactivate()
         return True
 
-    def on_key_press_event(self, widget, event):
-        keyname = gtk.gdk.keyval_name(event.keyval)
-        if keyname == "Escape" and self.full_screen_window.get_window().get_state() == gtk.gdk.WINDOW_STATE_FULLSCREEN:
+    def on_escape_key_press_event_leave_full_screen(self, widget, event):
+        keyname = Gdk.keyval_name(event.keyval)
+        if keyname == "Escape" and 'fullscreen' in self.full_screen_window.get_window().get_state().value_nicks:
             self.view["full_screen"].set_active(False)
             return True
 
@@ -266,7 +258,8 @@ class MenuBarController(ExtendedController):
         :return:
         """
         self.sm_notebook.set_show_tabs(False)
-        self.sm_notebook.reparent(self.full_screen_window)
+        self.main_window_view['graphical_editor_vbox'].remove(self.sm_notebook)
+        self.full_screen_window.add(self.sm_notebook)
         position = self.main_window_view.get_top_widget().get_position()
         self.full_screen_window.show()
         self.full_screen_window.move(position[0], position[1])
@@ -275,9 +268,9 @@ class MenuBarController(ExtendedController):
         self.main_window_view.get_top_widget().iconify()
 
     def on_full_screen_deactivate(self):
-        # gui_helper.set_window_size_and_position(self.main_window_view.get_top_widget(), "MAIN_WINDOW")
         self.main_window_view.get_top_widget().present()
-        self.sm_notebook.reparent(self.main_window_view['graphical_editor_vbox'])
+        self.full_screen_window.remove(self.sm_notebook)
+        self.main_window_view['graphical_editor_vbox'].pack_start(self.sm_notebook, True, True, 0)
         self.main_window_view['graphical_editor_vbox'].reorder_child(self.sm_notebook, 0)
         self.sm_notebook.set_show_tabs(True)
         self.full_screen_window.hide()
@@ -298,7 +291,7 @@ class MenuBarController(ExtendedController):
         Unregister all registered functions to a view element
         :return:
         """
-        for handler_id in self.handler_ids.iterkeys():
+        for handler_id in self.handler_ids.keys():
             self.view[handler_id].disconnect(self.handler_ids[handler_id])
 
     def register_actions(self, shortcut_manager):
@@ -388,7 +381,7 @@ class MenuBarController(ExtendedController):
         Remove all callbacks registered to the shortcut manager
         :return:
         """
-        for action in self.registered_shortcut_callbacks.iterkeys():
+        for action in self.registered_shortcut_callbacks.keys():
             for callback in self.registered_shortcut_callbacks[action]:
                 self.shortcut_manager.remove_callback_for_action(action, callback)
         # delete all registered shortcut callbacks
@@ -399,11 +392,11 @@ class MenuBarController(ExtendedController):
     ######################################################
 
     def on_new_activate(self, widget=None, data=None):
-        gui_helper_state_machine.new_state_machine()
+        return gui_helper_state_machine.new_state_machine()
 
     @staticmethod
     def on_open_activate(widget=None, data=None, path=None):
-        gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
+        return gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
 
     @staticmethod
     def on_open_library_state_separately_activate(widget, data=None):
@@ -460,7 +453,6 @@ class MenuBarController(ExtendedController):
             backup_session.reset_session()
         if not force and global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
             backup_session.store_session()
-            self.on_delete_check_sm_running()
             force = True
         avoid_shutdown = self.on_delete_event(widget, None, force=force)
         if not avoid_shutdown:
@@ -472,9 +464,9 @@ class MenuBarController(ExtendedController):
         # State machine was modified, callback method handles closing operation
         if not force and self.on_delete_check_sm_modified():
             return True  # prevents closing operation
-        # State machine is running, callback method handles closing operation
-        if not force and self.on_delete_check_sm_running():
-            return True  # prevents closing operation
+
+        # independently if state machine is running or not the GUI will be closed
+        self.on_delete_check_sm_running()
 
         gui_singletons.main_window_controller.prepare_destruction()
         return False
@@ -482,51 +474,46 @@ class MenuBarController(ExtendedController):
     def refresh_shortcuts(self):
         self.shortcut_manager.remove_shortcuts()
         self.shortcut_manager.update_shortcuts()
-        for item_name, shortcuts in global_gui_config.get_config_value('SHORTCUTS', {}).iteritems():
+        for item_name, shortcuts in global_gui_config.get_config_value('SHORTCUTS', {}).items():
             if shortcuts and item_name in self.view.buttons:
-                self.view.set_menu_item_accelerator(item_name, shortcuts[0])
+                self.view.set_menu_item_accelerator(item_name, shortcuts[0], remove_old=True)
         self.create_logger_warning_if_shortcuts_are_overwritten_by_menu_bar()
 
     def on_delete_check_sm_modified(self):
         if state_machine_manager.has_dirty_state_machine():
-
             message_string = "Are you sure you want to exit RAFCON?\n\n" \
                              "The following state machines have been modified and not saved. " \
                              "These changes will get lost:"
-            for sm_id, sm in state_machine_manager.state_machines.iteritems():
+            for sm_id, sm in state_machine_manager.state_machines.items():
                 if sm.marked_dirty:
                     message_string = "%s\n#%s: %s " % (message_string, str(sm_id), sm.root_state.name)
             dialog = RAFCONButtonDialog(message_string, ["Close without saving", "Cancel"],
-                                        message_type=gtk.MESSAGE_WARNING, parent=self.get_root_window())
+                                        message_type=Gtk.MessageType.WARNING, parent=self.get_root_window())
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:  # Close without saving - button pressed
-                if not self.state_machine_execution_engine.finished_or_stopped():
-                    self.on_delete_check_sm_running()
-                else:
-                    gui_singletons.main_window_controller.prepare_destruction()
-                    self.on_destroy(None)
+                return False
             elif response_id == 2:  # Cancel - button pressed
                 logger.debug("Close main window canceled")
-            return True
-        return False
+                return True
+        else:
+            return False
 
     def on_delete_check_sm_running(self):
         if not self.state_machine_execution_engine.finished_or_stopped():
-
             message_string = "The state machine is still running. Do you want to stop the execution before closing?"
             dialog = RAFCONButtonDialog(message_string, ["Stop execution", "Keep running"],
-                                        message_type=gtk.MESSAGE_QUESTION, parent=self.get_root_window())
+                                        message_type=Gtk.MessageType.QUESTION, parent=self.get_root_window())
             response_id = dialog.run()
             dialog.destroy()
             if response_id == 1:  # Stop execution
                 self.state_machine_execution_engine.stop()
+                return False
             elif response_id == 2:  # Keep running
-                logger.debug("State machine will stay running!")
-                gui_singletons.main_window_controller.prepare_destruction()
-            self.on_destroy(None)
-            return True
-        return False
+                logger.debug("State machine will keep running!")
+                return True
+        else:
+            return False
 
     def on_destroy(self, widget, data=None):
         from rafcon.gui.start import stop_gtk
@@ -647,29 +634,12 @@ class MenuBarController(ExtendedController):
     ######################################################
     # menu bar functionality - Execution
     ######################################################
-    def execution_status_dependent_correction_of_selected_and_active_state_machine(self):
-        active_state_machine_id = None
-        if core_singletons.state_machine_manager.get_active_state_machine():
-            active_state_machine_id = core_singletons.state_machine_manager.get_active_state_machine().state_machine_id
-        selected_state_machine_id = gui_singletons.state_machine_manager_model.selected_state_machine_id
-        if core_singletons.state_machine_manager.get_active_state_machine():
-            # is the state machine active change the selection accordingly to be the active state machine
-            if not self.state_machine_execution_engine.finished_or_stopped():
-                gui_singletons.state_machine_manager_model.selected_state_machine_id = active_state_machine_id
-            else:  # change the active state machine to be the selected state machine
-                core_singletons.state_machine_manager.active_state_machine_id = selected_state_machine_id
-
-        # is there no active state machine id set the selected state machine (if it is set) is now the active one
-        if selected_state_machine_id and active_state_machine_id is None:
-            gui_singletons.state_machine_manager.active_state_machine_id = selected_state_machine_id
 
     def on_start_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.start(self.model.selected_state_machine_id)
 
     def on_start_from_selected_state_activate(self, widget, data=None):
         logger.debug("Run from selected state ...")
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) is not 1:
             logger.error("Exactly one state must be selected!")
@@ -678,35 +648,27 @@ class MenuBarController(ExtendedController):
                                                       selection.get_selected_state().state.get_path())
 
     def on_pause_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.pause()
 
     def on_stop_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.stop()
 
     def on_step_mode_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.step_mode(self.model.selected_state_machine_id)
 
     def on_step_into_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.step_into()
 
     def on_step_over_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.step_over()
 
     def on_step_out_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.step_out()
 
     def on_backward_step_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         self.state_machine_execution_engine.backward_step()
 
     def on_run_to_selected_state_activate(self, widget, data=None):
-        self.execution_status_dependent_correction_of_selected_and_active_state_machine()
         logger.debug("Run to selected state ...")
 
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
@@ -724,7 +686,7 @@ class MenuBarController(ExtendedController):
         about = AboutDialogView()
         gui_helper_label.set_button_children_size_request(about)
         response = about.run()
-        if response == gtk.RESPONSE_DELETE_EVENT or response == gtk.RESPONSE_CANCEL:
+        if response == Gtk.ResponseType.DELETE_EVENT or response == Gtk.ResponseType.CANCEL:
             about.destroy()
 
     def check_edit_menu_items_status(self, widget):

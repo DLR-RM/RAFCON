@@ -1,5 +1,6 @@
 
 
+from builtins import range
 def execute(self, inputs, outputs, gvm):
     import time
     number_of_bugs = inputs["Bugs"]

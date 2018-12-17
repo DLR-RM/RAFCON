@@ -13,8 +13,12 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from future.utils import string_types
+from builtins import str
 from weakref import ref
-from pango import SCALE, FontDescription, WRAP_WORD
+from gi.repository.Pango import SCALE, FontDescription, WrapMode
+from gi.repository import PangoCairo
+# from cairo import Antialias
 from copy import copy
 import cairo
 
@@ -22,6 +26,7 @@ from gaphas.item import Element, NW, NE, SW, SE
 from gaphas.connector import Position
 from gaphas.matrix import Matrix
 from gaphas.solver import Variable
+from gaphas.painter import CairoBoundingBoxContext
 
 from rafcon.core.states.state import StateExecutionStatus
 
@@ -62,6 +67,9 @@ class StateView(Element):
         self.min_width = self.min_height = 0
         self.width = size[0]
         self.height = size[1]
+
+        self._c_min_w = self._constraints[0]
+        self._c_min_h = self._constraints[1]
 
         self.is_root_state_of_library = state_m.state.is_root_state_of_library
 
@@ -120,8 +128,6 @@ class StateView(Element):
         return self._view
 
     def setup_canvas(self):
-        self._income = self.add_income()
-
         canvas = self.canvas
         parent = self.parent
 
@@ -363,12 +369,11 @@ class StateView(Element):
         self.update_minimum_size_of_children()
 
         def update_port_position(port_v, meta_data):
-            if isinstance(meta_data['rel_pos'], tuple) and len(meta_data['rel_pos']) == 2:
+            if contains_geometric_info(meta_data['rel_pos']) == 2:
                 port_v.handle.pos = meta_data['rel_pos']
                 self.port_constraints[port_v].update_position(meta_data['rel_pos'])
 
-        if isinstance(state_meta['income']['rel_pos'], tuple) and len(state_meta['income']['rel_pos']) == 2:
-            update_port_position(self.income, state_meta['income'])
+        update_port_position(self.income, self.income.model.get_meta_data_editor())
         for outcome_v in self.outcomes:
             update_port_position(outcome_v, outcome_v.model.get_meta_data_editor())
         for data_port_v in self.inputs + self.outputs:
@@ -490,12 +495,15 @@ class StateView(Element):
 
     def _draw_symbol(self, context, symbol, color, transparency=0.):
         c = context.cairo
+        cairo_context = c
+        if isinstance(c, CairoBoundingBoxContext):
+            cairo_context = c._cairo
         width = self.width
         height = self.height
 
-        c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+        # c.set_antialias(Antialias.GOOD)
 
-        layout = c.create_layout()
+        layout = PangoCairo.create_layout(cairo_context)
 
         font_name = constants.ICON_FONT
 
@@ -526,8 +534,8 @@ class StateView(Element):
                   height / 2. - layout.get_size()[1] / float(SCALE) / 2.)
 
         c.set_source_rgba(*gap_draw_helper.get_col_rgba(color, transparency))
-        c.update_layout(layout)
-        c.show_layout(layout)
+        PangoCairo.update_layout(cairo_context, layout)
+        PangoCairo.show_layout(cairo_context, layout)
 
     def get_transitions(self):
         transitions = []
@@ -611,21 +619,23 @@ class StateView(Element):
                 return port
         raise AttributeError("Port with id '{0}' not found in state".format(port_id, self.model.state.name))
 
-    def add_income(self):
-        income_v = IncomeView(self)
+    def add_income(self, income_m):
+        income_v = IncomeView(income_m, self)
+        self.canvas.add_port(income_v)
+        self._income = income_v
         self._ports.append(income_v.port)
         self._handles.append(income_v.handle)
         self._map_handles_port_v[income_v.handle] = income_v
 
-        port_meta = self.model.get_meta_data_editor()['income']
+        port_meta = income_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
-            # print "generate rel_pos"
+            # print("generate rel_pos")
             # Position income on the top of the left state side
             income_v.side = SnappedSide.LEFT
             pos_x = 0
             pos_y = self._calculate_port_pos_on_line(1, self.height)
-            port_meta = self.model.set_meta_data_editor('income.rel_pos', (pos_x, pos_y))['income']
-        # print "add income", self.model, self.model.parent, port_meta['rel_pos']
+            port_meta = income_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
+        # print("add income", self.model, self.model.parent, port_meta['rel_pos'])
         income_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(income_v)
         return income_v
@@ -637,6 +647,7 @@ class StateView(Element):
         self._ports.remove(income_v.port)
         self._handles.remove(income_v.handle)
 
+        self.canvas.remove_port(income_v)
         if income_v in self.port_constraints:
             self.canvas.solver.remove_constraint(self.port_constraints.pop(income_v))
 
@@ -650,7 +661,7 @@ class StateView(Element):
 
         port_meta = outcome_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
-            # print "generate rel_pos"
+            # print("generate rel_pos")
             if outcome_m.outcome.outcome_id < 0:
                 # Position aborted/preempted in upper right corner
                 outcome_v.side = SnappedSide.TOP
@@ -664,7 +675,7 @@ class StateView(Element):
                 number_of_outcome = [o.model for o in self.outcomes if o.model.outcome.outcome_id >= 0].index(outcome_m) + 1
                 pos_y = self._calculate_port_pos_on_line(number_of_outcome, self.height)
             port_meta = outcome_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
-        # print "add outcome", self.model, self.model.parent, port_meta['rel_pos']
+        # print("add outcome", self.model, self.model.parent, port_meta['rel_pos'])
         outcome_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(outcome_v)
 
@@ -688,14 +699,14 @@ class StateView(Element):
 
         port_meta = port_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
-            # print "generate rel_pos"
+            # print("generate rel_pos")
             # Distribute input ports on the left side of the state, starting from bottom
             input_port_v.side = SnappedSide.LEFT
             number_of_input = self.model.input_data_ports.index(port_m) + 1
             pos_x = 0
             pos_y = self.height - self._calculate_port_pos_on_line(number_of_input, self.height)
             port_meta = port_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
-        # print "add input_port", self.model, self.model.parent, port_meta['rel_pos']
+        # print("add input_port", self.model, self.model.parent, port_meta['rel_pos'])
         input_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(input_port_v)
 
@@ -720,13 +731,13 @@ class StateView(Element):
         port_meta = port_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
             # Distribute output ports on the right side of the state, starting from bottom
-            # print "generate rel_pos"
+            # print("generate rel_pos")
             output_port_v.side = SnappedSide.RIGHT
             number_of_output = self.model.output_data_ports.index(port_m) + 1
             pos_x = self.width
             pos_y = self.height - self._calculate_port_pos_on_line(number_of_output, self.height)
             port_meta = port_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
-        # print "add output_port", self.model, self.model.parent, port_meta['rel_pos']
+        # print("add output_port", self.model, self.model.parent, port_meta['rel_pos'])
         output_port_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(output_port_v)
 
@@ -753,7 +764,7 @@ class StateView(Element):
         port_meta = scoped_variable_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
             # Distribute scoped variables on the top side of the state, starting from left
-            # print "generate rel_pos"
+            # print("generate rel_pos")
             scoped_variable_port_v.side = SnappedSide.BOTTOM
 
             number_of_scoped_var = self.model.scoped_variables.index(scoped_variable_m) + 1
@@ -761,7 +772,7 @@ class StateView(Element):
                                                      port_width=self.border_width * 4)
             pos_y = self.height
             port_meta = scoped_variable_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
-        # print "add scoped_variable", self.model, self.model.parent, port_meta['rel_pos']
+        # print("add scoped_variable", self.model, self.model.parent, port_meta['rel_pos'])
         scoped_variable_port_v.handle.pos = port_meta['rel_pos']
 
         self.add_rect_constraint_for_port(scoped_variable_port_v)
@@ -924,7 +935,7 @@ class NameView(Element):
 
     @name.setter
     def name(self, name):
-        assert isinstance(name, basestring)
+        assert isinstance(name, string_types)
         self._name = name
 
     @property
@@ -961,7 +972,7 @@ class NameView(Element):
         # logger.info("name rel_pos {}".format(name_meta['rel_pos']))
         # logger.info("name size {}".format(name_meta['size']))
         self.position = name_meta['rel_pos']
-        # print "name pos from meta", name_meta['rel_pos']
+        # print("name pos from meta", name_meta['rel_pos'])
         self.width = name_meta['size'][0]
         self.height = name_meta['size'][1]
 
@@ -1006,12 +1017,16 @@ class NameView(Element):
                 c.set_source_rgba(0, 0, 0, 0)
                 c.stroke()
 
-            c.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+            # c.set_antialias(Antialias.GOOD)
 
-            layout = c.create_layout()
-            layout.set_wrap(WRAP_WORD)
+            cairo_context = c
+            if isinstance(c, CairoBoundingBoxContext):
+                cairo_context = c._cairo
+
+            layout = PangoCairo.create_layout(cairo_context)
+            layout.set_wrap(WrapMode.WORD)
             layout.set_width(int(round(BASE_WIDTH * SCALE)))
-            layout.set_text(self.name)
+            layout.set_text(self.name, -1)
 
             def set_font_description(font_size):
                 font = FontDescription(font_name + " " + str(font_size))
@@ -1068,12 +1083,13 @@ class NameView(Element):
                 self.view.value_cache.store_value("font_size", current_font_size, font_size_parameters)
 
             c.move_to(*self.handles()[NW].pos)
-            c.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
+            cairo_context.set_source_rgba(*get_col_rgba(gui_config.gtk_colors['STATE_NAME'], font_transparency))
             c.save()
             # The pango layout has a fixed width and needs to be fitted to the context size
-            c.scale(1. / zoom_scale, 1. / zoom_scale)
-            c.update_layout(layout)
-            c.show_layout(layout)
+            cairo_context.scale(1. / zoom_scale, 1. / zoom_scale)
+
+            PangoCairo.update_layout(cairo_context, layout)
+            PangoCairo.show_layout(cairo_context, layout)
             c.restore()
 
             # Copy image surface to current cairo context

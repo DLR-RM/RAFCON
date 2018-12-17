@@ -44,13 +44,12 @@ def test_hierarchy_state_execution(caplog):
     try:
         # Changing the data type has to fail, as the data port is already connected to a data flow
         state_machine.root_state.input_data_ports[42].data_type = str
-    except Exception, e:
+    except Exception as e:
         assert isinstance(e, ValueError)
 
     testing_utils.test_multithreading_lock.acquire()
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     try:
@@ -74,8 +73,7 @@ def test_hierarchy_save_load_test(caplog):
 
     testing_utils.test_multithreading_lock.acquire()
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
-    rafcon.core.singleton.state_machine_execution_engine.start()
+    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
     rafcon.core.singleton.state_machine_execution_engine.join()
     rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     try:

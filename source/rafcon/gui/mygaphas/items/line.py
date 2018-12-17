@@ -10,11 +10,15 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from math import atan2, pi
+from builtins import zip
+from math import atan2, pi, floor
 
 from gaphas.item import Line, NW, SE
-from cairo import ANTIALIAS_SUBPIXEL, LINE_CAP_ROUND, LINE_CAP_BUTT
-from pango import SCALE
+from gaphas.painter import CairoBoundingBoxContext
+# from cairo import Antialias, LINE_CAP_ROUND, LINE_CAP_BUTT
+from cairo import LINE_CAP_ROUND, LINE_CAP_BUTT
+from gi.repository.Pango import SCALE
+from gi.repository import PangoCairo
 
 from rafcon.gui.config import global_gui_config
 
@@ -221,12 +225,12 @@ class PerpLine(Line):
     def _draw_name(self, context):
         c = context.cairo
 
-        if len(self._handles) % 2:
-            index = len(self._handles) / 2
+        if len(self._handles) % 2:  # uneven
+            index = int(floor(len(self._handles) / 2))
             cx, cy = self._handles[index].pos
             angle = 0
         else:
-            index = len(self._handles) / 2 - 1
+            index = int(len(self._handles) / 2) - 1
 
             p1, p2 = self._handles[index].pos, self._handles[index + 1].pos
 
@@ -242,7 +246,7 @@ class PerpLine(Line):
             else:
                 angle = 0
 
-        c.set_antialias(ANTIALIAS_SUBPIXEL)
+        # c.set_antialias(Antialias.GOOD)
 
         parameters = {
             'name': self.name,
@@ -258,16 +262,20 @@ class PerpLine(Line):
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
-            # print "draw port name from cache"
+            # print("draw port name from cache")
             self._label_image_cache.copy_image_to_context(c, upper_left_corner, angle)
 
         # Parameters have changed or nothing in cache => redraw
         else:
             # First retrieve pango layout to determine and store size of label
-            layout = get_text_layout(c, self.name, FONT_SIZE)
+            cairo_context = c
+            if isinstance(c, CairoBoundingBoxContext):
+                cairo_context = c._cairo
+            layout = get_text_layout(cairo_context, self.name, FONT_SIZE)
 
             ink_extents, logical_extents = layout.get_extents()
-            extents = [extent / float(SCALE) for extent in logical_extents]
+            extents = [extent / float(SCALE) for extent in [logical_extents.x, logical_extents.y,
+                                                            logical_extents.width, logical_extents.height]]
             real_label_size = extents[2], extents[3]
             desired_height = self.line_width * 2.5
             scale_factor = real_label_size[1] / desired_height
@@ -279,11 +287,13 @@ class PerpLine(Line):
             # surface of the correct size
             self._label_image_cache.get_cached_image(label_size[0], label_size[1], current_zoom, parameters, clear=True)
             c = self._label_image_cache.get_context_for_image(current_zoom)
+            cairo_context = c
+            layout = get_text_layout(cairo_context, self.name, FONT_SIZE)
 
             c.set_source_rgba(*self._arrow_color)
             c.scale(1. / scale_factor, 1. / scale_factor)
-            c.update_layout(layout)
-            c.show_layout(layout)
+            PangoCairo.update_layout(cairo_context, layout)
+            PangoCairo.show_layout(cairo_context, layout)
 
             self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, angle, zoom=current_zoom)
 

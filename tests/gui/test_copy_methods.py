@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import str
 import os
 from os.path import join
 import copy
@@ -75,10 +77,6 @@ def create_models():
 
     testing_utils.wait_for_gui()
 
-    rafcon.core.singleton.state_machine_manager.active_state_machine_id = sm.state_machine_id
-
-    testing_utils.wait_for_gui()
-
     state_machine_model = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     return ctr_state, state_machine_model, state_dict
@@ -100,7 +98,7 @@ def create_models_lib(output_list):
 
     for state_id in sm_model.root_state.states[new_state_id].states:
         state_m = sm_model.root_state.states[new_state_id].states[state_id]
-        print state_m.state.state_id, state_m.state.get_path(), state_m.meta
+        print(state_m.state.state_id, state_m.state.get_path(), state_m.meta)
 
     # sm_loaded = storage.load_state_machine_from_path(
     #     os.path.join(testing_utils.TEST_PATH, "assets", "unit_test_state_machines", "last_data_wins_test"))
@@ -150,7 +148,7 @@ def collect_state_memory_addresses(state, address_book=None):
         address_book = []
 
     def append_addresses_of_dict_elements(dict_of_elements, address_book):
-        for elem in dict_of_elements.itervalues():
+        for elem in dict_of_elements.values():
             # print "{0}: {1}".format(elem.__class__.__name__, id(elem))
             address_book.append(id(elem))
 
@@ -170,7 +168,7 @@ def collect_state_memory_addresses(state, address_book=None):
         append_addresses_of_dict_elements(state.data_flows, address_book)
         append_addresses_of_dict_elements(state.transitions, address_book)
         append_addresses_of_dict_elements(state.scoped_variables, address_book)
-        for elem in state.states.itervalues():
+        for elem in state.states.values():
             # print "{0}: {1}".format(elem.__class__.__name__, id(elem))
             collect_state_memory_addresses(elem, address_book)
             address_book.append(id(elem))
@@ -206,7 +204,7 @@ def collect_state_model_memory_addresses(state_m, address_book=None):
         append_addresses_of_list_elements(state_m.data_flows, address_book)
         append_addresses_of_list_elements(state_m.transitions, address_book)
         append_addresses_of_list_elements(state_m.scoped_variables, address_book)
-        for elem in state_m.states.itervalues():
+        for elem in state_m.states.values():
             # print "{3} {0}: {1} {2}".format(elem.__class__.__name__, id(elem), id(elem.meta), state_m.state.get_path())
             address_book.append(id(elem))
             address_book.append(id(elem.meta))
@@ -224,9 +222,9 @@ def compare_references_to_sm_model_and_core(sm_m, new_sm_m):
     merge_address_books.extend(new_address_book)
     for address in old_address_book:
         if address in new_address_book:
-            print address
-    print 'C {0} + {1} = {2} == {3}'.format(len(old_address_book), len(new_address_book), len(set(merge_address_books)),
-                                            len(old_address_book) + len(new_address_book))
+            print(address)
+    print('C {0} + {1} = {2} == {3}'.format(len(old_address_book), len(new_address_book), len(set(merge_address_books)),
+                                            len(old_address_book) + len(new_address_book)))
     assert len(old_address_book) + len(new_address_book) == len(set(merge_address_books))
     old_address_book = collect_state_model_memory_addresses(sm_m.root_state)
     new_address_book = collect_state_model_memory_addresses(new_sm_m.root_state)
@@ -234,19 +232,19 @@ def compare_references_to_sm_model_and_core(sm_m, new_sm_m):
     merge_address_books.extend(new_address_book)
     for address in old_address_book:
         if address in new_address_book:
-            print address
-    print 'M {0} + {1} = {2} == {3}'.format(len(old_address_book), len(new_address_book), len(set(merge_address_books)),
-                                            len(old_address_book) + len(new_address_book))
+            print(address)
+    print('M {0} + {1} = {2} == {3}'.format(len(old_address_book), len(new_address_book), len(set(merge_address_books)),
+                                            len(old_address_book) + len(new_address_book)))
     assert len(old_address_book) + len(new_address_book) == len(set(merge_address_books))
 
 
 def equal_check_state(origin_state, target_state):
-    print 'EQUAL STATE TEST '
+    print('EQUAL STATE TEST ')
     assert origin_state == target_state
 
 
 def equal_check_state_model(origin_state_m, target_state_m):
-    print 'EQUAL STATE MODEL TEST'
+    print('EQUAL STATE MODEL TEST')
     assert origin_state_m == target_state_m
     # # print type(state_m)
     # def diff_of_list_elements(origin_list_of_elements, target_list_of_elements, name):
@@ -273,10 +271,10 @@ def equal_check_state_model(origin_state_m, target_state_m):
     #     diff_of_list_elements(origin_state_m.data_flows, target_state_m.data_flows, 'data_flow')
     #     diff_of_list_elements(origin_state_m.transitions, target_state_m.transitions, 'transition')
     #     diff_of_list_elements(origin_state_m.scoped_variables, target_state_m.scoped_variables, 'scoped_variable')
-    #     for elem_id, elem in origin_state_m.states.iteritems():
+    #     for elem_id, elem in origin_state_m.states.items():
     #         # if elem_id not in target_state_m.states:
     #         #     print "XXX ", target_state_m.state.get_path(), target_state_m.state.name, elem_id
-    #         #     print "\n".join([str((elem, elem_id)) for elem, elem_id in origin_state_m.states.iteritems()])
+    #         #     print "\n".join([str((elem, elem_id)) for elem, elem_id in origin_state_m.states.items()])
     #         #     print "XXX ", elem.state.get_path(), elem.state.name
     #         equal_check_state_model(elem, target_state_m.states[elem_id])
 
@@ -291,8 +289,6 @@ def run_copy_test(sm_m, with_gui=False):
     compare_references_to_sm_model_and_core(sm_m, new_sm_m)
 
     # storage copy tests
-    # RAFCON_TEMP_PATH_BASE = "/net/notos/home_local/dark_room"
-    # RAFCON_TEMP_PATH_BASE = "/volume/USERSTORE/beld_rc/tmp"
     if sm.file_system_path is None:
         tmp_sm_system_path = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, 'copy_test_' + str(sm.state_machine_id))
     else:
@@ -317,8 +313,6 @@ def run_copy_performance_test_and_check_storage_copy(*args):
     sm = sm_m.state_machine
 
     # storage copy tests
-    # RAFCON_TEMP_PATH_BASE = "/net/notos/home_local/dark_room"
-    # RAFCON_TEMP_PATH_BASE = "/volume/USERSTORE/beld_rc/tmp"
     if sm.file_system_path is None:
         tmp_sm_system_path = join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, 'copy_test_' + str(sm.state_machine_id))
     else:
@@ -359,11 +353,11 @@ def run_copy_performance_test_and_check_storage_copy(*args):
 
     sm1_m.destroy()
 
-    print "only_model_duration: {}".format(only_model_duration)
-    print "only_storage_duration: {}".format(only_storage_duration)
-    print "storage_copy_duration: {}".format(storage_copy_duration)
-    print "core_copy_duration: {}".format(core_copy_duration)
-    print "model_copy_duration: {}".format(model_copy_duration)
+    print("only_model_duration: {}".format(only_model_duration))
+    print("only_storage_duration: {}".format(only_storage_duration))
+    print("storage_copy_duration: {}".format(storage_copy_duration))
+    print("core_copy_duration: {}".format(core_copy_duration))
+    print("model_copy_duration: {}".format(model_copy_duration))
 
 
 def test_simple(caplog):
@@ -373,7 +367,7 @@ def test_simple(caplog):
     :return:
     """
     testing_utils.dummy_gui(None)
-    print "start test simple"
+    print("start test simple")
     # create testbed
     testing_utils.initialize_environment(gui_already_started=False,
                                          gui_config={'HISTORY_ENABLED': False,
@@ -397,7 +391,7 @@ def test_simple(caplog):
     # wait until state machine model is destroyed
     testing_utils.wait_for_gui()
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
-    print "test simple finished"
+    print("test simple finished")
 
 
 def test_complex(caplog):
@@ -410,7 +404,7 @@ def test_complex(caplog):
     with_gui = True
 
     if with_gui:
-        print "test_complex with gui"
+        print("test_complex with gui")
         try:
             testing_utils.run_gui(
                 gui_config={'HISTORY_ENABLED': False,
@@ -428,7 +422,7 @@ def test_complex(caplog):
         finally:
             testing_utils.close_gui()
             testing_utils.shutdown_environment(caplog=caplog)
-        print "finish test_complex with gui"
+        print("finish test_complex with gui")
 
         # import threading
         # print "&" * 50
@@ -437,7 +431,7 @@ def test_complex(caplog):
         # print threading.currentThread()
         # print "&" * 50
     else:
-        print "test_complex without gui"
+        print("test_complex without gui")
         testing_utils.initialize_environment(
             gui_config={'HISTORY_ENABLED': False,
                         'AUTO_BACKUP_ENABLED': False},
@@ -454,7 +448,7 @@ def test_complex(caplog):
         import rafcon.core.singleton
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
         testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
-        print "after test_complex without gui"
+        print("after test_complex without gui")
 
     # import conftest
     # import shutil

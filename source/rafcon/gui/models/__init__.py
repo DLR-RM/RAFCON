@@ -10,15 +10,15 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from state import StateModel
-from abstract_state import AbstractStateModel, get_state_model_class_for_state
-from container_state import ContainerStateModel
-from library_state import LibraryStateModel
-from transition import TransitionModel
-from data_flow import DataFlowModel
-from data_port import DataPortModel
-from outcome import OutcomeModel
-from scoped_variable import ScopedVariableModel
-from global_variable_manager import GlobalVariableManagerModel
-from library_manager import LibraryManagerModel
-from state_machine import StateMachineModel
+from rafcon.gui.models.state import StateModel
+from rafcon.gui.models.abstract_state import AbstractStateModel, get_state_model_class_for_state
+from rafcon.gui.models.container_state import ContainerStateModel
+from rafcon.gui.models.library_state import LibraryStateModel
+from rafcon.gui.models.transition import TransitionModel
+from rafcon.gui.models.data_flow import DataFlowModel
+from rafcon.gui.models.data_port import DataPortModel
+from rafcon.gui.models.logical_port import OutcomeModel
+from rafcon.gui.models.scoped_variable import ScopedVariableModel
+from rafcon.gui.models.global_variable_manager import GlobalVariableManagerModel
+from rafcon.gui.models.library_manager import LibraryManagerModel
+from rafcon.gui.models.state_machine import StateMachineModel

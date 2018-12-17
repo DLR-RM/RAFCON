@@ -37,12 +37,17 @@ class LibraryStateModel(AbstractStateModel):
 
     def __init__(self, state, parent=None, meta=None, load_meta_data=True):
         assert isinstance(state, LibraryState)
-        # TODO maybe find a different way to load the meta data of ports correctly
-        # at the moment the models of state_copy get initialized and the meta data taken from there if not found in
-        # state itself
+
         self.state_copy_initialized = False
         self.meta_data_was_scaled = False
         super(LibraryStateModel, self).__init__(state, parent, meta)
+
+        self.recursive_generate_models(load_meta_data)
+
+    def recursive_generate_models(self, load_meta_data):
+        # TODO maybe find a different way to load the meta data of ports correctly
+        # at the moment the models of state_copy get initialized and the meta data taken from there if not found in
+        # state itself
 
         # regulate depth of library model generation to reduce resource consumption
         current_hierarchy_depth = self.state.library_hierarchy_depth
@@ -57,6 +62,7 @@ class LibraryStateModel(AbstractStateModel):
 
         self._load_input_data_port_models()
         self._load_output_data_port_models()
+        self._load_income_model()
         self._load_outcome_models()
 
         if load_meta_data:
@@ -66,8 +72,6 @@ class LibraryStateModel(AbstractStateModel):
                 # gui_helper_meta_data.scale_library_ports_meta_data(self)
             else:
                 self.meta_data_was_scaled = True
-                if not global_gui_config.get_config_value('GAPHAS_EDITOR'):
-                    self.meta_data_was_scaled = False
 
     def initiate_library_root_state_model(self):
         model_class = get_state_model_class_for_state(self.state.state_copy)
@@ -106,7 +110,7 @@ class LibraryStateModel(AbstractStateModel):
             # The next lines are commented because not needed and create problems if used why it is an open to-do
             # for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
             #     if port.core_element is not None:
-            #         # TODO setting data ports None in a Library state cause gtkmvc attribute getter problems why?
+            #         # TODO setting data ports None in a Library state cause gtkmvc3 attribute getter problems why?
             #         port.prepare_destruction()
 
         del self.input_data_ports[:]
@@ -120,6 +124,9 @@ class LibraryStateModel(AbstractStateModel):
             return self.state == other.state and self.meta == other.meta
         else:
             return False
+
+    def __hash__(self):
+        return id(self)
 
     def __copy__(self):
         state_m = AbstractStateModel.__copy__(self)
@@ -155,8 +162,18 @@ class LibraryStateModel(AbstractStateModel):
             new_op_m.data_port = output_data_port_m.data_port
             self.output_data_ports.append(new_op_m)
 
+    def _load_income_model(self):
+        """Reloads the income model directly from the state"""
+        if not self.state_copy_initialized:
+            return
+        self.income = None
+        income_m = deepcopy(self.state_copy.income)
+        income_m.parent = self
+        income_m.income = income_m.income
+        self.income = income_m
+
     def _load_outcome_models(self):
-        """Reloads the outcome models directly from the the state"""
+        """Reloads the outcome models directly from the state"""
         if not self.state_copy_initialized:
             return
         self.outcomes = []

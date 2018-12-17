@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import os
 
 from rafcon.utils import log
@@ -36,17 +37,17 @@ def post_init(setup_config):
     """
     logger.info("Run post-initiation hook of {} plugin.".format(__file__.split(os.path.sep)[-2]))
 
-    import core_template_observer
+    from . import core_template_observer
     # Example 1: initiate observer some elements of the execution engine
     core_template_observer.ExecutionEngineObserver()
 
     # Example 2: initiate observer execution status
     core_template_observer.ExecutionStatusObserver()
 
-    import gtkmvc_template_observer
-    # Example 3: gtkmvc generale modification observer
+    from . import gtkmvc_template_observer
+    # Example 3: gtkmvc3 general modification observer
     # initiate observer of root_state model-object which already implements a power full recursive notification pattern
     gtkmvc_template_observer.RootStateModificationObserver()
 
-    # Example 4: gtkmvc meta signal observer
+    # Example 4: gtkmvc3 meta signal observer
     gtkmvc_template_observer.MetaSignalModificationObserver()

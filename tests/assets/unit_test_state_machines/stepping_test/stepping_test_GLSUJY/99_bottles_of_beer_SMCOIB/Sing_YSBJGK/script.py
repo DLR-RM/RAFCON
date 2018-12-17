@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import str
 import time 
     
 def execute(self, inputs, outputs, gvm):  
@@ -14,5 +16,5 @@ def execute(self, inputs, outputs, gvm):
     return 0
     
 def backward_execute(self, inputs, outputs, gvm):
-    print "This is the second backward step test"
+    print("This is the second backward step test")
     return execute(self, inputs, outputs, gvm)

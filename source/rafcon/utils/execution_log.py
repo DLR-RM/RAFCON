@@ -10,6 +10,9 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 # Sebastian Riedel <sebastian.riedel@dlr.de>
 
+from future.utils import string_types, native_str
+from builtins import range
+from builtins import str
 import shelve
 import json
 import pickle
@@ -42,7 +45,7 @@ def log_to_raw_structure(execution_history_items):
             start_item = v
         else:
             # connect the item to its predecessor
-            prev_item_id = v['prev_history_item_id']
+            prev_item_id = native_str(v['prev_history_item_id'])
 
             if prev_item_id in execution_history_items:
                 ## should always be the case except if shelve is broken/missing data
@@ -61,7 +64,7 @@ def log_to_raw_structure(execution_history_items):
                     # this is a logical 'next' relationship
                     next_[prev_item_id] = k
             else:
-                logger.warn('HistoryItem is referring to a non-existing previous history item, HistoryItem was %s' % str(v))
+                logger.warning('HistoryItem is referring to a non-existing previous history item, HistoryItem was %s' % str(v))
 
         rid = v['run_id']
         if rid in grouped_by_run_id:
@@ -124,7 +127,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                     try:
                         execution_item[l] = item[l]
                     except KeyError:
-                        logger.warn("Key {} not in history start item".format(str(l)))
+                        logger.warning("Key {} not in history start item".format(str(l)))
 
                 ## add extended properties (added in later rafcon versions),
                 ## will add default value if not existing instead
@@ -150,7 +153,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                 try:
                     execution_item[l] = item[l]
                 except KeyError:
-                    logger.warn("Key {} not in history start item".format(str(l)))
+                    logger.warning("Key {} not in history start item".format(str(l)))
 
             ## add extended properties (added in later rafcon versions),
             ## will add default value if not existing instead
@@ -172,8 +175,8 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
 
             # for item in gitems:
             #     if item["description"] is not None:
-            #         print item["item_type"], item["call_type"], item["state_type"], item["state_name"]
-            #     print item["description"]
+            #         print(item["item_type"], item["call_type"], item["state_type"], item["state_name"])
+            #     print(item["description"])
 
             # select call and return items for this state
             try:
@@ -187,7 +190,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                         gitems[i]['call_type'] == 'CONTAINER' \
                                         for i in range(len(gitems))].index(True)]
                 except ValueError:
-                    logger.warn('Could not find a CallItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
+                    logger.warning('Could not find a CallItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
                     ## create dummy returnitem with the properties referenced later in this code
                     call_item = dict(description=None,
                                      history_item_id=None,
@@ -211,7 +214,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                           gitems[i]['call_type'] == 'CONTAINER' \
                                           for i in range(len(gitems))].index(True)]
                 except ValueError:
-                    logger.warn('Could not find a ReturnItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
+                    logger.warning('Could not find a ReturnItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
                     ## create dummy returnitem with the properties referenced later in this code
                     return_item = dict(history_item_id=None,
                                        outcome_name=None,
@@ -258,7 +261,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                  ('library_state_name', None),
                                  ('library_name', None),
                                  ('library_path', None)]:
-                execution_item[l] = call_item.get(l, default)
+                execution_item[l] = return_item.get(l, default)
 
             for l in ['outcome_name', 'outcome_id']:
                 execution_item[l] = return_item[l]
@@ -269,10 +272,10 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             def unpickle_data(data_dict):
                 r = dict()
                 # support backward compatibility
-                if isinstance(data_dict, basestring):  # formerly data dict was a json string
+                if isinstance(data_dict, string_types):  # formerly data dict was a json string
                     r = json.loads(data_dict)
                 else:
-                    for k, v in data_dict.iteritems():
+                    for k, v in data_dict.items():
                         if not k.startswith('!'): # ! indicates storage error
                             try:
                                 r[k] = pickle.loads(v)
@@ -292,6 +295,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             execution_item['data_outs'] = unpickle_data(return_item['input_output_data'])
             execution_item['scoped_data_ins'] = unpickle_data(call_item['scoped_data'])
             execution_item['scoped_data_outs'] = unpickle_data(return_item['scoped_data'])
+            execution_item['semantic_data'] = unpickle_data(execution_item['semantic_data'])
 
             collapsed_items[rid] = execution_item
 
@@ -326,7 +330,7 @@ def log_to_DataFrame(execution_history_items, data_in_columns=[], data_out_colum
 
     # remove columns which are not generic over all states (basically the
     # data flow stuff)
-    df_keys = gitems.values()[0].keys()
+    df_keys = list(list(gitems.values())[0].keys())
     df_keys.remove('data_ins')
     df_keys.remove('data_outs')
     df_keys.remove('scoped_data_ins')
@@ -392,4 +396,4 @@ def log_to_ganttplot(execution_history_items):
     fig, ax = plt.subplots(1, 1)
     ax.barh(bottom=[name2idx[k] for k in d.path_by_name], width=returndate-calldate,
             left=calldate, align='center', color=[state2color[s] for s in d.state_type], lw=0.0)
-    plt.yticks(range(len(ordered_unique_states)), ordered_unique_states)
+    plt.yticks(list(range(len(ordered_unique_states))), ordered_unique_states)

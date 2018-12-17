@@ -1,3 +1,4 @@
+from builtins import str
 from pytest import raises
 
 # state machine
@@ -20,6 +21,10 @@ def test_create_state(caplog):
     assert len(state1.outcomes) == 4
 
     state1.remove_outcome(out)
+
+    with raises(AttributeError):
+        # AttributeError should be raised if income is to be removed
+        state1.remove_income()
 
     with raises(AttributeError):
         # AttributeError should be raised if not existing outcome ID is to be removed
@@ -207,7 +212,7 @@ def test_create_container_state(caplog):
 
     barrier_state_id = container.add_state(BarrierConcurrencyState())
     with raises(AttributeError):
-        container.states[barrier_state_id].remove(container.states[barrier_state_id].states.values()[0])
+        container.states[barrier_state_id].remove(list(container.states[barrier_state_id].states.values())[0])
     container.remove_state(barrier_state_id)
     ###########################################
 

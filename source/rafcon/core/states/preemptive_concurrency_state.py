@@ -16,9 +16,10 @@
 
 """
 
+from builtins import str
 import traceback
 
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.states.concurrency_state import ConcurrencyState
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.utils import log
@@ -34,10 +35,11 @@ class PreemptiveConcurrencyState(ConcurrencyState):
 
     yaml_tag = u'!PreemptiveConcurrencyState'
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                 income=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None):
 
-        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes, states,
+        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, states,
                                   transitions, data_flows, start_state_id, scoped_variables)
 
     def run(self):
@@ -61,10 +63,10 @@ class PreemptiveConcurrencyState(ConcurrencyState):
 
             # preempt all child states
             if not self.backward_execution:
-                for state_id, state in self.states.iteritems():
+                for state_id, state in self.states.items():
                     state.recursively_preempt_states()
             # join all states
-            for history_index, state in enumerate(self.states.itervalues()):
+            for history_index, state in enumerate(self.states.values()):
                 self.join_state(state, history_index, concurrency_history_item)
                 self.add_state_execution_output_to_scoped_data(state.output_data, state)
                 self.update_scoped_variables_with_output_dictionary(state.output_data, state)
@@ -99,7 +101,7 @@ class PreemptiveConcurrencyState(ConcurrencyState):
 
             return self.finalize_concurrency_state(self.final_outcome)
 
-        except Exception, e:
+        except Exception as e:
             logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE

@@ -13,7 +13,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 import os
 
-from gtkmvc import ModelMT
+from gtkmvc3.model_mt import ModelMT
 
 from rafcon.core.state_machine_manager import StateMachineManager
 
@@ -54,12 +54,12 @@ class StateMachineManagerModel(ModelMT):
 
         self.state_machine_manager = state_machine_manager
         self.state_machines = {}
-        for sm_id, sm in state_machine_manager.state_machines.iteritems():
+        for sm_id, sm in state_machine_manager.state_machines.items():
             self.state_machines[sm_id] = StateMachineModel(sm)
 
         self._selected_state_machine_id = None
-        if len(self.state_machines.keys()) > 0:
-            self.selected_state_machine_id = self.state_machines.keys()[0]
+        if len(self.state_machines) > 0:
+            self.selected_state_machine_id = list(self.state_machines.keys())[0]
 
         if isinstance(meta, Vividict):
             self.meta = meta
@@ -80,8 +80,9 @@ class StateMachineManagerModel(ModelMT):
     def model_changed(self, model, prop_name, info):
         if isinstance(info['result'], Exception):
             from rafcon.gui.utils.notification_overview import NotificationOverview
-            logger.exception("The result type is {0} and the full notification {1}"
-                             "".format(type(info['result']), NotificationOverview(info)))
+            logger.exception("An '{0}' exception was raised in the core. "
+                             "Details about the origin:\n{1}"
+                             "".format(type(info['result']).__name__, NotificationOverview(info)))
             return
 
         if info["method_name"] == "add_state_machine":

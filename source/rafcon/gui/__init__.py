@@ -9,6 +9,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import rafcon.gui.config
-import rafcon.gui.singleton
 import rafcon.gui.interface
+import gi
+gi.require_version('Gtk', '3.0')
+gi.require_version('PangoCairo', '1.0')
+gi.require_version('GtkSource', '3.0')

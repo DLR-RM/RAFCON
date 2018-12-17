@@ -1,7 +1,8 @@
+from __future__ import print_function
 from random import randint
 
 def execute(self, inputs, outputs, gvm):
-    print "Executing transition test state %s" % self.name 
+    print("Executing transition test state %s" % self.name) 
     r = randint(3,4)
-    print "Outcome: ", r
+    print("Outcome: ", r)
     return r

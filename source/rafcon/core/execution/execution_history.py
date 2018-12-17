@@ -17,6 +17,10 @@
    :synopsis: A module for the history of one thread during state machine execution
 
 """
+from future.utils import native_str
+from builtins import object
+from builtins import range
+from builtins import str
 import time
 import copy
 from collections import Iterable, Sized
@@ -27,7 +31,7 @@ from jsonconversion.encoder import JSONObjectEncoder
 import shelve
 from threading import Lock
 from enum import Enum
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 import traceback
 
 from rafcon.core.id_generator import history_item_id_generator
@@ -55,7 +59,7 @@ class ExecutionHistoryStorage(object):
     def store_item(self, key, value):
         self.store_lock.acquire()
         try:
-            self.store[key] = value
+            self.store[native_str(key)] = value
         except Exception as e:
             logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
@@ -316,7 +320,7 @@ class HistoryItem(object):
 
         # semantic data
         semantic_data_dict = {}
-        for k, v in target_state.semantic_data.iteritems():
+        for k, v in target_state.semantic_data.items():
             try:
                 semantic_data_dict[k] = pickle.dumps(v)
             except Exception as e:
@@ -383,18 +387,18 @@ class ScopedDataItem(HistoryItem):
     def to_dict(self):
         record = HistoryItem.to_dict(self)
         scoped_data_dict = {}
-        for k, v in self.scoped_data.iteritems():
+        for k, v in self.scoped_data.items():
             try:
                 scoped_data_dict[v.name] = pickle.dumps(v.value)
             except Exception as e:
                 scoped_data_dict['!' + v.name] = (str(e), str(v.value))
             # logger.debug('TypeError: Could not serialize one of the scoped data port types.')
             # record['scoped_data'] = json.dumps({'error_type': 'TypeError',
-            #                                     'error_message': e.message}, cls=JSONObjectEncoder)
+            #                                     'error_message': e}, cls=JSONObjectEncoder)
         record['scoped_data'] = scoped_data_dict
 
         child_state_input_output_dict = {}
-        for k, v in self.child_state_input_output_data.iteritems():
+        for k, v in self.child_state_input_output_data.items():
             try:
                 child_state_input_output_dict[k] = pickle.dumps(v)
             except Exception as e:
@@ -408,7 +412,7 @@ class ScopedDataItem(HistoryItem):
         #     except TypeError as e:
         #         # logger.exception('TypeError: Could not serialize one of the scoped variables types.')
         #         # record['scoped_variables'] = json.dumps({'error_type': 'TypeError',
-        #         #                                          'error_message': e.message}, cls=JSONObjectEncoder)
+        #         #                                          'error_message': e}, cls=JSONObjectEncoder)
         #         record['scoped_variables'] = json.dumps(
         #             {"key_all": {"name": "all_scoped_variables_as_string",
         #                          "value": str(self.state_reference.scoped_variables)}}, cls=JSONObjectEncoder

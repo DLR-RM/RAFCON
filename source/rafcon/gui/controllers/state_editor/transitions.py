@@ -19,18 +19,19 @@
 
 """
 
-import gobject
-import gtk
+from gi.repository import GObject
+from gi.repository import Gtk
+from builtins import str
 
 from rafcon.core.state_elements.transition import Transition
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.controllers.state_editor.linkage_list import LinkageListController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers.label import format_cell
 from rafcon.gui.models.container_state import ContainerStateModel
 from rafcon.gui.utils.notification_overview import NotificationOverview
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.utils import log
+from functools import reduce
 
 logger = log.get_logger(__name__)
 
@@ -38,7 +39,7 @@ logger = log.get_logger(__name__)
 class StateTransitionsListController(LinkageListController):
     """Controller handling the view of transitions of the ContainerStateModel
 
-    This :class:`gtkmvc.Controller` class is the interface between the GTK widget view
+    This :class:`gtkmvc3.Controller` class is the interface between the GTK widget view
     :class:`gui.views.transitions.TransitionListView` and the transitions of the
     :class:`gui.models.state.ContainerStateModel`. Changes made in
     the GUI are written back to the model and vice versa.
@@ -60,8 +61,8 @@ class StateTransitionsListController(LinkageListController):
     def __init__(self, model, view):
         # ListStore for: id, from-state, from-outcome, to-state, to-outcome, is_external,
         #                   name-color, to-state-color, transition-object, state-object, is_editable, transition-model
-        list_store = gtk.ListStore(int, str, str, str, str, bool,
-                                   gobject.TYPE_PYOBJECT, gobject.TYPE_PYOBJECT, bool, gobject.TYPE_PYOBJECT)
+        list_store = Gtk.ListStore(int, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, bool,
+                                   GObject.TYPE_PYOBJECT, GObject.TYPE_PYOBJECT, bool, GObject.TYPE_PYOBJECT)
 
         self.view_dict = {'transitions_internal': True, 'transitions_external': True}
         self.combo = {}
@@ -79,15 +80,11 @@ class StateTransitionsListController(LinkageListController):
         """Called when the View was registered
         """
         super(StateTransitionsListController, self).register_view(view)
-        format_cell(view['from_state_combo'], None, 0)
-        format_cell(view['to_state_combo'], None, 0)
-        format_cell(view['from_outcome_combo'], None, 0)
-        format_cell(view['to_outcome_combo'], None, 0)
 
-        def cell_text(column, cell_renderer, model, iter):
+        def cell_text(column, cell_renderer, model, iter, data):
             t_id = model.get_value(iter, self.ID_STORAGE_ID)
             in_external = 'external' if model.get_value(iter, self.IS_EXTERNAL_STORAGE_ID) else 'internal'
-            # print t_id, in_external, self.combo[in_external]
+            # print(t_id, in_external, self.combo[in_external])
             if column.get_title() == 'Source State':
                 cell_renderer.set_property("model", self.combo[in_external][t_id]['from_state'])
                 cell_renderer.set_property("text-column", 0)
@@ -118,10 +115,10 @@ class StateTransitionsListController(LinkageListController):
             view['to_state_combo'].set_property("editable", False)
             view['to_outcome_combo'].set_property("editable", False)
         else:
-            view['from_state_combo'].connect("edited", self.on_combo_changed_from_state)
-            view['from_outcome_combo'].connect("edited", self.on_combo_changed_from_outcome)
-            view['to_state_combo'].connect("edited", self.on_combo_changed_to_state)
-            view['to_outcome_combo'].connect("edited", self.on_combo_changed_to_outcome)
+            self.connect_signal(view['from_state_combo'], "edited", self.on_combo_changed_from_state)
+            self.connect_signal(view['from_outcome_combo'], "edited", self.on_combo_changed_from_outcome)
+            self.connect_signal(view['to_state_combo'], "edited", self.on_combo_changed_to_state)
+            self.connect_signal(view['to_outcome_combo'], "edited", self.on_combo_changed_to_outcome)
 
         view.tree_view.connect("grab-focus", self.on_focus)
         self.update(initiator='"register view"')
@@ -140,7 +137,7 @@ class StateTransitionsListController(LinkageListController):
         free_outcomes = None
 
         if self.view_dict['transitions_internal'] and self.combo['free_from_outcomes_dict']:
-            from_state_id = self.combo['free_from_outcomes_dict'].keys()[0]
+            from_state_id = list(self.combo['free_from_outcomes_dict'].keys())[0]
             free_outcomes = self.combo['free_from_outcomes_dict'][from_state_id]
             responsible_parent = self.model.state
         elif self.view_dict['transitions_external'] and self.combo['free_ext_from_outcomes_dict'] and \
@@ -155,12 +152,12 @@ class StateTransitionsListController(LinkageListController):
 
         from_outcome = None if free_outcomes[0] is None else free_outcomes[0].outcome_id
         to_state_id = responsible_parent.state_id
-        to_outcomes = responsible_parent.outcomes.values()
+        to_outcomes = list(responsible_parent.outcomes.values())
         if len(to_outcomes) == 0:
             logger.warning("No more options to add a transition")
             return
         to_outcome = to_outcomes[0].outcome_id
-        # print "NEW TRANSITION IS: ", from_state_id, from_outcome, to_state_id, to_outcome
+        # print("NEW TRANSITION IS: ", from_state_id, from_outcome, to_state_id, to_outcome)
 
         try:
             if from_state_id == responsible_parent.state_id:
@@ -216,7 +213,7 @@ class StateTransitionsListController(LinkageListController):
             free_outcomes = self.combo['free_from_outcomes_dict'][new_from_state_id]
 
         current_from_outcome = responsible_state_m.state.transitions[t_id].from_outcome
-        free_outcome_ids = map(lambda outcome_m: None if outcome_m is None else outcome_m.outcome_id, free_outcomes)
+        free_outcome_ids = [None if outcome_m is None else outcome_m.outcome_id for outcome_m in free_outcomes]
         if len(free_outcomes) == 0:
             logger.warning('There is no free outcome for the chosen state')
             return
@@ -318,10 +315,10 @@ class StateTransitionsListController(LinkageListController):
         :param is_external:
         :return:
         """
-        from_state_combo = gtk.ListStore(str, str)
-        from_outcome_combo = gtk.ListStore(str)
-        to_state_combo = gtk.ListStore(str)
-        to_outcome_combo = gtk.ListStore(str)
+        from_state_combo = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
+        from_outcome_combo = Gtk.ListStore(GObject.TYPE_STRING)
+        to_state_combo = Gtk.ListStore(GObject.TYPE_STRING)
+        to_outcome_combo = Gtk.ListStore(GObject.TYPE_STRING)
 
         trans_dict = model.state.transitions
 
@@ -337,12 +334,12 @@ class StateTransitionsListController(LinkageListController):
         free_from_outcomes_dict = {}
         for state in model.state.states.values():
             from_o_combo = state.outcomes.values()
-            # print [o.outcome_id for o in from_o_combo], state_model.state.state_id
+            # print([o.outcome_id for o in from_o_combo], state_model.state.state_id)
             for transition in trans_dict.values():
-                # print transition, [[o.outcome_id == transition.from_outcome, transition.from_state == state_model.state.state_id] for o in from_o_combo]
-                from_o_combo = filter(lambda o: not (o.outcome_id == transition.from_outcome and
-                                                     transition.from_state == state.state_id), from_o_combo)
-                # print [o.outcome_id for o in from_o_combo]
+                # print(transition, [[o.outcome_id == transition.from_outcome, transition.from_state == state_model.state.state_id] for o in from_o_combo])
+                from_o_combo = [o for o in from_o_combo if not (o.outcome_id == transition.from_outcome and
+                                                     transition.from_state == state.state_id)]
+                # print([o.outcome_id for o in from_o_combo])
             if len(from_o_combo) > 0:
                 free_from_outcomes_dict[state.state_id] = from_o_combo
         # check if parent has start_state
@@ -352,7 +349,7 @@ class StateTransitionsListController(LinkageListController):
         # for from-state-combo use all states with free outcomes and from_state
         combined_states = [model.state] if is_external else [self_model.state]
         combined_states.extend(model.state.states.values())
-        free_from_states = filter(lambda state: state.state_id in free_from_outcomes_dict.keys(), combined_states)
+        free_from_states = [state for state in combined_states if state.state_id in free_from_outcomes_dict]
 
         if trans is None:
             return None, None, None, None, free_from_states, free_from_outcomes_dict
@@ -428,7 +425,7 @@ class StateTransitionsListController(LinkageListController):
 
         model = self.model
 
-        # print "clean data base"
+        # print("clean data base")
 
         ### FOR COMBOS
         # internal transitions
@@ -501,7 +498,7 @@ class StateTransitionsListController(LinkageListController):
                 self.combo['free_ext_from_outcomes_dict'] = free_from_outcomes_dict
 
     def _update_tree_store(self):
-        """ Updates TreeStore of the gtk.ListView according internal combo knowledge gained by
+        """ Updates TreeStore of the Gtk.ListView according internal combo knowledge gained by
         _update_internal_data_base function call.
         """
 
@@ -509,7 +506,7 @@ class StateTransitionsListController(LinkageListController):
         if self.view_dict['transitions_internal'] and isinstance(self.model, ContainerStateModel) and \
                 len(self.model.state.transitions) > 0:
             for transition_id in self.combo['internal'].keys():
-                # print "TRANSITION_ID: ", transition_id, self.model.state.transitions
+                # print("TRANSITION_ID: ", transition_id, self.model.state.transitions)
                 t = self.model.state.transitions[transition_id]
 
                 if t.from_state is not None:
@@ -525,7 +522,7 @@ class StateTransitionsListController(LinkageListController):
                     to_outcome = None if t.to_outcome is None else self.model.state.outcomes[t.to_outcome]
                     to_outcome_label = "None" if to_outcome is None else to_outcome.name
                 else:
-                    # print t.to_state, self.model.states
+                    # print(t.to_state, self.model.states)
                     if t.to_state == self.model.state.state_id:
                         to_state_label = "self (" + self.model.state.name + ")"
                         to_outcome_label = self.model.state.outcomes[t.to_outcome].name
@@ -547,7 +544,7 @@ class StateTransitionsListController(LinkageListController):
         if self.view_dict['transitions_external'] and self.model.parent and \
                 len(self.model.parent.state.transitions) > 0:
             for transition_id in self.combo['external'].keys():
-                # print "TRANSITION_ID: ", transition_id, self.model.parent.state.transitions
+                # print("TRANSITION_ID: ", transition_id, self.model.parent.state.transitions)
                 try:
                     t = self.model.parent.state.transitions[transition_id]
                     # logger.info(str(t))
@@ -633,7 +630,7 @@ class StateTransitionsListController(LinkageListController):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
-        # print self, self.model.state.get_path(), overview
+        # print(self, self.model.state.get_path(), overview)
         # logger.info("after_notification_of_parent_or_state_from_lists: OK")
 
         if overview['prop_name'][0] in ['states', 'outcomes', 'transitions'] and \
@@ -652,7 +649,7 @@ class StateTransitionsListController(LinkageListController):
                         return
                 else:
                     return
-        # print "TUPDATE ", self, overview
+        # print("TUPDATE ", self, overview)
 
         try:
             # logger.info("after_notification_of_parent_or_state_from_lists: UPDATE")

@@ -17,9 +17,11 @@
 
 """
 
+from future.utils import string_types
+from builtins import str
 from weakref import ref
 from yaml import YAMLObject
-from gtkmvc import Observable
+from gtkmvc3.observable import Observable
 from jsonconversion.jsonobject import JSONObject
 
 from rafcon.core.custom_exceptions import RecoveryModeException
@@ -53,6 +55,9 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
 
         self.parent = parent
 
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
@@ -64,8 +69,15 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
     def __cmp__(self, other):
         if isinstance(other, StateElement):
             if self.__class__ is other.__class__:
-                return self.core_element_id.__cmp__(other.core_element_id)
+                if self.core_element_id < other.core_element_id:
+                    return -1
+                elif self.core_element_id > other.core_element_id:
+                    return 1
+                return 0
             return -1 if self.__class__.__name__ < other.__class__.__name__ else 1
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
 
     @property
     def parent(self):
@@ -161,7 +173,7 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
         :param value: The new desired value for this property
         :raises exceptions.ValueError: if a property could not be changed
         """
-        assert isinstance(property_name, basestring)
+        assert isinstance(property_name, string_types)
         old_value = getattr(self, property_name)
         setattr(self, property_name, value)
 

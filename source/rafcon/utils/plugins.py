@@ -18,6 +18,7 @@
 
 """
 
+from builtins import str
 import sys
 import os
 import importlib
@@ -66,7 +67,7 @@ def run_hook(hook_name, *args, **kwargs):
     :param args: Arguments
     :param kwargs: Keyword arguments
     """
-    for module in plugin_dict.itervalues():
+    for module in plugin_dict.values():
         if hasattr(module, "hooks") and callable(getattr(module.hooks, hook_name, None)):
             getattr(module.hooks, hook_name)(*args, **kwargs)
 

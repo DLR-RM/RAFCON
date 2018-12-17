@@ -12,6 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from __future__ import print_function
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 from setuptools.command.develop import develop as DevelopCommand
@@ -20,6 +21,14 @@ from os import path
 import os
 import sys
 from imp import load_source
+import distutils.log as log
+
+
+rafcon_root_path = os.path.dirname(os.path.abspath(__file__))
+
+script_path = path.realpath(__file__)
+install_helper = path.join(path.dirname(script_path), "source", "rafcon", "utils", "installation.py")
+installation = load_source("installation", install_helper)
 
 
 class PyTest(TestCommand):
@@ -46,9 +55,8 @@ class PyTest(TestCommand):
         sys.path.insert(0, test_path)
         sys.path.insert(0, rafcon_path)
         os.environ["PYTHONPATH"] = rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
-        print
-        print "Running pytest with the following arguments:", shlex.split(self.pytest_args) + ['tests']
-        print
+        log.info("\nRunning pytest with the following arguments: {}\n".format(shlex.split(self.pytest_args) + [
+            'tests']))
         error_number = pytest.main(shlex.split(self.pytest_args) + ['tests'])
         sys.exit(error_number)
 
@@ -72,111 +80,19 @@ class PostInstallCommand(InstallCommand):
         installation.install_libraries()
 
 
-def get_data_files_tuple(*path, **kwargs):
-    """Return a tuple which can be used for setup.py's data_files
-    
-    :param tuple path: List of path elements pointing to a file or a directory of files
-    :param dict kwargs: Set path_to_file to True is `path` points to a file 
-    :return: tuple of install directory and list of source files
-    :rtype: tuple(str, [str])
-    """
-    path = os.path.join(*path)
-    target_path = os.path.join("share", *path.split(os.sep)[1:])  # remove source/ (package_dir)
-    if "path_to_file" in kwargs and kwargs["path_to_file"]:
-        source_files = [path]
-        target_path = os.path.dirname(target_path)
-    else:
-        source_files = [os.path.join(path, filename) for filename in os.listdir(path)]
-    return target_path, source_files
-
-
-def get_all_files_recursivly(*path):
-    """ Adds all files of the specified path to a data_files compatible list
-
-    :param tuple path: List of path elements pointing to a directory of files
-    :return: list of tuples of install directory and list of source files
-    :rtype: list(tuple(str, [str]))
-    """
-    result_list = list()
-    root_dir = os.path.join(*path)
-    print "retrieving all files from folder '{}'recursivelyy and adding to data_files ... ".format(root_dir)
-
-    # remove share/ (package_dir) => e.g. target_dir_sub_path will be just "libraries"
-    target_dir_sub_path = os.path.join(*root_dir.split(os.sep)[1:])
-
-    for dir_, _, files in os.walk(root_dir):
-        relative_directory = os.path.relpath(dir_, root_dir)
-        file_list = list()
-        for fileName in files:
-            relative_file = os.path.join(relative_directory, fileName)
-            file_list.append(os.path.join(root_dir, relative_file))  # this is now a path relative to rafcon root folder
-            # print relative_file
-        if len(file_list) > 0:
-            # this is valid path in ~/.local folder: e.g. share/rafcon/libraries/generic/wait
-            target_path = os.path.join("share", "rafcon", target_dir_sub_path, relative_directory)
-            result_list.append((target_path, file_list))
-    return result_list
-
-
-def generate_data_files():
-    """ Generate the data_files list used in the setup function
-
-    :return: list of tuples of install directory and list of source files
-    :rtype: list(tuple(str, [str]))
-    """
-    assets_folder = path.join('source', 'rafcon', 'gui', 'assets')
-    themes_folder = path.join(assets_folder, 'themes')
-    examples_folder = path.join('share', 'examples')
-    libraries_folder = path.join('share', 'libraries')
-
-    gui_data_files = [
-        get_data_files_tuple(assets_folder, 'icons'),
-        get_data_files_tuple(assets_folder, 'splashscreens'),
-        get_data_files_tuple(assets_folder, path.join('fonts', 'FontAwesome')),
-        get_data_files_tuple(assets_folder, path.join('fonts', 'DIN Next LT Pro')),
-        get_data_files_tuple(themes_folder, 'dark', 'gtk-2.0', 'gtkrc', path_to_file=True),
-        get_data_files_tuple(themes_folder, 'dark', 'colors.json', path_to_file=True),
-        get_data_files_tuple(themes_folder, 'dark', 'gtk-sourceview'),
-    ]
-
-    locale_data_files = installation.create_mo_files()
-    # example tuple
-    # locale_data_files = [('share/rafcon/locale/de/LC_MESSAGES', ['source/rafcon/locale/de/LC_MESSAGES/rafcon.mo'])]
-    # print locale_data_files
-
-    version_data_file = [("./", ["./VERSION"])]
-
-    # print gui_data_files
-    # print version_data_file
-
-    examples_data_files = get_all_files_recursivly(examples_folder)
-    # print examples_data_files
-    libraries_data_files = get_all_files_recursivly(libraries_folder)
-    generated_data_files = locale_data_files + gui_data_files + examples_data_files + libraries_data_files + \
-                           version_data_file
-    # for elem in generated_data_files:
-    #     print elem
-    return generated_data_files
-
-
-global_requirements = ['pylint>=1.6,<2', 'pyyaml~=3.10', 'psutil', 'jsonconversion~=0.2', 'yaml_configuration~=0.0',
-                       'python-gtkmvc-dlr==1.99.2', 'gaphas>=0.7']
-
-script_path = path.realpath(__file__)
-install_helper = path.join(path.dirname(script_path), "source", "rafcon", "gui", "helpers", "installation.py")
-installation = load_source("installation", install_helper)
-
 # read version from VERSION file
 # this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon
-setup_dir = os.path.dirname(__file__)
-version_file_path = os.path.join(setup_dir, "VERSION")
+version_file_path = os.path.join(rafcon_root_path, "VERSION")
 with open(version_file_path, "r") as f:
     content = f.read().splitlines()
     version = content[0]
 
-readme_file_path = os.path.join(setup_dir, "README.rst")
+readme_file_path = os.path.join(rafcon_root_path, "README.rst")
 with open(readme_file_path, "r") as f:
     long_description = f.read()
+
+global_requirements = ['pylint>=1.6,<2', 'pyyaml~=3.10', 'psutil', 'jsonconversion~=0.2.9', 'yaml_configuration~=0.1',
+                       'python-gtkmvc3-dlr~=1.0.0', 'gaphas~=1.0.0rc1', 'future>=0.16,<0.18.0']
 
 setup(
     name='rafcon',
@@ -189,8 +105,8 @@ setup(
                 'interface',
     long_description=long_description,
 
-    packages=find_packages('source'),
-    package_dir={'': 'source'},  # tell distutils packages are under src
+    packages=find_packages("source"),
+    package_dir={'': "source"},  # tell distutils packages are under source
 
     package_data={
         # Include pylint and logging config
@@ -202,25 +118,26 @@ setup(
         'rafcon.gui.glade': ['*.glade']
     },
 
-    data_files=generate_data_files(),
+    data_files=installation.generate_data_files(),
 
-    setup_requires=['Sphinx>=1.4'] + global_requirements,
+    setup_requires=['Sphinx>=1.4', 'libsass >= 0.15.0'] + global_requirements,
     tests_require=['pytest', 'pytest-catchlog', 'graphviz', 'pymouse'] + global_requirements,
     install_requires=global_requirements,
 
-    dependency_links=[
-        "https://github.com/DLR-RM/gtkmvc3/releases/download/gtkmvc_dlr_1.99.2/python-gtkmvc-dlr-1.99.2.tar.gz"
-        "#egg=python-gtkmvc-dlr-1.99.2"
-    ],
+    sass_manifests={
+        'rafcon': {
+            'sass_path': 'gui/assets/share/themes/RAFCON/sass',
+            'css_path': 'gui/assets/share/themes/RAFCON/gtk-3.0',
+            'strip_extension': True
+        }
+    },
 
     entry_points={
         'console_scripts': [
-            'rafcon_start = rafcon.core.start:main',
             'rafcon_core = rafcon.core.start:main'
         ],
         'gui_scripts': [
             'rafcon_execution_log_viewer = rafcon.gui.execution_log_viewer:main',
-            'rafcon_start_gui = rafcon.gui.start:main',
             'rafcon = rafcon.gui.start:main'
         ]
     },
@@ -235,16 +152,17 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
-        'Environment :: X11 Applications',
+        'Environment :: X11 Applications :: GTK',
         'Framework :: Robot Framework',
         'Intended Audience :: Developers',
         'Intended Audience :: Education',
         'Intended Audience :: Manufacturing',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved',
+        'License :: OSI Approved :: Eclipse Public License 1.0 (EPL-1.0)',
         'Natural Language :: English',
         'Operating System :: Unix',
-        'Programming Language :: Python :: 2 :: Only',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         'Topic :: Scientific/Engineering',
         'Topic :: Software Development',
         'Topic :: Utilities'

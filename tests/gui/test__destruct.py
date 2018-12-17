@@ -1,8 +1,13 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from past.builtins import map
+from builtins import str
 import os
 import gc
 import time
 import shutil
-import gtkmvc
+import gtkmvc3
+
 from pprint import pprint
 
 import rafcon.core.singleton
@@ -34,11 +39,11 @@ old_state_element_model_init = None
 CTRL_FILES = ['extended_controller']
 old_extended_controller_init = None
 
-# store method of gtkmvc element classes
-GTKMVC_FILES = ['gtkmvc_view', 'gtkmvc_controller']
-old_gtkmvc_view_init = gtkmvc.View.__init__
-old_gtkmvc_model_mt_init = gtkmvc.ModelMT.__init__
-old_gtkmvc_controller_init = gtkmvc.Controller.__init__
+# store method of gtkmvc3 element classes
+GTKMVC_FILES = ['gtkmvc3_view', 'gtkmvc3_controller']
+old_gtkmvc3_view_init = None
+old_gtkmvc3_model_mt_init = None
+old_gtkmvc3_controller_init = None
 
 # store method of gaphas element classes
 GAPHAS_FILES = ['gaphas_state_view', 'gaphas_extended_view', 'gaphas_port_view', 'gaphas_connection_view']
@@ -126,7 +131,7 @@ def get_log_elements(elements, with_prints=False, print_method=None):
         if file_name is None:
             continue
         gen_file = os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(file_name, GENERATION_LOG_FILE_APPENDIX))
-        print gen_file
+        print(gen_file)
         with open(gen_file) as f:
             element_gen_file = f.readlines()
         element_gen_file = [line.replace('\n', '') for line in element_gen_file]
@@ -151,12 +156,12 @@ def get_log_elements(elements, with_prints=False, print_method=None):
                     if _print_method is not None:
                         _print_method(s)
                     else:
-                        print s
+                        print(s)
 
         log_result_dict[file_name] = {'gen_file': element_gen_file, 'del_file': element_del_file}
 
     # print '\n'.join(["{0}: \n{1}\n{2}".format(element_name, log_files['gen_file'], log_files['del_file'])
-    #                  for element_name, log_files in log_result_dict.iteritems()])
+    #                  for element_name, log_files in log_result_dict.items()])
 
     return log_result_dict
 
@@ -167,20 +172,20 @@ def check_log_files(elements):
         files.append(os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, GENERATION_LOG_FILE_APPENDIX)))
 
     for file_path in files:
-        print "check file: ", file_path
+        print("check file: ", file_path)
         if os.path.exists(file_path):
-            print "exists before: ", file_path
+            print("exists before: ", file_path)
         with open(file_path, 'a+'):
             pass
         if os.path.exists(file_path):
-            print "exists after: ", file_path
+            print("exists after: ", file_path)
 
 
 def remove_log_files(elements):
     files = []
     for element_name in elements:
         files.append(os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, GENERATION_LOG_FILE_APPENDIX)))
-    print "REMOVE: \n{}".format('\n'.join([log_file_path for log_file_path in files]))
+    print("REMOVE: \n{}".format('\n'.join([log_file_path for log_file_path in files])))
     for log_file_path in files:
         if os.path.exists(log_file_path):
             os.remove(log_file_path)
@@ -197,8 +202,8 @@ def create_models():
     # global_gui_config.set_config_value('HISTORY_ENABLED', True)
     logger = log.get_logger(__name__)
     logger.setLevel(logging.VERBOSE)
-    for handler in logging.getLogger('gtkmvc').handlers:
-        logging.getLogger('gtkmvc').removeHandler(handler)
+    for handler in logging.getLogger('gtkmvc3').handlers:
+        logging.getLogger('gtkmvc3').removeHandler(handler)
 
     state1 = ExecutionState('State1', state_id='STATE1')
     output_state1 = state1.add_output_data_port("output", "int")
@@ -273,10 +278,10 @@ def generate_graphs(target_object_s):
         try:
             import objgraph
         except ImportError:
-            print "ImportError no generation of graph"
+            print("ImportError no generation of graph")
             return
 
-        print "graph from object: ", target_object_s, id(target_object_s)
+        print("graph from object: ", target_object_s, id(target_object_s))
 
         if isinstance(target_object_s, list):
             target_object = target_object_s[0]
@@ -287,7 +292,7 @@ def generate_graphs(target_object_s):
             for to in set(target_object_s):  # set used to additional avoid multiple identical graph generation
                 generate_graphs(to)
         else:
-            print "generate graph"
+            print("generate graph")
             target_object = target_object_s
             folder_path = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "..", "..",
                                        target_object.__class__.__name__)
@@ -299,7 +304,7 @@ def generate_graphs(target_object_s):
                                    highlight=None,
                                    extra_info=None, refcounts=True, shortnames=False,
                                    filename=graph_file_name)
-            print "generate graph finished"
+            print("generate graph finished")
 
 
 def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=None, log_file=True,
@@ -345,9 +350,9 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
                          "".format(object_class, len(found_objects_of_kind), collection_counts,
                                    len(result_dict[name]['gen_file']) if name else None, class_types_found))
         else:
-            print "of object of kind '{0}' have been generated {2} and there are {1} left over instances " \
+            print("of object of kind '{0}' have been generated {2} and there are {1} left over instances " \
                   "".format(object_class, len(found_objects_of_kind),
-                            len(result_dict[name]['gen_file']) if name else None)
+                            len(result_dict[name]['gen_file']) if name else None))
         if check_it:
             assert len(found_objects_of_kind) == 0
 
@@ -365,10 +370,10 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
         if isinstance(it, dict):
             if name:
                 return set(["{0}: {1}".format(key, element_in_iter.__class__.__name__)
-                            for key, element_in_iter in it.iteritems()])
+                            for key, element_in_iter in it.items()])
             else:
                 return set(["{0}: {1}".format(key, element_in_iter.__class__)
-                            for key, element_in_iter in it.iteritems()])
+                            for key, element_in_iter in it.items()])
         else:
             if name:
                 return set([element_in_iter.__class__.__name__ for element_in_iter in it])
@@ -385,33 +390,33 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
             pprint(["{1} with {0} elements of type: ".format(len(referrer), referrer.__class__.__name__),
                     get_classes_in_iter(referrer)])
 
-    print "ignored_objects", ignored_objects
-    print "found_objects", found_objects
-    print "target_objects", target_objects
+    print("ignored_objects", ignored_objects)
+    print("found_objects", found_objects)
+    print("target_objects", target_objects)
 
     if target_objects:
         generate_graphs(target_objects)
         return
         for index_target_object, target_object in enumerate(target_objects):
-            print
-            print
-            print "# Referrers of #{0} {1}:".format(index_target_object + 1, searched_type), target_object
+            print()
+            print()
+            print("# Referrers of #{0} {1}:".format(index_target_object + 1, searched_type), target_object)
 
             # TODO the referrer prints should avoid to print the local variables list (by checking element keys)
             # TODO the referrer prints should avoid to print the list generated in this script (by inherit)
             target_object_referrers = gc.get_referrers(target_object)
             list_referrers = [referrer for referrer in target_object_referrers if hasattr(referrer, '__iter__')]
 
-            print "## simple referrers", len(target_object_referrers)
+            print("## simple referrers", len(target_object_referrers))
             map(print_referrer, [referrer for referrer in target_object_referrers if referrer not in list_referrers])
 
-            print "## list referrers"
+            print("## list referrers")
             gc.collect()
 
             for referrer in list_referrers:
                 print_referrer(referrer)
                 second_instance_list_referrers = gc.get_referrers(referrer)
-                print "### referrers of list referrer", len(second_instance_list_referrers)
+                print("### referrers of list referrer", len(second_instance_list_referrers))
                 map(print_referrer, second_instance_list_referrers)
     # else:
     #     generate_graphs(found_objects)
@@ -458,43 +463,43 @@ def run_simple_modification_construction():
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     testing_utils.call_gui_callback(check_state_editor_models, sm_m, sm_m.root_state)
     import rafcon.gui.helpers.state
-    list_exsisting_state_ids = sm_m.root_state.states.keys()
+    list_exsisting_state_ids = list(sm_m.root_state.states.keys())
 
-    print "%" * 50
-    print "check before add_state"
-    print "%" * 50
+    print("%" * 50)
+    print("check before add_state")
+    print("%" * 50)
 
     testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
                                     rafcon.gui.helpers.state.StateType.EXECUTION)
-    print "%" * 50
-    print "after first add"
-    print "%" * 50
+    print("%" * 50)
+    print("after first add")
+    print("%" * 50)
     testing_utils.call_gui_callback(rafcon.gui.helpers.state.add_state, sm_m.root_state,
                                     rafcon.gui.helpers.state.StateType.HIERARCHY)
 
-    new_state_ids = [state_id for state_id, state_m in sm_m.root_state.states.iteritems()
+    new_state_ids = [state_id for state_id, state_m in sm_m.root_state.states.items()
                      if state_id not in list_exsisting_state_ids]
     for state_id in new_state_ids:
         testing_utils.call_gui_callback(sm_m.root_state.state.remove_state, state_id)
-    print "%" * 50
-    print "after deletes"
-    print "%" * 50
+    print("%" * 50)
+    print("after deletes")
+    print("%" * 50)
     import time
-    print "%" * 50
-    print "do test menu bar"
-    print "%" * 50
-    import widget.test_menu_bar
+    print("%" * 50)
+    print("do test menu bar")
+    print("%" * 50)
+    from gui.widget import test_menu_bar
     # TODO D-get this test also running with substitute_library
-    widget.test_menu_bar.trigger_gui_signals(with_refresh=True, with_substitute_library=False)
-    print "%" * 50
-    print "do test complex actions, group & ungroup"
-    print "%" * 50
-    import test_complex_actions
+    test_menu_bar.trigger_gui_signals(with_refresh=True, with_substitute_library=False)
+    print("%" * 50)
+    print("do test complex actions, group & ungroup")
+    print("%" * 50)
+    from gui import test_complex_actions
     test_complex_actions.trigger_repetitive_group_ungroup()
-    print "%" * 50
-    print "do test ungroup"
-    print "%" * 50
-    import test_group_ungroup
+    print("%" * 50)
+    print("do test ungroup")
+    print("%" * 50)
+    from gui import test_group_ungroup
     test_group_ungroup.trigger_ungroup_signals()
     testing_utils.call_gui_callback(testing_utils.wait_for_gui)
 
@@ -506,14 +511,12 @@ def run_simple_execution_controller_construction():
     import rafcon.core.execution.execution_engine
     import rafcon.gui.singleton
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
-    testing_utils.call_gui_callback(rafcon.gui.singleton.state_machine_manager.__setattr__, "active_state_machine_id",
-                                    sm_m.state_machine.state_machine_id)
     execution_engine = rafcon.gui.singleton.state_machine_execution_engine
     sm_execution_status = rafcon.core.execution.execution_engine.StateMachineExecutionStatus
-    testing_utils.call_gui_callback(execution_engine.start)
+    testing_utils.call_gui_callback(execution_engine.start, sm_m.state_machine.state_machine_id)
 
     while execution_engine.status.execution_mode is not sm_execution_status.FINISHED:
-        print "execution not finished yet: wait"
+        print("execution not finished yet: wait")
         time.sleep(0.01)
     testing_utils.call_gui_callback(rafcon.core.singleton.state_machine_manager.delete_all_state_machines)
 
@@ -627,7 +630,7 @@ def un_patch_model_classes_from_log():
 
 def patch_ctrl_classes_with_log():
 
-    # TODO maybe remove this again because the gtkmvc classes are covering this case
+    # TODO maybe remove this again because the gtkmvc3 classes are covering this case
     import rafcon.gui.controllers.utils.extended_controller
     global old_extended_controller_init
 
@@ -658,52 +661,62 @@ def un_patch_ctrl_classes_from_log():
     remove_log_files(CTRL_FILES)
 
 
-def patch_gtkmvc_classes_with_log():
+def patch_gtkmvc3_classes_with_log():
+    import gtkmvc3.view
+    import gtkmvc3.controller
+    import gtkmvc3.model_mt
 
-    global old_gtkmvc_view_init, old_gtkmvc_controller_init, old_gtkmvc_model_mt_init
+    global old_gtkmvc3_view_init, old_gtkmvc3_controller_init, old_gtkmvc3_model_mt_init
+    old_gtkmvc3_view_init = gtkmvc3.view.View.__init__
+    old_gtkmvc3_model_mt_init = gtkmvc3.model_mt.ModelMT.__init__
+    old_gtkmvc3_controller_init = gtkmvc3.controller.Controller.__init__
 
     check_log_files(GTKMVC_FILES)
 
-    def gtkmvc_view_init(self, glade=None, top=None, parent=None, builder=None):
+    def gtkmvc3_view_init(self, top=None, parent=None, builder=None):
         self.__gen_time_stamp = int(round(time.time() * 1000))
-        self.__kind = 'gtkmvc_view'
+        self.__kind = 'gtkmvc3_view'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
                                                                                    GENERATION_LOG_FILE_APPENDIX))
         with open(self.__gen_log_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
-        old_gtkmvc_view_init(self, glade, top, parent, builder)
+        old_gtkmvc3_view_init(self, top, parent, builder)
 
-    def gtkmvc_controller_init(self, model, view, spurious=False, auto_adapt=False):
+    def gtkmvc3_controller_init(self, model, view, spurious=False, auto_adapt=False):
         self.__gen_time_stamp = int(round(time.time() * 1000))
-        self.__kind = 'gtkmvc_controller'
+        self.__kind = 'gtkmvc3_controller'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
                                                                                    GENERATION_LOG_FILE_APPENDIX))
         with open(self.__gen_log_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
-        old_gtkmvc_controller_init(self, model, view, spurious, auto_adapt)
+        old_gtkmvc3_controller_init(self, model, view, spurious, auto_adapt)
 
-    def gtkmvc_model_mt_init(self):
+    def gtkmvc3_model_mt_init(self):
         self.__gen_time_stamp = int(round(time.time() * 1000))
-        self.__kind = 'gtkmvc_model_mt'
+        self.__kind = 'gtkmvc3_model_mt'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
                                                                                    GENERATION_LOG_FILE_APPENDIX))
         with open(self.__gen_log_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
-        old_gtkmvc_model_mt_init(self)
+        old_gtkmvc3_model_mt_init(self)
 
-    gtkmvc.View.__init__ = gtkmvc_view_init
-    # gtkmvc.ModelMT.__init__ = gtkmvc_model_mt_init
-    gtkmvc.Controller.__init__ = gtkmvc_controller_init
+    gtkmvc3.view.View.__init__ = gtkmvc3_view_init
+    # gtkmvc3.ModelMT.__init__ = gtkmvc3_model_mt_init
+    gtkmvc3.controller.Controller.__init__ = gtkmvc3_controller_init
 
 
-def un_patch_gtkmvc_classes_from_log():
-    global old_gtkmvc_view_init, old_gtkmvc_controller_init, old_gtkmvc_model_mt_init
-    gtkmvc.View.__init__ = old_gtkmvc_view_init
-    # gtkmvc.ModelMT.__init__ = old_gtkmvc_model_mt_init
-    gtkmvc.Controller.__init__ = old_gtkmvc_controller_init
+def un_patch_gtkmvc3_classes_from_log():
+    import gtkmvc3.view
+    import gtkmvc3.controller
+    import gtkmvc3.model_mt
+
+    global old_gtkmvc3_view_init, old_gtkmvc3_controller_init, old_gtkmvc3_model_mt_init
+    gtkmvc3.view.View.__init__ = old_gtkmvc3_view_init
+    # gtkmvc3.ModelMT.__init__ = old_gtkmvc3_model_mt_init
+    gtkmvc3.controller.Controller.__init__ = old_gtkmvc3_controller_init
     remove_log_files(GTKMVC_FILES)
 
 
@@ -784,7 +797,7 @@ def un_patch_gaphas_classes_from_log():
 
 
 def print_func(s):
-    print s
+    print(s)
 
 
 LOG_FILE_NAME_ID = 0
@@ -802,6 +815,10 @@ def get_param_dict():
     import rafcon.gui.mygaphas.items.connection
     import rafcon.gui.mygaphas.items.state
     import rafcon.gui.mygaphas.view
+    import gtkmvc3.view
+    import gtkmvc3.controller
+    import gtkmvc3.model_mt
+
     param_dict = {
                   rafcon.core.states.state.State:
                       ('state', patch_core_classes_with_log, un_patch_core_classes_from_log),
@@ -813,12 +830,12 @@ def get_param_dict():
                       ('state_element_model', patch_model_classes_with_log, un_patch_model_classes_from_log),
                   rafcon.gui.controllers.utils.extended_controller.ExtendedController:
                       ('extended_controller', patch_ctrl_classes_with_log, un_patch_ctrl_classes_from_log),
-                  gtkmvc.View:
-                      ('gtkmvc_view', patch_gtkmvc_classes_with_log, un_patch_gtkmvc_classes_from_log),
-                  # gtkmvc.ModelMT:
-                  #     ('gtkmvc_model_mt', patch_gtkmvc_classes_with_log, un_patch_gtkmvc_classes_from_log),
-                  gtkmvc.Controller:
-                      ('gtkmvc_controller', patch_gtkmvc_classes_with_log, un_patch_gtkmvc_classes_from_log),
+                  gtkmvc3.view.View:
+                      ('gtkmvc3_view', patch_gtkmvc3_classes_with_log, un_patch_gtkmvc3_classes_from_log),
+                  # gtkmvc3.ModelMT:
+                  #     ('gtkmvc3_model_mt', patch_gtkmvc3_classes_with_log, un_patch_gtkmvc3_classes_from_log),
+                  gtkmvc3.controller.Controller:
+                      ('gtkmvc3_controller', patch_gtkmvc3_classes_with_log, un_patch_gtkmvc3_classes_from_log),
                   rafcon.gui.mygaphas.view.ExtendedGtkView:
                       ('gaphas_extended_view', patch_gaphas_classes_with_log, un_patch_gaphas_classes_from_log),
                   rafcon.gui.mygaphas.items.state.StateView:
@@ -836,7 +853,7 @@ def run_patching(elements):
     f_set = set([param_dict[class_to_patch][PATCH_FUNCTION_ID] for class_to_patch, _ in elements
                  if class_to_patch in param_dict])
     for func in f_set:
-        print "patch with: ", func
+        print("patch with: ", func)
         func()
 
 
@@ -845,7 +862,7 @@ def run_un_patching(elements):
     f_set = set([param_dict[class_to_patch][UN_PATCH_FUNCTION_ID] for class_to_patch, check_it in elements
                  if class_to_patch in param_dict])
     for func in f_set:
-        print "un-patch with: ", func
+        print("un-patch with: ", func)
         func()
 
 
@@ -871,12 +888,9 @@ def test_core_destruct(caplog):
     # test
     generate_sm_for_garbage_collector()
 
-    check_existing_objects_of_kind(elements, ignored_objects=already_existing_objects)
-
-    run_un_patching(elements)
-
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
-
+    check_existing_objects_of_kind(elements, ignored_objects=already_existing_objects)
+    run_un_patching(elements)
 
 def test_model_and_core_destruct(caplog):
 
@@ -902,11 +916,9 @@ def test_model_and_core_destruct(caplog):
 
     run_model_construction()
 
-    check_existing_objects_of_kind(elements, print_func, already_existing_objects)
-
-    run_un_patching(elements)
-
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
+    check_existing_objects_of_kind(elements, print_func, already_existing_objects)
+    run_un_patching(elements)
 
 
 def test_simple_model_and_core_destruct_with_gui(caplog):
@@ -920,8 +932,22 @@ def test_simple_model_and_core_destruct_with_gui(caplog):
     import rafcon.gui.mygaphas.items.state
     import rafcon.gui.mygaphas.items.connection
     import rafcon.gui.mygaphas.items.ports
+    import rafcon.gui.controllers.global_variable_manager
+    import gtkmvc3.view
+    import gtkmvc3.controller
+    import gtkmvc3.model_mt
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk
 
-    searched_class = rafcon.core.states.hierarchy_state.HierarchyState
+    # searched_class = rafcon.gui.controllers.global_variable_manager.GlobalVariableManagerController
+    # searched_class = rafcon.core.states.state.State
+    # searched_class = rafcon.core.states.execution_state.ExecutionState
+    # searched_class = rafcon.gui.controllers.state_editor.transitions.StateTransitionsListController
+    # searched_class = rafcon.gui.models.abstract_state.AbstractStateModel
+    searched_class = rafcon.gui.models.container_state.ContainerStateModel
+    # searched_class = Gtk.Widget
+    # searched_class = Gtk.Window
 
     elements = [
                 (rafcon.core.states.state.State, True),
@@ -929,16 +955,18 @@ def test_simple_model_and_core_destruct_with_gui(caplog):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.View, True),
-                (gtkmvc.Controller, True),
+                (gtkmvc3.view.View, True),
+                (gtkmvc3.controller.Controller, True),
                 (rafcon.gui.mygaphas.view.ExtendedGtkView, True),
                 (rafcon.gui.mygaphas.items.connection.ConnectionView, True),
                 (rafcon.gui.mygaphas.items.ports.PortView, True),
                 (rafcon.gui.mygaphas.items.state.StateView, True),
+                (Gtk.Widget, True),
+                (Gtk.Window, True),
                 # (searched_class, False),
                 ]
     run_setup_gui_destruct(caplog, elements, searched_class, run_simple_controller_construction,
-                           # run_setup_gui_destruct(caplog, elements, searched_class, run_simple_modification_construction,
+    # run_setup_gui_destruct(caplog, elements, searched_class, run_simple_modification_construction,
                            gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
@@ -949,6 +977,9 @@ def test_simple_execution_model_and_core_destruct_with_gui(caplog):
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
+    import gtkmvc3.view
+    import gtkmvc3.controller
+    import gtkmvc3.model_mt
 
     searched_class = rafcon.core.states.execution_state.ExecutionState
 
@@ -958,9 +989,9 @@ def test_simple_execution_model_and_core_destruct_with_gui(caplog):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.View, True),
-                # (gtkmvc.ModelMT, True),
-                (gtkmvc.Controller, True),
+                (gtkmvc3.view.View, True),
+                # (gtkmvc3.ModelMT, True),
+                (gtkmvc3.controller.Controller, True),
                 # (searched_class, False),
                 ]
     run_setup_gui_destruct(caplog, elements, searched_class, run_simple_execution_controller_construction,
@@ -980,6 +1011,9 @@ def test_model_and_core_modification_history_destruct_with_gui(caplog):
     import rafcon.gui.mygaphas.items.state
     import rafcon.gui.mygaphas.items.connection
     import rafcon.gui.mygaphas.items.ports
+    import gtkmvc3.view
+    import gtkmvc3.controller
+    import gtkmvc3.model_mt
 
     searched_class = rafcon.core.states.hierarchy_state.HierarchyState
     # searched_class = rafcon.core.states.execution_state.ExecutionState
@@ -991,8 +1025,8 @@ def test_model_and_core_modification_history_destruct_with_gui(caplog):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.View, True),
-                (gtkmvc.Controller, True),
+                (gtkmvc3.view.View, True),
+                (gtkmvc3.controller.Controller, True),
                 (rafcon.gui.mygaphas.view.ExtendedGtkView, False),
                 (rafcon.gui.mygaphas.items.connection.ConnectionView, False),
                 (rafcon.gui.mygaphas.items.ports.PortView, False),
@@ -1016,7 +1050,7 @@ def run_copy_cut_and_paste():
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     from rafcon.gui.singleton import main_window_controller
     import rafcon.gui.singleton as gui_singletons
-    from gui.widget.test_menu_bar import focus_graphical_editor_in_page
+    from testing_utils import focus_graphical_editor_in_page
     menu_bar_controller = main_window_controller.get_controller("menu_bar_controller")
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
 
@@ -1025,11 +1059,11 @@ def run_copy_cut_and_paste():
     #########################################
 
     # select state 1
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State1":
             selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
             testing_utils.call_gui_callback(selection.add, sm_model)
-            print "select state: ", sm_model.state
+            print("select state: ", sm_model.state)
 
     # focus correct page
     page_id = state_machines_ctrl.get_page_num(sm_m.state_machine.state_machine_id)
@@ -1038,49 +1072,49 @@ def run_copy_cut_and_paste():
 
     # copy state 1
     testing_utils.call_gui_callback(menu_bar_controller.on_copy_selection_activate, None, None)
-    print "copy state: ", sm_model.state
+    print("copy state: ", sm_model.state)
 
     # clear selection
     testing_utils.call_gui_callback(selection.clear)
 
     # select state 3
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State3":
             from rafcon.gui.models.container_state import ContainerStateModel
             assert isinstance(sm_model, ContainerStateModel)
             testing_utils.call_gui_callback(selection.add, sm_model)
-            print "select state: ", sm_model.state
+            print("select state: ", sm_model.state)
     # focus
     focus_graphical_editor_in_page(page)
     # paste state 1 into state 3
     testing_utils.call_gui_callback(menu_bar_controller.on_paste_clipboard_activate, None, None)
-    print "pasted state into target state for the first time: ", sm_model.state
+    print("pasted state into target state for the first time: ", sm_model.state)
 
     # another time
     # select state 3
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State3":
             from rafcon.gui.models.container_state import ContainerStateModel
             assert isinstance(sm_model, ContainerStateModel)
             testing_utils.call_gui_callback(selection.add, sm_model)
-            print "select state: ", sm_model.state
+            print("select state: ", sm_model.state)
     # focus
     focus_graphical_editor_in_page(page)
     # paste state 1 into state 3
     testing_utils.call_gui_callback(menu_bar_controller.on_paste_clipboard_activate, None, None)
-    print "pasted state into target state for the second time: ", sm_model.state
+    print("pasted state into target state for the second time: ", sm_model.state)
 
     #########################################
     # cut tests
     #########################################
 
     # select state 1
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State1":
             state1 = sm_model.state
             selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
             testing_utils.call_gui_callback(selection.add, sm_model)
-            print "select state: ", sm_model.state
+            print("select state: ", sm_model.state)
 
     # focus correct page
     page_id = state_machines_ctrl.get_page_num(sm_m.state_machine.state_machine_id)
@@ -1089,7 +1123,7 @@ def run_copy_cut_and_paste():
 
     # cut state 1
     testing_utils.call_gui_callback(menu_bar_controller.on_cut_selection_activate, None, None)
-    print "cut state: ", sm_model.state
+    print("cut state: ", sm_model.state)
 
     # destroy state test
     # print "%" * 20, "before  ", "%" * 20
@@ -1100,19 +1134,19 @@ def run_copy_cut_and_paste():
     testing_utils.call_gui_callback(selection.clear)
 
     # select state 3
-    for sm_model in sm_m.root_state.states.values():
+    for sm_model in list(sm_m.root_state.states.values()):
         if sm_model.state.name == "State3":
             from rafcon.gui.models.container_state import ContainerStateModel
             assert isinstance(sm_model, ContainerStateModel)
             testing_utils.call_gui_callback(selection.add, sm_model)
-            print "select state: ", sm_model.state
+            print("select state: ", sm_model.state)
 
     # focus
     focus_graphical_editor_in_page(page)
 
     # paste state 1 into state 3
     testing_utils.call_gui_callback(menu_bar_controller.on_paste_clipboard_activate, None, None)
-    print "paste state into target state: ", sm_model.state
+    print("paste state into target state: ", sm_model.state)
 
     # import time
     # time.sleep(10.0)
@@ -1127,6 +1161,9 @@ def test_copy_paste_with_modification_history_destruct_with_gui(caplog):
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
     import rafcon.core.states.hierarchy_state
+    import gtkmvc3.view
+    import gtkmvc3.controller
+    import gtkmvc3.model_mt
 
     # searched_class = rafcon.core.states.execution_state.ExecutionState
     # searched_class = rafcon.gui.models.container_state.ContainerStateModel
@@ -1141,8 +1178,8 @@ def test_copy_paste_with_modification_history_destruct_with_gui(caplog):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.View, True),
-                (gtkmvc.Controller, True),
+                (gtkmvc3.view.View, True),
+                (gtkmvc3.controller.Controller, True),
                 (searched_class, False),
                 ]
     run_setup_gui_destruct(caplog, elements, searched_class, run_copy_cut_and_paste,
@@ -1157,8 +1194,11 @@ def test_complex_model_and_core_destruct_with_gui(caplog):
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
     import rafcon.core.states.hierarchy_state
-
     import rafcon.gui.models.container_state
+    import gtkmvc3.view
+    import gtkmvc3.controller
+    import gtkmvc3.model_mt
+
     # searched_class = rafcon.core.states.hierarchy_state.HierarchyState
     searched_class = rafcon.gui.models.container_state.ContainerStateModel
 
@@ -1168,20 +1208,22 @@ def test_complex_model_and_core_destruct_with_gui(caplog):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc.View, True),
-                (gtkmvc.Controller, True),
+                (gtkmvc3.view.View, True),
+                (gtkmvc3.controller.Controller, True),
                 (searched_class, False),
                 ]
     run_setup_gui_destruct(caplog, elements, searched_class, run_complex_controller_construction,
                            gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
-def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, libraries=None, expected_warnings=0, expected_errors=0):
+def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, libraries=None,
+                           expected_warnings=0, expected_errors=0):
     # if core test run before
     import rafcon.gui.singleton
     rafcon.gui.singleton.main_window_controller = None
     already_existing_objects = check_existing_objects_of_kind([(c, False) for c, check_it in elements],
-                                                              print_func, log_file=False)
+                                                              print_func, log_file=False,
+                                                              searched_type=searched_class.__name__)
 
     # TODO make it fully working and later activate modification history and auto backup
     testing_utils.run_gui(gui_config=gui_config, libraries=libraries)
@@ -1191,21 +1233,20 @@ def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, l
     exception_during_test_method = None
 
     try:
-        print "%" * 50
-        print "before test function print"
-        print "%" * 50
+        print("%" * 50)
+        print("before test function print")
+        print("%" * 50)
         func()
     except Exception as e:
         exception_during_test_method = e
         raise
     # finally:
     testing_utils.close_gui()
-    rafcon.gui.singleton.main_window_controller = None  # could be moved to the testing_utils but is not needed
     if exception_during_test_method:
         raise exception_during_test_method
-    print "%" * 50
-    print "check for existing objects print"
-    print "%" * 50
+    print("%" * 50)
+    print("check for existing objects print")
+    print("%" * 50)
     testing_utils.shutdown_environment(caplog=caplog, expected_warnings=expected_warnings, expected_errors=expected_errors)
     check_existing_objects_of_kind(elements, print_func, ignored_objects=already_existing_objects,
                                    searched_type=searched_class.__name__)
@@ -1213,13 +1254,13 @@ def run_setup_gui_destruct(caplog, elements, searched_class, func, gui_config, l
 
 
 if __name__ == '__main__':
-    # testing_utils.dummy_gui(None)
+    testing_utils.dummy_gui(None)
     # test_core_destruct(None)
     # test_model_and_core_destruct(None)
     # test_simple_model_and_core_destruct_with_gui(None)
     # test_simple_execution_model_and_core_destruct_with_gui(None)
     # test_model_and_core_modification_history_destruct_with_gui(None)
-    test_copy_paste_with_modification_history_destruct_with_gui(None)
-    # test_complex_model_and_core_destruct_with_gui(None)
+    # test_copy_paste_with_modification_history_destruct_with_gui(None)
+    test_complex_model_and_core_destruct_with_gui(None)
     # import pytest
     # pytest.main(['-s', __file__])

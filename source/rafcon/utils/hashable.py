@@ -10,6 +10,9 @@
 # Michael Vilzmann <michael.vilzmann@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import object
+from builtins import str
+import sys
 import hashlib
 
 
@@ -33,7 +36,7 @@ class Hashable(object):
                 Hashable.update_hash_from_dict(obj_hash, key)
                 Hashable.update_hash_from_dict(obj_hash, object_[key])
         else:
-            obj_hash.update(str(object_))
+            obj_hash.update(Hashable.get_object_hash_string(object_))
 
     def update_hash(self, obj_hash):
         """Should be implemented by derived classes to update the hash with their data fields
@@ -58,3 +61,10 @@ class Hashable(object):
             obj_hash = hashlib.sha256()
         self.update_hash(obj_hash)
         return obj_hash
+
+    @staticmethod
+    def get_object_hash_string(object_):
+        obj_hash_string = str(object_)
+        if sys.version_info >= (3,):
+            obj_hash_string = obj_hash_string.encode('utf-8')
+        return obj_hash_string

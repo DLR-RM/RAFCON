@@ -12,7 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc import View
+from gtkmvc3.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.views.utils.tree import TreeView
@@ -39,14 +39,13 @@ class StateDataFlowsEditorView(View):
     def __init__(self):
         View.__init__(self)
 
-        gui_helper_label.set_label_markup(self['data_flows_label'], 'DATA FLOWS',
-                                          letter_spacing=constants.LETTER_SPACING_1PT)
-
         self.data_flows_listView = StateDataFlowsListView()
-        self['dataflows_scroller'].add(self.data_flows_listView.get_top_widget())
-        self.data_flows_listView.scrollbar_widget = self['dataflows_scroller']
+        self['data_flows_scroller'].add(self.data_flows_listView.get_top_widget())
+        self.data_flows_listView.scrollbar_widget = self['data_flows_scroller']
 
         self['internal_d_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['connected_to_d_checkbutton'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['add_d_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['remove_d_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
+
+        gui_helper_label.ellipsize_labels_recursively(self['data_flows_toolbar'])

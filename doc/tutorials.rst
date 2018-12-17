@@ -429,14 +429,14 @@ environment:
 
 By running RAFCON after sourcing the environment, the
 ``network_config.yaml`` is automatically generated in our home folder:
-``~.config/rafcon/`` if it does not already exist. This file contains
+``~/.config/rafcon/`` if it does not already exist. This file contains
 all settings for the communication. More details can be found at the
 :ref:`Configuration`. The path of the
 ``network_config.yaml`` can be changed by running the ``start.py``
 script with argument "-nc", which will be necessary when we want to
 connect server and client running on a single system like in this
 tutorial. Therefore we create the subdirectories ``/client`` and
-``/server`` within the ``~.config/rafcon/`` path and copy/paste the
+``/server`` within the ``~/.config/rafcon/`` path and copy/paste the
 ``network_config.yaml`` into both. Since the file is created for servers
 by default, we just have to edit the one in the ``/client`` directory,
 where we replace the ``<SERVER: true>`` column by ``<SERVER: false>``.
@@ -445,13 +445,13 @@ Now we can launch the server:
 
 .. code:: python
 
-    /volume/software/common/packages/rafcon/latest/lib/python2.7/rafcon/mvc/start.py -nc ~/.config/rafcon/server
+    rafcon -nc ~/.config/rafcon/server
 
 and the client:
 
 .. code:: python
 
-    /volume/software/common/packages/rafcon/latest/lib/python2.7/rafcon/mvc/start.py -nc ~/.config/rafcon/client
+    rafcon -nc ~/.config/rafcon/client
 
 If everything went fine, we should see below output in the debug console
 of the client:

@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import str
 import os
 
 # general tool elements
@@ -57,10 +59,8 @@ def trigger_source_editor_signals():
 
     # ---focus the newly added state and get the source controller---
     sm_m = menubar_ctrl.model.get_selected_state_machine_model()
-    call_gui_callback(rafcon.gui.singleton.state_machine_manager.__setattr__, "active_state_machine_id",
-                      sm_m.state_machine.state_machine_id)
     root_state_m = sm_m.root_state
-    state_m = root_state_m.states.values()[0]
+    state_m = list(root_state_m.states.values())[0]
     states_editor_controller = rafcon.gui.singleton.main_window_controller.get_controller('states_editor_ctrl')
     state_identifier = states_editor_controller.get_state_identifier(state_m)
     call_gui_callback(states_editor_controller.activate_state_tab, state_m)
@@ -85,23 +85,25 @@ def trigger_source_editor_signals():
 
     # get the textview buffer and replace the buffer text with another
     test_buffer = source_view.get_buffer()
-    test_buffer.set_text(test_text, 10)
+    call_gui_callback(test_buffer.set_text, test_text, -1)
 
-    # ---check if a new buffer doesnt change the source text
-    source_view.textview.set_buffer(test_buffer)
+    # ---check if a new buffer doesn't change the source text
+    call_gui_callback(source_view.textview.set_buffer, test_buffer)
     assert not source_editor_controller.source_text == test_text
 
     # ---check if the cancel button resets the buffer to the source text
     cancel_button = source_view['cancel_button']
     call_gui_callback(source_editor_controller.cancel_clicked, cancel_button)
-    assert source_view.get_buffer().get_text(test_buffer.get_start_iter(), test_buffer.get_end_iter()) == content
+    assert source_view.get_buffer().get_text(test_buffer.get_start_iter(), test_buffer.get_end_iter(),
+                                             include_hidden_chars=True) == content
 
     # test buffer now contains the source_text which equals content so test_buffer is again set to contain test_text
-    test_buffer.set_text(test_text, 10)
+    call_gui_callback(test_buffer.set_text, test_text, -1)
 
     # ---check if changing the buffer and applying the changes has an impact on the source text
-    source_view.textview.set_buffer(test_buffer)
-    print("test_buffer " + test_buffer.get_text(test_buffer.get_start_iter(), test_buffer.get_end_iter()))
+    call_gui_callback(source_view.textview.set_buffer, test_buffer)
+    print("test_buffer " + test_buffer.get_text(test_buffer.get_start_iter(), test_buffer.get_end_iter(),
+                                                include_hidden_chars=True))
     apply_button = source_view['apply_button']
     call_gui_callback(source_editor_controller.apply_clicked, apply_button)
     assert source_editor_controller.source_text == test_text
@@ -130,7 +132,7 @@ def trigger_source_editor_signals():
 
 
 def test_gui(caplog):
-    testing_utils.run_gui(gui_config={'GAPHAS_EDITOR': True, 'AUTO_BACKUP_ENABLED': False,
+    testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False,
                                       'CHECK_PYTHON_FILES_WITH_PYLINT': False, 'PREFER_EXTERNAL_EDITOR': False})
 
     # queue = Queue.Queue() # TODO think about to use this to get call_back methods return value by a generic scheme

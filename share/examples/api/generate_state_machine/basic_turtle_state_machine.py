@@ -1,6 +1,7 @@
+from builtins import str
 import sys
 import os
-import gtk
+from gi.repository import Gtk
 import signal
 from os.path import dirname, abspath
 
@@ -149,7 +150,7 @@ def run_turtle_demo():
 
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
 
-    gtk.main()
+    Gtk.main()
     logger.debug("Gtk main loop exited!")
 
 

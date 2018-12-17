@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 def execute(self, inputs, outputs, gvm):
     self.logger.debug("add beer again")
@@ -6,4 +7,4 @@ def execute(self, inputs, outputs, gvm):
     
     
 def backward_execute(self, inputs, outputs, gvm):
-    print "Backward execute ", self.name
+    print("Backward execute ", self.name)

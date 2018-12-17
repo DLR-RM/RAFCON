@@ -14,13 +14,14 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 
+from builtins import object
+from builtins import range
 from math import sin, cos, pi, atan2
 from enum import Enum
 
-import gtk
-import gobject
-from gtkmvc import View
-
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GObject
 # careful import
 try:
     import gtk.gtkgl
@@ -39,6 +40,7 @@ try:
 except (ImportError, RuntimeError):
     GL_ENABLED = False
 
+from gtkmvc3.view import View
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.utils.geometry import dist
@@ -54,7 +56,7 @@ class Direction(Enum):
     left = 4
 
 
-class Color:
+class Color(object):
 
     _r = 0
     _g = 0
@@ -151,28 +153,30 @@ class GraphicalEditorView(View):
         # Configure OpenGL frame buffer.
         # Try to get a double-buffered frame buffer configuration,
         # if not successful then exit program
-        display_mode = (gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
+        display_mode = (Gtk.gdkgl.MODE_RGB | Gtk.gdkgl.MODE_DEPTH | Gtk.gdkgl.MODE_DOUBLE)
         try:
-            glconfig = gtk.gdkgl.Config(mode=display_mode)
-        except gtk.gdkgl.NoMatches:
+            glconfig = Gtk.gdkgl.Config(mode=display_mode)
+        except Gtk.gdkgl.NoMatches:
             raise SystemExit
 
-        self.v_box = gtk.VBox()
+        self.v_box = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.editor = GraphicalEditor(glconfig)
-        self.editor.add_events(gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON_MOTION_MASK |
-                               gtk.gdk.KEY_PRESS_MASK | gtk.gdk.KEY_RELEASE_MASK | gtk.gdk.POINTER_MOTION_MASK)
+        self.editor.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.BUTTON_MOTION_MASK |
+                               Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK | Gdk.EventMask.POINTER_MOTION_MASK)
         self.editor.set_size_request(0, 0)
-        self.editor.set_flags(gtk.CAN_FOCUS)
+        self.editor.set_flags(Gtk.CAN_FOCUS)
 
-        self.v_box.pack_end(self.editor)
+        self.v_box.pack_end(self.editor, True, True, 0)
 
         self['main_frame'] = self.v_box
         self.top = 'main_frame'
 
 
-class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
+# old; GTK TODO
+# class GraphicalEditor(Gtk.DrawingArea, Gtk.gtkgl.Widget):
+class GraphicalEditor(Gtk.DrawingArea, Gtk.Widget):
     # background_color = Color.from_hex(0x17242f)
-    background_color = Color.from_hex_string(gui_config.colors['GLOBAL_BACKGROUND'])
+    background_color = Color.from_hex_string(gui_config.colors['BASE_COLOR'])
     state_color = Color.from_hex(0xd7e0ec)  # Color(0.9, 0.9, 0.9, 0.8)
     state_selected_color = Color.from_hex(0xd7e0ec)  # Color(0.7, 0, 0, 0.8)
     state_active_color = Color.from_hex(0xb7d9b0)  # Color(0.7, 0, 0, 0.8)
@@ -203,7 +207,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         :param glconfig: Configuration flags for OpenGl
         """
-        gtk.DrawingArea.__init__(self)
+        Gtk.DrawingArea.__init__(self)
 
         # default outer coordinate values which will later be overwritten by the controller
         self.left = -10
@@ -233,7 +237,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
 
         # Query the GLX and OpenGL extension version.
         opengl_version = glGetString(GL_VERSION)
-        major, minor = gtk.gdkgl.query_version()
+        major, minor = Gtk.gdkgl.query_version()
         logger.info("OpenGL version: {0}".format(opengl_version))
         logger.info("GLX version: {0}.{1}".format(major, minor))
 
@@ -260,7 +264,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
             return False
 
         # Draw on the full viewport
-        glViewport(0, 0, self.allocation.width, self.allocation.height)
+        glViewport(0, 0, self.get_allocation().width, self.get_allocation().height)
 
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
@@ -298,7 +302,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         """
         left, right, _, _ = self.get_view_coordinates()
         width = right - left
-        display_width = self.allocation.width
+        display_width = self.get_allocation().width
         return display_width / float(width)
 
     def expose_init(self, *args):
@@ -422,7 +426,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         # Every state has at least the default outcomes "aborted" and "preempted"
         num_outcomes = max(0, len(outcomes))
         if num_outcomes < 2:
-            # logger.warn("Expecting at least 2 outcomes, found {num:d}".format(num=num_outcomes))
+            # logger.warning("Expecting at least 2 outcomes, found {num:d}".format(num=num_outcomes))
             pass
         else:
             num_outcomes -= 2
@@ -996,7 +1000,7 @@ class GraphicalEditor(gtk.DrawingArea, gtk.gtkgl.Widget):
         top = self.top
         bottom = self.bottom
 
-        aspect = self.allocation.width / float(self.allocation.height)
+        aspect = self.get_allocation().width / float(self.get_allocation().height)
 
         if aspect < 1:
             bottom /= aspect

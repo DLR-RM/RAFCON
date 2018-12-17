@@ -16,9 +16,12 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from builtins import range
 import os
 
-from gtkmvc import View
+from gi.repository import Gtk
+
+from gtkmvc3.view import View
 
 from rafcon.gui.config import global_gui_config
 import rafcon.gui.helpers.label as gui_helper_label
@@ -35,7 +38,6 @@ from rafcon.gui.views.state_machine_tree import StateMachineTreeView
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
 from rafcon.gui.views.states_editor import StatesEditorView
 from rafcon.gui.views.tool_bar import ToolBarView
-from rafcon.gui.views.top_tool_bar import TopToolBarView
 from rafcon.gui.views.undocked_window import UndockedWindowView
 
 
@@ -68,28 +70,28 @@ class MainWindowView(View):
         ######################################################
         self.library_tree = LibraryTreeView()
         self.library_tree.show()
-        self['libraries_alignment'].add(self.library_tree)
+        self['libraries_scrolledwindow'].add(self.library_tree)
 
         ######################################################
         # State Icons
         ######################################################
         self.state_icons = StateIconView()
         self.state_icons.show()
-        self["state_icons_box"].pack_start(self.state_icons.get_top_widget())
+        self["state_icons_box"].pack_start(self.state_icons.get_top_widget(), True, True, 0)
 
         ######################################################
         # State Machine Tree
         ######################################################
         self.state_machine_tree = StateMachineTreeView()
         self.state_machine_tree.show()
-        self['states_tree_alignment'].add(self.state_machine_tree)
+        self['states_tree_scrolledwindow'].add(self.state_machine_tree)
 
         ######################################################
         # Global Variable Manager
         ######################################################
         self.global_var_editor = GlobalVariableEditorView()
         self.global_var_editor.show()
-        self['global_variables_alignment'].add(self.global_var_editor.get_top_widget())
+        self['global_variables_eventbox'].add(self.global_var_editor.get_top_widget())
 
         ######################################################
         # State Machine History
@@ -121,29 +123,12 @@ class MainWindowView(View):
         self['graphical_editor_vbox'].pack_start(self.state_machines_editor.get_top_widget(), True, True, 0)
         self['graphical_editor_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 0)
 
-        self['graphical_editor_label_event_box'].remove(self['graphical_editor_label'])
-        self['graphical_editor_label_event_box'].set_border_width(constants.GRID_SIZE)
-        graphical_editor_label = gui_helper_label.create_label_with_text_and_spacing(_('GRAPHICAL EDITOR'),
-                                                                                     font_size=constants.FONT_SIZE_BIG,
-                                                                                     letter_spacing=constants.
-                                                                                     LETTER_SPACING_1PT)
-        graphical_editor_label.set_alignment(0, .5)
-        self['graphical_editor_label_event_box'].add(graphical_editor_label)
-
         ######################################################
         # States-editor
         ######################################################
         self.states_editor = StatesEditorView()
         self['state_editor_eventbox'].add(self.states_editor.get_top_widget())
         self.states_editor.show()
-
-        self['state_editor_label_hbox'].remove(self['state_editor_label'])
-        self['state_editor_label_hbox'].set_border_width(constants.GRID_SIZE)
-        state_editor_label = gui_helper_label.create_label_with_text_and_spacing(_('STATE EDITOR'),
-                                                                                 font_size=constants.FONT_SIZE_BIG,
-                                                                                 letter_spacing=constants.LETTER_SPACING_1PT)
-        state_editor_label.set_alignment(0., 0.)
-        self['state_editor_label_hbox'].add(state_editor_label)
 
         ######################################################
         # Debug Console
@@ -158,25 +143,20 @@ class MainWindowView(View):
         self['console'] = self.debug_console_view['console']
 
         ##################################################
-        # menu bar view
+        # HeaderBar with MenuBar
         ##################################################
-        self.top_tool_bar = TopToolBarView()
-        self.top_tool_bar.show()
-        self['top_menu_hbox'].remove(self['top_tool_bar_placeholder'])
-        self['top_menu_hbox'].pack_end(self.top_tool_bar.get_top_widget(), expand=True, fill=True, padding=0)
-        self['top_menu_hbox'].reorder_child(self.top_tool_bar.get_top_widget(), 1)
 
         self.menu_bar = MenuBarView(self)
         self.menu_bar.show()
-        self['top_menu_hbox'].remove(self['menu_bar_placeholder'])
-        self['top_menu_hbox'].pack_start(self.menu_bar.get_top_widget(), expand=False, fill=True, padding=0)
-        self['top_menu_hbox'].reorder_child(self.menu_bar.get_top_widget(), 0)
+
+        self['headerbar'].pack_start(self.menu_bar.get_top_widget())
+        self['headerbar'].show()
 
         self.tool_bar = ToolBarView()
         self.tool_bar.show()
         self['top_level_vbox'].remove(self['tool_bar_placeholder'])
         self['top_level_vbox'].pack_start(self.tool_bar.get_top_widget(), expand=False, fill=True, padding=0)
-        self['top_level_vbox'].reorder_child(self.tool_bar.get_top_widget(), 1)
+        self['top_level_vbox'].reorder_child(self.tool_bar.get_top_widget(), 0)
 
         ################################################
         # Hide Buttons
@@ -229,19 +209,19 @@ class MainWindowView(View):
 
         # --------------------------------------------------------------------------
 
-        self.get_top_widget().set_decorated(False)
-
-        self['upper_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        self['upper_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
-        if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
-            self['lower_notebook'].set_tab_hborder(int(constants.TAB_BORDER_WIDTH * 2 / 1.4))
-        else:
-            self['lower_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        self['lower_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
+        # Gtk TODO: find replacement for methods set_tab_hborder and set_tab_vborder
+        # self['upper_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
+        # self['upper_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
+        # if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
+        #     self['lower_notebook'].set_tab_hborder(int(constants.TAB_BORDER_WIDTH * 2 / 1.4))
+        # else:
+        #     self['lower_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
+        # self['lower_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
 
         self.left_bar_window = UndockedWindowView('left_bar_window')
         self.right_bar_window = UndockedWindowView('right_bar_window')
         self.console_window = UndockedWindowView('console_window')
+
 
     def rotate_and_detach_tab_labels(self):
         """Rotates tab labels of a given notebook by 90 degrees and makes them detachable.
