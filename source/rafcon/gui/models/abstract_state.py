@@ -240,7 +240,7 @@ class AbstractStateModel(MetaModel, Hashable):
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.core_element)
-        for state_element in sorted([self.income], self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
+        for state_element in sorted([self.income] + self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
             self.update_hash_from_dict(obj_hash, state_element)
         if not self.state.get_next_upper_library_root_state():
             self.update_hash_from_dict(obj_hash, self.meta)
