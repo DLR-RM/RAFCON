@@ -252,8 +252,6 @@ def extract_child_models_of_state(state_m, new_state_class):
             if new_state_is_container:
                 required_child_models['states'].remove(decider_state_m)
                 obsolete_child_models['states'] = [decider_state_m]
-            else:
-                obsolete_child_models['states'].append(decider_state_m)
 
     return required_child_models, obsolete_child_models
 
