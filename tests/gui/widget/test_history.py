@@ -1813,6 +1813,7 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
     import rafcon.gui.singleton
     sm = StateMachine(HierarchyState())
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
+    sm_m = list(rafcon.gui.singleton.state_machine_manager_model.state_machines.values())[-1]
 
     call_gui_callback(sm_m.selection.set, [sm_m.root_state])
 
