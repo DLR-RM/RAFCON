@@ -4,8 +4,8 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/develop>`__.
 
-Next release
-------------
+0.13.0
+""""""
 
 This is a shiny new minor release of RAFCON. Finally, Python 3 (>=3.4) is supported, while Python 2.7 can still be
 used, thanks to the ``future`` packet. With this, we also ported the GUI from GTK+ 2 to GTK+ 3, allowing for better
