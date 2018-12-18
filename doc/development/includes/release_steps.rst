@@ -59,12 +59,22 @@ institute):
 
   .. code:: bash
 
+     $ git push release-[new version number]
      $ git checkout master
      $ git pull master
-     $ git merge release-[new version number]]
+     $ git merge release-[new version number]
+     $ git push
+
+9. Build style files
+
+  Build ``*.css`` files from ``*.scss`` files.
+
+  .. code:: bash
+
+     $ python setup.py build_sass
 
 
-9. Do the release
+10. Do the release
 
   Make sure, everything is pushed (:code:`git push`). Then copy the release notes for the specific version into a
   temporary file, e.g. ``/tmp/release_notes.rst``. Finally do:
@@ -74,39 +84,18 @@ institute):
      $ cd [projet directory]]
      $ rmpm_do release --domain software.common --version [new version number] -F /tmp/release_notes.rst
 
-10. Merge to develop
+11. Merge to develop
 
   Merge all changes back into the develop branch:
 
   .. code:: bash
 
      $ git checkout develop
+     $ git pull
      $ git merge release-[new version number]]
-
-11. Publish to GitHub
-
-  Publish the changes to GitHub and GitHub Enterprise (assuming ``github`` is your GitHub remote name):
-
-  .. code:: bash
-
      $ git push
-     $ git push github
 
-  Make a release on GitHub by navigating to `https://github.com/DLR-RM/RAFCON/releases/new`. Enter the new version
-  number in the "Tag version" field. Optioanlly add a release title and decription. Click "Publish release".
-
-12. Force build of GitHub pages
-
-  Push an empty commit to the ``gh-pages`` branch:
-
-  .. code:: bash
-
-     $ git checkout gh-pages
-     $ git commit -m 'rebuild pages' --allow-empty
-     $ git push
-     $ git push guthub
-
-11. Publish new release to PyPi
+12. Publish new release to PyPi
 
   Create a new distribution file and publish it on PyPi:
 
@@ -115,3 +104,27 @@ institute):
      $ rm dist/*
      $ python setup.py sdist
      $ twine upload dist/*
+
+13. Publish to GitHub
+
+  Publish the changes to GitHub and GitHub Enterprise (assuming ``github`` is your GitHub remote name):
+
+  .. code:: bash
+
+     $ git push github
+     $ git checkout master
+     $ git push github
+
+  Make a release on GitHub by navigating to `https://github.com/DLR-RM/RAFCON/releases/new`. Enter the new version
+  number in the "Tag version" field. Optioanlly add a release title and decription. Click "Publish release".
+
+14. Force build of GitHub pages
+
+  Push an empty commit to the ``gh-pages`` branch:
+
+  .. code:: bash
+
+     $ git checkout gh-pages
+     $ git commit -m 'rebuild pages' --allow-empty
+     $ git push
+     $ git push github
