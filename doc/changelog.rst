@@ -20,6 +20,12 @@ Next release
 - Changes:
 
 
+0.13.1
+""""""
+
+- Bug Fixes: Fix installation
+
+
 0.13.0
 """"""
 
