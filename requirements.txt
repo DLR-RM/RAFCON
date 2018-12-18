@@ -16,7 +16,6 @@ PyGObject==3.30.4
 pylint==1.9.3
 python-gtkmvc3-dlr==1.0.1
 PyYAML==3.13
-rafcon==0.13.0
 simplegeneric==0.8.1
 singledispatch==3.4.0.3
 six==1.12.0
