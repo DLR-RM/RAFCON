@@ -1,29 +1,29 @@
-State Elements: ``state_elements``
-==================================
+StateElements: ``state_elements``
+=================================
 
 .. contents::
     :backlinks: top
 
-data_flow
----------
+DataFlow
+--------
 .. automodule:: rafcon.core.state_elements.data_flow
 
-data_port
----------
+Data Ports
+----------
 .. automodule:: rafcon.core.state_elements.data_port
 
-outcome
--------
+Logical Ports
+-------------
 .. automodule:: rafcon.core.state_elements.logical_port
 
-scope
+Scope
 -----
 .. automodule:: rafcon.core.state_elements.scope
 
-transition
+Transition
 ----------
 .. automodule:: rafcon.core.state_elements.transition
 
-state_element
--------------
+StateElement
+------------
 .. automodule:: rafcon.core.state_elements.state_element

@@ -68,10 +68,10 @@ Selection (in selection)
 .. automodule:: rafcon.gui.models.selection
 
 
-OutcomeModel (in outcome)
--------------------------
+LogicalPortModel (in logical_port)
+----------------------------------
 
-.. automodule:: rafcon.gui.models.outcome
+.. automodule:: rafcon.gui.models.logical_port
 
 
 StateMachineModel (in state_machine)
