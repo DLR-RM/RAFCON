@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "RAFCON all over on the Automatica fair 2018"
-date:   2018-06-24 09:025:00 +0100
+date:   2018-06-24 09:25:00 +0100
 categories: project fair mobile-robotics cooperative-workcell sme
 author: Franz Steinmetz
 ---
