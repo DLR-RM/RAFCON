@@ -45,7 +45,16 @@ institute):
   Open ``[project directory]/doc/Changelog.rst`` and verify that all changes are included within the correct version
   number. Compare with :code:`git log` and the latest closed issues on GitHub. Commit your changes.
 
-7. Apply the version number
+7. Build style files
+
+  Build ``*.css`` files from ``*.scss`` files.
+
+  .. code:: bash
+
+     $ python setup.py build_sass
+     $ git add source/rafcon/gui/assets/share/themes/RAFCON/gtk-3.0/*.css --force
+
+8. Apply the version number
 
   1. Update the version number in ``[project directory]/VERSION``.
   2. Update the ``version`` in ``[project directory]/CITATION.cff``.
@@ -53,7 +62,7 @@ institute):
   4. Run ``cffconvert --ignore-suspect-keys --outputformat zenodo --outfile .zenodo.json`` (see `"Making software citable" <https://guide.esciencecenter.nl/citable_software/making_software_citable.html>`__, requires Python 3)
   5. Commit and push your changes.
 
-8. Merge to master
+9. Merge to master
 
   When everything is prepared, you can merge the release branch into the master branch:
 
@@ -64,15 +73,6 @@ institute):
      $ git pull master
      $ git merge release-[new version number]
      $ git push
-
-9. Build style files
-
-  Build ``*.css`` files from ``*.scss`` files.
-
-  .. code:: bash
-
-     $ python setup.py build_sass
-
 
 10. Do the release
 

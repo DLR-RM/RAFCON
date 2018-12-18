@@ -8,6 +8,14 @@ constants
 ---------
 .. automodule:: rafcon.utils.constants
 
+dict_operations
+---------------
+.. automodule:: rafcon.utils.dict_operations
+
+execution_log
+-------------
+.. automodule:: rafcon.utils.execution_log
+
 filesystem
 ----------
 .. automodule:: rafcon.utils.filesystem
@@ -23,6 +31,10 @@ hashable
 i18n
 ----
 .. automodule:: rafcon.utils.i18n
+
+installation
+------------
+.. automodule:: rafcon.utils.installation
 
 log
 ---
@@ -40,13 +52,21 @@ plugins
 -------
 .. automodule:: rafcon.utils.plugins
 
-singleton
+profiler
+--------
+.. automodule:: rafcon.utils.profiler
+
+resources
 ---------
-.. automodule:: rafcon.utils.singleton
+.. automodule:: rafcon.utils.resources
 
 storage_utils
 -------------
 .. automodule:: rafcon.utils.storage_utils
+
+timer
+-----
+.. automodule:: rafcon.utils.timer
 
 type_helpers
 ------------
