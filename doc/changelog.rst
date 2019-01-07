@@ -17,7 +17,11 @@ Next release
 
 - Bug Fixes:
 
+  - run correct command for updating font cache
+
 - Changes:
+
+  - Replaced font "DIN Next LT Pro" by "Source Sans Pro"
 
 
 0.13.1
