@@ -40,6 +40,8 @@ def install_fonts(logger=None, restart=False):
         log.warn("No GTK found. Will not install fonts.")
         return
 
+    font_names_to_be_installed = ["Source Sans Pro", "FontAwesome"]
+
     tv = Gtk.TextView()
     try:
         context = tv.get_pango_context()
@@ -50,23 +52,26 @@ def install_fonts(logger=None, restart=False):
         log.warn("Could not get pango context. Will not install fonts.")
         return
     existing_fonts = context.list_families()
-    existing_font_names = [font.get_name() for font in existing_fonts]
+    existing_font_faces = {font.get_name(): [face.get_face_name() for face in font.list_faces()]
+                           for font in existing_fonts
+                           if font.get_name() in font_names_to_be_installed}
 
     user_otf_fonts_folder = os.path.join(os.path.expanduser('~'), '.fonts')
 
     font_installed = False
     try:
-        for font_name in ["Source Sans Pro", "FontAwesome"]:
-            if font_name in existing_font_names:
-                log.debug("Font '{0}' found".format(font_name))
-                continue
-
+        for font_name in font_names_to_be_installed:
             # A font is a folder one or more font faces
             fonts_folder = os.path.join(assets_folder, "fonts", font_name)
-            num_faces = len(os.listdir(fonts_folder))
+            num_faces_to_be_installed = len(filter(lambda name: name.endswith(".otf"), os.listdir(fonts_folder)))
+            num_faces_installed = len(existing_font_faces[font_name])
+
+            if num_faces_to_be_installed <= num_faces_installed:
+                log.debug("Font '{0}' already installed".format(font_name))
+                return
 
             specific_user_otf_fonts_folder = user_otf_fonts_folder
-            if num_faces > 1:
+            if num_faces_to_be_installed > 1:
                 specific_user_otf_fonts_folder = os.path.join(user_otf_fonts_folder, font_name)
 
             log.info("Installing font '{0}' to {1}".format(font_name, specific_user_otf_fonts_folder))
