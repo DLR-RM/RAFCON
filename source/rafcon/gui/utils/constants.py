@@ -25,7 +25,7 @@ def get_glade_path(glade_file):
     return path.join(mvc_dir, "glade", glade_file)
 
 
-FONTS = ["DIN Next LT Pro", "FontAwesome"]
+FONTS = ["Source Sans Pro", "FontAwesome"]
 INTERFACE_FONT = FONTS[0]
 ICON_FONT = FONTS[1]
 
