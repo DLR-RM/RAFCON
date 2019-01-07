@@ -61,14 +61,19 @@ def install_fonts(logger=None, restart=False):
                 log.debug("Font '{0}' found".format(font_name))
                 continue
 
-            log.info("Installing font '{0}' to {1}".format(font_name, user_otf_fonts_folder))
-            if not os.path.isdir(user_otf_fonts_folder):
-                os.makedirs(user_otf_fonts_folder)
-
             # A font is a folder one or more font faces
             fonts_folder = os.path.join(assets_folder, "fonts", font_name)
+            num_faces = len(os.listdir(fonts_folder))
+
+            specific_user_otf_fonts_folder = user_otf_fonts_folder
+            if num_faces > 1:
+                specific_user_otf_fonts_folder = os.path.join(user_otf_fonts_folder, font_name)
+
+            log.info("Installing font '{0}' to {1}".format(font_name, specific_user_otf_fonts_folder))
+            if not os.path.isdir(specific_user_otf_fonts_folder):
+                os.makedirs(specific_user_otf_fonts_folder)
             for font_face in os.listdir(fonts_folder):
-                target_font_file = os.path.join(user_otf_fonts_folder, font_face)
+                target_font_file = os.path.join(specific_user_otf_fonts_folder, font_face)
                 source_font_file = os.path.join(fonts_folder, font_face)
                 shutil.copy(source_font_file, target_font_file)
             font_installed = True
