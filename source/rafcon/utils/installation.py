@@ -255,7 +255,7 @@ def generate_data_files():
     gui_data_files = [
         get_data_files_tuple(assets_folder, 'splashscreens'),
         get_data_files_tuple(assets_folder, 'fonts', 'FontAwesome'),
-        # get_data_files_tuple(assets_folder, 'fonts', 'Source Sans Pro'),
+        get_data_files_tuple(assets_folder, 'fonts', 'Source Sans Pro'),
         get_data_files_tuple(themes_folder, 'gtk-3.0', 'gtk.css', path_to_file=True),
         get_data_files_tuple(themes_folder, 'gtk-3.0', 'gtk-dark.css', path_to_file=True),
         get_data_files_tuple(themes_folder, 'assets'),
