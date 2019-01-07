@@ -83,7 +83,7 @@ def install_fonts(logger=None, restart=False):
 
     if font_installed:
         log.info("Running font detection ...")
-        fail = subprocess.call(['fc-cache', '-fv', '"' + user_otf_fonts_folder + '"'])
+        fail = subprocess.call(['fc-cache', '-fv', user_otf_fonts_folder])
         if fail:
             log.warn("Could not run font detection. RAFCON might not find the correct fonts.")
         if restart:
