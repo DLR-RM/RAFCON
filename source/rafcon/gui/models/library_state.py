@@ -58,7 +58,7 @@ class LibraryStateModel(AbstractStateModel):
             # logger.debug("initialize state copy {0}".format(self))
             self.initiate_library_root_state_model()
         else:
-            logger.debug("Do not initialize state copy {0}".format(self))
+            logger.verbose("Do not initialize state copy {0}".format(self))
 
         self._load_port_models()
 
