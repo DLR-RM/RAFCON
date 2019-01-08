@@ -17,6 +17,8 @@ Next release
 
 - Bug Fixes:
 
+  - :issue:`658` crash in load_state_machine
+
 - Changes:
 
 
