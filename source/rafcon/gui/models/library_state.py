@@ -86,6 +86,7 @@ class LibraryStateModel(AbstractStateModel):
         self.initiate_library_root_state_model()
         self._load_input_data_port_models()
         self._load_output_data_port_models()
+        self._load_income_model()
         self._load_outcome_models()
 
     def prepare_destruction(self, recursive=True):
