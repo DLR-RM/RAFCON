@@ -60,10 +60,7 @@ class LibraryStateModel(AbstractStateModel):
         else:
             logger.debug("Do not initialize state copy {0}".format(self))
 
-        self._load_input_data_port_models()
-        self._load_output_data_port_models()
-        self._load_income_model()
-        self._load_outcome_models()
+        self._load_port_models()
 
         if load_meta_data:
             if not self.load_meta_data():
@@ -84,10 +81,7 @@ class LibraryStateModel(AbstractStateModel):
     def enforce_generation_of_state_copy_model(self):
         """This enforce a load of state copy model without considering meta data"""
         self.initiate_library_root_state_model()
-        self._load_input_data_port_models()
-        self._load_output_data_port_models()
-        self._load_income_model()
-        self._load_outcome_models()
+        self._load_port_models()
 
     def prepare_destruction(self, recursive=True):
         """Prepares the model for destruction
