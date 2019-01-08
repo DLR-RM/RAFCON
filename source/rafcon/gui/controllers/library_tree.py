@@ -260,6 +260,16 @@ class LibraryTreeController(ExtendedController):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         gui_helper_state_machine.insert_state_into_selected_state(self._get_selected_library_state(), as_template)
 
+    def select_library_tree_element_of_library_state_model(self, state_m):
+        local_file_system_path = os.path.join(state_m.state.library_path, state_m.state.library_name)
+        library_state_row_iter = self.library_row_iter_dict_by_library_path[local_file_system_path]
+        state_row_path = self.tree_store.get_path(library_state_row_iter)
+        if state_row_path is not None:
+            self.view.expand_to_path(state_row_path)
+        self.view.scroll_to_cell(state_row_path, None)
+        self.view.get_selection().select_iter(library_state_row_iter)
+        self.view.grab_focus()
+
     def select_open_state_machine_of_selected_library_element(self):
         """Select respective state machine of selected library in state machine manager if already open """
         (model, row_path) = self.view.get_selection().get_selected()
