@@ -221,3 +221,8 @@ class LibraryStateModel(AbstractStateModel):
         self._is_about_to_be_destroyed_recursively = value
         if self.state_copy:
             self.state_copy.is_about_to_be_destroyed_recursively = value
+            
+    def _parse_for_element_meta_data(self, meta_data):
+        if not self.state_copy_initialized:
+            return 
+        super(LibraryStateModel, self)._parse_for_element_meta_data(meta_data)
