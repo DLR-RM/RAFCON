@@ -21,7 +21,11 @@ Next release
 
   - :issue:`658` crash in load_state_machine
 
+  - run correct command for updating font cache
+
 - Changes:
+
+  - Replaced font "DIN Next LT Pro" by "Source Sans Pro"
 
 
 0.13.1

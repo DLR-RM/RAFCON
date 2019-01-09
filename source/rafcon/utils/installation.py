@@ -40,6 +40,8 @@ def install_fonts(logger=None, restart=False):
         log.warn("No GTK found. Will not install fonts.")
         return
 
+    font_names_to_be_installed = ["Source Sans Pro", "FontAwesome"]
+
     tv = Gtk.TextView()
     try:
         context = tv.get_pango_context()
@@ -50,25 +52,33 @@ def install_fonts(logger=None, restart=False):
         log.warn("Could not get pango context. Will not install fonts.")
         return
     existing_fonts = context.list_families()
-    existing_font_names = [font.get_name() for font in existing_fonts]
+    existing_font_faces = {font.get_name(): [face.get_face_name() for face in font.list_faces()]
+                           for font in existing_fonts
+                           if font.get_name() in font_names_to_be_installed}
 
     user_otf_fonts_folder = os.path.join(os.path.expanduser('~'), '.fonts')
 
     font_installed = False
     try:
-        for font_name in ["DIN Next LT Pro", "FontAwesome"]:
-            if font_name in existing_font_names:
-                log.debug("Font '{0}' found".format(font_name))
-                continue
-
-            log.info("Installing font '{0}' to {1}".format(font_name, user_otf_fonts_folder))
-            if not os.path.isdir(user_otf_fonts_folder):
-                os.makedirs(user_otf_fonts_folder)
-
+        for font_name in font_names_to_be_installed:
             # A font is a folder one or more font faces
             fonts_folder = os.path.join(assets_folder, "fonts", font_name)
+            num_faces_to_be_installed = len(filter(lambda name: name.endswith(".otf"), os.listdir(fonts_folder)))
+            num_faces_installed = len(existing_font_faces[font_name])
+
+            if num_faces_to_be_installed <= num_faces_installed:
+                log.debug("Font '{0}' already installed".format(font_name))
+                return
+
+            specific_user_otf_fonts_folder = user_otf_fonts_folder
+            if num_faces_to_be_installed > 1:
+                specific_user_otf_fonts_folder = os.path.join(user_otf_fonts_folder, font_name)
+
+            log.info("Installing font '{0}' to {1}".format(font_name, specific_user_otf_fonts_folder))
+            if not os.path.isdir(specific_user_otf_fonts_folder):
+                os.makedirs(specific_user_otf_fonts_folder)
             for font_face in os.listdir(fonts_folder):
-                target_font_file = os.path.join(user_otf_fonts_folder, font_face)
+                target_font_file = os.path.join(specific_user_otf_fonts_folder, font_face)
                 source_font_file = os.path.join(fonts_folder, font_face)
                 shutil.copy(source_font_file, target_font_file)
             font_installed = True
@@ -78,7 +88,7 @@ def install_fonts(logger=None, restart=False):
 
     if font_installed:
         log.info("Running font detection ...")
-        fail = subprocess.call(['fc-cache', '-fv', '"' + user_otf_fonts_folder + '"'])
+        fail = subprocess.call(['fc-cache', '-fv', user_otf_fonts_folder])
         if fail:
             log.warn("Could not run font detection. RAFCON might not find the correct fonts.")
         if restart:
@@ -250,7 +260,7 @@ def generate_data_files():
     gui_data_files = [
         get_data_files_tuple(assets_folder, 'splashscreens'),
         get_data_files_tuple(assets_folder, 'fonts', 'FontAwesome'),
-        get_data_files_tuple(assets_folder, 'fonts', 'DIN Next LT Pro'),
+        get_data_files_tuple(assets_folder, 'fonts', 'Source Sans Pro'),
         get_data_files_tuple(themes_folder, 'gtk-3.0', 'gtk.css', path_to_file=True),
         get_data_files_tuple(themes_folder, 'gtk-3.0', 'gtk-dark.css', path_to_file=True),
         get_data_files_tuple(themes_folder, 'assets'),
