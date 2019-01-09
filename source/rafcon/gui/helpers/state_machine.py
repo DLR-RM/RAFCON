@@ -832,7 +832,7 @@ def add_data_port_to_selected_states(data_port_type, data_type=None, selected_st
         return
     if all([isinstance(state_m.state, LibraryState) for state_m in selected_states]):
         logger.warning("The data port couldn't be added to state of type {0}"
-                    "".format(LibraryState.__name__))
+                       "".format(LibraryState.__name__))
         return
     ids = {}
     for state_m in selected_states:
@@ -891,7 +891,7 @@ def add_outcome_to_selected_states(selected_states=None):
         return
     if all([isinstance(state_m.state, LibraryState) for state_m in selected_states]):
         logger.warning("The outcome couldn't be added to state of type {0}"
-                    "".format(LibraryState.__name__))
+                       "".format(LibraryState.__name__))
         return
     ids = {}
     for state_m in selected_states:

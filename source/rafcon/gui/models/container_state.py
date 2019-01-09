@@ -52,13 +52,6 @@ class ContainerStateModel(StateModel):
         assert isinstance(container_state, ContainerState)
         super(ContainerStateModel, self).__init__(container_state, parent, meta, load_meta_data, expected_future_models)
 
-        self.states = {}
-        self.transitions = []
-        self.data_flows = []
-        self.scoped_variables = []
-
-        self._load_scoped_variable_models()
-
         self._load_child_state_models(load_meta_data)
 
         self._load_transition_models()
@@ -72,11 +65,16 @@ class ContainerStateModel(StateModel):
         # this class is an observer of its own properties:
         self.register_observer(self)
 
+    def _load_port_models(self):
+        super(ContainerStateModel, self)._load_port_models()
+        self._load_scoped_variable_models()
+
     def _load_child_state_models(self, load_meta_data):
         """Adds models for each child state of the state
 
         :param bool load_meta_data: Whether to load the meta data of the child state
         """
+        self.states = {}
         # Create model for each child class
         child_states = self.state.states
         for child_state in child_states.values():
@@ -89,16 +87,19 @@ class ContainerStateModel(StateModel):
 
     def _load_scoped_variable_models(self):
         """ Adds models for each scoped variable of the state """
+        self.scoped_variables = []
         for scoped_variable in self.state.scoped_variables.values():
             self._add_model(self.scoped_variables, scoped_variable, ScopedVariableModel)
 
     def _load_data_flow_models(self):
         """ Adds models for each data flow of the state """
+        self.data_flows = []
         for data_flow in self.state.data_flows.values():
             self._add_model(self.data_flows, data_flow, DataFlowModel)
 
     def _load_transition_models(self):
         """ Adds models for each transition of the state """
+        self.transitions = []
         for transition in self.state.transitions.values():
             self._add_model(self.transitions, transition, TransitionModel)
 
