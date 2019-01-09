@@ -8,14 +8,28 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Patch releases 0.13.\*
 ----------------------
 
-Next release
+
+Next Release
 """"""""""""
 
 - Features:
 
-  - The right click menu of library state can be used to select and focus respective library tree element
 
 - Improvements:
+
+
+- Bug Fixes:
+
+
+- Changes:
+
+
+0.13.2
+""""""
+
+- Features:
+
+  - The right click menu of library state can be used to select and focus respective library tree element
 
 - Bug Fixes:
 
