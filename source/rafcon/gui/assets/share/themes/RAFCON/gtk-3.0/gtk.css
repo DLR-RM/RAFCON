@@ -34,7 +34,7 @@ $wm_icon_active_bg: $selected_fg_color;
   outline-offset: -3px;
   outline-width: 1px;
   -gtk-outline-radius: 2px;
-  font-family: DINNextLTPro; }
+  font-family: 'Source Sans Pro'; }
 
 .background {
   color: #2a2a2a;
@@ -3146,7 +3146,7 @@ modelbutton.flat:selected arrow, treeview.view:selected, treeview.view:selected:
   border-bottom: 1px solid #e9e9eb; }
   .widget-title > label {
     color: #5c5c5d;
-    font-family: DINNextLTPro;
+    font-family: 'Source Sans Pro';
     font-size: 13px;
     font-weight: 500;
     letter-spacing: 1.1px;
