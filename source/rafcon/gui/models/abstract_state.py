@@ -111,10 +111,7 @@ class AbstractStateModel(MetaModel, Hashable):
         self.input_data_ports = []
         self.output_data_ports = []
         self.outcomes = []
-        self._load_input_data_port_models()
-        self._load_output_data_port_models()
-        self._load_income_model()
-        self._load_outcome_models()
+        self._load_port_models()
 
     def __str__(self):
         return "Model of state: {0}".format(self.state)
@@ -344,6 +341,12 @@ class AbstractStateModel(MetaModel, Hashable):
             if outcome_m.outcome.outcome_id == outcome_id:
                 return outcome_m
         return False
+
+    def _load_port_models(self):
+        self._load_income_model()
+        self._load_outcome_models()
+        self._load_input_data_port_models()
+        self._load_output_data_port_models()
 
     def _load_input_data_port_models(self):
         raise NotImplementedError

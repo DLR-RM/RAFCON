@@ -84,6 +84,12 @@ via:
 
    pip install --user pycairo<2.0.0,>=1.10.0
 
+If you are using Python 3.4, you will need a ``pip`` version <= 8. Run the following command, to downgrade ``pip``:
+
+.. code-block:: bash
+
+   pip install --user --upgrade pip==8
+
 Of course you can also directly use the RAFCON sources from GitHub.
 
 .. code-block:: bash

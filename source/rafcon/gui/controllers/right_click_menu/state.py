@@ -193,6 +193,8 @@ class StateMachineRightClickMenu(object):
         if len(selection.states) == 1 and isinstance(selected_state_m, LibraryStateModel):
             menu.append(create_check_menu_item("Show library content", selected_state_m.meta['gui']['show_content'],
                                                partial(self.on_toggle_show_library_content, state_m=selected_state_m)))
+            menu.append(create_menu_item("Show library tree element", constants.SIGN_LIB,
+                                         partial(self.on_select_library_tree_element, state_m=selected_state_m)))
 
     def insert_is_start_state_in_menu(self, menu, shortcuts_dict, accel_group):
 
@@ -265,6 +267,12 @@ class StateMachineRightClickMenu(object):
     def on_toggle_show_library_content(widget, date=None, state_m=None):
         if state_m is not None:
             gui_helper_state_machine.gui_helper_state.toggle_show_content_flag_of_library_state_model(state_m)
+
+
+    def on_select_library_tree_element(widget, date=None, state_m=None):
+        from rafcon.gui.singleton import main_window_controller
+        library_tree_controller = main_window_controller.get_controller('library_controller')
+        library_tree_controller.select_library_tree_element_of_library_state_model(state_m)
 
     def on_toggle_is_start_state(self, widget, data=None):
         self.shortcut_manager.trigger_action("is_start_state", None, None)
