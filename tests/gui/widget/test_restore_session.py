@@ -263,7 +263,7 @@ def test_restore_session(caplog):
     from rafcon.core.storage import storage
 
     change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False,
-                            'SESSION_RESTORE_ENABLED': True, 'GAPHAS_EDITOR': True}
+                            'SESSION_RESTORE_ENABLED': True}
 
     # first run
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),

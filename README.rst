@@ -37,7 +37,7 @@ Collaborative working
 Installation preparations
 -------------------------
 
-Before installing RAFCON, Python 2.7, pip and setuptools are required on your system. Most of the other dependencies
+Before installing RAFCON, Python >=2.7, pip and setuptools are required on your system. Most of the other dependencies
 are automatically resolved by pip/setuptools, but not all of them. Those need be be installed manually, too:
 
 Installation requirements for Ubuntu 16.04
@@ -45,31 +45,27 @@ Installation requirements for Ubuntu 16.04
 
 .. code-block:: bash
 
-   sudo apt-get install python-dev python-opengl python-gtkglext1 python-gtksourceview2 python-pip
-   sudo -H pip2 install --upgrade pip
-   sudo -H pip2 install --upgrade setuptools
+   sudo apt-get install python-dev python-pip
+   sudo -H pip install --upgrade pip
+   sudo -H pip install --upgrade setuptools
 
 Installation requirements for Ubuntu 18.04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
-   sudo apt-get install python-dev python-opengl python-gtkglext1 python-gtksourceview2 python-pip build-essential glade python-glade2 libcanberra-gtk-module
-   sudo -H pip2 install --upgrade pip
-   sudo -H pip2 install --upgrade setuptools
+   sudo apt-get install python-dev python-pip build-essential glade
+   sudo -H pip install --upgrade pip
+   sudo -H pip install --upgrade setuptools
 
 General requirements
 ^^^^^^^^^^^^^^^^^^^^
 
 If you are not using Ubuntu 16.04 or 18.04, please make sure that the following packages are installed:
 
-* Python 2.7
+* Python >=2.7
 * pip (recent version required: v18 known to be working)
 * python-setuptools (recent version required: v40 known to be working)
-* python-opengl
-* python-gtkglext1
-* python-gtksourceview2
-* pylint
 
 
 Installing RAFCON
@@ -77,9 +73,22 @@ Installing RAFCON
 
 .. code-block:: bash
 
-   pip2 install rafcon --user
+   pip install rafcon --user
 
 The ``--user`` flag is optional. If not set, RAFCON is installed globally (in this case you normaly need to have root privileges).
+
+If during the installation the error ``ImportError: No module named cairo`` occurs, please install pycairo directly
+via:
+
+.. code-block:: bash
+
+   pip install --user pycairo<2.0.0,>=1.10.0
+
+If you are using Python 3.4, you will need a ``pip`` version <= 8. Run the following command, to downgrade ``pip``:
+
+.. code-block:: bash
+
+   pip install --user --upgrade pip==8
 
 Of course you can also directly use the RAFCON sources from GitHub.
 
@@ -107,4 +116,4 @@ If you want to uninstall RAFCON, all you need to do is call
 
 .. code-block:: bash
 
-   pip2 uninstall rafcon
+   pip uninstall rafcon

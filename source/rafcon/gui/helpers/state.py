@@ -19,6 +19,7 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
+from rafcon.core.state_elements.logical_port import Income
 from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.gui import singleton as gui_singletons
 
@@ -87,6 +88,23 @@ def check_expected_future_model_list_is_empty(target_state_m, msg, delete=True, 
     return True
 
 
+def update_models_recursively(state_m):
+    """ If a state model is reused the model depth maybe is to low. Therefore this method checks if all 
+    library state models are created with reliable depth"""
+
+    assert isinstance(state_m, AbstractStateModel)
+
+    if isinstance(state_m, LibraryStateModel):
+        if not state_m.state_copy_initialized:
+            state_m.recursive_generate_models(load_meta_data=False)
+            import rafcon.gui.helpers.meta_data as gui_helper_meta_data
+            gui_helper_meta_data.scale_library_content(state_m)
+
+    if isinstance(state_m, ContainerStateModel):
+        for child_state_m in state_m.states.values():
+            update_models_recursively(child_state_m)
+
+
 def add_state(container_state_m, state_type):
     """Add a state to a container state
 
@@ -153,11 +171,13 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
         input_data_ports = dict(source_state.input_data_ports)
         output_data_ports = dict(source_state.output_data_ports)
         scoped_variables = dict(source_state.scoped_variables)
+        income = source_state.income
         outcomes = dict(source_state.outcomes)
         source_state.input_data_ports = {}
         source_state.output_data_ports = {}
         source_state.scoped_variables = {}
         source_state.transitions = {}  # before remove of outcomes related transitions should be gone
+        source_state.income = Income()
         source_state.outcomes = {}
         states = dict(source_state.states)
         # TODO check why next line can not be performed
@@ -167,6 +187,7 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
                                        input_data_ports=input_data_ports,
                                        output_data_ports=output_data_ports,
                                        scoped_variables=scoped_variables,
+                                       income=income,
                                        outcomes=outcomes,
                                        transitions=state_transitions,
                                        data_flows=data_flows,
@@ -186,15 +207,17 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
         # separate state-elements from source state
         input_data_ports = dict(source_state.input_data_ports)
         output_data_ports = dict(source_state.output_data_ports)
+        income = source_state.income
         outcomes = dict(source_state.outcomes)
         source_state.input_data_ports = {}
         source_state.output_data_ports = {}
+        source_state.income = Income()
         source_state.outcomes = {}
 
         new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
                                        input_data_ports=input_data_ports,
                                        output_data_ports=output_data_ports,
-                                       outcomes=outcomes)
+                                       income=income, outcomes=outcomes)
 
     if source_state.description is not None and len(source_state.description) > 0:
         new_state.description = source_state.description
@@ -221,7 +244,7 @@ def extract_child_models_of_state(state_m, new_state_class):
     new_state_is_container = issubclass(new_state_class, ContainerState)
 
     # define which model references to hold for new state
-    required_model_properties = ['input_data_ports', 'output_data_ports', 'outcomes']
+    required_model_properties = ['input_data_ports', 'output_data_ports', 'outcomes', 'income']
     obsolete_model_properties = []
     if current_state_is_container and new_state_is_container:  # hold some additional references
         # transition are removed when changing the state type, thus do not copy them
@@ -231,6 +254,8 @@ def extract_child_models_of_state(state_m, new_state_class):
         obsolete_model_properties.extend(['states', 'transitions', 'data_flows', 'scoped_variables'])
 
     def get_element_list(state_m, prop_name):
+        if prop_name == 'income':
+            return [state_m.income]
         wrapper = getattr(state_m, prop_name)
         # ._obj is needed as gaphas wraps observable lists and dicts into a gaphas.support.ObsWrapper
         list_or_dict = wrapper._obj
@@ -252,8 +277,6 @@ def extract_child_models_of_state(state_m, new_state_class):
             if new_state_is_container:
                 required_child_models['states'].remove(decider_state_m)
                 obsolete_child_models['states'] = [decider_state_m]
-            else:
-                obsolete_child_models['states'].append(decider_state_m)
 
     return required_child_models, obsolete_child_models
 
@@ -390,7 +413,6 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
     if isinstance(state_m_to_insert, AbstractStateModel) and \
             not gui_helper_meta_data.model_has_empty_meta(state_m_to_insert):
 
-        gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
         if isinstance(state_m_to_insert, ContainerStateModel):
             # print("TARGET1", state_m_to_insert.state.state_element_attrs)
             models_dict = {'state': state_m_to_insert}
@@ -403,16 +425,16 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
                 models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
 
             resize_factor = gui_helper_meta_data.scale_meta_data_according_state(models_dict, as_template=True)
-            gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor, gaphas_editor)
+            gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor)
 
         elif isinstance(state_m_to_insert, StateModel):
             # print("TARGET2", state_m_to_insert.state.state_element_attrs)
 
             if previous_state_size:
-                current_size = state_m_to_insert.get_meta_data_editor(gaphas_editor)['size']
+                current_size = state_m_to_insert.get_meta_data_editor()['size']
                 factor = gui_helper_meta_data.divide_two_vectors(current_size, previous_state_size)
                 factor = (min(*factor), min(*factor))
-                gui_helper_meta_data.resize_state_meta(state_m_to_insert, factor, gaphas_editor)
+                gui_helper_meta_data.resize_state_meta(state_m_to_insert, factor)
 
             else:
                 logger.debug("For insert as template of {0} no resize of state meta data is performed because "
@@ -452,8 +474,7 @@ def insert_state_as(target_state_m, state, as_template):
         old_lib_state_m = state_m
         state_m = state_m.state_copy
 
-        gaphas_editor, _ = gui_helper_meta_data.get_y_axis_and_gaphas_editor_flag()
-        previous_state_size = state_m.get_meta_data_editor(gaphas_editor)['size']
+        previous_state_size = state_m.get_meta_data_editor()['size']
         gui_helper_meta_data.put_default_meta_on_state_m(state_m, target_state_m)
         # TODO check if the not as template case maybe has to be run with the prepare call
         prepare_state_m_for_insert_as(state_m, previous_state_size)
@@ -469,25 +490,25 @@ def insert_state_as(target_state_m, state, as_template):
     target_state_m.state.add_state(state_m.state)
 
 
-def substitute_state(target_state_m, state_m_to_insert):
-    """ Substitute the target state with a the handed state
+def substitute_state(target_state_m, state_m_to_insert, as_template=False):
+    """ Substitutes the target state
 
-    Both states are handed by there state models. The insert state adapts the size and position of the target state.
-    State elements of the state handed to be insert became resize by keeping there proportion.
+    Both, the state to be replaced (the target state) and the state to be inserted (the new state) are passed via
+    parameters.
+    The new state adapts the size and position of the target state.
+    State elements of the new state are resized but kepp their proportion.
 
     :param rafcon.gui.models.container_state.AbstractStateModel target_state_m: State Model of state to be substituted
-    :param rafcon.gui.models.container_state.StateModel state_m_to_insert: State Model of state to be insert instate
+    :param rafcon.gui.models.container_state.StateModel state_m_to_insert: State Model of state to be inserted
     :return:
     """
     # print("substitute_state")
 
-    gaphas_editor = gui_singletons.global_gui_config.get_config_value('GAPHAS_EDITOR', True)
     state_to_insert = state_m_to_insert.state
     action_parent_m = target_state_m.parent
     old_state_m = target_state_m
     old_state = old_state_m.state
     state_id = old_state.state_id
-    # print("TARGET", old_state_m.get_meta_data_editor(gaphas_editor))
 
     # BEFORE MODEL
     tmp_meta_data = {'transitions': {}, 'data_flows': {}, 'state': None}
@@ -508,11 +529,9 @@ def substitute_state(target_state_m, state_m_to_insert):
     action_parent_m.substitute_state.__func__.old_state_m = old_state_m
 
     # put old state size and rel_pos onto new state
-    previous_state_size = state_m_to_insert.get_meta_data_editor(gaphas_editor)['size']
-    state_m_to_insert.set_meta_data_editor('size', old_state_m.get_meta_data_editor(gaphas_editor)['size'],
-                                           gaphas_editor)
-    state_m_to_insert.set_meta_data_editor('rel_pos', old_state_m.get_meta_data_editor(gaphas_editor)['rel_pos'],
-                                           gaphas_editor)
+    previous_state_size = state_m_to_insert.get_meta_data_editor()['size']
+    state_m_to_insert.set_meta_data_editor('size', old_state_m.get_meta_data_editor()['size'])
+    state_m_to_insert.set_meta_data_editor('rel_pos', old_state_m.get_meta_data_editor()['rel_pos'])
     # scale the meta data according new size
     prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size)
 
@@ -520,6 +539,14 @@ def substitute_state(target_state_m, state_m_to_insert):
     new_state = e = None
     # print("state to insert", state_to_insert)
     try:
+        # if as_template:  # TODO remove this work around if the models are loaded correctly
+        #     # the following enforce the creation of a new model (in needed depth) and transfer of meta data
+        #     import rafcon.gui.action
+        #     meta_dict = rafcon.gui.action.get_state_element_meta(state_m_to_insert)
+        #     new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
+        #     sm_m = action_parent_m.get_state_machine_m()
+        #     rafcon.gui.action.insert_state_meta_data(meta_dict, sm_m.get_state_model_by_path(new_state.get_path()))
+        # else:
         action_parent_m.expected_future_models.add(state_m_to_insert)
         new_state = action_parent_m.state.substitute_state(state_id, state_to_insert)
         # assert new_state.state_id is state_id
@@ -531,6 +558,7 @@ def substitute_state(target_state_m, state_m_to_insert):
         # AFTER MODEL
         # print("AFTER MODEL", new_state)
         new_state_m = action_parent_m.states[new_state.state_id]
+        update_models_recursively(state_m=new_state_m)
         tmp_meta_data = action_parent_m.substitute_state.__func__.tmp_meta_data_storage
         old_state_m = action_parent_m.substitute_state.__func__.old_state_m
         changed_models = []
@@ -584,7 +612,7 @@ def substitute_state_as(target_state_m, state, as_template, keep_name=False):
         state_m.state.name = target_state_m.state.name
 
     assert target_state_m.parent.states[target_state_m.state.state_id] is target_state_m
-    substitute_state(target_state_m, state_m)
+    substitute_state(target_state_m, state_m, as_template)
 
 
 def group_states_and_scoped_variables(state_m_list, sv_m_list):

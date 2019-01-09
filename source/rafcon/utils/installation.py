@@ -168,6 +168,8 @@ def create_mo_files():
         mo_file = domain + '.mo'
         mo_dir = path.join(localedir, lang, 'LC_MESSAGES')
         mo_path = path.join(mo_dir, mo_file)
+        mo_dir_rel = path.join(rel_localedir, lang, 'LC_MESSAGES')
+        mo_path_rel = path.join(mo_dir_rel, mo_file)
         try:
             os.makedirs(mo_dir)
         except os.error:  # already exists
@@ -177,10 +179,10 @@ def create_mo_files():
         if result == 0:  # Compilation successful
             # add po file
             target_dir = path.join("share", *rel_localedir.split(os.sep)[1:])  # remove source/ (package_dir)
-            data_files.append((target_dir, [os.path.join(localedir, po_file)]))
+            data_files.append((target_dir, [os.path.join(rel_localedir, po_file)]))
             # add mo file
-            target_dir = path.join("share", *mo_dir.split(os.sep)[1:])  # remove source/ (package_dir)
-            data_files.append((target_dir, [mo_path]))
+            target_dir = path.join("share", *mo_dir_rel.split(os.sep)[1:])  # remove source/ (package_dir)
+            data_files.append((target_dir, [mo_path_rel]))
         else:
             distutils.log.warn("Could not compile translation '{}'. RAFCON will not be available in this "
                                "language.".format(lang))
@@ -197,13 +199,12 @@ def get_data_files_tuple(*rel_path, **kwargs):
     :rtype: tuple(str, [str])
     """
     rel_path = os.path.join(*rel_path)
-    abs_path = os.path.join(rafcon_root_path, rel_path)
     target_path = os.path.join("share", *rel_path.split(os.sep)[1:])  # remove source/ (package_dir)
     if "path_to_file" in kwargs and kwargs["path_to_file"]:
-        source_files = [abs_path]
+        source_files = [rel_path]
         target_path = os.path.dirname(target_path)
     else:
-        source_files = [os.path.join(abs_path, filename) for filename in os.listdir(abs_path)]
+        source_files = [os.path.join(rel_path, filename) for filename in os.listdir(rel_path)]
     return target_path, source_files
 
 
@@ -215,17 +216,17 @@ def get_data_files_recursively(*rel_root_path, **kwargs):
     :rtype: list(tuple(str, [str]))
     """
     result_list = list()
-    root_dir = os.path.join(rafcon_root_path, *rel_root_path)
+    rel_root_dir = os.path.join(*rel_root_path)
     share_target_root = os.path.join("share", kwargs.get("share_target_root", "rafcon"))
     distutils.log.debug("recursively generating data files for folder '{}' ...".format(
-        root_dir))
+        rel_root_dir))
 
-    for dir_, _, files in os.walk(root_dir):
-        relative_directory = os.path.relpath(dir_, root_dir)
+    for dir_, _, files in os.walk(rel_root_dir):
+        relative_directory = os.path.relpath(dir_, rel_root_dir)
         file_list = list()
         for fileName in files:
             rel_file_path = os.path.join(relative_directory, fileName)
-            abs_file_path = os.path.join(root_dir, rel_file_path)
+            abs_file_path = os.path.join(rel_root_dir, rel_file_path)
             file_list.append(abs_file_path)
         if len(file_list) > 0:
             # this is a valid path in ~/.local folder: e.g. share/rafcon/libraries/generic/wait
@@ -250,7 +251,8 @@ def generate_data_files():
         get_data_files_tuple(assets_folder, 'splashscreens'),
         get_data_files_tuple(assets_folder, 'fonts', 'FontAwesome'),
         get_data_files_tuple(assets_folder, 'fonts', 'DIN Next LT Pro'),
-        get_data_files_tuple(themes_folder, 'gtk-3.0'),
+        get_data_files_tuple(themes_folder, 'gtk-3.0', 'gtk.css', path_to_file=True),
+        get_data_files_tuple(themes_folder, 'gtk-3.0', 'gtk-dark.css', path_to_file=True),
         get_data_files_tuple(themes_folder, 'assets'),
         get_data_files_tuple(themes_folder, 'sass'),
         get_data_files_tuple(themes_folder, 'gtk-sourceview'),
@@ -267,9 +269,8 @@ def generate_data_files():
     # locale_data_files = [('share/rafcon/locale/de/LC_MESSAGES', ['source/rafcon/locale/de/LC_MESSAGES/rafcon.mo'])]
     # print("locale_data_files", locale_data_files)
 
-    version_data_file = [("./", [os.path.join(rafcon_root_path, "VERSION")])]
-    desktop_data_file = [("share/applications", [path.join(rafcon_root_path, 'share', 'applications',
-                                                           'de.dlr.rm.RAFCON.desktop')])]
+    version_data_file = [("./", ["VERSION"])]
+    desktop_data_file = [("share/applications", [path.join('share', 'applications', 'de.dlr.rm.RAFCON.desktop')])]
 
     examples_data_files = get_data_files_recursively(examples_folder, share_target_root=path.join("rafcon", "examples"))
     libraries_data_files = get_data_files_recursively(libraries_folder, share_target_root=path.join("rafcon",

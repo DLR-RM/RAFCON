@@ -38,7 +38,7 @@ from rafcon.core.states.state import State
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.state_elements.data_flow import DataFlow
 from rafcon.core.state_elements.data_port import DataPort, InputDataPort
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.state_elements.scope import ScopedVariable
 from rafcon.core.state_elements.transition import Transition
 
@@ -348,10 +348,11 @@ class ModificationsHistoryModel(ModelMT):
                                                          state_machine_model=self.state_machine_model,
                                                          overview=overview)
                 elif "remove_" in cause:
-                    assert cause in ["remove_transition", "remove_data_flow", "remove_outcome", "remove_input_data_port",
-                                     "remove_output_data_port", "remove_scoped_variable", "remove_state"]
+                    assert cause in ["remove_transition", "remove_data_flow", "remove_income", "remove_outcome",
+                                     "remove_input_data_port", "remove_output_data_port", "remove_scoped_variable",
+                                     "remove_state"]
                     if ("transition" in cause or "data_flow" in cause or "scoped_variable" in cause or "state" in cause) or\
-                            (("data_port" in cause or "outcome" in cause) and not isinstance(overview['model'][-1].state.parent, State)):
+                            (("data_port" in cause or "outcome" in cause or "income" in cause) and not isinstance(overview['model'][-1].state.parent, State)):
                         if self.with_debug_logs:
                             self.store_test_log_file("#4 REMOVE1 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
                         # if "transition" in cause:
@@ -359,7 +360,7 @@ class ModificationsHistoryModel(ModelMT):
                         self.active_action = RemoveObjectAction(parent_path=overview['instance'][-1].get_path(),
                                                                 state_machine_model=self.state_machine_model,
                                                                 overview=overview)
-                    elif "data_port" in cause or "outcome" in cause:
+                    elif "data_port" in cause or "outcome" in cause or "income" in cause:
 
                         if isinstance(overview['instance'][-1].parent, State):
                             if self.with_debug_logs:
@@ -726,6 +727,7 @@ class ModificationsHistoryModel(ModelMT):
                 logger.error("HISTORY after not count [states] -> For every before there should be a after.")
 
     @ModelMT.observe("state", before=True)
+    @ModelMT.observe("income", before=True)
     @ModelMT.observe("outcomes", before=True)
     @ModelMT.observe("is_start", before=True)
     @ModelMT.observe("transitions", before=True)
@@ -766,6 +768,7 @@ class ModificationsHistoryModel(ModelMT):
                     logger.error("FAILED to start NEW HISTORY ELEMENT [root_state]")
 
     @ModelMT.observe("state", after=True)
+    @ModelMT.observe("income", after=True)
     @ModelMT.observe("outcomes", after=True)
     @ModelMT.observe("is_start", after=True)
     @ModelMT.observe("transitions", after=True)

@@ -16,6 +16,7 @@ from copy import copy, deepcopy
 from weakref import ref
 from gtkmvc3.model_mt import ModelMT
 from gtkmvc3.observable import Signal
+import gtkmvc3.support.wrappers as wrappers
 
 from rafcon.gui.models.signals import MetaSignalMsg, Notification
 from rafcon.gui.models.meta import MetaModel
@@ -78,6 +79,7 @@ class AbstractStateModel(MetaModel, Hashable):
     _is_about_to_be_destroyed_recursively = False
     is_start = None
     state = None
+    income = None
     outcomes = []
     input_data_ports = []
     output_data_ports = []
@@ -85,8 +87,8 @@ class AbstractStateModel(MetaModel, Hashable):
     action_signal = Signal()
     destruction_signal = Signal()
 
-    __observables__ = ("state", "input_data_ports", "output_data_ports", "outcomes", "is_start", "meta_signal",
-                       "action_signal", "destruction_signal")
+    __observables__ = ("state", "input_data_ports", "output_data_ports", "income", "outcomes", "is_start",
+                       "meta_signal", "action_signal", "destruction_signal")
 
     def __init__(self, state, parent=None, meta=None):
         if type(self) == AbstractStateModel:
@@ -109,9 +111,7 @@ class AbstractStateModel(MetaModel, Hashable):
         self.input_data_ports = []
         self.output_data_ports = []
         self.outcomes = []
-        self._load_input_data_port_models()
-        self._load_output_data_port_models()
-        self._load_outcome_models()
+        self._load_port_models()
 
     def __str__(self):
         return "Model of state: {0}".format(self.state)
@@ -124,17 +124,25 @@ class AbstractStateModel(MetaModel, Hashable):
         if self.meta != other.meta:
             return False
         for attr in self.state.state_element_attrs:
-            # E.g. compare lists of outcomes and data ports. The lists are converted to sets, as those are unordered
-            if hasattr(getattr(self, attr), "__radd__"):  # elements are stored in a list (ObsListWrapper)
-                elements = getattr(self, attr)
-                other_elements = getattr(other, attr)
-            else:  # elements are stored in a dict (ObsMapWrapper)
-                elements = list(getattr(self, attr).items())
-                other_elements = list(getattr(other, attr).items())
-            if len(elements) != len(other_elements):
-                return False
-            if not all([element in other_elements for element in other_elements]):
-                return False
+            # some state element attributes are wrapped in a wrappers.ObsWrapperBase class, some of which are held in
+            # lists or dicts. Those need to be compared element-wise.
+            my_attr = getattr(self, attr)
+            other_attr = getattr(other, attr)
+            if isinstance(my_attr, wrappers.ObsSeqWrapper):
+                if isinstance(my_attr, wrappers.ObsListWrapper):  # elements are stored in a list
+                    elements = my_attr
+                    other_elements = other_attr
+                elif isinstance(my_attr, wrappers.ObsMapWrapper):  # elements are stored in a dict
+                    elements = my_attr.items()
+                    other_elements = other_attr.items()
+                else:
+                    raise ValueError("Unsupported state element type: " + str(type(my_attr)))
+                if len(elements) != len(other_elements):
+                    return False
+                if not all([element in other_elements for element in other_elements]):
+                    return False
+            else:
+                return my_attr == other_attr
         return True
 
     def __hash__(self):
@@ -162,7 +170,8 @@ class AbstractStateModel(MetaModel, Hashable):
         from rafcon.gui.models.state_element import StateElementModel
         if not isinstance(item, StateElementModel):
             return False
-        return item in self.outcomes or item in self.input_data_ports or item in self.output_data_ports
+        return item is self.income or item in self.outcomes or \
+               item in self.input_data_ports or item in self.output_data_ports
 
     def __copy__(self):
         state = copy(self.state)
@@ -207,6 +216,8 @@ class AbstractStateModel(MetaModel, Hashable):
             logger.verbose("Observer already unregistered!")
             pass
         if recursive:
+            if self.income:
+                self.income.prepare_destruction()
             for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
                 port.prepare_destruction()
         del self.input_data_ports[:]
@@ -215,6 +226,7 @@ class AbstractStateModel(MetaModel, Hashable):
         self.state = None
         self.input_data_ports = None
         self.output_data_ports = None
+        self.income = None
         self.outcomes = None
         # History TODO: these are needed by the modification history
         # self.action_signal = None
@@ -225,14 +237,14 @@ class AbstractStateModel(MetaModel, Hashable):
 
     def update_hash(self, obj_hash):
         self.update_hash_from_dict(obj_hash, self.core_element)
-        for state_element in sorted(self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
+        for state_element in sorted([self.income] + self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
             self.update_hash_from_dict(obj_hash, state_element)
         if not self.state.get_next_upper_library_root_state():
             self.update_hash_from_dict(obj_hash, self.meta)
 
     def update_meta_data_hash(self, obj_hash):
         super(AbstractStateModel, self).update_meta_data_hash(obj_hash)
-        for state_element in sorted(self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
+        for state_element in sorted([self.income] + self.outcomes[:] + self.input_data_ports[:] + self.output_data_ports[:]):
             state_element.update_meta_data_hash(obj_hash)
 
     @property
@@ -330,10 +342,19 @@ class AbstractStateModel(MetaModel, Hashable):
                 return outcome_m
         return False
 
+    def _load_port_models(self):
+        self._load_income_model()
+        self._load_outcome_models()
+        self._load_input_data_port_models()
+        self._load_output_data_port_models()
+
     def _load_input_data_port_models(self):
         raise NotImplementedError
 
     def _load_output_data_port_models(self):
+        raise NotImplementedError
+
+    def _load_income_model(self):
         raise NotImplementedError
 
     def _load_outcome_models(self):
@@ -546,6 +567,7 @@ class AbstractStateModel(MetaModel, Hashable):
         for outcome_m in self.outcomes:
             source_outcome_m = source_state_m.get_outcome_m(outcome_m.outcome.outcome_id)
             outcome_m.meta = deepcopy(source_outcome_m.meta)
+        self.income.meta = deepcopy(source_state_m.income.meta)
 
         self.meta_signal.emit(MetaSignalMsg("copy_state_m", "all", True))
 
@@ -568,6 +590,15 @@ class AbstractStateModel(MetaModel, Hashable):
         for outcome_m in self.outcomes:
             self._copy_element_meta_data_from_meta_file_data(meta_data, outcome_m, "outcome",
                                                              outcome_m.outcome.outcome_id)
+        if "income" in meta_data:
+            if "gui" in meta_data and "editor_gaphas" in meta_data["gui"] and \
+                    "income" in meta_data["gui"]["editor_gaphas"]:  # chain necessary to prevent key generation
+                del meta_data["gui"]["editor_gaphas"]["income"]
+        elif "gui" in meta_data and "editor_gaphas" in meta_data["gui"] and \
+                "income" in meta_data["gui"]["editor_gaphas"]:  # chain necessary to prevent key generation in meta data
+            meta_data["income"]["gui"]["editor_gaphas"] = meta_data["gui"]["editor_gaphas"]["income"]
+            del meta_data["gui"]["editor_gaphas"]["income"]
+        self._copy_element_meta_data_from_meta_file_data(meta_data, self.income, "income", "")
 
     @staticmethod
     def _copy_element_meta_data_from_meta_file_data(meta_data, element_m, element_name, element_id):
@@ -605,6 +636,8 @@ class AbstractStateModel(MetaModel, Hashable):
             self._copy_element_meta_data_to_meta_file_data(meta_data, outcome_m, "outcome",
                                                            outcome_m.outcome.outcome_id)
 
+        self._copy_element_meta_data_to_meta_file_data(meta_data, self.income, "income", "")
+
     @staticmethod
     def _copy_element_meta_data_to_meta_file_data(meta_data, element_m, element_name, element_id):
         """Helper method to generate meta data for meta data file for the given element
@@ -634,9 +667,7 @@ class AbstractStateModel(MetaModel, Hashable):
         vividict = mirror_y_axis_in_vividict_element(vividict, 'rel_pos')
         if contains_geometric_info(vividict['size']):
             self.temp['conversion_from_opengl'] = True
-            # Determine income position
             size = vividict['size']
-            vividict['income']['rel_pos'] = (0, size[1] / 2.)
 
             # Determine size and position of NameView
             margin = min(size) / 12.

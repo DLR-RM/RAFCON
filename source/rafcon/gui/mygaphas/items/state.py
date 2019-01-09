@@ -128,8 +128,6 @@ class StateView(Element):
         return self._view
 
     def setup_canvas(self):
-        self._income = self.add_income()
-
         canvas = self.canvas
         parent = self.parent
 
@@ -371,12 +369,11 @@ class StateView(Element):
         self.update_minimum_size_of_children()
 
         def update_port_position(port_v, meta_data):
-            if isinstance(meta_data['rel_pos'], tuple) and len(meta_data['rel_pos']) == 2:
+            if contains_geometric_info(meta_data['rel_pos']) == 2:
                 port_v.handle.pos = meta_data['rel_pos']
                 self.port_constraints[port_v].update_position(meta_data['rel_pos'])
 
-        if isinstance(state_meta['income']['rel_pos'], tuple) and len(state_meta['income']['rel_pos']) == 2:
-            update_port_position(self.income, state_meta['income'])
+        update_port_position(self.income, self.income.model.get_meta_data_editor())
         for outcome_v in self.outcomes:
             update_port_position(outcome_v, outcome_v.model.get_meta_data_editor())
         for data_port_v in self.inputs + self.outputs:
@@ -622,20 +619,22 @@ class StateView(Element):
                 return port
         raise AttributeError("Port with id '{0}' not found in state".format(port_id, self.model.state.name))
 
-    def add_income(self):
-        income_v = IncomeView(self)
+    def add_income(self, income_m):
+        income_v = IncomeView(income_m, self)
+        self.canvas.add_port(income_v)
+        self._income = income_v
         self._ports.append(income_v.port)
         self._handles.append(income_v.handle)
         self._map_handles_port_v[income_v.handle] = income_v
 
-        port_meta = self.model.get_meta_data_editor()['income']
+        port_meta = income_m.get_meta_data_editor()
         if not contains_geometric_info(port_meta['rel_pos']):
             # print("generate rel_pos")
             # Position income on the top of the left state side
             income_v.side = SnappedSide.LEFT
             pos_x = 0
             pos_y = self._calculate_port_pos_on_line(1, self.height)
-            port_meta = self.model.set_meta_data_editor('income.rel_pos', (pos_x, pos_y))['income']
+            port_meta = income_m.set_meta_data_editor('rel_pos', (pos_x, pos_y))
         # print("add income", self.model, self.model.parent, port_meta['rel_pos'])
         income_v.handle.pos = port_meta['rel_pos']
         self.add_rect_constraint_for_port(income_v)
@@ -648,6 +647,7 @@ class StateView(Element):
         self._ports.remove(income_v.port)
         self._handles.remove(income_v.handle)
 
+        self.canvas.remove_port(income_v)
         if income_v in self.port_constraints:
             self.canvas.solver.remove_constraint(self.port_constraints.pop(income_v))
 

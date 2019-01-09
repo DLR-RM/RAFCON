@@ -31,29 +31,21 @@ from gi.repository import Gdk
 import rafcon.core.singleton
 from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.controllers.graphical_editor import GraphicalEditorController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.helpers import text_formatting
+from rafcon.gui.controllers.graphical_editor_gaphas import GraphicalEditorController as \
+    GraphicalEditorGaphasController
 from rafcon.gui.models.state_machine import StateMachineModel, StateMachine
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog
-from rafcon.gui.views.graphical_editor import GraphicalEditorView, GL_ENABLED
+from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView as GraphicalEditorGaphasView
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
+from rafcon.gui.helpers import text_formatting
 from rafcon.gui.helpers.label import create_menu_item
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
-GAPHAS_AVAILABLE = True
-try:
-    from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView as GraphicalEditorGaphasView
-    from rafcon.gui.controllers.graphical_editor_gaphas import GraphicalEditorController as \
-        GraphicalEditorGaphasController
-except ImportError as e:
-    raise
-    logger.warning("The Gaphas graphical editor is not supported due to missing libraries: {0}".format(e))
-    GAPHAS_AVAILABLE = False
 
 ROOT_STATE_NAME_MAX_CHARS = 25
 
@@ -225,16 +217,8 @@ class StateMachinesEditorController(ExtendedController):
         sm_id = state_machine_m.state_machine.state_machine_id
         logger.debug("Create new graphical editor for state machine with id %s" % str(sm_id))
 
-        use_gaphas = global_gui_config.get_config_value('GAPHAS_EDITOR', True)
-        if use_gaphas and GAPHAS_AVAILABLE or not GL_ENABLED:
-            if not GL_ENABLED and not use_gaphas:
-                logger.info("Gaphas editor is used. "
-                            "The gui-config is set to use OpenGL editor but not all libraries needed are provided.")
-            graphical_editor_view = GraphicalEditorGaphasView(state_machine_m)
-            graphical_editor_ctrl = GraphicalEditorGaphasController(state_machine_m, graphical_editor_view)
-        else:
-            graphical_editor_view = GraphicalEditorView()
-            graphical_editor_ctrl = GraphicalEditorController(state_machine_m, graphical_editor_view)
+        graphical_editor_view = GraphicalEditorGaphasView(state_machine_m)
+        graphical_editor_ctrl = GraphicalEditorGaphasController(state_machine_m, graphical_editor_view)
 
         self.add_controller(sm_id, graphical_editor_ctrl)
 

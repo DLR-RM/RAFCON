@@ -4,16 +4,48 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/develop>`__.
 
+
+Patch releases 0.13.\*
+----------------------
+
 Next release
-------------
+""""""""""""
+
+- Features:
+
+  - The right click menu of library state can be used to select and focus respective library tree element
+
+- Improvements:
+
+- Bug Fixes:
+
+  - :issue:`658` crash in load_state_machine
+
+- Changes:
+
+
+0.13.1
+""""""
+
+- Bug Fixes: Fix installation
+
+
+0.13.0
+""""""
+
+This is a shiny new minor release of RAFCON. Finally, Python 3 (>=3.4) is supported, while Python 2.7 can still be
+used, thanks to the ``future`` packet. With this, we also ported the GUI from GTK+ 2 to GTK+ 3, allowing for better
+styling. Of course, there are many more improvements and bug fixes:
 
 - Features:
 
   - RAFCON is now compatible to Python 3
+  - GTK+ 2 to GTK+ 3 port of the RAFCON GUI
+  - Better styling including a HeaderBar
+  - Alternative light theme! (GUI config option ``THEME_DARK_VARIANT``)
 
 - Improvements:
 
-  - gtk2 to gtk3 conversion of the RAFCON GUI
   - :issue:`117` Make GUI resizeable on all edges and corners
   - :issue:`610` Provide CITATION.cff to make software citable
   - :issue:`619` Provide and install *.desktop file
@@ -30,15 +62,17 @@ Next release
   - :issue:`596` External editor does not remember the handed command and also does not lock the embedded editor
   - :issue:`617` Invalid DataFlow by DataFlowWidget
   - :issue:`618` semantic data strings get scrambled/obfuscated in execution history log
-                 fixed by pull request :issue:`626` fix(execution_log): unpickle semantic data
+    fixed by pull request :issue:`626` fix(execution_log): unpickle semantic data
   - :issue:`624` Debug console: cursor is not positioned at the point were it is clicked on
   - :issue:`627` Generic library state machines need Gtk2 to gtk3 conversion
   - :issue:`638` Exiting Fullscreen mode hides the graphical editor
+  - :issue:`644` "Substitute state as template" creates problems if not all models are recursive created
 
 - Changes:
 
   - Redundant libraries are marked as deprecated
   - No more "+"-icon next to state machine tabs to add a new state machine (related to :issue:`639`)
+  - Remove old OpenGL GraphicalEditor
   - Remove deprecated entry points ``rafcon_start`` and ``rafcon_start_gui``
 
 

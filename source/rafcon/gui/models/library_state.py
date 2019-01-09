@@ -37,12 +37,17 @@ class LibraryStateModel(AbstractStateModel):
 
     def __init__(self, state, parent=None, meta=None, load_meta_data=True):
         assert isinstance(state, LibraryState)
-        # TODO maybe find a different way to load the meta data of ports correctly
-        # at the moment the models of state_copy get initialized and the meta data taken from there if not found in
-        # state itself
+
         self.state_copy_initialized = False
         self.meta_data_was_scaled = False
         super(LibraryStateModel, self).__init__(state, parent, meta)
+
+        self.recursive_generate_models(load_meta_data)
+
+    def recursive_generate_models(self, load_meta_data):
+        # TODO maybe find a different way to load the meta data of ports correctly
+        # at the moment the models of state_copy get initialized and the meta data taken from there if not found in
+        # state itself
 
         # regulate depth of library model generation to reduce resource consumption
         current_hierarchy_depth = self.state.library_hierarchy_depth
@@ -53,11 +58,9 @@ class LibraryStateModel(AbstractStateModel):
             # logger.debug("initialize state copy {0}".format(self))
             self.initiate_library_root_state_model()
         else:
-            logger.debug("Do not initialize state copy {0}".format(self))
+            logger.verbose("Do not initialize state copy {0}".format(self))
 
-        self._load_input_data_port_models()
-        self._load_output_data_port_models()
-        self._load_outcome_models()
+        self._load_port_models()
 
         if load_meta_data:
             if not self.load_meta_data():
@@ -65,7 +68,7 @@ class LibraryStateModel(AbstractStateModel):
                 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
                 # gui_helper_meta_data.scale_library_ports_meta_data(self)
             else:
-                self.meta_data_was_scaled = global_gui_config.get_config_value('GAPHAS_EDITOR', True)
+                self.meta_data_was_scaled = True
 
     def initiate_library_root_state_model(self):
         model_class = get_state_model_class_for_state(self.state.state_copy)
@@ -78,9 +81,7 @@ class LibraryStateModel(AbstractStateModel):
     def enforce_generation_of_state_copy_model(self):
         """This enforce a load of state copy model without considering meta data"""
         self.initiate_library_root_state_model()
-        self._load_input_data_port_models()
-        self._load_output_data_port_models()
-        self._load_outcome_models()
+        self._load_port_models()
 
     def prepare_destruction(self, recursive=True):
         """Prepares the model for destruction
@@ -156,8 +157,18 @@ class LibraryStateModel(AbstractStateModel):
             new_op_m.data_port = output_data_port_m.data_port
             self.output_data_ports.append(new_op_m)
 
+    def _load_income_model(self):
+        """Reloads the income model directly from the state"""
+        if not self.state_copy_initialized:
+            return
+        self.income = None
+        income_m = deepcopy(self.state_copy.income)
+        income_m.parent = self
+        income_m.income = income_m.income
+        self.income = income_m
+
     def _load_outcome_models(self):
-        """Reloads the outcome models directly from the the state"""
+        """Reloads the outcome models directly from the state"""
         if not self.state_copy_initialized:
             return
         self.outcomes = []
@@ -204,3 +215,8 @@ class LibraryStateModel(AbstractStateModel):
         self._is_about_to_be_destroyed_recursively = value
         if self.state_copy:
             self.state_copy.is_about_to_be_destroyed_recursively = value
+            
+    def _parse_for_element_meta_data(self, meta_data):
+        if not self.state_copy_initialized:
+            return 
+        super(LibraryStateModel, self)._parse_for_element_meta_data(meta_data)

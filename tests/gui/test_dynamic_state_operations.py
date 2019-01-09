@@ -73,7 +73,7 @@ def test_dynamic_state_insertion_and_deletion_inside_library(caplog):
         raise
     finally:
         testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=20)
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=23)
 
 
 if __name__ == '__main__':

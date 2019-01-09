@@ -23,6 +23,10 @@ def test_create_state(caplog):
     state1.remove_outcome(out)
 
     with raises(AttributeError):
+        # AttributeError should be raised if income is to be removed
+        state1.remove_income()
+
+    with raises(AttributeError):
         # AttributeError should be raised if not existing outcome ID is to be removed
         state1.remove_outcome(out)
     with raises(AttributeError):

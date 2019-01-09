@@ -28,7 +28,7 @@ from gtkmvc3.observable import Observable
 
 from rafcon.core.states.state import State
 from rafcon.core.decorators import lock_state_machine
-from rafcon.core.state_elements.outcome import Outcome
+from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.script import Script
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.execution.execution_history import CallType
@@ -45,10 +45,11 @@ class ExecutionState(State):
 
     yaml_tag = u'!ExecutionState'
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, outcomes=None,
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
+                 income=None, outcomes=None,
                  path=None, filename=None, check_path=True):
 
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, outcomes)
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes)
         self._script = None
         self.script = Script(path, filename, check_path=check_path, parent=self)
         self.logger = log.get_logger(self.name)
@@ -66,8 +67,9 @@ class ExecutionState(State):
     def __copy__(self):
         input_data_ports = {elem_id: copy(elem) for elem_id, elem in self._input_data_ports.items()}
         output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.items()}
+        income = copy(self._income)
         outcomes = {elem_id: copy(elem) for elem_id, elem in list(self._outcomes.items())}
-        state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, outcomes, None)
+        state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, None)
         state.script_text = deepcopy(self.script_text)
         state.description = deepcopy(self.description)
         state.semantic_data = deepcopy(self.semantic_data)
@@ -88,8 +90,9 @@ class ExecutionState(State):
         state_id = dictionary['state_id']
         input_data_ports = dictionary['input_data_ports']
         output_data_ports = dictionary['output_data_ports']
+        income = dictionary.get('income', None)  # older state machine versions don't have this set
         outcomes = dictionary['outcomes']
-        state = cls(name, state_id, input_data_ports, output_data_ports, outcomes, check_path=False)
+        state = cls(name, state_id, input_data_ports, output_data_ports, income, outcomes, check_path=False)
         try:
             state.description = dictionary['description']
         except (TypeError, KeyError):  # (Very) old state machines do not have a description field

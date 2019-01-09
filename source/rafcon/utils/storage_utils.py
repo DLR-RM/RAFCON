@@ -33,8 +33,8 @@ substitute_modules = {
     'rafcon.statemachine.scope.ScopedVariable': 'rafcon.core.state_elements.scope.ScopedVariable',
     'rafcon.statemachine.state_element.StateElement': 'rafcon.core.state_elements.state_element.StateElement',
     'rafcon.statemachine.transition.Transition': 'rafcon.core.state_elements.transition.Transition',
-    'rafcon.statemachine.outcome.Outcome': 'rafcon.core.state_elements.outcome.Outcome',
-    # state elements
+    'rafcon.statemachine.outcome.Outcome': 'rafcon.core.state_elements.logical_port.Outcome',
+    # state elements: statemachine => core
     'rafcon.statemachine.state_elements.data_flow.DataFlow': 'rafcon.core.state_elements.data_flow.DataFlow',
     'rafcon.statemachine.state_elements.data_port.DataPort': 'rafcon.core.state_elements.data_port.DataPort',
     'rafcon.statemachine.state_elements.data_port.InputDataPort': 'rafcon.core.state_elements.data_port.InputDataPort',
@@ -43,8 +43,8 @@ substitute_modules = {
     'rafcon.statemachine.state_elements.scope.ScopedVariable': 'rafcon.core.state_elements.scope.ScopedVariable',
     'rafcon.statemachine.state_elements.state_element.StateElement': 'rafcon.core.state_elements.state_element.StateElement',
     'rafcon.statemachine.state_elements.transition.Transition': 'rafcon.core.state_elements.transition.Transition',
-    'rafcon.statemachine.state_elements.outcome.Outcome': 'rafcon.core.state_elements.outcome.Outcome',
-    # states
+    'rafcon.statemachine.state_elements.outcome.Outcome': 'rafcon.core.state_elements.logical_port.Outcome',
+    # states: statemachine => core
     'rafcon.statemachine.states.barrier_concurrency_state.BarrierConcurrencyState':
         'rafcon.core.states.barrier_concurrency_state.BarrierConcurrencyState',
     'rafcon.statemachine.states.barrier_concurrency_state.DeciderState':
@@ -55,7 +55,9 @@ substitute_modules = {
     'rafcon.statemachine.states.hierarchy_state.HierarchyState': 'rafcon.core.states.hierarchy_state.HierarchyState',
     'rafcon.statemachine.states.library_state.LibraryState': 'rafcon.core.states.library_state.LibraryState',
     'rafcon.statemachine.states.preemptive_concurrency_state.PreemptiveConcurrencyState': 'rafcon.core.states.preemptive_concurrency_state.PreemptiveConcurrencyState',
-    'rafcon.statemachine.states.state.State': 'rafcon.core.states.state.State'
+    'rafcon.statemachine.states.state.State': 'rafcon.core.states.state.State',
+    # logical_port
+    'rafcon.core.state_elements.outcome.Outcome': 'rafcon.core.state_elements.logical_port.Outcome'
 }
 
 

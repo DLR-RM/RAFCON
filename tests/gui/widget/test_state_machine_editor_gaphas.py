@@ -68,9 +68,8 @@ def trigger_copy_delete_bug_signals():
 
     graphical_editor_ctrl = state_machines_ctrl.get_controller(first_sm_id)
 
-    if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR', True):
-        assert isinstance(graphical_editor_ctrl, graphical_editor_gaphas.GraphicalEditorController)
-        assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
+    assert isinstance(graphical_editor_ctrl, graphical_editor_gaphas.GraphicalEditorController)
+    assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
 
     new_estate_m = list(root_state_m.states.values())[0]
     if new_estate_m.state.get_path() == new_hstate_m.state.get_path():
@@ -78,8 +77,7 @@ def trigger_copy_delete_bug_signals():
 
     call_gui_callback(sm_m.selection.set, new_estate_m)
     call_gui_callback(menubar_ctrl.on_delete_activate, None)
-    if gui_config.global_gui_config.get_config_value('GAPHAS_EDITOR', True):
-        assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
+    assert graphical_editor_ctrl.canvas.get_view_for_model(new_state_m)
 
     print("TEST FINISHED")
 
@@ -90,7 +88,7 @@ def test_copy_delete_bug(caplog):
     libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
                  "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
-    change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False, 'GAPHAS_EDITOR': True}
+    change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False}
     testing_utils.run_gui(gui_config=change_in_gui_config, libraries=libraries,)
 
     try:

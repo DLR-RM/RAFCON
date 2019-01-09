@@ -620,7 +620,8 @@ class GraphicalEditorController(ExtendedController):
                                      'set_output_runtime_value', 'set_use_output_runtime_value',
                                      'input_data_port_runtime_values', 'use_runtime_value_input_data_ports',
                                      'output_data_port_runtime_values', 'use_runtime_value_output_data_ports',
-                                     'semantic_data', 'add_semantic_data', 'remove_semantic_data']
+                                     'semantic_data', 'add_semantic_data', 'remove_semantic_data',
+                                     'remove_income']
                 if method_name not in known_ignore_list:
                     logger.warning("Method {0} not caught in GraphicalViewer, details: {1}".format(method_name, info))
 
@@ -794,9 +795,10 @@ class GraphicalEditorController(ExtendedController):
         self.canvas.add(state_v, parent_v, index=index)
         state_v.matrix.translate(*rel_pos)
 
+        state_v.add_income(state_m.income)
+
         for outcome_m in state_m.outcomes:
             state_v.add_outcome(outcome_m)
-            # state_v.add_double_port_outcome(outcome_m)
 
         for input_port_m in state_m.input_data_ports:
             state_v.add_input_port(input_port_m)
