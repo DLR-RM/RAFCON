@@ -1027,6 +1027,7 @@ def ungroup_selected_state():
     if len(selection.states) == 1 and isinstance(selected_state_m, ContainerStateModel) and \
             not selected_state_m.state.is_root_state:
         logger.debug("do ungroup")
+        selection.remove(selected_state_m)
         if is_selection_inside_of_library_state(selected_elements=[selected_state_m]):
             logger.warning("Ungroup is not performed because target state is inside of a library state.")
             return
