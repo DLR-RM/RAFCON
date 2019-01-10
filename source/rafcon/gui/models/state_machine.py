@@ -450,8 +450,7 @@ class ComplexActionObserver(Observer):
         action = msg.action
 
         if isinstance(msg.result, Exception) and action in self.ongoing_complex_actions:
-            self.nested_action_already_in.append((action, self.ongoing_complex_actions.pop(action)))
-            return
+            pass
 
         if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'cut']:
             new_state_m = msg.action_parent_m
