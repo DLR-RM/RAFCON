@@ -376,7 +376,7 @@ class GraphicalEditorController(ExtendedController):
             if not self.model.ongoing_complex_actions:
                 self.complex_action_ongoing = False
                 # print("do adapt complex action")
-                action_name, action_dict = self.model.nested_action_already_in[-1]
+                action_name, action_dict = self.model.complex_action_observer.nested_action_already_in[-1]
                 self.adapt_complex_action(action_dict['target'], action_dict['new'])
         else:
             if not self.complex_action_ongoing and self.model.ongoing_complex_actions:

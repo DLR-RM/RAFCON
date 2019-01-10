@@ -86,9 +86,8 @@ class StateMachineModel(MetaModel, Hashable):
         else:
             self.meta = Vividict()
 
-        # ongoing_complex_actions and nested_action_already_in are updated by ComplexActionObserver -> Encapsulated
+        # ongoing_complex_actions is updated by ComplexActionObserver -> Encapsulated
         self.ongoing_complex_actions = {}
-        self.nested_action_already_in = []
         self.complex_action_observer = ComplexActionObserver(self)
 
         self.meta_signal = Signal()
@@ -398,6 +397,8 @@ class ComplexActionObserver(Observer):
         self.model = model
         self.observe_model(model)
 
+        self.nested_action_already_in = []
+
     @property
     def ongoing_complex_actions(self):
         return self.model.ongoing_complex_actions
@@ -405,14 +406,6 @@ class ComplexActionObserver(Observer):
     @ongoing_complex_actions.setter
     def ongoing_complex_actions(self, value):
         self.model.ongoing_complex_actions = value
-
-    @property
-    def nested_action_already_in(self):
-        return self.model.nested_action_already_in
-
-    @nested_action_already_in.setter
-    def nested_action_already_in(self, value):
-        self.model.nested_action_already_in = value
 
     @ModelMT.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
