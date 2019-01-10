@@ -283,7 +283,7 @@ class StatesEditorController(ExtendedController):
         from rafcon.gui.singleton import state_machine_manager_model
         selection = state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) == 1:
-            self.add_state_editor(selection.get_selected_state())
+            self.activate_state_tab(selection.get_selected_state())
 
     def add_state_editor(self, state_m):
         """Triggered whenever a state is selected.
