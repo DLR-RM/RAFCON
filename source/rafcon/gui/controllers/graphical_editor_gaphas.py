@@ -336,7 +336,7 @@ class GraphicalEditorController(ExtendedController):
         notification = meta_signal_message.notification
         if not notification:    # For changes applied to the root state, there are always two notifications
             return              # Ignore the one with less information
-        if self._ongoing_complex_actions:
+        if self.model.ongoing_complex_actions:
             return
 
         model = notification.model
