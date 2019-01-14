@@ -156,7 +156,7 @@ def trigger_repetitive_group_ungroup(*args):
     # print "wait3 failure"
 
 
-def test_repetitive_ungroup_state_and_group_states(caplog):
+def _test_repetitive_ungroup_state_and_group_states(caplog):
     """Check if repetitive group and ungroup works"""
     libraries = {"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True}, libraries=libraries)
@@ -167,7 +167,59 @@ def test_repetitive_ungroup_state_and_group_states(caplog):
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
-    pass
+
+
+@log.log_exceptions(None, gtk_quit=True)
+def trigger_cut_multiple_states(*args):
+    import rafcon.gui.singleton
+    from rafcon.gui.controllers.menu_bar import MenuBarController
+    from rafcon.gui.controllers.states_editor import StatesEditorController
+    from rafcon.gui.clipboard import global_clipboard
+    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+    main_window_controller = rafcon.gui.singleton.main_window_controller
+    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+    states_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl')
+    assert isinstance(menubar_ctrl, MenuBarController)
+    assert isinstance(states_editor_ctrl, StatesEditorController)
+
+    # generate new state machine -> it should be selected directly
+    call_gui_callback(menubar_ctrl.on_new_activate, None)
+    sm_m = sm_manager_model.get_selected_state_machine_model()
+
+    # add two states
+    call_gui_callback(menubar_ctrl.on_add_state_activate, None)
+    call_gui_callback(menubar_ctrl.on_add_state_activate, None)
+    assert len(sm_m.root_state.states) == 2
+
+    # select them step by step and check that only one state editor is created
+    state_ids = list(sm_m.root_state.states.keys())
+    print("states in root state are {0}".format(state_ids))
+    call_gui_callback(sm_m.selection.set, sm_m.root_state.states[state_ids[0]])
+    call_gui_callback(sm_m.selection.add, sm_m.root_state.states[state_ids[1]])
+    print("selected states are {0}".format(sm_m.selection.states))
+    assert len(states_editor_ctrl.tabs) == 1
+
+    # cut and check that both states are removed
+    call_gui_callback(global_clipboard.cut, sm_m.selection)
+    assert len(sm_m.root_state.states) == 0
+
+
+def test_cut_of_multiple_states(caplog):
+    """Check if order of selection and deselection while a cut operation can create a problem with 
+    the states editor generation and destruction
+    
+    - covers bug issue #631 cut multiple states fails
+    """
+
+    libraries = {"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
+    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True}, libraries=libraries)
+    try:
+        trigger_cut_multiple_states()
+    except Exception:
+        raise
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
 
 # def test_paste_method(caplog):
@@ -179,4 +231,5 @@ def test_repetitive_ungroup_state_and_group_states(caplog):
 if __name__ == '__main__':
     testing_utils.dummy_gui(None)
     # test_repetitive_ungroup_state_and_group_states(None)
+    # test_cut_of_multiple_states(None)
     pytest.main([__file__, '-xs'])
