@@ -145,8 +145,6 @@ class StatesEditorController(ExtendedController):
         self.tabs = {}
         self.closed_tabs = {}
 
-        self.complex_action_ongoing = False
-
     def register_view(self, view):
         super(StatesEditorController, self).register_view(view)
         self.view.notebook.connect('switch-page', self.on_switch_page)
@@ -266,13 +264,12 @@ class StatesEditorController(ExtendedController):
 
     @ExtendedController.observe("ongoing_complex_actions", after=True)
     def state_action_signal(self, model, prop_name, info):
-        if self.complex_action_ongoing:
-            if not self.current_state_machine_m.ongoing_complex_actions:
-                self.complex_action_ongoing = False
-                self.adapt_complex_action()
-        else:
-            if not self.complex_action_ongoing and self.current_state_machine_m.ongoing_complex_actions:
-                self.complex_action_ongoing = True
+        if model is not self.current_state_machine_m:
+            logger.error("States editor is not only observing the current selected state machine.")
+
+        # only once at the end of an complex action the ongoing complex actions dictionary is empty
+        if not model.ongoing_complex_actions:
+            self.adapt_complex_action()
 
     def adapt_complex_action(self):
         # destroy pages of no more existing states

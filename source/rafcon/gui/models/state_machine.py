@@ -457,7 +457,7 @@ class ComplexActionObserver(Observer):
 
         self.ongoing_complex_actions.pop(action)
 
-        if not self.ongoing_complex_actions:  # TODO check if the condition is exact enough
+        if not self.ongoing_complex_actions:
             # common case remove the view here in the after action signal
             self.relieve_model(model)
             self.nested_action_already_in = []  # TODO check if this is not needed
