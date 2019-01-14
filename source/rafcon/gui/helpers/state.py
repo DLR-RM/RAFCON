@@ -366,27 +366,22 @@ def change_state_type(state_m, target_class):
         affected_models.append(new_state_m)
 
     if is_root_state:
+        action_type = 'change_root_state_type'
+        action_parent_m = state_machine_m
+        affected_models = [new_state_m, ]
 
         if new_state_m:
             new_state_m.register_observer(state_machine_m)
             state_machine_m.root_state = new_state_m
-
-        old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
-                                                       action_parent_m=state_machine_m,
-                                                       affected_models=[new_state_m, ],
-                                                       after=True, result=e))
-
     else:
+        action_type = 'change_state_type'
+        action_parent_m = parent_state_m
+
         if new_state_m:
             new_state_m.parent = parent_state_m
             # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
             parent_state_m.states[state_id] = new_state_m
             parent_state_m.update_child_is_start()
-
-        old_state_m.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model',
-                                                       action_parent_m=parent_state_m,
-                                                       affected_models=affected_models,
-                                                       after=True, result=e))
 
     # Destroy all states and state elements (core and models) that are no longer required
     old_state.destroy(recursive=False)
@@ -398,6 +393,11 @@ def change_state_type(state_m, target_class):
             else:
                 logger.verbose("Multiple calls of destroy {0}".format(state_element_m))
         state_element_m.prepare_destruction()
+
+    old_state_m.action_signal.emit(ActionSignalMsg(action=action_type, origin='model',
+                                                   action_parent_m=action_parent_m,
+                                                   affected_models=affected_models,
+                                                   after=True, result=e))
 
     if is_root_state:
         suppressed_notification_parameters = state_machine_m.change_root_state_type.__func__.suppressed_notification_parameters
