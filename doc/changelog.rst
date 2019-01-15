@@ -20,11 +20,12 @@ Next Release
 
 - Bug Fixes:
 
-    - Fix rescaling factor**2 if adding libraries as template
+  - Fix rescaling factor**2 if adding libraries as template
+  - :issue:`631` Cut of multiple states creates various problems
 
 - Changes:
 
-    - Increase any MAX_VISIBLE_LIBRARY_HIERARCHY value to be minimal 2 -> for performance the aim is to allow lower values again
+  - Increase any MAX_VISIBLE_LIBRARY_HIERARCHY value to be minimal 2 -> for performance the aim is to allow lower values again
 
 0.13.3
 """"""
@@ -43,8 +44,6 @@ Next Release
 - Bug Fixes:
 
   - :issue:`658` crash in load_state_machine
-  - :issue:`631` Cut of multiple states creates various problems
-
   - run correct command for updating font cache
 
 - Changes:
