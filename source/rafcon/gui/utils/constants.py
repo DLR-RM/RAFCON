@@ -162,3 +162,7 @@ ICON_STICKY = "f08d"
 ICON_ERASE = 'f12d'
 
 RAFCON_INSTANCE_LOCK_FILE_PATH = os.path.join(RAFCON_TEMP_PATH_BASE, 'lock')
+
+complex_actions = ['change_root_state_type', 'change_state_type',
+                   'substitute_state', 'group_states', 'ungroup_state',
+                   'paste', 'cut', 'undo/redo']

@@ -235,7 +235,7 @@ class Selection(ModelMT):
         This is a helper method for generic widgets that want to modify the selection. These widgets can pass a list
         of newly selected (or clicked on) models.
 
-        The method looks at the previous selection, the passed models and the lift of pressed (modifier) keys:
+        The method looks at the previous selection, the passed models and the list of pressed (modifier) keys:
 
         * If no modifier key is pressed, the previous selection is cleared and the new selection is set to the passed
           models

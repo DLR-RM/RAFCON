@@ -43,6 +43,7 @@ Next Release
 - Bug Fixes:
 
   - :issue:`658` crash in load_state_machine
+  - :issue:`631` Cut of multiple states creates various problems
 
   - run correct command for updating font cache
 

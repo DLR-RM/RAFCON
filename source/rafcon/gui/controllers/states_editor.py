@@ -262,6 +262,26 @@ class StatesEditorController(ExtendedController):
                 pass
             self.clean_up_tabs()
 
+    @ExtendedController.observe("ongoing_complex_actions", after=True)
+    def state_action_signal(self, model, prop_name, info):
+        if model is not self.current_state_machine_m:
+            logger.error("States editor is not only observing the current selected state machine.")
+
+        # only once at the end of an complex action the ongoing complex actions dictionary is empty
+        if not model.ongoing_complex_actions:
+            self.adapt_complex_action()
+
+    def adapt_complex_action(self):
+        # destroy pages of no more existing states
+        for tab_dict in self.tabs.values():
+            if tab_dict['state_m'].state is None:
+                self.destroy_page(tab_dict)
+
+        from rafcon.gui.singleton import state_machine_manager_model
+        selection = state_machine_manager_model.get_selected_state_machine_model().selection
+        if len(selection.states) == 1:
+            self.activate_state_tab(selection.get_selected_state())
+
     def add_state_editor(self, state_m):
         """Triggered whenever a state is selected.
 
@@ -372,7 +392,7 @@ class StatesEditorController(ExtendedController):
             if tab_dict['controller'].view.source_view.get_buffer().handler_is_connected(handler_id):
                 tab_dict['controller'].view.source_view.get_buffer().disconnect(handler_id)
             else:
-                logger.warning("Source code changed handler of state {0} was already removed.".format(tab_dict['model']))
+                logger.warning("Source code changed handler of state {0} was already removed.".format(tab_dict['state_m']))
         self.remove_controller(tab_dict['controller'])
 
     def close_page(self, state_identifier, delete=True):
@@ -525,7 +545,7 @@ class StatesEditorController(ExtendedController):
     @ExtendedController.observe("sm_selection_changed_signal", signal=True)
     def selection_notification(self, model, property, info):
         """If a single state is selected, open the corresponding tab"""
-        if model != self.current_state_machine_m:
+        if model is not self.current_state_machine_m or len(self.current_state_machine_m.ongoing_complex_actions) > 0:
             return
         state_machine_m = model
         assert isinstance(state_machine_m.selection, Selection)
@@ -549,7 +569,7 @@ class StatesEditorController(ExtendedController):
     def update_tab_label(self, state_m):
         """Update all tab labels
 
-        :param rafcon.statemachone.states.state.State state_m: State model who's tab label is to be updated
+        :param rafcon.state_machine.states.state.State state_m: State model who's tab label is to be updated
         """
         state_identifier = self.get_state_identifier(state_m)
         if state_identifier not in self.tabs and state_identifier not in self.closed_tabs:
