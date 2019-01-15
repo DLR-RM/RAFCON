@@ -84,7 +84,6 @@ class GraphicalEditorController(ExtendedController):
         self.canvas = MyCanvas()
         self.zoom = 3.
         self.perform_drag_and_drop = False
-        self.complex_action_ongoing = False
 
         view.setup_canvas(self.canvas, self.zoom)
 
