@@ -88,21 +88,26 @@ def check_expected_future_model_list_is_empty(target_state_m, msg, delete=True, 
     return True
 
 
-def update_models_recursively(state_m):
+def update_models_recursively(state_m, expected=True):
     """ If a state model is reused the model depth maybe is to low. Therefore this method checks if all 
-    library state models are created with reliable depth"""
+    library state models are created with reliable depth
+    
+    :param bool expected: Define newly generated library models as expected or triggers logger warnings if False
+    """
 
     assert isinstance(state_m, AbstractStateModel)
 
     if isinstance(state_m, LibraryStateModel):
         if not state_m.state_copy_initialized:
+            if not expected:
+                logger.warning("State {0} generates unexpected missing state copy models.".format(state_m))
             state_m.recursive_generate_models(load_meta_data=False)
             import rafcon.gui.helpers.meta_data as gui_helper_meta_data
             gui_helper_meta_data.scale_library_content(state_m)
 
     if isinstance(state_m, ContainerStateModel):
         for child_state_m in state_m.states.values():
-            update_models_recursively(child_state_m)
+            update_models_recursively(child_state_m, expected)
 
 
 def add_state(container_state_m, state_type):
@@ -468,6 +473,7 @@ def insert_state_as(target_state_m, state, as_template):
     state_m = get_state_model_class_for_state(state)(state)
     if not as_template:
         gui_helper_meta_data.put_default_meta_on_state_m(state_m, target_state_m)
+
     # If inserted as template, we have to extract the state_copy and respective model
     else:
         assert isinstance(state, LibraryState)
@@ -486,8 +492,10 @@ def insert_state_as(target_state_m, state, as_template):
         state_m.state.change_state_id()
 
     target_state_m.expected_future_models.add(state_m)
-
     target_state_m.state.add_state(state_m.state)
+
+    # secure possible missing models to be generated
+    update_models_recursively(state_m, expected=False)
 
 
 def substitute_state(target_state_m, state_m_to_insert, as_template=False):
