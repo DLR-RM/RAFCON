@@ -20,8 +20,11 @@ Next Release
 
 - Bug Fixes:
 
+    - Fix rescaling factor**2 if adding libraries as template
 
 - Changes:
+
+    - Increase any MAX_VISIBLE_LIBRARY_HIERARCHY value to be minimal 2 -> for performance the aim is to allow lower values again
 
 0.13.3
 """"""
