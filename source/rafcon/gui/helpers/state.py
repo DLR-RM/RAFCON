@@ -438,9 +438,9 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
             if previous_state_size:
                 current_size = state_m_to_insert.get_meta_data_editor()['size']
                 factor = gui_helper_meta_data.divide_two_vectors(current_size, previous_state_size)
+                state_m_to_insert.set_meta_data_editor('size', previous_state_size)
                 factor = (min(*factor), min(*factor))
                 gui_helper_meta_data.resize_state_meta(state_m_to_insert, factor)
-
             else:
                 logger.debug("For insert as template of {0} no resize of state meta data is performed because "
                              "the meta data has empty fields.".format(state_m_to_insert))
