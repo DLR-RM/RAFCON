@@ -156,7 +156,7 @@ def trigger_repetitive_group_ungroup(*args):
     # print "wait3 failure"
 
 
-def _test_repetitive_ungroup_state_and_group_states(caplog):
+def test_repetitive_ungroup_state_and_group_states(caplog):
     """Check if repetitive group and ungroup works"""
     libraries = {"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True}, libraries=libraries)
