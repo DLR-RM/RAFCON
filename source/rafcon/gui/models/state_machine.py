@@ -86,7 +86,8 @@ class StateMachineModel(MetaModel, Hashable):
         else:
             self.meta = Vividict()
 
-        # ongoing_complex_actions is updated by ComplexActionObserver -> Encapsulated
+        # ongoing_complex_actions is updated by ComplexActionObserver -> secure encapsulated observation
+        # and made observable by state machine model here
         self.ongoing_complex_actions = {}
         self.complex_action_observer = ComplexActionObserver(self)
 
@@ -388,8 +389,13 @@ class StateMachineModel(MetaModel, Hashable):
 
 
 class ComplexActionObserver(Observer):
-    """ This Observer observes the and structures the information of complex actions and separates this observation
+    """ This Observer observes the and structures the information of complex actions and separates those observations
      from the StateMachineModel to avoid to mix these with the root state observation of the state machine model.
+     
+     - In ongoing_complex_actions dictionary all active actions and there properties are hold
+     - Only once at the end of an complex action the ongoing_complex_actions dictionary is empty
+       and the nested_action_already_in list has elements in to secure accessibility of action properties in the pattern
+     - The nested_action_already_in list is cleaned after the ongoing_complex_actions dictionary was cleared observable
     """
 
     def __init__(self, model):
@@ -416,9 +422,6 @@ class ComplexActionObserver(Observer):
         action = msg.action
 
         if action in rafcon.gui.utils.constants.complex_actions:
-
-            if not self.ongoing_complex_actions:
-                self.nested_action_already_in = []
 
             self.ongoing_complex_actions[action] = {}
             if action in ['group_states', 'paste', 'cut']:
@@ -460,4 +463,4 @@ class ComplexActionObserver(Observer):
         if not self.ongoing_complex_actions:
             # common case remove the view here in the after action signal
             self.relieve_model(model)
-            self.nested_action_already_in = []  # TODO check if this is not needed
+            self.nested_action_already_in = []
