@@ -14,7 +14,6 @@
 from gi.repository import Gtk
 from gi.repository import GObject
 from future.utils import string_types
-from builtins import str
 
 from rafcon.gui.utils import constants
 from rafcon.utils import log
@@ -308,7 +307,7 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
                     check_box_renderer.connect("toggled", toggled_callback, index)
                 checkbox_column = Gtk.TreeViewColumn(table_header[index], check_box_renderer, active=index)
                 self.tree_view.append_column(checkbox_column)
-            elif column_type in (str, str):
+            elif issubclass(column_type, string_types):
                 text_renderer = Gtk.CellRendererText()
                 text_column = Gtk.TreeViewColumn(table_header[index], text_renderer, text=index)
                 self.tree_view.append_column(text_column)
@@ -319,7 +318,7 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
 
         # correct last list element if not boolean or string and table data length is +1 compared to table header
         if first_row_data_types and len(first_row_data_types) == len(table_header) + 1 and \
-                not isinstance(first_row_data_types[-1], (bool, string_types)):
+                not issubclass(first_row_data_types[-1], (bool, string_types)):
             first_row_data_types[-1] = GObject.TYPE_PYOBJECT
 
         # fill list store
@@ -328,4 +327,5 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
         for row in table_data:
             self.list_store.append(row)
 
+        self.tree_view.show_all()
         self.show_grab_focus_and_run(standalone)
