@@ -31,6 +31,38 @@ def trigger_gui_signals():
     lib_state = LibraryState(join("generic", "dialog"), "Dialog [3 options]", "0.1", "Dialog [3 options]")
     call_gui_callback(gui_helper_state_machine.insert_state_into_selected_state, lib_state, False)
 
+    lib_tree_ctrl = main_window_controller.get_controller('library_controller')
+    from rafcon.gui.controllers.library_tree import LibraryTreeController
+    assert isinstance(lib_tree_ctrl, LibraryTreeController)
+
+    ##############################################################
+    print("\n" * 3 + "#" * 60 + "\n# Insert a library with may library depth level 1 " + "\n" * 3)
+    ##############################################################
+    library_path, library_name = ('generic/dialog', 'Show dialog')
+    call_gui_callback(lib_tree_ctrl.select_library_tree_element_of_lib_tree_path, join(library_path, library_name))
+    call_gui_callback(lib_tree_ctrl.insert_button_clicked, None, False)
+
+    ##############################################################
+    print("\n" * 3 + "#" * 60 + "\n# Insert a library with may library depth level 2 " + "\n" * 3)
+    ##############################################################
+    library_path, library_name = ('generic/dialog', 'Dialog [3 options]')
+    call_gui_callback(lib_tree_ctrl.select_library_tree_element_of_lib_tree_path, join(library_path, library_name))
+    call_gui_callback(lib_tree_ctrl.insert_button_clicked, None, False)
+
+    ##############################################################
+    print("\n" * 3 + "#" * 60 + "\n# Insert a library with may library depth level 1 as template " + "\n" * 3)
+    ##############################################################
+    library_path, library_name = ('generic/dialog', 'Show dialog')
+    call_gui_callback(lib_tree_ctrl.select_library_tree_element_of_lib_tree_path, join(library_path, library_name))
+    call_gui_callback(lib_tree_ctrl.insert_button_clicked, None, True)
+
+    ##############################################################
+    print("\n" * 3 + "#" * 60 + "\n# Insert a library with may library depth level 2 as template " + "\n" * 3)
+    ##############################################################
+    library_path, library_name = ('generic/dialog', 'Dialog [3 options]')
+    call_gui_callback(lib_tree_ctrl.select_library_tree_element_of_lib_tree_path, join(library_path, library_name))
+    call_gui_callback(lib_tree_ctrl.insert_button_clicked, None, True)
+
 
 def test_gui(caplog):
     from os.path import join
