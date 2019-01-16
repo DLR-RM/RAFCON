@@ -20,6 +20,8 @@ Next Release
 
 - Bug Fixes:
 
+  - :issue:`667` dialog "saving state as library" not working properly
+  - :issue:`668` adding a state as template screws up meta data
   - Fix rescaling factor**2 if adding libraries as template
   - :issue:`631` Cut of multiple states creates various problems
 
