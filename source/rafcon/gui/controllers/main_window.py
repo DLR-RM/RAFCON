@@ -121,9 +121,9 @@ class MainWindowController(ExtendedController):
         ######################################################
         # state machines editor
         ######################################################
-        state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
-                                                                   view.state_machines_editor)
-        self.add_controller('state_machines_editor_ctrl', state_machines_editor_ctrl)
+        self.state_machines_editor_ctrl = StateMachinesEditorController(state_machine_manager_model,
+                                                                        view.state_machines_editor)
+        self.add_controller('state_machines_editor_ctrl', self.state_machines_editor_ctrl)
 
         ######################################################
         # global variable editor
@@ -324,8 +324,8 @@ class MainWindowController(ExtendedController):
         self.handler_ids[view_index] = handler_id
 
     def switch_state_machine_execution_engine(self, new_state_machine_execution_engine):
-        """
-        Switch the state machine execution engine the main window controller listens to.
+        """ Switch the state machine execution engine.
+
         :param new_state_machine_execution_engine: the new state machine execution engine for this controller
         :return:
         """
@@ -335,6 +335,9 @@ class MainWindowController(ExtendedController):
         # register new
         self.state_machine_execution_model = new_state_machine_execution_engine
         self.observe_model(self.state_machine_execution_model)
+
+        # inform observing controllers
+        self.state_machines_editor_ctrl.switch_state_machine_execution_engine(new_state_machine_execution_engine)
 
     def set_pane_position(self, config_id):
         """Adjusts the position of a GTK Pane to a value stored in the runtime config file. If there was no value
@@ -364,24 +367,17 @@ class MainWindowController(ExtendedController):
         label_string = label_string.replace("STATE_MACHINE_EXECUTION_STATUS.", "")
         self.view['execution_status_label'].set_text(label_string)
 
-        state_machines_editor = self.get_controller('state_machines_editor_ctrl')
-        if not state_machines_editor:
-            return
         current_execution_mode = execution_engine.status.execution_mode
         if current_execution_mode is StateMachineExecutionStatus.STARTED:
-            state_machines_editor.highlight_execution_of_currently_active_sm(True)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_start_shortcut')
         elif current_execution_mode is StateMachineExecutionStatus.PAUSED:
-            state_machines_editor.highlight_execution_of_currently_active_sm(True)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_pause_shortcut')
         elif execution_engine.finished_or_stopped():
-            state_machines_editor.highlight_execution_of_currently_active_sm(False)
             self.view['step_buttons'].hide()
             self._set_single_button_active('button_stop_shortcut')
         else:  # all step modes
-            state_machines_editor.highlight_execution_of_currently_active_sm(True)
             self.view['step_buttons'].show()
             self._set_single_button_active('button_step_mode_shortcut')
 
