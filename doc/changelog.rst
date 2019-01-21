@@ -20,7 +20,7 @@ Next Release
 
 - Bug Fixes:
 
-  - :issue:`666` tab of executed state machine stays green
+  - :issue:`660` tab of executed state machine stays green
   - :issue:`667` dialog "saving state as library" not working properly
   - :issue:`664` cleaning of execution history does not work
   - :issue:`668` adding a state as template screws up meta data
