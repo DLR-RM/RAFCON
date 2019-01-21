@@ -6,6 +6,7 @@ import pytest
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback
+from gui.execution import state_machines_editor_tab_status_check
 
 # general tool elements
 from rafcon.utils import log
@@ -22,16 +23,18 @@ def execute_dynamic_state_insertion(state_machine_name="dynamic_library_insertio
         menubar_ctrl.on_open_activate, None, None,
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", state_machine_name))
     )
-    testing_utils.wait_for_gui()
+    testing_utils.wait_for_gui()  # TODO check -> without call_gui_callback wait_for_gui should be without effect
 
     call_gui_callback(menubar_ctrl.on_start_activate, None, None)
+    current_state_machine_id = gui_singleton.state_machine_manager.active_state_machine_id
+    state_machines_editor_tab_status_check(current_state_machine_id, active=True)  # execution start is synchronous
 
-    testing_utils.wait_for_gui()
+    testing_utils.wait_for_gui()  # TODO check -> without call_gui_callback wait_for_gui should be without effect
 
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
-
-    call_gui_callback(menubar_ctrl.on_stop_activate, None)
+    # stop or finished are asynchronous but the call_gui_callback makes the check synchronous
+    call_gui_callback(state_machines_editor_tab_status_check, current_state_machine_id, False)
 
 
 def test_dynamic_state_insertion(caplog):
