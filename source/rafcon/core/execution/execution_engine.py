@@ -66,7 +66,9 @@ class ExecutionEngine(Observable):
     def pause(self):
         """Set the execution mode to paused
         """
-
+        if self.state_machine_manager.active_state_machine_id is None:
+            logger.info("'Pause' is not a valid action to initiate state machine execution.")
+            return
         if self.state_machine_manager.get_active_state_machine() is not None:
             self.state_machine_manager.get_active_state_machine().root_state.recursively_pause_states()
 

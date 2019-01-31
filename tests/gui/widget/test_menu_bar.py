@@ -106,9 +106,12 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     import rafcon.gui.singleton
     import rafcon.gui.helpers.state as gui_helper_state
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+    from rafcon.gui.controllers.library_tree import LibraryTreeController
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_controller = rafcon.gui.singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
+    lib_tree_ctrl = main_window_controller.get_controller('library_controller')
+    assert isinstance(lib_tree_ctrl, LibraryTreeController)
 
     state_machine = create_state_machine()
     first_sm_id = state_machine.state_machine_id
@@ -219,10 +222,20 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
 
     ##########################################################
     # substitute state with template
-    lib_state = rafcon.gui.singleton.library_manager.get_library_instance('generic', 'wait')
     old_keys = list(state_m_parent.state.states.keys())
     transitions_before, data_flows_before = state_m_parent.state.related_linkage_state('RQXPAI')
-    call_gui_callback(state_m_parent.state.substitute_state, 'RQXPAI', lib_state.state_copy)
+
+    # lib_state = call_gui_callback(rafcon.gui.singleton.library_manager.get_library_instance, 'generic', 'wait')
+    # CORE LEVEL VERSION OF A SUBSTITUTE STATE EXAMPLE
+    # call_gui_callback(state_m_parent.state.substitute_state, 'RQXPAI', lib_state.state_copy)
+    # SAME WITH THE GUI AND HELPER METHOD
+    # call_gui_callback(gui_helper_state.substitute_state_as, state_m_parent.states['RQXPAI'], lib_state, True)
+    # GUI LEVEL SUBSTITUTE STATE EXAMPLE WITH CORRECT META DATA HANDLING TODO why those above produce wrong meta data?
+    call_gui_callback(sm_m.selection.set, [state_m_parent.states['RQXPAI'], ])
+    library_path, library_name = ('generic', 'wait')
+    call_gui_callback(lib_tree_ctrl.select_library_tree_element_of_lib_tree_path, join(library_path, library_name))
+    call_gui_callback(lib_tree_ctrl.substitute_as_template_clicked, None, True)
+
     new_state_id = None
     for state_id in state_m_parent.state.states.keys():
         if state_id not in old_keys:
@@ -234,7 +247,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     assert len(transitions_before['external']['outgoing']) == 1
     assert len(transitions_after['external']['outgoing']) == 0
     call_gui_callback(state_m_parent.state.add_transition, new_state_id, 0, 'MCOLIQ', None)
-
+    print("XXX1")
     # modify the template with other data type and respective data flows to parent
     call_gui_callback(list(state_m_parent.states[new_state_id].state.input_data_ports.items())[0][1].__setattr__, "data_type", "int")
     call_gui_callback(state_m_parent.state.add_input_data_port, 'in_time', "int")
@@ -244,10 +257,22 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
                       new_state_id,
                       list(state_m_parent.states[new_state_id].state.input_data_ports.items())[0][1].data_port_id)
 
+    ##########################################################
+    # substitute state with library
     old_keys = list(state_m_parent.state.states.keys())
     transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
-    lib_state = rafcon.gui.singleton.library_manager.get_library_instance('generic', 'wait')
-    call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state)
+
+    # lib_state = call_gui_callback(rafcon.gui.singleton.library_manager.get_library_instance, 'generic', 'wait')
+    # CORE LEVEL VERSION OF A SUBSTITUTE STATE EXAMPLE
+    # call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state)
+    # SAME WITH THE GUI AND HELPER METHOD
+    # call_gui_callback(gui_helper_state.substitute_state_as, state_m_parent.states[new_state_id], lib_state, False)
+    # GUI LEVEL SUBSTITUTE STATE EXAMPLE WITH CORRECT META DATA HANDLING TODO why those above produce wrong meta data?
+    call_gui_callback(sm_m.selection.set, [state_m_parent.states[new_state_id], ])
+    library_path, library_name = ('generic', 'wait')
+    call_gui_callback(lib_tree_ctrl.select_library_tree_element_of_lib_tree_path, join(library_path, library_name))
+    call_gui_callback(lib_tree_ctrl.substitute_as_library_clicked, None, True)
+
     new_state_id = None
     for state_id in list(state_m_parent.state.states.keys()):
         if state_id not in old_keys:
@@ -279,8 +304,14 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
 
     old_keys = list(state_m_parent.state.states.keys())
     transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
-    lib_state = rafcon.gui.singleton.library_manager.get_library_instance('generic', 'wait')
-    call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state.state_copy)
+    # CORE LEVEL VERSION OF A SUBSTITUTE STATE EXAMPLE
+    # lib_state = rafcon.gui.singleton.library_manager.get_library_instance('generic', 'wait')
+    # call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state.state_copy)
+    # GUI LEVEL SUBSTITUTE STATE EXAMPLE WITH CORRECT META DATA HANDLING TODO why those above produce wrong meta data?
+    call_gui_callback(sm_m.selection.set, [state_m_parent.states[new_state_id], ])
+    library_path, library_name = ('generic', 'wait')
+    call_gui_callback(lib_tree_ctrl.select_library_tree_element_of_lib_tree_path, join(library_path, library_name))
+    call_gui_callback(lib_tree_ctrl.substitute_as_template_clicked, None, True)
     new_state_id = None
     for state_id in list(state_m_parent.state.states.keys()):
         if state_id not in old_keys:

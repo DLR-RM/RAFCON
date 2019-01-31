@@ -84,8 +84,10 @@ def create_models():
 
 def create_models_lib(output_list):
     from rafcon.core.states.library_state import LibraryState
-
+    import rafcon.gui.helpers.state as gui_helper_state
+    import rafcon.gui.helpers.meta_data as gui_helper_meta_data
     [state, sm_model, state_dict] = create_models()
+    root_state_m = sm_model.get_state_model_by_path(state_dict['Container'].get_path())
 
     wait3 = LibraryState(name="Wait3", library_path="generic", library_name="wait")
     state_dict['Nested'].add_state(wait3)
@@ -93,8 +95,17 @@ def create_models_lib(output_list):
     dialog3 = LibraryState(name="3 Option", library_path=join("generic", "dialog"), library_name="Dialog [3 options]")
     state_dict['Nested'].add_state(dialog2)
     state_dict['Container'].add_state(dialog3)
+    # insert useful meta data
+    d3_m = sm_model.get_state_model_by_path(dialog3.get_path())
+    gui_helper_meta_data.put_default_meta_on_state_m(d3_m, root_state_m, len(root_state_m.states) - 1)
+    msg = gui_helper_meta_data.MetaSignalMsg(d3_m, 'set_default_meta_data', affects_children=True)
+    root_state_m.meta_signal.emit(msg)
+
+    # insert library state with correct meta data -> this sm has at the moment only meta data for the root state
     last_wins = LibraryState(name="last wins", library_path="unit_test_state_machines", library_name="last_data_wins_test")
-    new_state_id = state_dict['Container'].add_state(last_wins.state_copy)
+    last_wins_root_state = last_wins.state_copy
+    gui_helper_state.insert_state_as(root_state_m, last_wins, True)
+    new_state_id = last_wins_root_state.state_id
 
     for state_id in sm_model.root_state.states[new_state_id].states:
         state_m = sm_model.root_state.states[new_state_id].states[state_id]
@@ -469,6 +480,6 @@ if __name__ == '__main__':
     # import re
     # import copy
     # cProfile.run('test_state_add_remove_notification(None)')
-    test_complex(None)
+    # test_complex(None)
     # test_simple(None)
-    # pytest.main(['-s', __file__])
+    pytest.main(['-s', __file__])

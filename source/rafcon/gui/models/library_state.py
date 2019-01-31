@@ -51,7 +51,11 @@ class LibraryStateModel(AbstractStateModel):
 
         # regulate depth of library model generation to reduce resource consumption
         current_hierarchy_depth = self.state.library_hierarchy_depth
-        max_hierarchy_depth = global_gui_config.get_config_value("MAX_VISIBLE_LIBRARY_HIERARCHY", 2)
+        min_temp_depth = 2
+        max_hierarchy_depth = global_gui_config.get_config_value("MAX_VISIBLE_LIBRARY_HIERARCHY", min_temp_depth)
+        if max_hierarchy_depth < min_temp_depth:
+            logger.verbose("Increase MAX_VISIBLE_LIBRARY_HIERARCHY to {0} for state {1}.".format(min_temp_depth, self))
+            max_hierarchy_depth = min_temp_depth
         no_fully_rec_lib_model = global_gui_config.get_config_value("NO_FULLY_RECURSIVE_LIBRARY_MODEL", False)
         recursive_model_generation = not (current_hierarchy_depth > max_hierarchy_depth) or not no_fully_rec_lib_model
         if recursive_model_generation:

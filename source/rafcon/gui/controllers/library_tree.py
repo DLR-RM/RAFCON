@@ -86,7 +86,8 @@ class LibraryTreeController(ExtendedController):
             menu.append(create_menu_item("Open", constants.BUTTON_OPEN, self.open_button_clicked))
             menu.append(create_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
             menu.append(Gtk.SeparatorMenuItem())
-            menu.append(create_menu_item("Remove library", constants.BUTTON_DEL, self.delete_button_clicked))
+            menu.append(create_menu_item("Remove library", constants.BUTTON_DEL,
+                                         self.menu_item_remove_libraries_or_root_clicked))
 
             sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute as library", menu,
                                                                      constants.BUTTON_REFR)
@@ -103,13 +104,15 @@ class LibraryTreeController(ExtendedController):
                                              partial(self.substitute_as_template_clicked, keep_name=True)))
             sub_menu.append(create_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
                                              partial(self.substitute_as_template_clicked, keep_name=False)))
-        elif kind == 'library root':
-            menu.append(create_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
-            menu.append(create_menu_item("Remove library root", constants.BUTTON_DEL, self.delete_button_clicked))
+        elif kind in ['library root', 'library tree']:
+            menu.append(create_menu_item("Add library root", constants.BUTTON_DEL,
+                                         self.menu_item_add_library_root_clicked))
+            if kind == 'library root':
+                menu.append(create_menu_item("Remove library root", constants.BUTTON_DEL,
+                                             self.menu_item_remove_libraries_or_root_clicked))
         elif kind == 'libraries':
-            menu.append(create_menu_item("Remove libraries", constants.BUTTON_DEL, self.delete_button_clicked))
-        elif kind == 'library tree':
-            menu.append(create_menu_item("Add library root", constants.BUTTON_DEL, self.add_button_clicked))
+            menu.append(create_menu_item("Remove libraries", constants.BUTTON_DEL,
+                                         self.menu_item_remove_libraries_or_root_clicked))
 
         return menu
 
@@ -260,15 +263,18 @@ class LibraryTreeController(ExtendedController):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         gui_helper_state_machine.insert_state_into_selected_state(self._get_selected_library_state(), as_template)
 
-    def select_library_tree_element_of_library_state_model(self, state_m):
-        local_file_system_path = os.path.join(state_m.state.library_path, state_m.state.library_name)
-        library_state_row_iter = self.library_row_iter_dict_by_library_path[local_file_system_path]
+    def select_library_tree_element_of_lib_tree_path(self, lib_tree_path):
+        library_state_row_iter = self.library_row_iter_dict_by_library_path[lib_tree_path]
         state_row_path = self.tree_store.get_path(library_state_row_iter)
         if state_row_path is not None:
             self.view.expand_to_path(state_row_path)
         self.view.scroll_to_cell(state_row_path, None)
         self.view.get_selection().select_iter(library_state_row_iter)
         self.view.grab_focus()
+
+    def select_library_tree_element_of_library_state_model(self, state_m):
+        lib_tree_path = os.path.join(state_m.state.library_path, state_m.state.library_name)
+        self.select_library_tree_element_of_lib_tree_path(lib_tree_path)
 
     def select_open_state_machine_of_selected_library_element(self):
         """Select respective state machine of selected library in state machine manager if already open """
@@ -302,40 +308,39 @@ class LibraryTreeController(ExtendedController):
         global_runtime_config.update_recently_opened_state_machines_with(state_machine)
         return state_machine
 
-    def get_text_of_menu_item(self, menu_item):
+    def get_menu_item_text(self, menu_item):
         assert isinstance(menu_item, Gtk.MenuItem)
         menu_box = menu_item.get_child()
         assert isinstance(menu_box, Gtk.Box)
         return menu_box.get_children()[1].get_text()
 
-    def add_button_clicked(self, widget):
-        menu_item_text = self.get_text_of_menu_item(widget)
-        if "library root" in menu_item_text:
-            logger.info("Get new path and mounting key.")
-            from rafcon.gui import interface
-            from rafcon.gui.singleton import global_config, global_runtime_config
+    def menu_item_add_library_root_clicked(self, widget):
 
-            _path = interface.save_folder("Please choose the folder to be mounted and insert your mounting key.",
-                                          "insert your mounting key here")
+        logger.info("Get new path and mounting key.")
+        from rafcon.gui import interface
+        from rafcon.gui.singleton import global_config, global_runtime_config
 
-            if _path is None:
-                return
-            path_elements = _path.split(os.path.sep)
-            library_root_key = path_elements[-1]  # the file/folder name is the mounting key
-            library_root_path = os.path.sep.join(path_elements[:-1])
+        _path = interface.save_folder("Please choose the folder to be mounted and insert your mounting key.",
+                                      "insert your mounting key here")
 
-            logger.info("Add new library root '{0}: {1}' to config.".format(library_root_key, library_root_path))
-            library_paths = global_config.get_config_value('LIBRARY_PATHS')
-            library_paths[library_root_key] = library_root_path
-            global_config.save_configuration()
-            self.model.library_manager.refresh_libraries()
+        if _path is None:
+            return
+        path_elements = _path.split(os.path.sep)
+        library_root_key = path_elements[-1]  # the file/folder name is the mounting key
+        library_root_path = os.path.sep.join(path_elements[:-1])
 
-    def delete_button_clicked(self, widget):
+        logger.info("Add new library root '{0}: {1}' to config.".format(library_root_key, library_root_path))
+        library_paths = global_config.get_config_value('LIBRARY_PATHS')
+        library_paths[library_root_key] = library_root_path
+        global_config.save_configuration()
+        self.model.library_manager.refresh_libraries()
+
+    def menu_item_remove_libraries_or_root_clicked(self, menu_item):
         """Removes library from hard drive after request second confirmation"""
 
-        menu_item_text = self.get_text_of_menu_item(widget)
+        menu_item_text = self.get_menu_item_text(menu_item)
 
-        logger.info("delete library" + str(widget) + str(menu_item_text))
+        logger.info("Delete item '{0}' pressed.".format(menu_item_text))
         model, path = self.view.get_selection().get_selected()
         if path:
             # Second confirmation to delete library

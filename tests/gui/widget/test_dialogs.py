@@ -113,7 +113,7 @@ def test_dialog_test(caplog):
 
 # Following tests are useful to preserve functionality
 # RAFCONButtonDialog, RAFCONInputDialog and RAFCONCheckBoxTableDialog
-# - trigger of LibraryTreeController.delete_button_clicked and check of button responses (results in state machines e.g)
+# - trigger of LibraryTreeController.menu_item_remove_libraries_or_root_clicked and check of button responses (results in state machines e.g)
 # - trigger of MenuBarController.
 #   -> check_sm_modified and check of button responses (results in state machines e.g)
 #   -> check_sm_running and check of button responses (results in state machines e.g)

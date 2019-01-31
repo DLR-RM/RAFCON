@@ -23,12 +23,32 @@ Next Release
 
 - Changes:
 
+
+Next Release
+""""""""""""
+
+- Bug Fixes:
+
+  - Fix installation of None existing fonts
+  - :issue:`660` tab of executed state machine stays green
+  - :issue:`667` dialog "saving state as library" not working properly
+  - :issue:`664` cleaning of execution history does not work
+  - :issue:`668` adding a state as template screws up meta data
+  - Fix rescaling factor**2 if adding libraries as template
+  - :issue:`631` Cut of multiple states creates various problems
+
+- Changes:
+
+  - Increase any MAX_VISIBLE_LIBRARY_HIERARCHY value to be minimal 2 -> for performance the aim is to allow lower values again
+
+
 0.13.3
 """"""
 
 - Changes:
 
   - Release correct style files 
+
 
 0.13.2
 """"""
@@ -40,7 +60,6 @@ Next Release
 - Bug Fixes:
 
   - :issue:`658` crash in load_state_machine
-
   - run correct command for updating font cache
 
 - Changes:

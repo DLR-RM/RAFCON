@@ -109,16 +109,13 @@ class Clipboard(Observable):
                                                            affected_models=[], after=False,
                                                            kwargs={'remove': non_empty_lists_dict}))
 
-        for state_element_attr, models_list in selection_dict_of_copied_models.items():
-            # gui_helper_state_machine.delete_core_elements_of_models(models_list, destroy=False,
-            #                                                         recursive=False, force=False)
-            gui_helper_state_machine.delete_core_elements_of_models(models_list, destroy=True,
-                                                                    recursive=True, force=True)
+        for models in selection_dict_of_copied_models.values():
+            gui_helper_state_machine.delete_core_elements_of_models(models, destroy=True,
+                                                                    recursive=True, force=False)
         affected_models = [model for models in non_empty_lists_dict.values() for model in models]
         action_parent_m.action_signal.emit(ActionSignalMsg(action='cut', origin='clipboard',
                                                            action_parent_m=action_parent_m,
                                                            affected_models=affected_models, after=True))
-        # self.destroy_all_models_in_dict(selection_dict_of_copied_models)
 
     def prepare_new_copy(self):
         self.model_copies = deepcopy(self.model_copies)
@@ -491,7 +488,11 @@ class Clipboard(Observable):
 
         return selected_models_dict, parent_m
 
-    def destroy_all_models_in_dict(self, target_dict, destroy_parent=True):
+    @staticmethod
+    def destroy_all_models_in_dict(target_dict):
+        """ Method runs the prepare destruction method of models 
+            which are assumed in list or tuple as values within a dict
+        """
         if target_dict:
             for model_list in target_dict.values():
                 if isinstance(model_list, (list, tuple)):

@@ -88,21 +88,26 @@ def check_expected_future_model_list_is_empty(target_state_m, msg, delete=True, 
     return True
 
 
-def update_models_recursively(state_m):
+def update_models_recursively(state_m, expected=True):
     """ If a state model is reused the model depth maybe is to low. Therefore this method checks if all 
-    library state models are created with reliable depth"""
+    library state models are created with reliable depth
+    
+    :param bool expected: Define newly generated library models as expected or triggers logger warnings if False
+    """
 
     assert isinstance(state_m, AbstractStateModel)
 
     if isinstance(state_m, LibraryStateModel):
         if not state_m.state_copy_initialized:
+            if not expected:
+                logger.warning("State {0} generates unexpected missing state copy models.".format(state_m))
             state_m.recursive_generate_models(load_meta_data=False)
             import rafcon.gui.helpers.meta_data as gui_helper_meta_data
             gui_helper_meta_data.scale_library_content(state_m)
 
     if isinstance(state_m, ContainerStateModel):
         for child_state_m in state_m.states.values():
-            update_models_recursively(child_state_m)
+            update_models_recursively(child_state_m, expected)
 
 
 def add_state(container_state_m, state_type):
@@ -366,27 +371,22 @@ def change_state_type(state_m, target_class):
         affected_models.append(new_state_m)
 
     if is_root_state:
+        action_type = 'change_root_state_type'
+        action_parent_m = state_machine_m
+        affected_models = [new_state_m, ]
 
         if new_state_m:
             new_state_m.register_observer(state_machine_m)
             state_machine_m.root_state = new_state_m
-
-        old_state_m.action_signal.emit(ActionSignalMsg(action='change_root_state_type', origin='model',
-                                                       action_parent_m=state_machine_m,
-                                                       affected_models=[new_state_m, ],
-                                                       after=True, result=e))
-
     else:
+        action_type = 'change_state_type'
+        action_parent_m = parent_state_m
+
         if new_state_m:
             new_state_m.parent = parent_state_m
             # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
             parent_state_m.states[state_id] = new_state_m
             parent_state_m.update_child_is_start()
-
-        old_state_m.action_signal.emit(ActionSignalMsg(action='change_state_type', origin='model',
-                                                       action_parent_m=parent_state_m,
-                                                       affected_models=affected_models,
-                                                       after=True, result=e))
 
     # Destroy all states and state elements (core and models) that are no longer required
     old_state.destroy(recursive=False)
@@ -398,6 +398,11 @@ def change_state_type(state_m, target_class):
             else:
                 logger.verbose("Multiple calls of destroy {0}".format(state_element_m))
         state_element_m.prepare_destruction()
+
+    old_state_m.action_signal.emit(ActionSignalMsg(action=action_type, origin='model',
+                                                   action_parent_m=action_parent_m,
+                                                   affected_models=affected_models,
+                                                   after=True, result=e))
 
     if is_root_state:
         suppressed_notification_parameters = state_machine_m.change_root_state_type.__func__.suppressed_notification_parameters
@@ -433,9 +438,9 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
             if previous_state_size:
                 current_size = state_m_to_insert.get_meta_data_editor()['size']
                 factor = gui_helper_meta_data.divide_two_vectors(current_size, previous_state_size)
+                state_m_to_insert.set_meta_data_editor('size', previous_state_size)
                 factor = (min(*factor), min(*factor))
                 gui_helper_meta_data.resize_state_meta(state_m_to_insert, factor)
-
             else:
                 logger.debug("For insert as template of {0} no resize of state meta data is performed because "
                              "the meta data has empty fields.".format(state_m_to_insert))
@@ -468,6 +473,7 @@ def insert_state_as(target_state_m, state, as_template):
     state_m = get_state_model_class_for_state(state)(state)
     if not as_template:
         gui_helper_meta_data.put_default_meta_on_state_m(state_m, target_state_m)
+
     # If inserted as template, we have to extract the state_copy and respective model
     else:
         assert isinstance(state, LibraryState)
@@ -486,8 +492,10 @@ def insert_state_as(target_state_m, state, as_template):
         state_m.state.change_state_id()
 
     target_state_m.expected_future_models.add(state_m)
-
     target_state_m.state.add_state(state_m.state)
+
+    # secure possible missing models to be generated
+    update_models_recursively(state_m, expected=False)
 
 
 def substitute_state(target_state_m, state_m_to_insert, as_template=False):

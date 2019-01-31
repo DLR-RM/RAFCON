@@ -91,14 +91,16 @@ def dict_has_empty_elements(d, ignored_keys=None, ignored_partial_keys=None):
 
 
 def model_has_empty_meta(m, ignored_keys=None, ignored_partial_keys=None):
-    # print(m, m.meta)
-    if dict_has_empty_elements(m.meta, ignored_keys, ignored_partial_keys):
-        # print("XXX", m, m.meta)
+    # print(m, m.get_meta_data_editor())
+    if dict_has_empty_elements(m.get_meta_data_editor(), ignored_keys, ignored_partial_keys):
+        # print("XXX", str(m), m.get_meta_data_editor())
+        # print("state_path {0} file_system_path {1}".format(m.state.get_path(), m.state.file_system_path))
         return True
     if isinstance(m, ContainerStateModel):
         for state_m in m.states.values():
-            if dict_has_empty_elements(state_m.meta, ignored_keys, ignored_partial_keys):
-                # print("LXXX", state_m, state_m.meta)
+            if dict_has_empty_elements(state_m.get_meta_data_editor(), ignored_keys, ignored_partial_keys):
+                # print("LXXX", str(state_m), state_m.get_meta_data_editor())
+                # print("state_path {0} file_system_path {1}".format(state_m.state.get_path(), state_m.state.file_system_path))
                 return True
     return False
 

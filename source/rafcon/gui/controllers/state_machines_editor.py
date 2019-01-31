@@ -30,7 +30,7 @@ from gi.repository import Gdk
 
 import rafcon.core.singleton
 from rafcon.core.states.hierarchy_state import HierarchyState
-from rafcon.gui.config import global_gui_config
+import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.controllers.graphical_editor_gaphas import GraphicalEditorController as \
     GraphicalEditorGaphasController
@@ -127,6 +127,9 @@ class StateMachinesEditorController(ExtendedController):
 
         self.tabs = {}
         self.last_focused_state_machine_ids = collections.deque(maxlen=10)
+
+        self.state_machine_execution_model = gui_singletons.state_machine_execution_model
+        self.observe_model(self.state_machine_execution_model)
 
     def register_view(self, view):
         """Called when the View was registered"""
@@ -458,29 +461,6 @@ class StateMachinesEditorController(ExtendedController):
         for state_machine_m in state_machine_m_list:
             self.on_close_clicked(None, state_machine_m, None, force=True)
 
-    def highlight_execution_of_currently_active_sm(self, active):
-        """
-        High light active state machine. Please consider the difference between active and selected state machine.
-        :param active: a flag if the state machine has to be shown as running
-        :return:
-        """
-
-        notebook = self.view['notebook']
-        active_state_machine_id = self.model.state_machine_manager.active_state_machine_id
-        if active_state_machine_id is None:
-            return
-        else:
-            page = self.get_page_for_state_machine_id(active_state_machine_id)
-            if page is None:
-                # logger.warning("No state machine open {0}".format(page_num))
-                return
-
-        label = notebook.get_tab_label(page).get_child().get_children()[0]
-        if active:
-            label.get_style_context().add_class("execution-running")
-        else:
-            label.get_style_context().remove_class("execution-running")
-
     def refresh_state_machines(self, state_machine_ids):
         """ Refresh list af state machine tabs
 
@@ -537,3 +517,36 @@ class StateMachinesEditorController(ExtendedController):
         """ Refreshes all state machine tabs
         """
         self.refresh_state_machines(list(self.model.state_machine_manager.state_machines.keys()))
+
+    def switch_state_machine_execution_engine(self, new_state_machine_execution_engine):
+        """
+        Switch the state machine execution engine the main window controller listens to.
+        :param new_state_machine_execution_engine: the new state machine execution engine for this controller
+        :return:
+        """
+        # relieve old one
+        self.relieve_model(self.state_machine_execution_model)
+
+        # register new
+        self.state_machine_execution_model = new_state_machine_execution_engine
+        self.observe_model(self.state_machine_execution_model)
+
+    @ExtendedController.observe("execution_engine", after=True)
+    def execution_engine_model_changed(self, model, prop_name, info):
+        """High light active state machine. """
+
+        notebook = self.view['notebook']
+        active_state_machine_id = self.model.state_machine_manager.active_state_machine_id
+
+        if active_state_machine_id is None:
+            # un-mark all state machine that are marked with execution-running style class
+            for tab in self.tabs.values():
+                label = notebook.get_tab_label(tab['page']).get_child().get_children()[0]
+                if label.get_style_context().has_class(constants.execution_running_style_class):
+                    label.get_style_context().remove_class(constants.execution_running_style_class)
+        else:
+            # mark active state machine with execution-running style class
+            page = self.get_page_for_state_machine_id(active_state_machine_id)
+            if page:
+                label = notebook.get_tab_label(page).get_child().get_children()[0]
+                label.get_style_context().add_class(constants.execution_running_style_class)

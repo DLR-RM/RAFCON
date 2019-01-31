@@ -1030,6 +1030,7 @@ def ungroup_selected_state():
         if is_selection_inside_of_library_state(selected_elements=[selected_state_m]):
             logger.warning("Ungroup is not performed because target state is inside of a library state.")
             return
+        selection.remove(selected_state_m)
         return gui_helper_state.ungroup_state(selected_state_m)
 
 
