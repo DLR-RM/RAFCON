@@ -71,7 +71,7 @@ def install_fonts(logger=None, restart=False):
 
             if num_faces_to_be_installed <= num_faces_installed:
                 log.debug("Font '{0}' already installed".format(font_name))
-                return
+                continue
 
             specific_user_otf_fonts_folder = user_otf_fonts_folder
             if num_faces_to_be_installed > 1:

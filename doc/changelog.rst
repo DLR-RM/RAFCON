@@ -20,16 +20,17 @@ Next Release
 
 - Bug Fixes:
 
+  - Continue installation of none-existing fonts in case that one font was already installed
 
 - Changes:
 
 
-Next Release
-""""""""""""
+0.13.4
+""""""
 
 - Bug Fixes:
 
-  - Fix installation of None existing fonts
+  - Fix installation of not-existing fonts
   - :issue:`660` tab of executed state machine stays green
   - :issue:`667` dialog "saving state as library" not working properly
   - :issue:`664` cleaning of execution history does not work
