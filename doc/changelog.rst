@@ -20,9 +20,16 @@ Next Release
 
 - Bug Fixes:
 
-  - Continue installation of none-existing fonts in case that one font was already installed
 
 - Changes:
+
+
+0.13.5
+""""""
+
+- Bug Fixes:
+
+  - Continue installation of none-existing fonts in case that one font was already installed
 
 
 0.13.4
