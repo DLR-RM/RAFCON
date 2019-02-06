@@ -1737,8 +1737,10 @@ class ContainerState(State):
             from_port = self.get_data_port(data_flow.from_state, data_flow.from_key)
             to_port = self.get_data_port(data_flow.to_state, data_flow.to_key)
             if check_data_port is from_port or check_data_port is to_port:
-                if not type_inherits_of_type(from_port.data_type, to_port.data_type):
-                    return False, "Connection of two non-compatible data types"
+                # check if one of the data_types if type 'object'; in this case the data flow is always valid
+                if not (from_port.data_type is object or to_port.data_type is object):
+                    if not type_inherits_of_type(from_port.data_type, to_port.data_type):
+                        return False, "Connection of two non-compatible data types"
         return True, "valid"
 
     def _check_data_port_id(self, data_port):

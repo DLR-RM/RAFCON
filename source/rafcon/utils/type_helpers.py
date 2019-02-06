@@ -110,7 +110,7 @@ def convert_string_value_to_type_value(string_value, data_type):
 
 
 def type_inherits_of_type(inheriting_type, base_type):
-    """Checks whether type is inherits base_type
+    """Checks whether inheriting_type inherits from base_type
 
     :param str inheriting_type:
     :param str base_type:
