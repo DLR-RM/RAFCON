@@ -21,6 +21,7 @@ Next Release
 - Bug Fixes:
 
   - :issue:`678` script validation does not work
+  - :issue:`663` cannot rename connected data port of type object
 
 - Changes:
 
