@@ -173,7 +173,7 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
         lint_config_file = resource_filename(rafcon.__name__, "pylintrc")
         args = ["--rcfile={}".format(lint_config_file)]  # put your own here
         with contextlib.closing(StringIO()) as dummy_buffer:
-            json_report = JSONReporter(dummy_buffer)
+            json_report = JSONReporter(dummy_buffer.getvalue())
             try:
                 lint.Run([self.tmp_file] + args, reporter=json_report, exit=False)
             except:
@@ -209,9 +209,10 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
             if sm_m.selection.get_selected_state() is not self.model:
                 sm_m.selection.set(self.model)
 
-            RAFCONButtonDialog(message_string, ["Save with errors", "Do not save"],
+            dialog = RAFCONButtonDialog(message_string, ["Save with errors", "Do not save"],
                                on_message_dialog_response_signal,
                                message_type=Gtk.MessageType.WARNING, parent=self.get_root_window())
+            result = dialog.run()
         else:
             self.set_script_text(current_text)
 
