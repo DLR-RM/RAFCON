@@ -20,6 +20,7 @@ Next Release
 
 - Bug Fixes:
 
+  - :issue:`678` script validation does not work
 
 - Changes:
 
