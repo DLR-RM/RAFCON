@@ -665,6 +665,7 @@ class ConnectionTool(gaphas.tool.ConnectHandleTool):
 class ConnectionCreationTool(ConnectionTool):
     def __init__(self):
         super(ConnectionCreationTool, self).__init__()
+        self._release_event_in_progress = False
 
     def on_button_press(self, event):
         """Handle button press events.
@@ -719,25 +720,30 @@ class ConnectionCreationTool(ConnectionTool):
 
     def on_button_release(self, event):
         # A temporary connection was created. Check if it is a valid one.
-        if self._connection_v:
-            self.view.canvas.update_now()
-            if self._current_sink:
-                if self.motion_handle:
-                    self.motion_handle.stop_move()
-                sink_port_v = self._current_sink.port.port_v
-                self._disconnect_temporarily(sink_port_v, target=True)
-                gap_helper.create_new_connection(self._connection_v.from_port, sink_port_v)
 
-            # remove placeholder from canvas
+        # TODO: This is a fundamental problem; discuss how to solve it generally and where it can occur
+        if not self._release_event_in_progress:
+            self._release_event_in_progress = True
             if self._connection_v:
-                self._connection_v.remove_connection_from_ports()
-                self.view.canvas.remove(self._connection_v)
+                self.view.canvas.update_now()
+                if self._current_sink:
+                    if self.motion_handle:
+                        self.motion_handle.stop_move()
+                    sink_port_v = self._current_sink.port.port_v
+                    self._disconnect_temporarily(sink_port_v, target=True)
+                    gap_helper.create_new_connection(self._connection_v.from_port, sink_port_v)
 
-        # No connection was created, but only a handle was clicked on. Check whether it is to be selected
-        else:
-            self.view.handle_new_selection(self._start_port_v)
+                # remove placeholder from canvas
+                if self._connection_v:
+                    self._connection_v.remove_connection_from_ports()
+                    self.view.canvas.remove(self._connection_v)
 
-        super(ConnectionCreationTool, self).on_button_release(event)
+            # No connection was created, but only a handle was clicked on. Check whether it is to be selected
+            else:
+                self.view.handle_new_selection(self._start_port_v)
+
+            super(ConnectionCreationTool, self).on_button_release(event)
+            self._release_event_in_progress = False
 
 
 class ConnectionModificationTool(ConnectionTool):
