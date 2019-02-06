@@ -147,7 +147,7 @@ class DataPort(StateElement):
             logger.warning("The name of the created data port is 'error'. "
                         "This name is internally used for error propagation as well. "
                         "Only proceed if you know, what you are doing, otherwise rename the data port.")
-        self._name = name
+        self._change_property_with_validity_check('_name', name)
 
     @property
     def data_type(self):
