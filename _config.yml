@@ -30,6 +30,7 @@ plugins:
   - jekyll-feed
   - jekyll-github-metadata
   - jekyll-seo-tag
+  - jekyll-sitemap
 exclude:
   - Gemfile
   - Gemfile.lock
