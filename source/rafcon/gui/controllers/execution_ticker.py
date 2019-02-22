@@ -6,13 +6,7 @@
 # http://www.eclipse.org/legal/epl-v10.html
 #
 # Contributors:
-# Annika Wollschlaeger <annika.wollschlaeger@dlr.de>
-# Franz Steinmetz <franz.steinmetz@dlr.de>
-# Lukas Becker <lukas.becker@dlr.de>
-# Mahmoud Akl <mahmoud.akl@dlr.de>
-# Matthias Buettner <matthias.buettner@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
-# Sebastian Brunner <sebastian.brunner@dlr.de>
 
 """
 .. module:: execution_ticker
@@ -159,8 +153,7 @@ class ExecutionTickerController(ExtendedController):
 
         active_state_machine_id = self.model.state_machine_manager.active_state_machine_id
         if active_state_machine_id is None:
-            # un-mark all state machine that are marked with execution-running style class
-
+            # relieve all state machines that have no active execution
             if self.current_observed_sm_m:
                 self.relieve_model(self.current_observed_sm_m)
                 self.ticker_text_label.set_text('None')
@@ -168,6 +161,6 @@ class ExecutionTickerController(ExtendedController):
             else:
                 logger.info("Execution engine notification without active state machine {0}".format(info))
         else:
+            # observe all state machines that have no active execution
             self.current_observed_sm_m = self.model.state_machines[active_state_machine_id]
-            # mark active state machine with execution-running style class
             self.observe_model(self.current_observed_sm_m)
