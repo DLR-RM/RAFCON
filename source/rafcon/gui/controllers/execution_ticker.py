@@ -62,6 +62,7 @@ class ExecutionTickerController(ExtendedController):
     def register_view(self, view):
         pass  # not used yet because the view is still integrated in the main window view
 
+    # TODO remove properties after own view was separated
     @property
     def ticker_text_label(self):
         return rafcon.gui.singleton.main_window_controller.view["execution_ticker_text"]
