@@ -662,7 +662,6 @@
                                         <property name="position">4</property>
                                       </packing>
                                     </child>
-
                                     <child>
                                       <object class="GtkBox" id="state_icons_box">
                                         <property name="visible">True</property>

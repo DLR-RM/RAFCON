@@ -150,8 +150,8 @@ class MainWindowController(ExtendedController):
         ######################################################
         # execution ticker
         ######################################################
-        execution_ticker_ctrl = ExecutionTickerController(state_machine_manager_model, None)
-        self.add_controller('execution_ticker_ctrl', execution_ticker_ctrl)
+        self.execution_ticker_ctrl = ExecutionTickerController(state_machine_manager_model, None)
+        self.add_controller('execution_ticker_ctrl', self.execution_ticker_ctrl)
 
         ######################################################
         # menu bar
@@ -283,6 +283,9 @@ class MainWindowController(ExtendedController):
 
         # hide not usable buttons
         self.view['step_buttons'].hide()
+
+        # TODO move in separate view when doing the refactoring of the center toolbar
+        self.execution_ticker_ctrl.check_configuration()
 
         # Initializing Main Window Size & Position
         # secure un maximize in initial condition to restore correct position and size

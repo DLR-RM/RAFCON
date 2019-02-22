@@ -34,8 +34,6 @@ from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
-TICKER_MAX_CHARS = 25
-
 
 class ExecutionTickerController(ExtendedController):
     """Controller handling the execution ticker for all active state machines
@@ -48,8 +46,8 @@ class ExecutionTickerController(ExtendedController):
     :param rafcon.gui.views.graphical_editor.GraphicalEditorView view: The GTK view having an OpenGL rendering
         element
     """
-    # TODO In future there will be multiple actiove state machines which have to be taken into account
-    # TODO Currently concurrent states are also not taken into accoutn what could be an extension or other feature
+    # TODO In future there will be multiple active state machines which have to be taken into account
+    # TODO Currently concurrent states are also not taken into account what could be an extension or other feature
 
     def __init__(self, model, view):
         """Constructor"""
@@ -57,10 +55,53 @@ class ExecutionTickerController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         self.observe_model(rafcon.gui.singleton.gui_config_model)
         self.current_observed_sm_m = None
+        self.update_disabled = False
         self.state_machine_execution_model = rafcon.gui.singleton.state_machine_execution_model
         self.observe_model(self.state_machine_execution_model)
 
-        # rafcon.gui.singleton.main_window_controller.view["execution_ticker_text"].show()
+    def register_view(self, view):
+        pass  # not used yet because the view is still integrated in the main window view
+
+    @property
+    def ticker_text_label(self):
+        return rafcon.gui.singleton.main_window_controller.view["execution_ticker_text"]
+
+    @property
+    def ticker_label(self):
+        return rafcon.gui.singleton.main_window_controller.view["execution_ticker_label"]
+
+    @property
+    def ticker_hbox(self):
+        return rafcon.gui.singleton.main_window_controller.view["execution_ticker_hbox"]
+
+    @ExtendedController.observe('config', after=True)
+    def on_config_value_changed(self, config_m, prop_name, info):
+        """Callback when a config value has been changed
+
+        :param ConfigModel config_m: The config model that has been changed
+        :param str prop_name: Should always be 'config'
+        :param dict info: Information e.g. about the changed config key
+        """
+        config_key = info['args'][1]
+
+        if config_key in ["EXECUTION_TICKER_ENABLED"]:
+            self.check_configuration()
+
+    def check_configuration(self):
+        if rafcon.gui.singleton.global_gui_config.get_config_value("EXECUTION_TICKER_ENABLED"):
+            self.enabled()
+        else:
+            self.disabled()
+
+    def disabled(self):
+        self.ticker_hbox.hide()
+        self.update_disabled = True
+
+    def enabled(self):
+        self.ticker_hbox.show()
+        self.ticker_label.show()
+        self.ticker_text_label.show()
+        self.update_disabled = False
 
     @ExtendedController.observe("state_machine", after=True)
     def on_state_execution_status_changed_after(self, model, prop_name, info):
@@ -73,6 +114,9 @@ class ExecutionTickerController(ExtendedController):
         """
         from rafcon.gui.utils.notification_overview import NotificationOverview
         from rafcon.core.states.state import State
+
+        if self.update_disabled:
+            return
 
         def name_and_next_state(state):
             assert isinstance(state, State)
@@ -99,13 +143,12 @@ class ExecutionTickerController(ExtendedController):
                 observable = overview['model'][-1].state
                 assert isinstance(observable, State)
 
-                message = create_path(observable, 3)
+                path_depth = rafcon.gui.singleton.global_gui_config.get_config_value("EXECUTION_TICKER_PATH_DEPTH")
+                message = create_path(observable, path_depth)
                 if rafcon.gui.singleton.main_window_controller.view is not None:
-                    # TODO how to algin always left
-                    # rafcon.gui.singleton.main_window_controller.view["execution_tigger_label"].set_halign(Gtk.Align.START)
-                    # TODO how to avoid label to grow and increase the size of the overall GUI
-                    rafcon.gui.singleton.main_window_controller.view["execution_ticker_text"].set_text(message)
-                    print message
+                    # TODO how to align always left
+                    # self.execution_ticker_text.set_halign(Gtk.Align.START)
+                    self.ticker_text_label.set_text(message)
                 else:
                     logger.warn("Not initialized yet")
 
@@ -119,7 +162,7 @@ class ExecutionTickerController(ExtendedController):
 
             if self.current_observed_sm_m:
                 self.relieve_model(self.current_observed_sm_m)
-                rafcon.gui.singleton.main_window_controller.view["execution_ticker_text"].set_text('None')
+                self.ticker_text_label.set_text('None')
                 self.current_observed_sm_m = None
             else:
                 logger.info("Execution engine notification without active state machine {0}".format(info))
