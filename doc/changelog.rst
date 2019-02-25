@@ -22,6 +22,7 @@ Next Release
 
   - :issue_ghe:`678` script validation does not work
   - :issue_ghe:`663` cannot rename connected data port of type object
+  - installation of fonts under Python 3
 
 - Changes:
 
