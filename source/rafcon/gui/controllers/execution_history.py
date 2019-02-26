@@ -373,7 +373,6 @@ class ExecutionHistoryTreeController(ExtendedController):
         rebuild the tree view of the history item tree store
         :return:
         """
-        print("UPDATE HISTORY")
         # with self._update_lock:
         self._update_lock.acquire()
         self._store_expansion_state()
