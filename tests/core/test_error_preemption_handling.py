@@ -65,7 +65,7 @@ class TestErrorPreemptionHandling(object):
 
     def run_state_machine(self):
         sms = state_machine_manager.state_machines
-        state_machine_execution_engine.start(sms[sms.keys()[0]].state_machine_id)
+        state_machine_execution_engine.start(sms[list(sms.keys())[0]].state_machine_id)
         state_machine_execution_engine.join()
 
     @staticmethod
