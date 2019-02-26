@@ -56,7 +56,7 @@ class ExecutionTickerController(ExtendedController):
         pass  # not used yet because the view is still integrated in the main window view
 
     def destroy(self):
-        self.disabled()
+        self.disable()
         self.relieve_all_models()
         self._view_initialized = False
         # super(ExecutionTickerController, self).destroy()
@@ -85,11 +85,11 @@ class ExecutionTickerController(ExtendedController):
 
     def check_configuration(self):
         if rafcon.gui.singleton.global_gui_config.get_config_value("EXECUTION_TICKER_ENABLED"):
-            self.enabled()
+            self.enable()
         else:
-            self.disabled()
+            self.disable()
 
-    def disabled(self):
+    def disable(self):
         """ Relieve all state machines that have no active execution and hide the widget """
 
         self.ticker_label.hide()
@@ -97,7 +97,7 @@ class ExecutionTickerController(ExtendedController):
         if self.current_observed_sm_m:
             self.stop_sm_m_observation(self.current_observed_sm_m)
 
-    def enabled(self):
+    def enable(self):
         """ Observe all state machines that have an active execution and show the widget """
 
         self.ticker_label.show()
@@ -171,7 +171,7 @@ class ExecutionTickerController(ExtendedController):
         active_sm_id = rafcon.gui.singleton.state_machine_manager_model.state_machine_manager.active_state_machine_id
         if active_sm_id is None:
             # relieve all state machines that have no active execution and hide the widget
-            self.disabled()
+            self.disable()
         else:
             # observe all state machines that have an active execution and show the widget
             self.check_configuration()
