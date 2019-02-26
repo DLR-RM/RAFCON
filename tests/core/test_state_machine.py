@@ -5,7 +5,7 @@ from rafcon.core.decorators import global_lock_counter, lock_state_machine
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.state_machine import StateMachine
 
-from testing_utils import assert_logger_warnings_and_errors
+from tests.utils import assert_logger_warnings_and_errors
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 

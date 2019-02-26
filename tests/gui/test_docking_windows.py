@@ -3,8 +3,8 @@ import threading
 import pytest
 import time
 
-import testing_utils
-from testing_utils import call_gui_callback, wait_for_gui
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback, wait_for_gui
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

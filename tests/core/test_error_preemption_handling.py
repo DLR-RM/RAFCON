@@ -1,7 +1,7 @@
 from builtins import object
 import os
 import pytest
-import testing_utils
+from tests import utils as testing_utils
 
 from rafcon.core.storage import storage as global_storage
 

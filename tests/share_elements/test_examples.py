@@ -13,7 +13,7 @@ import rafcon
 from rafcon.utils import log
 
 # test environment elements
-import testing_utils
+from tests import utils as testing_utils
 import pytest
 
 logger = log.get_logger(__name__)

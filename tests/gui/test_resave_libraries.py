@@ -2,7 +2,7 @@ from __future__ import print_function
 import os
 import pytest
 
-import testing_utils
+from tests import utils as testing_utils
 
 
 def test_resave(caplog):

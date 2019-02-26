@@ -5,8 +5,8 @@ import os
 import time
 import pytest
 
-import testing_utils
-from testing_utils import call_gui_callback
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback
 
 
 sm_path_recursive_resize = os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines", "recursive_resize")

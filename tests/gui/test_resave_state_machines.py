@@ -2,7 +2,7 @@ from os.path import join, realpath, dirname
 import rafcon
 import subprocess
 import sys
-import testing_utils
+from tests import utils as testing_utils
 
 
 def test_library_resave():

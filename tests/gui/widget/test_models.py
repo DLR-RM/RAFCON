@@ -3,7 +3,7 @@ from gtkmvc3.observer import Observer
 from builtins import str
 
 import pytest
-import testing_utils
+from tests import utils as testing_utils
 
 with_print = False
 

@@ -4,8 +4,8 @@ import os
 import time
 
 # test environment elements
-import testing_utils
-from testing_utils import call_gui_callback, wait_for_execution_engine_sync_counter
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback, wait_for_execution_engine_sync_counter
 
 # general tool elements
 from rafcon.utils import log

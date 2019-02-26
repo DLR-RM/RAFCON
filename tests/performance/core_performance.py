@@ -12,7 +12,7 @@ from rafcon.core.state_machine import StateMachine
 
 from rafcon.utils.timer import measure_time
 
-import testing_utils
+from tests import utils as testing_utils
 
 
 @measure_time

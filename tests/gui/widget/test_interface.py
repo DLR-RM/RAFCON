@@ -3,8 +3,8 @@ from future import standard_library
 standard_library.install_aliases()
 import os
 
-import testing_utils
-from testing_utils import RAFCON_TEMP_PATH_TEST_BASE
+from tests import utils as testing_utils
+from tests.utils import RAFCON_TEMP_PATH_TEST_BASE
 
 
 def test_core_open_folder(monkeypatch):

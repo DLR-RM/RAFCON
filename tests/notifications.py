@@ -5,7 +5,7 @@ from os.path import join
 from graphviz import Digraph
 from collections import OrderedDict
 
-from testing_utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
+from tests.utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
 
 # notification debugging
 debugging_enabled = False

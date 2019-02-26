@@ -8,8 +8,8 @@ from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.utils import log
 
 # test environment elements
-import testing_utils
-from testing_utils import wait_for_execution_engine_sync_counter
+from tests import utils as testing_utils
+from tests.utils import wait_for_execution_engine_sync_counter
 
 logger = log.get_logger(__name__)
 

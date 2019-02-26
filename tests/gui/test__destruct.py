@@ -18,7 +18,7 @@ import rafcon.core.state_elements.state_element
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
-import testing_utils
+from tests import utils as testing_utils
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -449,7 +449,7 @@ def run_simple_controller_construction():
     testing_utils.call_gui_callback(create_models)
 
     import rafcon.gui.singleton
-    from gui.widget.test_states_editor import check_state_editor_models
+    from tests.gui.widget.test_states_editor import check_state_editor_models
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     testing_utils.call_gui_callback(check_state_editor_models, sm_m, sm_m.root_state)
 
@@ -459,7 +459,7 @@ def run_simple_modification_construction():
     testing_utils.call_gui_callback(create_models)
 
     import rafcon.gui.singleton
-    from gui.widget.test_states_editor import check_state_editor_models
+    from tests.gui.widget.test_states_editor import check_state_editor_models
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     testing_utils.call_gui_callback(check_state_editor_models, sm_m, sm_m.root_state)
     import rafcon.gui.helpers.state
@@ -488,7 +488,7 @@ def run_simple_modification_construction():
     print("%" * 50)
     print("do test menu bar")
     print("%" * 50)
-    from gui.widget import test_menu_bar
+    from rafcon.gui.widget import test_menu_bar
     # TODO D-get this test also running with substitute_library
     test_menu_bar.trigger_gui_signals(with_refresh=True, with_substitute_library=False)
     print("%" * 50)
@@ -526,9 +526,9 @@ def run_complex_controller_construction():
     testing_utils.call_gui_callback(create_models)
 
     # for a start load one of the type change tests to generate a lot of controllers which also close the GUI
-    # from gui.widget.test_states_editor import create_models, MainWindowView, \
+    # from tests.gui.widget.test_states_editor import create_models, MainWindowView, \
     #     MainWindowController, trigger_state_type_change_tests, gtk, threading
-    from gui.widget.test_states_editor import trigger_state_type_change_tests
+    from tests.gui.widget.test_states_editor import trigger_state_type_change_tests
     trigger_state_type_change_tests(with_gui=True)
 
 
@@ -1050,7 +1050,7 @@ def run_copy_cut_and_paste():
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     from rafcon.gui.singleton import main_window_controller
     import rafcon.gui.singleton as gui_singletons
-    from testing_utils import focus_graphical_editor_in_page
+    from tests.utils import focus_graphical_editor_in_page
     menu_bar_controller = main_window_controller.get_controller("menu_bar_controller")
     state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
 
