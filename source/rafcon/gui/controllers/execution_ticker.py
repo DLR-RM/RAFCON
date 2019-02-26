@@ -13,6 +13,7 @@
    :synopsis: A module that holds the controller to the execution ticker of all active state machines.
 
 """
+from gi.repository import Gtk
 
 import rafcon.core.singleton
 from rafcon.gui.utils import constants
@@ -64,10 +65,6 @@ class ExecutionTickerController(ExtendedController):
     def ticker_label(self):
         return rafcon.gui.singleton.main_window_controller.view["execution_ticker_label"]
 
-    @property
-    def ticker_hbox(self):
-        return rafcon.gui.singleton.main_window_controller.view["execution_ticker_hbox"]
-
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
         """Callback when a config value has been changed
@@ -90,14 +87,14 @@ class ExecutionTickerController(ExtendedController):
     def disabled(self):
         """ Relieve all state machines that have no active execution and hide the widget """
 
-        self.ticker_hbox.hide()
+        self.ticker_label.hide()
+        self.ticker_text_label.hide()
         if self.current_observed_sm_m:
             self.stop_sm_m_observation()
 
     def enabled(self):
         """ Observe all state machines that have an active execution and show the widget """
 
-        self.ticker_hbox.show()
         self.ticker_label.show()
         self.ticker_text_label.show()
         if self.current_observed_sm_m is None:
@@ -145,8 +142,6 @@ class ExecutionTickerController(ExtendedController):
                 path_depth = rafcon.gui.singleton.global_gui_config.get_config_value("EXECUTION_TICKER_PATH_DEPTH")
                 message = create_path(observable, path_depth)
                 if rafcon.gui.singleton.main_window_controller.view is not None:
-                    # TODO how to align always left
-                    # self.execution_ticker_text.set_halign(Gtk.Align.START)
                     self.ticker_text_label.set_text(message)
                 else:
                     logger.warn("Not initialized yet")
