@@ -58,6 +58,7 @@ class ExecutionTickerController(ExtendedController):
     def destroy(self):
         self.disabled()
         self.relieve_all_models()
+        self._view_initialized = False
         # super(ExecutionTickerController, self).destroy()
 
     # TODO remove properties after own view was separated
@@ -164,6 +165,8 @@ class ExecutionTickerController(ExtendedController):
     @ExtendedController.observe("execution_engine", after=True)
     def execution_engine_model_changed(self, model, prop_name, info):
         """Active observation of state machine and show and hide widget. """
+        if not self._view_initialized:
+            return
 
         active_sm_id = rafcon.gui.singleton.state_machine_manager_model.state_machine_manager.active_state_machine_id
         if active_sm_id is None:
