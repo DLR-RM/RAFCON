@@ -442,7 +442,7 @@ def patch_gtkmvc3_model_mt():
         direct method call depending whether the caller's thread is
         different from the observer's thread"""
 
-        from notifications import feed_debugging_graph
+        from tests.notifications import feed_debugging_graph
         feed_debugging_graph(self, observer, method, *args, **kwargs)
 
         if observer not in self._ModelMT__observer_threads:

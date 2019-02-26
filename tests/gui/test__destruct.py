@@ -881,7 +881,7 @@ def test_core_destruct(caplog):
 
     run_patching(elements)
 
-    import core.test_states as basic_state_machines
+    import tests.core.test_states as basic_state_machines
     # basic_state_machines.test_create_state(caplog)
     # basic_state_machines.test_create_container_state(caplog)
     basic_state_machines.test_port_and_outcome_removal(caplog)
