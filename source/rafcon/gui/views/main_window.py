@@ -19,11 +19,8 @@
 from builtins import range
 import os
 
-from gi.repository import Gtk
-
 from gtkmvc3.view import View
 
-from rafcon.gui.config import global_gui_config
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui import glade
 from rafcon.gui.utils import constants
@@ -222,6 +219,7 @@ class MainWindowView(View):
         self.right_bar_window = UndockedWindowView('right_bar_window')
         self.console_window = UndockedWindowView('console_window')
 
+        gui_helper_label.ellipsize_labels_recursively(self['graphical_editor_toolbar'])
 
     def rotate_and_detach_tab_labels(self):
         """Rotates tab labels of a given notebook by 90 degrees and makes them detachable.
