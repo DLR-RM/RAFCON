@@ -188,22 +188,6 @@ class ExecutionEngine(Observable):
         self.run_to_states = []
         self.set_execution_mode(StateMachineExecutionStatus.FINISHED)
 
-    @Observable.observed
-    def step_mode(self, state_machine_id=None):
-        """Set the execution mode to stepping mode. Transitions are only triggered if a new step is triggered
-        """
-        logger.debug("Activate step mode")
-
-        if state_machine_id is not None:
-            self.state_machine_manager.active_state_machine_id = state_machine_id
-
-        self.run_to_states = []
-        if self.finished_or_stopped():
-            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
-            self._run_active_state_machine()
-        else:
-            self.set_execution_mode(StateMachineExecutionStatus.FORWARD_INTO)
-
     def _run_active_state_machine(self):
         """Store running state machine and observe its status
         """
@@ -239,6 +223,22 @@ class ExecutionEngine(Observable):
         logger.debug("Executing backward step ...")
         self.run_to_states = []
         self.set_execution_mode(StateMachineExecutionStatus.BACKWARD)
+
+    @Observable.observed
+    def step_mode(self, state_machine_id=None):
+        """Set the execution mode to stepping mode. Transitions are only triggered if a new step is triggered
+        """
+        logger.debug("Activate step mode")
+
+        if state_machine_id is not None:
+            self.state_machine_manager.active_state_machine_id = state_machine_id
+
+        self.run_to_states = []
+        if self.finished_or_stopped():
+            self.set_execution_mode(StateMachineExecutionStatus.STEP_MODE)
+            self._run_active_state_machine()
+        else:
+            self.set_execution_mode(StateMachineExecutionStatus.STEP_MODE)
 
     def step_into(self):
         """Take a forward step (into) for all active states in the state machine
@@ -318,8 +318,11 @@ class ExecutionEngine(Observable):
             logger.debug("Execution engine stopped. State '{0}' is going to quit in the case of "
                          "no preemption handling has to be done!".format(state.name))
 
-        elif self._status.execution_mode is StateMachineExecutionStatus.PAUSED:
-            while self._status.execution_mode is StateMachineExecutionStatus.PAUSED:
+        elif (self._status.execution_mode is StateMachineExecutionStatus.PAUSED)\
+                or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
+            # if the status was set to PAUSED or STEP_MODE don't wake up!
+            while (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
+                    or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
                 try:
                     self._status.execution_condition_variable.acquire()
                     self._status.execution_condition_variable.wait()
@@ -334,16 +337,18 @@ class ExecutionEngine(Observable):
             logger.debug("Stepping mode: waiting for next step!")
 
             wait = True
-            # if there is not state in self.run_to_states then RAFCON waits for the next user input and simply does
-            # one step
+            # if there is a state in self.run_to_states then RAFCON was commanded
+            #    a) a step_over
+            #    b) a step_out
+            #    c) a run_until
             for state_path in copy.deepcopy(self.run_to_states):
                 next_child_state_path = None
                 # can be None in case of no transition given
                 if next_child_state_to_execute:
                     next_child_state_path = next_child_state_to_execute.get_path()
                 if state_path == state.get_path():
-                    # the execution did a whole step_over for the hierarchy state "state"
-                    # or a whole step_out for the hierarchy state "state"
+                    # the execution did a whole step_over inside hierarchy state "state" (case a) )
+                    # or a whole step_out into the hierarchy state "state" (case b) )
                     # thus we delete its state path from self.run_to_states
                     # and wait for another step (of maybe different kind)
                     wait = True
@@ -351,13 +356,13 @@ class ExecutionEngine(Observable):
                     break
                 elif state_path == next_child_state_path:
                     # this is the case that execution has reached a specific state explicitly marked via
-                    # run_to_selected_state(); if this is the case run_to_selected_state() is finished and the execution
+                    # run_to_selected_state() (case c) )
+                    # if this is the case run_to_selected_state() is finished and the execution
                     # has to wait for new execution commands
                     wait = True
                     self.run_to_states.remove(state_path)
                     break
-                # if there is an element in self.run_to_states which is not the same as state.get_path(),
-                # in this case the execution does not have to wait and has to run until the selected state is reached
+                # don't wait if its just a normal step
                 else:
                     wait = False
                     # do not break here, the state_path may be of another state machine branch
@@ -369,6 +374,14 @@ class ExecutionEngine(Observable):
                     self._status.execution_condition_variable.wait()
                 finally:
                     self._status.execution_condition_variable.release()
+                # if the status was set to PAUSED or STEP_MODE don't wake up!
+                while (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
+                        or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
+                    try:
+                        self._status.execution_condition_variable.acquire()
+                        self._status.execution_condition_variable.wait()
+                    finally:
+                        self._status.execution_condition_variable.release()
                 # state was notified => thus, a new user command was issued, which has to be handled!
                 state.execution_history.new_execution_command_handled = False
 
@@ -412,30 +425,30 @@ class ExecutionEngine(Observable):
 
         return return_value
 
-    def modify_run_to_states(self, state):
+    def _modify_run_to_states(self, state):
         """
-        This is a special case. Inside a hierarchy state a step_over is triggered but the step_over affects the
-        last child. In this case the step_over must be transformed to a step_out and thus modify the self.run_to_states
-        :param state:
-        :return:
+        This is a special case. Inside a hierarchy state a step_over is triggered and affects the last child.
+        In this case the self.run_to_states has to be modified in order to contain the parent of the hierarchy state.
+        Otherwise the execution won't respect the step_over any more and run until the end of the state machine.
+        The same holds for a step_out.
+        The reason for this is, that handle_execution_mode() can not be called between
+        the last state of a hierarchy state and the termination of the hierarchy state itself.
         """
         if self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OVER or \
-            self._status.execution_mode  is StateMachineExecutionStatus.FORWARD_OUT:
-            step_over_to_step_out_transform_found = False
+                self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OUT:
             for state_path in copy.deepcopy(self.run_to_states):
                 if state_path == state.get_path():
+                    logger.verbose("Modifying run_to_states; triggered by state %s!", state.name)
                     self.run_to_states.remove(state_path)
-                    step_over_to_step_out_transform_found = True
-                    logger.debug("Step_over is transformed to a step out for state %s!", state.name)
-            if step_over_to_step_out_transform_found:
-                from rafcon.core.states.state import State
-                if isinstance(state.parent, State):
-                    from rafcon.core.states.library_state import LibraryState
-                    if isinstance(state.parent, LibraryState):
-                        parent_path = state.parent.parent.get_path()
-                    else:
-                        parent_path = state.parent.get_path()
-                    self.run_to_states.append(parent_path)
+                    from rafcon.core.states.state import State
+                    if isinstance(state.parent, State):
+                        from rafcon.core.states.library_state import LibraryState
+                        if isinstance(state.parent, LibraryState):
+                            parent_path = state.parent.parent.get_path()
+                        else:
+                            parent_path = state.parent.get_path()
+                        self.run_to_states.append(parent_path)
+                    break
 
     def execute_state_machine_from_path(self, state_machine=None, path=None, start_state_path=None, wait_for_execution_finished=True):
         """ A helper function to start an arbitrary state machine at a given path.

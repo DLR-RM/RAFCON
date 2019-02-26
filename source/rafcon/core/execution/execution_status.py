@@ -90,5 +90,5 @@ class ExecutionStatus(Observable):
 
 
 StateMachineExecutionStatus = Enum('STATE_MACHINE_EXECUTION_STATUS', 'STARTED STOPPED PAUSED FINISHED '
-                                                                     'FORWARD_INTO FORWARD_OVER FORWARD_OUT '
+                                                                     'STEP_MODE FORWARD_INTO FORWARD_OVER FORWARD_OUT '
                                                                      'BACKWARD RUN_TO_SELECTED_STATE')
