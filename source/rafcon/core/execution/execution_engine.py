@@ -115,7 +115,7 @@ class ExecutionEngine(Observable):
             # do not start another state machine before the old one did not finish its execution
             if self.state_machine_running:
                 logger.warning("An old state machine is still running! Make sure that it terminates,"
-                            " before you can start another state machine!")
+                               " before you can start another state machine! {0}".format(self))
                 return
 
             logger.debug("Start execution engine ...")
