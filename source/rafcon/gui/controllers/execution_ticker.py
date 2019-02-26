@@ -141,11 +141,11 @@ class ExecutionTickerController(ExtendedController):
         if 'kwargs' in info and 'method_name' in info['kwargs']:
             overview = NotificationOverview(info)
             if overview['method_name'][-1] == 'state_execution_status':
-                observable = overview['model'][-1].state
-                assert isinstance(observable, State)
+                active_state = overview['model'][-1].state
+                assert isinstance(active_state, State)
 
                 path_depth = rafcon.gui.singleton.global_gui_config.get_config_value("EXECUTION_TICKER_PATH_DEPTH")
-                message = create_path(observable, path_depth)
+                message = create_path(active_state, path_depth)
                 if rafcon.gui.singleton.main_window_controller.view is not None:
                     self.ticker_text_label.set_text(message)
                 else:
