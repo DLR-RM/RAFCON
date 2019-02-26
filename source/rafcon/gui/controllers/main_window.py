@@ -284,8 +284,6 @@ class MainWindowController(ExtendedController):
         # hide not usable buttons
         self.view['step_buttons'].hide()
 
-        # TODO move in separate view when doing the refactoring of the center toolbar
-        self.execution_ticker_ctrl.check_configuration()
 
         # Initializing Main Window Size & Position
         # secure un maximize in initial condition to restore correct position and size

@@ -49,7 +49,6 @@ class ExecutionTickerController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         self.observe_model(rafcon.gui.singleton.gui_config_model)
         self.current_observed_sm_m = None
-        self.update_disabled = False
         self.state_machine_execution_model = rafcon.gui.singleton.state_machine_execution_model
         self.observe_model(self.state_machine_execution_model)
 
@@ -89,19 +88,27 @@ class ExecutionTickerController(ExtendedController):
             self.disabled()
 
     def disabled(self):
+        """ Relieve all state machines that have no active execution and hide the widget """
+
         self.ticker_hbox.hide()
-        self.update_disabled = True
+        if self.current_observed_sm_m:
+            self.stop_sm_m_observation()
 
     def enabled(self):
+        """ Observe all state machines that have an active execution and show the widget """
+
         self.ticker_hbox.show()
         self.ticker_label.show()
         self.ticker_text_label.show()
-        self.update_disabled = False
+        if self.current_observed_sm_m is None:
+            self.start_sm_m_observation()
 
     @ExtendedController.observe("state_machine", after=True)
     def on_state_execution_status_changed_after(self, model, prop_name, info):
-        """
+        """ Show current execution status in the widget
+
         This function specifies what happens if the state machine execution status of a state changes
+        
         :param observable: the state whose execution status changed
         :param return_value: the new execution status
         :param args: a list of all arguments of the observed function
@@ -109,9 +116,6 @@ class ExecutionTickerController(ExtendedController):
         """
         from rafcon.gui.utils.notification_overview import NotificationOverview
         from rafcon.core.states.state import State
-
-        if self.update_disabled:
-            return
 
         def name_and_next_state(state):
             assert isinstance(state, State)
@@ -147,20 +151,26 @@ class ExecutionTickerController(ExtendedController):
                 else:
                     logger.warn("Not initialized yet")
 
+    def stop_sm_m_observation(self):
+        if self.current_observed_sm_m:
+            self.relieve_model(self.current_observed_sm_m)
+            self.ticker_text_label.set_text('None')
+            self.current_observed_sm_m = None
+
+    def start_sm_m_observation(self):
+        active_state_machine_id = self.model.state_machine_manager.active_state_machine_id
+        if active_state_machine_id:
+            self.current_observed_sm_m = self.model.state_machines[active_state_machine_id]
+            self.observe_model(self.current_observed_sm_m)
+
     @ExtendedController.observe("execution_engine", after=True)
     def execution_engine_model_changed(self, model, prop_name, info):
-        """High light active state machine. """
+        """Active observation of state machine and show and hide widget. """
 
         active_state_machine_id = self.model.state_machine_manager.active_state_machine_id
         if active_state_machine_id is None:
-            # relieve all state machines that have no active execution
-            if self.current_observed_sm_m:
-                self.relieve_model(self.current_observed_sm_m)
-                self.ticker_text_label.set_text('None')
-                self.current_observed_sm_m = None
-            else:
-                logger.info("Execution engine notification without active state machine {0}".format(info))
+            # relieve all state machines that have no active execution and hide the widget
+            self.disabled()
         else:
-            # observe all state machines that have no active execution
-            self.current_observed_sm_m = self.model.state_machines[active_state_machine_id]
-            self.observe_model(self.current_observed_sm_m)
+            # observe all state machines that have an active execution and show the widget
+            self.check_configuration()

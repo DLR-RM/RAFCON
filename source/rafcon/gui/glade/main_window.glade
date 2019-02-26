@@ -625,13 +625,13 @@
                                     </child>
                                     <child>
                                       <object class="GtkBox" id="execution_ticker_hbox">
-                                        <property name="visible">True</property>
+                                        <property name="visible">False</property>
                                         <property name="can_focus">False</property>
                                         <property name="resize_mode">queue</property>
                                         <property name="orientation">horizontal</property>
                                         <child>
                                           <object class="GtkLabel" id="execution_ticker_label">
-                                            <property name="visible">True</property>
+                                            <property name="visible">False</property>
                                             <property name="can_focus">False</property>
                                             <property name="xalign">0</property>
                                             <property name="label">ACTIVE STATE:</property>
@@ -644,7 +644,7 @@
                                         </child>
                                         <child>
                                           <object class="GtkLabel" id="execution_ticker_text">
-                                            <property name="visible">True</property>
+                                            <property name="visible">False</property>
                                             <property name="can_focus">False</property>
                                             <property name="xalign">0</property>
                                             <property name="label">None</property>
