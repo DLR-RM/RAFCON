@@ -59,8 +59,8 @@ class ExecutionTickerController(ExtendedController):
 
     def destroy(self):
         self.disabled()
-        self.relieve_model(self.state_machine_execution_model)
-        super(ExecutionTickerController, self).destroy()
+        self.relieve_all_models()
+        # super(ExecutionTickerController, self).destroy()
 
     # TODO remove properties after own view was separated
     @property
