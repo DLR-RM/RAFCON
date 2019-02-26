@@ -488,18 +488,18 @@ def run_simple_modification_construction():
     print("%" * 50)
     print("do test menu bar")
     print("%" * 50)
-    from rafcon.gui.widget import test_menu_bar
+    from tests.gui.widget import test_menu_bar
     # TODO D-get this test also running with substitute_library
     test_menu_bar.trigger_gui_signals(with_refresh=True, with_substitute_library=False)
     print("%" * 50)
     print("do test complex actions, group & ungroup")
     print("%" * 50)
-    from gui import test_complex_actions
+    from tests.gui import test_complex_actions
     test_complex_actions.trigger_repetitive_group_ungroup()
     print("%" * 50)
     print("do test ungroup")
     print("%" * 50)
-    from gui import test_group_ungroup
+    from tests.gui import test_group_ungroup
     test_group_ungroup.trigger_ungroup_signals()
     testing_utils.call_gui_callback(testing_utils.wait_for_gui)
 
