@@ -150,7 +150,7 @@ class MainWindowController(ExtendedController):
         ######################################################
         # execution ticker
         ######################################################
-        self.execution_ticker_ctrl = ExecutionTickerController(state_machine_manager_model, None)
+        self.execution_ticker_ctrl = ExecutionTickerController(self.state_machine_execution_model, None)
         self.add_controller('execution_ticker_ctrl', self.execution_ticker_ctrl)
 
         ######################################################

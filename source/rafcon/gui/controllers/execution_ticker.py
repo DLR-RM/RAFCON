@@ -17,7 +17,7 @@
 import rafcon.core.singleton
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
-from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
+from rafcon.gui.models.state_machine_execution_engine import StateMachineExecutionEngineModel
 
 # noinspection PyUnresolvedReferences
 from rafcon.gui.mygaphas import guide
@@ -34,9 +34,9 @@ class ExecutionTickerController(ExtendedController):
      The class shows the last execution update in a text field. Currently this is only one state and one active state
      machine.
 
-    :param rafcon.gui.models.state_machine.StateMachineModel model: The state machine model, holding the root
-        state and the current selection
-    :param rafcon.gui.views.graphical_editor.GraphicalEditorView view: The GTK view having an OpenGL rendering
+    :param rafcon.gui.models.state_machine_execution_engine.StateMachineExecutionEngineModel model:
+        The execution engine model to observe
+    :param view: currently None
         element
     """
     # TODO In future there will be multiple active state machines which have to be taken into account
@@ -44,12 +44,10 @@ class ExecutionTickerController(ExtendedController):
 
     def __init__(self, model, view):
         """Constructor"""
-        assert isinstance(model, StateMachineManagerModel)
+        assert isinstance(model, StateMachineExecutionEngineModel)
         ExtendedController.__init__(self, model, view)
         self.observe_model(rafcon.gui.singleton.gui_config_model)
         self.current_observed_sm_m = None
-        self.state_machine_execution_model = rafcon.gui.singleton.state_machine_execution_model
-        self.observe_model(self.state_machine_execution_model)
 
     def _idle_register_view(self, view):
         pass  # work around to avoid traceback because of view=None
@@ -96,7 +94,7 @@ class ExecutionTickerController(ExtendedController):
         self.ticker_label.hide()
         self.ticker_text_label.hide()
         if self.current_observed_sm_m:
-            self.stop_sm_m_observation()
+            self.stop_sm_m_observation(self.current_observed_sm_m)
 
     def enabled(self):
         """ Observe all state machines that have an active execution and show the widget """
@@ -104,7 +102,7 @@ class ExecutionTickerController(ExtendedController):
         self.ticker_label.show()
         self.ticker_text_label.show()
         if self.current_observed_sm_m is None:
-            self.start_sm_m_observation()
+            self.start_active_sm_m_observation()
 
     @ExtendedController.observe("state_machine", after=True)
     def on_state_execution_status_changed_after(self, model, prop_name, info):
@@ -112,9 +110,9 @@ class ExecutionTickerController(ExtendedController):
 
         This function specifies what happens if the state machine execution status of a state changes
         
-        :param observable: the state whose execution status changed
-        :param return_value: the new execution status
-        :param args: a list of all arguments of the observed function
+        :param model: the model of the state that has changed (most likely its execution status)
+        :param prop_name: property name that has been changed
+        :param info: notification info dictionary
         :return:
         """
         from rafcon.gui.utils.notification_overview import NotificationOverview
@@ -152,24 +150,23 @@ class ExecutionTickerController(ExtendedController):
                 else:
                     logger.warn("Not initialized yet")
 
-    def stop_sm_m_observation(self):
-        if self.current_observed_sm_m:
-            self.relieve_model(self.current_observed_sm_m)
-            self.ticker_text_label.set_text('None')
-            self.current_observed_sm_m = None
+    def stop_sm_m_observation(self, sm_m):
+        self.relieve_model(sm_m)
+        self.ticker_text_label.set_text('None')
+        self.current_observed_sm_m = None
 
-    def start_sm_m_observation(self):
-        active_state_machine_id = self.model.state_machine_manager.active_state_machine_id
-        if active_state_machine_id:
-            self.current_observed_sm_m = self.model.state_machines[active_state_machine_id]
+    def start_active_sm_m_observation(self):
+        active_sm_id = rafcon.gui.singleton.state_machine_manager_model.state_machine_manager.active_state_machine_id
+        if active_sm_id:
+            self.current_observed_sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[active_sm_id]
             self.observe_model(self.current_observed_sm_m)
 
     @ExtendedController.observe("execution_engine", after=True)
     def execution_engine_model_changed(self, model, prop_name, info):
         """Active observation of state machine and show and hide widget. """
 
-        active_state_machine_id = self.model.state_machine_manager.active_state_machine_id
-        if active_state_machine_id is None:
+        active_sm_id = rafcon.gui.singleton.state_machine_manager_model.state_machine_manager.active_state_machine_id
+        if active_sm_id is None:
             # relieve all state machines that have no active execution and hide the widget
             self.disabled()
         else:
