@@ -13,10 +13,8 @@
    :synopsis: A module that holds the controller to the execution ticker of all active state machines.
 
 """
-from gi.repository import Gtk
 
 import rafcon.core.singleton
-from rafcon.gui.utils import constants
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
@@ -53,8 +51,16 @@ class ExecutionTickerController(ExtendedController):
         self.state_machine_execution_model = rafcon.gui.singleton.state_machine_execution_model
         self.observe_model(self.state_machine_execution_model)
 
+    def _idle_register_view(self, view):
+        pass  # work around to avoid traceback because of view=None
+
     def register_view(self, view):
         pass  # not used yet because the view is still integrated in the main window view
+
+    def destroy(self):
+        self.disabled()
+        self.relieve_model(self.state_machine_execution_model)
+        super(ExecutionTickerController, self).destroy()
 
     # TODO remove properties after own view was separated
     @property
