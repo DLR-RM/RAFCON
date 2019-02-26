@@ -27,11 +27,27 @@ def create_state_machine():
     root.add_state(ex2)
     ex3 = ExecutionState(name='3')
     root.add_state(ex3)
+
+    # hierarchy state at the beginning
+    h4 = HierarchyState('H4')
+    ex41 = ExecutionState(name='41')
+    h4.add_state(ex41)
+    ex42 = ExecutionState(name='42')
+    h4.add_state(ex42)
+    ex43 = ExecutionState(name='43')
+    h4.add_state(ex43)
+    h4.start_state_id = ex41.state_id
+    h4.add_transition(ex41.state_id, 0, ex42.state_id, None)
+    h4.add_transition(ex42.state_id, 0, ex43.state_id, None)
+    h4.add_transition(ex43.state_id, 0, h4.state_id, 0)
+
+    root.add_state(h4)
     root.start_state_id = ex1.state_id
+    root.add_transition(h4.state_id, 0, ex1.state_id, None)
     root.add_transition(ex1.state_id, 0, ex2.state_id, None)
     root.add_transition(ex2.state_id, 0, ex3.state_id, None)
     t_id = root.add_transition(ex3.state_id, 0, root.state_id, 0)
-    return StateMachine(root_state=root), t_id
+    return StateMachine(root_state=root), t_id, h4.state_id
 
 
 def iter_execution_modes():
@@ -52,7 +68,7 @@ def iter_execution_modes():
     assert isinstance(execution_history_ctrl, ExecutionHistoryTreeController)
     testing_utils.call_gui_callback(testing_utils.wait_for_gui)
 
-    sm, remove_t_id = testing_utils.call_gui_callback(create_state_machine)
+    sm, remove_t_id, add_start_state_id = testing_utils.call_gui_callback(create_state_machine)
     sm_id = testing_utils.call_gui_callback(state_machine_manager.add_state_machine, sm)
     testing_utils.call_gui_callback(testing_utils.wait_for_gui)
     sm_m = gui_singleton.state_machine_manager_model.state_machines[sm_id]
@@ -74,6 +90,9 @@ def iter_execution_modes():
             Observer.__init__(self)
             self.model = model
             self.observe_model(model)
+            self.last_execution_change_at_state = None
+
+        def reset(self):
             self.last_execution_change_at_state = None
 
         @Observer.observe("state_machine", after=True)
@@ -113,8 +132,7 @@ def iter_execution_modes():
     current_active_state = execution_observer.last_execution_change_at_state
     print("last active state {0}".format(last_active_state))
     print("current active state {0} {1}".format(current_active_state, last_active_state == current_active_state))
-    # TODO This fails currently if you do it with the gui by hand -> the pause cause one more step
-    # assert last_active_state == current_active_state
+    assert last_active_state == current_active_state
 
     # active state should not change from pause to step mode -> this can cause bad situations with a robot in the loop
     last_active_state = execution_observer.last_execution_change_at_state
@@ -124,8 +142,7 @@ def iter_execution_modes():
     current_active_state = execution_observer.last_execution_change_at_state
     print("last active state {0}".format(last_active_state))
     print("current active state {0} {1}".format(current_active_state, last_active_state == current_active_state))
-    # TODO This fails currently if you do it with the gui by hand -> the pause cause one more step
-    # assert last_active_state == current_active_state
+    assert last_active_state == current_active_state
 
     # finish the state machine
     testing_utils.call_gui_callback(menubar_ctrl.on_start_activate, None)
@@ -200,6 +217,39 @@ def iter_execution_modes():
     # # this works currently with the gui
     # assert number_of_executions_before + 1 == number_of_executions_after
     # testing_utils.call_gui_callback(testing_utils.wait_for_gui)
+
+    ############################################################
+    print("{0}# EXAMPLE #5: step mode (step over) with first state hierarchy state {0}".format('\n' + 40 * '#' + '\n'))
+    ############################################################
+    # testing_utils.call_gui_callback(sm_m.root_state.state.__setattr__, 'start_state_id', add_start_state_id)
+    execution_observer.reset()
+    # check that execution does a step over even if the first state is a hierarchy state
+    last_active_state = execution_observer.last_execution_change_at_state
+    print("#0 {0}".format(last_active_state))
+    current_sync_counter = state_machine_execution_engine.synchronization_counter
+    testing_utils.call_gui_callback(menubar_ctrl.on_step_mode_activate, None)
+    wait_for_sync_counter_change(current_sync_counter)
+    current_active_state = execution_observer.last_execution_change_at_state
+    print("#1 {0}".format(current_active_state))
+    current_sync_counter = state_machine_execution_engine.synchronization_counter
+    testing_utils.call_gui_callback(menubar_ctrl.on_step_over_activate, None)
+    wait_for_sync_counter_change(current_sync_counter)
+    after_so1_current_active_state = execution_observer.last_execution_change_at_state
+    print("#2 {0}".format(after_so1_current_active_state))
+    current_sync_counter = state_machine_execution_engine.synchronization_counter
+    testing_utils.call_gui_callback(menubar_ctrl.on_step_over_activate, None)
+    wait_for_sync_counter_change(current_sync_counter)
+    after_so2_current_active_state = execution_observer.last_execution_change_at_state
+    print("#3 {0}".format(after_so2_current_active_state))
+    current_sync_counter = state_machine_execution_engine.synchronization_counter
+    testing_utils.call_gui_callback(menubar_ctrl.on_step_over_activate, None)
+    wait_for_sync_counter_change(current_sync_counter)
+    after_so3_current_active_state = execution_observer.last_execution_change_at_state
+    print("#4 {0}".format(after_so3_current_active_state))
+
+    assert not last_active_state == current_active_state
+    assert len(after_so2_current_active_state.split('/')) == len(after_so1_current_active_state.split('/'))
+    assert len(after_so3_current_active_state.split('/')) == len(after_so2_current_active_state.split('/'))
 
     execution_observer.relieve_model(sm_m)
 
