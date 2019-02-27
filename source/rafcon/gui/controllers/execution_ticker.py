@@ -41,6 +41,7 @@ class ExecutionTickerController(ExtendedController):
     """
     # TODO In future there will be multiple active state machines which have to be taken into account
     # TODO Currently concurrent states are also not taken into account what could be an extension or other feature
+    _fix_text_of_label = ", CURRENT STATE:  "
 
     def __init__(self, model, view):
         """Constructor"""
@@ -67,10 +68,6 @@ class ExecutionTickerController(ExtendedController):
     def ticker_text_label(self):
         return rafcon.gui.singleton.main_window_controller.view["execution_ticker_text"]
 
-    @property
-    def ticker_label(self):
-        return rafcon.gui.singleton.main_window_controller.view["execution_ticker_label"]
-
     @ExtendedController.observe('config', after=True)
     def on_config_value_changed(self, config_m, prop_name, info):
         """Callback when a config value has been changed
@@ -93,7 +90,6 @@ class ExecutionTickerController(ExtendedController):
     def disable(self):
         """ Relieve all state machines that have no active execution and hide the widget """
 
-        self.ticker_label.hide()
         self.ticker_text_label.hide()
         if self.current_observed_sm_m:
             self.stop_sm_m_observation(self.current_observed_sm_m)
@@ -101,7 +97,6 @@ class ExecutionTickerController(ExtendedController):
     def enable(self):
         """ Observe all state machines that have an active execution and show the widget """
 
-        self.ticker_label.show()
         self.ticker_text_label.show()
         if self.current_observed_sm_m is None:
             self.start_active_sm_m_observation()
@@ -146,7 +141,8 @@ class ExecutionTickerController(ExtendedController):
                 assert isinstance(active_state, State)
 
                 path_depth = rafcon.gui.singleton.global_gui_config.get_config_value("EXECUTION_TICKER_PATH_DEPTH", 3)
-                message = create_path(active_state, path_depth)
+
+                message = self._fix_text_of_label + create_path(active_state, path_depth)
                 if rafcon.gui.singleton.main_window_controller.view is not None:
                     self.ticker_text_label.set_text(message)
                 else:
@@ -154,7 +150,7 @@ class ExecutionTickerController(ExtendedController):
 
     def stop_sm_m_observation(self, sm_m):
         self.relieve_model(sm_m)
-        self.ticker_text_label.set_text('None')
+        self.ticker_text_label.set_text(self._fix_text_of_label + 'None')
         self.current_observed_sm_m = None
 
     def start_active_sm_m_observation(self):

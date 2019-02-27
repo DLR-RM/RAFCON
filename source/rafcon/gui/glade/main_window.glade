@@ -624,28 +624,12 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkLabel" id="execution_ticker_label">
-                                        <property name="visible">False</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="halign">start</property>
-                                        <property name="label">, CURRENT STATE:</property>
-                                        <style>
-                                          <class name="secondary"/>
-                                        </style>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">4</property>
-                                      </packing>
-                                    </child>
-                                    <child>
                                       <object class="GtkLabel" id="execution_ticker_text">
                                         <property name="visible">False</property>
                                         <property name="can_focus">False</property>
                                         <property name="halign">start</property>
                                         <property name="label">None</property>
-                                        <property name="margin_start">10</property>
+                                        <property name="margin_start">0</property>
                                         <style>
                                           <class name="secondary"/>
                                         </style>
@@ -653,7 +637,7 @@
                                       <packing>
                                         <property name="expand">True</property>
                                         <property name="fill">True</property>
-                                        <property name="position">5</property>
+                                        <property name="position">4</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -669,7 +653,7 @@
                                       <packing>
                                         <property name="expand">True</property>
                                         <property name="fill">True</property>
-                                        <property name="position">6</property>
+                                        <property name="position">5</property>
                                       </packing>
                                     </child>
                                     <style>
