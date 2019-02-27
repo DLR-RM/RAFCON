@@ -172,8 +172,10 @@ def create_mo_files():
     import subprocess
     data_files = []
     domain = "rafcon"
+    assert "setup.py" in os.listdir(os.curdir)
     rel_localedir = path.join('source', 'rafcon', 'locale')
-    localedir = os.path.join(rafcon_root_path, rel_localedir)
+    localedir = os.path.join(os.curdir, rel_localedir)
+    # Assert that we are in the root directory of the RAFCON repository
     po_files = [po_file
                 for po_file in next(os.walk(localedir))[2]
                 if path.splitext(po_file)[1] == '.po']
