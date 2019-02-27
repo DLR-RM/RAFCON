@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import os
-import sys
 
 # Unfortunately this approach does not work to make sure to initialize the gui singletons from a gui thread
 # Problem: after executing conftest.py all modules are re-imported
@@ -21,9 +20,6 @@ import sys
 
 configs = [("core", "config.yaml"), ("gui", "gui_config.yaml"), ("runtime", "runtime_config.yaml")]
 config_contents = {}
-
-rafcon_source_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "source")
-sys.path.insert(0, rafcon_source_path)
 
 
 def pytest_configure(config):
