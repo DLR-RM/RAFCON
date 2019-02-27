@@ -14,6 +14,7 @@ Next Release
 
 - Features:
 
+    - add ExecutionTicker to see activity of state machine with high hierarchy depth
 
 - Improvements:
 
