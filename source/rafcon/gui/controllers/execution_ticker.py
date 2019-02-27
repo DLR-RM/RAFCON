@@ -48,6 +48,7 @@ class ExecutionTickerController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         self.observe_model(rafcon.gui.singleton.gui_config_model)
         self.current_observed_sm_m = None
+        self._view_initialized = True
 
     def _idle_register_view(self, view):
         pass  # work around to avoid traceback because of view=None
@@ -84,7 +85,7 @@ class ExecutionTickerController(ExtendedController):
             self.check_configuration()
 
     def check_configuration(self):
-        if rafcon.gui.singleton.global_gui_config.get_config_value("EXECUTION_TICKER_ENABLED"):
+        if rafcon.gui.singleton.global_gui_config.get_config_value("EXECUTION_TICKER_ENABLED", True):
             self.enable()
         else:
             self.disable()
@@ -144,7 +145,7 @@ class ExecutionTickerController(ExtendedController):
                 active_state = overview['model'][-1].state
                 assert isinstance(active_state, State)
 
-                path_depth = rafcon.gui.singleton.global_gui_config.get_config_value("EXECUTION_TICKER_PATH_DEPTH")
+                path_depth = rafcon.gui.singleton.global_gui_config.get_config_value("EXECUTION_TICKER_PATH_DEPTH", 3)
                 message = create_path(active_state, path_depth)
                 if rafcon.gui.singleton.main_window_controller.view is not None:
                     self.ticker_text_label.set_text(message)
