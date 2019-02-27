@@ -14,14 +14,11 @@
 
 from __future__ import print_function
 from setuptools import setup, find_packages
-from setuptools.command.test import test as TestCommand
 from setuptools.command.develop import develop as DevelopCommand
 from setuptools.command.install import install as InstallCommand
 from os import path
 import os
-import sys
 from imp import load_source
-import distutils.log as log
 
 
 rafcon_root_path = os.path.dirname(os.path.abspath(__file__))
@@ -29,36 +26,6 @@ rafcon_root_path = os.path.dirname(os.path.abspath(__file__))
 script_path = path.realpath(__file__)
 install_helper = path.join(path.dirname(script_path), "source", "rafcon", "utils", "installation.py")
 installation = load_source("installation", install_helper)
-
-
-class PyTest(TestCommand):
-    """Run py.test with RAFCON tests
-
-    Copied http://doc.pytest.org/en/latest/goodpractices.html#integrating-with-setuptools-python-setup-py-test-pytest-runner
-    """
-    # This allows the user to add custom parameters to py.test, e.g.
-    # $ python setup.py test -a "-v"
-    user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
-
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        # Add further test folder with 'or my_test_folder'
-        # self.pytest_args = '-vx -s -k "core or gui or share_elements or user_input"'
-        self.pytest_args = '-vx -s -k "core or gui or share_elements"'
-        # self.pytest_args = '-vx -s -k "user_input"'
-
-    def run_tests(self):
-        import shlex
-        import pytest  # import here, cause outside the eggs aren't loaded
-        test_path = path.join(path.dirname(path.abspath(__file__)), 'tests')
-        rafcon_path = path.join(path.dirname(path.abspath(__file__)), 'source')
-        sys.path.insert(0, test_path)
-        sys.path.insert(0, rafcon_path)
-        os.environ["PYTHONPATH"] = rafcon_path + os.pathsep + test_path + os.pathsep + os.environ["PYTHONPATH"]
-        log.info("\nRunning pytest with the following arguments: {}\n".format(shlex.split(self.pytest_args) + [
-            'tests']))
-        error_number = pytest.main(shlex.split(self.pytest_args) + ['tests'])
-        sys.exit(error_number)
 
 
 class PostDevelopCommand(DevelopCommand):
@@ -120,7 +87,7 @@ setup(
 
     data_files=installation.generate_data_files(),
 
-    setup_requires=['libsass >= 0.15.0'],
+    setup_requires=['pytest-runner', 'libsass >= 0.15.0'],
     tests_require=['pytest', 'pytest-catchlog', 'graphviz', 'pymouse'] + global_requirements,
     install_requires=global_requirements,
 
@@ -145,7 +112,6 @@ setup(
     cmdclass={
         'develop': PostDevelopCommand,
         'install': PostInstallCommand,
-        'test': PyTest
     },
 
     keywords=('state machine', 'robotic', 'FSM', 'development', 'GUI', 'visual programming'),
