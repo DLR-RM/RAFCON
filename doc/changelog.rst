@@ -14,7 +14,7 @@ Next Release
 
 - Features:
 
-    - add ExecutionTicker to see activity of state machine with high hierarchy depth
+  - add ExecutionTicker to see activity of state machine with high hierarchy depth
 
 - Improvements:
 
@@ -134,7 +134,7 @@ Patch releases 0.12.\*
 ----------------------
 
 0.12.25
--------
+"""""""
 
 - Improvements:
 
@@ -149,7 +149,7 @@ Patch releases 0.12.\*
 
 
 0.12.24
--------
+"""""""
 
 - Improvements:
 
@@ -161,7 +161,7 @@ Patch releases 0.12.\*
 
 
 0.12.23
--------
+"""""""
 
 - Improvements:
 
