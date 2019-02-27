@@ -163,7 +163,6 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
 
 def initialize_environment_core(core_config=None, libraries=None, delete=False):
     from rafcon.core.config import global_config
-    from rafcon.core.start import setup_environment
     import rafcon.core.singleton
 
     if rafcon.core.singleton.state_machine_manager.state_machines:
@@ -172,9 +171,6 @@ def initialize_environment_core(core_config=None, libraries=None, delete=False):
                                "".format(rafcon.core.singleton.state_machine_manager.state_machines))
 
     test_multithreading_lock.acquire()
-
-    print("initialize_environment_core")
-    setup_environment()
 
     # preserve LIBRARY_PATHS if handed with dict -> can be already be the dict of the global_config object
     if libraries is None and core_config is not None and 'LIBRARY_PATHS' in core_config:
