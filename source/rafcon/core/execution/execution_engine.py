@@ -294,9 +294,18 @@ class ExecutionEngine(Observable):
             self.run_to_states.append(path)
             self._run_active_state_machine()
 
+    def wait_while_in_pause_or_in_step_mode(self):
+        while (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
+                or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
+            try:
+                self._status.execution_condition_variable.acquire()
+                self._status.execution_condition_variable.wait()
+            finally:
+                self._status.execution_condition_variable.release()
+
     # depending on the execution state wait for the execution condition variable to be notified
     # list all execution modes to keep the overview
-    def handle_execution_mode(self, state, next_child_state_to_execute=None):
+    def handle_execution_mode(self, state, next_child_state_to_execute=None, woke_up_from_pause_or_step_mode=False):
         """Checks the current execution status and returns it
 
         If the execution mode is some kind of stepping, a condition variable stops the current execution,
@@ -320,14 +329,11 @@ class ExecutionEngine(Observable):
 
         elif (self._status.execution_mode is StateMachineExecutionStatus.PAUSED)\
                 or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
-            # if the status was set to PAUSED or STEP_MODE don't wake up!
-            while (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
-                    or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
-                try:
-                    self._status.execution_condition_variable.acquire()
-                    self._status.execution_condition_variable.wait()
-                finally:
-                    self._status.execution_condition_variable.release()
+            self.wait_while_in_pause_or_in_step_mode()
+            # new command was triggered => execution command has to handled
+            state.execution_history.new_execution_command_handled = False
+            # if the execution weaks up, it has to check the current execution mode
+            return self.handle_execution_mode(state, next_child_state_to_execute, woke_up_from_pause_or_step_mode=True)
 
         elif self._status.execution_mode is StateMachineExecutionStatus.FINISHED:
             # this must never happen during execution of the execution engine
@@ -368,20 +374,15 @@ class ExecutionEngine(Observable):
                     # do not break here, the state_path may be of another state machine branch
                     # break
 
-            if wait:
+            # don't wait if the the execution just woke up from step mode or pause
+            if wait and not woke_up_from_pause_or_step_mode:
                 try:
                     self._status.execution_condition_variable.acquire()
                     self._status.execution_condition_variable.wait()
                 finally:
                     self._status.execution_condition_variable.release()
                 # if the status was set to PAUSED or STEP_MODE don't wake up!
-                while (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
-                        or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
-                    try:
-                        self._status.execution_condition_variable.acquire()
-                        self._status.execution_condition_variable.wait()
-                    finally:
-                        self._status.execution_condition_variable.release()
+                self.wait_while_in_pause_or_in_step_mode()
                 # state was notified => thus, a new user command was issued, which has to be handled!
                 state.execution_history.new_execution_command_handled = False
 
@@ -391,21 +392,21 @@ class ExecutionEngine(Observable):
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_INTO:
                 pass
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OVER:
-                # the state that called this method is a hierarchy state => thus we save this state and wait until this
-                # very state will execute its next state; only then we will wait on the condition variable
                 if not state.execution_history.new_execution_command_handled:
+                    # the state that called this method is a hierarchy state => thus we save this state and wait until
+                    # thise very state will execute its next state; only then we will wait on the condition variable
                     self.run_to_states.append(state.get_path())
                 else:
                     pass
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OUT:
                 from rafcon.core.states.state import State
                 if isinstance(state.parent, State):
-                    from rafcon.core.states.library_state import LibraryState
-                    if isinstance(state.parent, LibraryState):
-                        parent_path = state.parent.parent.get_path()
-                    else:
-                        parent_path = state.parent.get_path()
                     if not state.execution_history.new_execution_command_handled:
+                        from rafcon.core.states.library_state import LibraryState
+                        if isinstance(state.parent, LibraryState):
+                            parent_path = state.parent.parent.get_path()
+                        else:
+                            parent_path = state.parent.get_path()
                         self.run_to_states.append(parent_path)
                     else:
                         pass
