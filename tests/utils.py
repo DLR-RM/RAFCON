@@ -38,9 +38,9 @@ EXAMPLES_PATH = join(TESTS_PATH, '..', 'share', 'examples')
 TEST_ASSETS_PATH = join(TESTS_PATH, 'assets')
 TEST_SCRIPT_PATH = join(TESTS_PATH, 'assets', 'scripts')
 TUTORIAL_PATH = join(TESTS_PATH, "..", "share", "examples", "tutorials")
-RAFCON_SHARED_LIBRARY_PATH = join(dirname(RAFCON_PATH), '..', 'share', 'libraries')
-print(LIBRARY_SM_PATH)
-print(RAFCON_SHARED_LIBRARY_PATH)
+RAFCON_SHARED_LIBRARY_PATH = environ.get("RAFCON_LIB_PATH", join(dirname(RAFCON_PATH), '..', 'share', 'libraries'))
+print("LIBRARY_SM_PATH", LIBRARY_SM_PATH)
+print("RAFCON_SHARED_LIBRARY_PATH", RAFCON_SHARED_LIBRARY_PATH)
 
 # from rafcon.core.config import global_config
 # global_config.load(path=join(TESTS_PATH, "assets", "configs", "valid_config"))
@@ -163,6 +163,7 @@ def initialize_environment(core_config=None, gui_config=None, runtime_config=Non
 
 def initialize_environment_core(core_config=None, libraries=None, delete=False):
     from rafcon.core.config import global_config
+    from rafcon.core.start import setup_environment
     import rafcon.core.singleton
 
     if rafcon.core.singleton.state_machine_manager.state_machines:
@@ -171,6 +172,9 @@ def initialize_environment_core(core_config=None, libraries=None, delete=False):
                                "".format(rafcon.core.singleton.state_machine_manager.state_machines))
 
     test_multithreading_lock.acquire()
+
+    print("initialize_environment_core")
+    setup_environment()
 
     # preserve LIBRARY_PATHS if handed with dict -> can be already be the dict of the global_config object
     if libraries is None and core_config is not None and 'LIBRARY_PATHS' in core_config:
