@@ -23,6 +23,7 @@ Next Release
 
   - :issue_ghe:`678` script validation does not work
   - :issue_ghe:`663` cannot rename connected data port of type object
+  - :issue_ghe:`683` rafcon can now be closed properly via signal
 
 - Changes:
 
