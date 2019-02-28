@@ -98,6 +98,9 @@ class HierarchyState(ContainerState):
                 # print("hs1", self.name)
                 self.handling_execution_mode = True
                 execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, self.child_state)
+
+                self.check_if_child_state_was_modified()
+
                 self.handling_execution_mode = False
                 if self.state_execution_status is not StateExecutionStatus.EXECUTE_CHILDREN:
                     self.state_execution_status = StateExecutionStatus.EXECUTE_CHILDREN
@@ -144,6 +147,18 @@ class HierarchyState(ContainerState):
             self.child_state = None
             self.last_child = None
             return self.finalize(Outcome(-1, "aborted"))
+
+    def check_if_child_state_was_modified(self):
+        # Check if a new state was inserted after the state machine was paused
+        if self.last_child: # this is the case, if at least the entry state was already executed
+            transition = self.get_transition_for_outcome(self.last_child, self.last_child.final_outcome)
+            new_child_state = self.get_state_for_transition(transition)
+        else:  # self.last_child is none in the case that self.child_state is the entry state
+            new_child_state = self.get_start_state(set_final_outcome=True)
+
+        if self.child_state is not new_child_state:
+            logger.debug("Next child state changed! Executing new child state ... ")
+            self.child_state = new_child_state
 
     def _handle_backward_execution_before_child_execution(self):
         """ Sets up all data after receiving a backward execution step from the execution engine

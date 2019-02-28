@@ -355,7 +355,6 @@ class ExecutionEngine(Observable):
             # container_state was notified => thus, a new user command was issued, which has to be handled!
             container_state.execution_history.new_execution_command_handled = False
 
-
     def handle_execution_mode(self, container_state, next_child_state_to_execute=None):
         """Checks the current execution status and returns it.
 
