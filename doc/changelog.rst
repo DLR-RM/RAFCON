@@ -16,7 +16,8 @@ Next Release
 
 
 - Improvements:
-
+  
+  - changing states (adding or removing) during step mode works now
 
 - Bug Fixes:
 
