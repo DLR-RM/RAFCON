@@ -65,10 +65,10 @@ def install_fonts(logger=None, restart=False):
         for font_name in font_names_to_be_installed:
             # A font is a folder one or more font faces
             fonts_folder = os.path.join(assets_folder, "fonts", font_name)
-            num_faces_to_be_installed = len(filter(lambda name: name.endswith(".otf"), os.listdir(fonts_folder)))
+            num_faces_to_be_installed = len([name for name in os.listdir(fonts_folder) if name.endswith(".otf")])
             num_faces_installed = 0
             # default case: font is not installed yet!
-            if font_name in existing_font_faces.iterkeys():
+            if font_name in existing_font_faces.keys():
                 num_faces_installed = len(existing_font_faces[font_name])
 
             if num_faces_to_be_installed <= num_faces_installed:

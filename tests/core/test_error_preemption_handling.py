@@ -33,6 +33,7 @@ class TestErrorPreemptionHandling(object):
 
     @classmethod
     def teardown_class(cls):
+        cls.state_machine = None
         testing_utils.shutdown_environment_only_core()
 
     def setup(self):

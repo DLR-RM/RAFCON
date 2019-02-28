@@ -181,6 +181,8 @@ A typical config file looks like this:
 
     SEMANTIC_DATA_MODE: False
     SHOW_PATH_NAMES_IN_EXECUTION_HISTORY: False
+    EXECUTION_TICKER_ENABLED: True
+    EXECUTION_TICKER_PATH_DEPTH: 3
 
     # 300 is equal to glib.PRIORITY_LOW which is is lower than the default gtk priority
     LOGGING_CONSOLE_GTK_PRIORITY: 300
@@ -497,6 +499,15 @@ SEMANTIC\_DATA\_MODE
 SHOW\_PATH\_NAMES\_IN\_EXECUTION\_HISTORY
   | Default: ``False``
   | If True, RAFCON shows the state paths next to the state names in each execution history entry.
+
+EXECUTION\_TICKER\_ENABLED
+  | Default: ``True``
+  | If True, the execution ticker will prompt activity into respective widget.
+
+EXECUTION\_TICKER\_PATH\_DEPTH
+  | Default: ``3``
+  | Number of state names shown in active path (by names) starting from the lowest leaf state as the last
+    and cutting away the first and following if to much.
 
 LOGGING\_CONSOLE\_GTK\_PRIORITY:
   | Default: 300

@@ -244,14 +244,14 @@ def trigger_issue_586_reproduction_sequence():
     sm_m = list(sm_manager_model.state_machines.values())[0]
     assert sm_m.state_machine_id == sm_manager_model.selected_state_machine_id
     concurrent_decimate_state_m = sm_m.get_state_model_by_path("GLSUJY/OOECFM")
-
+    decimate_beers_state_m = sm_m.get_state_model_by_path("GLSUJY/OOECFM/YVNWJU")
     # check start conditions overlapping ids
     state_ids = list(concurrent_decimate_state_m.states.keys())
     import rafcon.core.constants
     state_ids.remove(rafcon.core.constants.UNIQUE_DECIDER_STATE_ID)
-    child_state_ids = list(list(concurrent_decimate_state_m.states.values())[0].states.keys())
+    beer_child_state_ids = decimate_beers_state_m.states.keys()
     for state_id in state_ids:
-        assert all([child_id in child_state_ids for child_id in concurrent_decimate_state_m.states[state_id].states.keys()])
+        assert all([child_id in beer_child_state_ids for child_id in concurrent_decimate_state_m.states[state_id].states.keys()])
 
     call_gui_callback(sm_m.selection.set, concurrent_decimate_state_m)
     call_gui_callback(menubar_ctrl.on_ungroup_state_activate, None, None)
