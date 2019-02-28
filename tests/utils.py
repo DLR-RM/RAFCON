@@ -33,12 +33,13 @@ if not exists(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE):
 
 TESTS_PATH = dirname(abspath(__file__))
 RAFCON_PATH = realpath(rafcon.__path__[0])
+RAFCON_ROOT_PATH = dirname(TESTS_PATH)
 LIBRARY_SM_PATH = join(TESTS_PATH, '..', 'share', 'libraries')
 EXAMPLES_PATH = join(TESTS_PATH, '..', 'share', 'examples')
 TEST_ASSETS_PATH = join(TESTS_PATH, 'assets')
 TEST_SCRIPT_PATH = join(TESTS_PATH, 'assets', 'scripts')
 TUTORIAL_PATH = join(TESTS_PATH, "..", "share", "examples", "tutorials")
-RAFCON_SHARED_LIBRARY_PATH = environ.get("RAFCON_LIB_PATH", join(dirname(RAFCON_PATH), '..', 'share', 'libraries'))
+RAFCON_SHARED_LIBRARY_PATH = environ.get("RAFCON_LIB_PATH", join(RAFCON_ROOT_PATH, 'share', 'libraries'))
 print("LIBRARY_SM_PATH", LIBRARY_SM_PATH)
 print("RAFCON_SHARED_LIBRARY_PATH", RAFCON_SHARED_LIBRARY_PATH)
 
