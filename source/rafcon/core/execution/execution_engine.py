@@ -276,7 +276,6 @@ class ExecutionEngine(Observable):
     def run_to_selected_state(self, path, state_machine_id=None):
         """Execute the state machine until a specific state. This state won't be executed. This is an asynchronous task
         """
-
         if self.state_machine_manager.get_active_state_machine() is not None:
             self.state_machine_manager.get_active_state_machine().root_state.recursively_resume_states()
 
@@ -294,7 +293,9 @@ class ExecutionEngine(Observable):
             self.run_to_states.append(path)
             self._run_active_state_machine()
 
-    def wait_while_in_pause_or_in_step_mode(self):
+    def _wait_while_in_pause_or_in_step_mode(self):
+        """ Waits as long as the execution_mode is in paused or step_mode
+        """
         while (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
                 or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
             try:
@@ -303,88 +304,102 @@ class ExecutionEngine(Observable):
             finally:
                 self._status.execution_condition_variable.release()
 
-    # depending on the execution state wait for the execution condition variable to be notified
-    # list all execution modes to keep the overview
-    def handle_execution_mode(self, state, next_child_state_to_execute=None, woke_up_from_pause_or_step_mode=False):
-        """Checks the current execution status and returns it
+    def _wait_if_required(self, container_state, next_child_state_to_execute, woke_up_from_pause_or_step_mode):
+        """ Calls a blocking wait for the calling thread, depending on the execution mode.
 
-        If the execution mode is some kind of stepping, a condition variable stops the current execution,
-        until it gets notified by the step_*() or backward_step()
-        functions. This function is called by the hierarchy states.
+        :param container_state: the current hierarhcy state to handle the execution mode for
+        :param next_child_state_to_execute: the next child state for :param container_state to be executed
+        :param woke_up_from_pause_or_step_mode: a flag to check if the execution just woke up from paused- or step-mode
+        """
+        wait = True
+        # if there is a state in self.run_to_states then RAFCON was commanded
+        #    a) a step_over
+        #    b) a step_out
+        #    c) a run_until
+        for state_path in copy.deepcopy(self.run_to_states):
+            next_child_state_path = None
+            # can be None in case of no transition given
+            if next_child_state_to_execute:
+                next_child_state_path = next_child_state_to_execute.get_path()
+            if state_path == container_state.get_path():
+                # the execution did a whole step_over inside hierarchy state "state" (case a) )
+                # or a whole step_out into the hierarchy state "state" (case b) )
+                # thus we delete its state path from self.run_to_states
+                # and wait for another step (of maybe different kind)
+                wait = True
+                self.run_to_states.remove(state_path)
+                break
+            elif state_path == next_child_state_path:
+                # this is the case that execution has reached a specific state explicitly marked via
+                # run_to_selected_state() (case c) )
+                # if this is the case run_to_selected_state() is finished and the execution
+                # has to wait for new execution commands
+                wait = True
+                self.run_to_states.remove(state_path)
+                break
+            # don't wait if its just a normal step
+            else:
+                wait = False
+                # do not break here, the state_path may be of another state machine branch
+                # break
+        # don't wait if the the execution just woke up from step mode or pause
+        if wait and not woke_up_from_pause_or_step_mode:
+            logger.debug("Stepping mode: waiting for next step!")
+            try:
+                self._status.execution_condition_variable.acquire()
+                self._status.execution_condition_variable.wait()
+            finally:
+                self._status.execution_condition_variable.release()
+            # if the status was set to PAUSED or STEP_MODE don't wake up!
+            self._wait_while_in_pause_or_in_step_mode()
+            # container_state was notified => thus, a new user command was issued, which has to be handled!
+            container_state.execution_history.new_execution_command_handled = False
 
-        :param state: the state that as for the execution mode is only passed for debugging reasons
+
+    def handle_execution_mode(self, container_state, next_child_state_to_execute=None):
+        """Checks the current execution status and returns it.
+
+        Depending on the execution state, the calling thread (currently only hierarchy states) waits for the
+        execution to continue.
+
+        If the execution mode is any of the step modes, a condition variable stops the current execution,
+        until it gets notified by the step_*() or backward_step() functions.
+
+        :param container_state: the container_state, for which the execution mode is handled
+        :param next_child_state_to_execute: is the next child state of :param state to be executed
         :return: the current state machine execution status
         """
         self.synchronization_lock.acquire()
         self.synchronization_counter += 1
+        logger.verbose("Increase synchronization_counter!")
         self.synchronization_lock.release()
 
+        woke_up_from_pause_or_step_mode = False
+
+        if (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
+                or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
+            self._wait_while_in_pause_or_in_step_mode()
+            # new command was triggered => execution command has to handled
+            container_state.execution_history.new_execution_command_handled = False
+            woke_up_from_pause_or_step_mode = True
+
+        # no elif here: if the execution woke up from e.g. paused mode, it has to check the current execution mode
         if self._status.execution_mode is StateMachineExecutionStatus.STARTED:
             # logger.debug("Execution engine started!")
             pass
 
         elif self._status.execution_mode is StateMachineExecutionStatus.STOPPED:
             logger.debug("Execution engine stopped. State '{0}' is going to quit in the case of "
-                         "no preemption handling has to be done!".format(state.name))
-
-        elif (self._status.execution_mode is StateMachineExecutionStatus.PAUSED)\
-                or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
-            self.wait_while_in_pause_or_in_step_mode()
-            # new command was triggered => execution command has to handled
-            state.execution_history.new_execution_command_handled = False
-            # if the execution weaks up, it has to check the current execution mode
-            return self.handle_execution_mode(state, next_child_state_to_execute, woke_up_from_pause_or_step_mode=True)
+                         "no preemption handling has to be done!".format(container_state.name))
 
         elif self._status.execution_mode is StateMachineExecutionStatus.FINISHED:
             # this must never happen during execution of the execution engine
             raise Exception
 
         else:  # all other step modes
-            logger.debug("Stepping mode: waiting for next step!")
-
-            wait = True
-            # if there is a state in self.run_to_states then RAFCON was commanded
-            #    a) a step_over
-            #    b) a step_out
-            #    c) a run_until
-            for state_path in copy.deepcopy(self.run_to_states):
-                next_child_state_path = None
-                # can be None in case of no transition given
-                if next_child_state_to_execute:
-                    next_child_state_path = next_child_state_to_execute.get_path()
-                if state_path == state.get_path():
-                    # the execution did a whole step_over inside hierarchy state "state" (case a) )
-                    # or a whole step_out into the hierarchy state "state" (case b) )
-                    # thus we delete its state path from self.run_to_states
-                    # and wait for another step (of maybe different kind)
-                    wait = True
-                    self.run_to_states.remove(state_path)
-                    break
-                elif state_path == next_child_state_path:
-                    # this is the case that execution has reached a specific state explicitly marked via
-                    # run_to_selected_state() (case c) )
-                    # if this is the case run_to_selected_state() is finished and the execution
-                    # has to wait for new execution commands
-                    wait = True
-                    self.run_to_states.remove(state_path)
-                    break
-                # don't wait if its just a normal step
-                else:
-                    wait = False
-                    # do not break here, the state_path may be of another state machine branch
-                    # break
-
-            # don't wait if the the execution just woke up from step mode or pause
-            if wait and not woke_up_from_pause_or_step_mode:
-                try:
-                    self._status.execution_condition_variable.acquire()
-                    self._status.execution_condition_variable.wait()
-                finally:
-                    self._status.execution_condition_variable.release()
-                # if the status was set to PAUSED or STEP_MODE don't wake up!
-                self.wait_while_in_pause_or_in_step_mode()
-                # state was notified => thus, a new user command was issued, which has to be handled!
-                state.execution_history.new_execution_command_handled = False
+            logger.verbose("before wait")
+            self._wait_if_required(container_state, next_child_state_to_execute, woke_up_from_pause_or_step_mode)
+            logger.verbose("after wait")
 
             # calculate states to which should be run
             if self._status.execution_mode is StateMachineExecutionStatus.BACKWARD:
@@ -392,21 +407,21 @@ class ExecutionEngine(Observable):
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_INTO:
                 pass
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OVER:
-                if not state.execution_history.new_execution_command_handled:
+                if not container_state.execution_history.new_execution_command_handled:
                     # the state that called this method is a hierarchy state => thus we save this state and wait until
                     # thise very state will execute its next state; only then we will wait on the condition variable
-                    self.run_to_states.append(state.get_path())
+                    self.run_to_states.append(container_state.get_path())
                 else:
                     pass
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OUT:
                 from rafcon.core.states.state import State
-                if isinstance(state.parent, State):
-                    if not state.execution_history.new_execution_command_handled:
+                if isinstance(container_state.parent, State):
+                    if not container_state.execution_history.new_execution_command_handled:
                         from rafcon.core.states.library_state import LibraryState
-                        if isinstance(state.parent, LibraryState):
-                            parent_path = state.parent.parent.get_path()
+                        if isinstance(container_state.parent, LibraryState):
+                            parent_path = container_state.parent.parent.get_path()
                         else:
-                            parent_path = state.parent.get_path()
+                            parent_path = container_state.parent.get_path()
                         self.run_to_states.append(parent_path)
                     else:
                         pass
@@ -418,7 +433,7 @@ class ExecutionEngine(Observable):
                 # "run_to_states" were already updated thus doing nothing
                 pass
 
-        state.execution_history.new_execution_command_handled = True
+        container_state.execution_history.new_execution_command_handled = True
 
         # in the case that the stop method wakes up the paused or step mode a StateMachineExecutionStatus.STOPPED
         # will be returned
