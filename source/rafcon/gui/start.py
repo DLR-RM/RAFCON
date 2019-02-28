@@ -258,21 +258,8 @@ def signal_handler(signal, frame=None):
     print(_("Signal '{}' received.\nExecution engine will be stopped and program will be shutdown!").format(
         SIGNALS_TO_NAMES_DICT.get(signal, "[unknown]")))
 
-    try:
-        if not state_machine_execution_engine.finished_or_stopped():
-            state_machine_execution_engine.stop()
-            state_machine_execution_engine.join(3)  # Wait max 3 sec for the execution to stop
-    except Exception as e:
-        import traceback
-        print(_("Could not stop state machine: {0} {1}").format(e, traceback.format_exc()))
-
-    try:
-        gui_singletons.main_window_controller.prepare_destruction()
-    except Exception as e:
-        print("Exception while preparing destruction", e)
-        os._exit(1)
-
-    stop_gtk()
+    # close gui properly
+    gui_singletons.main_window_controller.get_controller('menu_bar_controller').on_quit_activate(None)
 
     post_gui_destruction()
 
