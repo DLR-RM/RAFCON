@@ -19,7 +19,7 @@ logger = log.get_logger(__name__)
 
 
 def avoid_parallel_execution(func):
-    """ A decorator to avoid the parallel execution of function. If a function is currently called, the second call
+    """ A decorator to avoid the parallel execution of a function. If the function is currently called, the second call
     is just skipped.
 
     :param func: The function to decorate
