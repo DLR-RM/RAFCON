@@ -371,7 +371,7 @@ class ExecutionEngine(Observable):
         """
         self.synchronization_lock.acquire()
         self.synchronization_counter += 1
-        logger.verbose("Increase synchronization_counter!")
+        # logger.verbose("Increase synchronization_counter!")
         self.synchronization_lock.release()
 
         woke_up_from_pause_or_step_mode = False
