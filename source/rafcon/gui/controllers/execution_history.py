@@ -349,7 +349,10 @@ class ExecutionHistoryTreeController(ExtendedController):
                 self.parent.focus_notebook_page_of_controller(self)
 
         if state_machine_execution_engine.status.execution_mode is not StateMachineExecutionStatus.STARTED:
-            self.update()
+            if not self.model.selected_state_machine_id == self.model.state_machine_manager.active_state_machine_id:
+                pass
+            else:
+                self.update()
 
     def clean_history(self, widget, event=None):
         """Triggered when the 'Clean History' button is clicked.
