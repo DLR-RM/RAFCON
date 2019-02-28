@@ -44,6 +44,7 @@ from rafcon.gui.controllers.state_machine_tree import StateMachineTreeController
 from rafcon.gui.controllers.state_machines_editor import StateMachinesEditorController
 from rafcon.gui.controllers.states_editor import StatesEditorController
 from rafcon.gui.controllers.tool_bar import ToolBarController
+from rafcon.gui.controllers.execution_ticker import ExecutionTickerController
 from rafcon.gui.controllers.undocked_window import UndockedWindowController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.views.main_window import MainWindowView
@@ -145,6 +146,12 @@ class MainWindowController(ExtendedController):
         ######################################################
         execution_history_ctrl = ExecutionHistoryTreeController(state_machine_manager_model, view.execution_history)
         self.add_controller('execution_history_ctrl', execution_history_ctrl)
+
+        ######################################################
+        # execution ticker
+        ######################################################
+        self.execution_ticker_ctrl = ExecutionTickerController(self.state_machine_execution_model, None)
+        self.add_controller('execution_ticker_ctrl', self.execution_ticker_ctrl)
 
         ######################################################
         # menu bar
@@ -276,6 +283,7 @@ class MainWindowController(ExtendedController):
 
         # hide not usable buttons
         self.view['step_buttons'].hide()
+
 
         # Initializing Main Window Size & Position
         # secure un maximize in initial condition to restore correct position and size

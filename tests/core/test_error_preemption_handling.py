@@ -33,6 +33,7 @@ class TestErrorPreemptionHandling(object):
 
     @classmethod
     def teardown_class(cls):
+        cls.state_machine = None
         testing_utils.shutdown_environment_only_core()
 
     def setup(self):
@@ -65,7 +66,7 @@ class TestErrorPreemptionHandling(object):
 
     def run_state_machine(self):
         sms = state_machine_manager.state_machines
-        state_machine_execution_engine.start(sms[sms.keys()[0]].state_machine_id)
+        state_machine_execution_engine.start(sms[list(sms.keys())[0]].state_machine_id)
         state_machine_execution_engine.join()
 
     @staticmethod
