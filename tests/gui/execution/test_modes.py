@@ -73,14 +73,15 @@ def iter_execution_modes():
     testing_utils.call_gui_callback(testing_utils.wait_for_gui)
     sm_m = gui_singleton.state_machine_manager_model.state_machines[sm_id]
 
-    def wait_for_sync_counter_change(current_sync_counter=None):
-        if current_sync_counter is None:
-            current_sync_counter = state_machine_execution_engine.synchronization_counter
-        print("##### before\n{0}\n#####".format(current_sync_counter))
+    def wait_for_sync_counter_change_and_wait_for_gui(current_sync_counter):
+        # if current_sync_counter is None:
+        #     current_sync_counter = state_machine_execution_engine.synchronization_counter
+        assert current_sync_counter is not None
+        print("##### before {0} #####".format(current_sync_counter))
         while current_sync_counter == state_machine_execution_engine.synchronization_counter:
             time.sleep(0.1)
-            print("##### in wait\n{0}\n#####".format(state_machine_execution_engine.synchronization_counter))
-        print("##### after\n{0}\n#####".format(state_machine_execution_engine.synchronization_counter))
+            print("##### in wait {0} #####".format(state_machine_execution_engine.synchronization_counter))
+        print("##### after {0} #####".format(state_machine_execution_engine.synchronization_counter))
         testing_utils.call_gui_callback(testing_utils.wait_for_gui)
 
     from gtkmvc3.observer import Observer
@@ -100,7 +101,7 @@ def iter_execution_modes():
             from rafcon.gui.utils.notification_overview import NotificationOverview
             overview = NotificationOverview(info)
             if overview['method_name'][-1] == 'state_execution_status':
-                print("CURRENT STATE: {0}".format(overview['model'][-1].state.get_path()))
+                # print("CURRENT STATE: {0}".format(overview['model'][-1].state.get_path()))
                 self.last_execution_change_at_state = overview['model'][-1].state.get_path()
 
     execution_observer = call_gui_callback(ActiveStateObserver, sm_m)
@@ -113,16 +114,20 @@ def iter_execution_modes():
     print("history length before: {0}\n".format(number_of_executions_before))
     current_sync_counter = state_machine_execution_engine.synchronization_counter
     testing_utils.call_gui_callback(menubar_ctrl.on_step_mode_activate, None)
-    wait_for_sync_counter_change(current_sync_counter)
+    wait_for_sync_counter_change_and_wait_for_gui(current_sync_counter)
     number_of_executions_after = len(execution_history_ctrl.history_tree_store)
     print("history length after1: {0}\n".format(number_of_executions_after))
-    # in the gui this works but here it often fails without sleep
-    i1 = 0.
-    while not number_of_executions_before + 1 == number_of_executions_after and not i1 > 2.:
-        time.sleep(0.1)
-        i1 += 0.1
-    print("history length after2: {0}\n".format(number_of_executions_after))
-    # assert number_of_executions_before + 1 == number_of_executions_after  # TODO uncomment and include into test
+    # Rico's old code:
+    # in the gui this works but here it often fails without sleep; TODO: this cannot be!
+    # i1 = 0.
+    # this while will never work! number_of_executions_before/after hold number copies and no references to numbers!
+    # while not number_of_executions_before + 1 == number_of_executions_after and not i1 > 2.:
+    #     time.sleep(0.1)
+    #     i1 += 0.1
+    # print("history length after2: {0}\n".format(number_of_executions_after))
+    # this must not work! the execution history is not observing the state_machine itself but the execution_engine
+    # and we should not change that for performance reasons!
+    # assert number_of_executions_before + 1 == number_of_executions_after
 
     # active state should not change from step mode to pause -> this can cause bad situations with a robot in the loop
     last_active_state = execution_observer.last_execution_change_at_state
@@ -149,19 +154,21 @@ def iter_execution_modes():
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
     testing_utils.call_gui_callback(testing_utils.wait_for_gui)  # propagate securely the stop
-    time.sleep(0.5)
+
 
     ############################################################
     print("{0}# EXAMPLE #2: RUN root state till finished{0}".format('\n' + 40 * '#' + '\n'))
     ############################################################
     # check that new execution history is shown in widget -> if not shown you may look into the wrong history
+    # Look out! if you want to work with the execution history either trigger a execution command or use reload
+    testing_utils.call_gui_callback(execution_history_ctrl.reload_history, None)
     number_of_executions_before = len(execution_history_ctrl.history_tree_store)
-    time.sleep(0.2)
     print("history length before: {0}\n".format(number_of_executions_before))
     testing_utils.call_gui_callback(menubar_ctrl.on_start_activate, None)
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
     testing_utils.call_gui_callback(testing_utils.wait_for_gui)
+    testing_utils.call_gui_callback(execution_history_ctrl.reload_history, None)
     number_of_executions_after = len(execution_history_ctrl.history_tree_store)
     print("history length after: {0}\n".format(number_of_executions_after))
     assert number_of_executions_before + 1 == number_of_executions_after
@@ -177,7 +184,7 @@ def iter_execution_modes():
     # print("history length before: {0}\n".format(number_of_executions_before))
     # current_sync_counter = state_machine_execution_engine.synchronization_counter
     # testing_utils.call_gui_callback(menubar_ctrl.on_start_activate, None)
-    # wait_for_sync_counter_change(current_sync_counter)
+    # wait_for_sync_counter_change_and_wait_for_gui(current_sync_counter)
     #
     # time.sleep(0.5)  # TODO why I need this sleeps
     # testing_utils.call_gui_callback(menubar_ctrl.on_pause_activate, None)
@@ -205,7 +212,7 @@ def iter_execution_modes():
     # print("history length before: {0}\n".format(number_of_executions_before))
     # current_sync_counter = state_machine_execution_engine.synchronization_counter
     # testing_utils.call_gui_callback(menubar_ctrl.on_start_activate, None)
-    # wait_for_sync_counter_change(current_sync_counter)
+    # wait_for_sync_counter_change_and_wait_for_gui(current_sync_counter)
     # number_of_executions_after = len(execution_history_ctrl.history_tree_store)
     # print("history length after: {0}\n".format(number_of_executions_after))
     # testing_utils.call_gui_callback(menubar_ctrl.on_stop_activate, None)
@@ -222,28 +229,33 @@ def iter_execution_modes():
     print("{0}# EXAMPLE #5: step mode (step over) with first state hierarchy state {0}".format('\n' + 40 * '#' + '\n'))
     ############################################################
     # testing_utils.call_gui_callback(sm_m.root_state.state.__setattr__, 'start_state_id', add_start_state_id)
-    execution_observer.reset()
+    testing_utils.call_gui_callback(testing_utils.wait_for_gui)
+    testing_utils.call_gui_callback(execution_observer.reset)
     # check that execution does a step over even if the first state is a hierarchy state
     last_active_state = execution_observer.last_execution_change_at_state
     print("#0 {0}".format(last_active_state))
+
     current_sync_counter = state_machine_execution_engine.synchronization_counter
     testing_utils.call_gui_callback(menubar_ctrl.on_step_mode_activate, None)
-    wait_for_sync_counter_change(current_sync_counter)
+    wait_for_sync_counter_change_and_wait_for_gui(current_sync_counter)
     current_active_state = execution_observer.last_execution_change_at_state
     print("#1 {0}".format(current_active_state))
+
     current_sync_counter = state_machine_execution_engine.synchronization_counter
     testing_utils.call_gui_callback(menubar_ctrl.on_step_over_activate, None)
-    wait_for_sync_counter_change(current_sync_counter)
+    wait_for_sync_counter_change_and_wait_for_gui(current_sync_counter)
     after_so1_current_active_state = execution_observer.last_execution_change_at_state
     print("#2 {0}".format(after_so1_current_active_state))
+
     current_sync_counter = state_machine_execution_engine.synchronization_counter
     testing_utils.call_gui_callback(menubar_ctrl.on_step_over_activate, None)
-    wait_for_sync_counter_change(current_sync_counter)
+    wait_for_sync_counter_change_and_wait_for_gui(current_sync_counter)
     after_so2_current_active_state = execution_observer.last_execution_change_at_state
     print("#3 {0}".format(after_so2_current_active_state))
+
     current_sync_counter = state_machine_execution_engine.synchronization_counter
     testing_utils.call_gui_callback(menubar_ctrl.on_step_over_activate, None)
-    wait_for_sync_counter_change(current_sync_counter)
+    wait_for_sync_counter_change_and_wait_for_gui(current_sync_counter)
     after_so3_current_active_state = execution_observer.last_execution_change_at_state
     print("#4 {0}".format(after_so3_current_active_state))
 
@@ -252,6 +264,8 @@ def iter_execution_modes():
     assert len(after_so3_current_active_state.split('/')) == len(after_so2_current_active_state.split('/'))
 
     execution_observer.relieve_model(sm_m)
+
+    return
 
 
 def test_execution_modes(caplog):
@@ -267,7 +281,6 @@ def test_execution_modes(caplog):
 
 
 if __name__ == '__main__':
-    testing_utils.dummy_gui(None)
     test_execution_modes(None)
     # import pytest
     # pytest.main(['-s', __file__])
