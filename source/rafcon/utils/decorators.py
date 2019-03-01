@@ -26,13 +26,13 @@ def avoid_parallel_execution(func):
     :return:
     """
     def func_wrapper(*args, **kwargs):
-        if not hasattr(func, "currently_executing"):
-            func.currently_executing = False
-        if not func.currently_executing:
+        if not getattr(func, "currently_executing", False):
             func.currently_executing = True
-            return_value = func(*args, **kwargs)
-            func.currently_executing = False
-            return return_value
+            try:
+                return_value = func(*args, **kwargs)
+            finally:
+                func.currently_executing = False
+                return return_value
         else:
             logger.verbose("Avoid parallel execution of function {}".format(func))
             return
