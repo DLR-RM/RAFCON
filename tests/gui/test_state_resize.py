@@ -145,7 +145,9 @@ def test_simple_state_size_resize(state_path, recursive, rel_size, caplog, monke
                               'LEFT_BAR_HIDDEN': True,
                               'RIGHT_BAR_HIDDEN': True,
                               'CONSOLE_HIDDEN': True,
-                              'MAIN_WINDOW_SIZE': (1000.0, 800.0)
+                              'MAIN_WINDOW_SIZE': (1000.0, 800.0),
+                              'MAIN_WINDOW_MAXIMIZED': False,
+                              'MAIN_WINDOW_POS': (60, 120)
                           }
                           )
 
