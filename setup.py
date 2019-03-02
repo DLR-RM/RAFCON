@@ -121,7 +121,7 @@ setup(
     data_files=installation.generate_data_files(),
 
     setup_requires=['Sphinx>=1.4', 'libsass >= 0.15.0'] + global_requirements,
-    tests_require=['pytest', 'pytest-catchlog', 'graphviz', 'pymouse'] + global_requirements,
+    tests_require=['pytest', 'pytest-catchlog', 'graphviz', 'pyuserinput'] + global_requirements,
     install_requires=global_requirements,
 
     sass_manifests={
