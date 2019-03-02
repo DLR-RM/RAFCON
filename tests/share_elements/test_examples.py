@@ -92,7 +92,14 @@ def test_functionality_example(caplog):
         # main_window_controller = rafcon.gui.singleton.main_window_controller
         for state_machine_id in list(rafcon.core.singleton.state_machine_manager.state_machines.keys()):
             rafcon.core.singleton.state_machine_execution_engine.start(state_machine_id)
-            time.sleep(3)
+            max_time = 3
+            current_time = 0.0
+            sleep_time = 0.2
+            while not rafcon.core.singleton.state_machine_execution_engine.finished_or_stopped():
+                time.sleep(sleep_time)
+                current_time += sleep_time
+                if current_time >= max_time:
+                    break
             rafcon.core.singleton.state_machine_execution_engine.stop()
             rafcon.core.singleton.state_machine_execution_engine.join()
     finally:
@@ -111,7 +118,9 @@ def test_plugins_example(caplog):
     try:
         cmd = join(testing_utils.RAFCON_PATH, 'gui', 'start.py') + ' -o ' + path_of_sm_to_run + " -ss"
         start_time = time.time()
-        rafcon_gui_process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # use exec! otherwise the terminate() call ends up killing the shell process and cmd is still running
+        # https://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
+        rafcon_gui_process = subprocess.Popen("exec " + cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # See https://stackoverflow.com/a/36477512 for details
         # Note: This (select and poll) only works on POSIX systems, not on Windows!
         poller = select.poll()
@@ -132,6 +141,9 @@ def test_plugins_example(caplog):
                     print("=> RAFCON is now terminated")
                     rafcon_gui_process.terminate()
                     stdout, _ = rafcon_gui_process.communicate()
+                    # print("stdout: ", stdout)
+                    print("something: ", _)
+                    print("rafcon_gui_process.returncode", rafcon_gui_process.returncode)
                     exception_count = 0
                     for line in stdout.rstrip().split("\n"):
                         print("process:", line)
@@ -157,10 +169,10 @@ def test_tutorial_state_machine_examples(caplog):
 
 
 if __name__ == '__main__':
-    # test_api_example(None)
-    # test_ros_library_examples(None)
-    # test_turtle_library_examples(None)
-    # test_functionality_example(None)
-    # test_plugins_example(None)
-    # test_tutorial_state_machine_examples(None)
-    pytest.main(['-s', __file__])
+    test_api_example(None)
+    test_ros_library_examples(None)
+    test_turtle_library_examples(None)
+    test_functionality_example(None)
+    test_plugins_example(None)
+    test_tutorial_state_machine_examples(None)
+    # pytest.main(['-s', __file__])
