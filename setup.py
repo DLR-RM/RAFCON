@@ -46,7 +46,7 @@ class PyTest(TestCommand):
         # self.pytest_args = '-vx -s -k "core or gui or share_elements or user_input"'
         # self.pytest_args = '-vx -s -k "core or gui or share_elements"'
         # self.pytest_args = '-vx -s -k "user_input"'
-        self.pytest_args = '-vx -k "not tests_in_processes and not assests and not network ' \
+        self.pytest_args = '-vx -s -k "not tests_in_processes and not assests and not network ' \
                            'and not performance and not user_input"'
 
     def run_tests(self):
