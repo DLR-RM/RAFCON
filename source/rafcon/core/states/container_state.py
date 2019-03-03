@@ -82,6 +82,7 @@ class ContainerState(State):
         # condition variable to wait for not connected states
         self._transitions_cv = Condition()
         self._child_execution = False
+        self._start_state_modified = False
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes)
 
@@ -251,6 +252,7 @@ class ContainerState(State):
         super(ContainerState, self).setup_run()
         # reset the scoped data
         self._scoped_data = {}
+        self._start_state_modified = False
         self.add_default_values_of_scoped_variables_to_scoped_data()
         self.add_input_data_to_scoped_data(self.input_data)
 
@@ -1096,6 +1098,7 @@ class ContainerState(State):
             for state_id, state in self.states.items():
                 if state.get_path() in state_machine_execution_engine.start_state_paths:
                     state_machine_execution_engine.start_state_paths.remove(self.get_path())
+                    self._start_state_modified = True
                     return state
 
         if self.start_state_id is None:

@@ -99,7 +99,11 @@ class HierarchyState(ContainerState):
                 self.handling_execution_mode = True
                 execution_mode = singleton.state_machine_execution_engine.handle_execution_mode(self, self.child_state)
 
-                self.check_if_child_state_was_modified()
+                # in the case of starting the sm from a specific state not the transitions define the logic flow
+                # but the the execution_engine.run_to_states; thus, do not alter the next state in this case
+                if not self._start_state_modified:
+                    # check if e.g. the state machine was paused and the next state was modified (e.g. removed)
+                    self.check_if_child_state_was_modified()
 
                 self.handling_execution_mode = False
                 if self.state_execution_status is not StateExecutionStatus.EXECUTE_CHILDREN:
