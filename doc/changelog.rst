@@ -14,6 +14,7 @@ Next Release
 
 - Features:
 
+  - add ExecutionTicker to see activity of state machine with high hierarchy depth
 
 - Improvements:
   
@@ -23,7 +24,9 @@ Next Release
 
   - :issue_ghe:`678` script validation does not work
   - :issue_ghe:`663` cannot rename connected data port of type object
+  - :issue_ghe:`684` ``test_simple_execution_model_and_core_destruct_with_gui`` fails when running core & gui tests in a row
   - fix pause and step mode behavior
+  - installation of fonts under Python 3
 
 - Changes:
 
@@ -135,7 +138,7 @@ Patch releases 0.12.\*
 ----------------------
 
 0.12.25
--------
+"""""""
 
 - Improvements:
 
@@ -150,7 +153,7 @@ Patch releases 0.12.\*
 
 
 0.12.24
--------
+"""""""
 
 - Improvements:
 
@@ -162,7 +165,7 @@ Patch releases 0.12.\*
 
 
 0.12.23
--------
+"""""""
 
 - Improvements:
 
