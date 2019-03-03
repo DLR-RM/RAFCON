@@ -87,9 +87,9 @@ def test_step_through_library(caplog):
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
-    state_machine_execution_engine.synchronization_lock.acquire()
+    state_machine_execution_engine._status.execution_condition_variable.acquire()
     state_machine_execution_engine.synchronization_counter = 0
-    state_machine_execution_engine.synchronization_lock.release()
+    state_machine_execution_engine._status.execution_condition_variable.release()
 
     rafcon.core.singleton.state_machine_execution_engine.step_mode(state_machine.state_machine_id)
     wait_for_execution_engine_sync_counter(1, logger)
@@ -109,7 +109,7 @@ def test_step_through_library(caplog):
     wait_for_execution_engine_sync_counter(1, logger)
 
     rafcon.core.singleton.state_machine_execution_engine.step_out()
-    wait_for_execution_engine_sync_counter(2, logger)
+    wait_for_execution_engine_sync_counter(1, logger)
 
     # step till library
     rafcon.core.singleton.state_machine_execution_engine.step_over()

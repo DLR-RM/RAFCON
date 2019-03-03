@@ -59,8 +59,12 @@ class ExecutionEngine(Observable):
         self._run_to_states = []
         self.run_to_states = []
         self.state_machine_running = False
+        # the thread, that wants to synchronize, has to acquire the self._status.execution_condition_variable
+        # then it can read or set the synchronization_counter; this is only relevant for tests
         self.synchronization_counter = 0
-        self.synchronization_lock = Lock()
+        # counts how often a state asks for the current execution status
+        self.state_counter = 0
+        self.state_counter_lock = Lock()
 
     @Observable.observed
     def pause(self):
@@ -300,6 +304,8 @@ class ExecutionEngine(Observable):
                 or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
             try:
                 self._status.execution_condition_variable.acquire()
+                self.synchronization_counter += 1
+                logger.verbose("Increase synchronization_counter: " + str(self.synchronization_counter))
                 self._status.execution_condition_variable.wait()
             finally:
                 self._status.execution_condition_variable.release()
@@ -347,6 +353,8 @@ class ExecutionEngine(Observable):
             logger.debug("Stepping mode: waiting for next step!")
             try:
                 self._status.execution_condition_variable.acquire()
+                self.synchronization_counter += 1
+                logger.verbose("Increase synchronization_counter: " + str(self.synchronization_counter))
                 self._status.execution_condition_variable.wait()
             finally:
                 self._status.execution_condition_variable.release()
@@ -368,10 +376,10 @@ class ExecutionEngine(Observable):
         :param next_child_state_to_execute: is the next child state of :param state to be executed
         :return: the current state machine execution status
         """
-        self.synchronization_lock.acquire()
-        self.synchronization_counter += 1
-        # logger.verbose("Increase synchronization_counter!")
-        self.synchronization_lock.release()
+        self.state_counter_lock.acquire()
+        self.state_counter += 1
+        # logger.verbose("Increase state_counter!" + str(self.state_counter))
+        self.state_counter_lock.release()
 
         woke_up_from_pause_or_step_mode = False
 
