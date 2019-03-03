@@ -277,7 +277,7 @@ def test_execution_modes(caplog):
         raise
     finally:
         testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=1)
 
 
 if __name__ == '__main__':
