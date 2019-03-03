@@ -103,7 +103,8 @@ def trigger_gui_signals(*args):
     main_window_controller = rafcon.gui.singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     global_runtime_config = rafcon.gui.singleton.global_runtime_config
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, create_state_machine())
+    state_machine = call_gui_callback(create_state_machine)
+    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, state_machine)
     assert isinstance(menubar_ctrl, MenuBarController)
     assert isinstance(sm_manager_model, StateMachineManagerModel)
 
