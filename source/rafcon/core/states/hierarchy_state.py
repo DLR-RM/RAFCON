@@ -150,9 +150,11 @@ class HierarchyState(ContainerState):
 
     def check_if_child_state_was_modified(self):
         # Check if a new state was inserted after the state machine was paused
-        if self.last_child: # this is the case, if at least the entry state was already executed
+        new_child_state = None
+        if self.last_child:  # this is the case, if at least the entry state was already executed
             transition = self.get_transition_for_outcome(self.last_child, self.last_child.final_outcome)
-            new_child_state = self.get_state_for_transition(transition)
+            if transition:
+                new_child_state = self.get_state_for_transition(transition)
         else:  # self.last_child is none in the case that self.child_state is the entry state
             new_child_state = self.get_start_state(set_final_outcome=True)
 
