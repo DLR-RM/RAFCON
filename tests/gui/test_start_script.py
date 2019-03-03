@@ -106,6 +106,7 @@ def test_start_script_valid_rmpm_env():
         "DLRRM_HOST_PLATFORM", "osl42-x86_64")) + rmpm_env["PATH"]
     if not distutils.spawn.find_executable("rmpm_do"):
         print("Could not find rmpm_do, skipping test")
+        return
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     config = join(testing_utils.TESTS_PATH, "assets", "configs", "valid_config", "config.yaml")
     cmd = "eval `rmpm_do env --env-format=embed_sh sw.common.rafcon` && rafcon_core -o {0} -c {1}" \
