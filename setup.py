@@ -44,8 +44,10 @@ class PyTest(TestCommand):
         TestCommand.initialize_options(self)
         # Add further test folder with 'or my_test_folder'
         # self.pytest_args = '-vx -s -k "core or gui or share_elements or user_input"'
-        self.pytest_args = '-vx -s -k "core or gui or share_elements"'
+        # self.pytest_args = '-vx -s -k "core or gui or share_elements"'
         # self.pytest_args = '-vx -s -k "user_input"'
+        self.pytest_args = '-vx -s -k "not tests_in_processes and not assests and not network ' \
+                           'and not performance and not user_input"'
 
     def run_tests(self):
         import shlex
@@ -121,7 +123,7 @@ setup(
     data_files=installation.generate_data_files(),
 
     setup_requires=['Sphinx>=1.4', 'libsass >= 0.15.0'] + global_requirements,
-    tests_require=['pytest', 'pytest-catchlog', 'graphviz', 'pymouse'] + global_requirements,
+    tests_require=['pytest', 'pytest-catchlog', 'graphviz', 'pyuserinput'] + global_requirements,
     install_requires=global_requirements,
 
     sass_manifests={

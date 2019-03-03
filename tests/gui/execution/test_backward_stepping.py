@@ -6,6 +6,7 @@ import time
 # test environment elements
 import testing_utils
 from testing_utils import call_gui_callback, wait_for_execution_engine_sync_counter
+from gui.execution import state_machines_editor_tab_status_check
 
 # general tool elements
 from rafcon.utils import log
@@ -30,11 +31,13 @@ def execute_library_state_forwards_backwards():
     testing_utils.wait_for_gui()
     # reset the synchronization counter; although the tests run in different processes they share their memory
     # as the import statements are at the top of the file and not inside the parallel called functions
-    state_machine_execution_engine.synchronization_lock.acquire()
+    state_machine_execution_engine._status.execution_condition_variable.acquire()
     state_machine_execution_engine.synchronization_counter = 0
-    state_machine_execution_engine.synchronization_lock.release()
+    state_machine_execution_engine._status.execution_condition_variable.release()
 
     call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
+    current_state_machine_id = gui_singleton.state_machine_manager.active_state_machine_id
+    state_machines_editor_tab_status_check(current_state_machine_id, active=True)  # execution start is synchronous
     wait_for_execution_engine_sync_counter(1, logger)
 
     # forward
@@ -54,8 +57,8 @@ def execute_library_state_forwards_backwards():
     for key, sd in sm.root_state.scoped_data.items():
         if sd.name == "beer_count":
             assert sd.value == 100
-
-    call_gui_callback(menubar_ctrl.on_stop_activate, None)
+    # stop or finished are asynchronous but the call_gui_callback makes the check synchronous
+    call_gui_callback(state_machines_editor_tab_status_check, current_state_machine_id, False)
 
 
 def test_backward_stepping_library_state(caplog):
@@ -98,11 +101,13 @@ def execute_preemptive_state_forwards_backwards():
 
     # reset the synchronization counter; although the tests run in different processes they share their memory
     # as the import statements are at the top of the file and not inside the parallel called functions
-    state_machine_execution_engine.synchronization_lock.acquire()
+    state_machine_execution_engine._status.execution_condition_variable.acquire()
     state_machine_execution_engine.synchronization_counter = 0
-    state_machine_execution_engine.synchronization_lock.release()
+    state_machine_execution_engine._status.execution_condition_variable.release()
 
     call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
+    current_state_machine_id = gui_singleton.state_machine_manager.active_state_machine_id
+    state_machines_editor_tab_status_check(current_state_machine_id, active=True)  # execution start is synchronous
 
     wait_for_execution_engine_sync_counter(1, logger)
 
@@ -126,13 +131,15 @@ def execute_preemptive_state_forwards_backwards():
         call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(2, logger)
 
+    state_machines_editor_tab_status_check(current_state_machine_id, active=True)
     call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
 
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
+    # stop or finished are asynchronous but the call_gui_callback makes the check synchronous
+    call_gui_callback(state_machines_editor_tab_status_check, current_state_machine_id, False)
 
     call_gui_callback(verify_execute_preemptive_state_forwards_backwards)
-    call_gui_callback(menubar_ctrl.on_stop_activate, None)
 
 
 def test_backward_stepping_preemptive_state(caplog):
@@ -160,9 +167,9 @@ def execute_barrier_state_forwards_backwards():
 
     # reset the synchronization counter; although the tests run in different processes they share their memory
     # as the import statements are at the top of the file and not inside the parallel called functions
-    state_machine_execution_engine.synchronization_lock.acquire()
+    state_machine_execution_engine._status.execution_condition_variable.acquire()
     state_machine_execution_engine.synchronization_counter = 0
-    state_machine_execution_engine.synchronization_lock.release()
+    state_machine_execution_engine._status.execution_condition_variable.release()
 
     call_gui_callback(menubar_ctrl.on_step_mode_activate, sm.state_machine_id, None)
     wait_for_execution_engine_sync_counter(1, logger)
@@ -176,7 +183,7 @@ def execute_barrier_state_forwards_backwards():
     wait_for_execution_engine_sync_counter(3, logger)
 
     call_gui_callback(menubar_ctrl.on_step_out_activate, None, None)
-    wait_for_execution_engine_sync_counter(4, logger)
+    wait_for_execution_engine_sync_counter(1, logger)
 
     for i in range(3):
         call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
@@ -235,4 +242,5 @@ if __name__ == '__main__':
     # test_backward_stepping_library_state(None)
     test_backward_stepping_barrier_state(None)
     # test_backward_stepping_preemptive_state(None)
+    # import pytest
     # pytest.main(['-s', __file__])

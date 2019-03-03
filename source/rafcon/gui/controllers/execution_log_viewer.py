@@ -15,6 +15,7 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GObject
 import shelve
+import os.path
 
 import rafcon.utils.execution_log as log_helper
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -32,6 +33,10 @@ class ExecutionLogTreeController(ExtendedController):
 
         logger.verbose("Select run_id: {0}".format(run_id_to_select))
         super(ExecutionLogTreeController, self).__init__(model, view)
+
+        if not os.path.isfile(filename):
+            logger.error("File does not exist!")
+            exit()
 
         self.run_id_to_select = run_id_to_select
         self.hist_items = shelve.open(filename, 'r')

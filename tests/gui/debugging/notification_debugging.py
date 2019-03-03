@@ -47,10 +47,11 @@ def create_bigger_state_machine():
 def patch_notifications():
     enable_debugging()
     # call_gui_callback(create_bigger_state_machine)
-    # call_gui_callback(create_small_state_machine)
-    from gui.widget.test_storage import create_models
-    call_gui_callback(create_models)
-    show_debug_graph()
+    call_gui_callback(create_small_state_machine)
+    # from gui.widget.test_storage import create_models
+    # call_gui_callback(create_models)
+    testing_utils.wait_for_gui()
+    call_gui_callback(show_debug_graph)
     disable_debugging()
 
     from testing_utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
