@@ -6,7 +6,7 @@ import time
 import pytest
 
 import testing_utils
-from testing_utils import call_gui_callback
+from testing_utils import call_gui_callback, wait_for_gui
 
 
 sm_path_recursive_resize = os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines", "recursive_resize")
@@ -30,7 +30,7 @@ def open_test_state_machine():
 
     call_gui_callback(menubar_ctrl.on_open_activate, None, None, sm_path_recursive_resize)
     time.sleep(0.5)
-    testing_utils.wait_for_gui()  # Wait for gaphas view
+    call_gui_callback(wait_for_gui)  # Wait for gaphas view
 
     sm_m = smm_m.state_machines[smm_m.selected_state_machine_id]
     sm_id = sm_m.state_machine.state_machine_id
@@ -70,6 +70,7 @@ def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypa
     button_press_event = Gdk.Event.new(type=Gdk.EventType.BUTTON_PRESS)
     button_press_event.button = 1
     call_gui_callback(resize_tool.on_button_press, button_press_event)
+    call_gui_callback(wait_for_gui)
     # Do resize: Move mouse
     motion_event = Gdk.Event.new(Gdk.EventType.MOTION_NOTIFY)
     motion_event.state = motion_event.get_state()[1] | Gdk.EventMask.BUTTON_PRESS_MASK
@@ -80,12 +81,14 @@ def resize_state(view, state_v, rel_size, num_motion_events, recursive, monkeypa
         motion_event.x = start_pos_handle[0] + rel_size[0] * (float(i + 1) / num_motion_events)
         motion_event.y = start_pos_handle[1] + rel_size[1] * (float(i + 1) / num_motion_events)
         call_gui_callback(resize_tool.on_motion_notify, motion_event)
+        call_gui_callback(wait_for_gui)
 
     # Stop resize: Release button
     # Gtk TODO: Check if button can be set like this
     button_release_event = Gdk.Event.new(type=Gdk.EventType.BUTTON_RELEASE)
     button_release_event.button = 1
     call_gui_callback(resize_tool.on_button_release, button_release_event)
+    call_gui_callback(wait_for_gui)
 
     monkeypatch.undo()
     monkeypatch.undo()
@@ -185,19 +188,23 @@ def test_simple_state_size_resize(state_path, recursive, rel_size, caplog, monke
         assert_state_size_and_meta_data_consistency(state_m, state_v, orig_state_size, canvas)
 
         call_gui_callback(sm_m.history.undo)
+        call_gui_callback(wait_for_gui)
         print("\nfirst undo:")
         print_state_sizes(state_m, canvas, ["C"])
         assert_state_size_and_meta_data_consistency(state_m, state_v, new_state_size, canvas)
 
         call_gui_callback(sm_m.history.undo)
+        call_gui_callback(wait_for_gui)
         print("\nsecond undo:")
         print_state_sizes(state_m, canvas, ["C"])
         assert_state_size_and_meta_data_consistency(state_m, state_v, orig_state_size, canvas)
 
         call_gui_callback(sm_m.history.redo)
+        call_gui_callback(wait_for_gui)
         assert_state_size_and_meta_data_consistency(state_m, state_v, new_state_size, canvas)
 
         call_gui_callback(sm_m.history.redo)
+        call_gui_callback(wait_for_gui)
         assert_state_size_and_meta_data_consistency(state_m, state_v, orig_state_size, canvas)
 
     finally:
