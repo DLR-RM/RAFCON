@@ -19,9 +19,10 @@ def test_start_script_open():
     """
     testing_utils.dummy_gui(None)
 
+    python_executable = str(sys.executable)
     script = join(testing_utils.RAFCON_PATH, "core", "start.py")
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
-    cmd = "%s -o %s" % (script, start_path)
+    cmd = "%s %s -o %s" % (python_executable, script, start_path)
     print("\ntest_start_script_open: \n", cmd)
     cmd_res = subprocess.call(cmd, shell=True)
     assert cmd_res == 0
@@ -127,7 +128,7 @@ def test_start_script_print_help_with_gui():
     script = join(testing_utils.RAFCON_PATH, "gui", "start.py")
     # start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     # cmd = "%s -o %s" % (script, start_path)
-    cmd = script + " -h"
+    cmd = sys.executable + " " + script + " -h"
     print("\ntest_start_script_open_with_gui: ", cmd)
     rafcon_gui_process = subprocess.Popen(cmd, shell=True)
     print("process PID: ", rafcon_gui_process.pid)
