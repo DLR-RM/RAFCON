@@ -261,7 +261,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 child_iter = self.history_tree_store.iter_nth_child(child_tree_iter, 0)
                 history_item = self.history_tree_store[child_iter][self.HISTORY_ITEM_STORAGE_ID]
             else:
-                logger.warning("In a dummy history should be respective real call element.")
+                logger.debug("In a dummy history should be respective real call element.")
         return history_item
 
     def _store_expansion_state(self):
