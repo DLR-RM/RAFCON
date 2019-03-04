@@ -230,7 +230,6 @@ def test_bug_issue_574(caplog):
 
 def trigger_issue_586_reproduction_sequence():
     from os.path import join
-    import rafcon.core.singleton
     import rafcon.gui.singleton
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_controller = rafcon.gui.singleton.main_window_controller
@@ -238,20 +237,24 @@ def trigger_issue_586_reproduction_sequence():
     current_sm_length = len(sm_manager_model.state_machines)
     assert current_sm_length == 0
 
+    # backward step barrier test is chosen to work on an existing test state machine including equal child state ids
     call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TEST_ASSETS_PATH,
                                                                       "unit_test_state_machines",
                                                                       "backward_step_barrier_test"))
     sm_m = list(sm_manager_model.state_machines.values())[0]
     assert sm_m.state_machine_id == sm_manager_model.selected_state_machine_id
     concurrent_decimate_state_m = sm_m.get_state_model_by_path("GLSUJY/OOECFM")
-    decimate_beers_state_m = sm_m.get_state_model_by_path("GLSUJY/OOECFM/YVNWJU")
-    # check start conditions overlapping ids
-    state_ids = list(concurrent_decimate_state_m.states.keys())
+
+    # check start conditions overlapping ids -> all states have four states and those have the same ids
     import rafcon.core.constants
+    state_ids = list(concurrent_decimate_state_m.states.keys())
     state_ids.remove(rafcon.core.constants.UNIQUE_DECIDER_STATE_ID)
-    beer_child_state_ids = decimate_beers_state_m.states.keys()
+
+    state_ids_set = set()
     for state_id in state_ids:
-        assert all([child_id in beer_child_state_ids for child_id in concurrent_decimate_state_m.states[state_id].states.keys()])
+        for child_state_id in concurrent_decimate_state_m.states[state_id].states.keys():
+            state_ids_set.add(child_state_id)
+        assert len(state_ids_set) == 4
 
     call_gui_callback(sm_m.selection.set, concurrent_decimate_state_m)
     call_gui_callback(menubar_ctrl.on_ungroup_state_activate, None, None)
