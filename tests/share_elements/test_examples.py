@@ -129,7 +129,7 @@ def test_plugins_example(caplog):
         plugin_loaded = False
         while True:
             if poller.poll(0.1):
-                line = rafcon_gui_process.stdout.readline().rstrip()
+                line = str(rafcon_gui_process.stdout.readline()).rstrip()
                 print("process:", line)
                 if "Successfully loaded plugin 'templates'" in line:
                     print("=> plugin loaded")
@@ -145,7 +145,7 @@ def test_plugins_example(caplog):
                     print("something: ", _)
                     print("rafcon_gui_process.returncode", rafcon_gui_process.returncode)
                     exception_count = 0
-                    for line in stdout.rstrip().split("\n"):
+                    for line in str(stdout.rstrip()).split("\n"):
                         print("process:", line)
                         if "Exception" in line:
                             exception_count += 1
