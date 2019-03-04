@@ -1,6 +1,6 @@
-Develop branch: |pic1|
+Develop branch: |build_status_develop|
 
-.. |pic1| image:: http://213.136.81.227:8080/buildStatus/icon?job=rafcon_github
+.. |build_status_develop| image:: http://213.136.81.227:8080/buildStatus/icon?job=rafcon_github
    :target: http://213.136.81.227:8080/buildStatus/icon?job=rafcon_github
 
 
