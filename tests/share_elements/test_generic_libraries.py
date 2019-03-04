@@ -91,7 +91,7 @@ def test_preemption_of_all_state_machines_at_once(caplog):
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=4)
 
 if __name__ == '__main__':
-    import pytest
     # test_preemption_of_all_state_machines_at_once(None)
-    # test_all_generic_libraries_in_a_row(None)
-    pytest.main(['-s', __file__])
+    test_all_generic_libraries_in_a_row(None)
+    # import pytest
+    # pytest.main(['-s', __file__])
