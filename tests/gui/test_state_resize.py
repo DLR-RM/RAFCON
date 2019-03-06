@@ -125,6 +125,7 @@ def print_state_sizes(state_m, canvas, state_names=None):
             print_state_sizes(child_state_m, canvas)
 
 
+@pytest.mark.unstable
 @pytest.mark.parametrize("state_path,recursive,rel_size", [
     (state_path_root, False, (40, 40)),
     (state_path_root, True, (40, 40)),

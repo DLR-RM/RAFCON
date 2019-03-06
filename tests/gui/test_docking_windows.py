@@ -216,6 +216,7 @@ def check_pane_positions():
     #     assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 95)
 
 
+@pytest.mark.unstable
 def test_window_positions(caplog):
     testing_utils.run_gui(core_config=None,
                           runtime_config={
@@ -249,6 +250,7 @@ def test_window_positions(caplog):
         testing_utils.shutdown_environment(caplog=caplog)
 
 
+@pytest.mark.unstable
 def test_pane_positions(caplog):
     testing_utils.run_gui(core_config=None,
                           gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},

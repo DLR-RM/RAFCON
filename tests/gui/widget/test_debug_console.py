@@ -118,6 +118,7 @@ def trigger_logging_view_gui_signals():
     print("finished debug console test")
 
 
+@pytest.mark.unstable
 def test_logging_view_widget(caplog):
     from os.path import join
 
