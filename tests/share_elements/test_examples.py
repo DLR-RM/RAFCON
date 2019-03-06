@@ -109,7 +109,11 @@ def test_plugins_example(caplog):
     # testing_utils.initialize_environment()
     testing_utils.test_multithreading_lock.acquire()
     try:
-        cmd = join(testing_utils.RAFCON_PATH, 'gui', 'start.py') + ' -o ' + path_of_sm_to_run + " -ss"
+        cmd = "{python} {start_script} -o {state_machine} -ss".format(
+            python=str(sys.executable),
+            start_script=join(testing_utils.RAFCON_PATH, 'gui', 'start.py'),
+            state_machine=path_of_sm_to_run
+        )
         start_time = time.time()
         rafcon_gui_process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # See https://stackoverflow.com/a/36477512 for details
@@ -119,8 +123,8 @@ def test_plugins_example(caplog):
 
         plugin_loaded = False
         while True:
-            if poller.poll(0.1):
-                line = rafcon_gui_process.stdout.readline().rstrip()
+            if poller.poll(100):
+                line = str(rafcon_gui_process.stdout.readline()).rstrip()
                 print("process:", line)
                 if "Successfully loaded plugin 'templates'" in line:
                     print("=> plugin loaded")
@@ -133,7 +137,7 @@ def test_plugins_example(caplog):
                     rafcon_gui_process.terminate()
                     stdout, _ = rafcon_gui_process.communicate()
                     exception_count = 0
-                    for line in stdout.rstrip().split("\n"):
+                    for line in str(stdout.rstrip()).split("\n"):
                         print("process:", line)
                         if "Exception" in line:
                             exception_count += 1
