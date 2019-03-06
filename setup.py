@@ -61,7 +61,7 @@ with open(readme_file_path, "r") as f:
 global_requirements = ['pylint>=1.6,<2', 'pyyaml~=3.10', 'psutil', 'jsonconversion~=0.2.9', 'yaml_configuration~=0.1',
                        'python-gtkmvc3-dlr~=1.0.0', 'gaphas~=1.0.0rc1', 'future>=0.16,<0.18.0']
 
-test_requirements = ['pytest', 'pytest-catchlog', 'graphviz', 'pymouse'] + global_requirements
+test_requirements = ['pytest', 'pytest-catchlog', 'graphviz', 'pyuserinput'] + global_requirements
 
 setup(
     name='rafcon',
