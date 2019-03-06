@@ -4,6 +4,7 @@ import os
 import time
 
 # test environment elements
+import pytest
 from tests import utils as testing_utils
 from tests.utils import call_gui_callback, wait_for_execution_engine_sync_counter
 
@@ -40,6 +41,7 @@ def execute_all_generic_libraries_with_keyboard_only():
     call_gui_callback(menubar_ctrl.on_stop_activate, None, None)
 
 
+@pytest.mark.timeout(30)
 def test_all_generic_libraries_in_a_row(caplog):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
                           libraries={'generic': os.path.join(testing_utils.LIBRARY_SM_PATH, 'generic')}

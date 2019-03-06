@@ -68,6 +68,7 @@ def test_turtle_library_examples(caplog):
     # TODO implement the tests
 
 
+@pytest.mark.timeout(60)
 def test_functionality_example(caplog):
     """Test for now only tests:
     - if the state machine can be open
