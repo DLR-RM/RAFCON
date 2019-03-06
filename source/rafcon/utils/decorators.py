@@ -19,8 +19,9 @@ logger = log.get_logger(__name__)
 
 
 def avoid_parallel_execution(func):
-    """ A decorator to avoid the parallel execution of a function. If the function is currently called, the second call
-    is just skipped.
+    """A decorator to avoid the parallel execution of a function.
+
+    If the function is currently called, the second call is just skipped.
 
     :param func: The function to decorate
     :return:
@@ -29,11 +30,9 @@ def avoid_parallel_execution(func):
         if not getattr(func, "currently_executing", False):
             func.currently_executing = True
             try:
-                return_value = func(*args, **kwargs)
+                return func(*args, **kwargs)
             finally:
                 func.currently_executing = False
-                return return_value
         else:
             logger.verbose("Avoid parallel execution of function {}".format(func))
-            return
     return func_wrapper
