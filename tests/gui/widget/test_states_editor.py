@@ -211,6 +211,7 @@ def trigger_state_type_change_tests(with_gui=True):
     # simple type change of root_state -> still could be extended
 
 
+@pytest.mark.timeout(20)
 def test_state_type_change_test(caplog):
 
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})

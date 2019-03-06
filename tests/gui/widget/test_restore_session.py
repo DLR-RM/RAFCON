@@ -259,6 +259,7 @@ def trigger_gui_signals_second_run(*args):
     call_gui_callback(backup_session.reset_session)
 
 
+@pytest.mark.timeout(20)
 def test_restore_session(caplog):
     from rafcon.core.storage import storage
 

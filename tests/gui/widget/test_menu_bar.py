@@ -362,6 +362,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
         assert len(sm_manager_model.state_machines) == 2
 
 
+@pytest.mark.timeout(30)
 def test_gui(caplog):
     from os.path import join
 

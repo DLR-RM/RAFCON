@@ -4,6 +4,7 @@ from builtins import str
 import logging
 import threading
 import time
+import pytest
 
 # core elements
 import rafcon.core.singleton
@@ -1178,6 +1179,7 @@ def test_data_flow_property_modifications_history(caplog):
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
+@pytest.mark.timeout(60)
 @pytest.mark.parametrize("with_gui", [False, True])
 def test_state_machine_modifications_with_gui(with_gui, caplog):
 

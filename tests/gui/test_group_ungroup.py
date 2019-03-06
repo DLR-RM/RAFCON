@@ -279,6 +279,7 @@ def trigger_issue_586_reproduction_sequence():
     # call_gui_callback(sm_m.history.undo)
 
 
+@pytest.mark.timeout(20)
 def test_bug_issue_586(caplog):
     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True}, libraries={})
 

@@ -7,6 +7,7 @@ import gc
 import time
 import shutil
 import gtkmvc3
+import pytest
 
 from pprint import pprint
 
@@ -998,6 +999,7 @@ def test_simple_execution_model_and_core_destruct_with_gui(caplog):
                            gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False})
 
 
+@pytest.mark.timeout(60)
 def test_model_and_core_modification_history_destruct_with_gui(caplog):
     testing_utils.dummy_gui(None)
 
