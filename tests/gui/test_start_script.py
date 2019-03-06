@@ -19,9 +19,10 @@ def test_start_script_open():
     """
     testing_utils.dummy_gui(None)
 
+    python_executable = str(sys.executable)
     script = join(testing_utils.RAFCON_PATH, "core", "start.py")
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
-    cmd = "python %s -o %s" % (script, start_path)
+    cmd = "%s %s -o %s" % (python_executable, script, start_path)
     print("\ntest_start_script_open: \n", cmd)
     cmd_res = subprocess.call(cmd, shell=True)
     assert cmd_res == 0
@@ -106,6 +107,7 @@ def test_start_script_valid_rmpm_env():
         "DLRRM_HOST_PLATFORM", "osl42-x86_64")) + rmpm_env["PATH"]
     if not distutils.spawn.find_executable("rmpm_do"):
         print("Could not find rmpm_do, skipping test")
+        return
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     config = join(testing_utils.TESTS_PATH, "assets", "configs", "valid_config", "config.yaml")
     cmd = "eval `rmpm_do env --env-format=embed_sh sw.common.rafcon` && rafcon_core -o {0} -c {1}" \
@@ -126,7 +128,7 @@ def test_start_script_print_help_with_gui():
     script = join(testing_utils.RAFCON_PATH, "gui", "start.py")
     # start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     # cmd = "%s -o %s" % (script, start_path)
-    cmd = "python " + script + " -h"
+    cmd = sys.executable + " " + script + " -h"
     print("\ntest_start_script_open_with_gui: ", cmd)
     rafcon_gui_process = subprocess.Popen(cmd, shell=True)
     print("process PID: ", rafcon_gui_process.pid)

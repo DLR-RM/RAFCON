@@ -14,7 +14,6 @@ Next Release
 
 - Features:
 
-  - add ExecutionTicker to see activity of state machine with high hierarchy depth
 
 - Improvements:
 
@@ -28,16 +27,33 @@ Next Release
   - optimize setup_requires in setup.py (faster installation)
   - mark unreliable tests as unstable
   - define timeouts for all tests
+  
+
+- Bug Fixes:
+
+
+- Changes:
+
+
+0.13.6
+""""""
+
+- Features:
+
+  - add ExecutionTicker to see activity of state machine with high hierarchy depth
+
+- Improvements:
+  
+  - changing states (adding or removing) during step mode works now
 
 - Bug Fixes:
 
   - :issue_ghe:`678` script validation does not work
   - :issue_ghe:`663` cannot rename connected data port of type object
   - :issue_ghe:`684` ``test_simple_execution_model_and_core_destruct_with_gui`` fails when running core & gui tests in a row
+  - fix pause and step mode behavior
   - installation of fonts under Python 3
   - various test fixed for Python 3
-
-- Changes:
 
 
 0.13.5

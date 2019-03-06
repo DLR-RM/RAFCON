@@ -188,7 +188,7 @@ def check_pane_positions():
     # thus, the equality check has to be done directly after un- and redocking the right bar
     print("=> test right_bar_window")
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
-    testing_utils.wait_for_gui()
+    call_gui_callback(wait_for_gui)
     config_id = 'RIGHT_BAR_DOCKED_POS'
     pane_id = constants.PANE_ID['RIGHT_BAR_DOCKED_POS']
     print("check pos of ", config_id, pane_id)
@@ -196,7 +196,7 @@ def check_pane_positions():
 
     print("=> test console_window")
     test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
-    testing_utils.wait_for_gui()
+    call_gui_callback(wait_for_gui)
     config_id = 'CONSOLE_DOCKED_POS'
     pane_id = constants.PANE_ID['CONSOLE_DOCKED_POS']
     print("check pos of ", config_id, pane_id)
@@ -204,7 +204,7 @@ def check_pane_positions():
 
     print("=> test left_bar_window")
     test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR")
-    testing_utils.wait_for_gui()
+    call_gui_callback(wait_for_gui)
     config_id = 'LEFT_BAR_DOCKED_POS'
     pane_id = constants.PANE_ID['LEFT_BAR_DOCKED_POS']
     print("check pos of ", config_id, pane_id)

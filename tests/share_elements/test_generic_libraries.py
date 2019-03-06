@@ -6,7 +6,7 @@ import time
 # test environment elements
 import pytest
 from tests import utils as testing_utils
-from tests.utils import call_gui_callback, wait_for_execution_engine_sync_counter
+from tests.utils import call_gui_callback
 
 # general tool elements
 from rafcon.utils import log
@@ -94,7 +94,7 @@ def test_preemption_of_all_state_machines_at_once(caplog):
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=4)
 
 if __name__ == '__main__':
-    import pytest
     # test_preemption_of_all_state_machines_at_once(None)
-    # test_all_generic_libraries_in_a_row(None)
-    pytest.main(['-s', __file__])
+    test_all_generic_libraries_in_a_row(None)
+    # import pytest
+    # pytest.main(['-s', __file__])
