@@ -20,6 +20,7 @@ Next Release
 
 - Bug Fixes:
 
+  - :issue_ghe:`689` rafcon cannot run without numpy
 
 - Changes:
 
