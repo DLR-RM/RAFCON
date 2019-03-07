@@ -29,14 +29,12 @@ def create_preemptive_wait_state_machine():
 
 
 def test_preemptive_wait_daemon(caplog):
-    testing_utils.test_multithreading_lock.acquire()
+    with testing_utils.test_multithreading_lock:
+        gvm.set_variable('state_1_wait', 0.5)
+        gvm.set_variable('state_2_wait', None)
 
-    gvm.set_variable('state_1_wait', 0.5)
-    gvm.set_variable('state_2_wait', None)
+        run_state_machine()
 
-    run_state_machine()
-
-    try:
         assert 0.5 < gvm.get_variable('state_1_wait_time')
         # cannot assert this as state 2 may be launched later and will thus have a shorter execution time
         # assert 0.5 < gvm.get_variable('state_2_wait_time')
@@ -44,8 +42,6 @@ def test_preemptive_wait_daemon(caplog):
         assert gvm.get_variable('state_2_preempted')
 
         testing_utils.assert_logger_warnings_and_errors(caplog)
-    finally:
-        testing_utils.test_multithreading_lock.release()
 
 
 def run_state_machine():
@@ -58,39 +54,31 @@ def run_state_machine():
 
 
 def test_preemptive_wait_timeout(caplog):
-    testing_utils.test_multithreading_lock.acquire()
+    with testing_utils.test_multithreading_lock:
+        gvm.set_variable('state_1_wait', 0.5)
+        gvm.set_variable('state_2_wait', 1.)
 
-    gvm.set_variable('state_1_wait', 0.5)
-    gvm.set_variable('state_2_wait', 1.)
+        run_state_machine()
 
-    run_state_machine()
-
-    try:
         assert 0.5 < gvm.get_variable('state_1_wait_time')
         assert not gvm.get_variable('state_1_preempted')
         assert gvm.get_variable('state_2_preempted')
 
         testing_utils.assert_logger_warnings_and_errors(caplog)
-    finally:
-        testing_utils.test_multithreading_lock.release()
 
 
 def test_preemptive_wait2_timeout(caplog):
-    testing_utils.test_multithreading_lock.acquire()
+    with testing_utils.test_multithreading_lock:
+        gvm.set_variable('state_2_wait', 0.5)
+        gvm.set_variable('state_1_wait', 1.)
 
-    gvm.set_variable('state_2_wait', 0.5)
-    gvm.set_variable('state_1_wait', 1.)
+        run_state_machine()
 
-    run_state_machine()
-
-    try:
         assert 0.5 < gvm.get_variable('state_2_wait_time')
         assert gvm.get_variable('state_1_preempted')
         assert not gvm.get_variable('state_2_preempted')
 
         testing_utils.assert_logger_warnings_and_errors(caplog)
-    finally:
-        testing_utils.test_multithreading_lock.release()
 
 if __name__ == '__main__':
     pytest.main([__file__])

@@ -57,54 +57,46 @@ class ExecutionHistoryStorage(object):
             logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
 
     def store_item(self, key, value):
-        self.store_lock.acquire()
-        try:
-            self.store[native_str(key)] = value
-        except Exception as e:
-            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
-        finally:
-            self.store_lock.release()
+        with self.store_lock:
+            try:
+                self.store[native_str(key)] = value
+            except Exception as e:
+                logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
 
     def flush(self):
-        self.store_lock.acquire()
-        try:
-            self.store.close()
-            self.store = shelve.open(self.filename, flag='c', protocol=2, writeback=False)
-            logger.debug('Flushed log file %s' % self.filename)
-        except Exception as e:
-            if self.destroyed:
-                pass # this is fine
-            else:
-                logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
-        finally:
-            self.store_lock.release()
+        with self.store_lock:
+            try:
+                self.store.close()
+                self.store = shelve.open(self.filename, flag='c', protocol=2, writeback=False)
+                logger.debug('Flushed log file %s' % self.filename)
+            except Exception as e:
+                if self.destroyed:
+                    pass # this is fine
+                else:
+                    logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
 
     def close(self, make_read_and_writable_for_all=False):
-        self.store_lock.acquire()
-        try:
-            self.store.close()
-            logger.debug('Closed log file %s' % self.filename)
-            if make_read_and_writable_for_all:
-                ret = subprocess.call(['chmod', 'a+rw', self.filename])
-                if ret:
-                    logger.debug('Could not make log file readable for all. chmod a+rw failed on %s.' % self.filename)
-                else:
-                    logger.debug('Set log file readable for all via chmod a+rw, file %s' % self.filename)
-        except Exception as e:
-            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
-        finally:
-            self.store_lock.release()
-    
+        with self.store_lock:
+            try:
+                self.store.close()
+                logger.debug('Closed log file %s' % self.filename)
+                if make_read_and_writable_for_all:
+                    ret = subprocess.call(['chmod', 'a+rw', self.filename])
+                    if ret:
+                        logger.debug('Could not make log file readable for all. chmod a+rw failed on %s.' % self.filename)
+                    else:
+                        logger.debug('Set log file readable for all via chmod a+rw, file %s' % self.filename)
+            except Exception as e:
+                logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
+
     def __del__(self):
-        self.store_lock.acquire()
-        self.destroyed = True
-        try:
-            self.store.close()
-            logger.debug('Closed log file %s' % self.filename)
-        except Exception as e:
-            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
-        finally:
-            self.store_lock.release()
+        with self.store_lock:
+            self.destroyed = True
+            try:
+                self.store.close()
+                logger.debug('Closed log file %s' % self.filename)
+            except Exception as e:
+                logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
 
 
 class ExecutionHistory(Observable, Iterable, Sized):
