@@ -61,9 +61,9 @@ def call_gui_callback(callback, *args, **kwargs):
     else:
         priority = GLib.PRIORITY_LOW
 
+    condition.acquire()
     GLib.idle_add(fun, priority=priority)
     # Wait for the condition to be notified
-    condition.acquire()
     # TODO: implement timeout that raises an exception
     condition.wait()
     condition.release()
