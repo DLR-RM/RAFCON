@@ -1,5 +1,5 @@
 import pytest
-import testing_utils
+from tests import utils as testing_utils
 
 
 def assert_single_editor_meta_data(model, gaphas):

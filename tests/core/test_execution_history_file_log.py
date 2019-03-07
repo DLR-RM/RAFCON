@@ -5,7 +5,7 @@ import rafcon.utils.execution_log as log_helper
 
 # test environment elements
 import pytest
-import testing_utils
+from tests import utils as testing_utils
 import os
 
 

@@ -7,7 +7,7 @@ from rafcon.core.state_machine import StateMachine
 
 # test environment elements
 from pytest import raises
-import testing_utils
+from tests import utils as testing_utils
 import pytest
 
 

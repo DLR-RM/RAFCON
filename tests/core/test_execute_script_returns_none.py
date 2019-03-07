@@ -6,7 +6,7 @@ import rafcon.core.start
 import rafcon.core.singleton
 from rafcon.core.storage import storage
 
-import testing_utils
+from tests import utils as testing_utils
 
 
 def test_execute_script_returns_none(caplog):

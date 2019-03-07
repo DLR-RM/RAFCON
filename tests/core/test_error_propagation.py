@@ -5,7 +5,7 @@ import pytest
 # singleton elements
 from rafcon.core.singleton import state_machine_manager, state_machine_execution_engine
 
-import testing_utils
+from tests import utils as testing_utils
 
 def test_error_propagation(caplog):
     testing_utils.initialize_environment_core()

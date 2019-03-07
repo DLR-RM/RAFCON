@@ -7,7 +7,7 @@ from rafcon.core.storage import storage
 from rafcon.core.config import global_config
 
 # test environment elements
-import testing_utils
+from tests import utils as testing_utils
 import pytest
 
 from rafcon.utils import log

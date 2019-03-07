@@ -4,7 +4,7 @@ from contextlib import contextmanager
 
 from rafcon.utils import i18n, installation
 
-import testing_utils
+from tests import utils as testing_utils
 
 
 def create_mo_files():

@@ -14,7 +14,7 @@ from rafcon.core.state_machine import StateMachine
 import rafcon.core.singleton
 
 # test environment elements
-import testing_utils
+from tests import utils as testing_utils
 
 
 def create_state_machine():

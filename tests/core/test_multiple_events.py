@@ -9,7 +9,7 @@ from rafcon.core.singleton import global_variable_manager
 from rafcon.core.singleton import state_machine_execution_engine
 
 # test environment elements
-import testing_utils
+from tests import utils as testing_utils
 
 
 def trigger_exectuion_engine(gvm, execution_engine):
