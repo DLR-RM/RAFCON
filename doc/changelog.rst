@@ -8,12 +8,23 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Patch releases 0.13.\*
 ----------------------
 
-
 Next Release
 """"""""""""
 
 - Features:
 
+
+- Improvements:
+
+
+- Bug Fixes:
+
+
+- Changes:
+
+
+0.13.7
+""""""
 
 - Improvements:
 
@@ -28,14 +39,11 @@ Next Release
   - mark unreliable tests as unstable
   - define timeouts for all tests
   
-
 - Bug Fixes:
 
   - :issue_ghe:`689` rafcon cannot run without numpy
   - :issue_ghe:`679` error message when connecting data flow
   - fix severe threading bug in call_gui_callback, which could lead to a complete freeze of a state machine
-
-- Changes:
 
 
 0.13.6
