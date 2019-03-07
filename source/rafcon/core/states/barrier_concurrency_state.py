@@ -20,7 +20,6 @@
 """
 
 from builtins import str
-import traceback
 
 from gtkmvc3.observable import Observable
 
@@ -175,7 +174,7 @@ class BarrierConcurrencyState(ConcurrencyState):
             return self.finalize_concurrency_state(self.final_outcome)
 
         except Exception as e:
-            logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
+            logger.exception("{0} had an internal error:".format(self))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
             return self.finalize(Outcome(-1, "aborted"))

@@ -32,7 +32,6 @@ import shelve
 from threading import Lock
 from enum import Enum
 from gtkmvc3.observable import Observable
-import traceback
 
 from rafcon.core.id_generator import history_item_id_generator
 from rafcon.utils import log
@@ -53,15 +52,15 @@ class ExecutionHistoryStorage(object):
             # writeback disabled, cause we don't need caching of entries in memory but continuous writes to the disk
             self.store = shelve.open(filename, flag='c', protocol=2, writeback=False)
             logger.debug('Openend log file for writing %s' % self.filename)
-        except Exception as e:
-            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
+        except Exception:
+            logger.exception('Exception:')
 
     def store_item(self, key, value):
         self.store_lock.acquire()
         try:
             self.store[native_str(key)] = value
-        except Exception as e:
-            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
+        except Exception:
+            logger.exception('Exception:')
         finally:
             self.store_lock.release()
 
@@ -71,11 +70,11 @@ class ExecutionHistoryStorage(object):
             self.store.close()
             self.store = shelve.open(self.filename, flag='c', protocol=2, writeback=False)
             logger.debug('Flushed log file %s' % self.filename)
-        except Exception as e:
+        except Exception:
             if self.destroyed:
-                pass # this is fine
+                pass  # this is fine
             else:
-                logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
+                logger.exception('Exception:')
         finally:
             self.store_lock.release()
 
@@ -90,8 +89,8 @@ class ExecutionHistoryStorage(object):
                     logger.debug('Could not make log file readable for all. chmod a+rw failed on %s.' % self.filename)
                 else:
                     logger.debug('Set log file readable for all via chmod a+rw, file %s' % self.filename)
-        except Exception as e:
-            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
+        except Exception:
+            logger.exception('Exception:')
         finally:
             self.store_lock.release()
     
@@ -101,8 +100,8 @@ class ExecutionHistoryStorage(object):
         try:
             self.store.close()
             logger.debug('Closed log file %s' % self.filename)
-        except Exception as e:
-            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
+        except Exception:
+            logger.exception('Exception:')
         finally:
             self.store_lock.release()
 

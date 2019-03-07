@@ -17,7 +17,6 @@
 """
 
 from builtins import str
-import traceback
 
 from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.states.concurrency_state import ConcurrencyState
@@ -102,7 +101,7 @@ class PreemptiveConcurrencyState(ConcurrencyState):
             return self.finalize_concurrency_state(self.final_outcome)
 
         except Exception as e:
-            logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
+            logger.exception("{0} had an internal error:".format(self))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
             return self.finalize(Outcome(-1, "aborted"))
