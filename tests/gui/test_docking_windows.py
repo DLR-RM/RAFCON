@@ -3,8 +3,8 @@ import threading
 import pytest
 import time
 
-import testing_utils
-from testing_utils import call_gui_callback, wait_for_gui
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback, wait_for_gui
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -188,7 +188,7 @@ def check_pane_positions():
     # thus, the equality check has to be done directly after un- and redocking the right bar
     print("=> test right_bar_window")
     test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
-    testing_utils.wait_for_gui()
+    call_gui_callback(wait_for_gui)
     config_id = 'RIGHT_BAR_DOCKED_POS'
     pane_id = constants.PANE_ID['RIGHT_BAR_DOCKED_POS']
     print("check pos of ", config_id, pane_id)
@@ -196,7 +196,7 @@ def check_pane_positions():
 
     print("=> test console_window")
     test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
-    testing_utils.wait_for_gui()
+    call_gui_callback(wait_for_gui)
     config_id = 'CONSOLE_DOCKED_POS'
     pane_id = constants.PANE_ID['CONSOLE_DOCKED_POS']
     print("check pos of ", config_id, pane_id)
@@ -204,7 +204,7 @@ def check_pane_positions():
 
     print("=> test left_bar_window")
     test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR")
-    testing_utils.wait_for_gui()
+    call_gui_callback(wait_for_gui)
     config_id = 'LEFT_BAR_DOCKED_POS'
     pane_id = constants.PANE_ID['LEFT_BAR_DOCKED_POS']
     print("check pos of ", config_id, pane_id)
@@ -216,6 +216,7 @@ def check_pane_positions():
     #     assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 95)
 
 
+@pytest.mark.unstable
 def test_window_positions(caplog):
     testing_utils.run_gui(core_config=None,
                           runtime_config={
@@ -249,6 +250,7 @@ def test_window_positions(caplog):
         testing_utils.shutdown_environment(caplog=caplog)
 
 
+@pytest.mark.unstable
 def test_pane_positions(caplog):
     testing_utils.run_gui(core_config=None,
                           gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},

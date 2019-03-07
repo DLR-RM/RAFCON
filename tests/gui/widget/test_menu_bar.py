@@ -3,8 +3,8 @@ from __future__ import print_function
 from rafcon.utils import log
 
 # test environment elements
-import testing_utils
-from testing_utils import call_gui_callback, focus_graphical_editor_in_page
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback, focus_graphical_editor_in_page
 
 import pytest
 
@@ -362,6 +362,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
         assert len(sm_manager_model.state_machines) == 2
 
 
+@pytest.mark.timeout(30)
 def test_gui(caplog):
     from os.path import join
 

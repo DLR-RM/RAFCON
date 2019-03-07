@@ -5,7 +5,7 @@ from os.path import join
 import copy
 import time
 
-import testing_utils
+from tests import utils as testing_utils
 import pytest
 
 with_print = False

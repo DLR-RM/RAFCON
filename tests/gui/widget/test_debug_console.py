@@ -7,8 +7,8 @@ import time
 from rafcon.utils import log
 
 # test environment elements
-import testing_utils
-from testing_utils import call_gui_callback
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback
 
 import pytest
 
@@ -118,6 +118,7 @@ def trigger_logging_view_gui_signals():
     print("finished debug console test")
 
 
+@pytest.mark.unstable
 def test_logging_view_widget(caplog):
     from os.path import join
 

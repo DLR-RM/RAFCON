@@ -25,6 +25,12 @@ Install RAFCON from Sources
 .. include:: includes/install_from_sources.rst
 
 
+Running the tests
+-----------------
+
+.. include:: includes/testing.rst
+
+
 Code of Conduct
 ---------------
 

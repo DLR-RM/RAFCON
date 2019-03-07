@@ -165,7 +165,7 @@ class ConcurrencyState(ContainerState):
         self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
         self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
 
-        singleton.state_machine_execution_engine.modify_run_to_states(self)
+        singleton.state_machine_execution_engine._modify_run_to_states(self)
 
         if self.preempted:
             final_outcome = Outcome(-2, "preempted")

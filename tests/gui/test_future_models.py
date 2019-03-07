@@ -1,4 +1,4 @@
-import testing_utils
+from tests import utils as testing_utils
 
 
 def test_default():

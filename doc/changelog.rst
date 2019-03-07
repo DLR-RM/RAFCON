@@ -8,24 +8,65 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Patch releases 0.13.\*
 ----------------------
 
-
 Next Release
 """"""""""""
 
 - Features:
 
-  - add ExecutionTicker to see activity of state machine with high hierarchy depth
 
 - Improvements:
 
 
 - Bug Fixes:
 
+    - :issue_ghe:`683` rafcon can now be closed properly via signal
+
+
+- Changes:
+
+
+0.13.7
+""""""
+
+- Improvements:
+
+  - add tox integration
+
+    - run tests under Python interpreters 2.7, 3.4, 3.5, 3.6, 3.7
+    - run tests with coverage
+    - build documentation and check links
+    - check sdist
+
+  - optimize setup_requires in setup.py (faster installation)
+  - mark unreliable tests as unstable
+  - define timeouts for all tests
+  
+- Bug Fixes:
+
+  - :issue_ghe:`689` rafcon cannot run without numpy
+  - :issue_ghe:`679` error message when connecting data flow
+  - fix severe threading bug in call_gui_callback, which could lead to a complete freeze of a state machine
+
+
+0.13.6
+""""""
+
+- Features:
+
+  - add ExecutionTicker to see activity of state machine with high hierarchy depth
+
+- Improvements:
+  
+  - changing states (adding or removing) during step mode works now
+
+- Bug Fixes:
+
   - :issue_ghe:`678` script validation does not work
   - :issue_ghe:`663` cannot rename connected data port of type object
   - :issue_ghe:`683` rafcon can now be closed properly via signal
-
-- Changes:
+  - fix pause and step mode behavior
+  - installation of fonts under Python 3
+  - various test fixed for Python 3
 
 
 0.13.5

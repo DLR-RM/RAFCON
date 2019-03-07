@@ -1,4 +1,4 @@
-from testing_utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
+from tests.utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
 FILE_TO_MODIFY = RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE + "/test_start_script.txt"
 
 

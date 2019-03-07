@@ -1,7 +1,7 @@
 from builtins import object
 import os
 import pytest
-import testing_utils
+from tests import utils as testing_utils
 
 from rafcon.core.storage import storage as global_storage
 
@@ -33,6 +33,7 @@ class TestErrorPreemptionHandling(object):
 
     @classmethod
     def teardown_class(cls):
+        cls.state_machine = None
         testing_utils.shutdown_environment_only_core()
 
     def setup(self):

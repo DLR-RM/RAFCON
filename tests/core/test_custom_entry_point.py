@@ -4,7 +4,7 @@ import os
 import rafcon.core.singleton
 
 # test environment elements
-import testing_utils
+from tests import utils as testing_utils
 
 
 def test_custom_entry_point(caplog):

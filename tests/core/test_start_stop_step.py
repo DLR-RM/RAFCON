@@ -8,7 +8,7 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.state_machine import StateMachine
 
 # test environment elements
-import testing_utils
+from tests import utils as testing_utils
 import pytest
 
 

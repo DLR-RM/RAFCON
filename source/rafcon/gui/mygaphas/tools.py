@@ -33,6 +33,7 @@ from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils import gap_helper
 from rafcon.gui.utils import constants
 from rafcon.utils import log
+from rafcon.utils.decorators import avoid_parallel_execution
 from rafcon.gui.config import global_gui_config
 
 logger = log.get_logger(__name__)
@@ -717,6 +718,7 @@ class ConnectionCreationTool(ConnectionTool):
 
         self._handle_temporary_connection(last_sink, self._current_sink, of_target=True)
 
+    @avoid_parallel_execution
     def on_button_release(self, event):
         # A temporary connection was created. Check if it is a valid one.
         if self._connection_v:

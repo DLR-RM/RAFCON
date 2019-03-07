@@ -4,9 +4,9 @@ import datetime
 import pytest
 
 # test environment elements
-import testing_utils
-from testing_utils import call_gui_callback
-from gui.execution import state_machines_editor_tab_status_check
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback
+from tests.gui.execution import state_machines_editor_tab_status_check
 
 # general tool elements
 from rafcon.utils import log

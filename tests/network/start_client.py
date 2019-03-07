@@ -53,7 +53,7 @@ def start_client(interacting_function, queue_dict):
 
     # load all plugins specified in the RAFCON_PLUGIN_PATH
     plugins.load_plugins()
-    import testing_utils
+    from tests import utils as testing_utils
 
     # check if twisted is imported
     if "twisted" in sys.modules:
