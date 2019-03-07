@@ -10,4 +10,4 @@ def execute(self, inputs, outputs, gvm):
     if isinstance(self.get_errors_for_state_name("Second"), exceptions.ZeroDivisionError):
         return 1
     else:
-return 0
+        return 0
