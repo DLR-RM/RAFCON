@@ -16,6 +16,8 @@ Next Release
 
 - Improvements:
 
+  - use Python warning module with custom ``RAFCONDeprecationWarning`` for deprecated usages
+
 
 - Bug Fixes:
 
