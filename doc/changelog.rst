@@ -32,6 +32,7 @@ Next Release
 - Bug Fixes:
 
   - :issue_ghe:`689` rafcon cannot run without numpy
+  - :issue_ghe:`679` error message when connecting data flow
 
 - Changes:
 
