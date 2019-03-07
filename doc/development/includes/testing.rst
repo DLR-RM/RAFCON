@@ -40,3 +40,15 @@ recreate the environments using the ``-r/--recreate`` option:
 .. code:: bash
 
     $ tox -re py2.7
+
+The RAFCON tests are annotated with a number of markers, allowing you to select specific tests:
+
+* ``core``, ``gui``, ``share_elements``, ``network``: Tests located in a folder with that name
+* ``unstable``: GUI tests that do not run very reliable (e.g. because of the window manager)
+
+Pytest allows you to select tests based on markers using the ``-m`` option. Markers can be combined using
+``not``, ``and``, ``or`` and paranthesis:
+
+.. code:: bash
+
+    $ tox -e 2.7 -- -x -m "gui and not unstable"
