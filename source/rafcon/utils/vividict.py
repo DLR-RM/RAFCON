@@ -112,7 +112,10 @@ class Vividict(dict, YAMLObject, JSONObject):
             if isinstance(np_val, dict):
                 for key, value in np_val.items():
                     np_val[key] = np_to_native(value)
-            if isinstance(np_val, ndarray):
+            # The following condition cannot hold true if no numpy is installed, as ndarray is set to dict, which was
+            # already handled in the previous condition
+            elif isinstance(np_val, ndarray):
+                # noinspection PyUnresolvedReferences
                 np_val = np_val.tolist()
             if isinstance(np_val, (list, tuple)):
                 native_list = [np_to_native(val) for val in np_val]
