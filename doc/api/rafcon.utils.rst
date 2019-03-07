@@ -8,6 +8,10 @@ constants
 ---------
 .. automodule:: rafcon.utils.constants
 
+decorators
+----------
+.. automodule:: rafcon.utils.decorators
+git s
 dict_operations
 ---------------
 .. automodule:: rafcon.utils.dict_operations
