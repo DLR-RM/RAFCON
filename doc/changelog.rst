@@ -19,7 +19,7 @@ Next Release
 
 - Bug Fixes:
 
-    - :issue_ghe:`683` rafcon can now be closed properly via signal
+  - :issue_ghe:`683` rafcon can now be closed properly via signal
 
 
 - Changes:
@@ -63,7 +63,8 @@ Next Release
 
   - :issue_ghe:`678` script validation does not work
   - :issue_ghe:`663` cannot rename connected data port of type object
-  - :issue_ghe:`683` rafcon can now be closed properly via signal
+  - :issue_ghe:`684` ``test_simple_execution_model_and_core_destruct_with_gui`` fails when running core & gui tests
+  in a row
   - fix pause and step mode behavior
   - installation of fonts under Python 3
   - various test fixed for Python 3
