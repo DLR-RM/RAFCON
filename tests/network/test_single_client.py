@@ -313,8 +313,8 @@ def launch_client(interacting_function_client, multiprocessing_queue_dict):
     # os.environ['RAFCON_PLUGIN_PATH'] = \
     #     "/home_local/brun_sb/develop/rafcon_monitoring_plugin/python/monitoring"
 
-    import network.start_client
-    network.start_client.start_client(interacting_function_client, multiprocessing_queue_dict)
+    import tests.network.start_client
+    tests.network.start_client.start_client(interacting_function_client, multiprocessing_queue_dict)
 
     # import sys
     # sys.path.insert(1, '/volume/software/common/packages/python_acknowledged_udp/latest/lib/python2.7')
@@ -331,8 +331,8 @@ def launch_server(interacting_function_handle_server_, multiprocessing_queue_dic
     # os.environ['RAFCON_PLUGIN_PATH'] = \
     #     "/home_local/brun_sb/develop/rafcon_monitoring_plugin/python/monitoring"
 
-    import network.start_server
-    server = Process(target=network.start_server.start_server,
+    import tests.network.start_server
+    server = Process(target=tests.network.start_server.start_server,
                      args=(interacting_function_handle_server_, multiprocessing_queue_dict))
 
     return server

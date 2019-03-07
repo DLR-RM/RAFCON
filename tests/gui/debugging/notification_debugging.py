@@ -4,9 +4,9 @@ from os.path import exists, join
 from rafcon.utils import log
 
 # test environment elements
-import testing_utils
+from tests import utils as testing_utils
 from notifications import enable_debugging, disable_debugging, show_debug_graph
-from testing_utils import call_gui_callback
+from tests.utils import call_gui_callback
 
 logger = log.get_logger(__name__)
 
@@ -39,7 +39,7 @@ def create_small_state_machine():
 
 def create_bigger_state_machine():
     import rafcon.core.singleton
-    from gui.widget.test_storage import create_state_machine
+    from rafcon.gui.widget.test_storage import create_state_machine
     sm = create_state_machine()
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
 
@@ -48,13 +48,13 @@ def patch_notifications():
     enable_debugging()
     # call_gui_callback(create_bigger_state_machine)
     call_gui_callback(create_small_state_machine)
-    # from gui.widget.test_storage import create_models
+    # from rafcon.gui.widget.test_storage import create_models
     # call_gui_callback(create_models)
     testing_utils.wait_for_gui()
     call_gui_callback(show_debug_graph)
     disable_debugging()
 
-    from testing_utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
+    from tests.utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
     assert exists(join(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE, 'notification_output.gv'))
     assert exists(join(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE, 'notification_print_out.txt'))
 

@@ -11,7 +11,7 @@ def execute(self, inputs, outputs, gvm):
     #libary_name = "bake_library1"
     libary_path = inputs["library_path"]
     libary_name = inputs["library_name"]
-    s = LibraryState(libary_path, libary_name, name=libary_name, state_id="test_state")
+    s = call_gui_callback(LibraryState, libary_path, libary_name, name=libary_name, state_id="test_state")
     call_gui_callback(self.parent.add_state, s)
     wait_for_gui()
     call_gui_callback(self.parent.add_transition, self.state_id, 0, s.state_id, None)

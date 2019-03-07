@@ -5,8 +5,8 @@ import time
 from rafcon.utils import log
 
 # test environment elements
-import testing_utils
-from testing_utils import call_gui_callback
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback
 import pytest
 
 logger = log.get_logger(__name__)
@@ -157,7 +157,7 @@ def trigger_state_type_change_tests(with_gui=True):
     sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
     def change_state_type(input_and_return_list, new_state_type, state_of_type_change):
-        from gui.widget.test_state_type_change import get_state_editor_ctrl_and_store_id_dict
+        from tests.gui.widget.test_state_type_change import get_state_editor_ctrl_and_store_id_dict
         sleep_time_max = 5.
         state_m = input_and_return_list.pop()
         # - get state-editor controller and find right row in combo box
@@ -211,6 +211,7 @@ def trigger_state_type_change_tests(with_gui=True):
     # simple type change of root_state -> still could be extended
 
 
+@pytest.mark.timeout(20)
 def test_state_type_change_test(caplog):
 
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})

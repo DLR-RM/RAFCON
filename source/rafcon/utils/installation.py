@@ -18,6 +18,8 @@ import subprocess
 import distutils.log
 
 try:
+    import gi
+    gi.require_version('Gtk', '3.0')
     from gi.repository import Gtk
 except ImportError:
     Gtk = None
@@ -63,10 +65,10 @@ def install_fonts(logger=None, restart=False):
         for font_name in font_names_to_be_installed:
             # A font is a folder one or more font faces
             fonts_folder = os.path.join(assets_folder, "fonts", font_name)
-            num_faces_to_be_installed = len(filter(lambda name: name.endswith(".otf"), os.listdir(fonts_folder)))
+            num_faces_to_be_installed = len([name for name in os.listdir(fonts_folder) if name.endswith(".otf")])
             num_faces_installed = 0
             # default case: font is not installed yet!
-            if font_name in existing_font_faces.iterkeys():
+            if font_name in existing_font_faces.keys():
                 num_faces_installed = len(existing_font_faces[font_name])
 
             if num_faces_to_be_installed <= num_faces_installed:
@@ -170,8 +172,10 @@ def create_mo_files():
     import subprocess
     data_files = []
     domain = "rafcon"
+    assert "setup.py" in os.listdir(os.curdir)
     rel_localedir = path.join('source', 'rafcon', 'locale')
-    localedir = os.path.join(rafcon_root_path, rel_localedir)
+    localedir = os.path.join(os.curdir, rel_localedir)
+    # Assert that we are in the root directory of the RAFCON repository
     po_files = [po_file
                 for po_file in next(os.walk(localedir))[2]
                 if path.splitext(po_file)[1] == '.po']

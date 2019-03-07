@@ -1,5 +1,5 @@
 import pytest
-import testing_utils
+from tests import utils as testing_utils
 
 
 @pytest.mark.parametrize("use_gaphas", [False, True])

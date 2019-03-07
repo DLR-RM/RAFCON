@@ -6,8 +6,8 @@ import rafcon.core.config
 
 # general tool elements
 from rafcon.utils import log
-import testing_utils
-from testing_utils import call_gui_callback, run_gui, wait_for_gui_quit
+from tests.utils import call_gui_callback, run_gui, wait_for_gui_quit
+from tests import utils as testing_utils
 
 logger = log.get_logger(__name__)
 
@@ -83,7 +83,7 @@ def create_and_resize_state():
     # time.sleep(1.0)
     time.sleep(0.5)
 
-    testing_utils.wait_for_gui()
+    wait_for_gui()
 
     sm_ctrls = main_window_controller.get_controller('state_machines_editor_ctrl')
     graphical_editor_controller = sm_ctrls.get_controller(1)
@@ -98,7 +98,7 @@ def create_and_resize_state():
 
     call_gui_callback(resize_state, sm_model, sm_page, graphical_editor_controller)
 
-    # testing_utils.wait_for_gui()
+    # wait_for_gui()
     # graphical_editor_controller.canvas.update()
 
     new_x, new_y = south_east_coordinates_of_model(state_view_for_root_state)

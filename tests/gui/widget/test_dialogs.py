@@ -2,8 +2,8 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import str
 import threading
-import testing_utils
-from testing_utils import call_gui_callback
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback
 
 from rafcon.utils import log
 

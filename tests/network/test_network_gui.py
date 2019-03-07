@@ -16,9 +16,9 @@ import threading
 import time
 import os
 import pytest
-from network.test_single_client import reset_global_variable_manager
-from network.test_single_client import launch_client
-from network.test_single_client import launch_server
+from tests.network.test_single_client import reset_global_variable_manager
+from tests.network.test_single_client import launch_client
+from tests.network.test_single_client import launch_server
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -496,7 +496,7 @@ def client_interaction(main_window_controller, global_monitoring_manager, queue_
 
 def test_network_gui():
 
-    from network.test_single_client import check_if_ports_are_open
+    from tests.network.test_single_client import check_if_ports_are_open
     assert check_if_ports_are_open(), "Address already in use by another server!"
 
     test_successful = True

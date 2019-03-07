@@ -118,8 +118,10 @@ modindex_common_prefix = ['rafcon.']
 # A list of warning types to suppress arbitrary warning messages.
 suppress_warnings = ['ref.python']
 
-extlinks = {'issue': ('https://rmc-github.robotic.dlr.de/common/rafcon/issues/%s',
-                      'Issue #')}
+extlinks = {
+    'issue_ghe': ('https://rmc-github.robotic.dlr.de/common/rafcon/issues/%s', 'Issue #'),
+    'issue_gh': ('https://github.com/DLR-RM/RAFCON/issues/%s', 'Issue #')
+}
 
 # -- Options for HTML output ----------------------------------------------
 

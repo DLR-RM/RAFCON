@@ -8,7 +8,7 @@ from rafcon.core.singleton import global_variable_manager as gvm
 from rafcon.core.state_machine import StateMachine
 
 # test environment elements
-import testing_utils
+from tests import utils as testing_utils
 
 
 def create_preemptive_wait_state_machine():

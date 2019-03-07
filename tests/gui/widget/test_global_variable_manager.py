@@ -1,6 +1,6 @@
 # general tool elements
-from testing_utils import call_gui_callback
-import testing_utils
+from tests.utils import call_gui_callback
+from tests import utils as testing_utils
 
 from rafcon.utils import log
 

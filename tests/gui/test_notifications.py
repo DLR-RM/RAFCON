@@ -21,7 +21,7 @@ from __future__ import print_function
 from gtkmvc3.observer import Observer
 from builtins import str
 
-import testing_utils
+from tests import utils as testing_utils
 import pytest
 
 with_print = False
@@ -490,7 +490,7 @@ def test_outcome_modify_notification(caplog):
     outcome_models_observer_dict = {}
     for outcome_id, outcome in state_dict['Nested2'].outcomes.items():
         if not outcome_id < 0:
-            outcome_models_observer_dict[outcome_id] = OutcomeNotificationLogObserver(state_model.outcomes[outcome_id],
+            outcome_models_observer_dict[outcome_id] = OutcomeNotificationLogObserver(state_model.get_outcome_m(outcome_id),
                                                                                       with_print=with_print)
             outcome.name = "new_name_" + str(outcome_id)
 
@@ -523,7 +523,7 @@ def test_outcome_modify_notification(caplog):
     # modify outcome and generate in previous a observer
     outcome_models_observer_dict = {}
     for outcome_id, outcome in state_dict['Nested'].outcomes.items():
-        outcome_models_observer_dict[outcome_id] = OutcomeNotificationLogObserver(state_model.outcomes[outcome_id],
+        outcome_models_observer_dict[outcome_id] = OutcomeNotificationLogObserver(state_model.get_outcome_m(outcome_id),
                                                                                   with_print=with_print)
         outcome.name = "new_name_" + str(outcome_id)
         print("OUTCOME", outcome_id)
