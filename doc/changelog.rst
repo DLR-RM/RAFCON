@@ -16,6 +16,8 @@ Next Release
 
 - Improvements:
 
+  - use with statement instead af acquire/release
+
 
 - Bug Fixes:
 
