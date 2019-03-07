@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from gtkmvc3.observable import Observable
 from builtins import object
-import testing_utils
+from tests import utils as testing_utils
 import pytest
 
 

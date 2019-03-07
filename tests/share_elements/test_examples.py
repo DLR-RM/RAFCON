@@ -13,7 +13,7 @@ import rafcon
 from rafcon.utils import log
 
 # test environment elements
-import testing_utils
+from tests import utils as testing_utils
 import pytest
 
 logger = log.get_logger(__name__)
@@ -68,6 +68,7 @@ def test_turtle_library_examples(caplog):
     # TODO implement the tests
 
 
+@pytest.mark.timeout(60)
 def test_functionality_example(caplog):
     """Test for now only tests:
     - if the state machine can be open
@@ -116,7 +117,11 @@ def test_plugins_example(caplog):
     # testing_utils.initialize_environment()
     testing_utils.test_multithreading_lock.acquire()
     try:
-        cmd = join(testing_utils.RAFCON_PATH, 'gui', 'start.py') + ' -o ' + path_of_sm_to_run + " -ss"
+        cmd = "{python} {start_script} -o {state_machine} -ss".format(
+            python=str(sys.executable),
+            start_script=join(testing_utils.RAFCON_PATH, 'gui', 'start.py'),
+            state_machine=path_of_sm_to_run
+        )
         start_time = time.time()
         # use exec! otherwise the terminate() call ends up killing the shell process and cmd is still running
         # https://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
@@ -128,7 +133,7 @@ def test_plugins_example(caplog):
 
         plugin_loaded = False
         while True:
-            if poller.poll(0.1):
+            if poller.poll(100):
                 line = str(rafcon_gui_process.stdout.readline()).rstrip()
                 print("process:", line)
                 if "Successfully loaded plugin 'templates'" in line:

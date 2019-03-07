@@ -3,8 +3,8 @@ from os.path import join
 
 from rafcon.utils import log
 # test environment elements
-import testing_utils
-from testing_utils import call_gui_callback, focus_graphical_editor_in_page
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback, focus_graphical_editor_in_page
 
 import pytest
 
@@ -282,6 +282,7 @@ def trigger_issue_586_reproduction_sequence():
     # call_gui_callback(sm_m.history.undo)
 
 
+@pytest.mark.timeout(20)
 def test_bug_issue_586(caplog):
     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True}, libraries={})
 

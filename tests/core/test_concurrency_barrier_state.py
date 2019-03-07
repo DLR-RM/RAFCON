@@ -10,7 +10,7 @@ import rafcon.core.singleton
 
 # test environment elements
 import pytest
-import testing_utils
+from tests import utils as testing_utils
 from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 
 

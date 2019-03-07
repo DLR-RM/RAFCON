@@ -21,7 +21,7 @@ from __future__ import print_function
 from gtkmvc3.observer import Observer
 from builtins import str
 
-import testing_utils
+from tests import utils as testing_utils
 import pytest
 
 with_print = False

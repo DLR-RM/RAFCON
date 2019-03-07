@@ -4,8 +4,8 @@ from builtins import str
 from rafcon.utils import log
 
 # test environment elements
-import testing_utils
-from testing_utils import call_gui_callback
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback
 
 logger = log.get_logger(__name__)
 
@@ -27,7 +27,7 @@ def trigger_copy_delete_bug_signals():
     state is removed.
     """
     from rafcon.core.states.hierarchy_state import HierarchyState
-    from gui.widget.test_menu_bar import select_and_paste_state
+    from tests.gui.widget.test_menu_bar import select_and_paste_state
     import rafcon.gui.singleton
     import rafcon.gui.config as gui_config
     import rafcon.gui.controllers.graphical_editor_gaphas as graphical_editor_gaphas

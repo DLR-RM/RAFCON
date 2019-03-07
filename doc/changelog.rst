@@ -16,6 +16,17 @@ Next Release
 
 
 - Improvements:
+
+  - add tox integration
+
+    - run tests under Python interpreters 2.7, 3.4, 3.5, 3.6, 3.7
+    - run tests with coverage
+    - build documentation and check links
+    - check sdist
+
+  - optimize setup_requires in setup.py (faster installation)
+  - mark unreliable tests as unstable
+  - define timeouts for all tests
   
 
 - Bug Fixes:
@@ -43,6 +54,7 @@ Next Release
   - :issue_ghe:`684` ``test_simple_execution_model_and_core_destruct_with_gui`` fails when running core & gui tests in a row
   - fix pause and step mode behavior
   - installation of fonts under Python 3
+  - various test fixed for Python 3
 
 
 0.13.5

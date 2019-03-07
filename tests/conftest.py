@@ -7,7 +7,7 @@ import os
 # and thus all variables (incl. singletons) are reinitialized
 # def pytest_configure(config):
 #     if any(x in str(config.invocation_dir) for x in ["gui", "share_elements", "widget", "network"]):
-#         import testing_utils
+#         import utils
 #         testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
 #         try:
 #             # do nothing, just open gui and close it afterwards
@@ -62,7 +62,7 @@ def restore_configs():
 def clean_temp_test_directory():
     import shutil
     import os
-    from . import testing_utils
+    from tests import utils as testing_utils
     test_temp_path = testing_utils.RAFCON_TEMP_PATH_TEST_BASE
     try:
         shutil.rmtree(test_temp_path)

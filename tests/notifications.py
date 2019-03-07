@@ -2,10 +2,9 @@ from __future__ import print_function
 from builtins import hex
 from builtins import str
 from os.path import join
-from graphviz import Digraph
 from collections import OrderedDict
 
-from testing_utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
+from tests.utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
 
 # notification debugging
 debugging_enabled = False
@@ -26,6 +25,7 @@ def node_name(node):
 
 
 def enable_debugging():
+    from graphviz import Digraph
     global debugging_enabled, notification_graph_to_render, dot_node_sequence_number, existing_dot_nodes_to_colors
     global nodes, edges
     existing_dot_nodes_to_colors = dict()
@@ -44,6 +44,7 @@ def enable_debugging():
 
 
 def show_debug_graph(print_to_console=False, open_text_file=True, render_graph=True):
+    from graphviz import Digraph
     global notification_graph_to_render
     assert isinstance(notification_graph_to_render, Digraph)
     print("started rendering graph ... ")
