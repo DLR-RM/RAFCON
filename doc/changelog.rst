@@ -33,6 +33,7 @@ Next Release
 
   - :issue_ghe:`689` rafcon cannot run without numpy
   - :issue_ghe:`679` error message when connecting data flow
+  - fix severe threading bug in call_gui_callback, which could lead to a complete freeze of a state machine
 
 - Changes:
 
