@@ -70,6 +70,7 @@ for mock_class in MOCK_CLASSES:
             mymock = type(name, (), { "observe": lambda: 0})
         else:  # module
             mymock = ModuleType(name)
+            mymock.__path__ = []
         print(i, name, mymock)
         sys.modules[path] = mymock
 
