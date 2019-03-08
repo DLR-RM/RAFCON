@@ -1,7 +1,7 @@
 {
     "creation_time": "2016-06-07 13:02:40", 
-    "last_update": "2018-01-11 09:02:57", 
+    "last_update": "2019-03-08 18:55:04", 
     "root_state_storage_id": "backward_step_preemtive_state_AOURYA", 
     "state_machine_version": null, 
-    "used_rafcon_version": "0.12.1a1"
+    "used_rafcon_version": "0.13.7"
 }

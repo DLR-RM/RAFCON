@@ -4,7 +4,7 @@ import time
 def execute(self, inputs, outputs, gvm):
     while True:
         time.sleep(0.010)
-        if self.preempted:
+        if self.preempted or self.parent.preempted:
             print("i was preempted")
             break    
 #        beer = gvm.get_variable('beers')
