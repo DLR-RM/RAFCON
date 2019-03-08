@@ -57,22 +57,23 @@ from unittest import mock
 MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT",
                 "gtkmvc3.observable.Signal", "gtkmvc3.view.View",
                 "gtkmvc3.observable.Observable", "gtkmvc3.support.wrappers", "gtkmvc3.controller.Controller"]
-mocked = set()
 for mock_class in MOCK_CLASSES:
     parts = mock_class.split(".")
     for i in range(len(parts)):
         name = parts[i]
         path = ".".join(parts[0:i+1])
-        if path in mocked:
+        parent_path = ".".join(parts[0:i])
+        if path in sys.modules:
             continue
-        mocked.add(path)
         if name[0].isupper():  # class
-            mymock = type(name, (), { "observe": lambda: 0})
+            mocked = type(name, (), {"observe": lambda: 0})
         else:  # module
-            mymock = ModuleType(name)
-            mymock.__path__ = []
-        print(i, name, mymock)
-        sys.modules[path] = mymock
+            mocked = ModuleType(name)
+            mocked.__path__ = []
+        print(path, mocked)
+        sys.modules[path] = mocked
+        if parent_path:
+            setattr(sys.modules[parent_path], name, mocked)
 
 # MOCK_MODULES = ["gtkmvc3", "gtkmvc3.controller", "gtkmvc3.model", "gtkmvc3.model_mt.ModelMT",
 #                 "gtkmvc3.observable.Signal", "gtkmvc3.view", "gtkmvc3.view.View", "gtkmvc3.observable",
