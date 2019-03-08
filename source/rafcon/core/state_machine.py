@@ -156,6 +156,9 @@ class StateMachine(Observable, JSONObject, Hashable):
         from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
+    def get_modification_lock(self):
+        return self._modification_lock
+
     @contextmanager
     def modification_lock(self, blocking=True):
         """Get modification lock in with() statement

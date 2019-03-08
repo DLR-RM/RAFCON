@@ -72,14 +72,11 @@ def test_transition_creation(caplog):
     root_state = sm_loaded.root_state
 
     state_machine = StateMachine(root_state)
-    testing_utils.test_multithreading_lock.acquire()
-    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
-    rafcon.core.singleton.state_machine_execution_engine.join()
-    try:
+    with testing_utils.test_multithreading_lock:
+        rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+        rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
+        rafcon.core.singleton.state_machine_execution_engine.join()
         testing_utils.assert_logger_warnings_and_errors(caplog)
-    finally:
-        testing_utils.test_multithreading_lock.release()
 
     rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
 
