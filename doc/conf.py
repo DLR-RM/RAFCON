@@ -47,6 +47,7 @@ except ImportError:
     pass
 
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
+autodoc_mock_imports = ["gi"]
 autoclass_content = 'class'
 
 # Add any paths that contain templates here, relative to this directory.
