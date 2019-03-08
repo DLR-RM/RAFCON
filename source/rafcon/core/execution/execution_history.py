@@ -72,7 +72,10 @@ class ExecutionHistoryStorage(object):
             self.store = shelve.open(self.filename, flag='c', protocol=2, writeback=False)
             logger.debug('Flushed log file %s' % self.filename)
         except Exception as e:
-            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
+            if self.destroyed:
+                pass # this is fine
+            else:
+                logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
         finally:
             self.store_lock.release()
 
@@ -94,6 +97,7 @@ class ExecutionHistoryStorage(object):
     
     def __del__(self):
         self.store_lock.acquire()
+        self.destroyed = True
         try:
             self.store.close()
             logger.debug('Closed log file %s' % self.filename)
@@ -129,6 +133,7 @@ class ExecutionHistory(Observable, Iterable, Sized):
                 execution_history_iterator = iter(self)
                 for history_item in execution_history_iterator:
                     history_item.destroy()
+        self.destroyed = True
         self._history_items = None
         self.initial_prev = None
 
@@ -162,7 +167,13 @@ class ExecutionHistory(Observable, Iterable, Sized):
             last_history_item.next = current_item
         if self.execution_history_storage is not None:
             self.execution_history_storage.store_item(current_item.history_item_id, current_item.to_dict())
-        self._history_items.append(current_item)
+        try:
+            self._history_items.append(current_item)
+        except AttributeError:
+            if self.destroyed:
+                pass # this is fine
+            else:
+                raise
         return current_item
 
     @Observable.observed

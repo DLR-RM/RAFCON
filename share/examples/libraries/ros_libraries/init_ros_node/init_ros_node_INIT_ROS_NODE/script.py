@@ -9,7 +9,7 @@ def execute(self, inputs, outputs, gvm):
         # check if the roscore is already running
         try:
             rospy.wait_for_service("/rosout/get_loggers", 5.0)
-        except Exception, e:
+        except Exception as e:
             self.logger.error("Exception: " + str(e) + str(traceback.format_exc()))
             return -1
 
@@ -29,11 +29,10 @@ def execute(self, inputs, outputs, gvm):
             if not gvm.variable_exist("robot_id"):
                 try: 
                     gvm.set_variable("robot_id",rospy.get_param("robot_id"))
-                except KeyError, e:
+                except KeyError as e:
                     self.logger.warn("robot_id does not exist in the parameter server")
 
-
-        except Exception, e:
+        except Exception as e:
             self.logger.error("Unexpected error:" + str(e) + str(traceback.format_exc()))
 
         return 0
