@@ -54,7 +54,7 @@ import rafcon.gui.config
 # gi = ModuleType("gi")
 # sys.modules[m.__name__] = gi
 from unittest import mock
-MOCK_MODULES = ['gi', 'gi.repository', 'gi.types']
+MOCK_MODULES = ['gi', 'gi.repository', 'gi.repository.Gtk', 'gi.types']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
