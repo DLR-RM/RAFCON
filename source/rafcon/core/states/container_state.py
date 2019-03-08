@@ -20,7 +20,6 @@
 
 """
 from builtins import str
-import traceback
 from copy import copy, deepcopy
 from threading import Condition
 
@@ -2165,7 +2164,7 @@ class ContainerState(State):
                 transition.parent = self
             except (ValueError, RecoveryModeException) as e:
                 if type(e) is RecoveryModeException:
-                    logger.error("Recovery error: {0}\n{1}".format(str(e), str(traceback.format_exc())))
+                    logger.exception("Recovery error:")
                     if e.do_delete_item:
                         transition_ids_to_delete.append(transition.transition_id)
                 else:
@@ -2222,7 +2221,7 @@ class ContainerState(State):
                 data_flow.parent = self
             except (ValueError, RecoveryModeException) as e:
                 if type(e) is RecoveryModeException:
-                    logger.error("Recovery error: {0}\n{1}".format(str(e), str(traceback.format_exc())))
+                    logger.error("Recovery error:")
                     if e.do_delete_item:
                         data_flow_ids_to_delete.append(data_flow.data_flow_id)
                 else:
