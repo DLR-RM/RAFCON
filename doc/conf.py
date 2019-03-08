@@ -66,7 +66,9 @@ for mock_class in MOCK_CLASSES:
         if path in sys.modules:
             continue
         if name[0].isupper():  # class
-            mocked = type(name, (), {"observe": lambda: 0, "observed": lambda: 0})
+            def fun(*args, **kwargs):
+                pass
+            mocked = type(name, (), {"observe": fun, "observed": fun})
         else:  # module
             mocked = ModuleType(name)
             mocked.__path__ = []
