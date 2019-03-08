@@ -47,7 +47,8 @@ except ImportError:
     pass
 
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
-autodoc_mock_imports = ["gi", "gtkmvc3.model_mt", "gtkmvc3.model", "gtkmvc3.view", "gtkmvc3.controller", "gaphas"]
+autodoc_mock_imports = ["gi", "gtkmvc3.model_mt", "gtkmvc3.model", "gtkmvc3.view", "gaphas",
+                        "rafcon.gui.mygaphas.guide.GuidedStateMixin"]
 autoclass_content = 'class'
 
 # Add any paths that contain templates here, relative to this directory.
