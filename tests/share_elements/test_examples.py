@@ -109,9 +109,8 @@ def test_functionality_example(caplog):
                                            unpatch_threading=False)
 
 
-@pytest.mark.unstable35
-@pytest.mark.unstable36
-@pytest.mark.unstable37
+@pytest.mark.unstable27
+@pytest.mark.unstable3
 def test_plugins_example(caplog):
 
     os.environ['RAFCON_PLUGIN_PATH'] = os.path.join(testing_utils.EXAMPLES_PATH, 'plugins', 'templates')
