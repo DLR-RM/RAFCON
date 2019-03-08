@@ -49,6 +49,8 @@ except ImportError:
 
 import rafcon.core.config
 import rafcon.gui.config
+from unittest.mock import MagicMock
+sys.modules["gi"] = MagicMock()
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
 autodoc_mock_imports = ["gi", "gtkmvc3", "yaml_configuration", "gaphas", "rafcon.core.singleton",
