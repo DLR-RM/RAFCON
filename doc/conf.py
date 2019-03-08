@@ -49,19 +49,38 @@ except ImportError:
 
 import rafcon.core.config
 import rafcon.gui.config
-# from types import ModuleType
+from types import ModuleType
 # import sys
 # gi = ModuleType("gi")
 # sys.modules[m.__name__] = gi
 from unittest import mock
-MOCK_MODULES = ["gtkmvc3", "gtkmvc3.controller", "gtkmvc3.model", "gtkmvc3.model_mt.ModelMT",
-                "gtkmvc3.observable.Signal", "gtkmvc3.view", "gtkmvc3.view.View", "gtkmvc3.observable",
-                "gtkmvc3.observable.Observable", "gtkmvc3.support.wrappers"]
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
-class Controller(object):
-    observe = mock.MagicMock()
-sys.modules["gtkmvc3.controller.Controller"] = Controller
+MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT",
+                "gtkmvc3.observable.Signal", "gtkmvc3.view.View",
+                "gtkmvc3.observable.Observable", "gtkmvc3.support.wrappers", "gtkmvc3.controller.Controller"]
+mocked = set()
+for mock_class in MOCK_CLASSES:
+    parts = mock_class.split(".")
+    for i in range(len(parts)):
+        name = parts[i]
+        path = ".".join(parts[0:i+1])
+        if path in mocked:
+            continue
+        mocked.add(path)
+        if name[0].isupper():  # class
+            mymock = type(name, (), { "observe": lambda: 0})
+        else:  # module
+            mymock = ModuleType(name)
+        print(i, name, mymock)
+        sys.modules[path] = mymock
+
+# MOCK_MODULES = ["gtkmvc3", "gtkmvc3.controller", "gtkmvc3.model", "gtkmvc3.model_mt.ModelMT",
+#                 "gtkmvc3.observable.Signal", "gtkmvc3.view", "gtkmvc3.view.View", "gtkmvc3.observable",
+#                 "gtkmvc3.observable.Observable", "gtkmvc3.support.wrappers"]
+# class Controller(object):
+#     observe = mock.MagicMock()
+# for mod_name in MOCK_MODULES:
+#     sys.modules[mod_name] = mock.Mock()
+# sys.modules["gtkmvc3.controller.Controller"] = Controller
 # from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
 autodoc_mock_imports = ["gi", "gtkmvc3", "yaml_configuration", "gaphas", "rafcon.core.singleton",
