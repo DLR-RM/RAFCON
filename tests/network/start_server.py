@@ -66,7 +66,7 @@ def start_server(interacting_function, queue_dict):
     # Initialize libraries
     core_singletons.library_manager.initialize()
 
-    import testing_utils
+    from tests import utils as testing_utils
     state_machine = global_storage.load_state_machine_from_path(
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "99_bottles_of_beer_monitoring")))
     sm_id = rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)

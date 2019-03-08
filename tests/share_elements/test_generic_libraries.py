@@ -4,8 +4,9 @@ import os
 import time
 
 # test environment elements
-import testing_utils
-from testing_utils import call_gui_callback
+import pytest
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback
 
 # general tool elements
 from rafcon.utils import log
@@ -31,14 +32,16 @@ def execute_all_generic_libraries_with_keyboard_only():
 
     call_gui_callback(menubar_ctrl.on_start_activate, None, None)
     import time
-    from keyboard_utils import keyboard as k
-    for key in [k.return_key]*7 + [k.tab_key]*2 + [k.return_key]*5:
-        time.sleep(0.5)
-        k.press_key(key)
-        k.release_key(key)
+    from pykeyboard import PyKeyboard
+    time.sleep(0.5)
+    k = PyKeyboard()
+    k.tap_key('Return', 7, 0.5)
+    k.tap_key('Tab', 2, 0.5)
+    k.tap_key('Return', 5, 0.5)
     call_gui_callback(menubar_ctrl.on_stop_activate, None, None)
 
 
+@pytest.mark.timeout(30)
 def test_all_generic_libraries_in_a_row(caplog):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
                           libraries={'generic': os.path.join(testing_utils.LIBRARY_SM_PATH, 'generic')}

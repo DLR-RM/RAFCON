@@ -5,8 +5,8 @@ from os.path import join, exists
 # general tool elements
 from rafcon.utils import log
 # test environment elements
-import testing_utils
-from testing_utils import call_gui_callback
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback
 
 import pytest
 
@@ -106,7 +106,7 @@ def trigger_gui_signals_first_run(*args):
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.gui.controllers.main_window import MenuBarController
     from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
-    from gui.widget.test_state_type_change import get_state_editor_ctrl_and_store_id_dict
+    from tests.gui.widget.test_state_type_change import get_state_editor_ctrl_and_store_id_dict
 
     testing_utils.wait_for_gui()
     main_window_controller = rafcon.gui.singleton.main_window_controller
@@ -259,6 +259,7 @@ def trigger_gui_signals_second_run(*args):
     call_gui_callback(backup_session.reset_session)
 
 
+@pytest.mark.timeout(20)
 def test_restore_session(caplog):
     from rafcon.core.storage import storage
 

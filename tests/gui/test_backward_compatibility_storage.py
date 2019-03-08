@@ -6,8 +6,8 @@ import hashlib
 from distutils.version import StrictVersion
 
 # general tool elements
-import testing_utils
-from testing_utils import call_gui_callback, run_gui, initialize_environment
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback, run_gui, initialize_environment
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)

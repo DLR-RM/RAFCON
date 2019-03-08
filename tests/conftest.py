@@ -2,12 +2,14 @@ from __future__ import absolute_import
 
 import os
 
+import pytest
+
 # Unfortunately this approach does not work to make sure to initialize the gui singletons from a gui thread
 # Problem: after executing conftest.py all modules are re-imported
 # and thus all variables (incl. singletons) are reinitialized
 # def pytest_configure(config):
 #     if any(x in str(config.invocation_dir) for x in ["gui", "share_elements", "widget", "network"]):
-#         import testing_utils
+#         import utils
 #         testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
 #         try:
 #             # do nothing, just open gui and close it afterwards
@@ -24,11 +26,28 @@ config_contents = {}
 
 def pytest_configure(config):
     store_configs()
+    # register additional markers "core", "gui", "share_elements" and "network"
+    config.addinivalue_line("markers", "core: mark test as being located in the core folder")
+    config.addinivalue_line("markers", "gui: mark test as being located in the gui folder")
+    config.addinivalue_line("markers", "share_elements: mark test as being located in the share_elements folder")
+    config.addinivalue_line("markers", "network: mark test as being located in the network folder")
 
 
 def pytest_unconfigure(config):
     restore_configs()
     clean_temp_test_directory()
+
+
+def pytest_collection_modifyitems(items):
+    for item in items:
+        if item.nodeid.startswith("tests/core/"):
+            item.add_marker(pytest.mark.core)
+        elif item.nodeid.startswith("tests/gui/"):
+            item.add_marker(pytest.mark.gui)
+        elif item.nodeid.startswith("tests/share_elements/"):
+            item.add_marker(pytest.mark.share_elements)
+        elif item.nodeid.startswith("tests/network/"):
+            item.add_marker(pytest.mark.network)
 
 
 def pytest_runtest_setup(item):
@@ -62,7 +81,7 @@ def restore_configs():
 def clean_temp_test_directory():
     import shutil
     import os
-    from . import testing_utils
+    from tests import utils as testing_utils
     test_temp_path = testing_utils.RAFCON_TEMP_PATH_TEST_BASE
     try:
         shutil.rmtree(test_temp_path)

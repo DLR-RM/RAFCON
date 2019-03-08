@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 # local
 from rafcon.utils.timer import measure_time
-import testing_utils
+from tests import utils as testing_utils
 
 # general tool elements
 from rafcon.utils import profiler

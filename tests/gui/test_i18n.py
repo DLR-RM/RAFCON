@@ -1,6 +1,6 @@
 from __future__ import print_function
-import testing_utils
-from core.test_i18n import use_locale, create_mo_files
+from tests import utils as testing_utils
+from tests.core.test_i18n import use_locale, create_mo_files
 
 
 def test_gtk_translation(caplog, monkeypatch):

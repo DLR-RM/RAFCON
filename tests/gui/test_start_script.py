@@ -6,7 +6,7 @@ import subprocess
 import os
 import sys
 import shutil
-import testing_utils
+from tests import utils as testing_utils
 FILE_MODIFIED_BY_STATE_MACHINE = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE,
                                               "test_start_script.txt")
 if os.path.exists(FILE_MODIFIED_BY_STATE_MACHINE):

@@ -7,7 +7,7 @@ from rafcon.core.state_machine import StateMachine
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 
 # test environment elements
-import testing_utils
+from tests import utils as testing_utils
 
 
 def create_hierarchy_state():

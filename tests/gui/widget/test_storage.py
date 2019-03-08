@@ -7,8 +7,8 @@ import pytest
 from rafcon.utils import log
 
 # test environment elements
-import testing_utils
-from testing_utils import call_gui_callback
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback
 
 logger = log.get_logger(__name__)
 

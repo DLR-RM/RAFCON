@@ -2,9 +2,11 @@ from os.path import join, realpath, dirname
 import rafcon
 import subprocess
 import sys
-import testing_utils
+import pytest
+from tests import utils as testing_utils
 
 
+@pytest.mark.timeout(20)
 def test_library_resave():
     script = join(dirname(realpath(rafcon.__file__)), "gui", "resave_state_machines.py")
     config_path = join(testing_utils.TESTS_PATH, "assets", "configs", "valid_config")

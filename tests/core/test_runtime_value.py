@@ -7,7 +7,7 @@ import rafcon
 from rafcon.core.singleton import state_machine_manager
 from rafcon.core.singleton import state_machine_execution_engine
 
-import testing_utils
+from tests import utils as testing_utils
 
 # utils
 from rafcon.utils import log

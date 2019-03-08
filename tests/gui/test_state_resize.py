@@ -5,8 +5,8 @@ import os
 import time
 import pytest
 
-import testing_utils
-from testing_utils import call_gui_callback, wait_for_gui
+from tests import utils as testing_utils
+from tests.utils import call_gui_callback, wait_for_gui
 
 
 sm_path_recursive_resize = os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines", "recursive_resize")
@@ -128,6 +128,7 @@ def print_state_sizes(state_m, canvas, state_names=None):
             print_state_sizes(child_state_m, canvas)
 
 
+@pytest.mark.unstable
 @pytest.mark.parametrize("state_path,recursive,rel_size", [
     (state_path_root, False, (40, 40)),
     (state_path_root, True, (40, 40)),

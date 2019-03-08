@@ -1,6 +1,6 @@
 from rafcon.core.global_variable_manager import GlobalVariableManager
 import pytest
-import testing_utils
+from tests import utils as testing_utils
 from pytest import raises
 
 
