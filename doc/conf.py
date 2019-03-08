@@ -47,7 +47,7 @@ except ImportError:
     pass
 
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
-autodoc_mock_imports = ["gi", "gtkmvc3", "gaphas"]
+autodoc_mock_imports = ["gi", "gtkmvc3.model_mt", "gaphas"]
 autoclass_content = 'class'
 
 # Add any paths that contain templates here, relative to this directory.
