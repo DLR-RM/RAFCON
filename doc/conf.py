@@ -59,6 +59,8 @@ from unittest import mock
 #     sys.modules[mod_name] = mock.Mock()
 class Controller(object):
     observe = mock.MagicMock()
+sys.modules["gtkmvc3"] = mock.Mock()
+sys.modules["gtkmvc3.controller"] = mock.Mock()
 sys.modules["gtkmvc3.controller.Controller"] = Controller
 # from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
