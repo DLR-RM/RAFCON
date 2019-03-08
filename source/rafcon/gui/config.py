@@ -92,15 +92,21 @@ class GuiConfig(ObservableConfig):
 
         # The env vars GTK_DATA_PREFIX and GTK_THEME must be set before Gtk is imported first to prevent GTK warnings
         # from other themes
-        from gi.repository import Gtk
-        settings = Gtk.Settings.get_default()
-        settings.set_property("gtk-theme-name", theme_name)
-        settings.set_property("gtk-application-prefer-dark-theme", dark_theme)
+        try:
+            from gi.repository import Gtk
+            settings = Gtk.Settings.get_default()
+            settings.set_property("gtk-theme-name", theme_name)
+            settings.set_property("gtk-application-prefer-dark-theme", dark_theme)
 
-        Gtk.Window.set_default_icon_name("rafcon" if dark_theme else "rafcon-light")
+            Gtk.Window.set_default_icon_name("rafcon" if dark_theme else "rafcon-light")
+        except ImportError:
+            pass
 
     def configure_colors(self):
-        from gi.repository import Gdk
+        try:
+            from gi.repository import Gdk
+        except ImportError:
+            return
         dark_theme = self.get_config_value('THEME_DARK_VARIANT', True)
         css_filename = "gtk-dark.css" if dark_theme else "gtk.css"
         # Get colors from GTKrc file
