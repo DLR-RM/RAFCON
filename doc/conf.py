@@ -46,15 +46,16 @@ try:
 except ImportError:
     pass
 
-from unittest.mock import MagicMock
+class MockConfig(object):
+    pass
 try:
     import rafcon.core.config
 except:
-    rafcon.core.config.global_config = MagicMock()
+    rafcon.core.config.global_config = MockConfig()
 try:
     import rafcon.gui.config
 except:
-    rafcon.gui.config.global_gui_config = MagicMock()
+    rafcon.gui.config.global_gui_config = MockConfig()
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
 autodoc_mock_imports = ["gi", "gtkmvc3", "yaml_configuration", "gaphas", "rafcon.core.singleton",
                         "rafcon.gui.singleton"]
