@@ -110,6 +110,7 @@ def test_functionality_example(caplog):
 
 
 @pytest.mark.unstable35
+@pytest.mark.unstable36
 @pytest.mark.unstable37
 def test_plugins_example(caplog):
 
