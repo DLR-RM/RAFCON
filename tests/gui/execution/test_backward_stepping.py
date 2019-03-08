@@ -31,9 +31,8 @@ def execute_library_state_forwards_backwards():
     testing_utils.wait_for_gui()
     # reset the synchronization counter; although the tests run in different processes they share their memory
     # as the import statements are at the top of the file and not inside the parallel called functions
-    state_machine_execution_engine._status.execution_condition_variable.acquire()
-    state_machine_execution_engine.synchronization_counter = 0
-    state_machine_execution_engine._status.execution_condition_variable.release()
+    with state_machine_execution_engine._status.execution_condition_variable:
+        state_machine_execution_engine.synchronization_counter = 0
 
     call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
     current_state_machine_id = gui_singleton.state_machine_manager.active_state_machine_id
@@ -101,9 +100,8 @@ def execute_preemptive_state_forwards_backwards():
 
     # reset the synchronization counter; although the tests run in different processes they share their memory
     # as the import statements are at the top of the file and not inside the parallel called functions
-    state_machine_execution_engine._status.execution_condition_variable.acquire()
-    state_machine_execution_engine.synchronization_counter = 0
-    state_machine_execution_engine._status.execution_condition_variable.release()
+    with state_machine_execution_engine._status.execution_condition_variable:
+        state_machine_execution_engine.synchronization_counter = 0
 
     call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
     current_state_machine_id = gui_singleton.state_machine_manager.active_state_machine_id
@@ -167,9 +165,8 @@ def execute_barrier_state_forwards_backwards():
 
     # reset the synchronization counter; although the tests run in different processes they share their memory
     # as the import statements are at the top of the file and not inside the parallel called functions
-    state_machine_execution_engine._status.execution_condition_variable.acquire()
-    state_machine_execution_engine.synchronization_counter = 0
-    state_machine_execution_engine._status.execution_condition_variable.release()
+    with state_machine_execution_engine._status.execution_condition_variable:
+        state_machine_execution_engine.synchronization_counter = 0
 
     call_gui_callback(menubar_ctrl.on_step_mode_activate, sm.state_machine_id, None)
     wait_for_execution_engine_sync_counter(1, logger)

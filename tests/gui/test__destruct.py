@@ -1188,6 +1188,7 @@ def test_copy_paste_with_modification_history_destruct_with_gui(caplog):
                            gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False}, expected_warnings=0)
 
 
+@pytest.mark.unstable
 def test_complex_model_and_core_destruct_with_gui(caplog):
 
     testing_utils.dummy_gui(None)

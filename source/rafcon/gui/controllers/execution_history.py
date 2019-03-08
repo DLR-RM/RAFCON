@@ -377,39 +377,38 @@ class ExecutionHistoryTreeController(ExtendedController):
         :return:
         """
         # with self._update_lock:
-        self._update_lock.acquire()
-        self._store_expansion_state()
-        self.history_tree_store.clear()
-        selected_sm_m = self.model.get_selected_state_machine_model()
-        if not selected_sm_m:
-            return
+        with self._update_lock:
+            self._store_expansion_state()
+            self.history_tree_store.clear()
+            selected_sm_m = self.model.get_selected_state_machine_model()
+            if not selected_sm_m:
+                return
 
-        for execution_number, execution_history in enumerate(selected_sm_m.state_machine.execution_histories):
-            if len(execution_history) > 0:
-                first_history_item = execution_history[0]
-                # the next lines filter out the StateMachineStartItem, which is not intended to
-                # be displayed, but merely as convenient entry point in the saved log file
-                if isinstance(first_history_item, StateMachineStartItem):
-                    if len(execution_history) > 1:
-                        first_history_item = execution_history[1]
+            for execution_number, execution_history in enumerate(selected_sm_m.state_machine.execution_histories):
+                if len(execution_history) > 0:
+                    first_history_item = execution_history[0]
+                    # the next lines filter out the StateMachineStartItem, which is not intended to
+                    # be displayed, but merely as convenient entry point in the saved log file
+                    if isinstance(first_history_item, StateMachineStartItem):
+                        if len(execution_history) > 1:
+                            first_history_item = execution_history[1]
+                            tree_item = self.history_tree_store.insert_after(
+                                None,
+                                None,
+                                (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
+                                 first_history_item, self.TOOL_TIP_TEXT))
+                            self.insert_execution_history(tree_item, execution_history[1:], is_root=True)
+                        else:
+                            pass  # there was only the Start item in the history
+                    else:
                         tree_item = self.history_tree_store.insert_after(
                             None,
                             None,
                             (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
                              first_history_item, self.TOOL_TIP_TEXT))
-                        self.insert_execution_history(tree_item, execution_history[1:], is_root=True)
-                    else:
-                        pass  # there was only the Start item in the history
-                else:
-                    tree_item = self.history_tree_store.insert_after(
-                        None,
-                        None,
-                        (first_history_item.state_reference.name + " - Run " + str(execution_number + 1),
-                         first_history_item, self.TOOL_TIP_TEXT))
-                    self.insert_execution_history(tree_item, execution_history, is_root=True)
+                        self.insert_execution_history(tree_item, execution_history, is_root=True)
 
-        self._restore_expansion_state()
-        self._update_lock.release()
+            self._restore_expansion_state()
 
     def insert_history_item(self, parent, history_item, description, dummy=False):
         """Enters a single history item into the tree store

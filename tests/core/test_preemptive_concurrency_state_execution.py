@@ -36,40 +36,34 @@ def test_concurrency_preemption_state_execution(caplog):
 
     preemption_state_sm = create_preemption_state_machine()
 
-    testing_utils.test_multithreading_lock.acquire()
-    rafcon.core.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
-    rafcon.core.singleton.state_machine_execution_engine.start(preemption_state_sm.state_machine_id)
-    rafcon.core.singleton.state_machine_execution_engine.join()
+    with testing_utils.test_multithreading_lock:
+        rafcon.core.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
+        rafcon.core.singleton.state_machine_execution_engine.start(preemption_state_sm.state_machine_id)
+        rafcon.core.singleton.state_machine_execution_engine.join()
 
-    try:
         assert rafcon.core.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
         assert preemption_state_sm.root_state.final_outcome.outcome_id == 3
         rafcon.core.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
         testing_utils.assert_logger_warnings_and_errors(caplog)
-    finally:
-        testing_utils.test_multithreading_lock.release()
 
 
 def test_concurrency_preemption_save_load(caplog):
-    testing_utils.test_multithreading_lock.acquire()
+    with testing_utils.test_multithreading_lock:
 
-    storage_path = testing_utils.get_unique_temp_path()
+        storage_path = testing_utils.get_unique_temp_path()
 
-    preemption_state_sm = create_preemption_state_machine()
+        preemption_state_sm = create_preemption_state_machine()
 
-    storage.save_state_machine_to_path(preemption_state_sm, storage_path)
-    storage.load_state_machine_from_path(storage_path)
+        storage.save_state_machine_to_path(preemption_state_sm, storage_path)
+        storage.load_state_machine_from_path(storage_path)
 
-    rafcon.core.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
-    rafcon.core.singleton.state_machine_execution_engine.start(preemption_state_sm.state_machine_id)
-    rafcon.core.singleton.state_machine_execution_engine.join()
+        rafcon.core.singleton.state_machine_manager.add_state_machine(preemption_state_sm)
+        rafcon.core.singleton.state_machine_execution_engine.start(preemption_state_sm.state_machine_id)
+        rafcon.core.singleton.state_machine_execution_engine.join()
 
-    try:
         assert rafcon.core.singleton.global_variable_manager.get_variable("preempted_state2_code") == "DF3LFXD34G"
         rafcon.core.singleton.state_machine_manager.remove_state_machine(preemption_state_sm.state_machine_id)
         testing_utils.assert_logger_warnings_and_errors(caplog)
-    finally:
-        testing_utils.test_multithreading_lock.release()
 
 if __name__ == '__main__':
     pytest.main([__file__])
