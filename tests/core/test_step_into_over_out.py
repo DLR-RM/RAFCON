@@ -16,12 +16,19 @@ logger = log.get_logger(__name__)
 
 def execute_command_synchronized_on_state(state_machine, state_id, command, counter=1, join=True):
     old_run_id = state_machine.get_state_by_path(state_id).run_id
+    old_execution_counter = state_machine.get_state_by_path(state_id)._execution_counter
     getattr(rafcon.core.singleton.state_machine_execution_engine, command)()
     # let the state start properly
     while old_run_id == state_machine.get_state_by_path(state_id).run_id:
         time.sleep(0.005)
+    while old_execution_counter == state_machine.get_state_by_path(state_id)._execution_counter:
+        time.sleep(0.005)
     if join:
-        state_machine.get_state_by_path(state_id).join()
+        try:
+            state_machine.get_state_by_path(state_id).join()
+        except RuntimeError:
+            # if the state is already executed then join() returns with an RuntimeError
+            pass
     # let the hierarchy properly chose the next state
     wait_for_execution_engine_sync_counter(counter, logger)
 
