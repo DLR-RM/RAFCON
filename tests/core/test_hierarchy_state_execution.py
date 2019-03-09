@@ -47,17 +47,14 @@ def test_hierarchy_state_execution(caplog):
     except Exception as e:
         assert isinstance(e, ValueError)
 
-    testing_utils.test_multithreading_lock.acquire()
-    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
-    rafcon.core.singleton.state_machine_execution_engine.join()
-    rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    try:
+    with testing_utils.test_multithreading_lock:
+        rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+        rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
+        rafcon.core.singleton.state_machine_execution_engine.join()
+        rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
         assert hierarchy_state.output_data["output1"] == 52.0
         # 2 type error -> one child output port data type error and root state scoped data type error
         testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors=2)
-    finally:
-        testing_utils.test_multithreading_lock.release()
 
 
 def test_hierarchy_save_load_test(caplog):
@@ -71,17 +68,14 @@ def test_hierarchy_save_load_test(caplog):
 
     state_machine = StateMachine(sm_loaded.root_state)
 
-    testing_utils.test_multithreading_lock.acquire()
-    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
-    rafcon.core.singleton.state_machine_execution_engine.join()
-    rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    try:
+    with testing_utils.test_multithreading_lock:
+        rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+        rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
+        rafcon.core.singleton.state_machine_execution_engine.join()
+        rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
         assert state_machine.root_state.output_data["output1"] == 52.0
         # 2 type error -> one child output port data type error and root state scoped data type error
         testing_utils.assert_logger_warnings_and_errors(caplog, expected_errors=2)
-    finally:
-        testing_utils.test_multithreading_lock.release()
 
 if __name__ == '__main__':
     test_hierarchy_state_execution(None)

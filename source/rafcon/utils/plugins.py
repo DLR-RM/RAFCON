@@ -22,7 +22,6 @@ from builtins import str
 import sys
 import os
 import importlib
-import traceback
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -54,8 +53,8 @@ def load_plugins():
                 module = importlib.import_module(plugin_name)
                 plugin_dict[plugin_name] = module
                 logger.info("Successfully loaded plugin '{}'".format(plugin_name))
-            except ImportError as e:
-                logger.error("Could not import plugin '{}': {}\n{}".format(plugin_name, e, str(traceback.format_exc())))
+            except ImportError:
+                logger.exception("Could not import plugin '{}':".format(plugin_name))
 
 
 def run_hook(hook_name, *args, **kwargs):

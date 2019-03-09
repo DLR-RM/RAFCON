@@ -33,25 +33,22 @@ def test_start_stop_pause_step(caplog):
     sm = return_loop_state_machine()
     rafcon.core.singleton.global_variable_manager.set_variable("counter", 0)
 
-    testing_utils.test_multithreading_lock.acquire()
-    rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
-    rafcon.core.singleton.state_machine_execution_engine.step_mode(sm.state_machine_id)
+    with testing_utils.test_multithreading_lock:
+        rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
+        rafcon.core.singleton.state_machine_execution_engine.step_mode(sm.state_machine_id)
 
-    for i in range(5):
+        for i in range(5):
+            time.sleep(0.2)
+            rafcon.core.singleton.state_machine_execution_engine.step_into()
+
+        # give the state machine time to execute
         time.sleep(0.2)
-        rafcon.core.singleton.state_machine_execution_engine.step_into()
+        rafcon.core.singleton.state_machine_execution_engine.stop()
+        rafcon.core.singleton.state_machine_execution_engine.join()
 
-    # give the state machine time to execute
-    time.sleep(0.2)
-    rafcon.core.singleton.state_machine_execution_engine.stop()
-    rafcon.core.singleton.state_machine_execution_engine.join()
-
-    try:
         assert rafcon.core.singleton.global_variable_manager.get_variable("counter") == 5
         rafcon.core.singleton.state_machine_manager.remove_state_machine(sm.state_machine_id)
         testing_utils.assert_logger_warnings_and_errors(caplog)
-    finally:
-        testing_utils.test_multithreading_lock.release()
 
 if __name__ == '__main__':
     pytest.main([__file__])
