@@ -3,15 +3,14 @@ import time
 
 def execute(self, inputs, outputs, gvm):
     while True:
+        # explicitely no preemptive_wait here!
         time.sleep(0.010)
         if self.preempted or self.parent.preempted:
             print("i was preempted")
-            break    
-#        beer = gvm.get_variable('beers')
-#        if beer >= 3:
-#            break
-    gvm.set_variable("whiskey",3)
-    return 0
+            gvm.set_variable("whiskey",3)
+            return -2  # prempted    
+    #gvm.set_variable("whiskey",3)
+    #return 0
     
 def backward_execute(self, inputs, outputs, gvm):
     self.logger.debug("backward step 3")
