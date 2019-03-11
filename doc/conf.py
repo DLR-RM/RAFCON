@@ -51,7 +51,7 @@ from types import ModuleType
 MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT", "gtkmvc3.observable.Observable", "gtkmvc3.controller.Controller"]
 MOCK_CLASSES = []
 
-from sphinx.ext.autodoc import _MockObject
+from sphinx.ext.autodoc.importer import _MockObject
 
 def __new__(cls, *args, **kwargs):
     # type: (Any, Any) -> Any
