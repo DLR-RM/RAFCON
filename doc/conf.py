@@ -67,7 +67,7 @@ def __new__(cls, *args, **kwargs):
         print("mocking", args[0])
         return type(args[0], (), args[2], **kwargs)  # type: ignore
     else:
-        print("mocking user super", cls)
+        print("mocking user super", cls, cls.__bases__)
         return super(_MockObject, cls).__new__(cls)
 
 _MockObject.__new__ = __new__
