@@ -77,10 +77,13 @@ def add_directive_header(self, sig):
                          ':class:`%s`' % b.__name__ or
                          ':class:`%s.%s`' % (b.__module__, b.__name__)
                          for b in self.object.__bases__]
+                self.add_line('   ' + _('Bases: %s') % ', '.join(bases),
+                              sourcename)
             except:
                 print("Exception")
-            self.add_line('   ' + _('Bases: %s') % ', '.join(bases),
-                          sourcename)
+                for b in self.object.__bases__
+                    print("base", b, getattr(b, "__module__", "No module"))
+                raise
 
 ClassDocumenter.add_directive_header = add_directive_header
 
