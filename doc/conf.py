@@ -53,21 +53,23 @@ from types import ModuleType
 MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT", "gtkmvc3.observable.Observable", "gtkmvc3.controller.Controller"]
 MOCK_CLASSES = []
 
+def dummy_fun(*args, **kwargs):
+    return dummy_fun
+
 from sphinx.ext.autodoc.importer import _MockObject
 
 def __new__(cls, *args, **kwargs):
     # type: (Any, Any) -> Any
     if len(args) == 3 and isinstance(args[1], tuple) and args[1][-1].__class__ is cls:
         # subclassing MockObject
+        attrs = args[2] if isinstance(args[2], dict) else {}
+        attrs.update({"observe": dummy_fun, "observed": dummy_fun, "register_observer": dummy_fun})
         return type(args[0], (), args[2], **kwargs)  # type: ignore
     else:
         return super(_MockObject, cls).__new__(cls)
 
 _MockObject.__new__ = __new__
 
-
-def dummy_fun(*args, **kwargs):
-    return dummy_fun
 
 module_name = __name__
 for mock_class in MOCK_CLASSES:
