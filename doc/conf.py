@@ -121,7 +121,7 @@ __name__ = module_name
 # from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
 autodoc_mock_imports = ["gi", "gtkmvc3", "yaml_configuration", "gaphas", "rafcon.core.singleton",
-                        "rafcon.gui.singleton"]
+                        "rafcon.gui.singleton", "cairo", "simplegeneric"]
 autoclass_content = 'class'
 
 # Add any paths that contain templates here, relative to this directory.
