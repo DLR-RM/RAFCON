@@ -59,7 +59,7 @@ MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT", "gtkmvc3.observable.Signal",
 
 
 def dummy_fun(*args, **kwargs):
-    pass
+    return dummy_fun
 module_name = __name__
 for mock_class in MOCK_CLASSES:
     parts = mock_class.split(".")
