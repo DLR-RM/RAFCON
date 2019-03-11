@@ -80,6 +80,9 @@ for mock_class in MOCK_CLASSES:
         sys.modules[path] = mocked
         if parent_path:
             setattr(sys.modules[parent_path], name, mocked)
+
+__name__ = "gaphas.aspect"
+sys.modules["gaphas.aspect"] = "ItemInMotion", type("ItemInMotion", (), {})
 __name__ = module_name
 
 # MOCK_MODULES = ["gtkmvc3", "gtkmvc3.controller", "gtkmvc3.model", "gtkmvc3.model_mt.ModelMT",
