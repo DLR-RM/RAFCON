@@ -90,6 +90,7 @@ def __getattr__(self, name):
 
 _MockObject.__new__ = __new__
 _MockObject.__mro_entries__ = __mro_entries__
+_MockObject.__getattr__ = __getattr__
 _MockModule.__getattr__ = __getattr__
 
 
