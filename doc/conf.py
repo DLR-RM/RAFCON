@@ -47,20 +47,26 @@ except ImportError:
     pass
 
 
-import rafcon.core.config
-import rafcon.gui.config
 from types import ModuleType
-# import sys
-# gi = ModuleType("gi")
-# sys.modules[m.__name__] = gi
-from unittest import mock
-MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT",
-                "gtkmvc3.observable.Observable", "gtkmvc3.controller.Controller",
-                "gaphas.aspect.ItemInMotion"]
+MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT", "gtkmvc3.observable.Observable", "gtkmvc3.controller.Controller"]
+MOCK_CLASSES = []
+
+from sphinx.ext.autodoc import _MockObject
+
+def __new__(cls, *args, **kwargs):
+    # type: (Any, Any) -> Any
+    if len(args) == 3 and isinstance(args[1], tuple) and args[1][-1].__class__ is cls:
+        # subclassing MockObject
+        return type(args[0], (), args[2], **kwargs)  # type: ignore
+    else:
+        return super(_MockObject, cls).__new__(cls)
+
+_MockObject.__new__ = __new__
 
 
 def dummy_fun(*args, **kwargs):
     return dummy_fun
+
 module_name = __name__
 for mock_class in MOCK_CLASSES:
     parts = mock_class.split(".")
@@ -70,7 +76,7 @@ for mock_class in MOCK_CLASSES:
         parent_path = ".".join(parts[0:i])
         if path in sys.modules:
             continue
-        if name[0].isupper() and name != "Gtk":  # class
+        if name[0].isupper():  # class
             mocked = type(name, (), {"observe": dummy_fun, "observed": dummy_fun, "register_observer": dummy_fun})
         else:  # module
             __name__ = parent_path
@@ -81,18 +87,8 @@ for mock_class in MOCK_CLASSES:
         if parent_path:
             setattr(sys.modules[parent_path], name, mocked)
 
-import rafcon.gui.mygaphas.guide
 __name__ = module_name
 
-# MOCK_MODULES = ["gtkmvc3", "gtkmvc3.controller", "gtkmvc3.model", "gtkmvc3.model_mt.ModelMT",
-#                 "gtkmvc3.observable.Signal", "gtkmvc3.view", "gtkmvc3.view.View", "gtkmvc3.observable",
-#                 "gtkmvc3.observable.Observable", "gtkmvc3.support.wrappers"]
-# class Controller(object):
-#     observe = mock.MagicMock()
-# for mod_name in MOCK_MODULES:
-#     sys.modules[mod_name] = mock.Mock()
-# sys.modules["gtkmvc3.controller.Controller"] = Controller
-# from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
 autodoc_mock_imports = ["gi", "gtkmvc3", "yaml_configuration", "gaphas", "cairo", "simplegeneric"]
 autoclass_content = 'class'
