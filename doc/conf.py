@@ -54,39 +54,12 @@ from types import ModuleType
 # gi = ModuleType("gi")
 # sys.modules[m.__name__] = gi
 from unittest import mock
-MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT", "gtkmvc3.observable.Signal", "gtkmvc3.view.View",
-                "gtkmvc3.observable.Observable", "gtkmvc3.support.wrappers", "gtkmvc3.controller.Controller",
-                "gi.repository.Gtk.IconView"]
+MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT", "gtkmvc3.observable.Signal",
+                "gtkmvc3.observable.Observable", "gtkmvc3.support.wrappers", "gtkmvc3.controller.Controller"]
 
-from sphinx.ext.autodoc import ClassDocumenter
 
-def add_directive_header(self, sig):
-    # type: (str) -> None
-    if self.doc_as_attr:
-        self.directivetype = 'attribute'
-    super(ClassDocumenter, self).add_directive_header(sig)
-
-    # add inheritance info, if wanted
-    if not self.doc_as_attr and self.options.show_inheritance:
-        sourcename = self.get_sourcename()
-        self.add_line('', sourcename)
-        if hasattr(self.object, '__bases__') and len(self.object.__bases__):
-            print("Bases", self.object, self.object.__bases__)
-            try:
-                bases = [b.__module__ in ('__builtin__', 'builtins') and
-                         ':class:`%s`' % b.__name__ or
-                         ':class:`%s.%s`' % (b.__module__, b.__name__)
-                         for b in self.object.__bases__]
-                self.add_line('   ' + _('Bases: %s') % ', '.join(bases),
-                              sourcename)
-            except:
-                print("Exception for", self.object)
-                for b in self.object.__bases__:
-                    print("base", b, getattr(b, "__module__", "No module"))
-                raise
-
-ClassDocumenter.add_directive_header = add_directive_header
-
+def dummy_fun(*args, **kwargs):
+    pass
 module_name = __name__
 for mock_class in MOCK_CLASSES:
     parts = mock_class.split(".")
@@ -96,10 +69,8 @@ for mock_class in MOCK_CLASSES:
         parent_path = ".".join(parts[0:i])
         if path in sys.modules:
             continue
-        if name[0].isupper() and name[0] != "Gtk":  # class
-            def fun(*args, **kwargs):
-                pass
-            mocked = type(name, (), {"observe": fun, "observed": fun})
+        if name[0].isupper() and name != "Gtk":  # class
+            mocked = type(name, (), {"observe": dummy_fun, "observed": dummy_fun})
         else:  # module
             __name__ = parent_path
             mocked = ModuleType(name)
