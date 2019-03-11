@@ -64,8 +64,10 @@ def __new__(cls, *args, **kwargs):
         # subclassing MockObject
         attrs = args[2] if isinstance(args[2], dict) else {}
         attrs.update({"observe": dummy_fun, "observed": dummy_fun, "register_observer": dummy_fun})
+        print("mocking", args[0])
         return type(args[0], (), args[2], **kwargs)  # type: ignore
     else:
+        print("mocking user super", cls)
         return super(_MockObject, cls).__new__(cls)
 
 _MockObject.__new__ = __new__
