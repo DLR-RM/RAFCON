@@ -46,6 +46,8 @@ try:
 except ImportError:
     pass
 
+import rafcon.core.config
+import rafcon.gui.config
 
 from types import ModuleType
 MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT", "gtkmvc3.observable.Observable", "gtkmvc3.controller.Controller"]
