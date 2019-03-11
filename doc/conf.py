@@ -54,9 +54,9 @@ from types import ModuleType
 # gi = ModuleType("gi")
 # sys.modules[m.__name__] = gi
 from unittest import mock
-MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT",
-                "gtkmvc3.observable.Signal", "gtkmvc3.view.View",
-                "gtkmvc3.observable.Observable", "gtkmvc3.support.wrappers", "gtkmvc3.controller.Controller"]
+MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT", "gtkmvc3.observable.Signal", "gtkmvc3.view.View",
+                "gtkmvc3.observable.Observable", "gtkmvc3.support.wrappers", "gtkmvc3.controller.Controller",
+                "gi.repository.Gtk.IconView"]
 
 from sphinx.ext.autodoc import ClassDocumenter
 
@@ -96,7 +96,7 @@ for mock_class in MOCK_CLASSES:
         parent_path = ".".join(parts[0:i])
         if path in sys.modules:
             continue
-        if name[0].isupper():  # class
+        if name[0].isupper() and name[0] != "Gtk":  # class
             def fun(*args, **kwargs):
                 pass
             mocked = type(name, (), {"observe": fun, "observed": fun})
