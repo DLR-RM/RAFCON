@@ -80,8 +80,8 @@ def add_directive_header(self, sig):
                 self.add_line('   ' + _('Bases: %s') % ', '.join(bases),
                               sourcename)
             except:
-                print("Exception")
-                for b in self.object.__bases__
+                print("Exception for", self.object)
+                for b in self.object.__bases__:
                     print("base", b, getattr(b, "__module__", "No module"))
                 raise
 
