@@ -49,14 +49,14 @@ except ImportError:
 import rafcon.core.config
 import rafcon.gui.config
 
+from sphinx.ext.autodoc.importer import _MockObject
 from types import ModuleType
-MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT", "gtkmvc3.observable.Observable", "gtkmvc3.controller.Controller"]
+# MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT", "gtkmvc3.observable.Observable", "gtkmvc3.controller.Controller"]
 MOCK_CLASSES = []
 
 def dummy_fun(*args, **kwargs):
     return dummy_fun
 
-from sphinx.ext.autodoc.importer import _MockObject
 
 def __new__(cls, *args, **kwargs):
     # type: (Any, Any) -> Any
@@ -70,7 +70,13 @@ def __new__(cls, *args, **kwargs):
         print("mocking user super", cls, cls.__bases__)
         return super(_MockObject, cls).__new__(cls)
 
+
+def __mro_entries__(self, bases):
+    # type: (Tuple) -> Tuple
+    return (self.__class__,)
+
 _MockObject.__new__ = __new__
+_MockObject.__mro_entries__ = __mro_entries__
 
 
 module_name = __name__
