@@ -62,13 +62,13 @@ def __new__(cls, *args, **kwargs):
     # type: (Any, Any) -> Any
     if len(args) == 3 and isinstance(args[1], tuple) and args[1][-1].__class__ is cls:
         # subclassing MockObject
-        # attrs = args[2] if isinstance(args[2], dict) else {}
-        # attrs.update({"observe": dummy_fun, "observed": dummy_fun, "register_observer": dummy_fun})
-        print("mocking", args[0])
+        # print("mocking", args[0])
         return type(args[0], (), args[2], **kwargs)  # type: ignore
     else:
-        print("mocking user super", cls, cls.__bases__)
-        mock = super(_MockObject, cls).__new__(cls)
+        cls.mock_counter = getattr(cls, "mock_counter", 0) + 1
+        unique_class = type("Mock{}".format(cls.mock_counter), (_MockObject, ), {})
+        # print("mocking user super", cls, cls.__bases__)
+        mock = super(_MockObject, unique_class).__new__(unique_class)
         setattr(mock, "observe", dummy_fun)
         setattr(mock, "observed", dummy_fun)
         setattr(mock, "register_observer", dummy_fun)
