@@ -70,7 +70,7 @@ for mock_class in MOCK_CLASSES:
         if path in sys.modules:
             continue
         if name[0].isupper() and name != "Gtk":  # class
-            mocked = type(name, (), {"observe": dummy_fun, "observed": dummy_fun})
+            mocked = type(name, (), {"observe": dummy_fun, "observed": dummy_fun, "register_observer": dummy_fun})
         else:  # module
             __name__ = parent_path
             mocked = ModuleType(name)
