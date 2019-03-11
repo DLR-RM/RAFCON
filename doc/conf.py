@@ -49,7 +49,7 @@ except ImportError:
 import rafcon.core.config
 import rafcon.gui.config
 
-from sphinx.ext.autodoc.importer import _MockObject
+from sphinx.ext.autodoc.importer import _MockObject, _MockModule
 from types import ModuleType
 # MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT", "gtkmvc3.observable.Observable", "gtkmvc3.controller.Controller"]
 MOCK_CLASSES = []
@@ -60,14 +60,16 @@ def dummy_fun(*args, **kwargs):
 
 def __new__(cls, *args, **kwargs):
     # type: (Any, Any) -> Any
+    mock_name = kwargs.pop("mock_name", "Mock")
     if len(args) == 3 and isinstance(args[1], tuple) and args[1][-1].__class__ is cls:
         # subclassing MockObject
         # print("mocking", args[0])
         return type(args[0], (), args[2], **kwargs)  # type: ignore
     else:
-        cls.mock_counter = getattr(cls, "mock_counter", 0) + 1
-        unique_class = type("Mock{}".format(cls.mock_counter), (_MockObject, ), {})
-        # print("mocking user super", cls, cls.__bases__)
+        # cls.mock_counter = getattr(cls, "mock_counter", 0) + 1
+        # unique_class = type("Mock{}".format(cls.mock_counter), (_MockObject, ), {})
+        unique_class = type(mock_name.format(cls.mock_counter), (_MockObject, ), {})
+        print("mocking user super", mock_name, cls, cls.__bases__)
         mock = super(_MockObject, unique_class).__new__(unique_class)
         setattr(mock, "observe", dummy_fun)
         setattr(mock, "observed", dummy_fun)
@@ -79,8 +81,16 @@ def __mro_entries__(self, bases):
     # type: (Tuple) -> Tuple
     return (self.__class__,)
 
+
+def __getattr__(self, name):
+    # type: (str) -> _MockObject
+    o = _MockObject(mock_name=name)
+    o.__module__ = self.__name__
+    return o
+
 _MockObject.__new__ = __new__
 _MockObject.__mro_entries__ = __mro_entries__
+_MockModule.__getattr__ = __getattr__
 
 
 module_name = __name__
