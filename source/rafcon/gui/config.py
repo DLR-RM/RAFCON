@@ -105,12 +105,13 @@ class GuiConfig(ObservableConfig):
     def configure_colors(self):
         # Provide black as fallback color if theme is not found instead of crashing
         self.colors = defaultdict(lambda: "#FFFFFF")
-        self.gtk_colors = defaultdict(lambda: Gdk.RGBA(0, 0, 0).to_color())
-
         try:
             from gi.repository import Gdk
+            self.gtk_colors = defaultdict(lambda: Gdk.RGBA(0, 0, 0).to_color())
         except ImportError:
+            self.gtk_colors = defaultdict(lambda: None)
             return
+
         dark_theme = self.get_config_value('THEME_DARK_VARIANT', True)
         css_filename = "gtk-dark.css" if dark_theme else "gtk.css"
         # Get colors from GTKrc file
