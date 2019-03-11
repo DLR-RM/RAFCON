@@ -58,12 +58,13 @@ MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT",
                 "gtkmvc3.observable.Signal", "gtkmvc3.view.View",
                 "gtkmvc3.observable.Observable", "gtkmvc3.support.wrappers", "gtkmvc3.controller.Controller"]
 
+from sphinx.ext.autodoc import ClassDocumenter
 
 def add_directive_header(self, sig):
     # type: (str) -> None
     if self.doc_as_attr:
         self.directivetype = 'attribute'
-    super().add_directive_header(sig)
+    super(ClassDocumenter, self).add_directive_header(sig)
 
     # add inheritance info, if wanted
     if not self.doc_as_attr and self.options.show_inheritance:
@@ -81,7 +82,6 @@ def add_directive_header(self, sig):
             self.add_line('   ' + _('Bases: %s') % ', '.join(bases),
                           sourcename)
 
-from sphinx.ext.autodoc import ClassDocumenter
 ClassDocumenter.add_directive_header = add_directive_header
 
 
