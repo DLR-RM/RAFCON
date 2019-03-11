@@ -82,7 +82,16 @@ def __mro_entries__(self, bases):
     return (self.__class__,)
 
 
-def __getattr__(self, name):
+def __getattrclass__(self, name):
+    # type: (str) -> _MockObject
+    if name[0].isupper():
+        o = _MockObject(mock_name=name)
+        o.__module__ = self.__name__
+        return o
+    return self
+
+
+def __getattrmodule__(self, name):
     # type: (str) -> _MockObject
     o = _MockObject(mock_name=name)
     o.__module__ = self.__name__
@@ -90,8 +99,8 @@ def __getattr__(self, name):
 
 _MockObject.__new__ = __new__
 _MockObject.__mro_entries__ = __mro_entries__
-_MockObject.__getattr__ = __getattr__
-_MockModule.__getattr__ = __getattr__
+_MockObject.__getattr__ = __getattrclass__
+_MockModule.__getattr__ = __getattrmodule__
 
 
 module_name = __name__
