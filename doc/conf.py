@@ -57,6 +57,34 @@ from unittest import mock
 MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT",
                 "gtkmvc3.observable.Signal", "gtkmvc3.view.View",
                 "gtkmvc3.observable.Observable", "gtkmvc3.support.wrappers", "gtkmvc3.controller.Controller"]
+
+
+def add_directive_header(self, sig):
+    # type: (str) -> None
+    if self.doc_as_attr:
+        self.directivetype = 'attribute'
+    super().add_directive_header(sig)
+
+    # add inheritance info, if wanted
+    if not self.doc_as_attr and self.options.show_inheritance:
+        sourcename = self.get_sourcename()
+        self.add_line('', sourcename)
+        if hasattr(self.object, '__bases__') and len(self.object.__bases__):
+            print("Bases", self.object, self.object.__bases__)
+            try:
+                bases = [b.__module__ in ('__builtin__', 'builtins') and
+                         ':class:`%s`' % b.__name__ or
+                         ':class:`%s.%s`' % (b.__module__, b.__name__)
+                         for b in self.object.__bases__]
+            except:
+                print("Exception")
+            self.add_line('   ' + _('Bases: %s') % ', '.join(bases),
+                          sourcename)
+
+from sphinx.ext.autodoc import ClassDocumenter
+ClassDocumenter.add_directive_header = add_directive_header
+
+
 for mock_class in MOCK_CLASSES:
     parts = mock_class.split(".")
     for i in range(len(parts)):
