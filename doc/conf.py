@@ -55,7 +55,8 @@ from types import ModuleType
 # sys.modules[m.__name__] = gi
 from unittest import mock
 MOCK_CLASSES = ["gtkmvc3.model_mt.ModelMT",
-                "gtkmvc3.observable.Observable", "gtkmvc3.controller.Controller"]
+                "gtkmvc3.observable.Observable", "gtkmvc3.controller.Controller",
+                "gaphas.aspect.ItemInMotion"]
 
 
 def dummy_fun(*args, **kwargs):
