@@ -87,7 +87,7 @@ def add_directive_header(self, sig):
 
 ClassDocumenter.add_directive_header = add_directive_header
 
-
+module_name = __name__
 for mock_class in MOCK_CLASSES:
     parts = mock_class.split(".")
     for i in range(len(parts)):
@@ -101,12 +101,14 @@ for mock_class in MOCK_CLASSES:
                 pass
             mocked = type(name, (), {"observe": fun, "observed": fun})
         else:  # module
+            __name__ = parent_path
             mocked = ModuleType(name)
             mocked.__path__ = []
         print(path, mocked)
         sys.modules[path] = mocked
         if parent_path:
             setattr(sys.modules[parent_path], name, mocked)
+__name__ = module_name
 
 # MOCK_MODULES = ["gtkmvc3", "gtkmvc3.controller", "gtkmvc3.model", "gtkmvc3.model_mt.ModelMT",
 #                 "gtkmvc3.observable.Signal", "gtkmvc3.view", "gtkmvc3.view.View", "gtkmvc3.observable",
