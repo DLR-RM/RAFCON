@@ -1,3 +1,11 @@
+- name: "IAC 2018"
+  description: "At the IAC 2018 booth, RAFCON was executed on multiple robots of the Institute of Robotics and Mechatronics.
+  Next to two Lightweight rover units (LRUs), also our in-house developed Ardea Hexacopter, was controlled by RAFCON.
+   On the Micro Aerial Vehicle (MAV), the task execution framework was used for system configuration, waypoint navigation and high-level mission control."
+  image: "images/projects/ardea.jpg"
+  url: "https://www.iac2018.org/"
+  note: "Date: October 2018"
+
 - name: "Automatica 2018"
   description: "During Automatica 2018 our Autonomous Industrial Mobile Manipulator (AIMM) delivered workpieces to different workstations on our 'Factory of the Future' booth."
   image: "images/projects/automatica_aimm.jpg"
