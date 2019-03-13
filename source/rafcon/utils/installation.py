@@ -16,13 +16,6 @@ import sys
 import shutil
 import subprocess
 import distutils.log
-
-try:
-    import gi
-    gi.require_version('Gtk', '3.0')
-    from gi.repository import Gtk
-except ImportError:
-    Gtk = None
 try:
     from gi.repository import GLib
 except ImportError:
@@ -38,7 +31,12 @@ def install_fonts(logger=None, restart=False):
         log = logger
     else:
         log = distutils.log
-    if not Gtk:
+
+    try:
+        import gi
+        gi.require_version('Gtk', '3.0')
+        from gi.repository import Gtk
+    except (ImportError, ValueError):
         log.warn("No GTK found. Will not install fonts.")
         return
 
