@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - zegami
 dependencies:
-  - pygobject=3.25.*
+  - pygobject
   - gtk
   - pip:
     - psutil==5.*
