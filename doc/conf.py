@@ -46,6 +46,7 @@ try:
 except ImportError:
     pass
 
+'''
 import rafcon.core.config
 import rafcon.gui.config
 
@@ -124,7 +125,7 @@ for mock_class in MOCK_CLASSES:
             setattr(sys.modules[parent_path], name, mocked)
 
 __name__ = module_name
-
+'''
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
 autodoc_mock_imports = ["gi", "gtkmvc3", "yaml_configuration", "gaphas", "cairo", "simplegeneric"]
 autoclass_content = 'class'
