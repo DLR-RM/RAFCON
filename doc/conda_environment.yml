@@ -4,6 +4,6 @@ channels:
 dependencies:
   - pygobject=3.25.*
   - pip:
-    - psutil=5.*
+    - psutil==5.*
     - pylint
     - PyYAML==3.13
