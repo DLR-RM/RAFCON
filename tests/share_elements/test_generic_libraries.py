@@ -48,13 +48,12 @@ def test_all_generic_libraries_in_a_row(caplog):
     )
     call_gui_callback(initialize_global_variables)
     try:
-
-        execute_all_generic_libraries_with_keyboard_only()
-    except Exception:
-        raise
+        with pytest.warns(log.RAFCONDeprecationWarning) as deprecations_warnings:
+            execute_all_generic_libraries_with_keyboard_only()
+        assert len([record for record in deprecations_warnings if record.category is log.RAFCONDeprecationWarning]) == 4
     finally:
         testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=4)
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0)
 
 
 def execute_preemption_of_all_state_machines_at_once():
@@ -86,12 +85,12 @@ def test_preemption_of_all_state_machines_at_once(caplog):
     )
     call_gui_callback(initialize_global_variables)
     try:
-        execute_preemption_of_all_state_machines_at_once()
-    except Exception:
-        raise
+        with pytest.warns(log.RAFCONDeprecationWarning) as deprecations_warnings:
+            execute_preemption_of_all_state_machines_at_once()
+        assert len([record for record in deprecations_warnings if record.category is log.RAFCONDeprecationWarning]) == 4
     finally:
         testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=4)
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0)
 
 if __name__ == '__main__':
     # test_preemption_of_all_state_machines_at_once(None)

@@ -1,12 +1,14 @@
+import warnings
 from gi.repository import GLib
 from gi.repository import Gtk
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, get_root_window
+from rafcon.utils.log import RAFCONDeprecationWarning
 
 
 def execute(self, inputs, outputs, gvm):
-    self.logger.warning("This library is deprecated. Please substitute it with 'generic/dialog/Dialog [2 options]' "
-                        "or the more generic 'generic/dialog/Show dialog'. "
-                        "See the library description for details on the new API.")
+    warnings.warn("Please substitute 2ButtonDialog  with 'generic/dialog/Dialog [2 options]'. "
+                  "or the more generic 'generic/dialog/Show dialog'. "
+                  "See the library descriptions for details on the new API.", RAFCONDeprecationWarning)
     self.logger.debug("Creating button dialog")
     
     if len(inputs['buttons']) != 2:

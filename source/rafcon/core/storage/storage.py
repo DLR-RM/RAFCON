@@ -25,6 +25,7 @@ import shutil
 import glob
 import copy
 import yaml
+import warnings
 from distutils.version import StrictVersion
 
 import rafcon
@@ -106,8 +107,8 @@ def clean_path_from_deprecated_naming(base_path):
     """
     def warning_logger_message(insert_string):
         not_allowed_characters = "'" + "', '".join(REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION.keys()) + "'"
-        logger.warning("Deprecated {2} in {0}. Please avoid to use the following characters {1}."
-                       "".format(base_path, not_allowed_characters, insert_string))
+        warnings.warn("{1} not allowed in {2} of {0}".format(base_path, not_allowed_characters, insert_string),
+                      log.RAFCONDeprecationWarning)
     from rafcon.core.singleton import library_manager
     if library_manager.is_os_path_within_library_root_paths(base_path):
         library_path, library_name = library_manager.get_library_path_and_name_for_os_path(base_path)

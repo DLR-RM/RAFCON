@@ -1,11 +1,13 @@
+import warnings
 from gi.repository import GLib
 from gi.repository import Gtk
 from rafcon.gui.utils.dialog import RAFCONMessageDialog, get_root_window
+from rafcon.utils.log import RAFCONDeprecationWarning
 
 
 def execute(self, inputs, outputs, gvm):
-    self.logger.warning("This library is deprecated. Please substitute it with 'generic/dialog/Dialog [Info]'. "
-                        "See the library description for details on the new API.")
+    warnings.warn("Please substitute MessageDialog with 'generic/dialog/Dialog [Info]'. "
+                  "See the library description for details on the new API.", RAFCONDeprecationWarning)
     self.logger.debug("Creating message dialog")
     markup_text = inputs['message_text']
     abort = inputs['abort_on_quit']
