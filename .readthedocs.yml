@@ -2,7 +2,7 @@ version: 2
 
 formats: all
 conda:
-  environment: doc/.conda_environment.yml
+  environment: doc/conda_environment.yml
 sphinx:
   builder: html
   configuration: doc/conf.py
