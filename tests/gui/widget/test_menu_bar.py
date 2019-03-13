@@ -363,6 +363,8 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
 
 
 @pytest.mark.timeout(30)
+@pytest.mark.unstable35
+@pytest.mark.unstable37
 def test_gui(caplog):
     from os.path import join
 

@@ -92,7 +92,7 @@ def execute_preemptive_state_forwards_backwards():
 
     menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
 
-    call_gui_callback(
+    state_machine = call_gui_callback(
         menubar_ctrl.on_open_activate, None, None,
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_step_preemtive_test"))
     )
@@ -114,9 +114,15 @@ def execute_preemptive_state_forwards_backwards():
         call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(2, logger)
 
-    for i in range(2):
-        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
-        wait_for_execution_engine_sync_counter(1, logger)
+    call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+    wait_for_execution_engine_sync_counter(1, logger)
+
+    # preemptive concurrency state must be finished before the next step
+    while not state_machine.get_state_by_path("AOURYA/LXEMOO").final_outcome:
+        time.sleep(0.010)
+
+    call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+    wait_for_execution_engine_sync_counter(1, logger)
 
     # "take turn" state reached
 
