@@ -1,8 +1,7 @@
 name: rafcon
 channels:
   - conda-forge
-  - pkgw/label/superseded
+  - zegami
 dependencies:
   - pygobject
-  - cairo
-  - gtk3
+  - gtk
