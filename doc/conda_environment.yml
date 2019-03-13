@@ -2,9 +2,8 @@ name: rafcon
 channels:
   - conda-forge
 dependencies:
-  - python=3.*
-  - cairo=1.10
-  - pygobject=3.20
+  - cairo=1.12.*
+  - pygobject=3.25.*
   - pip:
     - pylint=1.6
     - pyyaml=3.10
