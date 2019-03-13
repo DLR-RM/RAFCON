@@ -10,5 +10,6 @@ sphinx:
 python:
   version: 3.6
   install:
-    - requirements: doc/requirements.txt
+    - method: pip
+      path: doc/requirements.txt
   system_packages: True
