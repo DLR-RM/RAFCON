@@ -4,10 +4,10 @@ channels:
 dependencies:
   - pygobject=3.25.*
   - pip:
-    - pylint=1.6
-    - pyyaml=3.10
+    - pylint==1.6
+    - pyyaml==3.10
     - psutil
-    - jsonconversion=0.2
-    - yaml_configuration=0.1
-    - python-gtkmvc3-dlr=1.0
+    - jsonconversion==0.2
+    - yaml_configuration==0.1
+    - python-gtkmvc3-dlr==1.0
     - gaphas=1.0
