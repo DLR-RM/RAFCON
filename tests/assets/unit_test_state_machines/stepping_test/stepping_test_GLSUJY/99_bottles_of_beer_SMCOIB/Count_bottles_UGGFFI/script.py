@@ -2,7 +2,7 @@ from __future__ import print_function
 import time
 
 def execute(self, inputs, outputs, gvm):
-    time.sleep(0.2)
+    #time.sleep(0.2)
     gvm.set_variable("bottles", inputs["bottles"])
     if inputs['bottles'] > 0:
         return 1

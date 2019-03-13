@@ -14,13 +14,26 @@ from tests.utils import wait_for_execution_engine_sync_counter
 logger = log.get_logger(__name__)
 
 
-def wait_and_join(state_machine, state_id):
-    time.sleep(0.05)  # let the state start properly
-    state_machine.get_state_by_path(state_id).join()
-    time.sleep(0.05)  # let the hierarchy properly chose the next state
+def execute_command_synchronized_on_state(state_machine, state_id, command, counter=1, join=True):
+    old_run_id = state_machine.get_state_by_path(state_id).run_id
+    old_execution_counter = state_machine.get_state_by_path(state_id)._execution_counter
+    getattr(rafcon.core.singleton.state_machine_execution_engine, command)()
+    # let the state start properly
+    while old_run_id == state_machine.get_state_by_path(state_id).run_id:
+        time.sleep(0.005)
+    while old_execution_counter == state_machine.get_state_by_path(state_id)._execution_counter:
+        time.sleep(0.005)
+    if join:
+        try:
+            state_machine.get_state_by_path(state_id).join()
+        except RuntimeError:
+            # if the state is already executed then join() returns with an RuntimeError
+            pass
+    # let the hierarchy properly chose the next state
+    wait_for_execution_engine_sync_counter(counter, logger)
 
 
-def test_custom_entry_point(caplog):
+def test_step_into_over_out_no_library(caplog):
 
     testing_utils.initialize_environment_core()
 
@@ -29,8 +42,11 @@ def test_custom_entry_point(caplog):
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
+    with state_machine_execution_engine._status.execution_condition_variable:
+        state_machine_execution_engine.synchronization_counter = 0
+
     rafcon.core.singleton.state_machine_execution_engine.step_mode(state_machine.state_machine_id)
-    time.sleep(0.2)  # let the state machine start properly
+    wait_for_execution_engine_sync_counter(1, logger)
 
     # sm structure
 
@@ -44,27 +60,19 @@ def test_custom_entry_point(caplog):
     # GLSUJY/SMCOIB/OUWQUJ
     # GLSUJY/SMCOIB/UGGFFI
 
-    rafcon.core.singleton.state_machine_execution_engine.step_over()
-    wait_and_join(state_machine, "GLSUJY/PXTKIH")
-    rafcon.core.singleton.state_machine_execution_engine.step_over()
-    wait_and_join(state_machine, "GLSUJY/NDIVLD")
-    rafcon.core.singleton.state_machine_execution_engine.step_over()
-    wait_and_join(state_machine, "GLSUJY/SFZGMH")
-    rafcon.core.singleton.state_machine_execution_engine.step_over()
-    wait_and_join(state_machine, "GLSUJY/SMCOIB")
+    execute_command_synchronized_on_state(state_machine, "GLSUJY/PXTKIH", "step_over", 1)
+    execute_command_synchronized_on_state(state_machine, "GLSUJY/NDIVLD", "step_over", 1)
+    execute_command_synchronized_on_state(state_machine, "GLSUJY/SFZGMH", "step_over", 1)
+    execute_command_synchronized_on_state(state_machine, "GLSUJY/SMCOIB", "step_over", 1)
 
-    rafcon.core.singleton.state_machine_execution_engine.step_into()
-    wait_and_join(state_machine, "GLSUJY/PXTKIH")
-    rafcon.core.singleton.state_machine_execution_engine.step_into()
-    wait_and_join(state_machine, "GLSUJY/NDIVLD")
-    rafcon.core.singleton.state_machine_execution_engine.step_into()
-    wait_and_join(state_machine, "GLSUJY/SFZGMH")
-    rafcon.core.singleton.state_machine_execution_engine.step_into() # step into hierarchy state GLSUJY/SMCOIB
-    rafcon.core.singleton.state_machine_execution_engine.step_into()
-    wait_and_join(state_machine, "GLSUJY/SMCOIB/YSBJGK")
+    execute_command_synchronized_on_state(state_machine, "GLSUJY/PXTKIH", "step_into")
+    execute_command_synchronized_on_state(state_machine, "GLSUJY/NDIVLD", "step_into")
+    execute_command_synchronized_on_state(state_machine, "GLSUJY/SFZGMH", "step_into")
+    execute_command_synchronized_on_state(state_machine, "GLSUJY/SMCOIB", "step_into", join=False)
+    execute_command_synchronized_on_state(state_machine, "GLSUJY/SMCOIB/YSBJGK", "step_into")
 
     rafcon.core.singleton.state_machine_execution_engine.step_out()
-    wait_and_join(state_machine, "GLSUJY/SMCOIB")
+    wait_for_execution_engine_sync_counter(1, logger)
 
     rafcon.core.singleton.state_machine_execution_engine.stop()
     rafcon.core.singleton.state_machine_execution_engine.join()
@@ -87,9 +95,8 @@ def test_step_through_library(caplog):
 
     rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
-    state_machine_execution_engine._status.execution_condition_variable.acquire()
-    state_machine_execution_engine.synchronization_counter = 0
-    state_machine_execution_engine._status.execution_condition_variable.release()
+    with state_machine_execution_engine._status.execution_condition_variable:
+        state_machine_execution_engine.synchronization_counter = 0
 
     rafcon.core.singleton.state_machine_execution_engine.step_mode(state_machine.state_machine_id)
     wait_for_execution_engine_sync_counter(1, logger)
@@ -145,6 +152,6 @@ def test_step_through_library(caplog):
 
 
 if __name__ == '__main__':
-    test_custom_entry_point(None)
+    test_step_into_over_out_no_library(None)
     test_step_through_library(None)
     # pytest.main([__file__])

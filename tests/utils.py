@@ -527,12 +527,10 @@ def wait_for_execution_engine_sync_counter(target_value, logger, timeout=5):
     logger.debug("++++++++++ waiting for execution engine sync for " + str(target_value) + " steps ++++++++++")
     current_time = datetime.datetime.now()
     while True:
-        state_machine_execution_engine._status.execution_condition_variable.acquire()
-        if state_machine_execution_engine.synchronization_counter == target_value:
-            state_machine_execution_engine.synchronization_counter = 0
-            state_machine_execution_engine._status.execution_condition_variable.release()
-            break
-        state_machine_execution_engine._status.execution_condition_variable.release()
+        with state_machine_execution_engine._status.execution_condition_variable:
+            if state_machine_execution_engine.synchronization_counter == target_value:
+                state_machine_execution_engine.synchronization_counter = 0
+                break
         if (datetime.datetime.now() - current_time).seconds > timeout:
             raise RuntimeError("Something went wrong while waiting for states to finish!")
         time.sleep(0.1)

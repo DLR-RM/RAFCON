@@ -162,21 +162,18 @@ class ModificationsHistoryModel(ModelMT):
         logger.debug("Multiple undo and redo to reach modification history element of version {0} "
                      "-> undo-redo-list is: {1}".format(pointer_on_version_to_recover, undo_redo_list))
         # logger.debug("acquire lock 1 - for multiple action {0}".format(self.modifications.trail_pointer))
-        self.state_machine_model.storage_lock.acquire()
-        # logger.debug("acquired lock 1 - for multiple action {0}".format(self.modifications.trail_pointer))
-        for elem in undo_redo_list:
-            if elem[1] == 'undo':
-                # do undo
-                self._undo(elem[0])
-            else:
-                # do redo
-                self._redo(elem[0])
+        with self.state_machine_model.storage_lock:
+            # logger.debug("acquired lock 1 - for multiple action {0}".format(self.modifications.trail_pointer))
+            for elem in undo_redo_list:
+                if elem[1] == 'undo':
+                    # do undo
+                    self._undo(elem[0])
+                else:
+                    # do redo
+                    self._redo(elem[0])
 
-        self.modifications.reorganize_trail_history_for_version_id(pointer_on_version_to_recover)
-        self.change_count += 1
-        # logger.debug("release lock 1 - for multiple action {0}".format(self.modifications.trail_pointer))
-        self.state_machine_model.storage_lock.release()
-        # logger.debug("released lock 1 - for multiple action {0}".format(self.modifications.trail_pointer))
+            self.modifications.reorganize_trail_history_for_version_id(pointer_on_version_to_recover)
+            self.change_count += 1
 
     def _undo(self, version_id):
         self.busy = True
@@ -198,20 +195,17 @@ class ModificationsHistoryModel(ModelMT):
         if self.state_machine_model.storage_lock.locked():
             # logger.debug("is locked already 2 - for undo {0}".format(self.modifications.trail_pointer))
             return
-        self.state_machine_model.storage_lock.acquire()
-        # logger.debug("acquired lock 2 - for undo {0}".format(self.modifications.trail_pointer))
-        self.busy = True
-        # print("undo 2", self.modifications)
-        self.modifications.undo()
-        self.busy = False
-        if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
-            # logger.debug("StateMachineAction Undo")
-            self._re_initiate_observation()
-        self.update_internal_tmp_storage()
-        self.change_count += 1
-        # logger.debug("release lock 2 - for undo {0}".format(self.modifications.trail_pointer))
-        self.state_machine_model.storage_lock.release()
-        # logger.debug("release lock 2 - for undo {0}".format(self.modifications.trail_pointer))
+        with self.state_machine_model.storage_lock:
+            # logger.debug("acquired lock 2 - for undo {0}".format(self.modifications.trail_pointer))
+            self.busy = True
+            # print("undo 2", self.modifications)
+            self.modifications.undo()
+            self.busy = False
+            if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
+                # logger.debug("StateMachineAction Undo")
+                self._re_initiate_observation()
+            self.update_internal_tmp_storage()
+            self.change_count += 1
 
     def _redo(self, version_id):
         self.busy = True
@@ -234,19 +228,16 @@ class ModificationsHistoryModel(ModelMT):
         if self.state_machine_model.storage_lock.locked():
             # logger.debug("is locked already 3 - for redo {0}".format(self.modifications.trail_pointer))
             return
-        self.state_machine_model.storage_lock.acquire()
-        # logger.debug("acquired lock 3 - for redo")
-        self.busy = True
-        self.modifications.redo()
-        self.busy = False
-        if isinstance(self.modifications.trail_history[self.modifications.trail_pointer], StateMachineAction):
-            # logger.debug("StateMachineAction Redo")
-            self._re_initiate_observation()
-        self.update_internal_tmp_storage()
-        self.change_count += 1
-        # logger.debug("release lock 3 - for redo")
-        self.state_machine_model.storage_lock.release()
-        # logger.debug("release lock 3 - for redo")
+        with self.state_machine_model.storage_lock:
+            # logger.debug("acquired lock 3 - for redo")
+            self.busy = True
+            self.modifications.redo()
+            self.busy = False
+            if isinstance(self.modifications.trail_history[self.modifications.trail_pointer], StateMachineAction):
+                # logger.debug("StateMachineAction Redo")
+                self._re_initiate_observation()
+            self.update_internal_tmp_storage()
+            self.change_count += 1
 
     def _interrupt_active_action(self, info=None):
         if self.with_verbose:

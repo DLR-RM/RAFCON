@@ -1,7 +1,7 @@
 {
     "creation_time": "2015-05-27 15:10:34", 
-    "last_update": "2018-08-28 14:13:14", 
+    "last_update": "2019-03-09 09:50:24", 
     "root_state_storage_id": "stepping_test_GLSUJY", 
     "state_machine_version": "None", 
-    "used_rafcon_version": "0.12.21a1"
+    "used_rafcon_version": "0.13.7"
 }

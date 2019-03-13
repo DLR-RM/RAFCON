@@ -53,9 +53,8 @@ class LoggingConsoleController(ExtendedController):
             return
         # Store all new log entries
         if new:
-            self._lock.acquire()
-            self._log_entries.append((log_level, message))
-            self._lock.release()
+            with self._lock:
+                self._log_entries.append((log_level, message))
         self.view.print_message(message, log_level)
 
     def print_filtered_buffer(self):
