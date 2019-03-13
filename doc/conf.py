@@ -127,7 +127,7 @@ for mock_class in MOCK_CLASSES:
 __name__ = module_name
 '''
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
-# autodoc_mock_imports = ["gi", "gtkmvc3", "yaml_configuration", "gaphas", "cairo", "simplegeneric"]
+autodoc_mock_imports = ["gtkmvc3", "yaml_configuration", "gaphas"]
 autoclass_content = 'class'
 
 # Add any paths that contain templates here, relative to this directory.
