@@ -1,5 +1,7 @@
 name: rafcon
 channels:
   - conda-forge
+  - pkgw/label/superseded
 dependencies:
   - pygobject=3.25.*
+  - gtk3
