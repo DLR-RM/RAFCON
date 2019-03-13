@@ -1,8 +1,10 @@
 name: rafcon
 channels:
   - conda-forge
+  - zegami
 dependencies:
   - pygobject=3.25.*
+  - gtk
   - pip:
     - psutil==5.*
     - pylint
