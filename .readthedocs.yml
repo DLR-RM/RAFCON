@@ -7,9 +7,3 @@ sphinx:
   builder: html
   configuration: doc/conf.py
   fail_on_warning: false
-python:
-  version: 3.6
-  install:
-    - method: setuptools
-      path: .
-  system_packages: True

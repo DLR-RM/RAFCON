@@ -5,6 +5,7 @@ channels:
 dependencies:
   - pygobject
   - gtk
+  - python=3.6
   - pip:
     - psutil==5.*
     - pylint
