@@ -74,7 +74,7 @@ Th following link shows some bad examples: https://wiki.openstack.org/wiki/GitCo
 
 **Sources**
 
-- http://robots.thoughtbot.com/5-useful-tips-for-a-better-commit-message
-- http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
+- https://thoughtbot.com/blog/5-useful-tips-for-a-better-commit-message
+- https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 - https://wiki.openstack.org/wiki/GitCommitMessages
-- https://help.github.com/articles/closing-issues-via-commit-messages/
+- https://help.github.com/en/articles/closing-issues-using-keywords

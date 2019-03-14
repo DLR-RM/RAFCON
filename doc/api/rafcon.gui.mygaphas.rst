@@ -1,7 +1,7 @@
 Gaphas extensions for RAFCON: ``rafcon.gui.mygaphas``
 =====================================================
 
-Gaphas is a Python library for state-machine editors using Canvas: https://github.com/amolenaar/gaphas
+Gaphas is a Python library for state-machine editors using Canvas: https://github.com/gaphor/gaphas
 
 It is used her as library for the graphical editor as replacement for OpenGL. This modules contains all extensions
 necessary for RAFCON.
