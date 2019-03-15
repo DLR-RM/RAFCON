@@ -49,6 +49,7 @@ def trigger_source_editor_signals():
     # gui elements
     import rafcon.gui.singleton
     import rafcon.gui.config as gui_config
+    import psutil
 
     # ---setup---
     menubar_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('menu_bar_controller')
@@ -108,14 +109,27 @@ def trigger_source_editor_signals():
     call_gui_callback(source_editor_controller.apply_clicked, apply_button)
     assert source_editor_controller.source_text == test_text
 
-    # ----------- Test requiring gedit to work ------------
-    if not check_for_editor('gedit'):
-        call_gui_callback(menubar_ctrl.on_quit_activate, None, None, True)
+    # ----------- Test requiring psutil to work ------------
+    try:
+        psutil.process_iter()
+    except psutil.AccessDenied:
         return False
+
+    # ----------- Test requiring gedit to work ------------
+    try:
+        if not check_for_editor('gedit'):
+            return False
+    except psutil.AccessDenied:
+        return False
+
 
     # ---check if the open external button opens a gedit instance
 
-    kill_running_processes('gedit')
+    try:
+        kill_running_processes('gedit')
+    except psutil.AccessDenied:
+        return False
+
     call_gui_callback(gui_config.global_gui_config.set_config_value, 'DEFAULT_EXTERNAL_EDITOR', 'gedit')
     button = source_view['open_external_button']
 
