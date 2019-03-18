@@ -24,6 +24,7 @@ Next Release
 - Bug Fixes:
 
   - :issue_ghe:`683` rafcon can now be closed properly via signal
+  - use correct version and year in documentation
 
 
 - Changes:
