@@ -26,11 +26,6 @@ MainWindowController (in main_window)
 
 .. automodule:: rafcon.gui.controllers.main_window
 
-GraphicalEditorController (in graphical_editor)
------------------------------------------------
-
-.. automodule:: rafcon.gui.controllers.graphical_editor
-
 GraphicalEditorController (in graphical_editor_gaphas)
 ------------------------------------------------------
 
