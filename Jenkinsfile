@@ -17,7 +17,8 @@ pipeline {
         stage('Prepare tox') {
             steps {
                 timestamps {
-                    sh 'pip install --user --upgrade tox==3.7'
+                    sh 'printenv'
+                    sh 'pip3 install --user --upgrade tox==3.7'
                 }
             }
         }
@@ -34,7 +35,7 @@ pipeline {
                         // * run only stable tests
                         // * collect pytest results in XML file
                         // * set absolute cache_dir
-                        sh 'xvfb-run -as "-screen 0 1920x1200x24" tox -e py27 $tox_test_params -- -vx -m "(core or gui or share_elements) and not unstable" --junitxml $WORKSPACE/pytest_py27_results.xml -o cache_dir=$WORKSPACE'
+                        sh 'xvfb-run -as "-screen 0 1920x1200x24" ~/.local/bin/tox -e py27 $tox_test_params -- -vx -m "(core or gui or share_elements) and not unstable" --junitxml $WORKSPACE/pytest_py27_results.xml -o cache_dir=$WORKSPACE'
                     }
                 }
             }
@@ -45,7 +46,7 @@ pipeline {
                 timestamps {
                     timeout(time: 10, unit: 'MINUTES') {
                         sh 'rm -f $HOME/.config/rafcon/*'
-                        sh 'xvfb-run -as "-screen 0 1920x1200x24" tox -e py34 $tox_test_params -- -vx -m "(core or gui or share_elements) and not unstable" --junitxml $WORKSPACE/pytest_py34_results.xml -o cache_dir=$WORKSPACE'
+                        sh 'xvfb-run -as "-screen 0 1920x1200x24" ~/.local/bin/tox -e py34 $tox_test_params -- -vx -m "(core or gui or share_elements) and not unstable" --junitxml $WORKSPACE/pytest_py34_results.xml -o cache_dir=$WORKSPACE'
                     }
                 }
             }
