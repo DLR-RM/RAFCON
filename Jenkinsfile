@@ -74,7 +74,7 @@ pipeline {
         always {
             timestamps {
                 junit '**/pytest_*_results.xml'
-                archiveArtifacts artifacts: 'dist/*', fingerprint: true, onlyIfSuccessful: true
+                archiveArtifacts artifacts: '.tox/dist/*', fingerprint: true, onlyIfSuccessful: true
             }
         }
     }
