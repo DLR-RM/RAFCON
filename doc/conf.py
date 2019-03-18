@@ -16,6 +16,9 @@ import sys
 import os
 import datetime
 
+# Flag indicating whether the build is run on Read The Docs
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -49,6 +52,9 @@ except ImportError:
 
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
 autoclass_content = 'class'
+
+if on_rtd:
+    autodoc_mock_imports = ["gi.repository.GtkSource", "gi.repository.gtksourceview2"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
