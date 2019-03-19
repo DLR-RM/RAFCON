@@ -1,5 +1,6 @@
 import os
 import time
+import pytest
 
 # core elements
 import rafcon.core.config
@@ -120,6 +121,7 @@ def create_and_resize_state():
     # time.sleep(10.0)
 
 
+@pytest.mark.user_input
 def test_user_input_gaphas(caplog):
     run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
             libraries={'unit_test_state_machines': testing_utils.get_test_sm_path("unit_test_state_machines")})

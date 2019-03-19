@@ -31,6 +31,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "gui: mark test as being located in the gui folder")
     config.addinivalue_line("markers", "share_elements: mark test as being located in the share_elements folder")
     config.addinivalue_line("markers", "network: mark test as being located in the network folder")
+    config.addinivalue_line("markers", "user_input: mark test as imitating user inputs using pyuserinput")
 
 
 def pytest_unconfigure(config):
