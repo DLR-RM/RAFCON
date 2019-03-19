@@ -35,7 +35,7 @@ pipeline {
                         // * run only stable tests
                         // * collect pytest results in XML file
                         // * set absolute cache_dir
-                        sh "xvfb-run -as '-screen 0 1920x1200x24' ~/.local/bin/tox -e py27 $tox_test_params -- -vx -m '(core or gui or share_elements) and not unstable' --junitxml $WORKSPACE/pytest_py27_results.xml -o cache_dir=$WORKSPACE |& tee pytestout.txt"
+                        sh "xvfb-run -as '-screen 0 1920x1200x24' ~/.local/bin/tox -e py27 $tox_test_params -- $pytest_args --junitxml $WORKSPACE/pytest_py27_results.xml -o cache_dir=$WORKSPACE |& tee pytestout.txt"
                     }
                 }
             }
@@ -46,7 +46,7 @@ pipeline {
                 timestamps {
                     timeout(time: 10, unit: 'MINUTES') {
                         sh 'rm -f $HOME/.config/rafcon/*'
-                        sh "xvfb-run -as '-screen 0 1920x1200x24' ~/.local/bin/tox -e py34 $tox_test_params -- -vx -m '(core or gui or share_elements) and not unstable' --junitxml $WORKSPACE/pytest_py34_results.xml -o cache_dir=$WORKSPACE |& tee pytestout.txt"
+                        sh "xvfb-run -as '-screen 0 1920x1200x24' ~/.local/bin/tox -e py34 $tox_test_params -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml -o cache_dir=$WORKSPACE |& tee pytestout.txt"
                     }
                 }
             }
@@ -55,7 +55,7 @@ pipeline {
         stage('Build Documentation') {
             steps {
                 timestamps {
-                    sh 'xvfb-run -as "-screen 0 1920x1200x24" tox -e docs'
+                    sh 'xvfb-run -as "-screen 0 1920x1200x24" tox -e docs $tox_test_params'
                     sh 'sed -i "s#.*#$WORKSPACE/doc/&#" build_doc/output.txt'
                     recordIssues filters: [excludeCategory('.*rafcon.*'), excludeCategory('redirected with Found')], tools: [sphinxBuild(), groovyScript(parserId: 'sphinx-linkcheck', pattern: 'build_doc/output.txt'), groovyScript(parserId: 'pytest', pattern: 'pytestout.txt')]
                 }
