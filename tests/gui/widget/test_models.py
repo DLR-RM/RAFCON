@@ -1017,7 +1017,7 @@ def test_add_remove_models(caplog):
     # # assert check_if_all_states_there(state_dict['Container'], state_check_dict2)
 
     sm_model.destroy()
-    global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1182,7 +1182,7 @@ def test_state_property_models_consistency(caplog):
     check_state_for_all_models(state, state_m)
 
     sm_model.destroy()
-    global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1229,7 +1229,7 @@ def test_outcome_property__models_consistency(caplog):
     do_check_for_state(state_dict, state_name='Container')
 
     sm_model.destroy()
-    global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1323,7 +1323,7 @@ def test_transition_property_models_consistency(caplog):
     state_dict['Nested'].transitions[new_df_id].to_outcome = oc_great_nested
 
     sm_model.destroy()
-    global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1365,7 +1365,7 @@ def test_input_port_modify_notification(caplog):
                                                                                     default_value='awesome_tool')
 
     sm_model.destroy()
-    global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1408,7 +1408,7 @@ def test_output_port_modify_notification(caplog):
                                                                                       default_value='awesome_tool')
 
     sm_model.destroy()
-    global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1456,7 +1456,7 @@ def test_scoped_variable_modify_notification(caplog):
                                                                                    default_value='awesome_tool')
 
     sm_model.destroy()
-    global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1569,7 +1569,7 @@ def test_data_flow_property_modifications_history(caplog):
     state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
 
     sm_model.destroy()
-    global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 

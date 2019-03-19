@@ -21,6 +21,7 @@ gui_thread = None
 gui_ready = None
 gui_executed_once = False
 
+RAFCON_TEMP_PATH_CONFIGS = tempfile.mkdtemp(dir=constants.RAFCON_TEMP_PATH_BASE, prefix="config_")
 
 RAFCON_TEMP_PATH_TEST_BASE = join(constants.RAFCON_TEMP_PATH_BASE, 'unit_tests')
 if not exists(RAFCON_TEMP_PATH_TEST_BASE):
@@ -60,10 +61,10 @@ def get_test_sm_path(state_machine_name):
 def reload_config(config=True, gui_config=True):
     import rafcon
     if config:
-        rafcon.core.config.global_config.load()
+        rafcon.core.config.global_config.load(path=RAFCON_TEMP_PATH_CONFIGS)
     if gui_config:
         import rafcon.gui.config
-        rafcon.gui.config.global_gui_config.load()
+        rafcon.gui.config.global_gui_config.load(path=RAFCON_TEMP_PATH_CONFIGS)
 
 
 def remove_all_libraries(init_library_manager=True):
@@ -183,7 +184,7 @@ def initialize_environment_core(core_config=None, libraries=None, delete=False):
         if global_config.get_config_value('LIBRARY_PATHS') is not None:
             libraries = copy.deepcopy(global_config.get_config_value('LIBRARY_PATHS'))
     else:
-        global_config.load()
+        global_config.load(path=RAFCON_TEMP_PATH_CONFIGS)
         if isinstance(core_config, dict):
             for key, value in core_config.items():
                 global_config.set_config_value(key, value)
@@ -209,7 +210,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
     if isinstance(gui_config, tuple) and exists(join(gui_config[1], gui_config[0])):
         global_gui_config.load(gui_config[1], gui_config[0])
     else:
-        global_gui_config.load()
+        global_gui_config.load(path=RAFCON_TEMP_PATH_CONFIGS)
         if isinstance(gui_config, dict):
             for key, value in gui_config.items():
                 global_gui_config.set_config_value(key, value)
@@ -218,7 +219,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
     if isinstance(runtime_config, tuple) and exists(join(runtime_config[1], runtime_config[0])):
         global_runtime_config.load(runtime_config[1], runtime_config[0])
     else:
-        global_runtime_config.load()
+        global_runtime_config.load(path=RAFCON_TEMP_PATH_CONFIGS)
         if isinstance(runtime_config, dict):
             for key, value in runtime_config.items():
                 global_runtime_config.set_config_value(key, value)
