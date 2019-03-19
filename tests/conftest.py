@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-import os
-
 import pytest
 
 # Unfortunately this approach does not work to make sure to initialize the gui singletons from a gui thread
@@ -25,7 +23,6 @@ config_contents = {}
 
 
 def pytest_configure(config):
-    store_configs()
     # register additional markers "core", "gui", "share_elements" and "network"
     config.addinivalue_line("markers", "core: mark test as being located in the core folder")
     config.addinivalue_line("markers", "gui: mark test as being located in the gui folder")
@@ -35,7 +32,6 @@ def pytest_configure(config):
 
 
 def pytest_unconfigure(config):
-    restore_configs()
     clean_temp_test_directory()
 
 
@@ -49,34 +45,6 @@ def pytest_collection_modifyitems(items):
             item.add_marker(pytest.mark.share_elements)
         elif item.nodeid.startswith("tests/network/"):
             item.add_marker(pytest.mark.network)
-
-
-def pytest_runtest_setup(item):
-    restore_configs()
-
-
-def store_configs():
-    global configs
-    config_path = os.path.join(os.path.expanduser('~'), '.config', 'rafcon')
-
-    for config_name, file_name in configs:
-        try:
-            with open(os.path.join(config_path, file_name), 'r') as config_file:
-                config_contents[config_name] = config_file.read()
-        except IOError:
-            pass
-
-
-def restore_configs():
-    config_path = os.path.join(os.path.expanduser('~'), '.config', 'rafcon')
-
-    for config_name, file_name in configs:
-        if config_name in config_contents:
-            try:
-                with open(os.path.join(config_path, file_name), 'w') as config_file:
-                    config_file.write(config_contents[config_name])
-            except IOError:
-                pass
 
 
 def clean_temp_test_directory():
