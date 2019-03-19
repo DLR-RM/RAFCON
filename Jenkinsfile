@@ -4,7 +4,8 @@ pipeline {
     }
 
     parameters {
-        string(defaultValue: "-v", description: 'Additional parameters passed to tox when running the tests', name: 'tox_test_params')
+        string(name: 'tox_args', defaultValue: '-v', description: 'Arguments passed to next besides the environment name', )
+        string(name: 'pytest_args', defaultValue: '-vx -m "(core or gui or share_elements) and not unstable"', description: 'Arguments passed to pytest')
     }
 
     environment {
