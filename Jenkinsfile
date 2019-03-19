@@ -27,8 +27,6 @@ pipeline {
             steps {
                 timestamps {
                     timeout(time: 10, unit: 'MINUTES') {
-                        // Reset RAFCON config files
-                        sh 'rm -f $HOME/.config/rafcon/*'
                         // Run test
                         // * wrapped in xvfb-run for having an X server
                         // * specify tox environment
@@ -45,7 +43,6 @@ pipeline {
             steps {
                 timestamps {
                     timeout(time: 10, unit: 'MINUTES') {
-                        sh 'rm -f $HOME/.config/rafcon/*'
                         sh "xvfb-run -as '-screen 0 1920x1200x24' ~/.local/bin/tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml -o cache_dir=$WORKSPACE |& tee pytestout.txt"
                     }
                 }
