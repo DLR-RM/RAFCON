@@ -35,7 +35,7 @@ pipeline {
                         // * run only stable tests
                         // * collect pytest results in XML file
                         // * set absolute cache_dir
-                        sh "xvfb-run -as '-screen 0 1920x1200x24' ~/.local/bin/tox -e py27 $tox_test_params -- $pytest_args --junitxml $WORKSPACE/pytest_py27_results.xml -o cache_dir=$WORKSPACE |& tee pytestout.txt"
+                        sh "xvfb-run -as '-screen 0 1920x1200x24' ~/.local/bin/tox -e py27 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py27_results.xml -o cache_dir=$WORKSPACE |& tee pytestout.txt"
                     }
                 }
             }
@@ -46,7 +46,7 @@ pipeline {
                 timestamps {
                     timeout(time: 10, unit: 'MINUTES') {
                         sh 'rm -f $HOME/.config/rafcon/*'
-                        sh "xvfb-run -as '-screen 0 1920x1200x24' ~/.local/bin/tox -e py34 $tox_test_params -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml -o cache_dir=$WORKSPACE |& tee pytestout.txt"
+                        sh "xvfb-run -as '-screen 0 1920x1200x24' ~/.local/bin/tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml -o cache_dir=$WORKSPACE |& tee pytestout.txt"
                     }
                 }
             }
