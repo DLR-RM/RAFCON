@@ -53,7 +53,13 @@ pipeline {
             steps {
                 timestamps {
                     sh 'xvfb-run -as "-screen 0 1920x1200x24" tox -e docs $tox_test_params'
+                    // sphinx linkcheck only generates relative files, which cannot be found by recordIssues
+                    // therefore, we need to make the path absolute
                     sh 'sed -i "s#.*#$WORKSPACE/doc/&#" build_doc/output.txt'
+                    // Find warnings:
+                    // * in the sphinx build process
+                    // * in the sphinx linkcheck results
+                    // * in the pytest warnings section
                     recordIssues filters: [excludeCategory('.*rafcon.*'), excludeCategory('redirected with Found')], tools: [sphinxBuild(), groovyScript(parserId: 'sphinx-linkcheck', pattern: 'build_doc/output.txt'), groovyScript(parserId: 'pytest', pattern: 'pytestout.txt')]
                 }
             }
