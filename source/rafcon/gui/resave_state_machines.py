@@ -21,6 +21,7 @@ import threading
 import time
 
 from rafcon.utils import log
+from rafcon.utils.filesystem import get_default_config_path
 from rafcon.utils.gui_functions import call_gui_callback
 
 from rafcon.core.config import global_config
@@ -70,7 +71,7 @@ def trigger_gui_signals(*args):
         call_gui_callback(menubar_ctrl.on_quit_activate, None)
 
 
-def convert(config_path, source_path, target_path=None):
+def convert(config_path, source_path, target_path=None, gui_config_path=None):
     logger.info("RAFCON launcher")
     rafcon.gui.start.setup_l10n()
     from rafcon.gui.controllers.main_window import MainWindowController
@@ -78,9 +79,11 @@ def convert(config_path, source_path, target_path=None):
 
     setup_environment()
 
+    gui_config_path = gui_config_path or get_default_config_path()
+
     setup_config = {}
     setup_config["config_path"] = config_path
-    setup_config["gui_config_path"] = config_path
+    setup_config["gui_config_path"] = gui_config_path
     setup_config["source_path"] = [source_path]
     if not target_path:
         setup_config["target_path"] = [source_path]
@@ -138,41 +141,36 @@ def convert(config_path, source_path, target_path=None):
     logger.debug("Conversion done")
 
 
-def convert_libraries_in_path(config_path, lib_path, target_path=None):
+def convert_libraries_in_path(config_path, lib_path, target_path=None, gui_config_path=None):
     """
     This function resaves all libraries found at the spcified path
     :param lib_path: the path to look for libraries
     :return:
     """
     for lib in os.listdir(lib_path):
-        if os.path.isdir(os.path.join(lib_path, lib)) and not '.' == lib[0]:
-            if os.path.exists(os.path.join(os.path.join(lib_path, lib), "statemachine.yaml")) or \
-                    os.path.exists(os.path.join(os.path.join(lib_path, lib), "statemachine.json")):
-                if not target_path:
-                    convert(config_path, os.path.join(lib_path, lib))
-                else:
-                    convert(config_path, os.path.join(lib_path, lib), os.path.join(target_path, lib))
+        child_lib_path = os.path.join(lib_path, lib)
+        if os.path.isdir(child_lib_path) and not '.' == lib[0]:
+            lib_target_path = None if not target_path else os.path.join(target_path, lib)
+            if os.path.exists(os.path.join(child_lib_path, "statemachine.yaml")) or \
+                    os.path.exists(os.path.join(child_lib_path, "statemachine.json")):
+                convert(config_path, child_lib_path, lib_target_path, gui_config_path)
             else:
-                if not target_path:
-                    convert_libraries_in_path(config_path, os.path.join(lib_path, lib))
-                else:
-                    convert_libraries_in_path(config_path, os.path.join(lib_path, lib), os.path.join(target_path, lib))
+                convert_libraries_in_path(config_path, child_lib_path, lib_target_path, gui_config_path)
         else:
-            if os.path.isdir(os.path.join(lib_path, lib)) and '.' == lib[0]:
+            if os.path.isdir(child_lib_path) and '.' == lib[0]:
                 logger.debug("lib_root_path/lib_path .*-folder are ignored if within lib_path, "
-                             "e.g. -> {0} -> full path is {1}".format(lib, os.path.join(lib_path, lib)))
+                             "e.g. -> {0} -> full path is {1}".format(lib, child_lib_path))
 
 
 if __name__ == '__main__':
     import sys
-    if not len(sys.argv) >= 3:
+    if len(sys.argv) < 3:
         logger.error("Wrong number of arguments")
-        logger.error("Usage: resave_state_machine.py config_path library_folder_to_convert optional_target_folder")
+        logger.error("Usage: resave_state_machine.py config_path library_folder_to_convert optional_target_folder gui_config_path")
         exit(0)
     config_path = sys.argv[1]
+    gui_config_path = None if len(sys.argv) < 5 else sys.argv[4]
     folder_to_convert = sys.argv[2]
-    target_path = None
-    if len(sys.argv) >= 4:
-        target_path = sys.argv[3]
+    target_path = None if len(sys.argv) < 4 else sys.argv[3]
     logger.info("folder to convert: " + folder_to_convert)
-    convert_libraries_in_path(config_path, folder_to_convert, target_path)
+    convert_libraries_in_path(config_path, folder_to_convert, target_path, gui_config_path)
