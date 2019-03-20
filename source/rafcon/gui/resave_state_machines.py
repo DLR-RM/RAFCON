@@ -78,15 +78,9 @@ def convert(config_path, source_path, target_path=None):
 
     setup_environment()
 
-    home_path = expanduser('~')
-    if home_path:
-        home_path = join(home_path, ".config", "rafcon")
-    else:
-        home_path = 'None'
-
     setup_config = {}
     setup_config["config_path"] = config_path
-    setup_config["gui_config_path"] = home_path
+    setup_config["gui_config_path"] = config_path
     setup_config["source_path"] = [source_path]
     if not target_path:
         setup_config["target_path"] = [source_path]
