@@ -21,6 +21,7 @@ Next Release
   - use Python warning module with custom ``RAFCONDeprecationWarning`` for deprecated usages
   - the documentation can again be build on Read The Docs (at least the build of the API docs was corrupt since v0.13)
   - Jenkins integration
+  - test adaptions so that they can be parallelized
 
 
 - Bug Fixes:
