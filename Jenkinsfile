@@ -18,7 +18,7 @@ pipeline {
             steps {
                 timestamps {
                     sh 'printenv'
-                    sh 'pip3 install --user --upgrade tox==3.7'
+                    sh 'pip3 install --user --ignore-installed tox==3.8'
                 }
             }
         }
