@@ -25,6 +25,7 @@ Next Release
 - Bug Fixes:
 
   - :issue_ghe:`683` rafcon can now be closed properly via signal
+  - :issue_ghe:`712` Paste of Port into selected state is not possible
   - fix broken links in documentation
   - use correct version and year in documentation
 
