@@ -159,6 +159,8 @@ class Clipboard(Observable):
 
         # prepare list of lists to copy for limited or converted paste of objects
         target_state_element_attrs = target_state_m.state.state_element_attrs
+        if "income" in target_state_element_attrs:
+            target_state_element_attrs.remove("income")
         if limited and all([state_element_attr in target_state_element_attrs for state_element_attr in limited]):
             if len(limited) == 1 and limited[0] in ['input_data_ports', 'output_data_ports', 'scoped_variables'] and convert:
                 combined_list = element_m_copy_lists['input_data_ports'] + element_m_copy_lists['output_data_ports'] + \
@@ -465,6 +467,9 @@ class Clipboard(Observable):
         if not all_models_selected:
             logger.warning("Nothing to copy because state machine selection is empty.")
             return
+        if len(all_models_selected) == len(selection.incomes):
+            logger.warning("Incomes cannot be copied")
+            return
 
         parent_m = self.do_selection_reduction_to_one_parent(selection)
         self.copy_parent_state_id = parent_m.state.state_id if parent_m else None
@@ -472,9 +477,11 @@ class Clipboard(Observable):
         if smart_selection_adaption:
             self.do_smart_selection_adaption(selection, parent_m)
 
-        # store all lists of selection
+        # store all lists of selection, except incomes
         selected_models_dict = {}
         for state_element_attr in ContainerState.state_element_attrs:
+            if state_element_attr == "income":
+                continue
             selected_models_dict[state_element_attr] = list(getattr(selection, state_element_attr))
 
         # delete old models
