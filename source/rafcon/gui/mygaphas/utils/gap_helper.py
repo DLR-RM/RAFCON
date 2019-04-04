@@ -166,8 +166,6 @@ def add_data_flow_to_state(from_port, to_port):
             from_port), type(to_port)))
         return False
 
-    responsible_parent_m = None
-
     # from parent to child
     if isinstance(from_state_m, ContainerStateModel) and \
             check_if_dict_contains_object_reference_in_values(to_state_m.state, from_state_m.state.states):
@@ -176,18 +174,16 @@ def add_data_flow_to_state(from_port, to_port):
     elif isinstance(to_state_m, ContainerStateModel) and \
             check_if_dict_contains_object_reference_in_values(from_state_m.state, to_state_m.state.states):
         responsible_parent_m = to_state_m
-    # from parent to parent
-    elif isinstance(from_state_m, ContainerStateModel) and from_state_m.state is to_state_m.state:
+    # from parent to parent (input/scope to output/scope
+    elif isinstance(from_state_m, ContainerStateModel) and from_state_m.state is to_state_m.state \
+            and not isinstance(from_port, OutputPortView):
         responsible_parent_m = from_state_m  # == to_state_m
-    # from child to child
-    elif (not from_state_m.state.is_root_state) and (not to_state_m.state.is_root_state) \
-            and from_state_m.state is not to_state_m.state \
+    # child state to child state
+    elif not from_state_m.state.is_root_state and not to_state_m.state.is_root_state \
             and from_state_m.parent.state.state_id and to_state_m.parent.state.state_id:
         responsible_parent_m = from_state_m.parent
-
-    if not isinstance(responsible_parent_m, ContainerStateModel):
-        logger.error("Data flows only exist in container states (e.g. hierarchy states)")
-        return False
+    else:
+        raise ValueError("Trying to connect data ports that cannot be connected: {} with {}".format(from_port, to_port))
 
     try:
         responsible_parent_m.state.add_data_flow(from_state_id, from_port_id, to_state_id, to_port_id)
