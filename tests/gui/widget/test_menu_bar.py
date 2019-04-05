@@ -142,6 +142,8 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     sm_m = sm_manager_model.state_machines[first_sm_id + 1]
     page = state_machines_ctrl.get_page_for_state_machine_id(sm_m.state_machine_id)
 
+    # Tests for issue #712
+    # Copy an InputDataPort from a root state to an ExecutionState already having an InputDataPort
     call_gui_callback(sm_m.selection.set, [sm_m.root_state])
     call_gui_callback(gui_helper_state_machine.add_new_state, sm_m, StateType.EXECUTION)
     execution_state_m = list(sm_m.root_state.states.values())[0]
@@ -153,7 +155,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     call_gui_callback(sm_m.selection.set, execution_state_m)
     call_gui_callback(menubar_ctrl.on_delete_activate, None, None)
 
-    # Tests for issue #712
+    # Create BarrierConcurencyState and try to delete DeciderState (should fail with exception)
     call_gui_callback(sm_m.selection.set, [sm_m.root_state])
     call_gui_callback(gui_helper_state_machine.add_new_state, sm_m, StateType.BARRIER_CONCURRENCY)
     barrier_state_m = list(sm_m.root_state.states.values())[0]
