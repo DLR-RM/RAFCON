@@ -348,6 +348,8 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     dirty_states = []
     state_machine.root_state = load_state_recursively(parent=state_machine, state_path=root_state_path,
                                                       dirty_states=dirty_states)
+    if state_machine.root_state is None:
+        return  # a corresponding exception has been handled with a proper error log in load_state_recursively
     if len(dirty_states) > 0:
         state_machine.marked_dirty = True
     else:
@@ -448,6 +450,8 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         child_state_path = os.path.join(state_path, p)
         if os.path.isdir(child_state_path):
             child_state = load_state_recursively(state, child_state_path, dirty_states)
+            if not child_state:
+                return None
             if child_state.name is LIBRARY_NOT_FOUND_DUMMY_STATE_NAME:
                 one_of_my_child_states_not_found = True
 
