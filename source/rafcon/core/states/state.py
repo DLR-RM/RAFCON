@@ -239,7 +239,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :return: Attribute names of the state's state elements
         :rtype: list[str]
         """
-        return cls._state_element_attrs
+        return copy.copy(cls._state_element_attrs)
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- execution functions -------------------------------------

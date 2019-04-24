@@ -277,13 +277,11 @@ def get_boundaries_of_elements_in_dict(models_dict, clearance=0.):
     else:
         all_ports = list(models_dict['input_data_ports'].values()) + list(models_dict['output_data_ports'].values()) + \
                     list(models_dict['scoped_variables'].values()) + list(models_dict['outcomes'].values())
-        if len(set([port_m.core_element.parent for port_m in all_ports])) == 1:
-            logger.info("Only one parent {0} {1}".format(all_ports[0].core_element.parent, all_ports[0].parent.get_meta_data_editor()))
         if all_ports:
             left = all_ports[0].parent.get_meta_data_editor()['rel_pos'][0]
             top = all_ports[0].parent.get_meta_data_editor()['rel_pos'][1]
         else:
-            raise ValueError("Get boundary method does not aspects all list elements empty in dictionary. {0}"
+            raise ValueError("Get boundary method does not expect all list elements empty in dictionary. {0}"
                              "".format(models_dict))
 
     def cal_max(max_x, max_y, rel_pos, size):
