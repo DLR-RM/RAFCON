@@ -144,7 +144,7 @@ class Clipboard(Observable):
         via points
         :return:
         """
-        if all([not elems for elems in self.model_copies.itervalues()]):
+        if all([not elems for elems in self.model_copies.values()]):
             logger.warning("Paste is not performed because the clipboard is empty. "
                            "Select one or multiple elements and Copy or Cut those before performing Paste.")
             return
