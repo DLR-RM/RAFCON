@@ -216,8 +216,17 @@ class LibraryTreeController(ExtendedController):
         :param str library_root_path:
         :return:
         """
+        def add_description_to_tooltip(tool_tip_with_only_sm_file_system_path_in):
+            from rafcon.gui.helpers.state_machine import get_root_state_description_of_sm_file_system_path
+            description = get_root_state_description_of_sm_file_system_path(tool_tip_with_only_sm_file_system_path_in)
+            if description:
+                return tool_tip_with_only_sm_file_system_path_in + "\n\nDescription:\n\n{0}".format(description)
+            else:
+                return tool_tip_with_only_sm_file_system_path_in
+
         _library_key = self.convert_if_human_readable(library_key)
         tool_tip = library_item if isinstance(library_item, string_types) else ''
+
         if not tool_tip and parent is None:
             library_root_path = tool_tip = self.model.library_manager._library_root_paths.get(library_key, '')
         if not tool_tip:
@@ -225,6 +234,7 @@ class LibraryTreeController(ExtendedController):
             if len(library_path.split(os.path.sep)) > 1:
                 partial_path = os.path.sep.join(library_path.split(os.path.sep)[1:])
             tool_tip = os.path.join(library_root_path, partial_path, library_key)
+        tool_tip = add_description_to_tooltip(tool_tip)
         tree_item = self.tree_store.insert_before(parent, None, (_library_key, library_item, library_path,
                                                                  tool_tip, library_key))
         if isinstance(library_item, dict) and not library_item:
