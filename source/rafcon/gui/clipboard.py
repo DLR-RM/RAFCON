@@ -144,14 +144,18 @@ class Clipboard(Observable):
         via points
         :return:
         """
-        self.reset_clipboard_mapping_dicts()
+        if all([not elems for elems in self.model_copies.itervalues()]):
+            logger.warning("Paste is not performed because the clipboard is empty. "
+                           "Select one or multiple elements and Copy or Cut those before performing Paste.")
+            return
         if not isinstance(target_state_m, StateModel):
             logger.warning("Paste is not performed because target state indication has to be a StateModel not {0}"
-                        "".format(target_state_m.__class__.__name__))
+                           "".format(target_state_m.__class__.__name__))
             return
         if target_state_m.state.get_next_upper_library_root_state() is not None:
             logger.warning("Paste is not performed because selected target state is inside of a library state.")
             return
+        self.reset_clipboard_mapping_dicts()
 
         element_m_copy_lists = self.model_copies
         self.prepare_new_copy()  # threaded in future -> important that the copy is prepared here!!!
@@ -237,7 +241,7 @@ class Clipboard(Observable):
         if all([all([not gui_helpers_meta_data.model_has_empty_meta(state_element_m) for state_element_m, _ in elems_list])
                 if isinstance(elems_list, list) else gui_helpers_meta_data.model_has_empty_meta(elems_list)
                 for elems_list in insert_dict.values()]) or \
-                len(dict_of_non_empty_lists_of_model_copies) == 1 and 'states' in dict_of_non_empty_lists_of_model_copies:
+                                len(dict_of_non_empty_lists_of_model_copies) == 1 and 'states' in dict_of_non_empty_lists_of_model_copies:
             try:
                 gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
             except:
