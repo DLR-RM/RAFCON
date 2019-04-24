@@ -728,7 +728,7 @@ class ConnectionCreationTool(ConnectionTool):
                     self.motion_handle.stop_move()
                 sink_port_v = self._current_sink.port.port_v
                 self._disconnect_temporarily(sink_port_v, target=True)
-                gap_helper.create_new_connection(self._connection_v.from_port, sink_port_v)
+                gap_helper.create_new_connection(self._connection_v.from_port.model, sink_port_v.model)
 
             # remove placeholder from canvas
             if self._connection_v:

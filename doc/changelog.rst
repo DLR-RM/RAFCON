@@ -26,6 +26,7 @@ Next Release
 
   - :issue_ghe:`683` rafcon can now be closed properly via signal
   - :issue_ghe:`712` Paste of Port into selected state is not possible
+  - :issue_ghe:`711` Gaphas does not allow data flows from one state to itself
   - fix broken links in documentation
   - use correct version and year in documentation
 
