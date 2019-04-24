@@ -220,9 +220,9 @@ class LibraryTreeController(ExtendedController):
             from rafcon.gui.helpers.state_machine import get_root_state_description_of_sm_file_system_path
             description = get_root_state_description_of_sm_file_system_path(tool_tip_with_only_sm_file_system_path_in)
             if description:
-                return tool_tip_with_only_sm_file_system_path_in + "\n\nDescription:\n\n{0}".format(description)
+                return "[source]:\n" + tool_tip_with_only_sm_file_system_path_in + "\n\n[description]:\n\n{0}".format(description)
             else:
-                return tool_tip_with_only_sm_file_system_path_in
+                return "[source]:\n" + tool_tip_with_only_sm_file_system_path_in
 
         _library_key = self.convert_if_human_readable(library_key)
         tool_tip = library_item if isinstance(library_item, string_types) else ''
