@@ -42,8 +42,8 @@ def install_fonts(logger=None, restart=False):
 
     font_names_to_be_installed = ["Source Sans Pro", "FontAwesome"]
 
-    tv = Gtk.TextView()
     try:
+        tv = Gtk.TextView()
         context = tv.get_pango_context()
     except Exception as e:
         log.error("Could not get pango context. Will not install fonts: {}".format(e))

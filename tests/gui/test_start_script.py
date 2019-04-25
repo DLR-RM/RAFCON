@@ -1,16 +1,12 @@
 from __future__ import print_function
 import pytest
-from os.path import realpath, dirname, join
-import rafcon.utils.filesystem
+from os.path import dirname, join
+from rafcon.utils import constants
 import subprocess
 import os
 import sys
 import shutil
 from tests import utils as testing_utils
-FILE_MODIFIED_BY_STATE_MACHINE = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE,
-                                              "test_start_script.txt")
-if os.path.exists(FILE_MODIFIED_BY_STATE_MACHINE):
-    os.remove(FILE_MODIFIED_BY_STATE_MACHINE)
 
 
 def test_start_script_open():
@@ -22,15 +18,12 @@ def test_start_script_open():
     python_executable = str(sys.executable)
     script = join(testing_utils.RAFCON_PATH, "core", "start.py")
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
-    cmd = "%s %s -o %s" % (python_executable, script, start_path)
-    print("\ntest_start_script_open: \n", cmd)
-    cmd_res = subprocess.call(cmd, shell=True)
-    assert cmd_res == 0
-    tmp_file = open(FILE_MODIFIED_BY_STATE_MACHINE, "r")
-    res = tmp_file.read()
-    tmp_file.close()
-    assert (res == "start, state, "), "start script failed"
-    os.remove(FILE_MODIFIED_BY_STATE_MACHINE)
+    output = str(subprocess.check_output([python_executable, script,
+                                          '-o', start_path,
+                                          '-c', testing_utils.RAFCON_TEMP_PATH_CONFIGS]))
+    print("\ntest_start_script_open")
+    assert "enter state_1" in output
+    assert "enter state_2" in output
 
 
 def test_start_script_state():
@@ -42,24 +35,26 @@ def test_start_script_state():
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     state_path = "UTUOSC/AHWBOG"
     print(start_path)
-    cmd = sys.executable + " %s -o %s -s %s" % (script, start_path, state_path)
-    print("\ntest_start_script_state: \n", cmd)
-    cmd_res = subprocess.call(cmd, shell=True)
-    assert cmd_res == 0
-    tmp_file = open(FILE_MODIFIED_BY_STATE_MACHINE, "r")
-    res = tmp_file.read()
-    tmp_file.close()
-    assert (res == "state, "), "start from state failed"
-    os.remove(FILE_MODIFIED_BY_STATE_MACHINE)
+    output = str(subprocess.check_output([sys.executable, script,
+                                          '-o', start_path,
+                                          '-s', state_path,
+                                          '-c', testing_utils.RAFCON_TEMP_PATH_CONFIGS]))
+    print("\ntest_start_script_state")
+    assert "enter state_1" not in output
+    assert "enter state_2" in output
 
 
-def test_initial_default_config_folder_generation():
+def _test_initial_default_config_folder_generation():
     """ Test core.start.py and gui.start.py script run on console which should initiate the config folder.
     """
+    # TODO: this test is broken
+    # when specifying a config path that does not exist, RAFCON does not start
+    # Yet, the tests wants to see the opposite. This hasen't failed, yet, as the implementation was wrong:
+    # The ~/.config/rafcon folder was moved to ~/.config/rafcon/rafcon_backup
     testing_utils.dummy_gui(None)
 
-    user_config_folder = rafcon.utils.filesystem.get_default_config_path()
-    backup_user_config_folder = os.path.join(os.path.expanduser('~'), '.config', 'rafcon_backup')
+    user_config_folder = testing_utils.RAFCON_TEMP_PATH_CONFIGS
+    backup_user_config_folder = os.path.join(constants.RAFCON_TEMP_PATH_BASE, 'rafcon_backup')
     try:
         if os.path.exists(user_config_folder):
             shutil.move(user_config_folder, backup_user_config_folder)
@@ -82,19 +77,15 @@ def test_start_script_valid_config():
     run it and final checks the output file on consistency.
     """
     testing_utils.dummy_gui(None)
-    # valid config
-    bin_path = join(dirname(testing_utils.RAFCON_PATH), "..", "bin")
+    script = join(testing_utils.RAFCON_BIN_PATH, "rafcon_core")
     start_path = testing_utils.get_test_sm_path(join("unit_test_state_machines", "start_script_test"))
     config = join(testing_utils.TESTS_PATH, "assets", "configs", "valid_config", "config.yaml")
-    cmd = "export PATH={0}:$PATH && rafcon_core -o {1} -c {2}".format(bin_path, start_path, config)
-    print("\ntest_start_script_valid_config: \n", cmd)
-    cmd_res = subprocess.call(cmd, shell=True)
-    assert cmd_res == 0
-    tmp = open(FILE_MODIFIED_BY_STATE_MACHINE, "r")
-    res = tmp.read()
-    tmp.close()
-    assert (res == "start, state, "), "start with valid config failed"
-    os.remove(FILE_MODIFIED_BY_STATE_MACHINE)
+    output = str(subprocess.check_output([script,
+                                          '-o', start_path,
+                                          '-c', config]))
+    print("\ntest_start_script_valid_config")
+    assert "enter state_1" in output
+    assert "enter state_2" in output
 
 
 def test_start_script_valid_rmpm_env():

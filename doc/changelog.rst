@@ -20,6 +20,8 @@ Next Release
   - dedicated 'unstable' marks for python 2.7 and 3.x; these marks can be used to filter out tests
   - use Python warning module with custom ``RAFCONDeprecationWarning`` for deprecated usages
   - the documentation can again be build on Read The Docs (at least the build of the API docs was corrupt since v0.13)
+  - Jenkins integration
+  - test adaptions so that they can be parallelized
 
 
 - Bug Fixes:

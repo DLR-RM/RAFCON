@@ -50,6 +50,9 @@ try:
 except ImportError:
     pass
 
+# Do net verify certificates when checking links
+tls_verify = False
+
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'no-private-members']
 autoclass_content = 'class'
 
