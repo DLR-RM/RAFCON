@@ -423,6 +423,8 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
             models_dict = {'state': state_m_to_insert}
 
             for state_element_key in state_m_to_insert.state.state_element_attrs:
+                if state_element_key == "income":
+                    continue
                 state_element_list = getattr(state_m_to_insert, state_element_key)
                 # Some models are hold in a gtkmvc3.support.wrappers.ObsListWrapper, not a list
                 if hasattr(state_element_list, 'keys'):

@@ -108,14 +108,16 @@ def open_state_machine(path=None, recent_opened_notification=False):
     state_machine = None
     try:
         state_machine = storage.load_state_machine_from_path(load_path)
+        if not state_machine:
+            return  # a corresponding exception has been handled with a proper error log in load_state_machine_from_path
         state_machine_manager.add_state_machine(state_machine)
         if recent_opened_notification:
             global_runtime_config.update_recently_opened_state_machines_with(state_machine)
         duration = time.time() - start_time
         stat = state_machine.root_state.get_states_statistics(0)
         logger.info("It took {0:.2}s to load {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
-    except (AttributeError, ValueError, IOError) as e:
-        logger.error('Error while trying to open state machine: {0}'.format(e))
+    except Exception:
+        logger.exception('Error while trying to open state machine')
 
     return state_machine
 

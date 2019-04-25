@@ -295,7 +295,8 @@ class LibraryTreeController(ExtendedController):
     def open_run_button_clicked(self, widget):
         from rafcon.core.singleton import state_machine_execution_engine
         state_machine = self.open_library_as_state_machine()
-        state_machine_execution_engine.start(state_machine.state_machine_id)
+        if state_machine:
+            state_machine_execution_engine.start(state_machine.state_machine_id)
 
     def open_library_as_state_machine(self):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
@@ -305,7 +306,8 @@ class LibraryTreeController(ExtendedController):
 
         logger.debug("Opening library as state-machine from path '{0}'".format(physical_library_path))
         state_machine = gui_helper_state_machine.open_state_machine(physical_library_path)
-        global_runtime_config.update_recently_opened_state_machines_with(state_machine)
+        if state_machine:
+            global_runtime_config.update_recently_opened_state_machines_with(state_machine)
         return state_machine
 
     def get_menu_item_text(self, menu_item):
