@@ -176,6 +176,7 @@ A typical config file looks like this:
     RESTORE_UNDOCKED_SIDEBARS: True
 
     STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED: True
+    LIBRARY_TREE_TOOLTIP_INCLUDES_ROOT_STATE_DESCRIPTION: True
 
     ZOOM_WITH_CTRL: False
 
@@ -484,6 +485,10 @@ RESTORE\_UNDOCKED\_SIDEBARS
 STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED:
   | Default: ``True``
   | If set to True, states inside library states can be selected.
+
+LIBRARY_TREE_TOOLTIP_INCLUDES_ROOT_STATE_DESCRIPTION:
+  | Default: ``True``
+  | If set to True, tooltip include the root state description text if the hovered library tree element (leaf element) is a real state machine.
 
 ZOOM_WITH_CTRL:
   | Default: ``False``
