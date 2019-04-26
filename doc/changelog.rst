@@ -22,6 +22,7 @@ Next Release
   - the documentation can again be build on Read The Docs (at least the build of the API docs was corrupt since v0.13)
   - Jenkins integration
   - test adaptions so that they can be parallelized
+  - added `seqm.yaml` for tracking software engineering quality management (SEQM) requirements (DLR internal)
 
 
 - Bug Fixes:
