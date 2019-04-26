@@ -226,9 +226,9 @@ def add_transition_to_state(from_port_m, to_port_m):
             to_outcome_id = None
         # Transition from parent income to parent outcome
         elif isinstance(to_port_m, OutcomeModel):
-            to_outcome_id = to_port_m.outcome_id
+            to_outcome_id = to_port_m.outcome.outcome_id
     elif isinstance(from_port_m, OutcomeModel):
-        from_outcome_id = from_port_m.outcome_id
+        from_outcome_id = from_port_m.outcome.outcome_id
         # Transition from child outcome to child income
         if isinstance(to_port_m, IncomeModel):
             responsible_parent_m = from_state_m.parent
@@ -236,7 +236,7 @@ def add_transition_to_state(from_port_m, to_port_m):
         # Transition from child outcome to parent outcome
         elif isinstance(to_port_m, OutcomeModel):
             responsible_parent_m = to_state_m
-            to_outcome_id = to_port_m.outcome_id
+            to_outcome_id = to_port_m.outcome.outcome_id
     else:
         raise ValueError("Invalid port type")
 
