@@ -219,10 +219,12 @@ class LibraryTreeController(ExtendedController):
         def add_description_to_tooltip(tool_tip_with_only_sm_file_system_path_in):
             from rafcon.gui.helpers.state_machine import get_root_state_description_of_sm_file_system_path
             description = get_root_state_description_of_sm_file_system_path(tool_tip_with_only_sm_file_system_path_in)
-            if description:
-                return "[source]:\n" + tool_tip_with_only_sm_file_system_path_in + "\n\n[description]:\n\n{0}".format(description)
+            enabled = global_gui_config.get_config_value('LIBRARY_TREE_TOOLTIP_INCLUDES_ROOT_STATE_DESCRIPTION', True)
+            if description and enabled:
+                return "[source]:\n{0}\n\n[description]:\n\n{1}" \
+                       "".format(tool_tip_with_only_sm_file_system_path_in, description)
             else:
-                return "[source]:\n" + tool_tip_with_only_sm_file_system_path_in
+                return "[source]:\n{0}".format(tool_tip_with_only_sm_file_system_path_in)
 
         _library_key = self.convert_if_human_readable(library_key)
         tool_tip = library_item if isinstance(library_item, string_types) else ''
