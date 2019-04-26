@@ -1,0 +1,135 @@
+---
+- type: DLR SE QM project file
+- seqm_version: 1.1
+- project_name: 'rafcon '
+- seqmedit_version: 0.11.0
+- recommendations:
+    - eaa01:
+        - state: later
+    - eaa02:
+        - state: done
+    - eaa03:
+        - state: done
+    - eaa05:
+        - state: later
+    - eaa06:
+        - state: later
+    - eaa08:
+        - state: later
+    - eaa09:
+        - state: later
+    - eaa10:
+        - state: done
+    - eaem01:
+        - state: done
+    - eaem02:
+        - state: done
+    - eaem03:
+        - state: done
+    - eaem04:
+        - state: done
+    - eaem05:
+        - state: done
+    - eaem06:
+        - state: done
+    - eaem07:
+        - state: done
+    - eaem08:
+        - state: done
+    - eaem09:
+        - state: done
+    - eam01:
+        - state: done
+    - eam02:
+        - state: later
+    - eam03:
+        - state: later
+    - eam04:
+        - state: later
+    - eam05:
+        - state: later
+    - eam08:
+        - state: done
+    - eam09:
+        - state: later
+    - edi01:
+        - state: done
+    - edi02:
+        - state: done
+    - edi03:
+        - state: done
+    - edi05:
+        - state: done
+    - edi06:
+        - state: later
+    - edi07:
+        - state: later
+    - edi08:
+        - state: later
+    - edi09:
+        - state: done
+    - edi10:
+        - state: later
+    - edi11:
+        - state: done
+    - eqa01:
+        - state: done
+    - eqa02:
+        - state: done
+    - eqa03:
+        - state: done
+    - eqa04:
+        - state: done
+    - erm01:
+        - state: done
+    - erm02:
+        - state: done
+    - erm03:
+        - state: done
+    - erm04:
+        - state: later
+    - erm06:
+        - state: done
+    - erm07:
+        - state: done
+    - erm08:
+        - state: done
+    - erm09:
+        - state: done
+    - erm10:
+        - state: done
+    - erm11:
+        - state: later
+    - esa01:
+        - state: later
+    - esa02:
+        - state: later
+    - esa03:
+        - state: later
+    - esa04:
+        - state: later
+    - esa05:
+        - state: later
+    - esa06:
+        - state: later
+    - esa07:
+        - state: later
+    - esa08:
+        - state: later
+    - esa09:
+        - state: later
+    - esa10:
+        - state: later
+    - esa11:
+        - state: later
+    - est01:
+        - state: done
+    - est02:
+        - state: done
+    - est04:
+        - state: done
+    - est08:
+        - state: later
+    - est10:
+        - state: done
+- application_class: 2
