@@ -106,7 +106,10 @@ class GraphicalEditorController(ExtendedController):
         self.view.editor.connect("drag-data-received", self.on_drag_data_received)
         self.drag_motion_handler_id = self.view.editor.connect("drag-motion", self.on_drag_motion)
 
-        self.setup_canvas()
+        try:
+            self.setup_canvas()
+        except:
+            logger.exception("Error while setting up canvas")
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions

@@ -440,6 +440,8 @@ def scale_library_content(library_state_m, gaphas_editor=True):
     # (opengl same size as library state and in case of gaphas reduced by library state margin)
     models_dict = {'state': library_state_m.state_copy}
     for state_element_key in library_state_m.state_copy.state.state_element_attrs:
+        if state_element_key == "income":
+            continue
         state_element_list = getattr(library_state_m.state_copy, state_element_key)
         # Some models are hold in a gtkmvc3.support.wrappers.ObsListWrapper, not a list
         if hasattr(state_element_list, 'keys'):
