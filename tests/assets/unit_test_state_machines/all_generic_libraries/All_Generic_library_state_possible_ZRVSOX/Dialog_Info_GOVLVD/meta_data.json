@@ -1,15 +1,6 @@
 {
     "gui": {
         "editor_gaphas": {
-            "income": {
-                "rel_pos": {
-                    "__jsonqualname__": "__builtin__.tuple", 
-                    "items": [
-                        0.5024078876822957, 
-                        11.574509752355981
-                    ]
-                }
-            }, 
             "name": {
                 "rel_pos": {
                     "__jsonqualname__": "__builtin__.tuple", 
@@ -41,7 +32,20 @@
                 ]
             }
         }, 
-        "show_content": {}
+        "show_content": true
+    }, 
+    "income": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0.5024078876822957, 
+                        11.574509752355981
+                    ]
+                }
+            }
+        }
     }, 
     "input_data_port1": {
         "gui": {
