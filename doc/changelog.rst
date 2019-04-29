@@ -36,6 +36,7 @@ Next Release
 
 
 - Changes:
+  - pyyaml is not a dependency anymore, as it is now a dependency of yaml_configuration
 
 
 0.13.7
