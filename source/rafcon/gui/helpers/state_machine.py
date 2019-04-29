@@ -1036,17 +1036,31 @@ def ungroup_selected_state():
         return gui_helper_state.ungroup_state(selected_state_m)
 
 
-def get_root_state_name_of_sm_file_system_path(file_system_path):
-    if os.path.isdir(file_system_path) and os.path.exists(os.path.join(file_system_path, storage.STATEMACHINE_FILE)):
+def get_root_state_file_path(sm_file_system_path):
+    if os.path.isdir(sm_file_system_path) and os.path.exists(os.path.join(sm_file_system_path, storage.STATEMACHINE_FILE)):
         try:
-            sm_dict = storage.load_data_file(os.path.join(file_system_path, storage.STATEMACHINE_FILE))
+            sm_dict = storage.load_data_file(os.path.join(sm_file_system_path, storage.STATEMACHINE_FILE))
         except ValueError:
             return
         if 'root_state_id' not in sm_dict and 'root_state_storage_id' not in sm_dict:
             return
         root_state_folder = sm_dict['root_state_id'] if 'root_state_id' in sm_dict else sm_dict['root_state_storage_id']
-        root_state_file = os.path.join(file_system_path, root_state_folder, storage.FILE_NAME_CORE_DATA)
-        state_dict = storage_utils.load_objects_from_json(root_state_file, as_dict=True)
+        return os.path.join(sm_file_system_path, root_state_folder, storage.FILE_NAME_CORE_DATA)
+
+
+def get_root_state_name_of_sm_file_system_path(file_system_path):
+    root_state_file_path = get_root_state_file_path(sm_file_system_path=file_system_path)
+    if root_state_file_path:
+        state_dict = storage_utils.load_objects_from_json(root_state_file_path, as_dict=True)
         if 'name' in state_dict:
             return state_dict['name']
+        return
+
+
+def get_root_state_description_of_sm_file_system_path(file_system_path):
+    root_state_file_path = get_root_state_file_path(sm_file_system_path=file_system_path)
+    if root_state_file_path:
+        state_dict = storage_utils.load_objects_from_json(root_state_file_path, as_dict=True)
+        if 'description' in state_dict:
+            return state_dict['description']
         return
