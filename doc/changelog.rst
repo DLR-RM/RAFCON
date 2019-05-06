@@ -23,6 +23,7 @@ Next Release
   - tooltip of library tree include root state description text of libraries
   - Jenkins integration
   - test adaptions so that they can be parallelized
+  - added `seqm.yaml` for tracking software engineering quality management (SEQM) requirements (DLR internal)
 
 
 - Bug Fixes:
