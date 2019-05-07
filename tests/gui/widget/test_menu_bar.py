@@ -155,6 +155,16 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     call_gui_callback(sm_m.selection.set, execution_state_m)
     call_gui_callback(menubar_ctrl.on_delete_activate, None, None)
 
+    # TODO check why I have had to move this test above the bug tests below?!
+    # Create BarrierConcurrencyState and try to delete DeciderState (should fail with exception)
+    call_gui_callback(sm_m.selection.set, [sm_m.root_state])
+    call_gui_callback(gui_helper_state_machine.add_new_state, sm_m, StateType.BARRIER_CONCURRENCY)
+    barrier_state_m = list(sm_m.root_state.states.values())[0]
+    decider_state_path = "/".join([barrier_state_m.state.get_path(), UNIQUE_DECIDER_STATE_ID])
+    call_gui_callback(sm_m.selection.set, sm_m.get_state_model_by_path(decider_state_path))
+    call_gui_callback(menubar_ctrl.on_delete_activate, None, None)
+    call_gui_callback(sm_m.root_state.state.remove_state, barrier_state_m.state.state_id)
+
     # Tests for issue #717 and #726
     # create self transition and self data flow and perform state type change and substitute state
     call_gui_callback(sm_m.selection.set, [sm_m.root_state])
@@ -190,14 +200,6 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     assert t_m.transition.from_state == t_m.transition.to_state and t_m.transition.from_state == wait_state_m.state.state_id
     call_gui_callback(sm_m.root_state.state.remove_state, wait_state_m.state.state_id)
     first_sm_id += 1  # count state machine id once up because of library substitution (loads a state machine, too)
-
-    # Create BarrierConcurrencyState and try to delete DeciderState (should fail with exception)
-    call_gui_callback(sm_m.selection.set, [sm_m.root_state])
-    call_gui_callback(gui_helper_state_machine.add_new_state, sm_m, StateType.BARRIER_CONCURRENCY)
-    barrier_state_m = list(sm_m.root_state.states.values())[0]
-    decider_state_path = "/".join([barrier_state_m.state.get_path(), UNIQUE_DECIDER_STATE_ID])
-    call_gui_callback(sm_m.selection.set, sm_m.get_state_model_by_path(decider_state_path))
-    call_gui_callback(menubar_ctrl.on_delete_activate, None, None)
 
     assert len(sm_manager_model.state_machines) == current_sm_length + 1
     call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TUTORIAL_PATH,
