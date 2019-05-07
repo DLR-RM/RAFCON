@@ -58,7 +58,7 @@ def store_session():
                 # TODO extend to full range of selection -> see core_identifier action-module
                 selection_of_sm.append(model.state.get_path())
 
-        list_of_tab_meta.append({'backup_meta': state_machine_manager_model.state_machines[sm_id].auto_backup.meta,
+        list_of_tab_meta.append({'backup_meta': state_machine_manager_model.state_machines[sm_id].auto_backup.meta.to_dict(native_strings=True),
                                  'selection': selection_of_sm})
 
     # store final state machine backup meta data to backup session tabs and selection for the next run

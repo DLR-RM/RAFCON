@@ -16,6 +16,18 @@ Next Release
 
 - Improvements:
 
+
+- Bug Fixes:
+
+
+- Changes:
+
+
+0.13.8
+""""""
+
+- Improvements:
+
   - use with statement instead af acquire/release
   - dedicated 'unstable' marks for python 2.7 and 3.x; these marks can be used to filter out tests
   - use Python warning module with custom ``RAFCONDeprecationWarning`` for deprecated usages
@@ -23,10 +35,12 @@ Next Release
   - tooltip of library tree include root state description text of libraries
   - Jenkins integration
   - test adaptions so that they can be parallelized
+  - added `seqm.yaml` for tracking software engineering quality management (SEQM) requirements (DLR internal)
 
 
 - Bug Fixes:
 
+  - :issue_gh:`12` Error when switching from python2 to python3
   - :issue_gh:`18` State machines with library states cannot be opened if show flag is set to True
   - :issue_ghe:`683` rafcon can now be closed properly via signal
   - :issue_ghe:`712` Paste of Port into selected state is not possible
@@ -37,6 +51,7 @@ Next Release
 
 
 - Changes:
+  - pyyaml is not a dependency anymore, as it is now a dependency of yaml_configuration
 
 
 0.13.7
