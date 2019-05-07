@@ -28,6 +28,7 @@ Next Release
 
 - Bug Fixes:
 
+  - :issue_gh:`12` Error when switching from python2 to python3
   - :issue_gh:`18` State machines with library states cannot be opened if show flag is set to True
   - :issue_ghe:`683` rafcon can now be closed properly via signal
   - :issue_ghe:`712` Paste of Port into selected state is not possible
