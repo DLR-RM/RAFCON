@@ -16,6 +16,18 @@ Next Release
 
 - Improvements:
 
+
+- Bug Fixes:
+
+
+- Changes:
+
+
+0.13.8
+""""""
+
+- Improvements:
+
   - use with statement instead af acquire/release
   - dedicated 'unstable' marks for python 2.7 and 3.x; these marks can be used to filter out tests
   - use Python warning module with custom ``RAFCONDeprecationWarning`` for deprecated usages
