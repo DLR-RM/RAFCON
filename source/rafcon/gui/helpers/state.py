@@ -531,9 +531,11 @@ def substitute_state(target_state_m, state_m_to_insert, as_template=False):
     related_transitions, related_data_flows = action_parent_m.state.related_linkage_state(state_id)
     tmp_meta_data['state'] = old_state_m.meta
     # print("old state meta", old_state_m.meta)
-    for t in set(related_transitions['external']['ingoing'] + related_transitions['external']['outgoing']):
+    external_t = related_transitions['external']
+    for t in external_t['ingoing'] + external_t['outgoing'] + external_t['self']:
         tmp_meta_data['transitions'][t.transition_id] = action_parent_m.get_transition_m(t.transition_id).meta
-    for df in set(related_data_flows['external']['ingoing'] + related_data_flows['external']['outgoing']):
+    external_df = related_data_flows['external']
+    for df in external_df['ingoing'] + external_df['outgoing'] + external_df['self']:
         tmp_meta_data['data_flows'][df.data_flow_id] = action_parent_m.get_data_flow_m(df.data_flow_id).meta
     action_parent_m.substitute_state.__func__.tmp_meta_data_storage = tmp_meta_data
     action_parent_m.substitute_state.__func__.old_state_m = old_state_m

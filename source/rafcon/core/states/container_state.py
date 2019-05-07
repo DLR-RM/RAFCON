@@ -846,21 +846,45 @@ class ContainerState(State):
         super(ContainerState, self).destroy(recursive)
 
     def related_linkage_state(self, state_id):
-        """ TODO: document
+        """ The method generates two dictionaries with related transition and data flow linkage for respective state_id
+        
+        The method hand linkage dictionaries for all 'internal' and 'external' (first dict-key) linkage of the state.
+        Both dictionaries and there sub dicts (first dict-key) have 4 fields (as second dict-key), 
+        'enclosed', 'ingoing', 'outgoing' and 'self'.
+         - 'enclosed' means the handed state.states cover origin and target of those linkage
+         - 'ingoing' means the handed state is target of those linkage
+         - 'ingoing' means the handed state is origin of those linkage
+         - 'self' (corner case) single state that has linkage with it self and is thereby also origin and target at 
+           the same time
+        
+        :param state_id: State taken into account.
+        :rtype tuple
+        :return: related_transitions, related_data_flows
         """
+        related_transitions = {'external': {'ingoing': [], 'outgoing': [], 'self': []},
+                               'internal': {'enclosed': [], 'ingoing': [], 'outgoing': [], 'self': []}}
+        related_data_flows = {'external': {'ingoing': [], 'outgoing': [], 'self': []},
+                              'internal': {'enclosed': [], 'ingoing': [], 'outgoing': [], 'self': []}}
 
-        related_transitions = {'external': {'ingoing': [], 'outgoing': []},
-                               'internal': {'enclosed': [], 'ingoing': [], 'outgoing': []}}
-        related_data_flows = {'external': {'ingoing': [], 'outgoing': []},
-                              'internal': {'enclosed': [], 'ingoing': [], 'outgoing': []}}
-        # ingoing logical linkage to rebuild
-        related_transitions['external']['ingoing'] = [t for t in self.transitions.values() if t.to_state == state_id]
-        # outgoing logical linkage to rebuild
-        related_transitions['external']['outgoing'] = [t for t in self.transitions.values() if t.from_state == state_id]
-        # ingoing data linkage to rebuild
-        related_data_flows['external']['ingoing'] = [df for df in self.data_flows.values() if df.to_state == state_id]
-        # outgoing outgoing linkage to rebuild
-        related_data_flows['external']['outgoing'] = [df for df in self.data_flows.values() if df.from_state == state_id]
+        # self logical linkage
+        related_transitions['external']['self'] = [t for t in self.transitions.values()
+                                                   if t.from_state == state_id and t.to_state == state_id]
+        # ingoing logical linkage
+        related_transitions['external']['ingoing'] = [t for t in self.transitions.values()
+                                                      if t.from_state != state_id and t.to_state == state_id]
+        # outgoing logical linkage
+        related_transitions['external']['outgoing'] = [t for t in self.transitions.values()
+                                                       if t.from_state == state_id and t.to_state != state_id]
+
+        # self data linkage
+        related_data_flows['external']['self'] = [df for df in self.data_flows.values()
+                                                  if df.from_state == state_id and df.to_state == state_id]
+        # ingoing data linkage
+        related_data_flows['external']['ingoing'] = [df for df in self.data_flows.values()
+                                                     if df.from_state != state_id and df.to_state == state_id]
+        # outgoing outgoing linkage
+        related_data_flows['external']['outgoing'] = [df for df in self.data_flows.values()
+                                                      if df.from_state == state_id and df.to_state != state_id]
 
         state = self.states[state_id]
         if not isinstance(state, ContainerState):
@@ -868,7 +892,9 @@ class ContainerState(State):
 
         for t_id, t in state.transitions.items():
             # check if internal of new hierarchy state
-            if t.from_state in state.states and t.to_state in state.states:
+            if state_id == t.from_state and state_id == t.to_state:  # most likely never happens but possible
+                related_transitions['internal']['self'].append(t)
+            elif t.from_state in state.states and t.to_state in state.states:
                 related_transitions['internal']['enclosed'].append(t)
             elif t.to_state in state.states:
                 related_transitions['internal']['ingoing'].append(t)
@@ -879,7 +905,9 @@ class ContainerState(State):
 
         for df_id, df in state.data_flows.items():
             # check if internal of hierarchy state
-            if df.from_state in state.states and df.to_state in state.states or \
+            if state_id == df.from_state and state_id == df.to_state:  # most likely never happens but possible
+                related_data_flows['internal']['self'].append(df)
+            elif df.from_state in state.states and df.to_state in state.states or \
                     df.from_state in state.states and state.state_id == df.to_state and df.to_key in state.scoped_variables or \
                     state.state_id == df.from_state and df.from_key in state.scoped_variables and df.to_state in state.states:
                 related_data_flows['internal']['enclosed'].append(df)
@@ -897,7 +925,18 @@ class ContainerState(State):
         return related_transitions, related_data_flows
 
     def related_linkage_states_and_scoped_variables(self, state_ids, scoped_variables):
-        """ TODO: document
+        """ The method generates two dictionaries with transition and data flow linkage for related linkage
+        
+        The method hand linkage dictionaries for a set of states and scopes.
+        Both dictionaries have 4 fields (as first dict-key), 'enclosed', 'ingoing' and 'outgoing'
+         - 'enclosed' means the handed sets cover origin and target of those linkage
+         - 'ingoing' means the handed sets is target of those linkage
+         - 'ingoing' means the handed sets is origin of those linkage
+        
+        :param state_ids: List of states taken into account. 
+        :param scoped_variables: List of scoped variables taken into account
+        :rtype tuple
+        :return: related_transitions, related_data_flows
         """
 
         # find all related transitions

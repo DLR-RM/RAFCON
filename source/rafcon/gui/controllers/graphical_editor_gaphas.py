@@ -656,7 +656,9 @@ class GraphicalEditorController(ExtendedController):
             external_connections = set(connected_transitions['external']['ingoing'] +
                                        connected_transitions['external']['outgoing'] +
                                        connected_data_flows['external']['ingoing'] +
-                                       connected_data_flows['external']['outgoing'])
+                                       connected_data_flows['external']['outgoing'] +
+                                       connected_transitions['external']['self'] +
+                                       connected_data_flows['external']['self'])
             for connection_m in external_connections:
                 connection_v = self.canvas.get_view_for_core_element(connection_m)
                 if connection_v:
