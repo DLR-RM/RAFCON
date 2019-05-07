@@ -24,6 +24,7 @@ import os
 import logging
 import logging.config
 import json
+import warnings
 from pkg_resources import resource_filename
 
 # a dictionary to hold all loggers created so far
@@ -31,6 +32,10 @@ existing_loggers = {}
 
 # Root namespace
 rafcon_root = "rafcon"
+
+
+class RAFCONDeprecationWarning(DeprecationWarning):
+    pass
 
 
 # Credits: https://stackoverflow.com/a/35804945
@@ -95,6 +100,9 @@ with open(logging_conf_path) as logging_conf_file:
     except ValueError as e:
         # we can't use a logger here (chicken-egg-problem)
         print("Could not load {} (ValueError: {})".format(logging_conf_path, e))
+
+warnings.simplefilter("once", RAFCONDeprecationWarning)
+logging.captureWarnings(True)
 
 
 def get_logger(name):

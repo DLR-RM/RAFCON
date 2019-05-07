@@ -156,9 +156,8 @@ class ExecutionEngine(Observable):
         self.__set_execution_mode_to_stopped()
 
         # Notifies states waiting in step mode or those that are paused about execution stop
-        self._status.execution_condition_variable.acquire()
-        self._status.execution_condition_variable.notify_all()
-        self._status.execution_condition_variable.release()
+        with self._status.execution_condition_variable:
+            self._status.execution_condition_variable.notify_all()
         self.__running_state_machine = None
 
     def join(self, timeout=None):
@@ -302,13 +301,10 @@ class ExecutionEngine(Observable):
         """
         while (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
                 or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
-            try:
-                self._status.execution_condition_variable.acquire()
+            with self._status.execution_condition_variable:
                 self.synchronization_counter += 1
                 logger.verbose("Increase synchronization_counter: " + str(self.synchronization_counter))
                 self._status.execution_condition_variable.wait()
-            finally:
-                self._status.execution_condition_variable.release()
 
     def _wait_if_required(self, container_state, next_child_state_to_execute, woke_up_from_pause_or_step_mode):
         """ Calls a blocking wait for the calling thread, depending on the execution mode.
@@ -351,13 +347,10 @@ class ExecutionEngine(Observable):
         # don't wait if the the execution just woke up from step mode or pause
         if wait and not woke_up_from_pause_or_step_mode:
             logger.debug("Stepping mode: waiting for next step!")
-            try:
-                self._status.execution_condition_variable.acquire()
+            with self._status.execution_condition_variable:
                 self.synchronization_counter += 1
                 logger.verbose("Increase synchronization_counter: " + str(self.synchronization_counter))
                 self._status.execution_condition_variable.wait()
-            finally:
-                self._status.execution_condition_variable.release()
             # if the status was set to PAUSED or STEP_MODE don't wake up!
             self._wait_while_in_pause_or_in_step_mode()
             # container_state was notified => thus, a new user command was issued, which has to be handled!
@@ -376,10 +369,9 @@ class ExecutionEngine(Observable):
         :param next_child_state_to_execute: is the next child state of :param state to be executed
         :return: the current state machine execution status
         """
-        self.state_counter_lock.acquire()
-        self.state_counter += 1
-        # logger.verbose("Increase state_counter!" + str(self.state_counter))
-        self.state_counter_lock.release()
+        with self.state_counter_lock:
+            self.state_counter += 1
+            # logger.verbose("Increase state_counter!" + str(self.state_counter))
 
         woke_up_from_pause_or_step_mode = False
 
@@ -508,9 +500,8 @@ class ExecutionEngine(Observable):
             raise TypeError("status must be of type StateMachineExecutionStatus")
         self._status.execution_mode = execution_mode
         if notify:
-            self._status.execution_condition_variable.acquire()
-            self._status.execution_condition_variable.notify_all()
-            self._status.execution_condition_variable.release()
+            with self._status.execution_condition_variable:
+                self._status.execution_condition_variable.notify_all()
 
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc3
@@ -528,16 +519,13 @@ class ExecutionEngine(Observable):
         """Property for the _run_to_states field
 
         """
-        self.execution_engine_lock.acquire()
-        return_value = self._run_to_states
-        self.execution_engine_lock.release()
-        return return_value
+        with self.execution_engine_lock:
+            return self._run_to_states
 
     @run_to_states.setter
     def run_to_states(self, run_to_states):
         if not isinstance(run_to_states, list):
             raise TypeError("run_to_states must be of type list")
-        self.execution_engine_lock.acquire()
-        self._run_to_states = run_to_states
-        self.execution_engine_lock.release()
+        with self.execution_engine_lock:
+            self._run_to_states = run_to_states
 

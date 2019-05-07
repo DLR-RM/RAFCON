@@ -216,8 +216,19 @@ class LibraryTreeController(ExtendedController):
         :param str library_root_path:
         :return:
         """
+        def add_description_to_tooltip(tool_tip_with_only_sm_file_system_path_in):
+            from rafcon.gui.helpers.state_machine import get_root_state_description_of_sm_file_system_path
+            description = get_root_state_description_of_sm_file_system_path(tool_tip_with_only_sm_file_system_path_in)
+            enabled = global_gui_config.get_config_value('LIBRARY_TREE_TOOLTIP_INCLUDES_ROOT_STATE_DESCRIPTION', True)
+            if description and enabled:
+                return "[source]:\n{0}\n\n[description]:\n\n{1}" \
+                       "".format(tool_tip_with_only_sm_file_system_path_in, description)
+            else:
+                return "[source]:\n{0}".format(tool_tip_with_only_sm_file_system_path_in)
+
         _library_key = self.convert_if_human_readable(library_key)
         tool_tip = library_item if isinstance(library_item, string_types) else ''
+
         if not tool_tip and parent is None:
             library_root_path = tool_tip = self.model.library_manager._library_root_paths.get(library_key, '')
         if not tool_tip:
@@ -225,6 +236,7 @@ class LibraryTreeController(ExtendedController):
             if len(library_path.split(os.path.sep)) > 1:
                 partial_path = os.path.sep.join(library_path.split(os.path.sep)[1:])
             tool_tip = os.path.join(library_root_path, partial_path, library_key)
+        tool_tip = add_description_to_tooltip(tool_tip)
         tree_item = self.tree_store.insert_before(parent, None, (_library_key, library_item, library_path,
                                                                  tool_tip, library_key))
         if isinstance(library_item, dict) and not library_item:
@@ -295,7 +307,8 @@ class LibraryTreeController(ExtendedController):
     def open_run_button_clicked(self, widget):
         from rafcon.core.singleton import state_machine_execution_engine
         state_machine = self.open_library_as_state_machine()
-        state_machine_execution_engine.start(state_machine.state_machine_id)
+        if state_machine:
+            state_machine_execution_engine.start(state_machine.state_machine_id)
 
     def open_library_as_state_machine(self):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
@@ -305,7 +318,8 @@ class LibraryTreeController(ExtendedController):
 
         logger.debug("Opening library as state-machine from path '{0}'".format(physical_library_path))
         state_machine = gui_helper_state_machine.open_state_machine(physical_library_path)
-        global_runtime_config.update_recently_opened_state_machines_with(state_machine)
+        if state_machine:
+            global_runtime_config.update_recently_opened_state_machines_with(state_machine)
         return state_machine
 
     def get_menu_item_text(self, menu_item):

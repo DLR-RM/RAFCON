@@ -133,6 +133,39 @@ preempted-event for each state.
 For information on how to correctly listen to pause or preempted events
 inside a state, see :ref:`What happens if the state machine is paused? How can I pause running services, e. g. the robot? <faq_pause>`.
 
+.. _faq_step_within_state:
+
+Stepping through a state machine is cool, but I need to step through the code within a state. Can I do this?
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+RAFCON has no special feature for this, but Python has. It is called `the Python Debugger
+<https://docs.python.org/3/library/pdb.html>`__. All you have to do is inserting the following line of code into your
+``execute()`` method:
+
+.. code:: python
+
+    import pdb; pdb.set_trace()
+
+Alternatively, you can also use `the IPython Debugger ipdb <https://github.com/gotcha/ipdb>`__, giving you e.g. syntax
+highlighting and better tracebacks:
+
+.. code:: python
+
+    import ipdb; ipdb.set_trace()
+
+If this line of code is hit, the execution pauses and you need to switch to the terminal where you started RAFCON. You
+can now, for example, inspect the parameters of the ``execute()`` method by entering ``a``. This will output something
+like
+
+.. code::
+
+    inputs = {'counter': 3}
+    outputs = {}
+    gvm = <rafcon.core.global_variable_manager.GlobalVariableManager object at 0x7ff6a6541090>
+
+A good tutorial about the powerful possibilities you have within the debugger can be found on `Real Python
+<https://realpython.com/python-debugging-pdb/>`__.
+
 .. _faq_preemption:
 
 How does preemption work? How do I implement preemptable states correctly?

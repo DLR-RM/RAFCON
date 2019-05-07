@@ -108,14 +108,16 @@ def open_state_machine(path=None, recent_opened_notification=False):
     state_machine = None
     try:
         state_machine = storage.load_state_machine_from_path(load_path)
+        if not state_machine:
+            return  # a corresponding exception has been handled with a proper error log in load_state_machine_from_path
         state_machine_manager.add_state_machine(state_machine)
         if recent_opened_notification:
             global_runtime_config.update_recently_opened_state_machines_with(state_machine)
         duration = time.time() - start_time
         stat = state_machine.root_state.get_states_statistics(0)
         logger.info("It took {0:.2}s to load {1} states with {2} hierarchy levels.".format(duration, stat[0], stat[1]))
-    except (AttributeError, ValueError, IOError) as e:
-        logger.error('Error while trying to open state machine: {0}'.format(e))
+    except Exception:
+        logger.exception('Error while trying to open state machine')
 
     return state_machine
 
@@ -1034,17 +1036,31 @@ def ungroup_selected_state():
         return gui_helper_state.ungroup_state(selected_state_m)
 
 
-def get_root_state_name_of_sm_file_system_path(file_system_path):
-    if os.path.isdir(file_system_path) and os.path.exists(os.path.join(file_system_path, storage.STATEMACHINE_FILE)):
+def get_root_state_file_path(sm_file_system_path):
+    if os.path.isdir(sm_file_system_path) and os.path.exists(os.path.join(sm_file_system_path, storage.STATEMACHINE_FILE)):
         try:
-            sm_dict = storage.load_data_file(os.path.join(file_system_path, storage.STATEMACHINE_FILE))
+            sm_dict = storage.load_data_file(os.path.join(sm_file_system_path, storage.STATEMACHINE_FILE))
         except ValueError:
             return
         if 'root_state_id' not in sm_dict and 'root_state_storage_id' not in sm_dict:
             return
         root_state_folder = sm_dict['root_state_id'] if 'root_state_id' in sm_dict else sm_dict['root_state_storage_id']
-        root_state_file = os.path.join(file_system_path, root_state_folder, storage.FILE_NAME_CORE_DATA)
-        state_dict = storage_utils.load_objects_from_json(root_state_file, as_dict=True)
+        return os.path.join(sm_file_system_path, root_state_folder, storage.FILE_NAME_CORE_DATA)
+
+
+def get_root_state_name_of_sm_file_system_path(file_system_path):
+    root_state_file_path = get_root_state_file_path(sm_file_system_path=file_system_path)
+    if root_state_file_path:
+        state_dict = storage_utils.load_objects_from_json(root_state_file_path, as_dict=True)
         if 'name' in state_dict:
             return state_dict['name']
+        return
+
+
+def get_root_state_description_of_sm_file_system_path(file_system_path):
+    root_state_file_path = get_root_state_file_path(sm_file_system_path=file_system_path)
+    if root_state_file_path:
+        state_dict = storage_utils.load_objects_from_json(root_state_file_path, as_dict=True)
+        if 'description' in state_dict:
+            return state_dict['description']
         return

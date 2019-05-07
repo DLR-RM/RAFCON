@@ -106,6 +106,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self._description = None
         # detailed execution status of the state
         self._state_execution_status = StateExecutionStatus.INACTIVE
+        # tracks how often a state was executed
+        self._execution_counter = 0
 
         # before storing a state the file_system_path cannot return the file system path
         # therefore this variable is None till the state was stored
@@ -237,7 +239,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :return: Attribute names of the state's state elements
         :rtype: list[str]
         """
-        return cls._state_element_attrs
+        return copy.copy(cls._state_element_attrs)
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- execution functions -------------------------------------
@@ -274,6 +276,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         :raises exceptions.TypeError: if the input or output data are not of type dict
         """
+        self._execution_counter += 1
         self.state_execution_status = StateExecutionStatus.ACTIVE
         self.preempted = False
         if not isinstance(self.input_data, dict):

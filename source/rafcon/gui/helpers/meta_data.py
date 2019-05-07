@@ -277,13 +277,11 @@ def get_boundaries_of_elements_in_dict(models_dict, clearance=0.):
     else:
         all_ports = list(models_dict['input_data_ports'].values()) + list(models_dict['output_data_ports'].values()) + \
                     list(models_dict['scoped_variables'].values()) + list(models_dict['outcomes'].values())
-        if len(set([port_m.core_element.parent for port_m in all_ports])) == 1:
-            logger.info("Only one parent {0} {1}".format(all_ports[0].core_element.parent, all_ports[0].parent.get_meta_data_editor()))
         if all_ports:
             left = all_ports[0].parent.get_meta_data_editor()['rel_pos'][0]
             top = all_ports[0].parent.get_meta_data_editor()['rel_pos'][1]
         else:
-            raise ValueError("Get boundary method does not aspects all list elements empty in dictionary. {0}"
+            raise ValueError("Get boundary method does not expect all list elements empty in dictionary. {0}"
                              "".format(models_dict))
 
     def cal_max(max_x, max_y, rel_pos, size):
@@ -442,6 +440,8 @@ def scale_library_content(library_state_m, gaphas_editor=True):
     # (opengl same size as library state and in case of gaphas reduced by library state margin)
     models_dict = {'state': library_state_m.state_copy}
     for state_element_key in library_state_m.state_copy.state.state_element_attrs:
+        if state_element_key == "income":
+            continue
         state_element_list = getattr(library_state_m.state_copy, state_element_key)
         # Some models are hold in a gtkmvc3.support.wrappers.ObsListWrapper, not a list
         if hasattr(state_element_list, 'keys'):

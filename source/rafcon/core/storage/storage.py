@@ -25,6 +25,7 @@ import shutil
 import glob
 import copy
 import yaml
+import warnings
 from distutils.version import StrictVersion
 
 import rafcon
@@ -106,8 +107,8 @@ def clean_path_from_deprecated_naming(base_path):
     """
     def warning_logger_message(insert_string):
         not_allowed_characters = "'" + "', '".join(REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION.keys()) + "'"
-        logger.warning("Deprecated {2} in {0}. Please avoid to use the following characters {1}."
-                       "".format(base_path, not_allowed_characters, insert_string))
+        warnings.warn("{1} not allowed in {2} of {0}".format(base_path, not_allowed_characters, insert_string),
+                      log.RAFCONDeprecationWarning)
     from rafcon.core.singleton import library_manager
     if library_manager.is_os_path_within_library_root_paths(base_path):
         library_path, library_name = library_manager.get_library_path_and_name_for_os_path(base_path)
@@ -347,6 +348,8 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     dirty_states = []
     state_machine.root_state = load_state_recursively(parent=state_machine, state_path=root_state_path,
                                                       dirty_states=dirty_states)
+    if state_machine.root_state is None:
+        return  # a corresponding exception has been handled with a proper error log in load_state_recursively
     if len(dirty_states) > 0:
         state_machine.marked_dirty = True
     else:
@@ -447,6 +450,8 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         child_state_path = os.path.join(state_path, p)
         if os.path.isdir(child_state_path):
             child_state = load_state_recursively(state, child_state_path, dirty_states)
+            if not child_state:
+                return None
             if child_state.name is LIBRARY_NOT_FOUND_DUMMY_STATE_NAME:
                 one_of_my_child_states_not_found = True
 

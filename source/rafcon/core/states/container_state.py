@@ -20,7 +20,6 @@
 
 """
 from builtins import str
-import traceback
 from copy import copy, deepcopy
 from threading import Condition
 
@@ -65,8 +64,7 @@ class ContainerState(State):
 
     """
 
-    _state_element_attrs = ['outcomes', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'states',
-                            'transitions', 'data_flows']
+    _state_element_attrs = State.state_element_attrs + ['scoped_variables', 'states', 'transitions', 'data_flows']
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None,
@@ -224,9 +222,8 @@ class ContainerState(State):
         """
         super(ContainerState, self).recursively_preempt_states()
         # notify the transition condition variable to let the state instantaneously stop
-        self._transitions_cv.acquire()
-        self._transitions_cv.notify_all()
-        self._transitions_cv.release()
+        with self._transitions_cv:
+            self._transitions_cv.notify_all()
         for state in self.states.values():
             state.recursively_preempt_states()
 
@@ -297,9 +294,8 @@ class ContainerState(State):
 
             # wait until the user connects the outcome of the state with a transition
             logger.warning("Waiting for new transition at {1} of {0} ".format(state, state.final_outcome))
-            self._transitions_cv.acquire()
-            self._transitions_cv.wait(3.0)
-            self._transitions_cv.release()
+            with self._transitions_cv:
+                self._transitions_cv.wait(3.0)
 
             transition = self.get_transition_for_outcome(state, state.final_outcome)
 
@@ -319,9 +315,8 @@ class ContainerState(State):
                 # this will be caught at the end of the run method
                 return None
 
-            self._transitions_cv.acquire()
-            self._transitions_cv.wait(3.0)
-            self._transitions_cv.release()
+            with self._transitions_cv:
+                self._transitions_cv.wait(3.0)
             start_state = self.get_start_state(set_final_outcome=True)
         return start_state
 
@@ -1216,9 +1211,8 @@ class ContainerState(State):
                 Transition(None, None, to_state_id, to_outcome, transition_id, self)
 
         # notify all states waiting for transition to be connected
-        self._transitions_cv.acquire()
-        self._transitions_cv.notify_all()
-        self._transitions_cv.release()
+        with self._transitions_cv:
+            self._transitions_cv.notify_all()
 
         return transition_id
 
@@ -1247,9 +1241,8 @@ class ContainerState(State):
         self.transitions[transition_id] = new_transition
 
         # notify all states waiting for transition to be connected
-        self._transitions_cv.acquire()
-        self._transitions_cv.notify_all()
-        self._transitions_cv.release()
+        with self._transitions_cv:
+            self._transitions_cv.notify_all()
         # self.create_transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id)
         return transition_id
 
@@ -2170,7 +2163,7 @@ class ContainerState(State):
                 transition.parent = self
             except (ValueError, RecoveryModeException) as e:
                 if type(e) is RecoveryModeException:
-                    logger.error("Recovery error: {0}\n{1}".format(str(e), str(traceback.format_exc())))
+                    logger.exception("Recovery error:")
                     if e.do_delete_item:
                         transition_ids_to_delete.append(transition.transition_id)
                 else:
@@ -2227,7 +2220,7 @@ class ContainerState(State):
                 data_flow.parent = self
             except (ValueError, RecoveryModeException) as e:
                 if type(e) is RecoveryModeException:
-                    logger.error("Recovery error: {0}\n{1}".format(str(e), str(traceback.format_exc())))
+                    logger.error("Recovery error:")
                     if e.do_delete_item:
                         data_flow_ids_to_delete.append(data_flow.data_flow_id)
                 else:

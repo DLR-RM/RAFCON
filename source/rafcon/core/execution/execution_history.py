@@ -32,7 +32,6 @@ import shelve
 from threading import Lock
 from enum import Enum
 from gtkmvc3.observable import Observable
-import traceback
 
 from rafcon.core.id_generator import history_item_id_generator
 from rafcon.utils import log
@@ -53,54 +52,50 @@ class ExecutionHistoryStorage(object):
             # writeback disabled, cause we don't need caching of entries in memory but continuous writes to the disk
             self.store = shelve.open(filename, flag='c', protocol=2, writeback=False)
             logger.debug('Openend log file for writing %s' % self.filename)
-        except Exception as e:
-            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
+        except Exception:
+            logger.exception('Exception:')
 
     def store_item(self, key, value):
-        self.store_lock.acquire()
-        try:
-            self.store[native_str(key)] = value
-        except Exception as e:
-            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
-        finally:
-            self.store_lock.release()
+        with self.store_lock:
+            try:
+                self.store[native_str(key)] = value
+            except Exception:
+                logger.exception('Exception:')
 
     def flush(self):
-        self.store_lock.acquire()
-        try:
-            self.store.close()
-            self.store = shelve.open(self.filename, flag='c', protocol=2, writeback=False)
-            logger.debug('Flushed log file %s' % self.filename)
-        except Exception as e:
-            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
-        finally:
-            self.store_lock.release()
+        with self.store_lock:
+            try:
+                self.store.close()
+                self.store = shelve.open(self.filename, flag='c', protocol=2, writeback=False)
+                logger.debug('Flushed log file %s' % self.filename)
+            except Exception:
+                if self.destroyed:
+                    pass  # this is fine
+                else:
+                    logger.exception('Exception:')
 
     def close(self, make_read_and_writable_for_all=False):
-        self.store_lock.acquire()
-        try:
-            self.store.close()
-            logger.debug('Closed log file %s' % self.filename)
-            if make_read_and_writable_for_all:
-                ret = subprocess.call(['chmod', 'a+rw', self.filename])
-                if ret:
-                    logger.debug('Could not make log file readable for all. chmod a+rw failed on %s.' % self.filename)
-                else:
-                    logger.debug('Set log file readable for all via chmod a+rw, file %s' % self.filename)
-        except Exception as e:
-            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
-        finally:
-            self.store_lock.release()
-    
+        with self.store_lock:
+            try:
+                self.store.close()
+                logger.debug('Closed log file %s' % self.filename)
+                if make_read_and_writable_for_all:
+                    ret = subprocess.call(['chmod', 'a+rw', self.filename])
+                    if ret:
+                        logger.debug('Could not make log file readable for all. chmod a+rw failed on %s.' % self.filename)
+                    else:
+                        logger.debug('Set log file readable for all via chmod a+rw, file %s' % self.filename)
+            except Exception:
+                logger.exception('Exception:')
+
     def __del__(self):
-        self.store_lock.acquire()
-        try:
-            self.store.close()
-            logger.debug('Closed log file %s' % self.filename)
-        except Exception as e:
-            logger.error('Exception: ' + str(e) + str(traceback.format_exc()))
-        finally:
-            self.store_lock.release()
+        with self.store_lock:
+            self.destroyed = True
+            try:
+                self.store.close()
+                logger.debug('Closed log file %s' % self.filename)
+            except Exception:
+                logger.exception('Exception:')
 
 
 class ExecutionHistory(Observable, Iterable, Sized):
@@ -129,6 +124,7 @@ class ExecutionHistory(Observable, Iterable, Sized):
                 execution_history_iterator = iter(self)
                 for history_item in execution_history_iterator:
                     history_item.destroy()
+        self.destroyed = True
         self._history_items = None
         self.initial_prev = None
 
@@ -162,7 +158,13 @@ class ExecutionHistory(Observable, Iterable, Sized):
             last_history_item.next = current_item
         if self.execution_history_storage is not None:
             self.execution_history_storage.store_item(current_item.history_item_id, current_item.to_dict())
-        self._history_items.append(current_item)
+        try:
+            self._history_items.append(current_item)
+        except AttributeError:
+            if self.destroyed:
+                pass # this is fine
+            else:
+                raise
         return current_item
 
     @Observable.observed

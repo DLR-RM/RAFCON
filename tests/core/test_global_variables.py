@@ -31,19 +31,16 @@ def create_state_machine():
 
 def test_concurrency_barrier_state_execution(caplog):
 
-    testing_utils.test_multithreading_lock.acquire()
-    sm = create_state_machine()
-    root_state = sm.root_state
-    state_machine = StateMachine(root_state)
-    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
-    rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
-    rafcon.core.singleton.state_machine_execution_engine.join()
-    rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
-    try:
+    with testing_utils.test_multithreading_lock:
+        sm = create_state_machine()
+        root_state = sm.root_state
+        state_machine = StateMachine(root_state)
+        rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
+        rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
+        rafcon.core.singleton.state_machine_execution_engine.join()
+        rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
         assert root_state.output_data["output_data_port1"] == 42
         testing_utils.assert_logger_warnings_and_errors(caplog)
-    finally:
-        testing_utils.test_multithreading_lock.release()
 
 
 if __name__ == '__main__':

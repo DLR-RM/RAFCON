@@ -14,7 +14,7 @@ Tutorials
 In this tutorial we create a
 simple state-machine printing the lyrics of "99 Bottles of Beer", a
 `slightly advanced version of a Hello World
-program <http://en.wikipedia.org/wiki/99_Bottles_of_Beer#References_in_science>`__.
+program <https://en.wikipedia.org/wiki/99_Bottles_of_Beer#References_in_computer_science>`__.
 The purpose is to give a first impression of how to create programs with
 :ref:`RAFCON`, how to create loops and illustrate different ways
 of achieving things in RAFCON.
@@ -181,7 +181,7 @@ Starting the basic turtle demo state machine using ROS
 ------------------------------------------------------
 
 The basic turtle demo is a demo to demonstrate the use of libraries and
-to show the easy integration of `ROS <ROS>`__ into the RAFCON. To start
+to show the easy integration of `ROS <http://www.ros.org/>`__ into the RAFCON. To start
 the turtle demo just open the basic\_turtle\_state\_machine in the tutorials library folder and click on start.
 The following code blocks include code lines to generate the correct environment for our institute PCs;
 in an e.g. Ubuntu setup, where the environment is statically specified
@@ -234,8 +234,7 @@ give this path a name.
 Option 1
 """"""""
 
-This can be done in the `configuration of the
-core <https://rmintra01.robotic.dlr.de/wiki/RAFCON/Configuration#Core_configuration>`__.
+This can be done in the `Core configuration`_.
 
 .. figure:: _static/WaitLibrary.png
    :alt: Screenshot of a empty library path and created 'Wait' state machine.
@@ -337,7 +336,7 @@ machines, e. g. ``~/Desktop/rafcon_tutorial_library``. These libraries
 will also be loaded. The name of these libraries is equivalent to the
 name of the folder, thus in this case ``rafcon_tutorial_library``. This
 approach is especially useful if you release your libraries using
-`RMPM <https://rmintra01.robotic.dlr.de/wiki/Rmpm>`__. In the PT-file, you can append the path of the library
+`RMPM <https://wiki.robotic.dlr.de/RM_package_management>`__. In the PT-file, you can append the path of the library
 to :envvar:`RAFCON_LIBRARY_PATH` and do not have to modify the config file of
 the user.
 

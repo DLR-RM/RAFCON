@@ -84,6 +84,21 @@ def copy_and_paste_state_into_itself(sm_m, state_m_to_copy, page, menu_bar_ctrl)
     assert len(state_m_to_copy.state.states) == old_child_state_count + 1
 
 
+def copy_port(state_machine_model, port_m, menu_bar_ctrl):
+    print("Copying {}".format(port_m))
+    call_gui_callback(state_machine_model.selection.set, [port_m])
+    call_gui_callback(getattr(menu_bar_ctrl, 'on_copy_selection_activate'), None, None)
+
+
+def paste(state_machine_model, state_m, main_window_controller, menu_bar_ctrl, page):
+    print("Pasting")
+    call_gui_callback(state_machine_model.selection.set, [state_m])
+    main_window_controller.view['main_window'].grab_focus()
+    focus_graphical_editor_in_page(page)
+    call_gui_callback(menu_bar_ctrl.on_paste_clipboard_activate, None, None)
+    testing_utils.wait_for_gui()
+
+
 @log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     """The function triggers and test basic functions of the menu bar.
@@ -107,10 +122,13 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     import rafcon.gui.helpers.state as gui_helper_state
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     from rafcon.gui.controllers.library_tree import LibraryTreeController
+    from rafcon.core.states.barrier_concurrency_state import UNIQUE_DECIDER_STATE_ID
+    from rafcon.core.states.state import StateType
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_controller = rafcon.gui.singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     lib_tree_ctrl = main_window_controller.get_controller('library_controller')
+    state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
     assert isinstance(lib_tree_ctrl, LibraryTreeController)
 
     state_machine = create_state_machine()
@@ -122,11 +140,26 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
 
     # test decider state removal of barrier state
     sm_m = sm_manager_model.state_machines[first_sm_id + 1]
+    page = state_machines_ctrl.get_page_for_state_machine_id(sm_m.state_machine_id)
+
+    # Tests for issue #712
+    # Copy an InputDataPort from a root state to an ExecutionState already having an InputDataPort
     call_gui_callback(sm_m.selection.set, [sm_m.root_state])
-    from rafcon.core.states.barrier_concurrency_state import UNIQUE_DECIDER_STATE_ID
-    from rafcon.core.states.state import StateType
+    call_gui_callback(gui_helper_state_machine.add_new_state, sm_m, StateType.EXECUTION)
+    execution_state_m = list(sm_m.root_state.states.values())[0]
+    call_gui_callback(sm_m.root_state.state.add_input_data_port, "i1", int, data_port_id=0)
+    call_gui_callback(execution_state_m.state.add_input_data_port, "i1", int, data_port_id=0)
+    root_input_port_m = sm_m.root_state.get_input_data_port_m(0)
+    copy_port(sm_m, root_input_port_m, menubar_ctrl)
+    paste(sm_m, execution_state_m, main_window_controller, menubar_ctrl, page)
+    call_gui_callback(sm_m.selection.set, execution_state_m)
+    call_gui_callback(menubar_ctrl.on_delete_activate, None, None)
+
+    # Create BarrierConcurencyState and try to delete DeciderState (should fail with exception)
+    call_gui_callback(sm_m.selection.set, [sm_m.root_state])
     call_gui_callback(gui_helper_state_machine.add_new_state, sm_m, StateType.BARRIER_CONCURRENCY)
-    decider_state_path = "/".join([list(sm_m.root_state.states.values())[0].state.get_path(), UNIQUE_DECIDER_STATE_ID])
+    barrier_state_m = list(sm_m.root_state.states.values())[0]
+    decider_state_path = "/".join([barrier_state_m.state.get_path(), UNIQUE_DECIDER_STATE_ID])
     call_gui_callback(sm_m.selection.set, sm_m.get_state_model_by_path(decider_state_path))
     call_gui_callback(menubar_ctrl.on_delete_activate, None, None)
 
@@ -141,7 +174,6 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     # MAIN_WINDOW NEEDS TO BE FOCUSED (for global input focus) TO OPERATE PASTE IN GRAPHICAL VIEWER
     main_window_controller.view['main_window'].grab_focus()
     call_gui_callback(sm_manager_model.__setattr__, "selected_state_machine_id", first_sm_id + 2)
-    state_machines_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
     page_id = state_machines_ctrl.get_page_num(first_sm_id + 2)
     page = state_machines_ctrl.view.notebook.get_nth_page(page_id)
     call_gui_callback(focus_graphical_editor_in_page, page)
@@ -363,6 +395,8 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
 
 
 @pytest.mark.timeout(30)
+@pytest.mark.unstable35
+@pytest.mark.unstable37
 def test_gui(caplog):
     from os.path import join
 

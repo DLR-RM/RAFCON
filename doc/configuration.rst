@@ -176,6 +176,7 @@ A typical config file looks like this:
     RESTORE_UNDOCKED_SIDEBARS: True
 
     STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED: True
+    LIBRARY_TREE_TOOLTIP_INCLUDES_ROOT_STATE_DESCRIPTION: True
 
     ZOOM_WITH_CTRL: False
 
@@ -276,10 +277,8 @@ SOURCE\_EDITOR\_STYLE
   | Type: string
   | Default: ``rafcon``
   | The gtk source view style used in the script editor. Note: You can
-    download different styles at
-    `https://wiki.gnome.org/Projects/GtkSourceView/StyleSchemes GTK
-    Source View
-    Styles <https://wiki.gnome.org/Projects/GtkSourceView/StyleSchemes_GTK_Source_View_Styles>`__.
+    download different styles
+    `here <https://wiki.gnome.org/Projects/GtkSourceView/StyleSchemes>`__.
     The scripts have to be downloaded to
     ~/.local/share/gtksourceview-2.0/styles. "rafcon" is a style
     created to fit to the design of RAFCON.
@@ -487,6 +486,10 @@ STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED:
   | Default: ``True``
   | If set to True, states inside library states can be selected.
 
+LIBRARY_TREE_TOOLTIP_INCLUDES_ROOT_STATE_DESCRIPTION:
+  | Default: ``True``
+  | If set to True, tooltip include the root state description text if the hovered library tree element (leaf element) is a real state machine.
+
 ZOOM_WITH_CTRL:
   | Default: ``False``
   | If set to True the user has to press the CTRL button to zoom into a state machine.
@@ -520,7 +523,7 @@ SHORTCUTS
   | Defines the shortcuts of the GUI. The key describes the action
     triggered by the shortcut, the value defines the shortcut(s). There
     can be more than one shortcut registered for one action. See `GTK
-    Documentation <https://people.gnome.org/~gcampagna/docs/Gtk-3.0/Gtk.accelerator_parse.html>`__
+    Documentation <https://lazka.github.io/pgi-docs/Gtk-3.0/functions.html#Gtk.accelerator_parse>`__
     about more information about the shortcut parser. Not all
     actions are implemented, yet. Some actions are global within the GUI
     (such as 'save'), some are widget dependent (such as 'add').

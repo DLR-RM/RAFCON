@@ -23,6 +23,36 @@ Next Release
 - Changes:
 
 
+0.13.8
+""""""
+
+- Improvements:
+
+  - use with statement instead af acquire/release
+  - dedicated 'unstable' marks for python 2.7 and 3.x; these marks can be used to filter out tests
+  - use Python warning module with custom ``RAFCONDeprecationWarning`` for deprecated usages
+  - the documentation can again be build on Read The Docs (at least the build of the API docs was corrupt since v0.13)
+  - tooltip of library tree include root state description text of libraries
+  - Jenkins integration
+  - test adaptions so that they can be parallelized
+  - added `seqm.yaml` for tracking software engineering quality management (SEQM) requirements (DLR internal)
+
+
+- Bug Fixes:
+
+  - :issue_gh:`12` Error when switching from python2 to python3
+  - :issue_gh:`18` State machines with library states cannot be opened if show flag is set to True
+  - :issue_ghe:`683` rafcon can now be closed properly via signal
+  - :issue_ghe:`712` Paste of Port into selected state is not possible
+  - :issue_ghe:`711` Gaphas does not allow data flows from one state to itself
+  - fix broken links in documentation
+  - use correct version and year in documentation
+
+
+- Changes:
+  - pyyaml is not a dependency anymore, as it is now a dependency of yaml_configuration
+
+
 0.13.7
 """"""
 
@@ -61,7 +91,8 @@ Next Release
 
   - :issue_ghe:`678` script validation does not work
   - :issue_ghe:`663` cannot rename connected data port of type object
-  - :issue_ghe:`684` ``test_simple_execution_model_and_core_destruct_with_gui`` fails when running core & gui tests in a row
+  - :issue_ghe:`684` ``test_simple_execution_model_and_core_destruct_with_gui`` fails when running core & gui tests
+  in a row
   - fix pause and step mode behavior
   - installation of fonts under Python 3
   - various test fixed for Python 3

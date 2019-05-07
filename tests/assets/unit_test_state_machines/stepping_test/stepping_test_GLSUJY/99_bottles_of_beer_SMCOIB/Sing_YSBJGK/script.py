@@ -11,7 +11,7 @@ def execute(self, inputs, outputs, gvm):
     self.logger.info(str(bottles) + " bottles of beer on the wall, " + str(bottles) + " bottles of beer.")
     bottles -= 1
     self.logger.info("Take one down and pass it around, " + str(bottles) + " bottles of beer on the wall.")
-    time.sleep(0.2) 
+    #time.sleep(0.2) 
  
     return 0
     

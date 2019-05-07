@@ -10,7 +10,13 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import rafcon.gui.interface
-import gi
-gi.require_version('Gtk', '3.0')
-gi.require_version('PangoCairo', '1.0')
-gi.require_version('GtkSource', '3.0')
+
+try:
+    import gi
+    gi.require_version('Gtk', '3.0')
+    gi.require_version('PangoCairo', '1.0')
+    gi.require_version('GtkSource', '3.0')
+except (ImportError, ValueError) as e:
+    from rafcon.utils import log
+    logger = log.get_logger(__name__)
+    logger.warning("Could not import all packages required for opening the GUI: {}".format(e))

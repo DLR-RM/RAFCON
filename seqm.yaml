@@ -1,0 +1,169 @@
+---
+- type: DLR SE QM project file
+- seqm_version: 1.1
+- project_name: 'rafcon '
+- seqmedit_version: 0.11.0
+- recommendations:
+    - eaa01:
+        - state: done
+        - remark: ''
+    - eaa02:
+        - state: done
+    - eaa03:
+        - state: done
+    - eaa05:
+        - state: later
+        - remark: ''
+    - eaa06:
+        - state: later
+        - remark: ''
+    - eaa08:
+        - state: later
+        - remark: ''
+    - eaa09:
+        - state: later
+        - remark: ''
+    - eaa10:
+        - state: done
+    - eaem01:
+        - state: done
+    - eaem02:
+        - state: done
+    - eaem03:
+        - state: done
+    - eaem04:
+        - state: done
+    - eaem05:
+        - state: done
+    - eaem06:
+        - state: done
+    - eaem07:
+        - state: done
+    - eaem08:
+        - state: done
+    - eaem09:
+        - state: done
+    - eam01:
+        - state: done
+        - remark: ''
+    - eam02:
+        - state: done
+        - remark: Alle aktuellen feature requests liegen als Issue auf GitHub vor
+    - eam03:
+        - state: done
+        - remark: ''
+    - eam04:
+        - state: later
+        - remark: ''
+    - eam05:
+        - state: later
+        - remark: ''
+    - eam06:
+        - remark: ''
+    - eam08:
+        - state: done
+        - remark: ''
+    - eam09:
+        - state: done
+    - edi01:
+        - state: done
+    - edi02:
+        - state: done
+    - edi03:
+        - state: done
+    - edi04:
+        - remark: ''
+        - state: done
+    - edi05:
+        - state: done
+    - edi06:
+        - state: later
+        - remark: ''
+    - edi07:
+        - state: later
+        - remark: 'PyCharm code inspections langt wohl noch nicht, um den Punkt zu erfüllen?'
+    - edi08:
+        - state: later
+    - edi09:
+        - state: done
+    - edi10:
+        - state: later
+        - remark: ''
+    - edi11:
+        - state: done
+    - eqa01:
+        - state: done
+    - eqa02:
+        - state: done
+        - remark: ''
+    - eqa03:
+        - state: done
+        - remark: ''
+    - eqa04:
+        - state: done
+        - remark: ''
+    - erm01:
+        - state: done
+    - erm02:
+        - state: done
+    - erm03:
+        - state: done
+    - erm04:
+        - state: later
+        - remark: ''
+    - erm06:
+        - state: done
+    - erm07:
+        - state: done
+    - erm08:
+        - state: done
+    - erm09:
+        - state: done
+    - erm10:
+        - state: done
+    - erm11:
+        - state: later
+        - remark: ''
+    - esa01:
+        - state: later
+        - remark: ''
+    - esa02:
+        - state: later
+        - remark: ''
+    - esa03:
+        - state: done
+        - remark: ''
+    - esa04:
+        - state: later
+        - remark: ''
+    - esa05:
+        - state: later
+        - remark: ''
+    - esa06:
+        - state: later
+        - remark: ''
+    - esa07:
+        - state: later
+        - remark: ''
+    - esa08:
+        - state: later
+        - remark: ''
+    - esa09:
+        - state: later
+        - remark: ''
+    - esa10:
+        - state: later
+    - esa11:
+        - state: later
+    - est01:
+        - state: done
+    - est02:
+        - state: done
+    - est04:
+        - state: done
+    - est08:
+        - state: later
+        - remark: ''
+    - est10:
+        - state: done
+- application_class: 2

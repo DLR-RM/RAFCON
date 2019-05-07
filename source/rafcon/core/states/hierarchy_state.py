@@ -18,7 +18,6 @@
 
 """
 from builtins import str
-import traceback
 import copy
 
 from rafcon.utils import log
@@ -145,7 +144,7 @@ class HierarchyState(ContainerState):
             return self._finalize_hierarchy()
 
         except Exception as e:
-            logger.error("{0} had an internal error: {1}\n{2}".format(self, str(e), str(traceback.format_exc())))
+            logger.exception("{0} had an internal error:".format(self))
             self.output_data["error"] = e
             self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
             self.child_state = None

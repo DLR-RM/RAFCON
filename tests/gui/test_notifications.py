@@ -461,7 +461,7 @@ def test_outcome_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -544,7 +544,7 @@ def test_outcome_modify_notification(caplog):
         assert outcome_model_observer.get_number_of_notifications() == 2  # before + after notification
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -594,7 +594,7 @@ def test_input_port_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -665,7 +665,7 @@ def test_input_port_modify_notification(caplog):
     check_input_notifications(input_port_observer, states_m_observer_dict, state_dict, forecast=5)
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -714,7 +714,7 @@ def test_output_port_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -787,7 +787,7 @@ def test_output_port_modify_notification(caplog):
     check_output_notifications(output_port_observer, states_m_observer_dict, state_dict, forecast=5)
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -836,7 +836,7 @@ def test_scoped_variable_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -909,7 +909,7 @@ def test_scoped_variable_modify_notification(caplog):
     check_output_notifications(scoped_variable_observer, states_m_observer_dict, state_dict, forecast=5)
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 # add state
@@ -1005,7 +1005,7 @@ def test_data_flow_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1124,7 +1124,7 @@ def test_data_flow_modify_notification(caplog):
     check_data_flow_notifications(data_flow_m_observer, states_m_observer_dict, state_dict, forecast=4)
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1185,7 +1185,7 @@ def test_transition_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 2})
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1307,7 +1307,7 @@ def test_transition_modify_notification(caplog):
     check_transition_notifications(transition_m_observer, states_m_observer_dict, state_dict, forecast=5)
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1364,7 +1364,7 @@ def test_state_add_remove_notification(caplog):
     check_count_of_model_notifications(state_model_observer, {'states': 12})
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
@@ -1667,7 +1667,7 @@ def test_state_property_modify_notification(caplog):
     check_states_notifications(states_observer_dict, sub_state_name='Nested2', forecast=forecast)
 
     sm_model.destroy()
-    rafcon.gui.singleton.global_gui_config.load()
+    testing_utils.reload_config(False, True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 ###################

@@ -111,62 +111,61 @@ def get_port_for_handle(handle, state):
                     return scoped
 
 
-def create_new_connection(from_port, to_port):
+def create_new_connection(from_port_m, to_port_m):
     """Checks the type of connection and tries to create it
 
     If bot port are logical port,s a transition is created. If both ports are data ports (including scoped variable),
     then a data flow is added. An error log is created, when the types are not compatible.
 
-    :param from_port: The starting port of the connection
-    :param to_port: The end point of the connection
+    :param from_port_m: The starting port model of the connection
+    :param to_port_m: The end port model of the connection
     :return: True if a new connection was added
     """
-    from rafcon.gui.mygaphas.items.ports import ScopedVariablePortView, LogicPortView, DataPortView
+    from rafcon.gui.models.logical_port import LogicalPortModel
+    from rafcon.gui.models.data_port import DataPortModel
+    from rafcon.gui.models.scoped_variable import ScopedVariableModel
 
-    if isinstance(from_port, LogicPortView) and isinstance(to_port, LogicPortView):
-        return add_transition_to_state(from_port, to_port)
-    elif isinstance(from_port, (DataPortView, ScopedVariablePortView)) and \
-            isinstance(to_port, (DataPortView, ScopedVariablePortView)):
-        return add_data_flow_to_state(from_port, to_port)
+    if isinstance(from_port_m, LogicalPortModel) and isinstance(to_port_m, LogicalPortModel):
+        return add_transition_to_state(from_port_m, to_port_m)
+    elif isinstance(from_port_m, (DataPortModel, ScopedVariableModel)) and \
+            isinstance(to_port_m, (DataPortModel, ScopedVariableModel)):
+        return add_data_flow_to_state(from_port_m, to_port_m)
     # Both ports are not None
-    elif from_port and to_port:
-        logger.error("Connection of non-compatible ports: {0} and {1}".format(type(from_port), type(to_port)))
+    elif from_port_m and to_port_m:
+        logger.error("Connection of non-compatible ports: {0} and {1}".format(type(from_port_m), type(to_port_m)))
 
     return False
 
 
-def add_data_flow_to_state(from_port, to_port):
+def add_data_flow_to_state(from_port_m, to_port_m):
     """Interface method between Gaphas and RAFCON core for adding data flows
 
     The method checks the types of the given ports and their relation. From this the necessary parameters for the
     add_dat_flow method of the RAFCON core are determined. Also the parent state is derived from the ports.
 
-    :param from_port: Port from which the data flow starts
-    :param to_port: Port to which the data flow goes to
+    :param from_port_m: Port model from which the data flow starts
+    :param to_port_m: Port model to which the data flow goes to
     :return: True if a data flow was added, False if an error occurred
     """
-    from rafcon.gui.mygaphas.items.ports import InputPortView, OutputPortView, ScopedVariablePortView
+    from rafcon.gui.models.data_port import DataPortModel
+    from rafcon.gui.models.scoped_variable import ScopedVariableModel
+    from rafcon.core.state_elements.data_port import OutputDataPort
     from rafcon.gui.models.container_state import ContainerStateModel
 
-    from_state_v = from_port.parent
-    to_state_v = to_port.parent
-
-    from_state_m = from_state_v.model
-    to_state_m = to_state_v.model
+    from_state_m = from_port_m.parent
+    to_state_m = to_port_m.parent
 
     from_state_id = from_state_m.state.state_id
     to_state_id = to_state_m.state.state_id
 
-    from_port_id = from_port.port_id
-    to_port_id = to_port.port_id
+    from_port_id = from_port_m.core_element.state_element_id
+    to_port_id = to_port_m.core_element.state_element_id
 
-    if not isinstance(from_port, (InputPortView, OutputPortView, ScopedVariablePortView)) or \
-            not isinstance(from_port, (InputPortView, OutputPortView, ScopedVariablePortView)):
+    if not isinstance(from_port_m, (DataPortModel, ScopedVariableModel)) or \
+            not isinstance(from_port_m, (DataPortModel, ScopedVariableModel)):
         logger.error("Data flows only exist between data ports (input, output, scope). Given: {0} and {1}".format(type(
-            from_port), type(to_port)))
+            from_port_m), type(to_port_m)))
         return False
-
-    responsible_parent_m = None
 
     # from parent to child
     if isinstance(from_state_m, ContainerStateModel) and \
@@ -176,18 +175,17 @@ def add_data_flow_to_state(from_port, to_port):
     elif isinstance(to_state_m, ContainerStateModel) and \
             check_if_dict_contains_object_reference_in_values(from_state_m.state, to_state_m.state.states):
         responsible_parent_m = to_state_m
-    # from parent to parent
-    elif isinstance(from_state_m, ContainerStateModel) and from_state_m.state is to_state_m.state:
+    # from parent to parent (input/scope to output/scope
+    elif isinstance(from_state_m, ContainerStateModel) and from_state_m.state is to_state_m.state \
+            and not isinstance(from_port_m.core_element, OutputDataPort):
         responsible_parent_m = from_state_m  # == to_state_m
-    # from child to child
-    elif (not from_state_m.state.is_root_state) and (not to_state_m.state.is_root_state) \
-            and from_state_m.state is not to_state_m.state \
+    # child state to child state
+    elif not from_state_m.state.is_root_state and not to_state_m.state.is_root_state \
             and from_state_m.parent.state.state_id and to_state_m.parent.state.state_id:
         responsible_parent_m = from_state_m.parent
-
-    if not isinstance(responsible_parent_m, ContainerStateModel):
-        logger.error("Data flows only exist in container states (e.g. hierarchy states)")
-        return False
+    else:
+        raise ValueError("Trying to connect data ports that cannot be connected: {} with {}".format(from_port_m,
+                                                                                                    to_port_m))
 
     try:
         responsible_parent_m.state.add_data_flow(from_state_id, from_port_id, to_state_id, to_port_id)
@@ -197,23 +195,20 @@ def add_data_flow_to_state(from_port, to_port):
         return False
 
 
-def add_transition_to_state(from_port, to_port):
+def add_transition_to_state(from_port_m, to_port_m):
     """Interface method between Gaphas and RAFCON core for adding transitions
 
     The method checks the types of the given ports (IncomeView or OutcomeView) and from this determines the necessary
     parameters for the add_transition method of the RAFCON core. Also the parent state is derived from the ports.
 
-    :param from_port: Port from which the transition starts
-    :param to_port: Port to which the transition goes to
+    :param from_port_m: Port model from which the transition starts
+    :param to_port_m: Port model to which the transition goes to
     :return: True if a transition was added, False if an error occurred
     """
-    from rafcon.gui.mygaphas.items.ports import IncomeView, OutcomeView
+    from rafcon.gui.models.logical_port import IncomeModel, OutcomeModel
 
-    from_state_v = from_port.parent
-    to_state_v = to_port.parent
-
-    from_state_m = from_state_v.model
-    to_state_m = to_state_v.model
+    from_state_m = from_port_m.parent
+    to_state_m = to_port_m.parent
 
     # Gather necessary information to create transition
     from_state_id = from_state_m.state.state_id
@@ -222,33 +217,33 @@ def add_transition_to_state(from_port, to_port):
     responsible_parent_m = None
 
     # Start transition
-    if isinstance(from_port, IncomeView):
+    if isinstance(from_port_m, IncomeModel):
         from_state_id = None
         from_outcome_id = None
         responsible_parent_m = from_state_m
         # Transition from parent income to child income
-        if isinstance(to_port, IncomeView):
+        if isinstance(to_port_m, IncomeModel):
             to_outcome_id = None
         # Transition from parent income to parent outcome
-        elif isinstance(to_port, OutcomeView):
-            to_outcome_id = to_port.outcome_id
-    elif isinstance(from_port, OutcomeView):
-        from_outcome_id = from_port.outcome_id
+        elif isinstance(to_port_m, OutcomeModel):
+            to_outcome_id = to_port_m.outcome.outcome_id
+    elif isinstance(from_port_m, OutcomeModel):
+        from_outcome_id = from_port_m.outcome.outcome_id
         # Transition from child outcome to child income
-        if isinstance(to_port, IncomeView):
+        if isinstance(to_port_m, IncomeModel):
             responsible_parent_m = from_state_m.parent
             to_outcome_id = None
         # Transition from child outcome to parent outcome
-        elif isinstance(to_port, OutcomeView):
+        elif isinstance(to_port_m, OutcomeModel):
             responsible_parent_m = to_state_m
-            to_outcome_id = to_port.outcome_id
+            to_outcome_id = to_port_m.outcome.outcome_id
     else:
         raise ValueError("Invalid port type")
 
     from rafcon.gui.models.container_state import ContainerStateModel
     if not responsible_parent_m:
         logger.error("Transitions only exist between incomes and outcomes. Given: {0} and {1}".format(type(
-            from_port), type(to_port)))
+            from_port_m), type(to_port_m)))
         return False
     elif not isinstance(responsible_parent_m, ContainerStateModel):
         logger.error("Transitions only exist in container states (e.g. hierarchy states)")

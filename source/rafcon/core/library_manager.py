@@ -20,6 +20,7 @@
 import os
 import shutil
 import copy
+import warnings
 from gtkmvc3.observable import Observable
 
 from rafcon.core import interface
@@ -154,9 +155,9 @@ class LibraryManager(Observable):
         library_path = folder_path[len(library_root_path):]
         if not storage.clean_path(library_path) == library_path or not storage.clean_path(folder_name) == folder_name:
             not_allowed_characters = "'" + "', '".join(storage.REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION.keys()) + "'"
-            logger.warning("The library path {1} is deprecated please avoid use of {0}. If you renaming the "
-                           "state machine also adapt related state machine which make use of this library."
-                           "".format(not_allowed_characters, full_path))
+            warnings.warn("The library path {1} is deprecated, please avoid the usage of {0}. If you rename the "
+                          "state machine, remember to also adapt the related state machines using this library."
+                          "".format(not_allowed_characters, full_path), log.RAFCONDeprecationWarning)
         return folder_path, folder_name
 
     def _load_nested_libraries(self, library_path, target_dict):

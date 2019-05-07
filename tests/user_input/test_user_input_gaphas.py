@@ -1,5 +1,6 @@
 import os
 import time
+import pytest
 
 # core elements
 import rafcon.core.config
@@ -35,7 +36,7 @@ def resize_state(sm_model, sm_notebook_page, graphical_editor_controller):
 
     # self.view.get_matrix_i2v(self).transform_distance(width, height)
     from gaphas.view import View
-    assert (state_view_for_root_state.view, View)
+    assert isinstance(state_view_for_root_state.view, View)
 
     v2i = state_view_for_root_state.view.get_matrix_v2i(state_view_for_root_state)
     i2v = state_view_for_root_state.view.get_matrix_i2v(state_view_for_root_state)
@@ -120,6 +121,7 @@ def create_and_resize_state():
     # time.sleep(10.0)
 
 
+@pytest.mark.user_input
 def test_user_input_gaphas(caplog):
     run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
             libraries={'unit_test_state_machines': testing_utils.get_test_sm_path("unit_test_state_machines")})

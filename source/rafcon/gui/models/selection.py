@@ -19,7 +19,7 @@ from past.builtins import map
 from builtins import next, str
 
 from rafcon.core.states.state import State
-from rafcon.core.state_elements.logical_port import Outcome
+from rafcon.core.state_elements.logical_port import Income, Outcome
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.state_elements.scope import ScopedVariable
 from rafcon.core.state_elements.transition import Transition
@@ -121,6 +121,7 @@ class Selection(ModelMT):
     _input_data_ports = None
     _output_data_ports = None
     _scoped_variables = None
+    _incomes = None
     _outcomes = None
     _data_flows = None
     _transitions = None
@@ -137,6 +138,7 @@ class Selection(ModelMT):
         ModelMT.__init__(self)
 
         self._selected = set()
+        self._incomes = set()
         self._input_data_ports = set()
         self._output_data_ports = set()
         self._outcomes = set()
@@ -307,6 +309,7 @@ class Selection(ModelMT):
         self._input_data_ports = get_selected_elements_of_core_class(InputDataPort)
         self._output_data_ports = get_selected_elements_of_core_class(OutputDataPort)
         self._scoped_variables = get_selected_elements_of_core_class(ScopedVariable)
+        self._incomes = get_selected_elements_of_core_class(Income)
         self._outcomes = get_selected_elements_of_core_class(Outcome)
 
     @property
@@ -335,6 +338,20 @@ class Selection(ModelMT):
         :rtype: set
         """
         return self._data_flows
+
+    @property
+    def incomes(self):
+        """Returns all selected incomes
+
+        :return: Subset of the selection, only containing incomes
+        :rtype: set
+        """
+        return self._incomes
+
+    @property
+    def income(self):
+        """Alias for ``incomes()``"""
+        return self.incomes
 
     @property
     def outcomes(self):
