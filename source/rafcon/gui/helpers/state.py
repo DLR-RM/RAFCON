@@ -651,11 +651,11 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         tmp_models_dict['data_flows'][df.data_flow_id] = action_parent_m.get_data_flow_m(df.data_flow_id)
 
     affected_models = []
-    for elemets_dict in tmp_models_dict.values():
-        if isinstance(elemets_dict, dict):
-            affected_models.extend(elemets_dict.values())
-        elif isinstance(elemets_dict, AbstractStateModel):
-            affected_models.extend(elemets_dict)
+    for elements_dict in tmp_models_dict.values():
+        if isinstance(elements_dict, dict):
+            affected_models.extend(elements_dict.values())
+        elif isinstance(elements_dict, AbstractStateModel):
+            affected_models.extend(elements_dict)
 
     # print("EMIT-BEFORE ON ACTION PARENT")
     action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
