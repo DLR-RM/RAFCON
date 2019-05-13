@@ -75,11 +75,13 @@ class GlobalVariableManager(Observable):
         with self.__global_lock:
             unlock = True
             if self.variable_exist(key):
-                if self.is_locked(key) and self.__access_keys[key] != access_key:
+                if self.is_locked(key) and not access_key:  # case: locked, no access key; thus, wait until I get lock
+                    access_key = self.lock_variable(key, block=True)
+                elif self.is_locked(key) and self.__access_keys[key] != access_key:  # case: locked, but wrong access key
                     raise RuntimeError("Wrong access key for accessing global variable")
-                elif self.is_locked(key):
+                elif self.is_locked(key):  # case: locked and correct access key
                     unlock = False
-                else:
+                else:  # case not locked
                     access_key = self.lock_variable(key, block=True)
             else:
                 self.__variable_locks[key] = Lock()
