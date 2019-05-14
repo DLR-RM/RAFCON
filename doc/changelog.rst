@@ -18,7 +18,7 @@ Next Release
 
 
 - Bug Fixes:
-
+  - fixes bug of "locked" global variable during multithreading access
 
 - Changes:
 
