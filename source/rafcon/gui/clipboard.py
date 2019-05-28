@@ -441,7 +441,7 @@ class Clipboard(Observable):
                 [ip_m.data_port for ip_m in selection.input_data_ports] + \
                 [op_m.data_port for op_m in selection.output_data_ports]
             related_transitions, related_data_flows = \
-                parent_m.state.related_linkage_states_and_scoped_variables(state_ids, port_ids)
+                parent_m.state.get_connections_for_state_and_scoped_variables(state_ids, port_ids)
             # extend by selected states or a port and a state enclosed data flows
             for data_flow in related_data_flows['enclosed']:
                 data_flow_m = parent_m.get_data_flow_m(data_flow.data_flow_id)

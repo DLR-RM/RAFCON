@@ -351,8 +351,8 @@ class ContainerState(State):
                 number_of_str += 1
             return name_str + number_str
 
-        [related_transitions, related_data_flows] = self.related_linkage_states_and_scoped_variables(state_ids,
-                                                                                                     scoped_variable_ids)
+        [related_transitions, related_data_flows] = self.get_connections_for_state_and_scoped_variables(state_ids,
+                                                                                                        scoped_variable_ids)
 
         def assign_ingoing_outgoing(df, going_data_linkage_for_port, ingoing=True):
             internal = 'internal' if ingoing else 'external'
@@ -638,7 +638,7 @@ class ContainerState(State):
         from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, UNIQUE_DECIDER_STATE_ID
         if isinstance(state, BarrierConcurrencyState):
             state.remove_state(state_id=UNIQUE_DECIDER_STATE_ID, force=True)
-        [related_transitions, related_data_flows] = self.related_linkage_state(state_id)
+        [related_transitions, related_data_flows] = self.get_connections_for_state(state_id)
 
         # ingoing logical linkage to rebuild -> related_transitions['external']['ingoing']
         # outgoing logical linkage to rebuild -> related_transitions['external']['outgoing']
@@ -845,12 +845,12 @@ class ContainerState(State):
                 del self.states[state_id]
         super(ContainerState, self).destroy(recursive)
 
-    def related_linkage_state(self, state_id):
-        """ The method generates two dictionaries with related transition and data flow linkage for respective state_id
+    def get_connections_for_state(self, state_id):
+        """The method generates two dictionaries with related transitions and data flows for the given state_id
         
-        The method hand linkage dictionaries for all 'internal' and 'external' (first dict-key) linkage of the state.
-        Both dictionaries and there sub dicts (first dict-key) have 4 fields (as second dict-key), 
-        'enclosed', 'ingoing', 'outgoing' and 'self'.
+        The method creates dictionaries for all 'internal' and 'external' (first dict-key) connections of the state.
+        Both dictionaries contain sub dicts with 3 (external)/4 (internal) fields 'enclosed', 'ingoing', 'outgoing' and
+        'self'.
          - 'enclosed' means the handed state.states cover origin and target of those linkage
          - 'ingoing' means the handed state is target of those linkage
          - 'outgoing' means the handed state is origin of those linkage
@@ -924,21 +924,20 @@ class ContainerState(State):
 
         return related_transitions, related_data_flows
 
-    def related_linkage_states_and_scoped_variables(self, state_ids, scoped_variables):
-        """ The method generates two dictionaries with transition and data flow linkage for related linkage
+    def get_connections_for_state_and_scoped_variables(self, state_ids, scoped_variables):
+        """The method generates two dictionaries with transitions and data flows for the given state ids and scoped vars
         
-        The method hand linkage dictionaries for a set of states and scopes.
-        Both dictionaries have 4 fields (as first dict-key), 'enclosed', 'ingoing' and 'outgoing'
-         - 'enclosed' means the handed sets cover origin and target of those linkage
-         - 'ingoing' means the handed sets is target of those linkage
-         - 'ingoing' means the handed sets is origin of those linkage
+        The method creates dictionaries with connections for a set of states and scoped variables.
+        Both dictionaries have 3 fields (as first dict-key), 'enclosed', 'ingoing' and 'outgoing'
+         - 'enclosed' means the given sets cover origin and target of those linkage
+         - 'ingoing' means the given sets is target of those linkage
+         - 'ingoing' means the given sets is origin of those linkage
         
         :param state_ids: List of states taken into account. 
         :param scoped_variables: List of scoped variables taken into account
         :rtype tuple
         :return: related_transitions, related_data_flows
         """
-
         # find all related transitions
         related_transitions = {'enclosed': [], 'ingoing': [], 'outgoing': []}
         for t in self.transitions.values():
@@ -982,7 +981,7 @@ class ContainerState(State):
             logger.info("Rename state_id of state to substitute.")
             state.change_state_id()
 
-        [related_transitions, related_data_flows] = self.related_linkage_state(state_id)
+        [related_transitions, related_data_flows] = self.get_connections_for_state(state_id)
 
         readjust_parent_of_ports = True if state.state_id != list(state.outcomes.items())[0][1].parent.state_id else False
 

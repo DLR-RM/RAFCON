@@ -293,7 +293,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     ##########################################################
     # substitute state with template
     old_keys = list(state_m_parent.state.states.keys())
-    transitions_before, data_flows_before = state_m_parent.state.related_linkage_state('RQXPAI')
+    transitions_before, data_flows_before = state_m_parent.state.get_connections_for_state('RQXPAI')
 
     # lib_state = call_gui_callback(rafcon.gui.singleton.library_manager.get_library_instance, 'generic', 'wait')
     # CORE LEVEL VERSION OF A SUBSTITUTE STATE EXAMPLE
@@ -310,7 +310,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     for state_id in state_m_parent.state.states.keys():
         if state_id not in old_keys:
             new_state_id = state_id
-    transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
+    transitions_after, data_flows_after = state_m_parent.state.get_connections_for_state(new_state_id)
     # transition is not preserved because of unequal outcome naming
     assert len(transitions_before['external']['ingoing']) == 1
     assert len(transitions_after['external']['ingoing']) == 1
@@ -330,7 +330,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     ##########################################################
     # substitute state with library
     old_keys = list(state_m_parent.state.states.keys())
-    transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
+    transitions_before, data_flows_before = state_m_parent.state.get_connections_for_state(new_state_id)
 
     # lib_state = call_gui_callback(rafcon.gui.singleton.library_manager.get_library_instance, 'generic', 'wait')
     # CORE LEVEL VERSION OF A SUBSTITUTE STATE EXAMPLE
@@ -347,7 +347,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     for state_id in list(state_m_parent.state.states.keys()):
         if state_id not in old_keys:
             new_state_id = state_id
-    transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
+    transitions_after, data_flows_after = state_m_parent.state.get_connections_for_state(new_state_id)
     # test if data flow is ignored
     assert len(transitions_before['external']['ingoing']) == 1
     assert len(transitions_after['external']['ingoing']) == 1
@@ -373,7 +373,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
                       list(state_m_parent.states[new_state_id].state.input_data_ports.items())[0][1].data_port_id)
 
     old_keys = list(state_m_parent.state.states.keys())
-    transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
+    transitions_before, data_flows_before = state_m_parent.state.get_connections_for_state(new_state_id)
     # CORE LEVEL VERSION OF A SUBSTITUTE STATE EXAMPLE
     # lib_state = rafcon.gui.singleton.library_manager.get_library_instance('generic', 'wait')
     # call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state.state_copy)
@@ -386,7 +386,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     for state_id in list(state_m_parent.state.states.keys()):
         if state_id not in old_keys:
             new_state_id = state_id
-    transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
+    transitions_after, data_flows_after = state_m_parent.state.get_connections_for_state(new_state_id)
     # test if data flow is ignored
     assert len(transitions_before['external']['ingoing']) == 1
     assert len(transitions_after['external']['ingoing']) == 1
