@@ -853,7 +853,7 @@ class ContainerState(State):
         'enclosed', 'ingoing', 'outgoing' and 'self'.
          - 'enclosed' means the handed state.states cover origin and target of those linkage
          - 'ingoing' means the handed state is target of those linkage
-         - 'ingoing' means the handed state is origin of those linkage
+         - 'outgoing' means the handed state is origin of those linkage
          - 'self' (corner case) single state that has linkage with it self and is thereby also origin and target at 
            the same time
         
