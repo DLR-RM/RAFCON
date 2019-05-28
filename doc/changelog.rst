@@ -18,9 +18,9 @@ Next Release
 
 
 - Bug Fixes:
-  - :issue_ghe:`717` States that have data-flows from its output to its input crash gaphas while state type change
-  - :issue_ghe:`726` State with self-transition cannot be substituted
 
+  - :issue_ghe:`726` State with self-transition cannot be substituted
+  - fixes bug of "locked" global variable during multithreading access
 
 - Changes:
 
@@ -47,6 +47,7 @@ Next Release
   - :issue_ghe:`683` rafcon can now be closed properly via signal
   - :issue_ghe:`712` Paste of Port into selected state is not possible
   - :issue_ghe:`711` Gaphas does not allow data flows from one state to itself
+  - :issue_ghe:`717` States that have data-flows from its output to its input crash gahpas while state type change
   - fix broken links in documentation
   - use correct version and year in documentation
 
