@@ -1008,7 +1008,7 @@ class ContainerState(State):
         act_input_data_port_by_name = {ip.name: ip for ip in state.input_data_ports.values()}
         act_output_data_port_by_name = {op.name: op for op in state.output_data_ports.values()}
 
-        for t in set(related_transitions['external']['self']):
+        for t in related_transitions['external']['self']:
             new_t_id = self.add_transition(state_id, t.from_outcome, state_id, t.to_outcome, t.transition_id)
             re_create_io_going_t_ids.append(new_t_id)
             assert new_t_id == t.transition_id
