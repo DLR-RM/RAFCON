@@ -155,13 +155,51 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     call_gui_callback(sm_m.selection.set, execution_state_m)
     call_gui_callback(menubar_ctrl.on_delete_activate, None, None)
 
-    # Create BarrierConcurencyState and try to delete DeciderState (should fail with exception)
+    # TODO check why I have had to move this test above the bug tests below?!
+    # Create BarrierConcurrencyState and try to delete DeciderState (should fail with exception)
     call_gui_callback(sm_m.selection.set, [sm_m.root_state])
     call_gui_callback(gui_helper_state_machine.add_new_state, sm_m, StateType.BARRIER_CONCURRENCY)
     barrier_state_m = list(sm_m.root_state.states.values())[0]
     decider_state_path = "/".join([barrier_state_m.state.get_path(), UNIQUE_DECIDER_STATE_ID])
     call_gui_callback(sm_m.selection.set, sm_m.get_state_model_by_path(decider_state_path))
     call_gui_callback(menubar_ctrl.on_delete_activate, None, None)
+    call_gui_callback(sm_m.root_state.state.remove_state, barrier_state_m.state.state_id)
+
+    # Tests for issue #717 and #726
+    # create self transition and self data flow and perform state type change and substitute state
+    call_gui_callback(sm_m.selection.set, [sm_m.root_state])
+    call_gui_callback(gui_helper_state_machine.add_new_state, sm_m, StateType.EXECUTION)
+    execution_state_m = list(sm_m.root_state.states.values())[0]
+    new_state_id = execution_state_m.state.state_id
+    idp_id = call_gui_callback(execution_state_m.state.add_input_data_port, "i1", int, data_port_id=0)
+    odp_id = call_gui_callback(execution_state_m.state.add_output_data_port, "o1", int, data_port_id=0)
+    # add self transition and self data flow
+    call_gui_callback(execution_state_m.parent.state.add_transition, new_state_id, 0, new_state_id, None)
+    call_gui_callback(execution_state_m.parent.state.add_data_flow, new_state_id, odp_id, new_state_id, idp_id)
+    call_gui_callback(sm_m.selection.set, execution_state_m)
+    # test issue #717
+    from tests.gui.widget.test_state_type_change import get_state_editor_ctrl_and_store_id_dict
+    from rafcon.core.states.hierarchy_state import HierarchyState
+    [state_editor_ctrl, list_store_id_from_state_type_dict] = call_gui_callback(get_state_editor_ctrl_and_store_id_dict,
+                                                                                sm_m, execution_state_m, main_window_controller, 5., logger)
+    state_type_row_id = list_store_id_from_state_type_dict[HierarchyState.__name__]
+    call_gui_callback(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
+    new_state = sm_m.root_state.states[new_state_id]
+    assert len(new_state.parent.transitions) == 1 and len(new_state.parent.data_flows) == 1
+    # test issue #726
+    hierarchy_state_m = sm_m.root_state.states[new_state_id]
+    call_gui_callback(hierarchy_state_m.outcomes[0].__setattr__, "name", "end")  # rename to let the transition survive
+    call_gui_callback(sm_m.selection.set, hierarchy_state_m)
+    library_path, library_name = ('generic', 'wait')
+    call_gui_callback(lib_tree_ctrl.select_library_tree_element_of_lib_tree_path, join(library_path, library_name))
+    call_gui_callback(lib_tree_ctrl.substitute_as_library_clicked, None, True)
+    assert len(sm_m.root_state.states) == 1
+    wait_state_m = list(sm_m.root_state.states.values())[0]
+    assert len(new_state.parent.transitions) == 1
+    t_m = list(new_state.parent.transitions)[0]
+    assert t_m.transition.from_state == t_m.transition.to_state and t_m.transition.from_state == wait_state_m.state.state_id
+    call_gui_callback(sm_m.root_state.state.remove_state, wait_state_m.state.state_id)
+    first_sm_id += 1  # count state machine id once up because of library substitution (loads a state machine, too)
 
     assert len(sm_manager_model.state_machines) == current_sm_length + 1
     call_gui_callback(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TUTORIAL_PATH,
@@ -255,7 +293,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     ##########################################################
     # substitute state with template
     old_keys = list(state_m_parent.state.states.keys())
-    transitions_before, data_flows_before = state_m_parent.state.related_linkage_state('RQXPAI')
+    transitions_before, data_flows_before = state_m_parent.state.get_connections_for_state('RQXPAI')
 
     # lib_state = call_gui_callback(rafcon.gui.singleton.library_manager.get_library_instance, 'generic', 'wait')
     # CORE LEVEL VERSION OF A SUBSTITUTE STATE EXAMPLE
@@ -272,7 +310,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     for state_id in state_m_parent.state.states.keys():
         if state_id not in old_keys:
             new_state_id = state_id
-    transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
+    transitions_after, data_flows_after = state_m_parent.state.get_connections_for_state(new_state_id)
     # transition is not preserved because of unequal outcome naming
     assert len(transitions_before['external']['ingoing']) == 1
     assert len(transitions_after['external']['ingoing']) == 1
@@ -292,7 +330,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     ##########################################################
     # substitute state with library
     old_keys = list(state_m_parent.state.states.keys())
-    transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
+    transitions_before, data_flows_before = state_m_parent.state.get_connections_for_state(new_state_id)
 
     # lib_state = call_gui_callback(rafcon.gui.singleton.library_manager.get_library_instance, 'generic', 'wait')
     # CORE LEVEL VERSION OF A SUBSTITUTE STATE EXAMPLE
@@ -309,7 +347,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     for state_id in list(state_m_parent.state.states.keys()):
         if state_id not in old_keys:
             new_state_id = state_id
-    transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
+    transitions_after, data_flows_after = state_m_parent.state.get_connections_for_state(new_state_id)
     # test if data flow is ignored
     assert len(transitions_before['external']['ingoing']) == 1
     assert len(transitions_after['external']['ingoing']) == 1
@@ -335,7 +373,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
                       list(state_m_parent.states[new_state_id].state.input_data_ports.items())[0][1].data_port_id)
 
     old_keys = list(state_m_parent.state.states.keys())
-    transitions_before, data_flows_before = state_m_parent.state.related_linkage_state(new_state_id)
+    transitions_before, data_flows_before = state_m_parent.state.get_connections_for_state(new_state_id)
     # CORE LEVEL VERSION OF A SUBSTITUTE STATE EXAMPLE
     # lib_state = rafcon.gui.singleton.library_manager.get_library_instance('generic', 'wait')
     # call_gui_callback(state_m_parent.state.substitute_state, new_state_id, lib_state.state_copy)
@@ -348,7 +386,7 @@ def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     for state_id in list(state_m_parent.state.states.keys()):
         if state_id not in old_keys:
             new_state_id = state_id
-    transitions_after, data_flows_after = state_m_parent.state.related_linkage_state(new_state_id)
+    transitions_after, data_flows_after = state_m_parent.state.get_connections_for_state(new_state_id)
     # test if data flow is ignored
     assert len(transitions_before['external']['ingoing']) == 1
     assert len(transitions_after['external']['ingoing']) == 1

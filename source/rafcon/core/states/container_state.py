@@ -351,8 +351,8 @@ class ContainerState(State):
                 number_of_str += 1
             return name_str + number_str
 
-        [related_transitions, related_data_flows] = self.related_linkage_states_and_scoped_variables(state_ids,
-                                                                                                     scoped_variable_ids)
+        [related_transitions, related_data_flows] = self.get_connections_for_state_and_scoped_variables(state_ids,
+                                                                                                        scoped_variable_ids)
 
         def assign_ingoing_outgoing(df, going_data_linkage_for_port, ingoing=True):
             internal = 'internal' if ingoing else 'external'
@@ -638,7 +638,7 @@ class ContainerState(State):
         from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, UNIQUE_DECIDER_STATE_ID
         if isinstance(state, BarrierConcurrencyState):
             state.remove_state(state_id=UNIQUE_DECIDER_STATE_ID, force=True)
-        [related_transitions, related_data_flows] = self.related_linkage_state(state_id)
+        [related_transitions, related_data_flows] = self.get_connections_for_state(state_id)
 
         # ingoing logical linkage to rebuild -> related_transitions['external']['ingoing']
         # outgoing logical linkage to rebuild -> related_transitions['external']['outgoing']
@@ -845,22 +845,46 @@ class ContainerState(State):
                 del self.states[state_id]
         super(ContainerState, self).destroy(recursive)
 
-    def related_linkage_state(self, state_id):
-        """ TODO: document
+    def get_connections_for_state(self, state_id):
+        """The method generates two dictionaries with related transitions and data flows for the given state_id
+        
+        The method creates dictionaries for all 'internal' and 'external' (first dict-key) connections of the state.
+        Both dictionaries contain sub dicts with 3 (external)/4 (internal) fields 'enclosed', 'ingoing', 'outgoing' and
+        'self'.
+         - 'enclosed' means the handed state.states cover origin and target of those linkage
+         - 'ingoing' means the handed state is target of those linkage
+         - 'outgoing' means the handed state is origin of those linkage
+         - 'self' (corner case) single state that has linkage with it self and is thereby also origin and target at 
+           the same time
+        
+        :param state_id: State taken into account.
+        :rtype tuple
+        :return: related_transitions, related_data_flows
         """
+        related_transitions = {'external': {'ingoing': [], 'outgoing': [], 'self': []},
+                               'internal': {'enclosed': [], 'ingoing': [], 'outgoing': [], 'self': []}}
+        related_data_flows = {'external': {'ingoing': [], 'outgoing': [], 'self': []},
+                              'internal': {'enclosed': [], 'ingoing': [], 'outgoing': [], 'self': []}}
 
-        related_transitions = {'external': {'ingoing': [], 'outgoing': []},
-                               'internal': {'enclosed': [], 'ingoing': [], 'outgoing': []}}
-        related_data_flows = {'external': {'ingoing': [], 'outgoing': []},
-                              'internal': {'enclosed': [], 'ingoing': [], 'outgoing': []}}
-        # ingoing logical linkage to rebuild
-        related_transitions['external']['ingoing'] = [t for t in self.transitions.values() if t.to_state == state_id]
-        # outgoing logical linkage to rebuild
-        related_transitions['external']['outgoing'] = [t for t in self.transitions.values() if t.from_state == state_id]
-        # ingoing data linkage to rebuild
-        related_data_flows['external']['ingoing'] = [df for df in self.data_flows.values() if df.to_state == state_id]
-        # outgoing outgoing linkage to rebuild
-        related_data_flows['external']['outgoing'] = [df for df in self.data_flows.values() if df.from_state == state_id]
+        # self logical linkage
+        related_transitions['external']['self'] = [t for t in self.transitions.values()
+                                                   if t.from_state == state_id and t.to_state == state_id]
+        # ingoing logical linkage
+        related_transitions['external']['ingoing'] = [t for t in self.transitions.values()
+                                                      if t.from_state != state_id and t.to_state == state_id]
+        # outgoing logical linkage
+        related_transitions['external']['outgoing'] = [t for t in self.transitions.values()
+                                                       if t.from_state == state_id and t.to_state != state_id]
+
+        # self data linkage
+        related_data_flows['external']['self'] = [df for df in self.data_flows.values()
+                                                  if df.from_state == state_id and df.to_state == state_id]
+        # ingoing data linkage
+        related_data_flows['external']['ingoing'] = [df for df in self.data_flows.values()
+                                                     if df.from_state != state_id and df.to_state == state_id]
+        # outgoing outgoing linkage
+        related_data_flows['external']['outgoing'] = [df for df in self.data_flows.values()
+                                                      if df.from_state == state_id and df.to_state != state_id]
 
         state = self.states[state_id]
         if not isinstance(state, ContainerState):
@@ -868,7 +892,9 @@ class ContainerState(State):
 
         for t_id, t in state.transitions.items():
             # check if internal of new hierarchy state
-            if t.from_state in state.states and t.to_state in state.states:
+            if state_id == t.from_state and state_id == t.to_state:  # most likely never happens but possible
+                related_transitions['internal']['self'].append(t)
+            elif t.from_state in state.states and t.to_state in state.states:
                 related_transitions['internal']['enclosed'].append(t)
             elif t.to_state in state.states:
                 related_transitions['internal']['ingoing'].append(t)
@@ -879,7 +905,9 @@ class ContainerState(State):
 
         for df_id, df in state.data_flows.items():
             # check if internal of hierarchy state
-            if df.from_state in state.states and df.to_state in state.states or \
+            if state_id == df.from_state and state_id == df.to_state:  # most likely never happens but possible
+                related_data_flows['internal']['self'].append(df)
+            elif df.from_state in state.states and df.to_state in state.states or \
                     df.from_state in state.states and state.state_id == df.to_state and df.to_key in state.scoped_variables or \
                     state.state_id == df.from_state and df.from_key in state.scoped_variables and df.to_state in state.states:
                 related_data_flows['internal']['enclosed'].append(df)
@@ -896,10 +924,20 @@ class ContainerState(State):
 
         return related_transitions, related_data_flows
 
-    def related_linkage_states_and_scoped_variables(self, state_ids, scoped_variables):
-        """ TODO: document
+    def get_connections_for_state_and_scoped_variables(self, state_ids, scoped_variables):
+        """The method generates two dictionaries with transitions and data flows for the given state ids and scoped vars
+        
+        The method creates dictionaries with connections for a set of states and scoped variables.
+        Both dictionaries have 3 fields (as first dict-key), 'enclosed', 'ingoing' and 'outgoing'
+         - 'enclosed' means the given sets cover origin and target of those linkage
+         - 'ingoing' means the given sets is target of those linkage
+         - 'ingoing' means the given sets is origin of those linkage
+        
+        :param state_ids: List of states taken into account. 
+        :param scoped_variables: List of scoped variables taken into account
+        :rtype tuple
+        :return: related_transitions, related_data_flows
         """
-
         # find all related transitions
         related_transitions = {'enclosed': [], 'ingoing': [], 'outgoing': []}
         for t in self.transitions.values():
@@ -943,7 +981,7 @@ class ContainerState(State):
             logger.info("Rename state_id of state to substitute.")
             state.change_state_id()
 
-        [related_transitions, related_data_flows] = self.related_linkage_state(state_id)
+        [related_transitions, related_data_flows] = self.get_connections_for_state(state_id)
 
         readjust_parent_of_ports = True if state.state_id != list(state.outcomes.items())[0][1].parent.state_id else False
 
@@ -968,6 +1006,11 @@ class ContainerState(State):
         act_outcome_ids_by_name = {oc.name: oc_id for oc_id, oc in state.outcomes.items()}
         act_input_data_port_by_name = {ip.name: ip for ip in state.input_data_ports.values()}
         act_output_data_port_by_name = {op.name: op for op in state.output_data_ports.values()}
+
+        for t in related_transitions['external']['self']:
+            new_t_id = self.add_transition(state_id, t.from_outcome, state_id, t.to_outcome, t.transition_id)
+            re_create_io_going_t_ids.append(new_t_id)
+            assert new_t_id == t.transition_id
 
         for t in related_transitions['external']['ingoing']:
             new_t_id = self.add_transition(t.from_state, t.from_outcome, state_id, t.to_outcome, t.transition_id)
