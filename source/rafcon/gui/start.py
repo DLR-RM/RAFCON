@@ -71,6 +71,7 @@ def setup_installation():
         installation.install_fonts(logger, restart=True)
         installation.install_gtk_source_view_styles(logger)
         installation.install_libraries(logger, overwrite=False)
+        installation.install_icons(logger)
 
 
 def setup_gtkmvc3_logger():
