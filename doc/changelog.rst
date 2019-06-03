@@ -21,6 +21,7 @@ Next Release
 
   - :issue_ghe:`726` State with self-transition cannot be substituted
   - fixes bug of "locked" global variable during multithreading access
+  - use a safe loader for GUI config file
 
 - Changes:
 
