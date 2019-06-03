@@ -19,6 +19,7 @@ Next Release
 
 - Bug Fixes:
 
+  - :issue_gh:`20` program icon in task bar missing since version 0.13.x
   - :issue_ghe:`726` State with self-transition cannot be substituted
   - fixes bug of "locked" global variable during multithreading access
 
