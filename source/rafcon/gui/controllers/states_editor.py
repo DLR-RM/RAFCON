@@ -332,11 +332,6 @@ class StatesEditorController(ExtendedController):
                                        'source_code_changed_handler_id': handler_id}
         return page_id
 
-    def recreate_state_editor(self, old_state_m, new_state_m):
-        old_state_identifier = self.get_state_identifier(old_state_m)
-        self.close_page(old_state_identifier, delete=True)
-        self.add_state_editor(new_state_m)
-
     def reload_style(self):
         tabs_to_delete = []
         for state_identifier, tab_dict in list(self.tabs.items()):
