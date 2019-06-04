@@ -300,11 +300,6 @@ class ContainerStateModel(StateModel):
         elif info.method_name in ["transitions", "data_flows", "states", "scoped_variables"]:
             self.re_initiate_model_list(model_list, data_list, model_name, model_class, model_key)
 
-    @ModelMT.observe("state", after=True, before=True)
-    def change_state_type(self, model, prop_name, info):
-        if info.method_name != 'change_state_type':
-            return
-
     def insert_meta_data_from_models_dict(self, source_models_dict, notify_logger_method):
         # TODO D-Clean this up and integrate proper into group/ungroup functionality
         if 'states' in source_models_dict:
