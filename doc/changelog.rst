@@ -21,6 +21,7 @@ Next Release
 
   - :issue_ghe:`726` State with self-transition cannot be substituted
   - fixes bug of "locked" global variable during multithreading access
+  - :issue_ghe:`727` Sticky-Flag in States-Editor can cause crash if state type change is performed
 
 - Changes:
 
