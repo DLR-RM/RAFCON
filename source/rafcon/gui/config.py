@@ -152,8 +152,14 @@ class GuiConfig(ObservableConfig):
             # replace unicode strings with str strings
             color_name = str(color_name)
             color_code = str(color_code)
+            gtk_color = Gdk.RGBA()
             if color_code.startswith("#"):
-                color = Gdk.Color.parse(color_code)[1]
+                if gtk_color.parse(color_code):
+                    color = gtk_color.to_color()
+                else:
+                    self.logger.warning("Could not parse color with name '{}' and code '{}'".format(color_name,
+                                                                                                    color_code))
+                    continue
             elif color_code in self.colors:
                 color = self.gtk_colors[color_code]
                 color_code = self.gtk_colors[color_code]

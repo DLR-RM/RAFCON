@@ -370,22 +370,23 @@ class HoverItemTool(gaphas.tool.HoverTool):
         pos = event.x, event.y
 
         # Reset cursor
-        self.view.get_window().set_cursor(Gdk.Cursor.new(DEFAULT_CURSOR))
+        display = self.view.get_display()
+        self.view.get_window().set_cursor(Gdk.Cursor.new_for_display(display, DEFAULT_CURSOR))
 
         def handle_hover_of_port(hovered_handle):
             view.hovered_handle = hovered_handle
             port_v = state_v.get_port_for_handle(hovered_handle)
             view.queue_draw_area(*port_v.get_port_area(view))
             if event.get_state()[1] & constants.MOVE_PORT_MODIFIER:
-                self.view.get_window().set_cursor(Gdk.Cursor.new(constants.MOVE_CURSOR))
+                self.view.get_window().set_cursor(Gdk.Cursor.new_for_display(display, MOVE_CURSOR))
             else:
-                self.view.get_window().set_cursor(Gdk.Cursor.new(constants.CREATION_CURSOR))
+                self.view.get_window().set_cursor(Gdk.Cursor.new_for_display(display, constants.CREATION_CURSOR))
 
         if isinstance(view.hovered_item, PortView):
             if event.get_state()[1] & constants.MOVE_PORT_MODIFIER:
-                self.view.get_window().set_cursor(Gdk.Cursor.new(constants.MOVE_CURSOR))
+                self.view.get_window().set_cursor(Gdk.Cursor.new_for_display(display, constants.MOVE_CURSOR))
             else:
-                self.view.get_window().set_cursor(Gdk.Cursor.new(constants.CREATION_CURSOR))
+                self.view.get_window().set_cursor(Gdk.Cursor.new_for_display(display, constants.CREATION_CURSOR))
 
         elif isinstance(view.hovered_item, StateView):
             distance = view.hovered_item.border_width / 2.
@@ -426,10 +427,10 @@ class HoverItemTool(gaphas.tool.HoverTool):
             # If a handle is connection handle is hovered, show the move cursor
             item, handle = HandleFinder(view.hovered_item, view).get_handle_at_point(pos, split=False)
             if handle:
-                self.view.get_window().set_cursor(Gdk.Cursor.new(constants.MOVE_CURSOR))
+                self.view.get_window().set_cursor(Gdk.Cursor.new_for_display(display, constants.MOVE_CURSOR))
             # If no handle is hovered, indicate the option for selection with the selection cursor
             else:
-                self.view.get_window().set_cursor(Gdk.Cursor.new(constants.SELECT_CURSOR))
+                self.view.get_window().set_cursor(Gdk.Cursor.new_for_display(display, constants.SELECT_CURSOR))
 
         if isinstance(self.view.hovered_item, StateView):
             self._prev_hovered_item = self.view.hovered_item
