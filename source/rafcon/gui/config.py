@@ -16,6 +16,10 @@ from builtins import str
 import os
 import re
 import yaml
+try:
+    from yaml import CFullLoader as FullLoader
+except ImportError:
+    from yaml import FullLoader
 from collections import defaultdict
 
 from yaml_configuration.config import ConfigError
@@ -71,7 +75,7 @@ class GuiConfig(ObservableConfig):
 
         # fill up shortcuts
         if not using_default_config:
-            default_gui_config = yaml.load(self.default_config) if self.default_config else {}
+            default_gui_config = yaml.load(self.default_config, Loader=FullLoader) if self.default_config else {}
             shortcuts_dict = self.get_config_value('SHORTCUTS')
             for shortcut_name, shortcuts_list in default_gui_config.get('SHORTCUTS', {}).items():
                 if shortcut_name not in shortcuts_dict:
@@ -148,8 +152,14 @@ class GuiConfig(ObservableConfig):
             # replace unicode strings with str strings
             color_name = str(color_name)
             color_code = str(color_code)
+            gtk_color = Gdk.RGBA()
             if color_code.startswith("#"):
-                color = Gdk.Color.parse(color_code)[1]
+                if gtk_color.parse(color_code):
+                    color = gtk_color.to_color()
+                else:
+                    self.logger.warning("Could not parse color with name '{}' and code '{}'".format(color_name,
+                                                                                                    color_code))
+                    continue
             elif color_code in self.colors:
                 color = self.gtk_colors[color_code]
                 color_code = self.gtk_colors[color_code]

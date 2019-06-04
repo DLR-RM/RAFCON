@@ -49,8 +49,7 @@ def trigger_dialog_tests():
 
     dialog_window = call_gui_callback(dialog.RAFCONMessageDialog, test_text, on_ok_clicked)
     # First button of the dialog, in this case the standard "Ok" button
-    button = dialog_window.get_action_area().get_children()[0]
-    call_gui_callback(button.clicked)
+    call_gui_callback(dialog_window.response, 1)
     call_gui_callback(dialog_window.destroy)
     button_texts = ["First", "Second", "Third", "Fourth"]
 
@@ -58,7 +57,7 @@ def trigger_dialog_tests():
 
     for index, button_text in enumerate(button_texts):
         # Check if the button order is the same as requested by the button_texts list
-        button = dialog_window.get_action_area().get_children()[index]
+        button = dialog_window.buttons[index]
         assert str(button.get_label()) == button_texts[index]
 
     call_gui_callback(button.clicked)
@@ -79,7 +78,7 @@ def trigger_dialog_tests():
         # Check the checkboxes in an alternating order
         call_gui_callback(checkbox.set_active, index % 2)
 
-    button = dialog_window.get_action_area().get_children()[0]
+    call_gui_callback(dialog_window.response, 1)
     call_gui_callback(button.clicked)
 
     call_gui_callback(dialog_window.destroy)
