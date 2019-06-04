@@ -16,14 +16,21 @@ Next Release
 
 - Improvements:
 
+  - most ``[PyGTK]DeprecatedWarning``s are fixed
+
 
 - Bug Fixes:
 
+  - :issue_gh:`20` program icon in task bar missing since version 0.13.x
+  - :issue_ghe:`721` Correct execution history logging
   - :issue_ghe:`726` State with self-transition cannot be substituted
-  - fixes bug of "locked" global variable during multithreading access
   - :issue_ghe:`727` Sticky-Flag in States-Editor can cause crash if state type change is performed
+  - fixes bug of "locked" global variable during multithreading access
+  - use a safe loader for GUI config file
 
 - Changes:
+
+  - drop support for BuildBot
 
 
 0.13.8

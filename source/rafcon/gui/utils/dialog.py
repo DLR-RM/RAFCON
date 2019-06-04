@@ -70,7 +70,7 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
         if parent:
             self.set_transient_for(parent)
         if isinstance(markup_text, string_types):
-            from cgi import escape
+            from xml.sax.saxutils import escape
             self.set_markup(escape(str(markup_text)))
         else:
             logger.debug("The specified message '{1}' text is not a string, but {0}".format(markup_text,
@@ -117,9 +117,10 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
         super(RAFCONButtonDialog, self).__init__(markup_text, callback, callback_args, message_type,
                                                  flags, parent, width, standalone, title, height)
 
+        self.buttons = []
         if button_texts:
             for index, button in enumerate(button_texts, 1):
-                self.add_button(button, index)
+                self.buttons.append(self.add_button(button, index))
         else:
             logger.debug("No buttons where specified for the dialog from type or inheriting from RAFCONButtonDialog")
 
@@ -174,7 +175,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
 
         if isinstance(checkbox_text, string_types):
             # If a checkbox_text is specified by the caller, we can assume that one should be used.
-            self.checkbox = Gtk.CheckButton(checkbox_text)
+            self.checkbox = Gtk.CheckButton(label=checkbox_text)
             hbox.pack_end(self.checkbox, False, True, 1)
 
         self.show_grab_focus_and_run(standalone)
@@ -222,7 +223,7 @@ class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
             self.checkboxes = []
 
             for index, checkbox in enumerate(checkbox_texts):
-                self.checkboxes.append(Gtk.CheckButton(checkbox))
+                self.checkboxes.append(Gtk.CheckButton(label=checkbox))
                 checkbox_vbox.pack_start(self.checkboxes[index], True, True, 1)
         else:
             logger.debug("Argument checkbox_text is None or empty, no checkboxes were created")
@@ -237,7 +238,7 @@ class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
         return self.checkboxes[checkbox_index].get_active()
 
     def get_checkbox_states(self):
-        return [bool(checkbox.get_state()) for checkbox in self.checkboxes]
+        return [checkbox.get_active() for checkbox in self.checkboxes]
 
 
 class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
@@ -265,7 +266,7 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
 
         super(RAFCONCheckBoxTableDialog, self).__init__(markup_text, button_texts,
                                                         callback=callback, callback_args=callback_args,
-                                                        message_type=message_type, parent=parent,
+                                                        message_type=message_type, transient_for=parent,
                                                         width=width, standalone=standalone, title=title, height=height)
         if table_header is None:
             table_header = ["CheckBox", "Description"]

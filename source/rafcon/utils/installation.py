@@ -16,6 +16,7 @@ import sys
 import shutil
 import subprocess
 import distutils.log
+from distutils.dir_util import copy_tree
 
 try:
     from gi.repository import GLib
@@ -163,6 +164,25 @@ def install_libraries(logger=None, overwrite=True):
         shutil.copytree(library_path, user_library_path)
     except (IOError, shutil.Error) as e:
         log.error("Could not install RAFCON libraries: {}".format(e))
+
+
+def install_icons(logger=None):
+    if logger:
+        log = logger
+    else:
+        log = distutils.log
+    if GLib:
+        user_data_folder = GLib.get_user_data_dir()
+    else:
+        user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
+    user_icons_path = os.path.join(user_data_folder, 'icons')
+    icons_path = os.path.join(rafcon_root_path, assets_folder, "share", "icons")
+
+    try:
+        log.info("Installing RAFCON icons to {}".format(user_icons_path))
+        copy_tree(icons_path, user_icons_path, update=1)
+    except IOError as e:
+        log.error("Could not install RAFCON icons: {}".format(e))
 
 
 def create_mo_files():
