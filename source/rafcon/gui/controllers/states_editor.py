@@ -473,20 +473,20 @@ class StatesEditorController(ExtendedController):
     def on_switch_page(self, notebook, page_pointer, page_num, user_param1=None):
         """Update state selection when the active tab was changed
         """
-        page = notebook.get_nth_page(page_num)
-
-        # find state of selected tab
-        for tab_info in list(self.tabs.values()):
-            if tab_info['page'] is page:
-                state_m = tab_info['state_m']
-                sm_id = state_m.state.get_state_machine().state_machine_id
-                selected_state_m = self.current_state_machine_m.selection.get_selected_state()
-
-                # If the state of the selected tab is not in the selection, set it there
-                if selected_state_m is not state_m and sm_id in self.model.state_machine_manager.state_machines:
-                    self.model.selected_state_machine_id = sm_id
-                    self.current_state_machine_m.selection.set(state_m)
-                return
+        pass
+        # page = notebook.get_nth_page(page_num)
+        # # find state of selected tab
+        # for tab_info in list(self.tabs.values()):
+        #     if tab_info['page'] is page:
+        #         state_m = tab_info['state_m']
+        #         sm_id = state_m.state.get_state_machine().state_machine_id
+        #         selected_state_m = self.current_state_machine_m.selection.get_selected_state()
+        #
+        #         # If the state of the selected tab is not in the selection, set it there
+        #         if selected_state_m is not state_m and sm_id in self.model.state_machine_manager.state_machines:
+        #             self.model.selected_state_machine_id = sm_id
+        #             self.current_state_machine_m.selection.set(state_m)
+        #         return
 
     def activate_state_tab(self, state_m):
         """Opens the tab for the specified state model
