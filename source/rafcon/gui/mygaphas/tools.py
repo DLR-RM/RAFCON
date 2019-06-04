@@ -236,12 +236,15 @@ class MoveItemTool(gaphas.tool.ItemTool):
                 break
 
         if not affected_models and self._old_selection is not None:
-            # The selection is handled differently depending on whether states were moved or not
-            # If no move operation was performed, we reset the selection to that is was before the button-press event
-            # and let the state machine selection handle the selection
-            self.view.unselect_all()
-            self.view.select_item(self._old_selection)
-            self.view.handle_new_selection(self._item)
+            # The selection is handled differently depending on whether states were moved or not:
+            # The state the user clicked on is always added to the selection in the `on_button_press` handler, which is
+            # fine if the states were moved.
+            # If the states were not moved (no `affected_models`), and if the state the user clicked on had already been
+            # selected, and the extend-selection-modifier is clicked, then we need to remove the state from the
+            # selection
+            from rafcon.gui.models.selection import extend_selection
+            if self._item in self._old_selection and extend_selection():
+                self.view.unselect_item(self._item)
 
         self._move_name_v = False
         self._old_selection = None
