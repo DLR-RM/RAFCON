@@ -70,7 +70,7 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
         if parent:
             self.set_transient_for(parent)
         if isinstance(markup_text, string_types):
-            from cgi import escape
+            from xml.sax.saxutils import escape
             self.set_markup(escape(str(markup_text)))
         else:
             logger.debug("The specified message '{1}' text is not a string, but {0}".format(markup_text,
