@@ -240,11 +240,15 @@ class MoveItemTool(gaphas.tool.ItemTool):
             # The state the user clicked on is always added to the selection in the `on_button_press` handler, which is
             # fine if the states were moved.
             # If the states were not moved (no `affected_models`), and if the state the user clicked on had already been
-            # selected, and the extend-selection-modifier is clicked, then we need to remove the state from the
-            # selection
+            # selected, there are two cases to be considered:
+            # 1. extend-selection-modifier is clicked: we need to remove the state from the selection
+            # 2. extend-selection-modifier is not clicked: we need to remove all other states from the selection
             from rafcon.gui.models.selection import extend_selection
-            if self._item in self._old_selection and extend_selection():
-                self.view.unselect_item(self._item)
+            if self._item in self._old_selection:
+                if extend_selection():
+                    self.view.unselect_item(self._item)
+                else:
+                    map(self.view.unselect_item, [view for view in self._old_selection if view is not self._item])
 
         self._move_name_v = False
         self._old_selection = None
