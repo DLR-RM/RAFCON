@@ -26,6 +26,8 @@ Next Release
 
 - Changes:
 
+  - drop support for BuildBot
+
 
 0.13.8
 """"""
