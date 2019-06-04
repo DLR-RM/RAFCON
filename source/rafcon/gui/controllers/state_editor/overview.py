@@ -106,13 +106,9 @@ class StateOverviewController(ExtendedController):
             self.view['library_path'].set_editable(False)
             view['show_content_checkbutton'].set_active(self.model.meta['gui']['show_content'] is True)
             view['show_content_checkbutton'].connect('toggled', self.on_toggle_show_content)
-            # self.view['properties_widget'].remove(self.view['show_content_checkbutton'])
         else:
-            self.view['properties_widget'].remove(self.view['label_library_path'])
-            self.view['properties_widget'].remove(self.view['library_path'])
-            self.view['properties_widget'].remove(self.view['label_show_content'])
-            self.view['properties_widget'].remove(self.view['show_content_checkbutton'])
-            self.view['properties_widget'].resize(2, 5)
+            self.view['properties_widget'].remove_row(2)  # Library content
+            self.view['properties_widget'].remove_row(1)  # Library path/name
 
             for state_class in self.allowed_state_classes:
                 if isinstance(self.model.state, state_class):
