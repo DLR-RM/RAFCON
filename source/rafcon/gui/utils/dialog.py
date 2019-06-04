@@ -174,7 +174,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
 
         if isinstance(checkbox_text, string_types):
             # If a checkbox_text is specified by the caller, we can assume that one should be used.
-            self.checkbox = Gtk.CheckButton(checkbox_text)
+            self.checkbox = Gtk.CheckButton(label=checkbox_text)
             hbox.pack_end(self.checkbox, False, True, 1)
 
         self.show_grab_focus_and_run(standalone)
@@ -222,7 +222,7 @@ class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
             self.checkboxes = []
 
             for index, checkbox in enumerate(checkbox_texts):
-                self.checkboxes.append(Gtk.CheckButton(checkbox))
+                self.checkboxes.append(Gtk.CheckButton(label=checkbox))
                 checkbox_vbox.pack_start(self.checkboxes[index], True, True, 1)
         else:
             logger.debug("Argument checkbox_text is None or empty, no checkboxes were created")
@@ -237,7 +237,7 @@ class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
         return self.checkboxes[checkbox_index].get_active()
 
     def get_checkbox_states(self):
-        return [bool(checkbox.get_state()) for checkbox in self.checkboxes]
+        return [checkbox.get_active() for checkbox in self.checkboxes]
 
 
 class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
