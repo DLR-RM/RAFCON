@@ -379,22 +379,6 @@ class StatesEditorController(ExtendedController):
         if old_is_dirty is not tab_list[state_identifier]['source_code_view_is_dirty']:
             self.update_tab_label(source_script_state_m)
 
-    def _destroy_page(self, tab_dict):
-        """ Destroys desired page
-
-        Disconnects the page from signals and removes interconnection to parent-controller or observables.
-
-        :param tab_dict: Tab-dictionary that holds all necessary information of a page and state-editor.
-        """
-        # logger.info("destroy page %s" % tab_dict['controller'].model.state.get_path())
-        if tab_dict['source_code_changed_handler_id'] is not None:
-            handler_id = tab_dict['source_code_changed_handler_id']
-            if tab_dict['controller'].view.source_view.get_buffer().handler_is_connected(handler_id):
-                tab_dict['controller'].view.source_view.get_buffer().disconnect(handler_id)
-            else:
-                logger.warning("Source code changed handler of state {0} was already removed.".format(tab_dict['state_m']))
-        self.remove_controller(tab_dict['controller'])
-
     def close_page(self, state_identifier, delete=True):
         """Closes the desired page
 
@@ -404,9 +388,24 @@ class StatesEditorController(ExtendedController):
         :param state_identifier: Identifier of the page's state
         :param delete: Whether to delete the controller (deletion is necessary if teh state is deleted)
         """
+        def _destroy_page(tab_dict):
+            """Destroy page corresponding to the `tab_dict`
+
+            Disconnects the page from signals and removes interconnection to parent-controller or observables.
+
+            :param tab_dict: Tab-dictionary that holds all necessary information of a page and state-editor.
+            """
+            if tab_dict['source_code_changed_handler_id'] is not None:
+                handler_id = tab_dict['source_code_changed_handler_id']
+                if tab_dict['controller'].view.source_view.get_buffer().handler_is_connected(handler_id):
+                    tab_dict['controller'].view.source_view.get_buffer().disconnect(handler_id)
+                else:
+                    logger.warning("Source code changed handler of state {0} was already removed.".format(tab_dict['state_m']))
+            self.remove_controller(tab_dict['controller'])
+
         # delete old controller references
         if delete and state_identifier in self.closed_tabs:
-            self._destroy_page(self.closed_tabs[state_identifier])
+            _destroy_page(self.closed_tabs[state_identifier])
             del self.closed_tabs[state_identifier]
 
         # check for open page of state
@@ -417,9 +416,8 @@ class StatesEditorController(ExtendedController):
             if not delete:
                 self.closed_tabs[state_identifier] = self.tabs[state_identifier]
             else:
-                self._destroy_page(self.tabs[state_identifier])
-            if state_identifier in self.tabs:
-                del self.tabs[state_identifier]
+                _destroy_page(self.tabs[state_identifier])
+            del self.tabs[state_identifier]
 
     def find_page_of_state_m(self, state_m):
         """Return the identifier and page of a given state model
