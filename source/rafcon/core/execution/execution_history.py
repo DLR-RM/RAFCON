@@ -301,21 +301,24 @@ class HistoryItem(object):
         from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
         if isinstance(self.state_reference, LibraryState):
             # in case of a Library State, all the data of the library itself should be used
-            target_state = self.state_reference.state_copy
             record['is_library'] = True
-            record['library_state_name'] = self.state_reference.name
+            # TODO: rename key to library_root_state_name? However, this will break many analysis scripts => next minor
+            record['library_state_name'] = self.state_reference.state_copy.name
             record['library_name'] = self.state_reference.library_name
             record['library_path'] = self.state_reference.library_path
+            target_state = self.state_reference.state_copy
         else:
-            target_state = self.state_reference
             record['is_library'] = False
             record['library_state_name'] = None
             record['library_name'] = None
             record['library_path'] = None
+            target_state = self.state_reference
 
         # there are 3 names of interest:
-        # library_name (= library key), library_state_name (name of the user), state_name (name of the developer)
-        record['state_name'] = target_state.name
+        # self.state_reference.library_name (<- name of the library on the filesystem)
+        # self.state_reference.name (<- name of the user when using a library and changing the name)
+        # self.state_reference.state_copy.name (<- the name of the library root state)
+        record['state_name'] = self.state_reference.name
         record['timestamp'] = self.timestamp
         record['run_id'] = self.run_id  # library state and state copy have the same run_id
         record['history_item_id'] = self.history_item_id
