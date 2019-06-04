@@ -266,7 +266,7 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
 
         super(RAFCONCheckBoxTableDialog, self).__init__(markup_text, button_texts,
                                                         callback=callback, callback_args=callback_args,
-                                                        message_type=message_type, parent=parent,
+                                                        message_type=message_type, transient_for=parent,
                                                         width=width, standalone=standalone, title=title, height=height)
         if table_header is None:
             table_header = ["CheckBox", "Description"]
