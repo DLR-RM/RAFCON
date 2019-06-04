@@ -55,9 +55,9 @@ def open_folder(query, default_path=None):
         last_path = expanduser('~')
 
     dialog = Gtk.FileChooserDialog(title=query, parent=None,
-                                   action=Gtk.FileChooserAction.SELECT_FOLDER,
-                                   buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                            Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+                                   action=Gtk.FileChooserAction.SELECT_FOLDER)
+    dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                       Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
     # Allows confirming with Enter and double-click
     dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
@@ -121,9 +121,10 @@ def create_folder(query, default_name=None, default_path=None):
         last_path = expanduser('~')
 
     dialog = Gtk.FileChooserDialog(title=query, parent=None,
-                                   action=Gtk.FileChooserAction.CREATE_FOLDER,
-                                   buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                            Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
+                                   action=Gtk.FileChooserAction.CREATE_FOLDER)
+    dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                       Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+    # dialog.add_buttons(Gtk.ButtonsType.OK_CANCEL)
     # Allows confirming with Enter and double-click
     dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
@@ -188,9 +189,9 @@ def save_folder(query, default_name=None):
         last_path = expanduser('~')
 
     dialog = Gtk.FileChooserDialog(title=query, parent=None,
-                                   action=Gtk.FileChooserAction.SAVE,
-                                   buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                            Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+                                   action=Gtk.FileChooserAction.SAVE)
+    dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                       Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
     # Allows confirming with Enter and double-click
     dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
