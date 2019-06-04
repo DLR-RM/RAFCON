@@ -48,7 +48,8 @@ class SplashScreen(Gtk.Window):
         # add label to display text, the text can be changed by the text() method.
         # Align it in the middle of the gtk window
         self.label = Gtk.Label(label="")
-        self.label.set_alignment(0.5, 0.5)
+        self.label.set_xalign(0.5)
+        self.label.set_yalign(0.5)
         main_vbox.pack_start(self.label, False, True, 10)
         main_vbox.set_spacing(0)
 
