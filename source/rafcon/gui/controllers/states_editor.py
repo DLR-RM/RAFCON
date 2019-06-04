@@ -24,6 +24,8 @@
 
 from gi.repository import Gtk
 
+from itertools import chain
+
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.controllers.state_editor.state_editor import StateEditorController
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -181,6 +183,23 @@ class StatesEditorController(ExtendedController):
     def get_state_identifier(self, state_m):
         return id(state_m)
 
+    def get_state_identifier_for_page(self, page):
+        """Returns the state identifier for a given page"""
+        for identifier, page_info in list(self.tabs.items()):
+            if page_info["page"] is page:  # reference comparison on purpose
+                return identifier
+
+    def get_page_of_state_m(self, state_m):
+        """Return the identifier and page of a given state model
+
+        :param state_m: The state model to be searched
+        :return: page containing the state and the state_identifier
+        """
+        for state_identifier, page_info in list(self.tabs.items()):
+            if page_info['state_m'] is state_m:
+                return page_info['page'], state_identifier
+        return None, None
+
     def get_state_tab_name(self, state_m):
         state_machine_id = state_m.state.get_state_machine().state_machine_id
         state_name = state_m.state.name
@@ -229,19 +248,6 @@ class StatesEditorController(ExtendedController):
             if len(selection.states) > 0:
                 self.activate_state_tab(selection.get_selected_state())
 
-    def clean_up_tabs(self):
-        """ Method remove state-tabs for those no state machine exists anymore.
-        """
-        tabs_to_close = []
-        for state_identifier, tab_dict in list(self.tabs.items()):
-            if tab_dict['sm_id'] not in self.model.state_machine_manager.state_machines:
-                tabs_to_close.append(state_identifier)
-        for state_identifier, tab_dict in list(self.closed_tabs.items()):
-            if tab_dict['sm_id'] not in self.model.state_machine_manager.state_machines:
-                tabs_to_close.append(state_identifier)
-        for state_identifier in tabs_to_close:
-            self.close_page(state_identifier, delete=True)
-
     @ExtendedController.observe("state_machines", before=True)
     def state_machines_set_notification(self, model, prop_name, info):
         """Observe all open state machines and their root states
@@ -254,34 +260,41 @@ class StatesEditorController(ExtendedController):
     def state_machines_del_notification(self, model, prop_name, info):
         """Relive models of closed state machine
         """
+        def clean_up_tabs():
+            """ Method remove state-tabs for those no state machine exists anymore.
+            """
+            tabs_to_close = []
+            for state_identifier, tab_dict in chain(self.tabs.items(), self.closed_tabs.items()):
+                if tab_dict['sm_id'] not in self.model.state_machine_manager.state_machines:
+                    tabs_to_close.append(state_identifier)
+            for state_identifier in tabs_to_close:
+                self.close_page(state_identifier, delete=True)
+
         if info['method_name'] == '__delitem__':
             state_machine_m = info["result"]
             try:
                 self.relieve_model(state_machine_m)
             except KeyError:
                 pass
-            self.clean_up_tabs()
+            clean_up_tabs()
 
     @ExtendedController.observe("ongoing_complex_actions", after=True)
     def state_action_signal(self, model, prop_name, info):
         # this function is triggered e.g. in case of a state_type change
         if model is not self.current_state_machine_m:
-            logger.error("States editor is not only observing the current selected state machine.")
+            logger.error("States editor is not only observing the currenty selected state machine.")
 
         # only once at the end of an complex action the ongoing complex actions dictionary is empty
         if not model.ongoing_complex_actions:
-            self.adapt_complex_action()
+            # destroy pages of no more existing states
+            for state_identifier, tab_dict in list(chain(self.tabs.items(), self.closed_tabs.items())):
+                if tab_dict['state_m'].state is None:
+                    self.close_page(state_identifier)
 
-    def adapt_complex_action(self):
-        # destroy pages of no more existing states
-        for state_identifier, tab_dict in self.tabs.items():
-            if tab_dict['state_m'].state is None:
-                self.close_page(state_identifier)
-
-        from rafcon.gui.singleton import state_machine_manager_model
-        selection = state_machine_manager_model.get_selected_state_machine_model().selection
-        if len(selection.states) == 1:
-            self.activate_state_tab(selection.get_selected_state())
+            from rafcon.gui.singleton import state_machine_manager_model
+            selection = state_machine_manager_model.get_selected_state_machine_model().selection
+            if len(selection.states) == 1:
+                self.activate_state_tab(selection.get_selected_state())
 
     def add_state_editor(self, state_m):
         """Triggered whenever a state is selected.
@@ -339,7 +352,7 @@ class StatesEditorController(ExtendedController):
         :return:
         """
         tabs_to_delete = []
-        for state_identifier, tab_dict in list(self.tabs.items()):
+        for state_identifier, tab_dict in chain(self.tabs.items(), self.closed_tabs.items()):
             tabs_to_delete.append(state_identifier)
         for state_identifier in tabs_to_delete:
             self.close_page(state_identifier, delete=True)
@@ -419,37 +432,6 @@ class StatesEditorController(ExtendedController):
                 _destroy_page(self.tabs[state_identifier])
             del self.tabs[state_identifier]
 
-    def find_page_of_state_m(self, state_m):
-        """Return the identifier and page of a given state model
-
-        :param state_m: The state model to be searched
-        :return: page containing the state and the state_identifier
-        """
-        for state_identifier, page_info in list(self.tabs.items()):
-            if page_info['state_m'] is state_m:
-                return page_info['page'], state_identifier
-        return None, None
-
-    def on_tab_close_clicked(self, event, state_m):
-        """Triggered when the states-editor close button is clicked
-
-        Closes the tab.
-
-        :param state_m: The desired state model (the selected state)
-        """
-        [page, state_identifier] = self.find_page_of_state_m(state_m)
-        if page:
-            self.close_page(state_identifier, delete=False)
-
-    def on_toggle_sticky_clicked(self, event, state_m):
-        """Callback for the "toggle-sticky-check-button" emitted by custom TabLabel widget.
-        """
-        [page, state_identifier] = self.find_page_of_state_m(state_m)
-        if not page:
-            return
-        self.tabs[state_identifier]['is_sticky'] = not self.tabs[state_identifier]['is_sticky']
-        page.sticky_button.set_active(self.tabs[state_identifier]['is_sticky'])
-
     def close_all_pages(self):
         """Closes all tabs of the states editor"""
         states_to_be_closed = []
@@ -468,11 +450,31 @@ class StatesEditorController(ExtendedController):
         for state_identifier in states_to_be_closed:
             self.close_page(state_identifier, delete=False)
 
+    def on_tab_close_clicked(self, event, state_m):
+        """Triggered when the states-editor close button is clicked
+
+        Closes the tab.
+
+        :param state_m: The desired state model (the selected state)
+        """
+        [page, state_identifier] = self.get_page_of_state_m(state_m)
+        if page:
+            self.close_page(state_identifier, delete=False)
+
+    def on_toggle_sticky_clicked(self, event, state_m):
+        """Callback for the "toggle-sticky-check-button" emitted by custom TabLabel widget.
+        """
+        [page, state_identifier] = self.get_page_of_state_m(state_m)
+        if not page:
+            return
+        self.tabs[state_identifier]['is_sticky'] = not self.tabs[state_identifier]['is_sticky']
+        page.sticky_button.set_active(self.tabs[state_identifier]['is_sticky'])
+
     def on_switch_page(self, notebook, page_pointer, page_num, user_param1=None):
         """Update state machine and state selection when the active tab was changed
 
         When the state editor tab switches (e.g. when a tab is closed), this callback causes the state machine tab
-        corresponding to the activated state editor tab to be opened and the correspondinf state to be selected.
+        corresponding to the activated state editor tab to be opened and the corresponding state to be selected.
 
         This is disabled for now, as the might be irritating for the user
         """
@@ -498,6 +500,36 @@ class StatesEditorController(ExtendedController):
 
         :param state_m: The desired state model (the selected state)
         """
+
+        def keep_only_sticked_and_selected_tabs():
+            """Close all tabs, except the currently active one and all sticked ones"""
+            # Only if the user didn't deactivate this behaviour
+            if not global_gui_config.get_config_value('KEEP_ONLY_STICKY_STATES_OPEN', True):
+                return
+
+            page_id = self.view.notebook.get_current_page()
+            # No tabs are open
+            if page_id == -1:
+                return
+
+            page = self.view.notebook.get_nth_page(page_id)
+            current_state_identifier = self.get_state_identifier_for_page(page)
+
+            states_to_be_closed = []
+            # Iterate over all tabs
+            for state_identifier, tab_info in list(self.tabs.items()):
+                # If the tab is currently open, keep it open
+                if current_state_identifier == state_identifier:
+                    continue
+                # If the tab is sticky, keep it open
+                if tab_info['is_sticky']:
+                    continue
+                # Otherwise close it
+                states_to_be_closed.append(state_identifier)
+
+            for state_identifier in states_to_be_closed:
+                self.close_page(state_identifier, delete=False)
+
         # The current shown state differs from the desired one
         current_state_m = self.get_current_state_m()
         if current_state_m is not state_m:
@@ -514,36 +546,7 @@ class StatesEditorController(ExtendedController):
                 page_id = self.view.notebook.page_num(page)
                 self.view.notebook.set_current_page(page_id)
 
-        self.keep_only_sticked_and_selected_tabs()
-
-    def keep_only_sticked_and_selected_tabs(self):
-        """Close all tabs, except the currently active one and all sticked ones"""
-        # Only if the user didn't deactivate this behaviour
-        if not global_gui_config.get_config_value('KEEP_ONLY_STICKY_STATES_OPEN', True):
-            return
-
-        page_id = self.view.notebook.get_current_page()
-        # No tabs are open
-        if page_id == -1:
-            return
-
-        page = self.view.notebook.get_nth_page(page_id)
-        current_state_identifier = self.get_state_identifier_for_page(page)
-
-        states_to_be_closed = []
-        # Iterate over all tabs
-        for state_identifier, tab_info in list(self.tabs.items()):
-            # If the tab is currently open, keep it open
-            if current_state_identifier == state_identifier:
-                continue
-            # If the tab is sticky, keep it open
-            if tab_info['is_sticky']:
-                continue
-            # Otherwise close it
-            states_to_be_closed.append(state_identifier)
-
-        for state_identifier in states_to_be_closed:
-            self.close_page(state_identifier, delete=False)
+        keep_only_sticked_and_selected_tabs()
 
     @ExtendedController.observe("sm_selection_changed_signal", signal=True)
     def selection_notification(self, state_machine_m, property, info):
@@ -580,13 +583,6 @@ class StatesEditorController(ExtendedController):
         page = tab_info['page']
         set_tab_label_texts(page.title_label, state_m, tab_info['source_code_view_is_dirty'])
 
-    def get_state_identifier_for_page(self, page):
-        """Return the state identifier for a given page
-        """
-        for identifier, page_info in list(self.tabs.items()):
-            if page_info["page"] is page:  # reference comparison on purpose
-                return identifier
-
     def rename_selected_state(self, key_value, modifier_mask):
         """Callback method for shortcut action rename
 
@@ -600,6 +596,6 @@ class StatesEditorController(ExtendedController):
         if len(selection.states) == 1 and len(selection) == 1:
             selected_state = selection.get_selected_state()
             self.activate_state_tab(selected_state)
-            _, state_identifier = self.find_page_of_state_m(selected_state)
+            _, state_identifier = self.get_page_of_state_m(selected_state)
             state_controller = self.tabs[state_identifier]['controller']
             state_controller.rename()
