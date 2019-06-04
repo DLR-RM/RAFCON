@@ -209,7 +209,7 @@ class StatesEditorController(ExtendedController):
     def root_state_changed(self, model, property, info):
         old_root_state_m = info['old']
 
-        # TODO check if some models are the same in the new model - but only if widgets update if parent has changed
+        # TODO check if some models are the same in the new root state model
         def close_all_tabs_of_related_state_models_recursively(parent_state_m):
             if isinstance(parent_state_m, ContainerStateModel):
                 if parent_state_m.states:  # maybe empty if the states editor is under destruction
@@ -264,6 +264,7 @@ class StatesEditorController(ExtendedController):
 
     @ExtendedController.observe("ongoing_complex_actions", after=True)
     def state_action_signal(self, model, prop_name, info):
+        # this function is triggered e.g. in case of a state_type change
         if model is not self.current_state_machine_m:
             logger.error("States editor is not only observing the current selected state machine.")
 
@@ -273,9 +274,9 @@ class StatesEditorController(ExtendedController):
 
     def adapt_complex_action(self):
         # destroy pages of no more existing states
-        for tab_dict in self.tabs.values():
+        for state_identifier, tab_dict in self.tabs.items():
             if tab_dict['state_m'].state is None:
-                self.destroy_page(tab_dict)
+                self.close_page(state_identifier)
 
         from rafcon.gui.singleton import state_machine_manager_model
         selection = state_machine_manager_model.get_selected_state_machine_model().selection
@@ -333,6 +334,10 @@ class StatesEditorController(ExtendedController):
         return page_id
 
     def reload_style(self):
+        """ Closes all tabs and reopens only the current tab in the new style.
+
+        :return:
+        """
         tabs_to_delete = []
         for state_identifier, tab_dict in list(self.tabs.items()):
             tabs_to_delete.append(state_identifier)
@@ -349,7 +354,7 @@ class StatesEditorController(ExtendedController):
         :param rafcon.gui.models.state.StateModel state_m: The state model related to the text buffer
         :return:
         """
-
+        # TODO: why is this function needed? Either the text was changed or not! Why checking for modifications?
         state_identifier = self.get_state_identifier(state_m)
         if state_identifier in self.tabs:
             tab_list = self.tabs
@@ -538,11 +543,10 @@ class StatesEditorController(ExtendedController):
             self.close_page(state_identifier, delete=False)
 
     @ExtendedController.observe("sm_selection_changed_signal", signal=True)
-    def selection_notification(self, model, property, info):
+    def selection_notification(self, state_machine_m, property, info):
         """If a single state is selected, open the corresponding tab"""
-        if model is not self.current_state_machine_m or len(self.current_state_machine_m.ongoing_complex_actions) > 0:
+        if state_machine_m is not self.current_state_machine_m or len(self.current_state_machine_m.ongoing_complex_actions) > 0:
             return
-        state_machine_m = model
         assert isinstance(state_machine_m.selection, Selection)
         if len(state_machine_m.selection.states) == 1 and len(state_machine_m.selection) == 1:
             self.activate_state_tab(state_machine_m.selection.get_selected_state())
