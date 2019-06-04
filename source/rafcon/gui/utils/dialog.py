@@ -117,9 +117,10 @@ class RAFCONButtonDialog(RAFCONMessageDialog):
         super(RAFCONButtonDialog, self).__init__(markup_text, callback, callback_args, message_type,
                                                  flags, parent, width, standalone, title, height)
 
+        self.buttons = []
         if button_texts:
             for index, button in enumerate(button_texts, 1):
-                self.add_button(button, index)
+                self.buttons.append(self.add_button(button, index))
         else:
             logger.debug("No buttons where specified for the dialog from type or inheriting from RAFCONButtonDialog")
 
