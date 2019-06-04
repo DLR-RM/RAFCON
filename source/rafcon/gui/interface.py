@@ -54,11 +54,10 @@ def open_folder(query, default_path=None):
     else:
         last_path = expanduser('~')
 
-    dialog = Gtk.FileChooserDialog(query,
-                                   None,
-                                   Gtk.FileChooserAction.SELECT_FOLDER,
-                                   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                    Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+    dialog = Gtk.FileChooserDialog(title=query, parent=None,
+                                   action=Gtk.FileChooserAction.SELECT_FOLDER,
+                                   buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                            Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
     # Allows confirming with Enter and double-click
     dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
@@ -121,11 +120,10 @@ def create_folder(query, default_name=None, default_path=None):
     else:
         last_path = expanduser('~')
 
-    dialog = Gtk.FileChooserDialog(query,
-                                   None,
-                                   Gtk.FileChooserAction.CREATE_FOLDER,
-                                   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                    Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
+    dialog = Gtk.FileChooserDialog(title=query, parent=None,
+                                   action=Gtk.FileChooserAction.CREATE_FOLDER,
+                                   buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                            Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
     # Allows confirming with Enter and double-click
     dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
@@ -189,11 +187,10 @@ def save_folder(query, default_name=None):
     else:
         last_path = expanduser('~')
 
-    dialog = Gtk.FileChooserDialog(query,
-                                   None,
-                                   Gtk.FileChooserAction.SAVE,
-                                   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                    Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+    dialog = Gtk.FileChooserDialog(title=query, parent=None,
+                                   action=Gtk.FileChooserAction.SAVE,
+                                   buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                            Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
     # Allows confirming with Enter and double-click
     dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
