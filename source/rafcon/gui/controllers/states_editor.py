@@ -471,7 +471,12 @@ class StatesEditorController(ExtendedController):
             self.close_page(state_identifier, delete=False)
 
     def on_switch_page(self, notebook, page_pointer, page_num, user_param1=None):
-        """Update state selection when the active tab was changed
+        """Update state machine and state selection when the active tab was changed
+
+        When the state editor tab switches (e.g. when a tab is closed), this callback causes the state machine tab
+        corresponding to the activated state editor tab to be opened and the correspondinf state to be selected.
+
+        This is disabled for now, as the might be irritating for the user
         """
         pass
         # page = notebook.get_nth_page(page_num)
