@@ -165,10 +165,9 @@ class MoveItemTool(gaphas.tool.ItemTool):
 
         if not self._move_name_v:
             self._old_selection = self.view.selected_items
-            if self._item not in self.view.selected_items:
-                # When items are to be moved, a button-press should not cause any deselection.
-                # However, the selection is stored, in case no move operation is performed.
-                self.view.handle_new_selection(self._item)
+            # When items are to be moved, a button-press should not cause any deselection.
+            # However, the selection is stored, in case no move operation is performed.
+            self.view.handle_new_selection(self._item)
 
         if not self.view.is_focus():
             self.view.grab_focus()
@@ -235,13 +234,15 @@ class MoveItemTool(gaphas.tool.ItemTool):
                 self.view.graphical_editor.emit('meta_data_changed', state_v.model, "positions", True)
                 break
 
+        # if there are affected_models: this means that some of the states / state_elements were moved
         if not affected_models and self._old_selection is not None:
             # The selection is handled differently depending on whether states were moved or not
             # If no move operation was performed, we reset the selection to that is was before the button-press event
             # and let the state machine selection handle the selection
-            self.view.unselect_all()
-            self.view.select_item(self._old_selection)
-            self.view.handle_new_selection(self._item)
+            # self.view.unselect_all()
+            # self.view.select_item(self._old_selection)
+            # self.view.handle_new_selection(self._item)
+            pass
 
         self._move_name_v = False
         self._old_selection = None
