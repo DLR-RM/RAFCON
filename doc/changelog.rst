@@ -18,7 +18,7 @@ Next Release
 
 
 - Bug Fixes:
-
+  - :issue_ghe:`721` Correct execution history logging
   - :issue_ghe:`726` State with self-transition cannot be substituted
   - fixes bug of "locked" global variable during multithreading access
 
