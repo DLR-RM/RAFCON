@@ -390,6 +390,8 @@ def change_state_type(state_m, target_class):
 
     # Destroy all states and state elements (core and models) that are no longer required
     old_state.destroy(recursive=False)
+    # Temporarily re-register to prevent KeyError: prepare_destruction calls unregister_observer
+    old_state_m.register_observer(old_state_m)
     old_state_m.prepare_destruction(recursive=False)
     for state_element_m in obsolete_state_element_models:
         if isinstance(state_element_m, AbstractStateModel):
