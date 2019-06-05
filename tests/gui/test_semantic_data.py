@@ -37,7 +37,7 @@ def change_semantic_data_values():
     state_machine_model = gui_singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
     states_editor_controller = gui_singleton.main_window_controller.get_controller("states_editor_ctrl")
 
-    page_info, state_identifier = states_editor_controller.find_page_of_state_m(state_machine_model.root_state)
+    page_info, state_identifier = states_editor_controller.get_page_of_state_m(state_machine_model.root_state)
     # print page_info, state_identifier
 
     state_editor_controller = states_editor_controller.tabs[state_identifier]["controller"]

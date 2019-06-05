@@ -24,6 +24,7 @@ Next Release
   - :issue_gh:`20` program icon in task bar missing since version 0.13.x
   - :issue_ghe:`721` Correct execution history logging
   - :issue_ghe:`726` State with self-transition cannot be substituted
+  - :issue_ghe:`727` Sticky-Flag in States-Editor can cause crash if state type change is performed
   - fixes bug of "locked" global variable during multithreading access
   - use a safe loader for GUI config file
 
