@@ -49,6 +49,20 @@ pipeline {
             }
         }
 
+        stage('Test Python 3.6') {
+            environment {
+                PATH = "/opt/python/osl42-x86_64/python3/stable/1.0.1/bin:$PATH"
+                LD_LIBRARY_PATH = "/opt/python/osl42-x86_64/python3/stable/1.0.1/lib:$LD_LIBRARY_PATH"
+            }
+            steps {
+                timestamps {
+                    timeout(time: 10, unit: 'MINUTES') {
+                        sh "xvfb-run -as '-screen 0 1920x1200x24' ~/.local/bin/tox -e py36 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py36_results.xml -o cache_dir=$WORKSPACE |& tee pytestout.txt"
+                    }
+                }
+            }
+        }
+
         stage('Build Documentation') {
             steps {
                 timestamps {
