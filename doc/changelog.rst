@@ -31,6 +31,7 @@ Next Release
 - Changes:
 
   - drop support for BuildBot
+  - Jenkinsfile: tests are now also run under Python 3.6
 
 
 0.13.8
