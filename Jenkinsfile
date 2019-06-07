@@ -4,12 +4,13 @@ pipeline {
     }
 
     parameters {
-        string(name: 'tox_args', defaultValue: '-v', description: 'Arguments passed to next besides the environment name', )
+        string(name: 'tox_args', defaultValue: '-v', description: 'Arguments passed to tox besides the environment name', )
         string(name: 'pytest_args', defaultValue: '-vx -m "(core or gui or share_elements) and not unstable and not user_input"', description: 'Arguments passed to pytest')
     }
 
     environment {
         TOX_LIMITED_SHEBANG = 1
+        # Allows 1st build of a project to succeed, workaround for https://issues.jenkins-ci.org/browse/JENKINS-41929
         tox_args = "${params.tox_args}"
         pytest_args = "${params.pytest_args}"
     }
@@ -23,7 +24,7 @@ pipeline {
         stage('Prepare tox') {
             steps {
                 sh 'printenv'
-                sh 'pip3 install --user --ignore-installed tox==3.8'
+                sh 'pip3 install -q --user --ignore-installed tox==3.8'
             }
         }
 
