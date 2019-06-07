@@ -52,6 +52,8 @@ class Script(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!Script'
 
+    _script = None
+
     def __init__(self, path=None, filename=None, parent=None):
 
         Observable.__init__(self)
@@ -61,7 +63,7 @@ class Script(Observable, yaml.YAMLObject):
         self._script_id = generate_script_id()
         self._parent = None
 
-        self._script = DEFAULT_SCRIPT
+        self.script = DEFAULT_SCRIPT
         self.filename = filename
         if path:
             self.load_script_from_path_and_take_over_path(path, with_build_module=True)
@@ -76,6 +78,7 @@ class Script(Observable, yaml.YAMLObject):
         if not isinstance(value, string_types):
             raise ValueError("The script text needs to be string")
         self._script = value
+        self._build_module()
 
     def execute(self, state, inputs=None, outputs=None, backward_execution=False):
         """Execute the user 'execute' function specified in the script
@@ -87,6 +90,8 @@ class Script(Observable, yaml.YAMLObject):
         :return: Return value of the execute script
         :rtype: str | int
         """
+        if not self.compiled_module:
+            self._build_module()
         if not outputs:
             outputs = {}
         if not inputs:
@@ -115,27 +120,24 @@ class Script(Observable, yaml.YAMLObject):
                           "".format(os.path.join(self.path, self.filename)))
         self.script = script_text
 
-    def build_module(self):
+    def _build_module(self):
         """Builds a temporary module from the script file
 
         :raises exceptions.IOError: if the compilation of the script module failed
         """
         try:
             imp.acquire_lock()
-            module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
-
-            # load module
-            tmp_module = imp.new_module(module_name)
 
             code = compile(self.script, '%s (%s)' % (self.filename, self._script_id), 'exec')
-
-            try:
-                exec(code, tmp_module.__dict__)
-            except RuntimeError as e:
-                raise IOError("The compilation of the script module failed - error message: %s" % str(e))
-
+            # load module
+            module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
+            tmp_module = imp.new_module(module_name)
+            exec(code, tmp_module.__dict__)
             # return the module
             self.compiled_module = tmp_module
+        except Exception as e:
+            self.compiled_module = None
+            raise type(e)("Compilation failed: {}".format(str(e)))
         finally:
             imp.release_lock()
 

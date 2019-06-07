@@ -45,11 +45,12 @@ class ExecutionState(State):
 
     yaml_tag = u'!ExecutionState'
 
+    _script = None
+
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, income=None,
                  outcomes=None, path=None, filename=None):
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes)
-        self._script = None
         self.script = Script(path, filename, parent=self)
         self.logger = log.get_logger(self.name)
         # here all persistent variables that should be available for the next state run should be stored
@@ -104,8 +105,6 @@ class ExecutionState(State):
         """Calls the custom execute function of the script.py of the state
 
         """
-        self._script.build_module()
-
         outcome_item = self._script.execute(self, execute_inputs, execute_outputs, backward_execution)
 
         # in the case of backward execution the outcome is not relevant
