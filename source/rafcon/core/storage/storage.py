@@ -433,7 +433,10 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     # read script file if an execution state
     if isinstance(state, ExecutionState):
         script_text = read_file(state_path, state.script.filename)
-        state.script_text = script_text
+        try:
+            state.script_text = script_text
+        except:
+            logger.warning("The script of the state '{}' (id {}) contains an error".format(state.name, state.state_id))
 
     # load semantic data
     try:
