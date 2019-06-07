@@ -78,7 +78,7 @@ class Script(Observable, yaml.YAMLObject):
         if not isinstance(value, string_types):
             raise ValueError("The script text needs to be string")
         self._script = value
-        self._build_module()
+        self._compile_module()
 
     def execute(self, state, inputs=None, outputs=None, backward_execution=False):
         """Execute the user 'execute' function specified in the script
@@ -91,7 +91,7 @@ class Script(Observable, yaml.YAMLObject):
         :rtype: str | int
         """
         if not self.compiled_module:
-            self._build_module()
+            self._compile_module()
         if not outputs:
             outputs = {}
         if not inputs:
@@ -120,7 +120,7 @@ class Script(Observable, yaml.YAMLObject):
                           "".format(os.path.join(self.path, self.filename)))
         self.script = script_text
 
-    def _build_module(self):
+    def _compile_module(self):
         """Builds a temporary module from the script file
 
         :raises exceptions.IOError: if the compilation of the script module failed
@@ -137,7 +137,7 @@ class Script(Observable, yaml.YAMLObject):
             self.compiled_module = tmp_module
         except Exception as e:
             self.compiled_module = None
-            raise type(e)("Compilation failed: {}".format(str(e)))
+            raise
         finally:
             imp.release_lock()
 
