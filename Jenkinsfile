@@ -10,7 +10,7 @@ pipeline {
 
     environment {
         TOX_LIMITED_SHEBANG = 1
-        # Allows 1st build of a project to succeed, workaround for https://issues.jenkins-ci.org/browse/JENKINS-41929
+        // Allows 1st build of a project to succeed, workaround for https://issues.jenkins-ci.org/browse/JENKINS-41929
         tox_args = "${params.tox_args}"
         pytest_args = "${params.pytest_args}"
     }
