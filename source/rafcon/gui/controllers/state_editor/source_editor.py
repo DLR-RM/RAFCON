@@ -100,7 +100,10 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
 
     @source_text.setter
     def source_text(self, text):
-        self.model.state.script_text = text
+        try:
+            self.model.state.script_text = text
+        except Exception as e:
+            logger.error("The script was saved, but with an error: {}: {}".format(e.__class__.__name__, e))
 
     # ==================================== External Editor functions start ====================================
 
