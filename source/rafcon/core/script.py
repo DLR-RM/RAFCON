@@ -66,7 +66,7 @@ class Script(Observable, yaml.YAMLObject):
         self.script = DEFAULT_SCRIPT
         self.filename = filename
         if path:
-            self.load_script_from_path_and_take_over_path(path, with_build_module=True)
+            self.path = path
         self.parent = parent
 
     @property
@@ -193,26 +193,7 @@ class Script(Observable, yaml.YAMLObject):
         if not isinstance(value, string_types):
             raise TypeError("The path of a script has to be a string or None to use the default value.")
         self._path = value
-
-    def load_script_from_path_and_take_over_path(self, path, with_build_module=True):
-        if not isinstance(path, string_types):
-            raise TypeError("The path of a script has to be a string or None to use the default value.")
-
-        if not os.path.exists(path):
-            raise RuntimeError("Script path '{}' does not exist".format(path))
-        if not os.path.exists(os.path.join(path, self._filename)):
-            raise RuntimeError("Script '{}' does not exist".format(os.path.join(path, self._filename)))
-
-        # load and build the module per default else the default scripts will be loaded in self.script
-        old_path = self._path
-        self.path = path
-        try:
-            self._load_script()
-            if with_build_module:
-                self.build_module()
-        except:
-            self._path = old_path
-            raise
+        self._load_script()
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc3
