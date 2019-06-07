@@ -16,7 +16,7 @@ def test_error_propagation(caplog):
     try:
         assert sm.root_state.output_data["error_check"] == "successfull"
     finally:
-        testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=2)
+        testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=1, expected_errors=2)
 
 
 if __name__ == '__main__':
