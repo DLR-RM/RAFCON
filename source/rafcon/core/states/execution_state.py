@@ -70,7 +70,10 @@ class ExecutionState(State):
         income = copy(self._income)
         outcomes = {elem_id: copy(elem) for elem_id, elem in list(self._outcomes.items())}
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, None)
-        state.script_text = deepcopy(self.script_text)
+        try:
+            state.script_text = deepcopy(self.script_text)
+        except:
+            pass  # Tolerate script compilation errors
         state.description = deepcopy(self.description)
         state.semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path

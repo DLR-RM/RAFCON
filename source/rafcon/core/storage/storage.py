@@ -435,8 +435,12 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         script_text = read_file(state_path, state.script.filename)
         try:
             state.script_text = script_text
-        except:
-            logger.warning("The script of the state '{}' (id {}) contains an error".format(state.name, state.state_id))
+        except ImportError as e:
+            logger.info("The script of the state '{}' (id {}) uses a module that is not available: {}".format(
+                        state.name, state.state_id, str(e)))
+        except Exception as e:
+            logger.warning("The script of the state '{}' (id {}) contains a {}: {}".format(
+                           state.name, state.state_id, e.__class__.__name__, str(e)))
 
     # load semantic data
     try:
