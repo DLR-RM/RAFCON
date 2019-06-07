@@ -52,7 +52,7 @@ class Script(Observable, yaml.YAMLObject):
 
     yaml_tag = u'!Script'
 
-    def __init__(self, path=None, filename=None, check_path=True, parent=None):
+    def __init__(self, path=None, filename=None, parent=None):
 
         Observable.__init__(self)
         self._path = None
@@ -60,7 +60,6 @@ class Script(Observable, yaml.YAMLObject):
         self._compiled_module = None
         self._script_id = generate_script_id()
         self._parent = None
-        self._check_path = check_path
 
         self._script = DEFAULT_SCRIPT
         self.filename = filename
@@ -197,22 +196,21 @@ class Script(Observable, yaml.YAMLObject):
         if not isinstance(path, string_types):
             raise TypeError("The path of a script has to be a string or None to use the default value.")
 
-        if self._check_path:
-            if not os.path.exists(path):
-                raise RuntimeError("Script path '{}' does not exist".format(path))
-            if not os.path.exists(os.path.join(path, self._filename)):
-                raise RuntimeError("Script '{}' does not exist".format(os.path.join(path, self._filename)))
+        if not os.path.exists(path):
+            raise RuntimeError("Script path '{}' does not exist".format(path))
+        if not os.path.exists(os.path.join(path, self._filename)):
+            raise RuntimeError("Script '{}' does not exist".format(os.path.join(path, self._filename)))
 
-            # load and build the module per default else the default scripts will be loaded in self.script
-            old_path = self._path
-            self.path = path
-            try:
-                self._load_script()
-                if with_build_module:
-                    self.build_module()
-            except:
-                self._path = old_path
-                raise
+        # load and build the module per default else the default scripts will be loaded in self.script
+        old_path = self._path
+        self.path = path
+        try:
+            self._load_script()
+            if with_build_module:
+                self.build_module()
+        except:
+            self._path = old_path
+            raise
 
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc3

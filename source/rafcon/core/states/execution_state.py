@@ -45,13 +45,12 @@ class ExecutionState(State):
 
     yaml_tag = u'!ExecutionState'
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
-                 income=None, outcomes=None,
-                 path=None, filename=None, check_path=True):
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, income=None,
+                 outcomes=None, path=None, filename=None):
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes)
         self._script = None
-        self.script = Script(path, filename, check_path=check_path, parent=self)
+        self.script = Script(path, filename, parent=self)
         self.logger = log.get_logger(self.name)
         # here all persistent variables that should be available for the next state run should be stored
         self.persistent_variables = {}
@@ -92,7 +91,7 @@ class ExecutionState(State):
         output_data_ports = dictionary['output_data_ports']
         income = dictionary.get('income', None)  # older state machine versions don't have this set
         outcomes = dictionary['outcomes']
-        state = cls(name, state_id, input_data_ports, output_data_ports, income, outcomes, check_path=False)
+        state = cls(name, state_id, input_data_ports, output_data_ports, income, outcomes)
         try:
             state.description = dictionary['description']
         except (TypeError, KeyError):  # (Very) old state machines do not have a description field

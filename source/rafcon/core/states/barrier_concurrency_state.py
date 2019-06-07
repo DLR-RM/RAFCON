@@ -336,14 +336,12 @@ class DeciderState(ExecutionState):
 
     yaml_tag = u'!DeciderState'
 
-    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
-                 income=None, outcomes=None,
-                 path=None, filename=None, check_path=True):
+    def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, income=None,
+                 outcomes=None, path=None, filename=None):
 
         if state_id is None:
             state_id = UNIQUE_DECIDER_STATE_ID
-        ExecutionState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, path,
-                                filename, check_path)
+        ExecutionState.__init__(name, state_id, input_data_ports, output_data_ports, income, outcomes, path, filename)
 
         self.child_errors = {}
         self.final_outcomes_dict = {}
