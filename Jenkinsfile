@@ -68,13 +68,15 @@ pipeline {
         failure {
             rocketSend channel: 'rafcon-jenkins', avatar: 'https://rmc-jenkins.robotic.dlr.de/jenkins/static/ff676c77/images/headshot.png', message: ":sob: <$BUILD_URL|Build $BUILD_NUMBER> on branch '$BRANCH_NAME' *failed*! Commit: <https://rmc-github.robotic.dlr.de/common/rafcon/commit/$GIT_COMMIT|$GIT_COMMIT> :sob:", rawMessage: true
         }
+        unstable {
+            junit '**/pytest_*_results.xml'
+            rocketSend channel: 'rafcon-jenkins', avatar: 'https://rmc-jenkins.robotic.dlr.de/jenkins/static/ff676c77/images/headshot.png', message: ":sob: <$BUILD_URL|Build $BUILD_NUMBER> on branch '$BRANCH_NAME' *failed* (unstable)! Commit: <https://rmc-github.robotic.dlr.de/common/rafcon/commit/$GIT_COMMIT|$GIT_COMMIT> :sob:", rawMessage: true
+        }
         success {
+            junit '**/pytest_*_results.xml'
             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'build_doc', reportFiles: 'index.html', reportName: 'Documentation', reportTitles: 'RAFCON documentation'])
             rocketSend channel: 'rafcon-jenkins', avatar: 'https://rmc-jenkins.robotic.dlr.de/jenkins/static/ff676c77/images/headshot.png', message: ":tada: <$BUILD_URL|Build $BUILD_NUMBER> on branch '$BRANCH_NAME' *succeeded*! Commit: <https://rmc-github.robotic.dlr.de/common/rafcon/commit/$GIT_COMMIT|$GIT_COMMIT> :tada:", rawMessage: true
-        }
-        always {
-            junit '**/pytest_*_results.xml'
-            archiveArtifacts artifacts: '.tox/dist/*', fingerprint: true, onlyIfSuccessful: true
+            archiveArtifacts artifacts: '.tox/dist/*', fingerprint: true
         }
     }
 }
