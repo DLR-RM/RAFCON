@@ -118,8 +118,8 @@ class MainWindowView(View):
         ######################################################
         self.state_machines_editor = StateMachinesEditorView()
         self.state_machines_editor.show()
-        self['graphical_editor_vbox'].pack_start(self.state_machines_editor.get_top_widget(), True, True, 0)
-        self['graphical_editor_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 0)
+        self['central_vbox'].pack_start(self.state_machines_editor.get_top_widget(), True, True, 0)
+        self['central_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 1)
 
         ######################################################
         # States-editor
