@@ -111,7 +111,7 @@ class LibraryManager(Observable):
                 continue
             _, library_root_key = os.path.split(library_root_path)
             if library_root_key in self._libraries:
-                if os.path.realpath(self._library_root_paths[library_root_key]) == os.path.realpath(library_root_path):
+                if self._library_root_paths[library_root_key] == library_root_path:
                     logger.info("The library root key '{}' and root path '{}' exists multiple times in your environment"
                                 " and will be skipped.".format(library_root_key, library_root_path))
                 else:
@@ -354,6 +354,7 @@ class LibraryManager(Observable):
         :return: library path library name
         :rtype: str, str
         """
+        path = os.path.realpath(path)
         library_path = None
         library_name = None
         library_root_key = self._get_library_root_key_for_os_path(path)
