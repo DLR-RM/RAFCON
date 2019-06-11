@@ -27,6 +27,7 @@ Next Release
   - :issue_ghe:`727` Sticky-Flag in States-Editor can cause crash if state type change is performed
   - fixes bug of "locked" global variable during multithreading access
   - use a safe loader for GUI config file
+  - fix handling of symlinks in LibraryManager
 
 - Changes:
 

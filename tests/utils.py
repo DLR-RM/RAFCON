@@ -56,7 +56,7 @@ def get_unique_temp_path():
 
 
 def get_test_sm_path(state_machine_name):
-    return join(TEST_ASSETS_PATH, state_machine_name)
+    return realpath(join(TEST_ASSETS_PATH, state_machine_name))
 
 
 def reload_config(config=True, gui_config=True):
