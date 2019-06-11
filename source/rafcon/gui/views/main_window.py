@@ -28,6 +28,7 @@ from rafcon.gui.utils import constants
 from rafcon.gui.views.execution_history import ExecutionHistoryView
 from rafcon.gui.views.global_variable_editor import GlobalVariableEditorView
 from rafcon.gui.views.library_tree import LibraryTreeView
+from rafcon.gui.views.notification_bar import NotificationBarView
 from rafcon.gui.views.debug_console import DebugConsoleView
 from rafcon.gui.views.menu_bar import MenuBarView
 from rafcon.gui.views.modification_history import ModificationHistoryView
@@ -120,6 +121,14 @@ class MainWindowView(View):
         self.state_machines_editor.show()
         self['central_vbox'].pack_start(self.state_machines_editor.get_top_widget(), True, True, 0)
         self['central_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 1)
+
+        ######################################################
+        # Notification Bar
+        ######################################################
+        self.notification_bar = NotificationBarView()
+        self.notification_bar.show()
+        self['central_vbox'].pack_start(self.notification_bar.get_top_widget(), False, True, 0)
+        self['central_vbox'].reorder_child(self.notification_bar.get_top_widget(), 2)
 
         ######################################################
         # States-editor
