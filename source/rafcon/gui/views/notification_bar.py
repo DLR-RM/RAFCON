@@ -71,6 +71,7 @@ class NotificationBarView(View):
         if self.timer:
             self.timer.cancel()
         self.show_bar()
-        self.timer = Timer(duration, hide_me)
-        self.timer.start()
+        if duration > 0:
+            self.timer = Timer(duration, hide_me)
+            self.timer.start()
 
