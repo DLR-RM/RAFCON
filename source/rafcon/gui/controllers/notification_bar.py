@@ -20,15 +20,17 @@ class NotificationBarController(ExtendedController):
 
     def __init__(self, model, view):
         super(NotificationBarController, self).__init__(model, view)
-        log_helpers.LoggingViewHandler.add_logging_view('notification_bar', self)
+        log_helpers.LoggingViewHandler.add_logging_view(self.__class__.__name__, self)
 
     def register_view(self, view):
         super(NotificationBarController, self).register_view(view)
-        view.info_bar.connect("response", self._handle_response)
+        self.connect_signal(view.info_bar, "response", self._handle_response)
 
     def destroy(self):
-        self.view.quit_flag = True
-        log_helpers.LoggingViewHandler.remove_logging_view('notification_bar')
+        log_helpers.LoggingViewHandler.remove_logging_view(self.__class__.__name__)
+        if self.view.timer:
+            self.view.timer.cancel()
+            self.view.timer = None
         super(NotificationBarController, self).destroy()
 
     def print_message(self, message, log_level):
