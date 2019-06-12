@@ -13,6 +13,8 @@ Next Release
 
 - Features:
 
+  - new notification bar, informing about important log entries (configurable), fixes :issue_ghe:`288`
+
 
 - Improvements:
 

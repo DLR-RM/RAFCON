@@ -20,7 +20,6 @@ from rafcon.gui.helpers import label
 
 
 class NotificationBarView(View):
-    # top = 'notification_bar'
 
     timer = None
 
