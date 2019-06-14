@@ -385,7 +385,7 @@ class HoverItemTool(gaphas.tool.HoverTool):
             port_v = state_v.get_port_for_handle(hovered_handle)
             view.queue_draw_area(*port_v.get_port_area(view))
             if event.get_state()[1] & constants.MOVE_PORT_MODIFIER:
-                self.view.get_window().set_cursor(Gdk.Cursor.new_for_display(display, MOVE_CURSOR))
+                self.view.get_window().set_cursor(Gdk.Cursor.new_for_display(display, constants.MOVE_CURSOR))
             else:
                 self.view.get_window().set_cursor(Gdk.Cursor.new_for_display(display, constants.CREATION_CURSOR))
 
