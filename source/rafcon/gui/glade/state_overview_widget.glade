@@ -25,55 +25,12 @@
       </packing>
     </child>
     <child>
-      <object class="GtkViewport" id="type_viewport">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="hexpand">True</property>
-        <property name="vexpand">True</property>
-        <property name="resize_mode">queue</property>
-        <child>
-          <placeholder/>
-        </child>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="id_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">ID</property>
-        <style>
-          <class name="secondary"/>
-        </style>
-      </object>
-      <packing>
-        <property name="left_attach">3</property>
-        <property name="top_attach">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="label_id_value">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">xyz</property>
-        <property name="selectable">True</property>
-      </object>
-      <packing>
-        <property name="left_attach">4</property>
-        <property name="top_attach">3</property>
-      </packing>
-    </child>
-    <child>
       <object class="GtkCheckButton" id="is_start_state_checkbutton">
         <property name="label" translatable="yes">is start state</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="focus_on_click">False</property>
         <property name="receives_default">False</property>
-        <property name="border_width">5</property>
         <property name="draw_indicator">True</property>
       </object>
       <packing>
@@ -109,7 +66,7 @@
       <packing>
         <property name="left_attach">1</property>
         <property name="top_attach">1</property>
-        <property name="width">4</property>
+        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -121,26 +78,12 @@
         <property name="receives_default">False</property>
         <property name="hexpand">False</property>
         <property name="vexpand">False</property>
-        <property name="border_width">5</property>
         <property name="draw_indicator">True</property>
       </object>
       <packing>
         <property name="left_attach">1</property>
         <property name="top_attach">2</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkEntry" id="entry_name">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="hexpand">True</property>
-        <property name="vexpand">True</property>
-        <property name="invisible_char">•</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">0</property>
-        <property name="width">4</property>
+        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -174,10 +117,62 @@
       </packing>
     </child>
     <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
+      <object class="GtkBox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="spacing">10</property>
+        <child>
+          <object class="GtkEntry" id="entry_name">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="hexpand">True</property>
+            <property name="vexpand">True</property>
+            <property name="invisible_char">•</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="id_label">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="hexpand">False</property>
+            <property name="vexpand">False</property>
+            <property name="label" translatable="yes">ID</property>
+            <style>
+              <class name="secondary"/>
+            </style>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label_id_value">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="hexpand">False</property>
+            <property name="vexpand">False</property>
+            <property name="label" translatable="yes">xyz</property>
+            <property name="selectable">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">0</property>
+        <property name="width">2</property>
+      </packing>
     </child>
     <child>
       <placeholder/>
