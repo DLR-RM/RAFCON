@@ -22,6 +22,7 @@ Next Release
 - Bug Fixes:
 
   - :issue_gh:`20` program icon in task bar missing since version 0.13.x
+  - :issue_ghe:`665` state type dropdown menu prevents state editor widget to shrink
   - :issue_ghe:`721` Correct execution history logging
   - :issue_ghe:`726` State with self-transition cannot be substituted
   - :issue_ghe:`727` Sticky-Flag in States-Editor can cause crash if state type change is performed
