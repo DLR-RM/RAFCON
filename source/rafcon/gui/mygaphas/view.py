@@ -303,7 +303,7 @@ class ExtendedGtkView(GtkView, Observer):
                             "The item with focus (receives key events a.o.)")
 
     def do_configure_event(self, event):
-        super(ExtendedGtkView, self).do_configure_event(event)
+        GtkView.do_configure_event(self, event)
 
         # Keep position of state machine fixed within the window, also when size of left sidebar changes
         window = self.get_toplevel()
