@@ -175,6 +175,9 @@ A typical config file looks like this:
 
     RESTORE_UNDOCKED_SIDEBARS: True
 
+    NOTIFICATIONS_MINIMUM_LOG_LEVEL: 30
+    NOTIFICATIONS_DURATION: 3
+
     STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED: True
     LIBRARY_TREE_TOOLTIP_INCLUDES_ROOT_STATE_DESCRIPTION: True
 
@@ -481,6 +484,16 @@ PREFER_EXTERNAL_EDITOR
 RESTORE\_UNDOCKED\_SIDEBARS
   | Default: ``True``
   | If True, RAFCON will restore undocked windows from the last RAFCON-instance run.
+
+NOTIFICATIONS\_MINIMUM\_LOG\_LEVEL
+  | Default: ``30``
+  | Minimum log level of messages that shell show up in the notification bar. ``40`` corresponds to ``ERROR``,
+    ``30`` to ``WARNING``, ``20`` to ``INFO``, ``10`` to ``DEBUG`` and ``5`` to ``VERBOSE``. If this is set to a level
+    higher than ``40``, no notifications are shown.
+
+NOTIFICATIONS\_DURATION: 3
+  | Default: ``3``
+  | Number of seconds a notification is shown. If set to ``0``, the notification must be closed manually.
 
 STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED:
   | Default: ``True``

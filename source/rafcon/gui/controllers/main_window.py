@@ -38,6 +38,7 @@ from rafcon.gui.controllers.global_variable_manager import GlobalVariableManager
 from rafcon.gui.controllers.library_tree import LibraryTreeController
 from rafcon.gui.controllers.menu_bar import MenuBarController
 from rafcon.gui.controllers.modification_history import ModificationHistoryTreeController
+from rafcon.gui.controllers.notification_bar import NotificationBarController
 from rafcon.gui.controllers.debug_console import DebugConsoleController
 from rafcon.gui.controllers.state_icons import StateIconController
 from rafcon.gui.controllers.state_machine_tree import StateMachineTreeController
@@ -112,6 +113,12 @@ class MainWindowController(ExtendedController):
         ######################################################
         state_machine_tree_controller = StateMachineTreeController(state_machine_manager_model, view.state_machine_tree)
         self.add_controller('state_machine_tree_controller', state_machine_tree_controller)
+
+        ######################################################
+        # notification bar
+        ######################################################
+        self.notification_bar_ctrl = NotificationBarController(gui_singletons.gui_config_model, view.notification_bar)
+        self.add_controller('notification_bar_ctrl', self.notification_bar_ctrl)
 
         ######################################################
         # states editor

@@ -274,7 +274,8 @@ class PortView(object):
             'transparency': transparency,
             'incoming': self.connected_incoming,
             'outgoing': self.connected_outgoing,
-            'is_library_state_with_content_shown': is_library_state_with_content_shown
+            'is_library_state_with_content_shown': is_library_state_with_content_shown,
+            'draw_all': context.draw_all
         }
 
         upper_left_corner = (position.x.value - side_length / 2., position.y.value - side_length / 2.)
@@ -289,7 +290,7 @@ class PortView(object):
             self._port_image_cache.copy_image_to_context(c, upper_left_corner)
 
         # Parameters have changed or nothing in cache => redraw
-        else:
+        elif not context.draw_all:
             # print("draw")
             c = self._port_image_cache.get_context_for_image(current_zoom)
 
@@ -325,7 +326,8 @@ class PortView(object):
             'port_height': port_height,
             'side': label_position,
             'transparency': transparency,
-            'show_additional_value': show_additional_value
+            'show_additional_value': show_additional_value,
+            'draw_all': context.draw_all
         }
 
         # add value to parameters only when value is shown on label
@@ -339,7 +341,7 @@ class PortView(object):
                                                                            self._last_label_size[1],
                                                                            current_zoom, parameters)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
-        if from_cache and not context.draw_all:
+        if from_cache:
             # print("draw port name from cache")
             self._label_image_cache.copy_image_to_context(c, upper_left_corner)
 
@@ -363,20 +365,21 @@ class PortView(object):
             self._last_label_relative_pos = relative_pos
             self._last_label_size = label_size
 
-            # The size information is used to update the caching parameters and retrieve an image with the correct size
-            self._label_image_cache.get_cached_image(label_size[0], label_size[1], current_zoom, parameters, clear=True)
-            c = self._label_image_cache.get_context_for_image(current_zoom)
-            c.move_to(-relative_pos[0], -relative_pos[1])
+            if not context.draw_all:
+                # The size information is used to update the caching parameters and retrieve an image with the correct size
+                self._label_image_cache.get_cached_image(label_size[0], label_size[1], current_zoom, parameters, clear=True)
+                c = self._label_image_cache.get_context_for_image(current_zoom)
+                c.move_to(-relative_pos[0], -relative_pos[1])
 
-            gap_draw_helper.draw_port_label(c, self, transparency, False, label_position, show_additional_value, value)
+                gap_draw_helper.draw_port_label(c, self, transparency, False, label_position, show_additional_value, value)
 
-            # Copy image surface to current cairo context
-            upper_left_corner = (position[0] + relative_pos[0], position[1] + relative_pos[1])
-            self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
+                # Copy image surface to current cairo context
+                upper_left_corner = (position[0] + relative_pos[0], position[1] + relative_pos[1])
+                self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
 
-            # draw_all means, the bounding box of the state is calculated
-            # As we are using drawing operation, not supported by Gaphas, we manually need to update the bounding box
-            if context.draw_all:
+                   # draw_all means, the bounding box of the state is calculated
+                   # As we are using drawing operation, not supported by Gaphas, we manually need to update the bounding box
+            else:  # context.draw_all:
                 from gaphas.geometry import Rectangle
                 view = self.parent.canvas.get_first_view()
                 abs_pos = view.get_matrix_i2v(self.parent).transform_point(*label_pos)
@@ -716,7 +719,8 @@ class ScopedVariablePortView(PortView):
             'side': self.side,
             'side_length': side_length,
             'selected': self.is_selected(),
-            'transparency': state.transparency
+            'transparency': state.transparency,
+            'draw_all': context.draw_all
         }
         current_zoom = view.get_zoom_factor()
         from_cache, image, zoom = self._port_image_cache.get_cached_image(self._last_label_size[0],
@@ -756,8 +760,9 @@ class ScopedVariablePortView(PortView):
 
             # Second, write the text in the rectangle (scoped variable name)
             # Set the current point to be in the center of the rectangle
-            c.move_to(port_size[0] / 2., port_size[1] / 2.)
-            self.draw_name(c, state.transparency)
+            if not context.draw_all:
+                c.move_to(port_size[0] / 2., port_size[1] / 2.)
+                self.draw_name(c, state.transparency)
 
             # Copy image surface to current cairo context
             center_pos = self._get_port_center_position(name_size[0])
