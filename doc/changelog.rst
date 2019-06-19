@@ -20,6 +20,7 @@ Next Release
 
   - most ``[PyGTK]DeprecatedWarning``s are fixed
   - graphical editor: minor performance optimizations
+  - :issue_ghe:`665` Keep root state position when collapsing left sidebar
 
 
 - Bug Fixes:
