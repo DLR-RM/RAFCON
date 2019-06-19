@@ -90,6 +90,9 @@ class DataPortListController(ListViewController):
         if isinstance(self.model.state, LibraryState):
             view['use_runtime_value_toggle'] = Gtk.CellRendererToggle()
             view['use_runtime_value_col'] = Gtk.TreeViewColumn("Use Runtime Value")
+            view.make_column_title_elllipsable(view['use_runtime_value_col'],
+                                               tooltip="If set, the default value to the left will be used as default "\
+                                                       "value. Otherwise, the original default value of the library")
             view['use_runtime_value_col'].set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)
             view.get_top_widget().append_column(view['use_runtime_value_col'])
             view['use_runtime_value_col'].pack_start(view['use_runtime_value_toggle'], True)

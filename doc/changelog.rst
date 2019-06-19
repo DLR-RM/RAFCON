@@ -25,6 +25,7 @@ Next Release
 - Bug Fixes:
 
   - :issue_gh:`20` program icon in task bar missing since version 0.13.x
+  - :issue_ghe:`665` state type dropdown menu prevents state editor widget to shrink
   - :issue_ghe:`694` json library in python 3.6 writes one-line json files
   - :issue_ghe:`721` Correct execution history logging
   - :issue_ghe:`726` State with self-transition cannot be substituted
