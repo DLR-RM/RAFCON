@@ -19,6 +19,7 @@ Next Release
 - Improvements:
 
   - most ``[PyGTK]DeprecatedWarning``s are fixed
+  - graphical editor: minor performance optimizations
 
 
 - Bug Fixes:
