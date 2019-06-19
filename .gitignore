@@ -73,6 +73,7 @@ coverage.xml
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea/idea_tests
 
 # Sensitive or high-churn files
 .idea/**/dataSources/
