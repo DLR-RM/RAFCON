@@ -3183,7 +3183,7 @@ label.execution-running {
 #top_level_vbox {
   background-color: #141923; }
 
-#graphical_editor_vbox, #state_editor_eventbox {
+#state_machines_notebook, #state_editor_eventbox {
   background-color: #2d323c; }
 
 #linkage_container #input_box > label, #linkage_container #output_box > label, #linkage_container #scoped_box > label, #linkage_container #outcomes_box > label {
@@ -3234,6 +3234,18 @@ notebook.secondary > header > tabs > tab {
   notebook.secondary > header > tabs > tab:checked {
     color: #ffffff;
     background-color: #2d323c; }
+
+infobar.other {
+  background-color: #2896ff; }
+
+infobar.info {
+  background-color: #5dcd61; }
+
+infobar.warning {
+  background-color: #fd8009; }
+
+infobar.error {
+  background-color: #ff3300; }
 
 @define-color theme_fg_color #FFFFFF;
 @define-color theme_text_color #FFFFFF;
