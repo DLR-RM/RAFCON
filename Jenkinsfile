@@ -64,6 +64,14 @@ pipeline {
             }
         }
 
+        stage('Test Python 2.7 Coverage') {
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    sh "xvfb-run -as '-screen 0 1920x1200x24' ~/.local/bin/tox -e coverage $tox_args -- $pytest_args -o cache_dir=$WORKSPACE"
+                }
+            }
+        }
+
         stage('Build Documentation') {
             steps {
                 sh 'xvfb-run -as "-screen 0 1920x1200x24" tox -e docs $tox_test_params'
@@ -89,6 +97,13 @@ pipeline {
         }
         success {
             junit '**/pytest_*_results.xml'
+            cobertura autoUpdateHealth: false, autoUpdateStability: false,
+                coberturaReportFile: 'pytest-cov_results.xml',
+                conditionalCoverageTargets: '70, 0, 0', lineCoverageTargets: '80, 0, 0', methodCoverageTargets: '80, 0, 0',
+                maxNumberOfBuilds: 0,
+                enableNewApi: true,
+                failUnhealthy: false, failUnstable: false,
+                sourceEncoding: 'ASCII', zoomCoverageChart: false
             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'build_doc', reportFiles: 'index.html', reportName: 'Documentation', reportTitles: 'RAFCON documentation'])
             rocketSend channel: 'rafcon-jenkins', avatar: 'https://rmc-jenkins.robotic.dlr.de/jenkins/static/ff676c77/images/headshot.png', message: ":tada: <$BUILD_URL|Build $BUILD_NUMBER> on branch '$BRANCH_NAME' *succeeded*! Commit: <https://rmc-github.robotic.dlr.de/common/rafcon/commit/$GIT_COMMIT|$GIT_COMMIT> :tada:", rawMessage: true
             archiveArtifacts artifacts: '.tox/dist/*', fingerprint: true
