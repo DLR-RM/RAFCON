@@ -93,8 +93,8 @@ class StateOverviewController(ExtendedController):
         combo.set_focus_on_click(False)
         combo.set_model(l_store)
         combo.show_all()
-        view['type_viewport'].add(combo)
-        view['type_viewport'].show()
+        self.view['properties_widget'].attach(combo, 1, 3, 1, 1)
+        combo.set_hexpand(True)
 
         # Prepare label for state_name -> Library states cannot be changed
         if isinstance(self.model, LibraryStateModel):
@@ -125,6 +125,7 @@ class StateOverviewController(ExtendedController):
         if not self.with_is_start_state_check_box or isinstance(self.model.state, DeciderState) or \
                 self.model.state.is_root_state or type(self.model.parent.state) in has_no_start_state_state_types:
             view['is_start_state_checkbutton'].destroy()
+            self.view['properties_widget'].child_set_property(combo, "width", 2)
         else:
             view['is_start_state_checkbutton'].set_active(bool(self.model.is_start))
             view['is_start_state_checkbutton'].connect('toggled', self.on_toggle_is_start_state)

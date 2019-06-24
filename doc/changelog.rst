@@ -13,16 +13,21 @@ Next Release
 
 - Features:
 
+  - new notification bar, informing about important log entries (configurable), fixes :issue_ghe:`288`
+
 
 - Improvements:
 
   - most ``[PyGTK]DeprecatedWarning``s are fixed
+  - graphical editor: minor performance optimizations
   - code coverage report in Jenkins
 
 
 - Bug Fixes:
 
   - :issue_gh:`20` program icon in task bar missing since version 0.13.x
+  - :issue_ghe:`665` state type dropdown menu prevents state editor widget to shrink
+  - :issue_ghe:`694` json library in python 3.6 writes one-line json files
   - :issue_ghe:`721` Correct execution history logging
   - :issue_ghe:`726` State with self-transition cannot be substituted
   - :issue_ghe:`727` Sticky-Flag in States-Editor can cause crash if state type change is performed
@@ -33,6 +38,7 @@ Next Release
 - Changes:
 
   - drop support for BuildBot
+  - Jenkinsfile: tests are now also run under Python 3.6
 
 
 0.13.8

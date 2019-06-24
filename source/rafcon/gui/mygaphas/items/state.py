@@ -460,13 +460,14 @@ class StateView(Element):
             c.set_line_width(default_line_width * 2)
             c.stroke()
 
-            inner_nw, inner_se = self.get_state_drawing_area(self)
-            c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-            c.set_source_rgba(*get_col_rgba(state_background_color))
-            c.fill_preserve()
-            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self.transparency))
-            c.set_line_width(default_line_width)
-            c.stroke()
+            if not context.draw_all:
+                inner_nw, inner_se = self.get_state_drawing_area(self)
+                c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
+                c.set_source_rgba(*get_col_rgba(state_background_color))
+                c.fill_preserve()
+                c.set_source_rgba(*get_col_rgba(state_border_outline_color, self.transparency))
+                c.set_line_width(default_line_width)
+                c.stroke()
 
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
@@ -995,7 +996,8 @@ class NameView(Element):
         parameters = {
             'name': self.name,
             'selected': context.selected,
-            'transparency': font_transparency
+            'transparency': font_transparency,
+            'draw_all': context.draw_all
         }
 
         upper_left_corner = (0, 0)
@@ -1009,13 +1011,19 @@ class NameView(Element):
         else:
             c = self._image_cache.get_context_for_image(current_zoom)
 
-            if context.selected:
+            if context.selected or context.draw_all:
                 # Draw light background color if selected
                 c.rectangle(0, 0, width, height)
                 c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], transparency=.9))
                 c.fill_preserve()
                 c.set_source_rgba(0, 0, 0, 0)
                 c.stroke()
+
+            if context.draw_all:
+                # Copy image surface to current cairo context
+                self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
+                return
+
 
             # c.set_antialias(Antialias.GOOD)
 
