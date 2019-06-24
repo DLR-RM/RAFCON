@@ -17,6 +17,7 @@ Next Release
 - Improvements:
 
   - most ``[PyGTK]DeprecatedWarning``s are fixed
+  - code coverage report in Jenkins
 
 
 - Bug Fixes:
