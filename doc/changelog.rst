@@ -20,7 +20,9 @@ Next Release
 
   - most ``[PyGTK]DeprecatedWarning``s are fixed
   - graphical editor: minor performance optimizations
+  - code coverage report in Jenkins
   - :issue_ghe:`665` Keep root state position when collapsing left sidebar
+  - specify separators for JSON files: Python 3.4 no longer changes the whitespaces in state machine files
 
 
 - Bug Fixes:
