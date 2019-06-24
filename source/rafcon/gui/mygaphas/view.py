@@ -312,6 +312,8 @@ class ExtendedGtkView(GtkView, Observer):
             new_widget_pos = self.translate_coordinates(window, 0, 0)
             if self._widget_pos:
                 delta_pos = new_widget_pos[0] - self._widget_pos[0], new_widget_pos[1] - self._widget_pos[1]
-                self.hadjustment.set_value(delta_pos[0])
-                self.vadjustment.set_value(delta_pos[1])
+
+                self._matrix.translate(-delta_pos[0] / self._matrix[0], -delta_pos[1] / self._matrix[3])
+                # Make sure everything's updated
+                self.request_update((), self._canvas.get_all_items())
             self._widget_pos = new_widget_pos
