@@ -20,6 +20,7 @@ Next Release
 
   - most ``[PyGTK]DeprecatedWarning``s are fixed
   - graphical editor: minor performance optimizations
+  - :issue_gh:`21` Do not store semantic data if not available
 
 
 - Bug Fixes:
