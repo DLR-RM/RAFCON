@@ -27,6 +27,7 @@ class ExtendedGtkView(GtkView, Observer):
 
     hovered_handle = None
     _selection = None
+    _widget_pos = None
 
     def __init__(self, graphical_editor_v, state_machine_m, *args):
         GtkView.__init__(self, *args)
@@ -300,3 +301,19 @@ class ExtendedGtkView(GtkView, Observer):
 
     focused_item = property(_get_focused_item, _set_focused_item, _del_focused_item,
                             "The item with focus (receives key events a.o.)")
+
+    def do_configure_event(self, event):
+        if hasattr(self, "_back_buffer"):
+            GtkView.do_configure_event(self, event)
+
+        # Keep position of state machine fixed within the window, also when size of left sidebar changes
+        window = self.get_toplevel()
+        if window:
+            new_widget_pos = self.translate_coordinates(window, 0, 0)
+            if self._widget_pos:
+                delta_pos = new_widget_pos[0] - self._widget_pos[0], new_widget_pos[1] - self._widget_pos[1]
+
+                self._matrix.translate(-delta_pos[0] / self._matrix[0], -delta_pos[1] / self._matrix[3])
+                # Make sure everything's updated
+                self.request_update((), self._canvas.get_all_items())
+            self._widget_pos = new_widget_pos
