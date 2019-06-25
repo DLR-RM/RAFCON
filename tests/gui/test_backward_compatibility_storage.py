@@ -152,7 +152,12 @@ def calculate_state_machine_hash(path):
         for filename in filenames:
             # The STATEMACHINE_FILE cannot be used for the hash as it e.g. includes a timestamp
             if filename != storage.STATEMACHINE_FILE:
-                paths_to_hash.append(os.path.join(root, filename))
+                file_path = os.path.join(root, filename)
+                if filename == storage.SEMANTIC_DATA_FILE:
+                    semantic_data = open(file_path, 'rb').read()
+                    if semantic_data == "{}":
+                        continue
+                paths_to_hash.append(file_path)
 
     paths_to_hash.sort()
     hash = hashlib.md5()
