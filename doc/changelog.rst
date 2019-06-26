@@ -14,6 +14,7 @@ Next Release
 - Features:
 
   - new notification bar, informing about important log entries (configurable), fixes :issue_ghe:`288`
+  - Fullscreen mode: optionally show toolbar (``FULLSCREEN_SHOW_TOOLBAR`` option), show notifications
 
 
 - Improvements:
