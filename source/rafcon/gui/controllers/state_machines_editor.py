@@ -41,6 +41,7 @@ from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView as GraphicalEditorGaphasView
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
 from rafcon.gui.helpers import text_formatting
+from rafcon.gui.helpers.state_machine import new_state_machine
 from rafcon.gui.helpers.label import create_menu_item
 from rafcon.utils import log
 
@@ -101,14 +102,6 @@ def set_tab_label_texts(label, state_machine_m, unsaved_changes=False):
         label_text += '&#8201;*'
     label.set_markup(label_text)
     label.set_tooltip_text(tooltip_text)
-
-
-def add_state_machine(widget, event=None):
-    """Create a new state-machine when the user clicks on the '+' next to the tabs"""
-    logger.debug("Creating new state-machine...")
-    root_state = HierarchyState("new root state")
-    state_machine = StateMachine(root_state)
-    rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
 
 class StateMachinesEditorController(ExtendedController):
@@ -335,7 +328,7 @@ class StateMachinesEditorController(ExtendedController):
             menu.append(menu_item)
 
         menu_item = create_menu_item("New State Machine", constants.BUTTON_ADD,
-                                     callback=add_state_machine, callback_args=[])
+                                     callback=new_state_machine)
         menu.append(menu_item)
 
         if self.model.state_machines:
