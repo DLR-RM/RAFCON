@@ -101,7 +101,7 @@ class StateView(Element):
         # Initialize NameView
         name_meta = state_m.get_meta_data_editor()['name']
         if not contains_geometric_info(name_meta['size']):
-            name_width = self.width * 0.8
+            name_width = self.width - 2 * self._border_width
             name_height = self.height * 0.4
             name_meta = state_m.set_meta_data_editor('name.size', (name_width, name_height))['name']
         name_size = name_meta['size']
