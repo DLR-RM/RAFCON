@@ -1,4 +1,5 @@
 
 def execute(self, inputs, outputs, gvm):
-    self.logger.debug("Hello world")
-    return 0
+    self.logger.info("Hello {}".format(self.name))
+    self.preemptive_wait(2)
+    return "success"
