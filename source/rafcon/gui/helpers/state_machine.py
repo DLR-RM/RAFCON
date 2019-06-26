@@ -64,8 +64,8 @@ def new_state_machine():
     state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
     state_machines_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('state_machines_editor_ctrl')
 
-    logger.debug("Creating new state-machine...")
-    root_state = HierarchyState("new root state")
+    logger.debug("Creating new state machine...")
+    root_state = HierarchyState("root state")
     state_machine = StateMachine(root_state)
     state_machine_manager.add_state_machine(state_machine)
 
