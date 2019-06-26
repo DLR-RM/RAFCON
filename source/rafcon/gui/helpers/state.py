@@ -365,6 +365,9 @@ def change_state_type(state_m, target_class):
     # After the state has been changed in the core, we create a new model for it with all information extracted
     # from the old state model
     if new_state:
+        if old_state.__class__.__name__ in new_state.name:
+            new_state.name = old_state.name.replace(old_state.__class__.__name__, new_state.__class__.__name__)
+
         # Create a new state model based on the new state and apply the extracted child models
         new_state_m = create_state_model_for_state(new_state, old_state_meta, state_element_models)
         # By convention, tha last model within the affected model list, is the newly created model
