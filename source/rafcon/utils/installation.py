@@ -186,8 +186,6 @@ def install_icons(logger=None):
 
 
 def create_mo_files():
-    from os import path
-    import subprocess
     data_files = []
     domain = "rafcon"
     assert "setup.py" in os.listdir(os.curdir)
@@ -225,6 +223,12 @@ def create_mo_files():
     return data_files
 
 
+def is_tracked(path):
+    """Checks whether the given file/folder is tracked via git"""
+    return subprocess.call(['git', 'ls-files', '--error-unmatch', path],
+                           stderr=subprocess.STDOUT, stdout=open(os.devnull, 'w')) == 0
+
+
 def get_data_files_tuple(*rel_path, **kwargs):
     """Return a tuple which can be used for setup.py's data_files
 
@@ -240,6 +244,7 @@ def get_data_files_tuple(*rel_path, **kwargs):
         target_path = os.path.dirname(target_path)
     else:
         source_files = [os.path.join(rel_path, filename) for filename in os.listdir(rel_path)]
+        source_files = list(filter(is_tracked, source_files))
     return target_path, source_files
 
 
@@ -253,15 +258,17 @@ def get_data_files_recursively(*rel_root_path, **kwargs):
     result_list = list()
     rel_root_dir = os.path.join(*rel_root_path)
     share_target_root = os.path.join("share", kwargs.get("share_target_root", "rafcon"))
-    distutils.log.debug("recursively generating data files for folder '{}' ...".format(
-        rel_root_dir))
+    distutils.log.info("recursively generating data files for path '{}' ...".format(rel_root_dir))
 
     for dir_, _, files in os.walk(rel_root_dir):
         relative_directory = os.path.relpath(dir_, rel_root_dir)
         file_list = list()
-        for fileName in files:
-            rel_file_path = os.path.join(relative_directory, fileName)
+        for filename in files:
+            rel_file_path = os.path.join(relative_directory, filename)
             abs_file_path = os.path.join(rel_root_dir, rel_file_path)
+            if not is_tracked(abs_file_path):
+                distutils.log.info("skipping untracked data file: {}".format(abs_file_path))
+                continue
             file_list.append(abs_file_path)
         if len(file_list) > 0:
             # this is a valid path in ~/.local folder: e.g. share/rafcon/libraries/generic/wait
@@ -276,6 +283,8 @@ def generate_data_files():
     :return: list of tuples of install directory and list of source files
     :rtype: list(tuple(str, [str]))
     """
+    assert "setup.py" in os.listdir("."), "Command must be called from RAFCON repository root"
+
     assets_folder = path.join('source', 'rafcon', 'gui', 'assets')
     share_folder = path.join(assets_folder, 'share')
     themes_folder = path.join(share_folder, 'themes', 'RAFCON')
