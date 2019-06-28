@@ -16,10 +16,13 @@ from __future__ import print_function
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop as DevelopCommand
 from setuptools.command.install import install as InstallCommand
+import distutils.log
+
 from os import path
 import os
 from imp import load_source
 
+distutils.log.set_verbosity(distutils.log.INFO)
 
 rafcon_root_path = os.path.dirname(os.path.abspath(__file__))
 
