@@ -24,6 +24,11 @@ Next Release
   - code coverage report in Jenkins
   - :issue_ghe:`665` Keep root state position when collapsing left sidebar
   - specify separators for JSON files: Python 3.4 no longer changes the whitespaces in state machine files
+  - better defaults:
+
+    - root state is named "root state", further states "[state type] [states counter]"
+    - script of ``ExecutionState``s uses more RAFCON features (``preemptive_wait``, return outcome name)
+    - name of states uses full width of state
 
 
 - Bug Fixes:
@@ -37,6 +42,7 @@ Next Release
   - fixes bug of "locked" global variable during multithreading access
   - use a safe loader for GUI config file
   - fix handling of symlinks in LibraryManager
+
 
 - Changes:
 
