@@ -187,7 +187,9 @@ class StateView(Element):
     def remove(self):
         """Remove recursively all children and then the StateView itself
         """
-        self.canvas.get_first_view().unselect_item(self)
+        view = self.canvas.get_first_view()
+        if view:
+            view.unselect_item(self)
 
         for child in self.canvas.get_children(self)[:]:
             child.remove()
