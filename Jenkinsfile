@@ -30,46 +30,50 @@ pipeline {
             }
         }
 
-        stage('Test Python 2.7') {
-            steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    // Run test
-                    // * wrapped in xvfb-run for having an X server
-                    // * specify tox environment
-                    // * run only stable tests
-                    // * collect pytest results in XML file
-                    wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
-                        sh "tox -e py27 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py27_results.xml"
+        stage("Run tests") {
+            // Run tests in parallel:
+            // * wrapped in Xvfb for having an X server
+            // * specify tox environment (py27, py34, py36, coverage)
+            // * run only stable tests
+            // * collect pytest results in XML file
+            parallel {
+                stage('Test Python 2.7') {
+                    steps {
+                        timeout(time: 10, unit: 'MINUTES') {
+                            wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
+                                sh "tox -e py27 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py27_results.xml"
+                            }
+                        }
                     }
                 }
-            }
-        }
 
-        stage('Test Python 3.4') {
-            steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
-                        sh "xvfb-run -as '-screen 0 1920x1200x24' tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml"
+                stage('Test Python 3.4') {
+                    steps {
+                        timeout(time: 10, unit: 'MINUTES') {
+                            wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
+                                sh "xvfb-run -as '-screen 0 1920x1200x24' tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml"
+                            }
+                        }
                     }
                 }
-            }
-        }
 
-        stage('Test Python 3.6') {
-            steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
-                        sh "tox -e py36 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py36_results.xml"
+                stage('Test Python 3.6') {
+                    steps {
+                        timeout(time: 10, unit: 'MINUTES') {
+                            wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
+                                sh "tox -e py36 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py36_results.xml"
+                            }
+                        }
                     }
                 }
-            }
-        }
 
-        stage('Test Python 2.7 Coverage') {
-            steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
-                        sh "tox -e coverage $tox_args -- $pytest_args > pytestout.txt"
+                stage('Test Python 2.7 Coverage') {
+                    steps {
+                        timeout(time: 10, unit: 'MINUTES') {
+                            wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
+                                sh "tox -e coverage $tox_args -- $pytest_args > pytestout.txt"
+                            }
+                        }
                     }
                 }
             }
