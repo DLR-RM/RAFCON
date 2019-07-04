@@ -38,7 +38,9 @@ pipeline {
                     // * specify tox environment
                     // * run only stable tests
                     // * collect pytest results in XML file
-                    sh "xvfb-run -as '-screen 0 1920x1200x24' tox -e py27 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py27_results.xml |& tee pytestout.txt"
+                    wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
+                        sh "tox -e py27 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py27_results.xml |& tee pytestout.txt"
+                    }
                 }
             }
         }
@@ -46,16 +48,18 @@ pipeline {
         stage('Test Python 3.4') {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
-                    sh "xvfb-run -as '-screen 0 1920x1200x24' tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml |& tee pytestout.txt"
+                    wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
+                        sh "xvfb-run -as '-screen 0 1920x1200x24' tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml |& tee pytestout.txt"
+                    }
                 }
             }
         }
 
         stage('Test Python 3.6') {
             steps {
-                timestamps {
-                    timeout(time: 10, unit: 'MINUTES') {
-                        sh "xvfb-run -as '-screen 0 1920x1200x24' tox -e py36 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py36_results.xml |& tee pytestout.txt"
+                timeout(time: 10, unit: 'MINUTES') {
+                    wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
+                        sh "tox -e py36 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py36_results.xml |& tee pytestout.txt"
                     }
                 }
             }
@@ -64,14 +68,18 @@ pipeline {
         stage('Test Python 2.7 Coverage') {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
-                    sh "xvfb-run -as '-screen 0 1920x1200x24' tox -e coverage $tox_args -- $pytest_args"
+                    wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
+                        sh "tox -e coverage $tox_args -- $pytest_args"
+                    }
                 }
             }
         }
 
         stage('Build Documentation') {
             steps {
-                sh 'xvfb-run -as "-screen 0 1920x1200x24" tox -e docs $tox_test_params'
+                wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
+                    sh 'tox -e docs'
+                }
                 // sphinx linkcheck only generates relative files, which cannot be found by recordIssues
                 // therefore, we need to make the path absolute
                 sh 'sed -i "s#.*#$WORKSPACE/doc/&#" build_doc/output.txt'
