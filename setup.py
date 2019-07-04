@@ -61,10 +61,10 @@ readme_file_path = os.path.join(rafcon_root_path, "README.rst")
 with open(readme_file_path, "r") as f:
     long_description = f.read()
 
-global_requirements = ['pylint>=1.6,<2', 'psutil', 'jsonconversion~=0.2.11', 'yaml_configuration~=0.1',
+global_requirements = ['pylint>=1.6,<2', 'psutil', 'jsonconversion~=0.2.12', 'yaml_configuration~=0.1',
                        'python-gtkmvc3-dlr~=1.0.0', 'gaphas~=1.0.0', 'future>=0.16,<0.18.0']
 
-test_requirements = ['pytest>=3.5', 'pytest-timeout', 'pytest-mock', 'graphviz', 'pyuserinput']
+test_requirements = ['pytest>=3.5,<5', 'pytest-timeout', 'pytest-mock', 'graphviz', 'pyuserinput']
 test_requirements += global_requirements
 
 setup(
