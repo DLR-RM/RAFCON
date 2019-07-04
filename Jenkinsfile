@@ -24,8 +24,8 @@ pipeline {
 
         stage('Prepare tox') {
             steps {
-                sh 'printenv'
-                sh 'pip3 install -q --user --ignore-installed tox==3.8'
+                sh 'printenv | sort'
+                sh 'pip3 install -q --user --ignore-installed tox==3.12'
             }
         }
 
@@ -46,7 +46,7 @@ pipeline {
         stage('Test Python 3.4') {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
-                    sh "xvfb-run -as '-screen 0 1920x1200x24'tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml -o cache_dir=$WORKSPACE |& tee pytestout.txt"
+                    sh "xvfb-run -as '-screen 0 1920x1200x24' tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml -o cache_dir=$WORKSPACE |& tee pytestout.txt"
                 }
             }
         }
