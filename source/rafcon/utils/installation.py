@@ -225,6 +225,10 @@ def create_mo_files():
 
 def is_tracked(path):
     """Checks whether the given file/folder is tracked via git"""
+    if ".git" not in os.listdir("."):
+        # If this is not a git repo at all, regard the file as being tracked
+        # Ths can be the case if a wheel is build from a source dist
+        return True
     return subprocess.call(['git', 'ls-files', '--error-unmatch', path],
                            stderr=subprocess.STDOUT, stdout=open(os.devnull, 'w')) == 0
 
