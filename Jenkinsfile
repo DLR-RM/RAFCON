@@ -9,7 +9,8 @@ pipeline {
     }
 
     environment {
-        PATH = "/home_local/l_buildb/.local/bin:$PATH"
+        PATH = "/home_local/l_buildb/.local/bin:/opt/python/osl42-x86_64/python3/stable/1.0.1/bin:$PATH"
+        LD_LIBRARY_PATH = "/opt/python/osl42-x86_64/python3/stable/1.0.1/lib:$LD_LIBRARY_PATH"
         TOX_LIMITED_SHEBANG = 1
         // Allows 1st build of a project to succeed, workaround for https://issues.jenkins-ci.org/browse/JENKINS-41929
         tox_args = "${params.tox_args}"
@@ -52,10 +53,6 @@ pipeline {
         }
 
         stage('Test Python 3.6') {
-            environment {
-                PATH = "/opt/python/osl42-x86_64/python3/stable/1.0.1/bin:$PATH"
-                LD_LIBRARY_PATH = "/opt/python/osl42-x86_64/python3/stable/1.0.1/lib:$LD_LIBRARY_PATH"
-            }
             steps {
                 timestamps {
                     timeout(time: 10, unit: 'MINUTES') {
