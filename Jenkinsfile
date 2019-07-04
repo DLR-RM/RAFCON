@@ -39,7 +39,7 @@ pipeline {
                     // * run only stable tests
                     // * collect pytest results in XML file
                     wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
-                        sh "tox -e py27 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py27_results.xml |& tee pytestout.txt"
+                        sh "tox -e py27 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py27_results.xml"
                     }
                 }
             }
@@ -49,7 +49,7 @@ pipeline {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
                     wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
-                        sh "xvfb-run -as '-screen 0 1920x1200x24' tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml |& tee pytestout.txt"
+                        sh "xvfb-run -as '-screen 0 1920x1200x24' tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml"
                     }
                 }
             }
@@ -59,7 +59,7 @@ pipeline {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
                     wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
-                        sh "tox -e py36 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py36_results.xml |& tee pytestout.txt"
+                        sh "tox -e py36 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py36_results.xml"
                     }
                 }
             }
@@ -69,7 +69,7 @@ pipeline {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
                     wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
-                        sh "tox -e coverage $tox_args -- $pytest_args"
+                        sh "tox -e coverage $tox_args -- $pytest_args > pytestout.txt"
                     }
                 }
             }
