@@ -71,9 +71,7 @@ def reload_config(config=True, gui_config=True):
 def remove_all_libraries(init_library_manager=True):
     from rafcon.core.config import global_config
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
-    libs = [lib for lib in library_paths]
-    for lib in libs:
-        del library_paths[lib]
+    del library_paths[:]
     if init_library_manager:
         rafcon.core.singleton.library_manager.initialize()
 

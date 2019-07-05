@@ -301,7 +301,7 @@ class StateModel(AbstractStateModel):
             if destroy:
                 model.prepare_destruction()
             return
-        for model_or_key in model_list_or_dict:
+        for model_or_key in list(model_list_or_dict.keys()):
             model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
             if model.core_element is core_element:
                 if model_key is None:
