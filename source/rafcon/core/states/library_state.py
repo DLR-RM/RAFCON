@@ -132,8 +132,8 @@ class LibraryState(State):
                     self.marked_dirty = True
 
         # if there is a key existing in the runtime values but not in the input_data_ports we delete it
-        for key in self.use_runtime_value_input_data_ports.keys():
-            if key not in self.input_data_ports.keys():
+        for key in list(self.use_runtime_value_input_data_ports.keys()):
+            if key not in self.input_data_ports:
                 del self.use_runtime_value_input_data_ports[key]
                 del self.input_data_port_runtime_values[key]
                 # state machine cannot be marked dirty directly, as it does not exist yet
@@ -162,7 +162,7 @@ class LibraryState(State):
 
         # if there is a key existing in the runtime values but not in the output_data_ports we delete it
         for key in list(self.use_runtime_value_output_data_ports.keys()):
-            if key not in list(self.output_data_ports.keys()):
+            if key not in self.output_data_ports:
                 del self.use_runtime_value_output_data_ports[key]
                 del self.output_data_port_runtime_values[key]
                 # state machine cannot be marked dirty directly, as it does not exist yet
