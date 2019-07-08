@@ -40,6 +40,7 @@ Next Release
   - :issue_ghe:`721` Correct execution history logging
   - :issue_ghe:`726` State with self-transition cannot be substituted
   - :issue_ghe:`727` Sticky-Flag in States-Editor can cause crash if state type change is performed
+  - :issue_ghe:`755` Positions of outcomes are not always updated
   - fixes bug of "locked" global variable during multithreading access
   - use a safe loader for GUI config file
   - fix handling of symlinks in LibraryManager
