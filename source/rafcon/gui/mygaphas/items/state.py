@@ -371,7 +371,7 @@ class StateView(Element):
         self.update_minimum_size_of_children()
 
         def update_port_position(port_v, meta_data):
-            if contains_geometric_info(meta_data['rel_pos']) == 2:
+            if contains_geometric_info(meta_data['rel_pos']):
                 port_v.handle.pos = meta_data['rel_pos']
                 self.port_constraints[port_v].update_position(meta_data['rel_pos'])
 
