@@ -119,8 +119,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self._semantic_data = Vividict()
 
         if name is None:
-            name = "Untitled"
+            name = "{} {}".format(self.__class__.__name__, generate_state_name_id())
         self.name = str(name) if isinstance(name, (int, float)) else name
+
         if state_id is None:
             self._state_id = state_id_generator()
         else:
