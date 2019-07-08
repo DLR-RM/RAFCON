@@ -175,6 +175,8 @@ A typical config file looks like this:
 
     RESTORE_UNDOCKED_SIDEBARS: True
 
+    FULLSCREEN_SHOW_TOOLBAR: True
+
     NOTIFICATIONS_MINIMUM_LOG_LEVEL: 30
     NOTIFICATIONS_DURATION: 3
 
@@ -484,6 +486,10 @@ PREFER_EXTERNAL_EDITOR
 RESTORE\_UNDOCKED\_SIDEBARS
   | Default: ``True``
   | If True, RAFCON will restore undocked windows from the last RAFCON-instance run.
+
+FULLSCREEN\_SHOW\_TOOLBAR
+  | Default: ``True``
+  | If True, the toolbar with execution and state buttons is shown in fullscreen mode.
 
 NOTIFICATIONS\_MINIMUM\_LOG\_LEVEL
   | Default: ``30``
