@@ -87,10 +87,13 @@ class AbstractStateModel(MetaModel, Hashable):
     action_signal = Signal()
     destruction_signal = Signal()
 
+    state_counter = 0
+
     __observables__ = ("state", "input_data_ports", "output_data_ports", "income", "outcomes", "is_start",
                        "meta_signal", "action_signal", "destruction_signal")
 
     def __init__(self, state, parent=None, meta=None):
+        AbstractStateModel.state_counter += 1
         if type(self) == AbstractStateModel:
             raise NotImplementedError
 
