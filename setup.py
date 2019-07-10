@@ -14,8 +14,6 @@
 
 from __future__ import print_function
 from setuptools import setup, find_packages
-from setuptools.command.develop import develop as DevelopCommand
-from setuptools.command.install import install as InstallCommand
 import distutils.log
 
 from os import path
@@ -27,27 +25,8 @@ distutils.log.set_verbosity(distutils.log.INFO)
 rafcon_root_path = os.path.dirname(os.path.abspath(__file__))
 
 script_path = path.realpath(__file__)
-install_helper = path.join(path.dirname(script_path), "source", "rafcon", "utils", "installation.py")
-installation = load_source("installation", install_helper)
-
-
-class PostDevelopCommand(DevelopCommand):
-    """Post installation step for development mode
-    """
-    def run(self):
-        installation.install_fonts()
-        installation.install_gtk_source_view_styles()
-        installation.install_libraries()
-
-
-class PostInstallCommand(InstallCommand):
-    """Post installation step for installation mode
-    """
-    def run(self):
-        InstallCommand.run(self)
-        installation.install_fonts()
-        installation.install_gtk_source_view_styles()
-        installation.install_libraries()
+installation_script_path = path.join(path.dirname(script_path), "source", "rafcon", "utils", "installation.py")
+installation = load_source("installation", installation_script_path)
 
 
 # read version from VERSION file
@@ -119,11 +98,6 @@ setup(
         ]
     },
 
-    cmdclass={
-        'develop': PostDevelopCommand,
-        'install': PostInstallCommand,
-    },
-
     keywords=('state machine', 'robotic', 'FSM', 'development', 'GUI', 'visual programming'),
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -143,6 +117,4 @@ setup(
         'Topic :: Software Development',
         'Topic :: Utilities'
     ],
-
-    zip_safe=True
 )
