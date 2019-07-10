@@ -23,17 +23,28 @@ from os.path import expanduser, isfile, join
 import pkg_resources
 
 
+possible_prefix_paths = []
 share_folder_paths = []
 
-possible_prefix_paths = [sys.prefix, sys.exec_prefix,
-                         os.getenv("PYTHONUSERBASE"), os.getenv("VIRTUAL_ENV"),
-                         join(expanduser("~"), ".local"), join(os.sep, "usr", "local"), join(os.sep, "usr")]
+# The list is ordered by preference
+_possible_prefix_paths = [sys.prefix, sys.exec_prefix,
+                          os.getenv("VIRTUAL_ENV"), os.getenv("PYTHONUSERBASE"),
+                          join(expanduser("~"), ".local"), join(os.sep, "usr", "local"), join(os.sep, "usr")]
 
-for prefix_path in possible_prefix_paths:
-    if prefix_path:
-        prefix_path = join(prefix_path, "share")
-        if prefix_path not in share_folder_paths:
-            share_folder_paths.append(prefix_path)
+# Check which paths exist and remove duplicates
+for prefix_path in _possible_prefix_paths:
+    if prefix_path and prefix_path not in possible_prefix_paths and os.path.isdir(prefix_path):
+        possible_prefix_paths.append(prefix_path)
+        share_folder_paths.append(join(prefix_path, "share"))
+
+# One more candidate for share folder: GLib.get_user_data_dir()
+try:
+    from gi.repository import GLib
+    user_data_folder = GLib.get_user_data_dir()
+    if user_data_folder not in share_folder_paths:
+        share_folder_paths.insert(min(2, len(share_folder_paths)), user_data_folder)
+except ImportError:
+    pass
 
 
 def resource_filename(package_or_requirement, resource_name):
@@ -49,7 +60,7 @@ def resource_filename(package_or_requirement, resource_name):
     if pkg_resources.resource_exists(package_or_requirement, resource_name):
         return pkg_resources.resource_filename(package_or_requirement, resource_name)
 
-    path = _search_in_share_folders(package_or_requirement, resource_name)
+    path = search_in_share_folders(package_or_requirement, resource_name)
 
     if path:
         return path
@@ -70,7 +81,7 @@ def resource_exists(package_or_requirement, resource_name):
     if pkg_resources.resource_exists(package_or_requirement, resource_name):
         return True
 
-    path = _search_in_share_folders(package_or_requirement, resource_name)
+    path = search_in_share_folders(package_or_requirement, resource_name)
 
     return True if path else False
 
@@ -104,7 +115,7 @@ def resource_listdir(package_or_requirement, relative_path):
     return only_files
 
 
-def _search_in_share_folders(package_or_requirement, resource_name):
+def search_in_share_folders(package_or_requirement, resource_name):
     package_or_requirement_segments = package_or_requirement.split(".")
 
     # go up the whole module path and search for the module

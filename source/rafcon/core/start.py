@@ -42,6 +42,7 @@ from rafcon.core.storage import storage
 from rafcon.core.states.state import StateExecutionStatus
 
 from rafcon.utils import plugins
+from rafcon.utils import resources
 from rafcon.utils import log
 
 logger = log.get_logger("rafcon.start.core")
@@ -69,22 +70,21 @@ def post_setup_plugins(parser_result):
 def setup_environment():
     """Ensures that the environmental variable RAFCON_LIB_PATH is existent
     """
-    try:
-        from gi.repository import GLib
-        user_data_folder = GLib.get_user_data_dir()
-    except ImportError:
-        user_data_folder = join(os.path.expanduser("~"), ".local", "share")
-    rafcon_root_path = dirname(realpath(rafcon.__file__))
-    user_library_folder = join(user_data_folder, "rafcon", "libraries")
-
     # The RAFCON_LIB_PATH points to a path with common RAFCON libraries
-    # If the env variable is not set, we have to determine it. In the future, this should always be
-    # ~/.local/share/rafcon/libraries, but for backward compatibility, also a relative RAFCON path is supported
+    # If the env variable is not set, we have to determine it.
     if not os.environ.get('RAFCON_LIB_PATH', None):
-        if exists(user_library_folder):
-            os.environ['RAFCON_LIB_PATH'] = user_library_folder
+        # If RAFCON is started directly from the repo (without installation), the repo libraries have precedence
+        rafcon_root_path = dirname(realpath(rafcon.__file__))
+        rafcon_repo_library_path = join(dirname(dirname(rafcon_root_path)), 'share', 'libraries')
+        if os.path.isdir(rafcon_repo_library_path):
+            os.environ['RAFCON_LIB_PATH'] = rafcon_repo_library_path
         else:
-            os.environ['RAFCON_LIB_PATH'] = join(dirname(dirname(rafcon_root_path)), 'share', 'libraries')
+            rafcon_share_library_path = resources.search_in_share_folders("rafcon", "libraries")
+            if rafcon_share_library_path:
+                os.environ['RAFCON_LIB_PATH'] = rafcon_share_library_path
+            else:
+                logger.warning("Could not find root directory of RAFCON libraries. Please specify manually using the "
+                               "env var RAFCON_LIB_PATH")
 
     # Install dummy _ builtin function in case i18.setup_l10n() is not called
     if sys.version_info >= (3,):
