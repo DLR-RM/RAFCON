@@ -11,21 +11,22 @@
 
 import os
 from os import path
-from os.path import dirname
 import sys
+from imp import load_source
 import shutil
 import subprocess
 import distutils.log
 from distutils.dir_util import copy_tree
 
 try:
-    from gi.repository import GLib
+    from rafcon.utils import resources
 except ImportError:
-    GLib = None
+    script_path = path.realpath(__file__)
+    resources_script_path = path.join(path.dirname(script_path), "resources.py")
+    resources = load_source("resources", resources_script_path)
 
-# Path to this file: source/rafcon/utils/installation.py
-rafcon_root_path = dirname(dirname(dirname(dirname(path.abspath(__file__)))))
-assets_folder = os.path.join('source', 'rafcon', 'gui', 'assets')
+share_path = resources.search_in_share_folders("rafcon", "libraries")
+assets_path = resources.search_in_share_folders("rafcon.gui", "assets")
 
 
 def install_fonts(logger=None, restart=False):
@@ -63,7 +64,7 @@ def install_fonts(logger=None, restart=False):
     try:
         for font_name in font_names_to_be_installed:
             # A font is a folder one or more font faces
-            fonts_folder = os.path.join(assets_folder, "fonts", font_name)
+            fonts_folder = os.path.join(assets_path, "fonts", font_name)
             num_faces_to_be_installed = len([name for name in os.listdir(fonts_folder) if name.endswith(".otf")])
             num_faces_installed = 0
             # default case: font is not installed yet!
@@ -111,10 +112,7 @@ def install_gtk_source_view_styles(logger=None):
         log = logger
     else:
         log = distutils.log
-    if GLib:
-        user_data_folder = GLib.get_user_data_dir()
-    else:
-        user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
+    user_data_folder = resources.installation_share_folder
     user_source_view_style_path = os.path.join(user_data_folder, 'gtksourceview-3.0', 'styles')
 
     try:
@@ -122,7 +120,7 @@ def install_gtk_source_view_styles(logger=None):
             os.makedirs(user_source_view_style_path)
 
         # Copy all .xml source view style files from all themes to local user styles folder
-        themes_path = os.path.join(rafcon_root_path, assets_folder, "share", "themes")
+        themes_path = os.path.join(assets_path, "share", "themes")
         for theme in os.listdir(themes_path):
             theme_source_view_path = os.path.join(themes_path, theme, "gtk-sourceview")
             if not os.path.isdir(theme_source_view_path):
@@ -142,28 +140,28 @@ def install_libraries(logger=None, overwrite=True):
         log = logger
     else:
         log = distutils.log
-    if GLib:
-        user_data_folder = GLib.get_user_data_dir()
-    else:
-        user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
-    user_library_path = os.path.join(user_data_folder, 'rafcon', 'libraries')
-    library_path = os.path.join(rafcon_root_path, "share", "libraries")
 
-    if os.path.exists(user_library_path):
-        if not overwrite:
-            return
+    user_data_folder = resources.installation_share_folder
+
+    for library_folder in ["libraries", "examples"]:
+        source_library_path = os.path.join(share_path, library_folder)
+        user_library_path = os.path.join(user_data_folder, 'rafcon', library_folder)
+
+        if os.path.exists(user_library_path):
+            if not overwrite:
+                return
+            try:
+                log.info("Removing old RAFCON libraries in {}".format(user_library_path))
+                shutil.rmtree(user_library_path)
+            except (EnvironmentError, shutil.Error) as e:
+                log.error("Could not remove old RAFCON libraries in {}: {}".format(user_library_path, e))
+                return
+
         try:
-            log.info("Removing old RAFCON libraries in {}".format(user_library_path))
-            shutil.rmtree(user_library_path)
-        except (EnvironmentError, shutil.Error) as e:
-            log.error("Could not remove old RAFCON libraries in {}: {}".format(user_library_path, e))
-            return
-
-    try:
-        log.info("Installing RAFCON libraries to {}".format(user_library_path))
-        shutil.copytree(library_path, user_library_path)
-    except (IOError, shutil.Error) as e:
-        log.error("Could not install RAFCON libraries: {}".format(e))
+            log.info("Installing RAFCON libraries to {}".format(user_library_path))
+            shutil.copytree(source_library_path, user_library_path)
+        except (IOError, shutil.Error) as e:
+            log.error("Could not install RAFCON libraries: {}".format(e))
 
 
 def install_icons(logger=None):
@@ -171,12 +169,9 @@ def install_icons(logger=None):
         log = logger
     else:
         log = distutils.log
-    if GLib:
-        user_data_folder = GLib.get_user_data_dir()
-    else:
-        user_data_folder = os.path.join(os.path.expanduser('~'), '.local', 'share')
+    user_data_folder = resources.installation_share_folder
     user_icons_path = os.path.join(user_data_folder, 'icons')
-    icons_path = os.path.join(rafcon_root_path, assets_folder, "share", "icons")
+    icons_path = os.path.join(assets_path, "share", "icons")
 
     try:
         log.info("Installing RAFCON icons to {}".format(user_icons_path))
