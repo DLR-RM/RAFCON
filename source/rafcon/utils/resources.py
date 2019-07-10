@@ -16,7 +16,6 @@
 """
 
 import sys
-from past.builtins import map
 import os
 from os import listdir
 from os.path import expanduser, isfile, join
@@ -126,10 +125,10 @@ def search_in_share_folders(package_or_requirement, resource_name):
     # i.e. if a resource "r" is searched in rafcon.gui.controllers,
     # the resource "r" residing in rafcon.gui may also be returned
     while package_or_requirement_segments:
-        paths = map(
+        paths = list(map(
             lambda path: os.path.join(os.path.join(path, *package_or_requirement_segments), resource_name),
             share_folder_paths,
-        )
+        ))
 
         for path in paths:
             if os.path.isfile(path) or os.path.isdir(path):
