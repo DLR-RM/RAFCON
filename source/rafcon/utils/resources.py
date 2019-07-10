@@ -25,6 +25,7 @@ import pkg_resources
 
 possible_prefix_paths = []
 share_folder_paths = []
+installation_share_folder = None
 
 # The list is ordered by preference
 _possible_prefix_paths = [sys.prefix, sys.exec_prefix,
@@ -35,7 +36,10 @@ _possible_prefix_paths = [sys.prefix, sys.exec_prefix,
 for prefix_path in _possible_prefix_paths:
     if prefix_path and prefix_path not in possible_prefix_paths and os.path.isdir(prefix_path):
         possible_prefix_paths.append(prefix_path)
-        share_folder_paths.append(join(prefix_path, "share"))
+        share_folder_path = join(prefix_path, "share")
+        share_folder_paths.append(share_folder_path)
+        if not installation_share_folder and os.access(share_folder_path, os.W_OK):
+            installation_share_folder = share_folder_path
 
 # One more candidate for share folder: GLib.get_user_data_dir()
 try:
