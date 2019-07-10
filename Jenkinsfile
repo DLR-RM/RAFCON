@@ -51,7 +51,7 @@ pipeline {
                     steps {
                         timeout(time: 10, unit: 'MINUTES') {
                             wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
-                                sh "xvfb-run -as '-screen 0 1920x1200x24' tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml"
+                                sh "tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml"
                             }
                         }
                     }
