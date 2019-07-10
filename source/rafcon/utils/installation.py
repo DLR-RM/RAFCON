@@ -292,6 +292,7 @@ def generate_data_files():
     assets_folder = path.join('source', 'rafcon', 'gui', 'assets')
     share_folder = path.join(assets_folder, 'share')
     themes_folder = path.join(share_folder, 'themes', 'RAFCON')
+    gtksourceview_folder = path.join(themes_folder, 'gtk-sourceview')
     examples_folder = path.join('share', 'examples')
     libraries_folder = path.join('share', 'libraries')
 
@@ -317,14 +318,15 @@ def generate_data_files():
     # locale_data_files = [('share/rafcon/locale/de/LC_MESSAGES', ['source/rafcon/locale/de/LC_MESSAGES/rafcon.mo'])]
     # print("locale_data_files", locale_data_files)
 
-    version_data_file = [("./", ["VERSION"])]
     desktop_data_file = [("share/applications", [path.join('share', 'applications', 'de.dlr.rm.RAFCON.desktop')])]
-
+    gtksourceview_data_files = [("share/gtksourceview-3.0/styles/rafcon", [
+        path.join(gtksourceview_folder, 'rafcon.xml'), path.join(gtksourceview_folder, 'rafcon-dark.xml')
+    ])]
     examples_data_files = get_data_files_recursively(examples_folder, share_target_root=path.join("rafcon", "examples"))
     libraries_data_files = get_data_files_recursively(libraries_folder, share_target_root=path.join("rafcon",
                                                                                                     "libraries"))
-    generated_data_files = gui_data_files + icon_data_files + locale_data_files + version_data_file + \
-                           desktop_data_file + examples_data_files + libraries_data_files
+    generated_data_files = gui_data_files + icon_data_files + locale_data_files + \
+                           desktop_data_file + gtksourceview_data_files + examples_data_files + libraries_data_files
     # for elem in generated_data_files:
     #     print(elem)
     return generated_data_files
