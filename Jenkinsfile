@@ -5,7 +5,7 @@ pipeline {
 
     parameters {
         string(name: 'tox_args', defaultValue: '-v', description: 'Arguments passed to tox besides the environment name', )
-        string(name: 'pytest_args', defaultValue: '-vx -m "(core or gui or share_elements) and not unstable and not user_input"', description: 'Arguments passed to pytest')
+        string(name: 'pytest_args', defaultValue: '-vx --timeout 0 -m "(core or gui or share_elements) and not unstable and not user_input"', description: 'Arguments passed to pytest')
     }
 
     environment {
