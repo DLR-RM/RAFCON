@@ -15,7 +15,7 @@ This will run the following environments:
 * ``py27``, ``py3[4-7]``: Runs the test using the according Python interpreter
 * ``coverage``: Runs the tests using Python 2.7 with a coverage report
 * ``docs``: Builds the documentation and verifies all links
-* ``check``: Verifies the sdist file
+* ``check``: Verifies the sdist and wheel file
 
 Specific environments can be run with the ``-e`` option:
 
