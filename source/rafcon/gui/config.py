@@ -84,15 +84,20 @@ class GuiConfig(ObservableConfig):
                                      "".format(shortcut_name, shortcuts_list))
                     shortcuts_dict[shortcut_name] = shortcuts_list if isinstance(shortcuts_list, list) else [shortcuts_list]
 
+    def get_theme_path(self):
+        return get_data_file_path("themes", "RAFCON")
+
     def configure_gtk(self):
-        if not resource_exists(__name__, self.get_assets_path()):
+        theme_path = self.get_theme_path()
+        if not theme_path:
             raise ValueError("GTK theme 'RAFCON' does not exist")
 
         theme_name = "RAFCON"
         dark_theme = self.get_config_value('THEME_DARK_VARIANT', True)
 
-        data_dir = resource_filename(__name__, self.get_assets_path(for_theme=False))
-        os.environ['GTK_DATA_PREFIX'] = data_dir
+        # GTK_DATA_PREFIX must point to a path that contains share/themes/THEME_NAME
+        gtk_data_prefix = os.path.dirname(os.path.dirname(os.path.dirname(theme_path)))
+        os.environ['GTK_DATA_PREFIX'] = gtk_data_prefix
         os.environ['GTK_THEME'] = "{}{}".format(theme_name, ":dark" if dark_theme else "")
 
         # The env vars GTK_DATA_PREFIX and GTK_THEME must be set before Gtk is imported first to prevent GTK warnings
@@ -122,11 +127,12 @@ class GuiConfig(ObservableConfig):
         dark_theme = self.get_config_value('THEME_DARK_VARIANT', True)
         css_filename = "gtk-dark.css" if dark_theme else "gtk.css"
         # Get colors from GTKrc file
-        if not resource_exists(__name__, self.get_assets_path("gtk-3.0", css_filename)):
+        theme_path = self.get_theme_path()
+        css_file_path = os.path.join(theme_path, "gtk-3.0", css_filename)
+        if not os.path.isfile(css_file_path):
             raise ValueError("GTK theme does not exist")
 
-        gtkrc_file_path = resource_filename(__name__, self.get_assets_path("gtk-3.0", css_filename))
-        with open(gtkrc_file_path) as f:
+        with open(css_file_path) as f:
             lines = f.readlines()
 
         for line in lines:
@@ -144,7 +150,7 @@ class GuiConfig(ObservableConfig):
 
         # Get color definitions
         colors_filename = "colors-dark.json" if dark_theme else "colors.json"
-        color_file_path = resource_filename(__name__, self.get_assets_path(filename=colors_filename))
+        color_file_path = os.path.join(theme_path, colors_filename)
         try:
             colors = storage_utils.load_objects_from_json(color_file_path)
         except IOError:

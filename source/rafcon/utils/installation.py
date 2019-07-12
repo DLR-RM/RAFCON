@@ -25,8 +25,6 @@ except ImportError:
     resources_script_path = path.join(path.dirname(script_path), "resources.py")
     resources = load_source("resources", resources_script_path)
 
-share_path = resources.search_in_share_folders("rafcon", "libraries")
-assets_path = resources.search_in_share_folders("rafcon.gui", "assets")
 
 
 def install_fonts(logger=None, restart=False):
@@ -64,7 +62,8 @@ def install_fonts(logger=None, restart=False):
     try:
         for font_name in font_names_to_be_installed:
             # A font is a folder one or more font faces
-            fonts_folder = os.path.join(assets_path, "fonts", font_name)
+            fonts_folder = resources.get_data_file_path("rafcon", "gui", "fonts", font_name)
+            # fonts_folder = os.path.join(assets_path, "fonts", font_name)
             num_faces_to_be_installed = len([name for name in os.listdir(fonts_folder) if name.endswith(".otf")])
             num_faces_installed = 0
             # default case: font is not installed yet!
@@ -184,7 +183,7 @@ def create_mo_files():
     data_files = []
     domain = "rafcon"
     assert "setup.py" in os.listdir(os.curdir)
-    rel_localedir = path.join('source', 'rafcon', 'locale')
+    rel_localedir = path.join('share', 'rafcon', 'locale')
     localedir = os.path.join(os.curdir, rel_localedir)
     # Assert that we are in the root directory of the RAFCON repository
     po_files = [po_file

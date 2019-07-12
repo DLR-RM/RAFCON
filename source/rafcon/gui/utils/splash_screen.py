@@ -76,8 +76,8 @@ class SplashScreen(Gtk.Window):
 
     def rotate_image(self, random_=True):
         images = []
-        for image_filename in resource_listdir(rafcon.gui.__name__, "assets/splashscreens"):
-            images.append(resource_filename(rafcon.gui.__name__, "assets/splashscreens/" + image_filename))
+        for image_filename in resource_listdir(rafcon.gui.__name__, os.path.join("assets", "splashscreens")):
+            images.append(resource_filename(rafcon.gui.__name__, os.path.join("assets", "splashscreens", image_filename)))
 
         # if random mode is specified, choose a picture out of the target folder. Else switch through the pictures
         if random_:
