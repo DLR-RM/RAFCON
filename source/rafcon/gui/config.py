@@ -21,11 +21,12 @@ try:
 except ImportError:
     from yaml import FullLoader
 from collections import defaultdict
+from pkg_resources import resource_filename, resource_string
 
 from yaml_configuration.config import ConfigError
 
 from rafcon.core.config import ObservableConfig
-from rafcon.utils.resources import resource_filename, resource_exists, resource_string
+from rafcon.utils.resources import get_data_file_path
 from rafcon.utils import storage_utils
 from rafcon.utils import log
 

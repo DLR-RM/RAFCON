@@ -10,7 +10,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 
-from rafcon.utils.resources import resource_filename
+from pkg_resources import resource_filename
 
 
 def get_glade_path(glade_file):

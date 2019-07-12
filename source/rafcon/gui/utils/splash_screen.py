@@ -14,7 +14,7 @@ import os
 from gi.repository import Gtk
 from gi.repository import GdkPixbuf
 import random
-from rafcon.utils.resources import resource_filename, resource_listdir
+from pkg_resources import resource_filename, resource_listdir
 
 import rafcon.gui
 from rafcon.utils import log
