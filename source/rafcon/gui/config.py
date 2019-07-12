@@ -12,7 +12,6 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import str
 import os
 import re
 import yaml
@@ -34,7 +33,7 @@ logger = log.get_logger(__name__)
 
 CONFIG_FILE = "gui_config.yaml"
 
-DEFAULT_CONFIG = resource_string(__name__, CONFIG_FILE)
+DEFAULT_CONFIG = str(resource_string(__name__, CONFIG_FILE).decode("utf-8"))
 
 
 class GuiConfig(ObservableConfig):
