@@ -16,4 +16,4 @@ process RAFCON with new state machine
 	use_template: rafcon_template("True", "")
 
 process RAFCON with existing state machine
-	use_template: rafcon_template("", "/volume/software/common/packages/rafcon/latest/share/libraries/generic/wait")
+	use_template: rafcon_template("", "/volume/software/common/packages/rafcon/latest/share/rafcon/libraries/generic/wait")
