@@ -16,17 +16,37 @@ from __future__ import print_function
 from setuptools import setup, find_packages
 import distutils.log
 
-from os import path
 import os
-from imp import load_source
 
 distutils.log.set_verbosity(distutils.log.INFO)
 
+assert "setup.py" in os.listdir(os.curdir), "setup.py must be in current directory"
+
 rafcon_root_path = os.path.dirname(os.path.abspath(__file__))
 
-script_path = path.realpath(__file__)
-installation_script_path = path.join(path.dirname(script_path), "source", "rafcon", "utils", "installation.py")
-installation = load_source("installation", installation_script_path)
+
+def is_tracked(path):
+    import subprocess
+    """Checks whether the given file/folder is tracked via git"""
+    if ".git" not in os.listdir("."):
+        # If this is not a git repo at all, regard the file as being tracked
+        # Ths can be the case if a wheel is build from a source dist
+        return True
+    return subprocess.call(['git', 'ls-files', '--error-unmatch', path],
+                           stderr=subprocess.STDOUT, stdout=open(os.devnull, 'w')) == 0
+
+
+def get_data_files():
+    data_files_dir = os.path.join(".", 'share')
+    exclude_data_files_folders = ["ln", "templates"]
+    data_files = []
+    for directory, folders, files in os.walk(data_files_dir):
+        folder_name = directory.rsplit(os.sep, 1)[1]
+        if folder_name in exclude_data_files_folders:
+            continue
+        data_files.append((directory, [os.path.join(directory, file) for file in files
+                                       if is_tracked(os.path.join(directory, file))]))
+    return data_files
 
 
 # read version from VERSION file
@@ -70,7 +90,7 @@ setup(
         'rafcon.gui.glade': ['*.glade']
     },
 
-    data_files=installation.generate_data_files(),
+    data_files=get_data_files(),
 
     setup_requires=['pytest-runner', 'libsass >= 0.15.0'],
     tests_require=test_requirements,
