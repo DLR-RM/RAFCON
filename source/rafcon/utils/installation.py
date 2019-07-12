@@ -106,77 +106,16 @@ def install_fonts(logger=None, restart=False):
             os.execle(python, python, *args_and_env)
 
 
-def install_gtk_source_view_styles(logger=None):
-    if logger:
-        log = logger
-    else:
-        log = distutils.log
-    user_data_folder = resources.installation_share_folder
-    user_source_view_style_path = os.path.join(user_data_folder, 'gtksourceview-3.0', 'styles')
+def install_locally_required_files():
+    local_user_data_folder = resources.installation_share_folder
+    source_share_folder = resources.get_relative_share_path()
 
-    try:
-        if not os.path.exists(user_source_view_style_path):
-            os.makedirs(user_source_view_style_path)
-
-        # Copy all .xml source view style files from all themes to local user styles folder
-        themes_path = os.path.join(assets_path, "share", "themes")
-        for theme in os.listdir(themes_path):
-            theme_source_view_path = os.path.join(themes_path, theme, "gtk-sourceview")
-            if not os.path.isdir(theme_source_view_path):
-                continue
-            for style_filename in os.listdir(theme_source_view_path):
-                if not style_filename.endswith(".xml"):
-                    continue
-                log.info("Installing GTKSourceView style '{}' to {}".format(style_filename, user_source_view_style_path))
-                theme_source_view_style_path = os.path.join(theme_source_view_path, style_filename)
-                shutil.copy(theme_source_view_style_path, user_source_view_style_path)
-    except IOError as e:
-        log.error("Could not install GTKSourceView style: {}".format(e))
-
-
-def install_libraries(logger=None, overwrite=True):
-    if logger:
-        log = logger
-    else:
-        log = distutils.log
-
-    user_data_folder = resources.installation_share_folder
-
-    for library_folder in ["libraries", "examples"]:
-        source_library_path = os.path.join(share_path, library_folder)
-        user_library_path = os.path.join(user_data_folder, 'rafcon', library_folder)
-
-        if os.path.exists(user_library_path):
-            if not overwrite:
-                return
-            try:
-                log.info("Removing old RAFCON libraries in {}".format(user_library_path))
-                shutil.rmtree(user_library_path)
-            except (EnvironmentError, shutil.Error) as e:
-                log.error("Could not remove old RAFCON libraries in {}: {}".format(user_library_path, e))
-                return
-
+    for folder in ["gtksourceview-3.0", "icons"]:
         try:
-            log.info("Installing RAFCON libraries to {}".format(user_library_path))
-            shutil.copytree(source_library_path, user_library_path)
-        except (IOError, shutil.Error) as e:
-            log.error("Could not install RAFCON libraries: {}".format(e))
-
-
-def install_icons(logger=None):
-    if logger:
-        log = logger
-    else:
-        log = distutils.log
-    user_data_folder = resources.installation_share_folder
-    user_icons_path = os.path.join(user_data_folder, 'icons')
-    icons_path = os.path.join(assets_path, "share", "icons")
-
-    try:
-        log.info("Installing RAFCON icons to {}".format(user_icons_path))
-        copy_tree(icons_path, user_icons_path, update=1)
-    except IOError as e:
-        log.error("Could not install RAFCON icons: {}".format(e))
+            logger.info("Copying '{}' files...".format(folder))
+            copy_tree(join(source_share_folder, folder), join(local_user_data_folder, folder), update=1)
+        except IOError as e:
+            logger.error("Could not copy '{}' files: {}".format(folder, str(e)))
 
 
 def create_mo_files():
