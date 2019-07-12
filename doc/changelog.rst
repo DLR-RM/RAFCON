@@ -36,6 +36,8 @@ Next Release
 
   - provide RAFCON wheel file
   - make installation more robust, especially against missing font files
+  - simplify installation process
+  - clear separation in handling of ``data_files`` and ``package_files``
 
 
 - Bug Fixes:

@@ -16,27 +16,49 @@ from __future__ import print_function
 from setuptools import setup, find_packages
 import distutils.log
 
-from os import path
 import os
-from imp import load_source
 
 distutils.log.set_verbosity(distutils.log.INFO)
 
-rafcon_root_path = os.path.dirname(os.path.abspath(__file__))
+assert "setup.py" in os.listdir(os.curdir), "setup.py must be in current directory"
 
-script_path = path.realpath(__file__)
-installation_script_path = path.join(path.dirname(script_path), "source", "rafcon", "utils", "installation.py")
-installation = load_source("installation", installation_script_path)
+
+def include_as_data_file(path):
+    import subprocess
+    """Checks whether the given file/folder is tracked via git"""
+    if ".git" not in os.listdir("."):
+        # If this is not a git repo at all, regard the file as being tracked
+        # This can be the case if a wheel is build from a source dist
+        return True
+    # Include generated CSS files
+    if path.endswith(".css"):
+        return True
+    # Besides this, only include files tracked via git
+    return subprocess.call(['git', 'ls-files', '--error-unmatch', path],
+                           stderr=subprocess.STDOUT, stdout=open(os.devnull, 'w')) == 0
+
+
+def get_data_files():
+    data_files_dir = os.path.join(".", 'share')
+    exclude_data_files_folders = ["ln", "templates"]
+    data_files = []
+    for directory, folders, files in os.walk(data_files_dir):
+        folder_name = directory.rsplit(os.sep, 1)[1]
+        if folder_name in exclude_data_files_folders:
+            continue
+        data_files.append((directory, [os.path.join(directory, file) for file in files
+                                       if include_as_data_file(os.path.join(directory, file))]))
+    return data_files
 
 
 # read version from VERSION file
 # this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon
-version_file_path = os.path.join(rafcon_root_path, "VERSION")
+version_file_path = os.path.join(".", "VERSION")
 with open(version_file_path, "r") as f:
     content = f.read().splitlines()
     version = content[0]
 
-readme_file_path = os.path.join(rafcon_root_path, "README.rst")
+readme_file_path = os.path.join(".", "README.rst")
 with open(readme_file_path, "r") as f:
     long_description = f.read()
 
@@ -61,16 +83,16 @@ setup(
     package_dir={'': "source"},  # tell distutils packages are under source
 
     package_data={
-        # Include pylint and logging config
-        'rafcon': ['pylintrc', 'logging.conf'],
-        # Include core and GUI config
+        # Include pylint, logging config and localisation files
+        'rafcon': ['pylintrc', 'logging.conf', 'locale/*', 'locale/*/LC_MESSAGES/*'],
+        # Include core and GUI config plush splashscreens
         'rafcon.core': ['config.yaml'],
-        'rafcon.gui': ['gui_config.yaml'],
+        'rafcon.gui': ['gui_config.yaml', 'assets/splashscreens/*'],
         # Include all glade files
         'rafcon.gui.glade': ['*.glade']
     },
 
-    data_files=installation.generate_data_files(),
+    data_files=get_data_files(),
 
     setup_requires=['pytest-runner', 'libsass >= 0.15.0'],
     tests_require=test_requirements,

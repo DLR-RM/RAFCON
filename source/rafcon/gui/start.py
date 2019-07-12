@@ -85,7 +85,7 @@ def setup_installation():
     started the first time.
 
     If RAFCON is started directly from the repo or from RMPM (without a previous installation), it can be forced to
-    install all additionally required files (libraries, icons, gtksourceview styles) by setting the env variable
+    install all additionally required files (icons and gtksourceview styles) by setting the env variable
     `RAFCON_CHECK_INSTALLATION` to "True".
     """
     force_check_installation = os.environ.get("RAFCON_CHECK_INSTALLATION", False) == "True"
@@ -93,21 +93,10 @@ def setup_installation():
     if not force_check_installation and data_files_version_up_to_date():
         return
 
-    if not resources.search_in_share_folders("rafcon.gui", "assets"):
-        # RAFCON is started from repo or RMPM and has not been installed
-        force_check_installation = True
-        # resource locations must be override, as they cannot be found automatically
-        rafcon_source_root_path = os.path.dirname(os.path.realpath(rafcon.__file__))
-        rafcon_repo_root_path = os.path.dirname(os.path.dirname(rafcon_source_root_path))
-        installation.assets_path = os.path.join(rafcon_source_root_path, "gui", "assets")
-        installation.share_path = os.path.join(rafcon_repo_root_path, "share")
+    if force_check_installation or installation.started_without_installation():
+        installation.install_locally_required_files()
 
-    if force_check_installation:
-        installation.install_libraries(logger, overwrite=False)
-        installation.install_icons(logger)
-        installation.install_gtk_source_view_styles(logger)
-
-    installation.install_fonts(logger, restart=True)
+    installation.install_fonts(restart=True)
 
     update_data_files_version()
 
