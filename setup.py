@@ -22,16 +22,18 @@ distutils.log.set_verbosity(distutils.log.INFO)
 
 assert "setup.py" in os.listdir(os.curdir), "setup.py must be in current directory"
 
-rafcon_root_path = os.path.dirname(os.path.abspath(__file__))
 
-
-def is_tracked(path):
+def include_as_data_file(path):
     import subprocess
     """Checks whether the given file/folder is tracked via git"""
     if ".git" not in os.listdir("."):
         # If this is not a git repo at all, regard the file as being tracked
-        # Ths can be the case if a wheel is build from a source dist
+        # This can be the case if a wheel is build from a source dist
         return True
+    # Include generated CSS files
+    if path.endswith(".css"):
+        return True
+    # Besides this, only include files tracked via git
     return subprocess.call(['git', 'ls-files', '--error-unmatch', path],
                            stderr=subprocess.STDOUT, stdout=open(os.devnull, 'w')) == 0
 
@@ -45,18 +47,18 @@ def get_data_files():
         if folder_name in exclude_data_files_folders:
             continue
         data_files.append((directory, [os.path.join(directory, file) for file in files
-                                       if is_tracked(os.path.join(directory, file))]))
+                                       if include_as_data_file(os.path.join(directory, file))]))
     return data_files
 
 
 # read version from VERSION file
 # this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon
-version_file_path = os.path.join(rafcon_root_path, "VERSION")
+version_file_path = os.path.join(".", "VERSION")
 with open(version_file_path, "r") as f:
     content = f.read().splitlines()
     version = content[0]
 
-readme_file_path = os.path.join(rafcon_root_path, "README.rst")
+readme_file_path = os.path.join(".", "README.rst")
 with open(readme_file_path, "r") as f:
     long_description = f.read()
 
