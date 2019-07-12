@@ -81,11 +81,11 @@ setup(
     package_dir={'': "source"},  # tell distutils packages are under source
 
     package_data={
-        # Include pylint and logging config
-        'rafcon': ['pylintrc', 'logging.conf'],
-        # Include core and GUI config
+        # Include pylint, logging config and localisation files
+        'rafcon': ['pylintrc', 'logging.conf', 'locale/*', 'locale/*/LC_MESSAGES/*'],
+        # Include core and GUI config plush splashscreens
         'rafcon.core': ['config.yaml'],
-        'rafcon.gui': ['gui_config.yaml'],
+        'rafcon.gui': ['gui_config.yaml', 'assets/splashscreens/*'],
         # Include all glade files
         'rafcon.gui.glade': ['*.glade']
     },
