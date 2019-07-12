@@ -118,7 +118,7 @@ def install_locally_required_files():
 def create_mo_files():
     domain = "rafcon"
     assert "setup.py" in os.listdir(os.curdir)
-    rel_localedir = join('share', 'rafcon', 'locale')
+    rel_localedir = join('source', 'rafcon', 'locale')
     localedir = join(os.curdir, rel_localedir)
     # Assert that we are in the root directory of the RAFCON repository
     po_files = [po_file
