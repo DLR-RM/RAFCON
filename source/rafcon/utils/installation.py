@@ -26,6 +26,11 @@ except ImportError:
     resources = load_source("resources", resources_script_path)
 
 
+def started_without_installation():
+    import rafcon
+    pt_file_path = join(dirname(dirname(dirname(abspath(rafcon.__file__)))), "rafcon.pt")
+    if isfile(pt_file_path):
+        return True
 
 def install_fonts(logger=None, restart=False):
     if logger:
