@@ -17,6 +17,7 @@
 
 """
 
+from weakref import ref
 from future.utils import string_types
 from gtkmvc3.observable import Observable
 
@@ -46,8 +47,9 @@ class DataFlow(StateElement):
     _to_state = None
     _to_key = None
 
-    def __init__(self, from_state=None, from_key=None, to_state=None, to_key=None, data_flow_id=None, parent=None):
-        super(DataFlow, self).__init__()
+    def __init__(self, from_state=None, from_key=None, to_state=None, to_key=None, data_flow_id=None, parent=None,
+                 safe_init=True):
+        super(DataFlow, self).__init__(safe_init=safe_init)
 
         if data_flow_id is None:
             self._data_flow_id = generate_data_flow_id()
@@ -56,13 +58,26 @@ class DataFlow(StateElement):
                 raise ValueError("data_flow_id must be of type int")
             self._data_flow_id = data_flow_id
 
+        if safe_init:
+            DataFlow._safe_init(self, from_state, from_key, to_state, to_key, parent)
+        else:
+            DataFlow._unsafe_init(self, from_state, from_key, to_state, to_key, parent)
+
+    def _safe_init(self, from_state, from_key, to_state, to_key, parent):
         self.from_state = from_state
         self.from_key = from_key
         self.to_state = to_state
         self.to_key = to_key
-
         # Checks for validity
         self.parent = parent
+
+    def _unsafe_init(self, from_state, from_key, to_state, to_key, parent):
+        self._from_state = from_state
+        self._from_key = from_key
+        self._to_state = to_state
+        self._to_key = to_key
+        if parent:
+            self._parent = ref(parent)
 
     def __str__(self):
         default_string = "Data flow - from_state: %s, from_key: %s, to_state: %s, to_key: %s, id: %s" % \
@@ -107,7 +122,7 @@ class DataFlow(StateElement):
         to_state = dictionary['to_state']
         to_key = dictionary['to_key']
         data_flow_id = dictionary['data_flow_id']
-        return cls(from_state, from_key, to_state, to_key, data_flow_id)
+        return cls(from_state, from_key, to_state, to_key, data_flow_id, safe_init=False)
 
     @staticmethod
     def state_element_to_dict(state_element):

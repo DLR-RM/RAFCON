@@ -47,13 +47,25 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
 
     yaml_tag = u'!StateElement'
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, safe_init=True):
         Observable.__init__(self)
 
         if type(self) == StateElement:
             raise NotImplementedError
 
+        if safe_init:
+            StateElement._safe_init(self, parent)
+        else:
+            StateElement._unsafe_init(self, parent)
+
+    def _safe_init(self, parent):
         self.parent = parent
+
+    def _unsafe_init(self, parent):
+        if parent:
+            self._parent = ref(parent)
+        else:
+            self._parent = None
 
     def __hash__(self):
         return id(self)

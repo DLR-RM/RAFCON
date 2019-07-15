@@ -16,6 +16,7 @@
 
 """
 
+from weakref import ref
 from future.utils import string_types
 import datetime
 import time
@@ -62,11 +63,12 @@ class ScopedVariable(DataPort):
 
     yaml_tag = u'!ScopedVariable'
 
-    def __init__(self, name=None, data_type=None, default_value=None, scoped_variable_id=None, parent=None):
+    def __init__(self, name=None, data_type=None, default_value=None, scoped_variable_id=None, parent=None,
+                 safe_init=True):
 
         Observable.__init__(self)
 
-        DataPort.__init__(self, name, data_type, default_value, scoped_variable_id, parent)
+        DataPort.__init__(self, name, data_type, default_value, scoped_variable_id, parent, safe_init=safe_init)
 
     def __str__(self):
         return "ScopedVariable '{0}' [{1}] ({3} {2})".format(self.name, self.data_port_id, self.data_type,
@@ -87,7 +89,7 @@ class ScopedVariable(DataPort):
         name = dictionary['name']
         data_type = dictionary['data_type']
         default_value = dictionary['default_value']
-        return cls(name, data_type, default_value, data_port_id)
+        return cls(name, data_type, default_value, data_port_id, safe_init=False)
 
     @staticmethod
     def state_element_to_dict(state_element):
@@ -120,23 +122,38 @@ class ScopedData(StateElement):
     _data_port_type = None
     _primary_key = None
 
-    def __init__(self, name, value, value_type, from_state, data_port_type, parent=None):
+    def __init__(self, name, value, value_type, from_state, data_port_type, parent=None, safe_init=True):
 
-        super(ScopedData, self).__init__()
-
-        self.from_state = from_state
-        self.name = name
-
-        if value_type is not None:
-            self.value_type = value_type
-        self.value = value
-
-        self.data_port_type = data_port_type
+        super(ScopedData, self).__init__(safe_init=safe_init)
 
         self._timestamp = generate_time_stamp()
         # for storage purpose inside the container states (generated from key_name and from_state)
 
+        if safe_init:
+            ScopedData._safe_init(self, name, value, value_type, from_state, data_port_type, parent)
+        else:
+            ScopedData._unsafe_init(self, name, value, value_type, from_state, data_port_type, parent)
+
+        # logger.debug("DataPort with name %s initialized" % self.name)
+
+    def _safe_init(self, name, value, value_type, from_state, data_port_type, parent):
+        self.name = name
+        self.value = value
+        if value_type is not None:
+            self.value_type = value_type
+        self.from_state = from_state
+        self.data_port_type = data_port_type
         self.parent = parent
+
+    def _unsafe_init(self, name, value, value_type, from_state, data_port_type, parent):
+        self._name = name
+        self._value = value
+        if value_type is not None:
+            self._value_type = value_type
+        self._from_state = from_state
+        self._data_port_type = data_port_type
+        if parent:
+            self._parent = ref(parent)
 
     @property
     def state_element_id(self):
@@ -150,7 +167,7 @@ class ScopedData(StateElement):
     def from_dict(cls, dictionary):
         return ScopedData(dictionary['name'],
                           dictionary['value'], dictionary['value_type'],
-                          dictionary['from_state'], dictionary['data_port_type'])
+                          dictionary['from_state'], dictionary['data_port_type'], safe_init=False)
 
     @staticmethod
     def state_element_to_dict(state_element):

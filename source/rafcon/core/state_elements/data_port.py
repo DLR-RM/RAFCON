@@ -17,6 +17,7 @@
    :synopsis: A module to represent data ports the state machine
 
 """
+from weakref import ref
 from future.utils import string_types
 from enum import Enum
 from gtkmvc3.observable import Observable
@@ -51,10 +52,10 @@ class DataPort(StateElement):
     _default_value = None
 
     def __init__(self, name=None, data_type=None, default_value=None, data_port_id=None, parent=None, force_type=False,
-                 init_without_default_value_type_exceptions=False):
+                 init_without_default_value_type_exceptions=False, safe_init=True):
         if type(self) == DataPort and not force_type:
             raise NotImplementedError
-        super(DataPort, self).__init__()
+        super(DataPort, self).__init__(safe_init=safe_init)
         self._no_type_error_exceptions = True if init_without_default_value_type_exceptions else False
         self._was_forced_type = force_type
         if data_port_id is None:
@@ -64,16 +65,30 @@ class DataPort(StateElement):
         else:
             self._data_port_id = data_port_id
 
+        self._no_type_error_exceptions = False
+
+        if safe_init:
+            DataPort._safe_init(self, name, data_type, default_value, parent)
+        else:
+            DataPort._unsafe_init(self, name, data_type, default_value, parent)
+
+        # logger.debug("DataPort with name %s initialized" % self.name)
+
+    def _safe_init(self, name, data_type, default_value, parent):
         self.name = name
         if data_type is not None:
             self.data_type = data_type
         self.default_value = default_value
-
         # Checks for validity
         self.parent = parent
-        self._no_type_error_exceptions = False
 
-        # logger.debug("DataPort with name %s initialized" % self.name)
+    def _unsafe_init(self, name, data_type, default_value, parent):
+        self._name = name
+        if data_type is not None:
+            self._data_type = data_type
+        self._default_value = default_value
+        if parent:
+            self._parent = ref(parent)
 
     def __str__(self):
         return "DataPort '{0}' [{1}] ({3} {2})".format(self.name, self.data_port_id, self.data_type, self.default_value)
@@ -100,11 +115,11 @@ class DataPort(StateElement):
         # Allow creation of DataPort class when loading from YAML file
         if cls == DataPort:
             return DataPort(name, data_type, default_value, data_port_id, force_type=True,
-                            init_without_default_value_type_exceptions=True)
+                            init_without_default_value_type_exceptions=True, safe_init=False)
         # Call appropriate constructor, e.g. InputDataPort(...) for input data ports
         else:
             return cls(name, data_type, default_value, data_port_id, force_type=True,
-                       init_without_default_value_type_exceptions=True)
+                       init_without_default_value_type_exceptions=True, safe_init=False)
 
     @staticmethod
     def state_element_to_dict(state_element):
