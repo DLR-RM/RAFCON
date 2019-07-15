@@ -8,7 +8,6 @@ logger = log.get_logger(__name__)
 
 
 def trigger_gvm_signals():
-    raise ValueError()
     # core elements
     import rafcon.core.singleton
     import rafcon.gui.singleton
