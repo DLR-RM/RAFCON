@@ -10,9 +10,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import os
-from os.path import join, dirname, abspath, isfile, isdir, splitext, expanduser
+from os.path import join, dirname, abspath, isfile, isdir, splitext
 import sys
-import shutil
 import subprocess
 from distutils.dir_util import copy_tree
 
@@ -26,6 +25,10 @@ def started_without_installation():
     pt_file_path = join(dirname(dirname(dirname(abspath(rafcon.__file__)))), "rafcon.pt")
     if isfile(pt_file_path):
         return True
+
+
+def started_in_virtualenv():
+    return isdir(os.getenv("VIRTUAL_ENV", ""))
 
 
 def update_font_cache(path):
