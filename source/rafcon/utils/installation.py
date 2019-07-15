@@ -29,47 +29,35 @@ def started_without_installation():
 
 
 def update_font_cache(path):
-    fail = subprocess.call(['fc-cache', path])
-    return not fail
+    try:
+        fail = subprocess.call(['fc-cache', path])
+        return not fail
+    except OSError:
+        return False
+
+
+def installed_font_faces_for_font(font_name):
+    try:
+        p = subprocess.Popen(['fc-list', font_name], stdout=subprocess.PIPE)
+        output, _ = p.communicate()
+        output_lines = output.split("\n")
+        return len([line for line in output_lines if font_name in line])
+    except OSError:
+        return 0
 
 
 def install_fonts(restart=False):
-    try:
-        import gi
-        gi.require_version('Gtk', '3.0')
-        from gi.repository import Gtk
-    except (ImportError, ValueError):
-        logger.warn("No GTK found. Will not install fonts.")
-        return
-
-    font_names_to_be_installed = ["Source Sans Pro", "FontAwesome"]
-
-    try:
-        tv = Gtk.TextView()
-        context = tv.get_pango_context()
-    except Exception as e:
-        logger.error("Could not get pango context. Will not install fonts: {}".format(e))
-        return
-    if not context:  # A Pango context is not always available
-        logger.warn("Could not get pango context. Will not install fonts.")
-        return
-    existing_fonts = context.list_families()
-    existing_font_faces = {font.get_name(): [face.get_face_name() for face in font.list_faces()]
-                           for font in existing_fonts
-                           if font.get_name() in font_names_to_be_installed}
+    font_names_to_be_installed = [("Source Sans Pro", "SourceSansPro"), ("FontAwesome", "FontAwesome")]
 
     user_otf_fonts_folder = join(expanduser('~'), '.fonts')
 
     font_installed = False
     try:
-        for font_name in font_names_to_be_installed:
+        for font_name, internal_font_name in font_names_to_be_installed:
             # A font is a folder one or more font faces
             fonts_folder = resources.get_data_file_path("rafcon", "gui", "fonts", font_name)
             num_faces_to_be_installed = len([name for name in os.listdir(fonts_folder) if name.endswith(".otf")])
-            num_faces_installed = 0
-            # default case: font is not installed yet!
-            if font_name in existing_font_faces.keys():
-                num_faces_installed = len(existing_font_faces[font_name])
+            num_faces_installed = installed_font_faces_for_font(internal_font_name)
 
             if num_faces_to_be_installed <= num_faces_installed:
                 logger.debug("Font '{0}' already installed".format(font_name))
@@ -102,6 +90,7 @@ def install_fonts(restart=False):
             environ["RAFCON_CHECK_INSTALLATION"] = "False"
             args_and_env = list(sys.argv)
             args_and_env.append(environ)
+            logger.info("Restarting RAFCON ...")
             os.execle(python, python, *args_and_env)
 
 
