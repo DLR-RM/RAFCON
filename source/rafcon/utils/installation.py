@@ -63,17 +63,12 @@ def install_fonts(restart=False):
                 logger.debug("Font '{0}' already installed".format(font_name))
                 continue
 
-            specific_user_otf_fonts_folder = user_otf_fonts_folder
+            specific_user_otf_fonts_folder = join(user_otf_fonts_folder, "type1")
             if num_faces_to_be_installed > 1:
-                specific_user_otf_fonts_folder = join(user_otf_fonts_folder, font_name)
+                specific_user_otf_fonts_folder = join(specific_user_otf_fonts_folder, internal_font_name)
 
             logger.info("Installing font '{0}' to {1}".format(font_name, specific_user_otf_fonts_folder))
-            if not isdir(specific_user_otf_fonts_folder):
-                os.makedirs(specific_user_otf_fonts_folder)
-            for font_face in os.listdir(fonts_folder):
-                target_font_file = join(specific_user_otf_fonts_folder, font_face)
-                source_font_file = join(fonts_folder, font_face)
-                shutil.copy(source_font_file, target_font_file)
+            copy_tree(fonts_folder, specific_user_otf_fonts_folder, update=1)
             font_installed = True
     except IOError as e:
         logger.error("Could not install fonts, IOError: {}".format(e))
