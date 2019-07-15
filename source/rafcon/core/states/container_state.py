@@ -69,7 +69,7 @@ class ContainerState(State):
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None,
-                 scoped_variables=None):
+                 scoped_variables=None, safe_init=True):
 
         self._states = OrderedDict()
         self._transitions = {}
@@ -82,14 +82,29 @@ class ContainerState(State):
         self._child_execution = False
         self._start_state_modified = False
 
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes)
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, safe_init=safe_init)
 
+        if start_state_id is not None:
+            self.start_state_id = start_state_id
+
+        if safe_init:
+            ContainerState._safe_init(self, scoped_variables=scoped_variables, states=states, transitions=transitions,
+                                      data_flows=data_flows)
+        else:
+            ContainerState._unsafe_init(self, scoped_variables=scoped_variables, states=states, transitions=transitions,
+                                        data_flows=data_flows)
+
+    def _safe_init(self, scoped_variables, states, transitions, data_flows):
         self.scoped_variables = scoped_variables if scoped_variables is not None else {}
         self.states = states if states is not None else {}
         self.transitions = transitions if transitions is not None else {}
         self.data_flows = data_flows if data_flows is not None else {}
-        if start_state_id is not None:
-            self.start_state_id = start_state_id
+
+    def _unsafe_init(self, scoped_variables, states, transitions, data_flows):
+        self._scoped_variables = scoped_variables if scoped_variables is not None else {}
+        self._states = states if states is not None else {}
+        self._transitions = transitions if transitions is not None else {}
+        self._data_flows = data_flows if data_flows is not None else {}
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- generic methods -----------------------------------------
@@ -133,7 +148,8 @@ class ContainerState(State):
                     states=None,
                     transitions=transitions if states else None,
                     data_flows=data_flows if states else None,
-                    scoped_variables=dictionary['scoped_variables'])
+                    scoped_variables=dictionary['scoped_variables'],
+                    safe_init=False)
         try:
             state.description = dictionary['description']
         except (TypeError, KeyError):  # (Very) old state machines do not have a description field

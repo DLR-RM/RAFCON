@@ -132,11 +132,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.marked_dirty = False
 
         if safe_init:
-            self._safe_init(name=name, input_data_ports=input_data_ports, output_data_ports=output_data_ports,
-                            income=income, outcomes=outcomes, parent=parent)
+            State._safe_init(self, name=name, input_data_ports=input_data_ports, output_data_ports=output_data_ports,
+                             income=income, outcomes=outcomes, parent=parent)
         else:
-            self._unsafe_init(name=name, input_data_ports=input_data_ports,
-                              output_data_ports=output_data_ports, income=income, outcomes=outcomes, parent=parent)
+            State._unsafe_init(self, name=name, input_data_ports=input_data_ports, output_data_ports=output_data_ports,
+                               income=income, outcomes=outcomes, parent=parent)
 
     # Look out! If _safe_init or _unsafe_init is changed, remember to edit the other function as well!
     def _safe_init(self, name=None, input_data_ports=None, output_data_ports=None, income=None, outcomes=None,
@@ -155,7 +155,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if name is None:
             name = "{} {}".format(self.__class__.__name__, generate_state_name_id())
         self._name = str(name) if isinstance(name, (int, float)) else name
-        self._parent = parent
+        if parent:
+            self._parent = ref(parent)
+        else:
+            self._parent = None
         self._input_data_ports = input_data_ports if input_data_ports is not None else {}
         self._output_data_ports = output_data_ports if output_data_ports is not None else {}
         self._income = income if income is not None else Income()
