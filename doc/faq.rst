@@ -399,7 +399,7 @@ that.
 Open a new terminal, run the following command and restart RAFCON.
 
 .. code:: bash
-    $ fdir="$HOME/.local/share/fonts" && mkdir -p $fdir && find "$(dirname $(which rafcon))/../share/rafcon/gui/assets/fonts" -type f -name "*.otf" -exec cp -t $fdir {} + && unset fdir
+    $ fdir="$HOME/.local/share/fonts" && mkdir -p $fdir && find "$(dirname $(which rafcon))/../share/fonts" -type f -name "*.otf" -exec cp -t $fdir {} + && unset fdir
 
 This will copy the RAFCON font files from the install location to your local user, so the RAFCON GUI can load them.
 
