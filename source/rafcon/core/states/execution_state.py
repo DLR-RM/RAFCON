@@ -48,7 +48,7 @@ class ExecutionState(State):
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None, path=None, filename=None, check_path=True, safe_init=True):
 
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes)
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, safe_init=safe_init)
         self._script = None
         self.script = Script(path, filename, check_path=check_path, parent=self)
         self.logger = log.get_logger(self.name)
@@ -93,7 +93,8 @@ class ExecutionState(State):
         output_data_ports = dictionary['output_data_ports']
         income = dictionary.get('income', None)  # older state machine versions don't have this set
         outcomes = dictionary['outcomes']
-        state = cls(name, state_id, input_data_ports, output_data_ports, income, outcomes, check_path=False)
+        state = cls(name, state_id, input_data_ports, output_data_ports, income, outcomes, check_path=False,
+                    safe_init=False)
         try:
             state.description = dictionary['description']
         except (TypeError, KeyError):  # (Very) old state machines do not have a description field
