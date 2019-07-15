@@ -24,10 +24,17 @@ possible_prefix_paths = []
 share_folder_paths = []
 installation_share_folder = None
 
+try:
+    from gi.repository import GLib
+    xdg_user_data_folder = GLib.get_user_data_dir()
+except ImportError:
+    xdg_user_data_folder = os.getenv("XDG_DATA_HOME", join(expanduser("~"), ".local", "share"))
+    pass
+
 # The list is ordered by preference
 _possible_prefix_paths = [sys.prefix, sys.exec_prefix,
                           os.getenv("VIRTUAL_ENV"), os.getenv("PYTHONUSERBASE"),
-                          join(expanduser("~"), ".local"), join(os.sep, "usr", "local"), join(os.sep, "usr")]
+                          dirname(xdg_user_data_folder), join(os.sep, "usr", "local"), join(os.sep, "usr")]
 
 # Check which paths exist and remove duplicates
 for prefix_path in _possible_prefix_paths:
@@ -37,15 +44,6 @@ for prefix_path in _possible_prefix_paths:
         share_folder_paths.append(share_folder_path)
         if not installation_share_folder and os.access(share_folder_path, os.W_OK):
             installation_share_folder = share_folder_path
-
-# One more candidate for share folder: GLib.get_user_data_dir()
-try:
-    from gi.repository import GLib
-    user_data_folder = GLib.get_user_data_dir()
-    if user_data_folder not in share_folder_paths:
-        share_folder_paths.insert(min(2, len(share_folder_paths)), user_data_folder)
-except ImportError:
-    pass
 
 
 def get_repository_share_path():
