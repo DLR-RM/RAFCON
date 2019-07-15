@@ -58,8 +58,7 @@ logger = log.get_logger("rafcon.start.gui")
 
 
 def data_files_version_up_to_date():
-    user_data_folder = resources.installation_share_folder
-    install_file_path = os.path.join(user_data_folder, "rafcon", "installed")
+    install_file_path = os.path.join(resources.xdg_user_data_folder, "rafcon", "installed")
     if not os.path.isfile(install_file_path):
         return False
     with open(install_file_path, 'r') as file_pointer:
@@ -68,8 +67,7 @@ def data_files_version_up_to_date():
 
 
 def update_data_files_version():
-    user_data_folder = resources.installation_share_folder
-    install_file_folder = os.path.join(user_data_folder, "rafcon")
+    install_file_folder = os.path.join(resources.xdg_user_data_folder, "rafcon")
     install_file_path = os.path.join(install_file_folder, "installed")
     if not os.path.isdir(install_file_folder):
         os.mkdir(install_file_folder)

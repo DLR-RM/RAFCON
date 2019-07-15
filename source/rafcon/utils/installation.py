@@ -91,15 +91,14 @@ def install_fonts(restart=False):
 
 
 def install_locally_required_files():
-    source_share_folder = resources.get_repository_share_path()
+    source_share_folder = resources.get_data_file_path()
     if not source_share_folder:
         logger.warn("Cannot find repository required for installation of icons and gtksourceview styles")
-    local_user_data_folder = resources.installation_share_folder
 
     for folder in ["gtksourceview-3.0", "icons"]:
         try:
             logger.info("Copying '{}' files...".format(folder))
-            copy_tree(join(source_share_folder, folder), join(local_user_data_folder, folder), update=1)
+            copy_tree(join(source_share_folder, folder), join(resources.xdg_user_data_folder, folder), update=1)
         except IOError as e:
             logger.error("Could not copy '{}' files: {}".format(folder, str(e)))
 
