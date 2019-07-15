@@ -40,7 +40,7 @@ def installed_font_faces_for_font(font_name):
     try:
         p = subprocess.Popen(['fc-list', font_name], stdout=subprocess.PIPE)
         output, _ = p.communicate()
-        output_lines = output.split("\n")
+        output_lines = str(output.decode("utf-8")).split("\n")
         return len([line for line in output_lines if font_name in line])
     except OSError:
         return 0
