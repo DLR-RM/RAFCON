@@ -28,6 +28,11 @@ def started_without_installation():
         return True
 
 
+def update_font_cache(path):
+    fail = subprocess.call(['fc-cache', path])
+    return not fail
+
+
 def install_fonts(restart=False):
     try:
         import gi
@@ -88,8 +93,7 @@ def install_fonts(restart=False):
 
     if font_installed:
         logger.info("Running font detection ...")
-        fail = subprocess.call(['fc-cache', '-fv', user_otf_fonts_folder])
-        if fail:
+        if not update_font_cache(user_otf_fonts_folder):
             logger.warn("Could not run font detection. RAFCON might not find the correct fonts.")
         if restart:
             python = sys.executable
