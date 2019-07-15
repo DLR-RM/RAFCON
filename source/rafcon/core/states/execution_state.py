@@ -46,8 +46,7 @@ class ExecutionState(State):
     yaml_tag = u'!ExecutionState'
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
-                 income=None, outcomes=None,
-                 path=None, filename=None, check_path=True):
+                 income=None, outcomes=None, path=None, filename=None, check_path=True, safe_init=True):
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes)
         self._script = None
@@ -55,6 +54,7 @@ class ExecutionState(State):
         self.logger = log.get_logger(self.name)
         # here all persistent variables that should be available for the next state run should be stored
         self.persistent_variables = {}
+        # safe_init doesn't affect the constructor yet
 
     def __hash__(self):
         return id(self)
@@ -69,10 +69,11 @@ class ExecutionState(State):
         output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.items()}
         income = copy(self._income)
         outcomes = {elem_id: copy(elem) for elem_id, elem in list(self._outcomes.items())}
-        state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, None)
-        state.script_text = deepcopy(self.script_text)
-        state.description = deepcopy(self.description)
-        state.semantic_data = deepcopy(self.semantic_data)
+        state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, None,
+                               safe_init=False)
+        state._script_text = deepcopy(self.script_text)
+        state._description = deepcopy(self.description)
+        state._semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
         return state
 

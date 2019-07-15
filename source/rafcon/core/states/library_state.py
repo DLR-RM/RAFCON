@@ -207,12 +207,12 @@ class LibraryState(State):
                                self._name, self._state_id, income, outcomes,
                                copy(self.input_data_port_runtime_values), copy(self.use_runtime_value_input_data_ports),
                                copy(self.output_data_port_runtime_values), copy(self.use_runtime_value_output_data_ports),
-                               False)
+                               False, safe_init=False)
 
         # overwrite may by default set True flags by False
-        state.use_runtime_value_input_data_ports = copy(self.use_runtime_value_input_data_ports)
-        state.use_runtime_value_output_data_ports = copy(self.use_runtime_value_output_data_ports)
-        state.semantic_data = deepcopy(self.semantic_data)
+        state._use_runtime_value_input_data_ports = copy(self.use_runtime_value_input_data_ports)
+        state._use_runtime_value_output_data_ports = copy(self.use_runtime_value_output_data_ports)
+        state._semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
         return state
 

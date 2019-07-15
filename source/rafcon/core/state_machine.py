@@ -103,7 +103,7 @@ class StateMachine(Observable, JSONObject, Hashable):
         self._supports_saving_state_names = True
 
     def __copy__(self):
-        sm = self.__class__(copy(self._root_state), self.version, self.creation_time, self.last_update)
+        sm = self.__class__(copy(self._root_state, safe_init=False), self.version, self.creation_time, self.last_update)
         sm._marked_dirty = self._marked_dirty
         return sm
 

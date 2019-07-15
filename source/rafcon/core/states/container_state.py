@@ -19,6 +19,7 @@
    :synopsis: A module to represent a generic container state in the state machine
 
 """
+from weakref import ref
 from builtins import str
 from copy import copy, deepcopy
 from threading import Condition
@@ -102,9 +103,18 @@ class ContainerState(State):
 
     def _unsafe_init(self, scoped_variables, states, transitions, data_flows):
         self._scoped_variables = scoped_variables if scoped_variables is not None else {}
+        # set parents manually
+        for _, scoped_variable in self._scoped_variables.items():
+            scoped_variable._parent = ref(self)
         self._states = states if states is not None else {}
+        for _, state in self._states.items():
+            state._parent = ref(self)
         self._transitions = transitions if transitions is not None else {}
+        for _, transition in self._transitions.items():
+            transition._parent = ref(self)
         self._data_flows = data_flows if data_flows is not None else {}
+        for _, data_flow in self._data_flows.items():
+            data_flow._parent = ref(self)
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- generic methods -----------------------------------------
@@ -196,9 +206,9 @@ class ContainerState(State):
         transitions = {elem_id: copy(elem) for elem_id, elem in self._transitions.items()}
 
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, states,
-                               transitions, data_flows, None, scoped_variables)
-        state.description = deepcopy(self.description)
-        state.semantic_data = deepcopy(self.semantic_data)
+                               transitions, data_flows, None, scoped_variables, safe_init=False)
+        state._description = deepcopy(self.description)
+        state._semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
         return state
 

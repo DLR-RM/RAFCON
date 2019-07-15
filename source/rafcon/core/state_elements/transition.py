@@ -89,7 +89,7 @@ class Transition(StateElement):
 
     def __copy__(self):
         return self.__class__(self._from_state, self._from_outcome, self._to_state, self._to_outcome,
-                              self._transition_id, None)
+                              self._transition_id, None, safe_init=False)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()

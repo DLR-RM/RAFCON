@@ -160,9 +160,18 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         else:
             self._parent = None
         self._input_data_ports = input_data_ports if input_data_ports is not None else {}
+        # add parent manually
+        for port_id, port in self._input_data_ports.items():
+            port._parent = ref(self)
         self._output_data_ports = output_data_ports if output_data_ports is not None else {}
+        # add parent manually
+        for port_id, port in self._output_data_ports.items():
+            port._parent = ref(self)
         self._income = income if income is not None else Income()
+        self._income._parent = ref(self)
         self._outcomes = outcomes if outcomes is not None else {0: Outcome(outcome_id=0, name="success")}
+        for outcome_id, outcome in self._outcomes.items():
+            outcome._parent = ref(self)
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- generic methods -----------------------------------------

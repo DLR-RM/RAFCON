@@ -97,7 +97,7 @@ class DataPort(StateElement):
 
     def __copy__(self):
         return self.__class__(self._name, self._data_type, self._default_value, self._data_port_id, None,
-                              self._was_forced_type)
+                              self._was_forced_type, safe_init=False)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()

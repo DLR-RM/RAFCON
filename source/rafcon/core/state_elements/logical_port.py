@@ -66,7 +66,7 @@ class Income(LogicalPort):
         return "Income"
 
     def __copy__(self):
-        return self.__class__()
+        return self.__class__(safe_init=False)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
@@ -143,7 +143,7 @@ class Outcome(LogicalPort):
         return "Outcome '{0}' [{1}]".format(self.name, self.outcome_id)
 
     def __copy__(self):
-        return self.__class__(self._outcome_id, self._name, None)
+        return self.__class__(self._outcome_id, self._name, None, safe_init=False)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()

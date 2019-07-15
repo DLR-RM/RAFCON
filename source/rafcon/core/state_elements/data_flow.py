@@ -106,7 +106,8 @@ class DataFlow(StateElement):
             return default_string
 
     def __copy__(self):
-        return self.__class__(self._from_state, self._from_key, self._to_state, self._to_key, self._data_flow_id, None)
+        return self.__class__(self._from_state, self._from_key, self._to_state, self._to_key, self._data_flow_id,
+                              None, safe_init=False)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
