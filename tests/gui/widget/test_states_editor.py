@@ -135,7 +135,6 @@ def check_state_editor_models(sm_m, parent_state_m, logger=None):
     assert state_editor_ctrl.model is parent_state_m
 
 
-@log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(with_gui=True):
     import rafcon.core.singleton
     import rafcon.gui.singleton
@@ -217,8 +216,8 @@ def test_state_type_change_test(caplog):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
     try:
         trigger_state_type_change_tests(with_gui=True)
-    # except:
-    #     raise
+    except:
+        raise  # required, otherwise the exception cannot be accessed within finally
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)

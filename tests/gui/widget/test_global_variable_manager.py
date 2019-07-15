@@ -7,8 +7,8 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-@log.log_exceptions(None, gtk_quit=True)
 def trigger_gvm_signals():
+    raise ValueError()
     # core elements
     import rafcon.core.singleton
     import rafcon.gui.singleton
@@ -68,7 +68,7 @@ def test_gui(caplog):
     try:
         trigger_gvm_signals()
     except:
-        raise
+        raise  # required, otherwise the exception cannot be accessed within finally
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)

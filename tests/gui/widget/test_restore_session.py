@@ -84,7 +84,6 @@ def prepare_tab_data_of_open_state_machines(main_window_controller, sm_manager_m
         open_state_machines['selection_state_machine'] = None
 
 
-@log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals_first_run(*args):
     """The function triggers the creation of different state machines that should be backup-ed.
     In another run those are restored and checked onto correctness.
@@ -233,7 +232,6 @@ def trigger_gui_signals_first_run(*args):
     call_gui_callback(menubar_ctrl.on_stop_activate, None)  # TODO why this is some how important for correct restore
 
 
-@log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals_second_run(*args):
     import rafcon.gui.singleton
     main_window_controller = rafcon.gui.singleton.main_window_controller
@@ -274,6 +272,8 @@ def test_restore_session(caplog):
     try:
         open_state_machines = {'list_of_hash_path_tab_page_number_tuple': [], 'selected_sm_page_number': None}
         trigger_gui_signals_first_run(open_state_machines)
+    except:
+        raise  # required, otherwise the exception cannot be accessed within finally
     finally:
         testing_utils.close_gui(force_quit=False)
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
@@ -288,7 +288,7 @@ def test_restore_session(caplog):
         final_open_state_machines = {'list_of_hash_path_tab_page_number_tuple': [], 'selected_sm_page_number': None}
         trigger_gui_signals_second_run(final_open_state_machines)
     except:
-        raise
+        raise  # required, otherwise the exception cannot be accessed within finally
     finally:
         testing_utils.close_gui()
 
