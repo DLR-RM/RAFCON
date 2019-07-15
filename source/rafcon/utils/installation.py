@@ -49,13 +49,13 @@ def installed_font_faces_for_font(font_name):
 def install_fonts(restart=False):
     font_names_to_be_installed = [("Source Sans Pro", "SourceSansPro"), ("FontAwesome", "FontAwesome")]
 
-    user_otf_fonts_folder = join(expanduser('~'), '.fonts')
+    user_otf_fonts_folder = join(resources.xdg_user_data_folder, "fonts")
 
     font_installed = False
     try:
         for font_name, internal_font_name in font_names_to_be_installed:
             # A font is a folder one or more font faces
-            fonts_folder = resources.get_data_file_path("rafcon", "gui", "fonts", font_name)
+            fonts_folder = resources.get_data_file_path("fonts", "type1", font_name)
             num_faces_to_be_installed = len([name for name in os.listdir(fonts_folder) if name.endswith(".otf")])
             num_faces_installed = installed_font_faces_for_font(internal_font_name)
 
