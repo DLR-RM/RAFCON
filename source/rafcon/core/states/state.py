@@ -881,10 +881,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             if data_port.name in self.input_data and self.input_data[data_port.name] is not None:
                 #check for class
                 if not isinstance(self.input_data[data_port.name], data_port.data_type):
-                    logger.error("{0} had an data port error: Input of execute function must be of type '{1}' not '{2}'"
-                                 " as current value '{3}'".format(self, data_port.data_type.__name__,
-                                                               type(self.input_data[data_port.name]).__name__,
-                                                               self.input_data[data_port.name]))
+                    logger.error("{0} had an data port error: Input data type of value '{3}' must be '{1}'"
+                                 " and not '{2}'".format(self, data_port.data_type.__name__,
+                                              type(self.input_data[data_port.name]).__name__,
+                                              self.input_data[data_port.name]))
 
     def check_output_data_type(self):
         """Check the output data types of the state
@@ -896,10 +896,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             if data_port.name in self.output_data and self.output_data[data_port.name] is not None:
                 # check for class
                 if not isinstance(self.output_data[data_port.name], data_port.data_type):
-                    logger.error("{0} had an data port error: Output of execute function must be of type '{1}' not "
-                                 "'{2}' as current value {3}".format(self, data_port.data_type.__name__,
-                                                               type(self.output_data[data_port.name]).__name__,
-                                                               self.output_data[data_port.name]))
+                    logger.error("{0} had an data port error: Output data type of value {3}' must be '{1}'"
+                                 " and not '{2}'".format(self, data_port.data_type.__name__,
+                                                         type(self.output_data[data_port.name]).__name__,
+                                                         self.output_data[data_port.name]))
 
     def _check_scoped_data_validity(self, check_scoped_data):
         return True, "valid"  # no validity checks, yet
