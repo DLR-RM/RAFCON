@@ -79,8 +79,7 @@ def setup_installation():
     """Install necessary GUI resources
 
     By default, RAFCON should be installed via `pip` (`pip install rafcon`). With this, all resources are being
-    installed. The only exceptions are the fonts. Those are installed to ~/.fonts using this function if RAFCON is
-    started the first time.
+    installed. If installed in a virtual env, some locally required files need to be reinstalled into $XTG_DATA_HOME.
 
     If RAFCON is started directly from the repo or from RMPM (without a previous installation), it can be forced to
     install all additionally required files (icons and gtksourceview styles) by setting the env variable
@@ -91,7 +90,7 @@ def setup_installation():
     if not force_check_installation and data_files_version_up_to_date():
         return
 
-    if force_check_installation or installation.started_without_installation():
+    if force_check_installation or installation.started_without_installation() or installation.started_in_virtualenv():
         installation.install_locally_required_files()
 
     installation.install_fonts(restart=True)
