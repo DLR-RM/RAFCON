@@ -138,20 +138,22 @@ class ScopedData(StateElement):
         # logger.debug("DataPort with name %s initialized" % self.name)
 
     def _safe_init(self, name, value, value_type, from_state, data_port_type, parent):
+        # from state is used for name self._primary_key
+        self.from_state = from_state
         self.name = name
-        self.value = value
+        self._primary_key = self.name + self._from_state
         if value_type is not None:
             self.value_type = value_type
-        self.from_state = from_state
+        self.value = value
         self.data_port_type = data_port_type
         self.parent = parent
 
     def _unsafe_init(self, name, value, value_type, from_state, data_port_type, parent):
+        self._from_state = from_state
         self._name = name
-        self._value = value
         if value_type is not None:
             self._value_type = value_type
-        self._from_state = from_state
+        self._value = value
         self._data_port_type = data_port_type
         if parent:
             self._parent = ref(parent)
