@@ -52,6 +52,9 @@ class LibraryState(State):
     :ivar dict output_data_port_runtime_values: a dict to store all the runtime values for the output data ports
     :ivar dict use_runtime_value_output_data_ports: flags to indicate if the runtime or the default value should be used
                                                     for a specific output data port
+    :ivar dict allow_user_interaction: flag to indicate if the user can support in localizing moved libraries
+    :ivar skip_runtime_data_initialization: flag to indicate if the runtime-data data structures have to be initialized,
+                                            this is not needed e.g. in the case of a copy
     """
 
     yaml_tag = u'!LibraryState'
@@ -72,7 +75,7 @@ class LibraryState(State):
                  income=None, outcomes=None,
                  input_data_port_runtime_values=None, use_runtime_value_input_data_ports=None,
                  output_data_port_runtime_values=None, use_runtime_value_output_data_ports=None,
-                 allow_user_interaction=True, safe_init=True):
+                 allow_user_interaction=True, safe_init=True, skip_runtime_data_initialization=False):
 
         # this variable is set to true if the state initialization is finished! after initialization no change to the
         # library state is allowed any more
@@ -106,9 +109,10 @@ class LibraryState(State):
         else:
             LibraryState._unsafe_init(self, name)
 
-        # load_library_root_state_timer.stop(key)
-        self._handle_runtime_values(input_data_port_runtime_values, use_runtime_value_input_data_ports,
-                                    output_data_port_runtime_values, use_runtime_value_output_data_ports)
+        if not skip_runtime_data_initialization:
+            # load_library_root_state_timer.stop(key)
+            self._handle_runtime_values(input_data_port_runtime_values, use_runtime_value_input_data_ports,
+                                        output_data_port_runtime_values, use_runtime_value_output_data_ports)
 
         self.initialized = True
 
@@ -207,11 +211,8 @@ class LibraryState(State):
                                self._name, self._state_id, income, outcomes,
                                copy(self.input_data_port_runtime_values), copy(self.use_runtime_value_input_data_ports),
                                copy(self.output_data_port_runtime_values), copy(self.use_runtime_value_output_data_ports),
-                               False, safe_init=False)
+                               False, safe_init=False, skip_runtime_data_initialization=True)
 
-        # overwrite may by default set True flags by False
-        state._use_runtime_value_input_data_ports = copy(self.use_runtime_value_input_data_ports)
-        state._use_runtime_value_output_data_ports = copy(self.use_runtime_value_output_data_ports)
         state._semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
         return state
