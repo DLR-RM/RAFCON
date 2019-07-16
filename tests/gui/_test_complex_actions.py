@@ -57,7 +57,6 @@ def set_state_name(state, new_value):
     state.name = new_value
 
 
-# @log.log_exceptions(None, gtk_quit=True)
 def trigger_repetitive_group_ungroup(*args):
     import rafcon.gui.helpers.state as gui_helper_state
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
@@ -162,14 +161,13 @@ def test_repetitive_ungroup_state_and_group_states(caplog):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True}, libraries=libraries)
     try:
         trigger_repetitive_group_ungroup()
-    except Exception:
-        raise
+    except:
+        raise  # required, otherwise the exception cannot be accessed within finally
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 
-# @log.log_exceptions(None, gtk_quit=True)
 def trigger_cut_multiple_states(*args):
     import rafcon.gui.singleton
     from rafcon.gui.controllers.menu_bar import MenuBarController
@@ -215,8 +213,8 @@ def test_cut_of_multiple_states(caplog):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True}, libraries=libraries)
     try:
         trigger_cut_multiple_states()
-    except Exception:
-        raise
+    except:
+        raise  # required, otherwise the exception cannot be accessed within finally
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)

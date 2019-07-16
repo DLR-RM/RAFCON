@@ -5,7 +5,7 @@ pipeline {
 
     parameters {
         string(name: 'tox_args', defaultValue: '-v', description: 'Arguments passed to tox besides the environment name', )
-        string(name: 'pytest_args', defaultValue: '-vx -m "(core or gui or share_elements) and not unstable and not user_input"', description: 'Arguments passed to pytest')
+        string(name: 'pytest_args', defaultValue: '-vx --timeout 0 -m "(core or gui or share_elements) and not unstable and not user_input"', description: 'Arguments passed to pytest')
     }
 
     environment {
@@ -51,7 +51,7 @@ pipeline {
                     steps {
                         timeout(time: 10, unit: 'MINUTES') {
                             wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
-                                sh "xvfb-run -as '-screen 0 1920x1200x24' tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml"
+                                sh "tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml"
                             }
                         }
                     }

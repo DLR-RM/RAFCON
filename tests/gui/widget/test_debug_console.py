@@ -15,7 +15,6 @@ import pytest
 logger = log.get_logger(__name__)
 
 
-@log.log_exceptions(None, gtk_quit=True)
 def trigger_logging_view_gui_signals():
     """The function triggers and test basic functions of the logging widget in the debug console.
 
@@ -135,6 +134,8 @@ def test_logging_view_widget(caplog):
 
     try:
         trigger_logging_view_gui_signals()
+    except:
+        raise  # required, otherwise the exception cannot be accessed within finally
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)

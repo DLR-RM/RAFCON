@@ -309,7 +309,7 @@ class StateModel(AbstractStateModel):
                     if destroy:
                         model.prepare_destruction()
                     model_list.remove(model)
-                return
+                    return
         else:
             model_dict = model_list_or_dict
             for model_id, model in list(model_dict.items()):

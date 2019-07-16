@@ -248,7 +248,7 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
     global gui_thread, gui_ready, used_gui_threads
     e = None
     try:
-        if caplog is not None:
+        if caplog is not None and sys.exc_info()[0] is None:
             assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors)
     finally:
         try:

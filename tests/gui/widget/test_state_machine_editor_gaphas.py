@@ -10,7 +10,6 @@ from tests.utils import call_gui_callback
 logger = log.get_logger(__name__)
 
 
-@log.log_exceptions(None, gtk_quit=True)
 def trigger_copy_delete_bug_signals():
     """The function triggers multiple actions that result into a gaphas bug.
 
@@ -93,6 +92,8 @@ def test_copy_delete_bug(caplog):
 
     try:
         trigger_copy_delete_bug_signals()
+    except:
+        raise  # required, otherwise the exception cannot be accessed within finally
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
