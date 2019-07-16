@@ -113,6 +113,11 @@ class LibraryState(State):
             # load_library_root_state_timer.stop(key)
             self._handle_runtime_values(input_data_port_runtime_values, use_runtime_value_input_data_ports,
                                         output_data_port_runtime_values, use_runtime_value_output_data_ports)
+        else:
+            self._input_data_port_runtime_values = input_data_port_runtime_values
+            self._use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
+            self._output_data_port_runtime_values = output_data_port_runtime_values
+            self._use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
 
         self.initialized = True
 
