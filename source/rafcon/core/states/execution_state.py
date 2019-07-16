@@ -71,7 +71,8 @@ class ExecutionState(State):
         outcomes = {elem_id: copy(elem) for elem_id, elem in list(self._outcomes.items())}
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, None,
                                safe_init=False)
-        state._script_text = deepcopy(self.script_text)
+        # use setter here! the acutal value, which is changed is self._script.script!
+        state.script_text = deepcopy(self.script_text)
         state._description = deepcopy(self.description)
         state._semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
