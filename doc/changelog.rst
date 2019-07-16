@@ -34,6 +34,11 @@ Next Release
     - script of ``ExecutionState``s uses more RAFCON features (``preemptive_wait``, return outcome name)
     - name of states uses full width of state
 
+  - provide RAFCON wheel file
+  - make installation more robust, especially against missing font files
+  - simplify installation process
+  - clear separation in handling of ``data_files`` and ``package_files``
+
 
 - Bug Fixes:
 

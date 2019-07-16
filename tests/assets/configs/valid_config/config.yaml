@@ -1,9 +1,9 @@
 TYPE: SM_CONFIG
 LIBRARY_PATHS:
     generic: ${RAFCON_LIB_PATH}/generic
-    ros: ../../../../share/examples/libraries/ros_libraries
-    turtle_libraries: ../../../../share/examples/libraries/turtle_libraries
-    tutorials: ../../../../share/examples/tutorials
+    ros: ${RAFCON_LIB_PATH}/../examples/libraries/ros_libraries
+    turtle_libraries: ${RAFCON_LIB_PATH}/../examples/libraries/turtle_libraries
+    tutorials: ${RAFCON_LIB_PATH}/../examples/tutorials
     unit_test_state_machines: ../../../assets/unit_test_state_machines
 
 LIBRARY_RECOVERY_MODE: False

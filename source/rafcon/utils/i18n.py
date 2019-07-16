@@ -13,7 +13,7 @@
 import locale
 import gettext
 
-from rafcon.utils.resources import resource_filename
+from pkg_resources import resource_filename
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
