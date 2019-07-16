@@ -86,7 +86,10 @@ class DataPort(StateElement):
         self._name = name
         if data_type is not None:
             self._data_type = data_type
-        self._default_value = default_value
+        if isinstance(default_value, string_types):
+            self._default_value = type_helpers.convert_string_value_to_type_value(default_value, data_type)
+        else:
+            self._default_value = default_value
         if parent:
             self._parent = ref(parent)
 
