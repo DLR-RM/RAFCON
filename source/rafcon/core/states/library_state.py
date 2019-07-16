@@ -130,11 +130,16 @@ class LibraryState(State):
         self.state_copy._parent = ref(self)
         if name is None:
             self._name = self.state_copy.name
-        # copy all ports and outcomes of self.state_copy to let the library state appear like the container state
-        # this will also set the parent of all outcomes and data ports to self
         self._outcomes = self.state_copy.outcomes
+        # add parents manually
+        for outcome_id, outcome in self._outcomes.items():
+            outcome._parent = ref(self)
         self._input_data_ports = self.state_copy.input_data_ports
+        for port_id, port in self._input_data_ports.items():
+            port._parent = ref(self)
         self._output_data_ports = self.state_copy.output_data_ports
+        for port_id, port in self._output_data_ports.items():
+            port._parent = ref(self)
 
     def _handle_runtime_values(self, input_data_port_runtime_values, use_runtime_value_input_data_ports,
                                output_data_port_runtime_values, use_runtime_value_output_data_ports):
