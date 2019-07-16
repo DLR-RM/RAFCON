@@ -1217,13 +1217,11 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
         e = None
         try:
             trigger_state_type_change_typical_bug_tests(with_gui=True)
-        except Exception as e:
-            pass
+        except:
+            raise  # required, otherwise the exception cannot be accessed within finally
         finally:
             testing_utils.close_gui()
             testing_utils.shutdown_environment(caplog=caplog)
-            if e:
-                raise e
     else:
         testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True},
                                              gui_already_started=False)
@@ -1253,7 +1251,6 @@ def do_type_change(target_sm_m, target_state_m, drop_down_combo_label_of_new_tar
     state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active(state_type_row_id)
 
 
-# @log.log_exceptions(None, gtk_quit=False)
 def trigger_state_type_change_tests(with_gui):
     import rafcon.gui.singleton
     import rafcon.gui.helpers.state as gui_helper_state
@@ -1703,7 +1700,6 @@ def trigger_state_type_change_tests(with_gui):
     print(check_elements_ignores)
 
 
-# @log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_typical_bug_tests(with_gui):
     import rafcon.gui.singleton
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model

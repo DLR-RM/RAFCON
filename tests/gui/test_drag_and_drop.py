@@ -31,7 +31,6 @@ def create_models(*args, **kargs):
     rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
 
-@log.log_exceptions(None, gtk_quit=True)
 def trigger_drag_and_drop_tests(*args):
 
     # TODO test should use real SelectionData objects and motion to provide selection
@@ -133,11 +132,13 @@ def test_drag_and_drop_test(caplog):
         libraries={"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
     )
     import rafcon.core.singleton
-    call_gui_callback(create_models)
 
     try:
+        call_gui_callback(create_models)
         trigger_drag_and_drop_tests(rafcon.gui.singleton.state_machine_manager_model,
                                     rafcon.gui.singleton.main_window_controller)
+    except:
+        raise  # required, otherwise the exception cannot be accessed within finally
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog, expected_warnings=1, expected_errors=0)
