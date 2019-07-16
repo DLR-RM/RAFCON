@@ -593,7 +593,6 @@ def change_state_type(input_and_return_list, new_state_type, state_of_type_chang
     input_and_return_list.append(new_state_m)
 
 
-@log.log_exceptions(None, gtk_quit=True)
 def trigger_state_type_change_tests(with_gui):
     """Only works with gui at the moment.
 
@@ -690,6 +689,8 @@ def test_state_type_change_test(caplog):
     testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
     try:
         trigger_state_type_change_tests(with_gui=True)
+    except:
+        raise  # required, otherwise the exception cannot be accessed within finally
     finally:
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
