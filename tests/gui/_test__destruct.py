@@ -489,19 +489,19 @@ def run_simple_modification_construction():
     print("%" * 50)
     print("do test menu bar")
     print("%" * 50)
-    from tests.gui.widget import test_menu_bar
+    from tests.gui.widget import _test_menu_bar
     # TODO D-get this test also running with substitute_library
-    test_menu_bar.trigger_gui_signals(with_refresh=True, with_substitute_library=False)
+    _test_menu_bar.trigger_gui_signals(with_refresh=True, with_substitute_library=False)
     print("%" * 50)
     print("do test complex actions, group & ungroup")
     print("%" * 50)
-    from tests.gui import test_complex_actions
-    test_complex_actions.trigger_repetitive_group_ungroup()
+    from tests.gui import _test_complex_actions
+    _test_complex_actions.trigger_repetitive_group_ungroup()
     print("%" * 50)
     print("do test ungroup")
     print("%" * 50)
-    from tests.gui import test_group_ungroup
-    test_group_ungroup.trigger_ungroup_signals()
+    from tests.gui import _test_group_ungroup
+    _test_group_ungroup.trigger_ungroup_signals()
     testing_utils.call_gui_callback(testing_utils.wait_for_gui)
 
 
@@ -546,7 +546,7 @@ def patch_core_classes_with_log():
     check_log_files(CORE_FILES)
 
     def state_init(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
-                   income=None, outcomes=None, parent=None):
+                   income=None, outcomes=None, parent=None, safe_init=True):
         self._name = name
         if state_id is None:
             self._state_id = rafcon.core.states.state.state_id_generator()
@@ -558,7 +558,7 @@ def patch_core_classes_with_log():
             f.write("RUN {2} of {0} {3} {1}\n".format(self, id(self), "state", self.gen_time_stamp))
         old_state_init(self, name, self._state_id, input_data_ports, output_data_ports, income, outcomes, parent)
 
-    def state_element_init(self, parent=None):
+    def state_element_init(self, parent=None, safe_init=True):
         self.gen_time_stamp = int(round(time.time() * 1000))
         gen_file = os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format("state_element", GENERATION_LOG_FILE_APPENDIX))
         with open(gen_file, 'a+') as f:

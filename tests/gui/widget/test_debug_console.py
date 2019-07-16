@@ -31,7 +31,7 @@ def trigger_logging_view_gui_signals():
     import rafcon.core.singleton
     import rafcon.gui.singleton
     from rafcon.gui.config import global_gui_config
-    from .test_menu_bar import create_state_machine
+    from ._test_menu_bar import create_state_machine
     main_window_controller = rafcon.gui.singleton.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 

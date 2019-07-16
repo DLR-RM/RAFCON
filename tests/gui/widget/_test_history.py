@@ -249,7 +249,7 @@ def test_add_remove_history(caplog):
 
     def do_check_for_state(state_name):
 
-        from .test_models import check_state_for_all_models
+        from ._test_models import check_state_for_all_models
 
         def check_models_for_state_with_name(state_name, state_path_dict, sm_model):
             state_m = sm_model.get_state_model_by_path(state_path_dict[state_name])
