@@ -160,11 +160,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         else:
             self._parent = None
         self._input_data_ports = input_data_ports if input_data_ports is not None else {}
-        # add parent manually
+        # add parents manually
         for port_id, port in self._input_data_ports.items():
             port._parent = ref(self)
         self._output_data_ports = output_data_ports if output_data_ports is not None else {}
-        # add parent manually
         for port_id, port in self._output_data_ports.items():
             port._parent = ref(self)
         self._income = income if income is not None else Income()
