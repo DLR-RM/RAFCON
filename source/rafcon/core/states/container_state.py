@@ -2185,7 +2185,7 @@ class ContainerState(State):
                 self._states = old_states
                 raise
 
-        # check that all old_states are no more referencing self as there parent
+        # check that all old_states are no more referencing self as their parent
         for old_state in old_states.values():
             if old_state not in self._states.values() and old_state.parent is self:
                 old_state.parent = None

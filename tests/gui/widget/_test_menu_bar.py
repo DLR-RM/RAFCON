@@ -99,7 +99,7 @@ def paste(state_machine_model, state_m, main_window_controller, menu_bar_ctrl, p
     testing_utils.wait_for_gui()
 
 
-@log.log_exceptions(None, gtk_quit=True)
+# @log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(with_refresh=True, with_substitute_library=True):
     """The function triggers and test basic functions of the menu bar.
 
