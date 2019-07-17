@@ -1,6 +1,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from builtins import str
+import os
 import logging
 import threading
 import time
@@ -18,6 +19,9 @@ from rafcon.core.storage import storage
 
 # general tool elements
 from rafcon.utils import log
+
+logger = log.get_logger(__name__)
+logger.setLevel(logging.VERBOSE)
 
 # test environment elements
 from tests import utils as testing_utils
@@ -76,71 +80,17 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
 
 
 def create_state_machine():
-
-    logger = log.get_logger(__name__)
-    logger.setLevel(logging.VERBOSE)
-    for handler in logging.getLogger('gtkmvc3').handlers:
-        logging.getLogger('gtkmvc3').removeHandler(handler)
-
-    state1 = ExecutionState('State1', state_id='STATE1')
-    output_state1 = state1.add_output_data_port("output", "int")
-    input_state1 = state1.add_input_data_port("input", "str", "zero")
-    state2 = ExecutionState('State2', state_id='STATE2')
-    input_par_state2 = state2.add_input_data_port("par", "int", 0)
-    output_res_state2 = state2.add_output_data_port("res", "int")
-    state4 = HierarchyState(name='Nested', state_id='NESTED')
-    state4.add_outcome('GoGo')
-    output_state4 = state4.add_output_data_port("out", "int")
-    state5 = ExecutionState('Nested2', state_id='NESTED2')
-    state5.add_outcome('HereWeGo')
-    input_state5 = state5.add_input_data_port("in", "int", 0)
-    state3 = HierarchyState(name='State3', state_id='STATE3')
-    input_state3 = state3.add_input_data_port("input", "int", 0)
-    output_state3 = state3.add_output_data_port("output", "int")
-    state3.add_state(state4)
-    state3.add_state(state5)
-    state3.set_start_state(state4)
-    state3.add_scoped_variable("share", "int", 3)
-    state3.add_transition(state4.state_id, 0, state5.state_id, None)
-    state3.add_transition(state5.state_id, 0, state3.state_id, 0)
-    state3.add_data_flow(state4.state_id, output_state4, state5.state_id, input_state5)
-    state3.add_outcome('Branch1')
-    state3.add_outcome('Branch2')
-
-    ctr_state = HierarchyState(name="Container", state_id='CONT2')
-    ctr_state.add_state(state1)
-    ctr_state.add_state(state2)
-    ctr_state.add_state(state3)
-    input_ctr_state = ctr_state.add_input_data_port("ctr_in", "str", "zero")
-    output_ctr_state = ctr_state.add_output_data_port("ctr_out", "int")
-    ctr_state.set_start_state(state1)
-    ctr_state.add_transition(state1.state_id, 0, state2.state_id, None)
-    ctr_state.add_transition(state2.state_id, 0, state3.state_id, None)
-    ctr_state.add_transition(state3.state_id, 0, ctr_state.state_id, 0)
-    ctr_state.add_data_flow(state1.state_id, output_state1, state2.state_id, input_par_state2)
-    ctr_state.add_data_flow(state2.state_id, output_res_state2, state3.state_id, input_state3)
-    ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, state1.state_id, input_state1)
-    ctr_state.add_data_flow(state3.state_id, output_state3, ctr_state.state_id, output_ctr_state)
-    ctr_state.name = "Container"
-
-    ctr_state.add_input_data_port("input", "str", "default_value1")
-    ctr_state.add_input_data_port("pos_x", "str", "default_value2")
-    ctr_state.add_input_data_port("pos_y", "str", "default_value3")
-
-    ctr_state.add_output_data_port("output", "str", "default_value1")
-    ctr_state.add_output_data_port("result", "str", "default_value2")
-
-    scoped_variable1_ctr_state = ctr_state.add_scoped_variable("scoped", "str", "default_value1")
-    scoped_variable3_ctr_state = ctr_state.add_scoped_variable("ctr", "int", 42)
-
-    ctr_state.add_data_flow(ctr_state.state_id, input_ctr_state, ctr_state.state_id, scoped_variable1_ctr_state)
-    ctr_state.add_data_flow(state1.state_id, output_state1, ctr_state.state_id, scoped_variable3_ctr_state)
-
-    state_dict = {'Container': ctr_state, 'State1': state1, 'State2': state2, 'State3': state3, 'Nested': state4,
-                  'Nested2': state5}
-    sm = StateMachine(ctr_state)
-
-    return logger, sm, state_dict
+    state_machine_path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "history_test"))
+    state_machine = storage.load_state_machine_from_path(state_machine_path)
+    state_dict = {
+        'Container': state_machine.get_state_by_path("CONT2"),
+        'State1': state_machine.get_state_by_path("CONT2/STATE1"),
+        'State2': state_machine.get_state_by_path("CONT2/STATE2"),
+        'State3': state_machine.get_state_by_path("CONT2/STATE3"),
+        'Nested': state_machine.get_state_by_path("CONT2/STATE3/NESTED"),
+        'Nested2': state_machine.get_state_by_path("CONT2/STATE3/NESTED2")
+    }
+    return state_machine, state_dict
 
 
 def prepare_state_machine_model(state_machine):
@@ -153,31 +103,24 @@ def prepare_state_machine_model(state_machine):
     sm_m.history.fake = False
     print("with_verbose is: ", sm_m.history.with_verbose)
     sm_m.history.with_verbose = False
-    # return ctr_state, sm_m, state_dict
+    return sm_m
 
 
-def create_sm_model(with_gui=False, add_state_machine=False):
+def create_state_machine_m(with_gui=False, add_state_machine=False):
 
     # create state machine model
     import rafcon.gui.singleton
     if with_gui:
-        [logger, sm, state_dict] = call_gui_callback(create_state_machine)
-        call_gui_callback(prepare_state_machine_model, sm)
-        sm_model = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+        state_machine, state_dict = call_gui_callback(create_state_machine)
+        state_machine_m = call_gui_callback(prepare_state_machine_model, state_machine)
     else:
-        [logger, sm, state_dict] = create_state_machine()
+        state_machine, state_dict = create_state_machine()
         if add_state_machine:
-            print("sm model 1")
-            prepare_state_machine_model(sm)
-            print("sm model 2")
-            sm_model = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
-            print("sm model 3")
+            state_machine_m = prepare_state_machine_model(state_machine)
         else:
             from rafcon.gui.models.state_machine import StateMachineModel
-            sm_model = StateMachineModel(sm)
-            print("sm model 4")
-    print("sm model 5")
-    return logger, sm_model, state_dict
+            state_machine_m = StateMachineModel(state_machine)
+    return state_machine_m, state_dict
 
 
 # TODO introduce test_add_remove_history with_gui=True to have a more reliable unit-test
@@ -227,7 +170,7 @@ def test_add_remove_history(caplog):
 
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
-    [logger, sm_model, state_dict] = create_sm_model()
+    sm_model, state_dict = create_state_machine_m()
 
     state_machine_path = TEST_PATH + '_test_add_remove'
     save_state_machine(sm_model, state_machine_path + '_before', logger, with_gui=False, menubar_ctrl=None)
@@ -578,7 +521,7 @@ def test_state_property_modifications_history(caplog):
 
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
-    [logger, sm_model, state_dict] = create_sm_model()
+    sm_model, state_dict = create_state_machine_m()
 
     state1 = ExecutionState('State1', state_id="STATE1")
     input_state1 = state1.add_input_data_port("input", "str", "zero")
@@ -724,7 +667,7 @@ def test_outcome_property_modifications_history(caplog):
 
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
-    [logger, sm_model, state_dict] = create_sm_model()
+    sm_model, state_dict = create_state_machine_m()
 
     def do_check_for_state(state_dict, state_name='Nested'):
         ####################################################
@@ -802,7 +745,7 @@ def test_transition_property_modifications_history(caplog):
 
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
-    [logger, sm_model, state_dict] = create_sm_model()
+    sm_model, state_dict = create_state_machine_m()
 
     state1 = ExecutionState('State1')
     outcome_again_state1 = state1.add_outcome("again")
@@ -906,7 +849,7 @@ def test_input_port_modify_notification(caplog):
 
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
-    [logger, sm_model, state_dict] = create_sm_model()
+    sm_model, state_dict = create_state_machine_m()
 
     new_input_data_port_id = state_dict['Nested2'].add_input_data_port(name='new_input', data_type='str')
     sm_model.history.undo()
@@ -960,7 +903,7 @@ def test_output_port_modify_notification(caplog):
 
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
-    [logger, sm_model, state_dict] = create_sm_model()
+    sm_model, state_dict = create_state_machine_m()
 
     new_output_data_port_id = state_dict['Nested2'].add_output_data_port(name='new_output', data_type='str')
 
@@ -1011,7 +954,7 @@ def test_scoped_variable_modify_notification(caplog):
 
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
-    [logger, sm_model, state_dict] = create_sm_model()
+    sm_model, state_dict = create_state_machine_m()
 
     new_scoped_variable_id = state_dict['Nested'].add_scoped_variable(name='new_output', data_type='str')
 
@@ -1077,7 +1020,7 @@ def test_data_flow_property_modifications_history(caplog):
 
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
-    [logger, sm_model, state_dict] = create_sm_model()
+    sm_model, state_dict = create_state_machine_m()
 
     state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
@@ -1256,7 +1199,7 @@ def trigger_state_type_change_tests(with_gui):
     import rafcon.gui.helpers.state as gui_helper_state
     main_window_controller = rafcon.gui.singleton.main_window_controller
 
-    [logger, sm_m, state_dict] = create_sm_model(with_gui, add_state_machine=True)
+    sm_m, state_dict = create_state_machine_m(with_gui, add_state_machine=True)
     sleep_time_max = 5  # 0.5
 
     check_elements_ignores.append("internal_transitions")
@@ -1705,7 +1648,7 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_controller = rafcon.gui.singleton.main_window_controller
 
-    [logger, sm_m, state_dict] = create_sm_model(with_gui, add_state_machine=True)
+    sm_m, state_dict = create_state_machine_m(with_gui, add_state_machine=True)
 
     if not with_gui:
         testing_utils.wait_for_gui()
