@@ -106,21 +106,54 @@ def prepare_state_machine_model(state_machine):
     return sm_m
 
 
-def create_state_machine_m(with_gui=False, add_state_machine=False):
-
-    # create state machine model
-    import rafcon.gui.singleton
+def create_state_machine_m(with_gui=False):
     if with_gui:
         state_machine, state_dict = call_gui_callback(create_state_machine)
         state_machine_m = call_gui_callback(prepare_state_machine_model, state_machine)
     else:
         state_machine, state_dict = create_state_machine()
-        if add_state_machine:
-            state_machine_m = prepare_state_machine_model(state_machine)
-        else:
-            from rafcon.gui.models.state_machine import StateMachineModel
-            state_machine_m = StateMachineModel(state_machine)
+        state_machine_m = prepare_state_machine_model(state_machine)
     return state_machine_m, state_dict
+
+
+def perform_history_action(operation, *args, **kwargs):
+    parent = operation.__self__.parent
+    state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    sm_history = state_machine_m.history
+    history_length = len(sm_history.modifications.single_trail_history())
+    origin_hash = parent.mutable_hash().hexdigest()
+    operation_result = operation(*args, **kwargs)
+    assert len(sm_history.modifications.single_trail_history()) == history_length + 1
+    after_operation_hash = parent.mutable_hash().hexdigest()
+    sm_history.undo()
+    undo_operation_hash = parent.mutable_hash().hexdigest()
+    sm_history.redo()
+    redo_operation_hash = parent.mutable_hash().hexdigest()
+    assert origin_hash == undo_operation_hash
+    assert after_operation_hash == redo_operation_hash
+    return operation_result
+
+
+def perform_multiple_undo_redo(number):
+    state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    sm_history = state_machine_m.history
+    origin_hash = state_machine_m.mutable_hash().hexdigest()
+    for _ in range(number):
+        sm_history.undo()
+    for _ in range(number):
+        sm_history.redo()
+    final_hash = state_machine_m.mutable_hash().hexdigest()
+    assert origin_hash == final_hash
+
+
+def get_state_by_name(state_name, state_path_dict):
+    state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    return state_machine_m.state_machine.get_state_by_path(state_path_dict[state_name])
+
+
+def get_state_model_by_name(state_name, state_path_dict):
+    state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    return state_machine_m.get_state_model_by_path(state_path_dict[state_name])
 
 
 # TODO introduce test_add_remove_history with_gui=True to have a more reliable unit-test
@@ -170,19 +203,18 @@ def test_add_remove_history(caplog):
 
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
-    sm_model, state_dict = create_state_machine_m()
+    state_machine_m, state_dict = create_state_machine_m()
 
     state_machine_path = TEST_PATH + '_test_add_remove'
-    save_state_machine(sm_model, state_machine_path + '_before', logger, with_gui=False, menubar_ctrl=None)
+    save_state_machine(state_machine_m, state_machine_path + '_before', logger, with_gui=False, menubar_ctrl=None)
 
-    sm_history = sm_model.history
+    sm_history = state_machine_m.history
 
     state1 = HierarchyState('state1', state_id='STATE1')
     state2 = ExecutionState('state2', state_id='STATE2')
 
     state_dict['Nested'].add_state(state1)
     state_dict['Nested'].add_state(state2)
-    sm_history.modifications.reset()
     state_dict['state1'] = state1
     state_dict['state2'] = state2
 
@@ -191,212 +223,95 @@ def test_add_remove_history(caplog):
         state_path_dict[key] = state_dict[key].get_path()
 
     def do_check_for_state(state_name):
+        sm_history.modifications.reset()
 
-        from .test_models import check_state_for_all_models
-
-        def check_models_for_state_with_name(state_name, state_path_dict, sm_model):
-            state_m = sm_model.get_state_model_by_path(state_path_dict[state_name])
-            state = sm_model.state_machine.get_state_by_path(state_path_dict[state_name])
-            check_state_for_all_models(state, state_m)
+        # Note: The elements always need to be retrieved before performing an operation, as undo/redo operations replace
+        # both core and model objects
+        state_m = get_state_model_by_name(state_name, state_path_dict)
 
         #############
-        # add outcome
-        # print "\n\n###########1", state_dict[state_name].state_id, state_dict[state_name].input_data_ports.keys()
-        outcome_super = sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).add_outcome('super')
-        assert len(sm_history.modifications.single_trail_history()) == 2
-        # print "\n\n###########2", state_dict[state_name].state_id, state_dict[state_name].input_data_ports.keys()
-        sm_history.undo()
-        # print "\n\n###########3", state_dict[state_name].state_id, state_dict[state_name].input_data_ports.keys()
-        sm_history.redo()
-        # print "\n\n###########4", state_dict[state_name].state_id, state_dict[state_name].input_data_ports.keys()
+        # outcome add & remove
+        outcome_super = perform_history_action(state_m.state.add_outcome, "super")
 
-        ################
-        # remove outcome
-        # def print_all(state_m):
-        #     # state = state_m.state
-        #     # print state_m
-        #     print state_m.state.name  # , state_m.state.get_path()
-        #     if isinstance(state_m.state, ContainerState):
-        #         for state_m in state_m.states:
-        #             print_all(state_m)
+        state = get_state_by_name(state_name, state_path_dict)
+        perform_history_action(state_m.state.remove_outcome, outcome_super)
 
-        print(sm_model, "\n", sm_model.root_state)
-        save_state_machine(sm_model, state_machine_path + '_before', logger, with_gui=False, menubar_ctrl=None)
-        # new outcome should be the third one
-        sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).remove_outcome(outcome_super)
-        assert len(sm_history.modifications.single_trail_history()) == 3
-        save_state_machine(sm_model, state_machine_path + '_after', logger, with_gui=False, menubar_ctrl=None)
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.undo()
-        save_state_machine(sm_model, state_machine_path + '_undo', logger, with_gui=False, menubar_ctrl=None)
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        save_state_machine(sm_model, state_machine_path + '_redo', logger, with_gui=False, menubar_ctrl=None)
 
-        state_dict[state_name] = sm_model.state_machine.get_state_by_path(state_path_dict[state_name])
-
+        #############
+        # add two states
         state4 = ExecutionState('State4', state_id='STATE4')
+        state_path_dict['state4'] = state.get_path() + "/" + "STATE4"
+        perform_history_action(state.add_state, state4)
+
         state5 = ExecutionState('State5', state_id='STATE5')
+        state = get_state_by_name(state_name, state_path_dict)
+        state_path_dict['state5'] = state.get_path() + "/" + "STATE5"
+        perform_history_action(state.add_state, state5)
 
-        #############
-        # add state
-        print("xyz", state_dict[state_name].states.keys(), state_name)
-        print("xyz", sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).states.keys(), state_name)
-        sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).add_state(state4)
-        state_path_dict['state4'] = state4.get_path()
-        print(sm_model.state_machine.get_state_by_path(state_path_dict['state4']).get_path())
-        assert len(sm_history.modifications.single_trail_history()) == 4
-        sm_model.state_machine.get_state_by_path(state_path_dict[state_name]).add_state(state5)
-        state_path_dict['state5'] = state5.get_path()
-        print(sm_model.state_machine.get_state_by_path(state_path_dict['state5']).get_path())
-        assert len(sm_history.modifications.single_trail_history()) == 5
-        print(state_dict[state_name].states)
-        # store_state_machine(sm_model, test_history_path1)
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.undo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.undo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        # store_state_machine(sm_model, test_history_path2)
+        perform_multiple_undo_redo(2)
 
-        # resolve reference
-        print(state4.get_path(), state_path_dict['state4'])
-        print("\n\n\n")
-        print(sm_model.state_machine.get_state_by_path(state_path_dict['state4']))
-        print(sm_model.state_machine.get_state_by_path(state_path_dict['Nested']).states)
-        print("\n\n\n")
-        state4 = sm_model.state_machine.get_state_by_path(state_path_dict['state4'])
-        state5 = sm_model.state_machine.get_state_by_path(state_path_dict['state5'])
-        state_dict[state_name] = sm_model.get_state_model_by_path(state_path_dict[state_name]).state
-
+        state4 = get_state_by_name('state4', state_path_dict)
         outcome_state4 = state4.add_outcome('UsedHere')
         assert len(sm_history.modifications.single_trail_history()) == 6
+
+        state5 = get_state_by_name('state5', state_path_dict)
         outcome_state5 = state5.add_outcome('UsedHere')
         assert len(sm_history.modifications.single_trail_history()) == 7
 
         ################
         # add transition from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id
-        new_transition_id1 = state_dict[state_name].add_transition(from_state_id=state4.state_id,
-                                                                   from_outcome=outcome_state4,
-                                                                   to_state_id=state5.state_id, to_outcome=None)
-        state_m = sm_model.get_state_model_by_path(state_path_dict[state_name])
-        state = sm_model.state_machine.get_state_by_path(state_path_dict[state_name])
-        check_state_for_all_models(state, state_m)
-        assert len(sm_history.modifications.single_trail_history()) == 8
-        state_dict[state_name].add_transition(from_state_id=state5.state_id, from_outcome=outcome_state5,
-                                              to_state_id=state.state_id, to_outcome=-1)
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.modifications.single_trail_history()) == 9
-        sm_history.undo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-
-        # resolve reference
-        state4 = sm_model.state_machine.get_state_by_path(state_path_dict['state4'])
-        state5 = sm_model.state_machine.get_state_by_path(state_path_dict['state5'])
-        state_dict[state_name] = sm_model.state_machine.get_state_by_path(state_path_dict[state_name])
+        state = get_state_by_name(state_name, state_path_dict)
+        new_transition_id1 = perform_history_action(state.add_transition,
+                                                    from_state_id=state4.state_id, from_outcome=outcome_state4,
+                                                    to_state_id=state5.state_id, to_outcome=None)
+        state = get_state_by_name(state_name, state_path_dict)
+        perform_history_action(state.add_transition, from_state_id=state5.state_id, from_outcome=outcome_state5,
+                                                     to_state_id=state.state_id, to_outcome=-1)
 
         ###################
         # remove transition
-        state_dict[state_name].remove_transition(new_transition_id1)  # new outcome should be the third one
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_model.history.modifications.single_trail_history()) == 10
-        sm_history.undo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-
-        # resolve reference
-        state4 = sm_model.state_machine.get_state_by_path(state_path_dict['state4'])
-        state5 = sm_model.state_machine.get_state_by_path(state_path_dict['state5'])
-        state_dict[state_name] = sm_model.state_machine.get_state_by_path(state_path_dict[state_name])
+        state = get_state_by_name(state_name, state_path_dict)
+        perform_history_action(state.remove_transition, new_transition_id1)
 
         #############
         # remove state
-        state_dict[state_name].remove_state(state5.state_id)
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.modifications.single_trail_history()) == 11
-        sm_history.undo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
+        state = get_state_by_name(state_name, state_path_dict)
+        perform_history_action(state.remove_state, state5.state_id)
 
-        # resolve reference
-        state4 = sm_model.state_machine.get_state_by_path(state_path_dict['state4'])
-        state_dict[state_name] = sm_model.state_machine.get_state_by_path(state_path_dict[state_name])
 
         #############
         # add input_data_port
-        input_state4 = state4.add_input_data_port("input", "str", "zero")
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.modifications.single_trail_history()) == 12
-        sm_history.undo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-
-        # resolve reference
-        state4 = sm_model.state_machine.get_state_by_path(state_path_dict['state4'])
-        state_dict[state_name] = sm_model.state_machine.get_state_by_path(state_path_dict[state_name])
+        state4 = get_state_by_name('state4', state_path_dict)
+        input_state4_id = perform_history_action(state4.add_input_data_port, "input", "str", "zero")
 
         #############
         # remove input_data_port
-        state4.remove_input_data_port(input_state4)
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.modifications.single_trail_history()) == 13
-        sm_history.undo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
+        state4 = get_state_by_name('state4', state_path_dict)
+        perform_history_action(state4.remove_input_data_port, input_state4_id)
 
-        # resolve reference
-        state4 = sm_model.state_machine.get_state_by_path(state_path_dict['state4'])
-        state_dict[state_name] = sm_model.state_machine.get_state_by_path(state_path_dict[state_name])
 
         #############
         # add output_data_port
-        output_state4 = state4.add_output_data_port("output_"+state4.state_id, "int")
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.modifications.single_trail_history()) == 14
-        sm_history.undo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-
-        # resolve reference
-        state4 = sm_model.state_machine.get_state_by_path(state_path_dict['state4'])
-        state_dict[state_name] = sm_model.state_machine.get_state_by_path(state_path_dict[state_name])
+        state4 = get_state_by_name('state4', state_path_dict)
+        output_state4_id = perform_history_action(state4.add_output_data_port, "output_"+state4.state_id, "int")
 
         #############
         # remove output_data_port
-        state4.remove_output_data_port(output_state4)
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.modifications.single_trail_history()) == 15
-        sm_history.undo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
+        state4 = get_state_by_name('state4', state_path_dict)
+        perform_history_action(state4.remove_output_data_port, output_state4_id)
 
-        # resolve reference
-        state4 = sm_model.state_machine.get_state_by_path(state_path_dict['state4'])
-        state_dict[state_name] = sm_model.state_machine.get_state_by_path(state_path_dict[state_name])
 
         # prepare again state4
-        output_state4 = state4.add_output_data_port("output", "int")
-        input_state4 = state4.add_input_data_port("input_new", "str", "zero")
+        state4 = get_state_by_name('state4', state_path_dict)
+        output_state4_id = state4.add_output_data_port("output", "int")
+        input_state4_id = state4.add_input_data_port("input_new", "str", "zero")
         assert len(sm_history.modifications.single_trail_history()) == 17
-        output_state4 = state4.add_output_data_port("output_new", "int")
+        output_state4_id = state4.add_output_data_port("output_new", "int")
         assert len(sm_history.modifications.single_trail_history()) == 18
 
         state5 = ExecutionState('State5', 'STATE5')
-        state_dict[state_name].add_state(state5)
-        print(state_path_dict['state5'] + "\n" + state5.get_path())
+        state = get_state_by_name(state_name, state_path_dict)
+        state.add_state(state5)
         assert state_path_dict['state5'] == state5.get_path()
         assert len(sm_history.modifications.single_trail_history()) == 19
         input_par_state5 = state5.add_input_data_port("par", "int", 0)
@@ -404,76 +319,31 @@ def test_add_remove_history(caplog):
         output_res_state5 = state5.add_output_data_port("res", "int")
         assert len(sm_history.modifications.single_trail_history()) == 21
 
-
         #####################
         # add scoped_variable
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        scoped_buffer_nested = state_dict[state_name].add_scoped_variable("buffer", "int")
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_history.modifications.single_trail_history()) == 22
-        sm_history.undo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-
-        # resolve reference
-        state4 = sm_model.state_machine.get_state_by_path(state_path_dict['state4'])
-        state5 = sm_model.state_machine.get_state_by_path(state_path_dict['state5'])
-        state_dict[state_name] = sm_model.state_machine.get_state_by_path(state_path_dict[state_name])
+        state = get_state_by_name(state_name, state_path_dict)
+        scoped_buffer_nested = perform_history_action(state.add_scoped_variable, "buffer", "int")
 
         #####################
         # remove scoped_variable
-        state_dict[state_name].remove_scoped_variable(scoped_buffer_nested)
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_model.history.modifications.single_trail_history()) == 23
-        sm_model.history.undo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_model.history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-
-        # resolve reference
-        state4 = sm_model.get_state_model_by_path(state4.get_path()).state
-        state5 = sm_model.get_state_model_by_path(state5.get_path()).state
-        state_dict[state_name] = sm_model.get_state_model_by_path(state_dict[state_name].get_path()).state
+        state = get_state_by_name(state_name, state_path_dict)
+        perform_history_action(state.remove_scoped_variable, scoped_buffer_nested)
 
         #############
         # add data_flow
-        new_df_id = state_dict[state_name].add_data_flow(from_state_id=state4.state_id, from_data_port_id=output_state4,
-                                                         to_state_id=state5.state_id, to_data_port_id=input_par_state5)
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_model.history.modifications.single_trail_history()) == 24
-        sm_model.history.undo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_model.history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-
-        # resolve reference
-        state4 = sm_model.get_state_model_by_path(state4.get_path()).state
-        state5 = sm_model.get_state_model_by_path(state5.get_path()).state
-        state_dict[state_name] = sm_model.get_state_model_by_path(state_dict[state_name].get_path()).state
+        state = get_state_by_name(state_name, state_path_dict)
+        new_df_id = perform_history_action(state.add_data_flow,
+                                           from_state_id=state4.state_id, from_data_port_id=output_state4_id,
+                                           to_state_id=state5.state_id, to_data_port_id=input_par_state5)
 
         ################
         # remove data_flow
-        state_dict[state_name].remove_data_flow(new_df_id)
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        assert len(sm_model.history.modifications.single_trail_history()) == 25
-        sm_model.history.undo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
-        sm_model.history.redo()
-        check_models_for_state_with_name(state_name, state_path_dict, sm_model)
+        state = get_state_by_name(state_name, state_path_dict)
+        perform_history_action(state.remove_data_flow, new_df_id)
 
-    # state_check_dict1 = print_all_states_with_path_and_name(state_dict['Container'])
-    # do_check_for_state(state_dict, state_name='state1')
-    # do_check_for_state(state_dict, state_name='state2')
+
     do_check_for_state(state_name='Nested')
-    sm_model.history.modifications.reset()
-    save_state_machine(sm_model, TEST_PATH + "_add_remove_child_hierarchical_state", logger, with_gui=False)
-    # assert check_if_all_states_there(state_dict['Container'], state_check_dict1)
-    # state_check_dict2 = print_all_states_with_path_and_name(state_dict['Container'])
     do_check_for_state(state_name='Container')
-    save_state_machine(sm_model, TEST_PATH + "_add_remove_root_state", logger, with_gui=False)
-    # assert check_if_all_states_there(state_dict['Container'], state_check_dict1)
-    # assert check_if_all_states_there(state_dict['Container'], state_check_dict2)
 
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
@@ -1199,7 +1069,7 @@ def trigger_state_type_change_tests(with_gui):
     import rafcon.gui.helpers.state as gui_helper_state
     main_window_controller = rafcon.gui.singleton.main_window_controller
 
-    sm_m, state_dict = create_state_machine_m(with_gui, add_state_machine=True)
+    sm_m, state_dict = create_state_machine_m(with_gui)
     sleep_time_max = 5  # 0.5
 
     check_elements_ignores.append("internal_transitions")
@@ -1648,7 +1518,7 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
     main_window_controller = rafcon.gui.singleton.main_window_controller
 
-    sm_m, state_dict = create_state_machine_m(with_gui, add_state_machine=True)
+    sm_m, state_dict = create_state_machine_m(with_gui)
 
     if not with_gui:
         testing_utils.wait_for_gui()
