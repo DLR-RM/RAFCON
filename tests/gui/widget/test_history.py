@@ -510,19 +510,6 @@ def test_outcome_property_modifications_history(caplog):
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
-def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
-    assert tab_key in main_window_controller.get_controller('states_editor_ctrl').tabs
-    time_waited = 0.0
-    state_editor_ctrl = None
-    while state_editor_ctrl is None:
-        state_editor_ctrl = main_window_controller.get_controller('states_editor_ctrl').tabs[tab_key]['controller']
-        time.sleep(0.1)
-        time_waited += 0.1
-        assert time_waited < max_time
-
-    return state_editor_ctrl, time_waited
-
-
 def test_transition_property_modifications_history(caplog):
     ##################
     # transition properties
