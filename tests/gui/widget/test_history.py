@@ -515,22 +515,13 @@ def test_transition_property_modifications_history(caplog):
     # transition properties
 
     # change modify_origin
-
     # change from_outcome
-
     # change to_state
-
     # change to_outcome
-
     # modify_transition_from_state
-
     # modify_transition_from_outcome
-
     # modify_transition_to_outcome
-
     # modify_transition_to_state
-
-    # create testbed
 
     testing_utils.dummy_gui(None)
 
@@ -591,14 +582,9 @@ def test_input_port_modify_notification(caplog):
     # input_data_port properties
 
     # change name
-
     # change data_type
-
     # change default_value
-
     # change datatype
-
-    # create testbed
 
     testing_utils.dummy_gui(None)
 
@@ -606,35 +592,30 @@ def test_input_port_modify_notification(caplog):
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     sm_model, state_dict = create_state_machine_m()
 
-    new_input_data_port_id = state_dict['Nested2'].add_input_data_port(name='new_input', data_type='str')
-    sm_model.history.undo()
-    sm_model.history.redo()
+    nested_state = state_dict['Nested2']
+
+    new_input_data_port_id, nested_state = perform_history_action(nested_state.add_input_data_port,
+                                                                  name='new_input', data_type='str')
 
     ################################
     # check for modification of name
-    state_dict['Nested2'].input_data_ports[new_input_data_port_id].name = 'changed_new_input_name'
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.input_data_ports[new_input_data_port_id].__setattr__, "name",
+                                             "changed_new_input_name")
 
     #####################################
     # check for modification of data_type
-    state_dict['Nested2'].input_data_ports[new_input_data_port_id].data_type = 'int'
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.input_data_ports[new_input_data_port_id].__setattr__,
+                                             "data_type", "int")
 
     #########################################
     # check for modification of default_value
-    state_dict['Nested2'].input_data_ports[new_input_data_port_id].default_value = 5
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.input_data_ports[new_input_data_port_id].__setattr__,
+                                             "default_value", 5)
 
     ###########################################
     # check for modification of change_datatype
-    state_dict['Nested2'].input_data_ports[new_input_data_port_id].change_data_type(data_type='str',
-                                                                                    default_value='awesome_tool')
-    sm_model.history.undo()
-    sm_model.history.redo()
-    save_state_machine(sm_model, TEST_PATH + "_input_port_properties", logger, with_gui=False)
+    _, nested_state = perform_history_action(nested_state.input_data_ports[new_input_data_port_id].change_data_type,
+                                             data_type='str', default_value='awesome_tool')
 
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
