@@ -502,9 +502,9 @@ def test_outcome_property_modifications_history(caplog):
         state_path = state_dict[state_name].get_path()
         outcome_ids = list(state_dict[state_name].outcomes.keys())
         for outcome_id in outcome_ids:
-            nested = sm_model.state_machine.get_state_by_path(state_path)
+            state = sm_model.state_machine.get_state_by_path(state_path)
             if outcome_id >= 0:
-                outcome = nested.outcomes[outcome_id]
+                outcome = state.outcomes[outcome_id]
                 _, _ = perform_history_action(outcome.__setattr__, "name", "new_name_" + str(outcome_id))
 
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
@@ -542,82 +542,46 @@ def test_transition_property_modifications_history(caplog):
     outcome_again_state1 = state1.add_outcome("again")
     state2 = ExecutionState('State2')
     oc_done_state2 = state2.add_outcome("done")
-    oc_best_state2 = state2.add_outcome("best")
-    state_dict['Nested'].add_state(state1)
-    state_dict['Nested'].add_state(state2)
-    oc_great_nested = state_dict['Nested'].add_outcome("great")
-    outcome_counted_state1 = state1.add_outcome("counted")
+    state2.add_outcome("best")
+    nested_state = state_dict['Nested']
+    nested_state.add_state(state1)
+    nested_state.add_state(state2)
+    nested_state.add_outcome("great")
+    state1.add_outcome("counted")
     oc_full_state2 = state2.add_outcome("full")
-    # assert False
 
-    new_trans_id = state_dict['Nested'].add_transition(from_state_id=state1.state_id, from_outcome=outcome_again_state1,
-                                                       to_state_id=state1.state_id, to_outcome=None)
+    new_trans_id, nested_state = perform_history_action(nested_state.add_transition,
+                                                        from_state_id=state1.state_id, from_outcome=outcome_again_state1,
+                                                        to_state_id=state1.state_id, to_outcome=None)
 
     # modify_origin(self, from_state, from_outcome)
-    state_dict['Nested'].transitions[new_trans_id].modify_origin(from_state=state2.state_id,
-                                                                 from_outcome=oc_full_state2)
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.transitions[new_trans_id].modify_origin,
+                                             from_state=state2.state_id, from_outcome=oc_full_state2)
 
     # from_outcome(self, from_outcome)
-    state_dict['Nested'].transitions[new_trans_id].from_outcome = oc_done_state2
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.transitions[new_trans_id].__setattr__, "from_outcome",
+                                             oc_done_state2)
 
     # to_state(self, to_state)
-    state_dict['Nested'].transitions[new_trans_id].to_state = state2.state_id
-    sm_model.history.undo()
-    sm_model.history.redo()
-
-    # to_outcome(self, to_outcome)
-    # TODO do an example what does not violate the roles of transitions
-    # TODO test the respective function in transition
-    # state_dict['Nested'].transitions[new_trans_id].to_outcome = oc_great_nested
-    # sm_model.history.undo()
-    # sm_model.history.redo()
-
-    # # transition_id(self, transition_id)  -> no transition_id setter anymore
-    # state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
-    # state_dict['Nested'].transitions[new_trans_id].transition_id += 1
-    # sm_model.history.undo()
-    # sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.transitions[new_trans_id].__setattr__, "to_state",
+                                             state2.state_id)
 
     # reset observer and testbed
-    state_dict['Nested'].remove_transition(new_trans_id)
-    new_df_id = state_dict['Nested'].add_transition(from_state_id=state1.state_id,
-                                                    from_outcome=outcome_again_state1,
-                                                    to_state_id=state1.state_id,
-                                                    to_outcome=None)
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.remove_transition, new_trans_id)
+    new_df_id, nested_state = perform_history_action(nested_state.add_transition,
+                                                     from_state_id=state1.state_id, from_outcome=outcome_again_state1,
+                                                     to_state_id=state1.state_id, to_outcome=None)
 
-    ##### modify from parent state #######
-    # modify_transition_from_state(self, transition_id, from_state, from_outcome)
-    # state_dict['Nested'].modify_transition_from_state(new_df_id, from_state=state2.state_id,
-    #                                                   from_outcome=oc_full_state2)
-    state_dict['Nested'].transitions[new_df_id].modify_origin(state2.state_id, oc_full_state2)
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.transitions[new_df_id].modify_origin,
+                                             state2.state_id, oc_full_state2)
 
     # modify_transition_from_outcome(self, transition_id, from_outcome)
-    # state_dict['Nested'].modify_transition_from_outcome(new_df_id, from_outcome=oc_done_state2)
-    state_dict['Nested'].transitions[new_df_id].from_outcome = oc_done_state2
-    sm_model.history.undo()
-    sm_model.history.redo()
-
-    # TODO test the respective function in transition
-    # modify_transition_to_outcome(self, transition_id, to_outcome)
-    # Invalid test: to_outcome must be None as transition goes to child state
-    # state_dict['Nested'].modify_transition_to_outcome(new_df_id, to_outcome=oc_great_nested)
-    # sm_model.history.undo()
-    # sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.transitions[new_df_id].__setattr__, "from_outcome",
+                                             oc_done_state2)
 
     # modify_transition_to_state(self, transition_id, to_state, to_outcome)
-    # state_dict['Nested'].modify_transition_to_state(new_df_id, to_state=state1.state_id)
-    state_dict['Nested'].transitions[new_df_id].to_state = state1.state_id
-    sm_model.history.undo()
-    sm_model.history.redo()
-    save_state_machine(sm_model, TEST_PATH + "_transition_properties", logger, with_gui=False)
+    _, nested_state = perform_history_action(nested_state.transitions[new_df_id].__setattr__, "to_state",
+                                             state1.state_id)
 
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
