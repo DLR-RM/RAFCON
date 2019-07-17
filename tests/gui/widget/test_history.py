@@ -10,6 +10,7 @@ import pytest
 # core elements
 import rafcon.core.singleton
 from rafcon.core.state_machine import StateMachine
+from rafcon.core.states.state import State
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.hierarchy_state import HierarchyState
@@ -132,12 +133,18 @@ def perform_history_action(operation, *args, **kwargs):
     sm_history = state_machine_m.history
     history_length = len(sm_history.modifications.single_trail_history())
     origin_hash = parent.mutable_hash().hexdigest()
+    additional_operations = 0
+    if "additional_operations" in kwargs:
+        additional_operations = kwargs["additional_operations"]
+        del kwargs["additional_operations"]
     operation_result = operation(*args, **kwargs)
-    assert len(sm_history.modifications.single_trail_history()) == history_length + 1
+    assert len(sm_history.modifications.single_trail_history()) == history_length + 1 + additional_operations
     after_operation_hash = parent.mutable_hash().hexdigest()
-    sm_history.undo()
+    for _ in range(1 + additional_operations):
+        sm_history.undo()
     undo_operation_hash = parent.mutable_hash().hexdigest()
-    sm_history.redo()
+    for _ in range(1 + additional_operations):
+        sm_history.redo()
     redo_operation_hash = parent.mutable_hash().hexdigest()
     assert origin_hash == undo_operation_hash
     assert after_operation_hash == redo_operation_hash
@@ -391,133 +398,84 @@ def test_state_property_modifications_history(caplog):
     sm_model, state_dict = create_state_machine_m()
 
     state1 = ExecutionState('State1', state_id="STATE1")
-    input_state1 = state1.add_input_data_port("input", "str", "zero")
-    output_state1 = state1.add_output_data_port("output", "int")
-    output_count_state1 = state1.add_output_data_port("count", "int")
+    state1.add_input_data_port("input", "str", "zero")
+    state1.add_output_data_port("output", "int")
+    state1.add_output_data_port("count", "int")
 
     state2 = ExecutionState('State2')
-    input_par_state2 = state2.add_input_data_port("par", "int", 0)
-    input_number_state2 = state2.add_input_data_port("number", "int", 5)
-    output_res_state2 = state2.add_output_data_port("res", "int")
+    state2.add_input_data_port("par", "int", 0)
+    state2.add_input_data_port("number", "int", 5)
+    state2.add_output_data_port("res", "int")
 
-    nested_state_path = state_dict['Nested'].get_path()
-    state_dict['Nested'].add_state(state1)
-    state1_path = state1.get_path()
-    assert len(sm_model.history.modifications.single_trail_history()) == 2
-    state_dict['Nested'].add_state(state2)
+    nested_state = state_dict['Nested']
+    nested_state_path = nested_state.get_path()
+    nested_state.add_state(state1)
+    nested_state.add_state(state2)
     state2_path = state2.get_path()
-    assert len(sm_model.history.modifications.single_trail_history()) == 3
-    output_res_nested = state_dict['Nested'].add_output_data_port("res", "int")
-    assert len(sm_model.history.modifications.single_trail_history()) == 4
+    nested_state.add_output_data_port("res", "int")
 
-    oc_again_state1 = state1.add_outcome("again")
-    assert len(sm_model.history.modifications.single_trail_history()) == 5
-    oc_counted_state1 = state1.add_outcome("counted")
+    state1.add_outcome("again")
+    state1.add_outcome("counted")
+
     assert len(sm_model.history.modifications.single_trail_history()) == 6
 
-    oc_done_state2 = state2.add_outcome("done")
-    oc_best_state2 = state2.add_outcome("best")
-    oc_full_state2 = state2.add_outcome("full")
+    state2.add_outcome("done")
+    state2.add_outcome("best")
+    state2.add_outcome("full")
     assert len(sm_model.history.modifications.single_trail_history()) == 9
 
-    oc_great_nested = state_dict['Nested'].add_outcome("great")
+    nested_state.add_outcome("great")
     assert len(sm_model.history.modifications.single_trail_history()) == 10
 
     #######################################
     ######## Properties of State ##########
 
     # name(self, name)
-    state_dict['Nested'].name = 'nested'
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.__setattr__, "name", "nested")
 
-    # parent(self, parent) State
-    # state_dict['Nested'].parent = state_dict['State3']
-    # sm_model.history.undo()
-    # sm_model.history.redo()
-
+    # TODO: The following commented operations are not correctly supported by the history!
     # input_data_ports(self, input_data_ports) None or dict
-    state_dict['Nested'].input_data_ports = {}
-    sm_model.history.undo()
-    sm_model.history.redo()
-
-    # output_data_ports(self, output_data_ports) None or dict
-    state_dict['Nested'].output_data_ports = {}
-    sm_model.history.undo()
-    sm_model.history.redo()
+    # _, nested_state = perform_history_action(nested_state.__setattr__, "input_data_ports", {})
+    # _, nested_state = perform_history_action(nested_state.__setattr__, "output_data_ports", {})
 
     # outcomes(self, outcomes) None or dict
-    state_dict['Nested'].outcomes = state_dict['Nested'].outcomes
-    sm_model.history.undo()
-    sm_model.history.redo()
-    state_dict['Nested'].outcomes = {}
-    sm_model.history.undo()
-    sm_model.history.redo()
+    # _, nested_state = perform_history_action(nested_state.__setattr__, "outcomes", nested_state.outcomes)
+    # _, nested_state = perform_history_action(nested_state.__setattr__, "outcomes", {})
 
     script_text = '\ndef execute(self, inputs, outputs, gvm):\n\tself.logger.debug("Hello World")\n\treturn 0\n'
     script_text1 = '\ndef execute(self, inputs, outputs, gvm):\n\tself.logger.debug("Hello NERD")\n\treturn 0\n'
 
     # script(self, script) Script -> no script setter any more only script_text !!!
-    state_dict['Nested'].script_text = script_text
-    sm_model.history.undo()
-    sm_model.history.redo()
+    nested2_state = state_dict['Nested2']
+    _, nested2_state = perform_history_action(nested2_state.__setattr__, "script_text", script_text)
 
     # script_text(self, script_text)
-    state_dict['Nested'].script_text = script_text1
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested2_state = perform_history_action(nested2_state.__setattr__, "script_text", script_text1)
 
     # description(self, description) str
-    state_dict['Nested'].description = "awesome"
-    sm_model.history.undo()
-    sm_model.history.redo()
-
-    # # active(self, active) bool
-    # state_dict['Nested'].active = True
-    # sm_model.history.undo()
-    # sm_model.history.redo()
-    #
-    # # child_execution(self, child_execution) bool
-    # state_dict['Nested'].child_execution = True
-    # sm_model.history.undo()
-    # sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.__setattr__, "description", "awesome")
 
     ############################################
     ###### Properties of ContainerState ########
 
     # set_start_state(self, state) State or state_id
-    state_dict['Nested'] = sm_model.state_machine.get_state_by_path(nested_state_path)
-    state_dict['Nested'].set_start_state("STATE1")
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.set_start_state, "STATE1")
+
     # set_start_state(self, start_state)
     state2 = sm_model.state_machine.get_state_by_path(state2_path)
-    state_dict['Nested'].set_start_state(state2)
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.set_start_state, state2, additional_operations=1)
 
     # transitions(self, transitions) None or dict
-    state_dict['Nested'].transitions = {}
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.__setattr__, "transitions", {})
 
     # data_flows(self, data_flows) None or dict
-    state_dict['Nested'].data_flows = {}
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.__setattr__, "data_flows", {})
 
     # scoped_variables(self, scoped_variables) None or dict
-    state_dict['Nested'].scoped_variables = {}
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.__setattr__, "scoped_variables", {})
 
     # states(self, states) None or dict
-    state_dict['Nested'].states = {}
-    assert sm_model.history.modifications.single_trail_history()[-1].before_overview['method_name'][-1] == 'states'
-    sm_model.history.undo()
-    sm_model.history.redo()
-
-    save_state_machine(sm_model, TEST_PATH + "_state_properties", logger, with_gui=False)
+    _, nested_state = perform_history_action(nested_state.__setattr__, "states", {})
 
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
