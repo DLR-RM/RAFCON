@@ -127,6 +127,8 @@ def perform_history_action(operation, *args, **kwargs):
     rtype: tuple(any, rafcon.core.states.state.State)
     """
     state = operation.__self__
+    if not isinstance(state, State):
+        state = state.parent
     state_path = state.get_path()
     parent = state.parent
     state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
@@ -494,39 +496,16 @@ def test_outcome_property_modifications_history(caplog):
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     sm_model, state_dict = create_state_machine_m()
 
-    def do_check_for_state(state_dict, state_name='Nested'):
-        ####################################################
-        # modify outcome and generate in previous a observer
-        for outcome_id, outcome in state_dict['Nested2'].outcomes.items():
-            if not outcome_id < 0:
-                outcome.name = "new_name_" + str(outcome_id)
-                sm_model.history.undo()
-                sm_model.history.redo()
-                # resolve reference
-                state_dict['Nested2'] = sm_model.get_state_model_by_path(state_dict['Nested2'].get_path()).state
-
-        ##########################
-        # check for ContainerState -> should be unnecessary
-        state_model = sm_model.get_state_model_by_path(state_dict['Nested'].get_path())
-
-        ####################################################
-        # modify outcome
-        for outcome_id, outcome in state_dict['Nested'].outcomes.items():
-            outcome.name = "new_name_" + str(outcome_id)
-            sm_model.history.undo()
-            sm_model.history.redo()
-            # resolve reference
-            state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
-
-        # outcome_id(self, outcome_id) -> no data_fow_id setter anymore
-        # state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
-        # state_dict['Nested'].outcomes.values()[0].outcome_id += 10
-        # sm_model.history.undo()
-        # sm_model.history.redo()
-
-    # do_check_for_state(state_dict, history_ctrl, state_name='Nested')
-    do_check_for_state(state_dict, state_name='Container')
-    save_state_machine(sm_model, TEST_PATH + "_outcome_properties", logger, with_gui=False)
+    ####################################################
+    # modify outcome and generate in previous a observer
+    for state_name in ["Nested", "Nested2"]:
+        state_path = state_dict[state_name].get_path()
+        outcome_ids = list(state_dict[state_name].outcomes.keys())
+        for outcome_id in outcome_ids:
+            nested = sm_model.state_machine.get_state_by_path(state_path)
+            if outcome_id >= 0:
+                outcome = nested.outcomes[outcome_id]
+                _, _ = perform_history_action(outcome.__setattr__, "name", "new_name_" + str(outcome_id))
 
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
