@@ -117,7 +117,17 @@ def create_state_machine_m(with_gui=False):
 
 
 def perform_history_action(operation, *args, **kwargs):
-    parent = operation.__self__.parent
+    """Perform an operation on a state + undo and redo it with consistency checks
+
+    :param operation: The operation to be called
+    :param args: The arguments for the operation
+    :param kwargs: The keyword arguments for the operation
+    :return: the result of the operation and the new state reference
+    rtype: tuple(any, rafcon.core.states.state.State)
+    """
+    state = operation.__self__
+    state_path = state.get_path()
+    parent = state.parent
     state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     sm_history = state_machine_m.history
     history_length = len(sm_history.modifications.single_trail_history())
@@ -131,7 +141,7 @@ def perform_history_action(operation, *args, **kwargs):
     redo_operation_hash = parent.mutable_hash().hexdigest()
     assert origin_hash == undo_operation_hash
     assert after_operation_hash == redo_operation_hash
-    return operation_result
+    return operation_result, state_machine_m.state_machine.get_state_by_path(state_path)
 
 
 def perform_multiple_undo_redo(number):
@@ -231,22 +241,21 @@ def test_add_remove_history(caplog):
 
         #############
         # outcome add & remove
-        outcome_super = perform_history_action(state_m.state.add_outcome, "super")
+        outcome_super, state = perform_history_action(state_m.state.add_outcome, "super")
 
         state = get_state_by_name(state_name, state_path_dict)
-        perform_history_action(state_m.state.remove_outcome, outcome_super)
+        _, state = perform_history_action(state_m.state.remove_outcome, outcome_super)
 
 
         #############
         # add two states
         state4 = ExecutionState('State4', state_id='STATE4')
         state_path_dict['state4'] = state.get_path() + "/" + "STATE4"
-        perform_history_action(state.add_state, state4)
+        _, state = perform_history_action(state.add_state, state4)
 
         state5 = ExecutionState('State5', state_id='STATE5')
-        state = get_state_by_name(state_name, state_path_dict)
         state_path_dict['state5'] = state.get_path() + "/" + "STATE5"
-        perform_history_action(state.add_state, state5)
+        _, state = perform_history_action(state.add_state, state5)
 
         perform_multiple_undo_redo(2)
 
@@ -260,51 +269,44 @@ def test_add_remove_history(caplog):
 
         ################
         # add transition from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id
-        state = get_state_by_name(state_name, state_path_dict)
-        new_transition_id1 = perform_history_action(state.add_transition,
-                                                    from_state_id=state4.state_id, from_outcome=outcome_state4,
-                                                    to_state_id=state5.state_id, to_outcome=None)
-        state = get_state_by_name(state_name, state_path_dict)
-        perform_history_action(state.add_transition, from_state_id=state5.state_id, from_outcome=outcome_state5,
-                                                     to_state_id=state.state_id, to_outcome=-1)
+        new_transition_id1, state = perform_history_action(state.add_transition,
+                                                           from_state_id=state4.state_id, from_outcome=outcome_state4,
+                                                           to_state_id=state5.state_id, to_outcome=None)
+        _, state = perform_history_action(state.add_transition,
+                                          from_state_id=state5.state_id, from_outcome=outcome_state5,
+                                          to_state_id=state.state_id, to_outcome=-1)
 
         ###################
         # remove transition
-        state = get_state_by_name(state_name, state_path_dict)
-        perform_history_action(state.remove_transition, new_transition_id1)
+        _, state = perform_history_action(state.remove_transition, new_transition_id1)
 
         #############
         # remove state
-        state = get_state_by_name(state_name, state_path_dict)
-        perform_history_action(state.remove_state, state5.state_id)
+        _, state = perform_history_action(state.remove_state, state5.state_id)
 
 
         #############
         # add input_data_port
         state4 = get_state_by_name('state4', state_path_dict)
-        input_state4_id = perform_history_action(state4.add_input_data_port, "input", "str", "zero")
+        input_state4_id, state4 = perform_history_action(state4.add_input_data_port, "input", "str", "zero")
 
         #############
         # remove input_data_port
-        state4 = get_state_by_name('state4', state_path_dict)
-        perform_history_action(state4.remove_input_data_port, input_state4_id)
+        _, state4 = perform_history_action(state4.remove_input_data_port, input_state4_id)
 
 
         #############
         # add output_data_port
-        state4 = get_state_by_name('state4', state_path_dict)
-        output_state4_id = perform_history_action(state4.add_output_data_port, "output_"+state4.state_id, "int")
+        output_state4_id, state4 = perform_history_action(state4.add_output_data_port, "output_"+state4.state_id, "int")
 
         #############
         # remove output_data_port
-        state4 = get_state_by_name('state4', state_path_dict)
-        perform_history_action(state4.remove_output_data_port, output_state4_id)
+        _, state4 = perform_history_action(state4.remove_output_data_port, output_state4_id)
 
 
         # prepare again state4
-        state4 = get_state_by_name('state4', state_path_dict)
-        output_state4_id = state4.add_output_data_port("output", "int")
-        input_state4_id = state4.add_input_data_port("input_new", "str", "zero")
+        state4.add_output_data_port("output", "int")
+        state4.add_input_data_port("input_new", "str", "zero")
         assert len(sm_history.modifications.single_trail_history()) == 17
         output_state4_id = state4.add_output_data_port("output_new", "int")
         assert len(sm_history.modifications.single_trail_history()) == 18
@@ -321,26 +323,21 @@ def test_add_remove_history(caplog):
 
         #####################
         # add scoped_variable
-        state = get_state_by_name(state_name, state_path_dict)
-        scoped_buffer_nested = perform_history_action(state.add_scoped_variable, "buffer", "int")
+        scoped_buffer_nested, state = perform_history_action(state.add_scoped_variable, "buffer", "int")
 
         #####################
         # remove scoped_variable
-        state = get_state_by_name(state_name, state_path_dict)
-        perform_history_action(state.remove_scoped_variable, scoped_buffer_nested)
+        _, state = perform_history_action(state.remove_scoped_variable, scoped_buffer_nested)
 
         #############
         # add data_flow
-        state = get_state_by_name(state_name, state_path_dict)
-        new_df_id = perform_history_action(state.add_data_flow,
-                                           from_state_id=state4.state_id, from_data_port_id=output_state4_id,
-                                           to_state_id=state5.state_id, to_data_port_id=input_par_state5)
+        new_df_id, state = perform_history_action(state.add_data_flow,
+                                                  from_state_id=state4.state_id, from_data_port_id=output_state4_id,
+                                                  to_state_id=state5.state_id, to_data_port_id=input_par_state5)
 
         ################
         # remove data_flow
-        state = get_state_by_name(state_name, state_path_dict)
         perform_history_action(state.remove_data_flow, new_df_id)
-
 
     do_check_for_state(state_name='Nested')
     do_check_for_state(state_name='Container')
