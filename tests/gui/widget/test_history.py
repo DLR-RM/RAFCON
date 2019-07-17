@@ -577,7 +577,7 @@ def test_transition_property_modifications_history(caplog):
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
-def test_input_port_modify_notification(caplog):
+def test_input_port_modify(caplog):
     ##################
     # input_data_port properties
 
@@ -591,7 +591,6 @@ def test_input_port_modify_notification(caplog):
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     sm_model, state_dict = create_state_machine_m()
-
     nested_state = state_dict['Nested2']
 
     new_input_data_port_id, nested_state = perform_history_action(nested_state.add_input_data_port,
@@ -620,19 +619,15 @@ def test_input_port_modify_notification(caplog):
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
-def test_output_port_modify_notification(caplog):
+def test_output_port_modify(caplog):
 
     ##################
     # output_data_port properties
 
     # change name
-
     # change data_type
-
     # change default_value
-
     # change datatype
-
     # create testbed
 
     testing_utils.dummy_gui(None)
@@ -640,34 +635,31 @@ def test_output_port_modify_notification(caplog):
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     sm_model, state_dict = create_state_machine_m()
+    nested_state = state_dict['Nested2']
 
-    new_output_data_port_id = state_dict['Nested2'].add_output_data_port(name='new_output', data_type='str')
+    new_output_data_port_id, nested_state = perform_history_action(nested_state.add_output_data_port,
+                                                                   name='new_output', data_type='str')
 
     ################################
     # check for modification of name
-    state_dict['Nested2'].output_data_ports[new_output_data_port_id].name = 'changed_new_output_name'
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.output_data_ports[new_output_data_port_id].__setattr__, "name",
+                                             "changed_new_output_name")
 
     #####################################
     # check for modification of data_type
-    state_dict['Nested2'].output_data_ports[new_output_data_port_id].data_type = 'int'
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.output_data_ports[new_output_data_port_id].__setattr__,
+                                             "data_type", "int")
 
     #########################################
     # check for modification of default_value
-    state_dict['Nested2'].output_data_ports[new_output_data_port_id].default_value = 5
-    sm_model.history.undo()
-    sm_model.history.redo()
+    _, nested_state = perform_history_action(nested_state.output_data_ports[new_output_data_port_id].__setattr__,
+                                             "default_value", 5)
 
     ###########################################
     # check for modification of change_datatype
-    state_dict['Nested2'].output_data_ports[new_output_data_port_id].change_data_type(data_type='str',
-                                                                                      default_value='awesome_tool')
-    sm_model.history.undo()
-    sm_model.history.redo()
-    save_state_machine(sm_model, TEST_PATH + "_output_port_properties", logger, with_gui=False)
+    _, nested_state = perform_history_action(nested_state.output_data_ports[new_output_data_port_id].change_data_type,
+                                             data_type='str', default_value='awesome_tool')
+
 
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
