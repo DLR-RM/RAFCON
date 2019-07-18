@@ -202,6 +202,9 @@ def get_state_element_meta(state_model, with_parent_linkage=True, with_verbose=F
     if with_verbose:
         logger.verbose("STORE META for STATE: {0} {1}".format(state_model.state.state_id, state_model.state.name))
     meta_dict['is_start'] = state_model.is_start
+
+    meta_dict['income'] = meta_dump_or_deepcopy(state_model.income.meta)
+
     for elem in state_model.outcomes:
         meta_dict['outcomes'][elem.outcome.outcome_id] = meta_dump_or_deepcopy(elem.meta)
         if with_verbose:
@@ -278,6 +281,10 @@ def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=Non
     if with_verbose:
         logger.verbose("INSERT META for STATE: {0} {1}".format(state_model.state.state_id, state_model.state.name))
 
+    if 'income' in meta_dict:
+        state_model.income.meta = meta_dump_or_deepcopy(meta_dict['income'])
+    else:
+        missing_meta_data_log_msg(state_model, state_model.income, meta_dict, 'income', [state_model.income.core_element_id])
     for elem in state_model.outcomes:
         if elem.outcome.outcome_id in meta_dict['outcomes']:
             elem.meta = meta_dump_or_deepcopy(meta_dict['outcomes'][elem.outcome.outcome_id])
