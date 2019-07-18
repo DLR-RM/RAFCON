@@ -75,6 +75,7 @@ def trigger_source_editor_signals():
 
     # ---check if the source text can be changed---
     content = 'Test'
+    # This adds an additional error, as this script cannot be compiled
     call_gui_callback(source_editor_controller.set_script_text, content)
     assert content == source_editor_controller.source_text
 
@@ -86,6 +87,7 @@ def trigger_source_editor_signals():
 
     # get the textview buffer and replace the buffer text with another
     test_buffer = source_view.get_buffer()
+    # This adds an additional error, as this script cannot be compiled
     call_gui_callback(test_buffer.set_text, test_text, -1)
 
     # ---check if a new buffer doesn't change the source text
@@ -151,13 +153,13 @@ def test_gui(caplog):
 
     # queue = Queue.Queue() # TODO think about to use this to get call_back methods return value by a generic scheme
     # thread = threading.Thread(target=lambda q, arg1: q.put(trigger_source_editor_signals(arg1)), args=(queue, main_window_controller))
-    errors = 1
+    errors = 3
     try:
         result = trigger_source_editor_signals()
 
         if not result:
             logger.error("!The editor required in this test was not found on this machine. Test was aborted!")
-            errors = 2
+            errors += 1
     except:
         raise
     finally:

@@ -434,7 +434,17 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     # read script file if an execution state
     if isinstance(state, ExecutionState):
         script_text = read_file(state_path, state.script.filename)
-        state.script_text = script_text
+        if not global_config.get_config_value("SCRIPT_COMPILE_ON_FILESYSTEM_LOAD", True):
+            state.script.set_script_without_compilation(script_text)
+        else:
+            try:
+                state.script.script = script_text
+            except ImportError as e:
+                logger.info("The script of the state '{}' (id {}) uses a module that is not available: {}".format(
+                            state.name, state.state_id, str(e)))
+            except Exception as e:
+                logger.warning("The script of the state '{}' (id {}) contains a {}: {}".format(
+                               state.name, state.state_id, e.__class__.__name__, str(e)))
 
     # load semantic data
     try:

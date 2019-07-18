@@ -25,7 +25,8 @@ def create_hierarchy_state(number_child_states=10, sleep=False):
 
     for i in range(number_child_states):
         if sleep:
-            state = ExecutionState("state" + str(i), path=testing_utils.TEST_SCRIPT_PATH, filename="hello_world_sleep.py")
+            state = ExecutionState("state" + str(i), path=testing_utils.TEST_SCRIPT_PATH,
+                                   filename="hello_world_sleep.py")
         else:
             state = ExecutionState("state" + str(i))
         hierarchy.add_state(state)

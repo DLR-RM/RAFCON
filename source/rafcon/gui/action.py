@@ -142,7 +142,10 @@ def get_state_from_state_tuple(state_tuple):
                     UNIQUE_DECIDER_STATE_ID in state.states, child_state.state_id == UNIQUE_DECIDER_STATE_ID))
 
     if isinstance(state, ExecutionState):
-        state.script_text = state_tuple[STATE_TUPLE_SCRIPT_TEXT_INDEX]
+        try:
+            state.script_text = state_tuple[STATE_TUPLE_SCRIPT_TEXT_INDEX]
+        except:
+            pass  # Tolerate script compilation errors
     # print("------------- ", state)
     for child_state_id, child_state_tuple in state_tuple[STATE_TUPLE_CHILD_STATES_INDEX].items():
         child_state = get_state_from_state_tuple(child_state_tuple)
@@ -693,7 +696,10 @@ class Action(ModelMT, AbstractAction):
         # state.script = stored_state.script
         # logger.debug("script0: " + stored_state.script.script)
         if isinstance(state, ExecutionState):
-            state.script_text = stored_state.script_text
+            try:
+                state.script_text = stored_state.script_text
+            except:
+                pass  # Tolerate script compilation errors
 
         if is_root:
             for dp_id, dp in stored_state.input_data_ports.items():
@@ -738,7 +744,10 @@ class Action(ModelMT, AbstractAction):
                     # state.states[new_state.state_id].script = new_state.script
                     # logger.debug("script1: " + new_state.script_text)
                     if isinstance(new_state, ExecutionState):
-                        state.states[new_state.state_id].script_text = new_state.script_text
+                        try:
+                            state.states[new_state.state_id].script_text = new_state.script_text
+                        except:
+                            pass  # Tolerate script compilation errors
 
             if isinstance(state, BarrierConcurrencyState):
                 for t_id in list(state.transitions.keys()):

@@ -134,7 +134,7 @@ def create_models_concurrency():
     state_dict['Preemptive'] = pstate
     hstate = HierarchyState()
     estate = ExecutionState()
-    estate.script_text = estate.script_text + "\nprint 'nochwas'"
+    estate.script_text = estate.script_text + "\nprint('nochwas')"
     state_dict['Preemptive'].add_state(hstate)
     state_dict['Preemptive'].add_state(estate)
     bstate = BarrierConcurrencyState(name='Barrier', state_id='BARRIER')
@@ -142,7 +142,7 @@ def create_models_concurrency():
     state_dict['Barrier'] = bstate
     hstate = HierarchyState()
     estate = ExecutionState()
-    estate.script_text = estate.script_text + "\nprint 'irgendwas'"
+    estate.script_text = estate.script_text + "\nprint('irgendwas')"
     state_dict['Barrier'].add_state(hstate)
     state_dict['Barrier'].add_state(estate)
 
