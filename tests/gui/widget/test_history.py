@@ -1178,7 +1178,7 @@ def trigger_state_type_change_typical_bug_tests():
 
     logger.info("DO_TYPE_CHANGE")
     h_state1_m = sm_m.get_state_model_by_path(h_state1.get_path())
-    call_gui_callback(do_type_change, sm_m, h_state1_m, ExecutionState.__name__, True)
+    call_gui_callback(do_type_change, sm_m, h_state1_m, ExecutionState, True)
 
     logger.info("UNDO \n{0}".format(sm_m.history.modifications.single_trail_history()[-1].before_overview))
     call_gui_callback(sm_m.history.undo)
