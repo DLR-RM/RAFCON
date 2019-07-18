@@ -807,11 +807,14 @@ def test_state_type_change_bugs_with_gui(with_gui, caplog):
 
 
 def test_multiple_undo_redo_bug_with_gui(caplog):
-
+    minimized = os.getenv("RAFCON_START_MINIMIZED")
+    del os.environ["RAFCON_START_MINIMIZED"]
+    # print("RAFCON_START_MINIMIZED", "RAFCON_START_MINIMIZED")
     testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
     try:
         trigger_multiple_undo_redo_bug_tests(with_gui=True)
     finally:
+        os.environ["RAFCON_START_MINIMIZED"] = minimized
         testing_utils.close_gui()
         testing_utils.shutdown_environment(caplog=caplog)
 
@@ -1378,29 +1381,25 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
 
 
 def trigger_multiple_undo_redo_bug_tests(with_gui=False):
+    from gi.repository import GLib
     import rafcon.gui.singleton
     sm = StateMachine(HierarchyState())
     call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
     sm_m = list(rafcon.gui.singleton.state_machine_manager_model.state_machines.values())[-1]
     call_gui_callback(sm_m.selection.set, [sm_m.root_state])
 
-    try:
-        from keyboard_utils import press_key, keyboard
-
-        sm_id = sm_m.state_machine.state_machine_id
-        state_machines_editor_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('state_machines_editor_ctrl')
-        state_machines_editor_ctrl.get_controller(sm_id).view.get_top_widget().grab_focus()
-        state_machines_editor_ctrl.get_controller(sm_id).view.editor.grab_focus()
-        press_key([keyboard.control_l_key, 'a'], duration=0.6)
-        call_gui_callback(testing_utils.wait_for_gui)  # wait that last add is fully done
-        assert sm_m.history.modifications.single_trail_history()
-        press_key([keyboard.control_l_key, 'z'], duration=1.2)
-        call_gui_callback(testing_utils.wait_for_gui)  # wait that last undo is fully done
-        press_key([keyboard.control_l_key, keyboard.shift_l_key, 'z'], duration=1.2)
-        call_gui_callback(testing_utils.wait_for_gui)  # wait that last redo is fully done
-    except ImportError as e:
-        print("ERROR: ", e)
-        # TODO finish this test and make a better raise or error here
+    main_window_controller = rafcon.gui.singleton.main_window_controller
+    sm_id = sm_m.state_machine.state_machine_id
+    state_machines_editor_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
+    state_machines_editor_ctrl.get_controller(sm_id).view.get_top_widget().grab_focus()
+    state_machines_editor_ctrl.get_controller(sm_id).view.editor.grab_focus()
+    def trigger_action_repeated(action_name, number):
+        for _ in range(number):
+            main_window_controller.shortcut_manager.trigger_action(action_name, None, None)
+    call_gui_callback(trigger_action_repeated, "add", 10, priority=GLib.PRIORITY_HIGH)
+    assert sm_m.history.modifications.single_trail_history()
+    call_gui_callback(trigger_action_repeated, "undo", 20, priority=GLib.PRIORITY_HIGH)
+    call_gui_callback(trigger_action_repeated, "redo", 20, priority=GLib.PRIORITY_HIGH)
 
 
 if __name__ == '__main__':
