@@ -28,9 +28,6 @@ class StateTransitionsListView(TreeView):
         super(StateTransitionsListView, self).__init__()
         self.tree_view = self['tree_view']
 
-    def get_top_widget(self):
-        return self.tree_view
-
 
 class StateTransitionsEditorView(View):
     builder = glade.get_glade_path("state_transitions_widget.glade")

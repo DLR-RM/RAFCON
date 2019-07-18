@@ -27,6 +27,7 @@ STATE_ID_LENGTH = 6
 RUN_ID_LENGTH = 10
 experiment_id = ''+str(uuid.uuid1())
 
+state_name_counter = 0
 state_machine_id_counter = 0
 transition_id_counter = 0
 data_flow_id_counter = 0
@@ -37,6 +38,18 @@ semantic_data_id_counter = 0
 
 used_run_ids = []
 used_global_variable_ids = []
+
+
+def generate_state_name_id():
+    """Generates an id for a state
+
+    It simply uses a global counter that is increased each time. It is intended for the name of a new state.
+
+    :return: a new state machine id
+    """
+    global state_name_counter
+    state_name_counter += 1
+    return state_name_counter
 
 
 def generate_state_machine_id():

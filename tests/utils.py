@@ -36,12 +36,12 @@ TESTS_PATH = dirname(abspath(__file__))
 RAFCON_PATH = realpath(rafcon.__path__[0])
 RAFCON_ROOT_PATH = dirname(TESTS_PATH)
 RAFCON_BIN_PATH = join(TESTS_PATH, '..', 'bin')
-LIBRARY_SM_PATH = join(TESTS_PATH, '..', 'share', 'libraries')
-EXAMPLES_PATH = join(TESTS_PATH, '..', 'share', 'examples')
+LIBRARY_SM_PATH = join(TESTS_PATH, '..', 'share', 'rafcon', 'libraries')
+EXAMPLES_PATH = join(TESTS_PATH, '..', 'share', 'rafcon', 'examples')
 TEST_ASSETS_PATH = join(TESTS_PATH, 'assets')
 TEST_SCRIPT_PATH = join(TESTS_PATH, 'assets', 'scripts')
-TUTORIAL_PATH = join(TESTS_PATH, "..", "share", "examples", "tutorials")
-RAFCON_SHARED_LIBRARY_PATH = environ.get("RAFCON_LIB_PATH", join(RAFCON_ROOT_PATH, 'share', 'libraries'))
+TUTORIAL_PATH = join(TESTS_PATH, "..", "share", 'rafcon', "examples", "tutorials")
+RAFCON_SHARED_LIBRARY_PATH = environ.get("RAFCON_LIB_PATH", join(RAFCON_ROOT_PATH, 'share', 'rafcon', 'libraries'))
 print("LIBRARY_SM_PATH", LIBRARY_SM_PATH)
 print("RAFCON_SHARED_LIBRARY_PATH", RAFCON_SHARED_LIBRARY_PATH)
 
@@ -56,7 +56,7 @@ def get_unique_temp_path():
 
 
 def get_test_sm_path(state_machine_name):
-    return join(TEST_ASSETS_PATH, state_machine_name)
+    return realpath(join(TEST_ASSETS_PATH, state_machine_name))
 
 
 def reload_config(config=True, gui_config=True):
@@ -71,9 +71,7 @@ def reload_config(config=True, gui_config=True):
 def remove_all_libraries(init_library_manager=True):
     from rafcon.core.config import global_config
     library_paths = global_config.get_config_value("LIBRARY_PATHS")
-    libs = [lib for lib in library_paths]
-    for lib in libs:
-        del library_paths[lib]
+    library_paths.clear()
     if init_library_manager:
         rafcon.core.singleton.library_manager.initialize()
 
@@ -250,7 +248,7 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
     global gui_thread, gui_ready, used_gui_threads
     e = None
     try:
-        if caplog is not None:
+        if caplog is not None and sys.exc_info()[0] is None:
             assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors)
     finally:
         try:

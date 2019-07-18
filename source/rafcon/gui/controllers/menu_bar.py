@@ -258,8 +258,18 @@ class MenuBarController(ExtendedController):
         :return:
         """
         self.sm_notebook.set_show_tabs(False)
-        self.main_window_view['graphical_editor_vbox'].remove(self.sm_notebook)
-        self.full_screen_window.add(self.sm_notebook)
+
+        # Hide obsolete widgets of VBox
+        self.main_window_view['graphical_editor_label_event_box'].hide()
+        if not global_gui_config.get_config_value("FULLSCREEN_SHOW_TOOLBAR", True):
+            self.main_window_view['graphical_editor_toolbar'].hide()
+        self.main_window_view['console_return_button'].hide()
+
+        # Move whole VBox into fullscreen window
+        self.main_window_view['central_v_pane'].remove(self.main_window_view['central_vbox'])
+        self.full_screen_window.add(self.main_window_view['central_vbox'])
+
+        # Show fullscreen window undecorated in same screen as main window
         position = self.main_window_view.get_top_widget().get_position()
         self.full_screen_window.show()
         self.full_screen_window.move(position[0], position[1])
@@ -268,11 +278,19 @@ class MenuBarController(ExtendedController):
         self.main_window_view.get_top_widget().iconify()
 
     def on_full_screen_deactivate(self):
-        self.main_window_view.get_top_widget().present()
-        self.full_screen_window.remove(self.sm_notebook)
-        self.main_window_view['graphical_editor_vbox'].pack_start(self.sm_notebook, True, True, 0)
-        self.main_window_view['graphical_editor_vbox'].reorder_child(self.sm_notebook, 0)
+        # Move whole VBox back into main window
+        self.full_screen_window.remove(self.main_window_view['central_vbox'])
+        self.main_window_view['central_v_pane'].pack1(self.main_window_view['central_vbox'], True, False)
+
         self.sm_notebook.set_show_tabs(True)
+
+        # Show elements of VBox again
+        self.main_window_view['graphical_editor_label_event_box'].show()
+        self.main_window_view['graphical_editor_toolbar'].show()
+        if not self.main_window_view['central_v_pane'].get_child2():
+            self.main_window_view['console_return_button'].show()
+
+        self.main_window_view.get_top_widget().present()
         self.full_screen_window.hide()
 
     def connect_button_to_function(self, view_index, button_state, function):

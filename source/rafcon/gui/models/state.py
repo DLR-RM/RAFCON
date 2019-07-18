@@ -301,18 +301,23 @@ class StateModel(AbstractStateModel):
             if destroy:
                 model.prepare_destruction()
             return
-        for model_or_key in model_list_or_dict:
-            model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
-            if model.core_element is core_element:
-                if model_key is None:
+
+        if model_key is None:
+            model_list = model_list_or_dict
+            for model in model_list[:]:
+                if model.core_element is core_element:
                     if destroy:
                         model.prepare_destruction()
-                    model_list_or_dict.remove(model)
-                else:
+                    model_list.remove(model)
+                    return
+        else:
+            model_dict = model_list_or_dict
+            for model_id, model in list(model_dict.items()):
+                if model.core_element is core_element:
                     if destroy:
-                        model_list_or_dict[model_or_key].prepare_destruction(recursive)
-                    del model_list_or_dict[model_or_key]
-                return
+                        model.prepare_destruction(recursive)
+                    del model_dict[model_id]
+                    return
 
     def remove_additional_model(self, model_list_or_dict, core_objects_dict, model_name, model_key, destroy=True):
         """Remove one unnecessary model
@@ -333,23 +338,28 @@ class StateModel(AbstractStateModel):
             self.income = None
             return
 
-        for model_or_key in model_list_or_dict:
-            model = model_or_key if model_key is None else model_list_or_dict[model_or_key]
-            found = False
-            for core_object in core_objects_dict.values():
-                if core_object is getattr(model, model_name):
-                    found = True
-                    break
-            if not found:
-                if model_key is None:
+        if model_key is None:
+            model_list = model_list_or_dict
+            for model in model_list[:]:
+                for core_object in core_objects_dict.values():
+                    if core_object is getattr(model, model_name):
+                        break
+                else:  # core object not found
                     if destroy:
                         model.prepare_destruction()
-                    model_list_or_dict.remove(model)
-                else:
+                    model_list.remove(model)
+                    return
+        else:
+            model_dict = model_list_or_dict
+            for model_id, model in list(model_dict.items()):
+                for core_object in core_objects_dict.values():
+                    if core_object is getattr(model, model_name):
+                        break
+                else:  # core object not found
                     if destroy:
-                        model_list_or_dict[model_or_key].prepare_destruction()
-                    del model_list_or_dict[model_or_key]
-                return
+                        model.prepare_destruction()
+                    del model_dict[model_id]
+                    return
 
     def _get_future_expected_model(self, core_element):
         """Hand model for an core element from expected model list and remove the model from this list"""

@@ -17,21 +17,19 @@
 
 """
 
-import yaml
 from os.path import split
+from pkg_resources import resource_string, resource_filename
 from gtkmvc3.observable import Observable
 
-from rafcon.utils.resources import resource_string, resource_filename
 from yaml_configuration.config import DefaultConfig, ConfigError
 
-import rafcon
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
 CONFIG_FILE = "config.yaml"
 
-DEFAULT_CONFIG = resource_string(__name__, CONFIG_FILE)
+DEFAULT_CONFIG = str(resource_string(__name__, CONFIG_FILE).decode("utf-8"))
 
 
 class ObservableConfig(DefaultConfig, Observable):

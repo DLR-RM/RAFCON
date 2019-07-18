@@ -231,12 +231,13 @@ def save_semantic_data_for_state(state, state_path_full):
 
     destination_script_file = os.path.join(state_path_full, SEMANTIC_DATA_FILE)
 
-    try:
-        storage_utils.write_dict_to_json(state.semantic_data, destination_script_file)
-    except IOError:
-        logger.exception("Storing of semantic data for state {0} failed! Destination path: {1}".
-                         format(state.get_path(), destination_script_file))
-        raise
+    if state.semantic_data:
+        try:
+            storage_utils.write_dict_to_json(state.semantic_data, destination_script_file)
+        except IOError:
+            logger.exception("Storing of semantic data for state {0} failed! Destination path: {1}".
+                             format(state.get_path(), destination_script_file))
+            raise
 
 
 def save_state_recursively(state, base_path, parent_path, as_copy=False):

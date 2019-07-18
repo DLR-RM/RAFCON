@@ -7,12 +7,12 @@ Develop branch: |build_status_develop|
 RAFCON
 ======
 
-.. image:: https://raw.githubusercontent.com/DLR-RM/RAFCON/master/documents/assets/Screenshot_Drill_Skill.png
-   :width: 200px
+.. figure:: https://raw.githubusercontent.com/DLR-RM/RAFCON/master/documents/assets/Screenshot_Drill_Skill.png
+   :figwidth: 100%
+   :width: 800px
    :align: left
    :alt: Screenshot showing RAFCON with a big state machine
    :target: documents/assets/Screenshot_Drill_Skill.png?raw=true
-
 
 * Documentation: Hosted on `Read the Docs <http://rafcon.readthedocs.io/en/latest/>`_
 * Homepage: `DLR-RM.github.io/RAFCON/ <https://dlr-rm.github.io/RAFCON/>`_
@@ -37,6 +37,12 @@ Visual programming
 Collaborative working
 
   Share and reuse your state machines in form of libraries, stored as JSON strings in text files.
+
+.. figure:: https://raw.githubusercontent.com/DLR-RM/RAFCON/master/documents/assets/RAFCON-sm-creation-preview.gif
+   :figwidth: 100%
+   :width: 570px
+   :align: left
+   :alt: Example on how to create a simple state machine
 
 
 Installation preparations

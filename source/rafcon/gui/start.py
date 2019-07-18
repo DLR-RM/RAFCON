@@ -47,7 +47,7 @@ from rafcon.gui.utils import wait_for_gui
 import rafcon.utils.filesystem as filesystem
 from rafcon.utils import plugins, installation
 from rafcon.utils.i18n import setup_l10n
-from rafcon.utils import log
+from rafcon.utils import resources, log
 
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -57,21 +57,46 @@ from gi.repository import GLib
 logger = log.get_logger("rafcon.start.gui")
 
 
+def data_files_version_up_to_date():
+    install_file_path = os.path.join(resources.xdg_user_data_folder, "rafcon", "installed")
+    if not os.path.isfile(install_file_path):
+        return False
+    with open(install_file_path, 'r') as file_pointer:
+        install_version = file_pointer.read().strip()
+        return install_version == rafcon.__version__
+
+
+def update_data_files_version():
+    install_file_folder = os.path.join(resources.xdg_user_data_folder, "rafcon")
+    install_file_path = os.path.join(install_file_folder, "installed")
+    if not os.path.isdir(install_file_folder):
+        os.mkdir(install_file_folder)
+    with open(install_file_path, "w") as file_pointer:
+        file_pointer.write(rafcon.__version__)
+
+
 def setup_installation():
     """Install necessary GUI resources
-    
-    By default, RAFCON should be installed via `setup.py` (`pip install rafcon`). Thereby, all resources are being 
-    installed. However, if this is not the case, one can set the `RAFCON_CHECK_INSTALLATION` env variable to `True`. 
-    Then, the installation will be performed before starting the GUI. 
+
+    By default, RAFCON should be installed via `pip` (`pip install rafcon`). With this, all resources are being
+    installed. If installed in a virtual env, some locally required files need to be reinstalled into $XTG_DATA_HOME.
+
+    If RAFCON is started directly from the repo or from RMPM (without a previous installation), it can be forced to
+    install all additionally required files (icons and gtksourceview styles) by setting the env variable
+    `RAFCON_CHECK_INSTALLATION` to "True".
     """
-    if os.environ.get("RAFCON_CHECK_INSTALLATION", False) == "True":
-        rafcon_root = os.path.dirname(rafcon.__file__)
-        installation.assets_folder = os.path.join(rafcon_root, 'gui', 'assets')
-        installation.share_folder = os.path.join(os.path.dirname(os.path.dirname(rafcon_root)), 'share')
-        installation.install_fonts(logger, restart=True)
-        installation.install_gtk_source_view_styles(logger)
-        installation.install_libraries(logger, overwrite=False)
-        installation.install_icons(logger)
+    force_check_installation = os.environ.get("RAFCON_CHECK_INSTALLATION", False) == "True"
+
+    if not force_check_installation and data_files_version_up_to_date():
+        return
+
+    if force_check_installation or installation.started_without_installation() or installation.started_in_virtualenv():
+        installation.install_locally_required_files()
+
+    installation.install_fonts(restart=True)
+
+    update_data_files_version()
+
 
 
 def setup_gtkmvc3_logger():

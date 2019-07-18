@@ -58,10 +58,8 @@ def run_state_machine(state_machine_path):
 
 
 def get_backward_compatibility_state_machines_path():
-    python_version = "python" + str(sys.version_info.major) + "." + str(sys.version_info.minor)
     path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines",
-                                                       "backward_compatibility",
-                                                       python_version))
+                                                       "backward_compatibility"))
     return path
 
 
@@ -84,13 +82,7 @@ def test_backward_compatibility_storage(caplog):
         logger.info("Run backward compatibility state machine for other versions")
         all_versions_path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines",
                                                                         "backward_compatibility"))
-        for python_version_folder in os.listdir(all_versions_path):
-            full_python_version_path = os.path.join(all_versions_path, python_version_folder)
-            if os.path.isdir(full_python_version_path):
-                if full_python_version_path == path:
-                    pass
-                else:
-                    run_backward_compatibility_state_machines(full_python_version_path)
+        run_backward_compatibility_state_machines(all_versions_path)
 
     except Exception:
         raise
@@ -158,9 +150,15 @@ def calculate_state_machine_hash(path):
     paths_to_hash = []
     for root, dirs, filenames in os.walk(path):
         for filename in filenames:
+            file_path = os.path.join(root, filename)
             # The STATEMACHINE_FILE cannot be used for the hash as it e.g. includes a timestamp
-            if filename != storage.STATEMACHINE_FILE:
-                paths_to_hash.append(os.path.join(root, filename))
+            if filename == storage.STATEMACHINE_FILE:
+                continue
+            if filename == storage.SEMANTIC_DATA_FILE:
+                semantic_data = open(file_path, 'r').read()
+                if semantic_data == "{}":
+                    continue
+            paths_to_hash.append(file_path)
 
     paths_to_hash.sort()
     hash = hashlib.md5()

@@ -65,7 +65,6 @@ def check_order_and_consistency_of_menu(menubar_ctrl):
         assert recently_opened[index - 2] in get_label_of_menu_item_box(elem)
 
 
-@log.log_exceptions(None, gtk_quit=True)
 def trigger_gui_signals(*args):
     """The function triggers and test basic functions of the menu bar.
 
@@ -280,11 +279,11 @@ def test_recent_opened_state_machine_list(caplog):
                  "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
                  "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
     testing_utils.run_gui(gui_config=change_in_gui_config, libraries=libraries)  # , patch_threading=False)
-    call_gui_callback(patch_backup_threading)
     try:
+        call_gui_callback(patch_backup_threading)
         trigger_gui_signals()
     except:
-        raise
+        raise  # required, otherwise the exception cannot be accessed within finally
     finally:
         call_gui_callback(unpatch_backup_threading)
         testing_utils.close_gui()

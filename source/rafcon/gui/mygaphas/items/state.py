@@ -101,7 +101,7 @@ class StateView(Element):
         # Initialize NameView
         name_meta = state_m.get_meta_data_editor()['name']
         if not contains_geometric_info(name_meta['size']):
-            name_width = self.width * 0.8
+            name_width = self.width - 2 * self._border_width
             name_height = self.height * 0.4
             name_meta = state_m.set_meta_data_editor('name.size', (name_width, name_height))['name']
         name_size = name_meta['size']
@@ -187,7 +187,9 @@ class StateView(Element):
     def remove(self):
         """Remove recursively all children and then the StateView itself
         """
-        self.canvas.get_first_view().unselect_item(self)
+        view = self.canvas.get_first_view()
+        if view:
+            view.unselect_item(self)
 
         for child in self.canvas.get_children(self)[:]:
             child.remove()
@@ -369,7 +371,7 @@ class StateView(Element):
         self.update_minimum_size_of_children()
 
         def update_port_position(port_v, meta_data):
-            if contains_geometric_info(meta_data['rel_pos']) == 2:
+            if contains_geometric_info(meta_data['rel_pos']):
                 port_v.handle.pos = meta_data['rel_pos']
                 self.port_constraints[port_v].update_position(meta_data['rel_pos'])
 
@@ -460,13 +462,14 @@ class StateView(Element):
             c.set_line_width(default_line_width * 2)
             c.stroke()
 
-            inner_nw, inner_se = self.get_state_drawing_area(self)
-            c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-            c.set_source_rgba(*get_col_rgba(state_background_color))
-            c.fill_preserve()
-            c.set_source_rgba(*get_col_rgba(state_border_outline_color, self.transparency))
-            c.set_line_width(default_line_width)
-            c.stroke()
+            if not context.draw_all:
+                inner_nw, inner_se = self.get_state_drawing_area(self)
+                c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
+                c.set_source_rgba(*get_col_rgba(state_background_color))
+                c.fill_preserve()
+                c.set_source_rgba(*get_col_rgba(state_border_outline_color, self.transparency))
+                c.set_line_width(default_line_width)
+                c.stroke()
 
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
@@ -995,7 +998,8 @@ class NameView(Element):
         parameters = {
             'name': self.name,
             'selected': context.selected,
-            'transparency': font_transparency
+            'transparency': font_transparency,
+            'draw_all': context.draw_all
         }
 
         upper_left_corner = (0, 0)
@@ -1009,13 +1013,19 @@ class NameView(Element):
         else:
             c = self._image_cache.get_context_for_image(current_zoom)
 
-            if context.selected:
+            if context.selected or context.draw_all:
                 # Draw light background color if selected
                 c.rectangle(0, 0, width, height)
                 c.set_source_rgba(*gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], transparency=.9))
                 c.fill_preserve()
                 c.set_source_rgba(0, 0, 0, 0)
                 c.stroke()
+
+            if context.draw_all:
+                # Copy image surface to current cairo context
+                self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
+                return
+
 
             # c.set_antialias(Antialias.GOOD)
 
