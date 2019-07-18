@@ -3,9 +3,6 @@ from __future__ import absolute_import
 from builtins import str
 import os
 import logging
-import threading
-import time
-import pytest
 
 # core elements
 import rafcon.core.singleton
@@ -31,7 +28,7 @@ from tests.gui.widget.test_state_type_change import store_state_elements, check_
      check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
      check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
      get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
-from tests.gui.widget.test_states_editor import check_state_editor_models
+from tests.gui.widget.test_states_editor import select_child_states_and_state_sequentially
 import pytest
 
 NO_SAVE = False
@@ -809,14 +806,18 @@ def test_multiple_undo_redo_bug_with_gui(caplog):
         testing_utils.shutdown_environment(caplog=caplog)
 
 
-def do_type_change(target_sm_m, target_state_m, drop_down_combo_label_of_new_target_state_type, logger=None):
-    import rafcon.gui.singleton
-    main_window_controller = rafcon.gui.singleton.main_window_controller
-    [state_editor_ctrl, list_store_id_from_state_type_dict] = \
-        get_state_editor_ctrl_and_store_id_dict(target_sm_m, target_state_m, main_window_controller, 5., logger)
-    # - do state type change
-    state_type_row_id = list_store_id_from_state_type_dict[drop_down_combo_label_of_new_target_state_type]
-    state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active(state_type_row_id)
+def do_type_change(state_machine_m, state_m, target_state_type, with_gui):
+    if not with_gui:
+        import rafcon.gui.helpers.state as gui_helper_state
+        gui_helper_state.change_state_type(state_m, target_state_type)
+    else:
+        import rafcon.gui.singleton
+        main_window_controller = rafcon.gui.singleton.main_window_controller
+        [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+            get_state_editor_ctrl_and_store_id_dict(state_machine_m, state_m, main_window_controller, 5., logger)
+        # - do state type change
+        state_type_row_id = list_store_id_from_state_type_dict[target_state_type.__name__]
+        state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active(state_type_row_id)
 
 
 def trigger_state_type_change_tests(with_gui):
@@ -825,7 +826,6 @@ def trigger_state_type_change_tests(with_gui):
     main_window_controller = rafcon.gui.singleton.main_window_controller
 
     sm_m, state_dict = create_state_machine_m(with_gui)
-    sleep_time_max = 5  # 0.5
 
     check_elements_ignores.append("internal_transitions")
 
@@ -835,254 +835,144 @@ def trigger_state_type_change_tests(with_gui):
     path_of_state_of_type_change = state_dict[state_of_type_change].get_path()
     path_of_parent_of_type_change = state_dict[parent_of_type_change].get_path()
 
-    print("start 1")
+    def perform_operation(with_gui, operation, *args, **kwargs):
+        if with_gui:
+            return call_gui_callback(operation, *args, **kwargs)
+        return operation(*args, **kwargs)
+
+    def perform_state_type_change(state_path, state_machine_m, target_state_type, with_gui, open_all_states=False):
+        original_state_m = sm_m.get_state_model_by_path(state_path)
+
+        logger.info("State type change from {} to {}".format(original_state_m.state.__class__.__name__, target_state_type.__name__))
+        parent_state_m_hash = original_state_m.parent.mutable_hash().hexdigest()
+        perform_operation(with_gui, do_type_change, state_machine_m, original_state_m, target_state_type, with_gui)
+        type_changed_state_m = state_machine_m.get_state_model_by_path(state_path)
+        parent_changed_state_m_hash = type_changed_state_m.parent.mutable_hash().hexdigest()
+
+        logger.info("Undo state type change")
+        perform_operation(with_gui, state_machine_m.history.undo)
+        undone_state_m = state_machine_m.get_state_model_by_path(state_path)
+        assert parent_state_m_hash == undone_state_m.parent.mutable_hash().hexdigest(), "Model hash not identical"
+
+        if with_gui and open_all_states:
+            call_gui_callback(select_child_states_and_state_sequentially, state_machine_m, undone_state_m, logger)
+
+        logger.info("Redo state type change")
+        perform_operation(with_gui, state_machine_m.history.redo)
+        redone_state_m = state_machine_m.get_state_model_by_path(state_path)
+        assert parent_changed_state_m_hash == redone_state_m.parent.mutable_hash().hexdigest(), "Model hash not identical"
+
+        if with_gui and open_all_states:
+            call_gui_callback(select_child_states_and_state_sequentially, state_machine_m, redone_state_m, logger)
+
+        return redone_state_m
+
+
     # do state_type_change with gui
-    if with_gui:
-        call_gui_callback(sm_m.history.modifications.reset)
-    else:
-        sm_m.history.modifications.reset()
-    print("start 2")
+    perform_operation(with_gui, sm_m.history.modifications.reset)
 
-    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
-    print("\n\n %s \n\n" % state_m.state.name)
-    if with_gui:
-        call_gui_callback(sm_m.selection.set, [state_m])
-    else:
-        sm_m.selection.set([state_m])
+    original_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    perform_operation(with_gui, sm_m.selection.set, [original_state_m])
 
-    list_store_id_from_state_type_dict = {}
-    state_editor_ctrl = None
-    [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
     state_machine_path = TEST_PATH + "_state_type_change_{0}".format("with_gui" if with_gui else "without_gui")
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller') if with_gui else None
-    save_state_machine(sm_m, state_machine_path, logger, with_gui, menubar_ctrl)
-    print("CHECK state_of_type_change path", state_dict[state_of_type_change].get_path())
     if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, state_m, logger)
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, original_state_m, logger)
 
     # HS -> BCS
-    save_state_machine(sm_m, state_machine_path + '_before1', logger, with_gui, menubar_ctrl)
     # - do state type change
-    logger.info("HS -> BCS")
-    if with_gui:
-        call_gui_callback(do_type_change, sm_m, state_m, BarrierConcurrencyState.__name__, logger)
-    else:
-        gui_helper_state.change_state_type(state_m, BarrierConcurrencyState)
-        # state_dict[parent_of_type_change].change_state_type(state_m.state, BarrierConcurrencyState)
+    state_m = perform_state_type_change(path_of_state_of_type_change, sm_m, BarrierConcurrencyState, with_gui, True)
 
-    state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
-    print("CHECK state_of_type_change path", state_dict[state_of_type_change].get_path())
-    new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
-
-    save_state_machine(sm_m, state_machine_path + '_after1', logger, with_gui, menubar_ctrl)
-
-    assert len(sm_m.history.modifications.single_trail_history()) == 2
-    logger.info("BCS -> HS (undo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.undo)
-    else:
-        sm_m.history.undo()
-    print("CHECK state_of_type_change path", state_dict[state_of_type_change].get_path())
-    state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
-
-    save_state_machine(sm_m, state_machine_path + '_undo1', logger, with_gui, menubar_ctrl)
-    print("CHECK state_of_type_change path", state_dict[state_of_type_change].get_path())
-    new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    check_state_elements(check_list_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
-    if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
-    print("CHECK state_of_type_change path", state_dict[state_of_type_change].get_path())
-    logger.info("HS -> BCS (redo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.redo)
-    else:
-        sm_m.history.redo()
-
-    state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
-
-    save_state_machine(sm_m, state_machine_path + '_redo1', logger, with_gui, menubar_ctrl)
-
-    new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    check_state_elements(check_list_BCS, new_state, new_state_m, stored_state_elements_after, stored_state_m_elements_after)
-    if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
 
     # BCS -> HS
-    save_state_machine(sm_m, state_machine_path + '_before2', logger, with_gui, menubar_ctrl)
-    logger.info("BCS -> HS 2")
-    if with_gui:
-        call_gui_callback(sm_m.state_machine.__setattr__, "file_system_path", state_machine_path)
-        call_gui_callback(do_type_change, sm_m, new_state_m, HierarchyState.__name__, logger)
-    else:
-        sm_m.state_machine.file_system_path = state_machine_path
-        gui_helper_state.change_state_type(new_state_m, HierarchyState)
-        # state_dict[parent_of_type_change].change_state_type(new_state_m.state, HierarchyState)
+    state_m = perform_state_type_change(path_of_state_of_type_change, sm_m, HierarchyState, with_gui)
+    return
 
-    state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
-
-    new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
-
-    print("\n\n ###### State: %s" % state_dict[state_of_type_change])
-    from .test_storage import check_that_all_files_are_there
-    check_that_all_files_are_there(sm_m.state_machine, state_machine_path + '_before2', False, True)
-    check_that_all_files_are_there(sm_m.state_machine, state_machine_path + '_after2', False, True)
-
-    save_state_machine(sm_m, state_machine_path + '_after2', logger, with_gui, menubar_ctrl)
-
-    assert len(sm_m.history.modifications.single_trail_history()) == 3
-    logger.info("HS -> BCS 2 (undo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.undo)
-    else:
-        sm_m.history.undo()
-
-    state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
-
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
-
-    save_state_machine(sm_m, state_machine_path + '_undo2', logger, with_gui, menubar_ctrl)
-
-    logger.info("BCS -> HS 2 (redo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.redo)
-    else:
-        sm_m.history.redo()
-
-    state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
-
-    save_state_machine(sm_m, state_machine_path + '_redo2', logger, with_gui, menubar_ctrl)
-
-    new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    check_state_elements(check_list_HS, new_state, new_state_m, stored_state_elements_after, stored_state_m_elements_after)
-    if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
 
     # HS -> PCS
-    [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
-    save_state_machine(sm_m, state_machine_path + '_before3', logger, with_gui, menubar_ctrl)
+    [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, state_m)
     logger.info("HS -> PCS")
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, PreemptiveConcurrencyState.__name__, logger)
+        call_gui_callback(do_type_change, sm_m, state_m, PreemptiveConcurrencyState.__name__, with_gui)
     else:
-        gui_helper_state.change_state_type(new_state_m, PreemptiveConcurrencyState)
-        # state_dict[parent_of_type_change].change_state_type(new_state_m.state, PreemptiveConcurrencyState)
+        gui_helper_state.change_state_type(state_m, PreemptiveConcurrencyState)
+        # state_dict[parent_of_type_change].change_state_type(original_state_m.state, PreemptiveConcurrencyState)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
 
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
-
-    save_state_machine(sm_m, state_machine_path + '_after3', logger, with_gui, menubar_ctrl)
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, state_m)
 
     assert len(sm_m.history.modifications.single_trail_history()) == 4
     logger.info("PCS -> HS (undo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.undo)
-    else:
-        sm_m.history.undo()
+    perform_operation(with_gui, sm_m.history.undo)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
     if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
-
-    save_state_machine(sm_m, state_machine_path + '_undo3', logger, with_gui, menubar_ctrl)
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, state_m, logger)
 
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    check_state_elements(check_list_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    check_state_elements(check_list_HS, new_state, state_m, stored_state_elements, stored_state_m_elements)
 
     logger.info("HS -> PCS (redo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.redo)
-    else:
-        sm_m.history.redo()
-
-    state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
-
-    save_state_machine(sm_m, state_machine_path + '_redo3', logger, with_gui, menubar_ctrl)
-
-    new_state = sm_m.state_machine.get_state_by_path(state_dict[state_of_type_change].get_path())
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    check_state_elements(check_list_PCS, new_state, new_state_m, stored_state_elements_after, stored_state_m_elements_after)
-    if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
-
-    # PCS -> ES
-    [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
-    save_state_machine(sm_m, state_machine_path + '_before4', logger, with_gui, menubar_ctrl)
-    logger.info("PCS -> ES")
-    if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, ExecutionState.__name__, logger)
-    else:
-        gui_helper_state.change_state_type(new_state_m, ExecutionState)
-        # state_dict[parent_of_type_change].change_state_type(new_state_m.state, ExecutionState)
+    perform_operation(with_gui, sm_m.history.redo)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
 
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    check_state_elements(check_list_PCS, new_state, state_m, stored_state_elements_after, stored_state_m_elements_after)
+    if with_gui:
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, state_m, logger)
 
-    save_state_machine(sm_m, state_machine_path + '_after4', logger, with_gui, menubar_ctrl)
+    # PCS -> ES
+    [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, state_m)
+    logger.info("PCS -> ES")
+    if with_gui:
+        call_gui_callback(do_type_change, sm_m, state_m, ExecutionState.__name__, with_gui)
+    else:
+        gui_helper_state.change_state_type(state_m, ExecutionState)
+        # state_dict[parent_of_type_change].change_state_type(original_state_m.state, ExecutionState)
+
+    state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
+    state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
+
+    new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, state_m)
 
     assert len(sm_m.history.modifications.single_trail_history()) == 5
     logger.info("ES -> PCS (undo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.undo)
-    else:
-        sm_m.history.undo()
+    perform_operation(with_gui, sm_m.history.undo)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
 
-    new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
     if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
-
-    save_state_machine(sm_m, state_machine_path + '_undo4', logger, with_gui, menubar_ctrl)
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, state_m, logger)
 
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    check_state_elements(check_list_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    check_state_elements(check_list_PCS, new_state, state_m, stored_state_elements, stored_state_m_elements)
 
     logger.info("PCS -> ES (redo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.redo)
-    else:
-        sm_m.history.redo()
+    perform_operation(with_gui, sm_m.history.redo)
 
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
     state_dict[parent_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_parent_of_type_change)
 
-    save_state_machine(sm_m, state_machine_path + '_redo4', logger, with_gui, menubar_ctrl)
-
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    check_state_elements(check_list_ES, new_state, new_state_m, stored_state_elements_after, stored_state_m_elements_after)
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    check_state_elements(check_list_ES, new_state, state_m, stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, state_m, logger)
 
     ####### General Type Change as ROOT STATE ############
     state_of_type_change = 'Container'
@@ -1090,57 +980,51 @@ def trigger_state_type_change_tests(with_gui):
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
     if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, state_m, logger)
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, state_m, logger)
 
     # HS -> BCS
     logger.info("HS -> BCS root")
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, state_m, BarrierConcurrencyState.__name__, logger)
+        call_gui_callback(do_type_change, sm_m, state_m, BarrierConcurrencyState.__name__, with_gui)
     else:
         gui_helper_state.change_state_type(sm_m.root_state, BarrierConcurrencyState)
         # sm_m.state_machine.change_root_state_type(BarrierConcurrencyState)
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
 
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, state_m)
 
     # import time
     # time.sleep(100)
 
     assert len(sm_m.history.modifications.single_trail_history()) == 6
     logger.info("BCS -> HS root (undo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.undo)
-    else:
-        sm_m.history.undo()
+    perform_operation(with_gui, sm_m.history.undo)
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
 
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    check_state_elements(check_list_root_HS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    check_state_elements(check_list_root_HS, new_state, state_m, stored_state_elements, stored_state_m_elements)
     if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, state_m, logger)
 
     logger.info("HS -> BCS root (redo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.redo)
-    else:
-        sm_m.history.redo()
+    perform_operation(with_gui, sm_m.history.redo)
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
 
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    check_state_elements(check_list_root_BCS, new_state, new_state_m,
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    check_state_elements(check_list_root_BCS, new_state, state_m,
                          stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, state_m, logger)
 
     # BCS -> HS
-    [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
+    [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, state_m)
     logger.info("BCS -> HS root 2")
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, HierarchyState.__name__, logger)
+        call_gui_callback(do_type_change, sm_m, state_m, HierarchyState.__name__, with_gui)
     else:
         gui_helper_state.change_state_type(sm_m.root_state, HierarchyState)
         # sm_m.state_machine.change_root_state_type(HierarchyState)
@@ -1149,38 +1033,32 @@ def trigger_state_type_change_tests(with_gui):
 
     assert len(sm_m.history.modifications.single_trail_history()) == 7
     logger.info("HS -> BCS root 2 (undo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.undo)
-    else:
-        sm_m.history.undo()
+    perform_operation(with_gui, sm_m.history.undo)
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
 
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    check_state_elements(check_list_root_BCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    check_state_elements(check_list_root_BCS, new_state, state_m, stored_state_elements, stored_state_m_elements)
     if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, state_m, logger)
 
     logger.info("BCS -> HS root 2 (redo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.redo)
-    else:
-        sm_m.history.redo()
+    perform_operation(with_gui, sm_m.history.redo)
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
 
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    check_state_elements(check_list_root_HS, new_state, new_state_m,
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    check_state_elements(check_list_root_HS, new_state, state_m,
                          stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, state_m, logger)
 
     # HS -> PCS
-    [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
+    [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, state_m)
     logger.info("HS -> PCS")
     # - do state type change
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, PreemptiveConcurrencyState.__name__, logger)
+        call_gui_callback(do_type_change, sm_m, state_m, PreemptiveConcurrencyState.__name__, with_gui)
     else:
         gui_helper_state.change_state_type(sm_m.root_state, PreemptiveConcurrencyState)
         # sm_m.state_machine.change_root_state_type(PreemptiveConcurrencyState)
@@ -1188,38 +1066,32 @@ def trigger_state_type_change_tests(with_gui):
 
     assert len(sm_m.history.modifications.single_trail_history()) == 8
     logger.info("PCS -> HS (undo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.undo)
-    else:
-        sm_m.history.undo()
+    perform_operation(with_gui, sm_m.history.undo)
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
 
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    check_state_elements(check_list_root_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    check_state_elements(check_list_root_PCS, new_state, state_m, stored_state_elements, stored_state_m_elements)
     if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, state_m, logger)
 
     logger.info("HS -> PCS (redo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.redo)
-    else:
-        sm_m.history.redo()
+    perform_operation(with_gui, sm_m.history.redo)
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
 
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    check_state_elements(check_list_root_HS, new_state, new_state_m,
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    check_state_elements(check_list_root_HS, new_state, state_m,
                          stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, state_m, logger)
 
     # PCS -> ES
-    [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, new_state_m)
+    [stored_state_elements, stored_state_m_elements] = store_state_elements(new_state, state_m)
     logger.info("PCS -> ES")
     # - do state type change
     if with_gui:
-        call_gui_callback(do_type_change, sm_m, new_state_m, ExecutionState.__name__, logger)
+        call_gui_callback(do_type_change, sm_m, state_m, ExecutionState.__name__, with_gui)
     else:
         gui_helper_state.change_state_type(sm_m.root_state, ExecutionState)
         # sm_m.state_machine.change_root_state_type(ExecutionState)
@@ -1227,37 +1099,31 @@ def trigger_state_type_change_tests(with_gui):
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
 
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, new_state_m)
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    [stored_state_elements_after, stored_state_m_elements_after] = store_state_elements(new_state, state_m)
 
     assert len(sm_m.history.modifications.single_trail_history()) == 9
     logger.info("ES -> PCS (undo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.undo)
-    else:
-        sm_m.history.undo()
+    perform_operation(with_gui, sm_m.history.undo)
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
 
-    # print "path: ", state_dict[state_of_type_change].get_path(), " state ", state_dict[state_of_type_change]
+    # print "path: ", path_of_state_of_type_change, " state ", state_dict[state_of_type_change]
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    check_state_elements(check_list_root_PCS, new_state, new_state_m, stored_state_elements, stored_state_m_elements)
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    check_state_elements(check_list_root_PCS, new_state, state_m, stored_state_elements, stored_state_m_elements)
     if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, state_m, logger)
 
     logger.info("PCS -> ES (redo)")
-    if with_gui:
-        call_gui_callback(sm_m.history.redo)
-    else:
-        sm_m.history.redo()
+    perform_operation(with_gui, sm_m.history.redo)
     state_dict[state_of_type_change] = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
 
     new_state = sm_m.state_machine.get_state_by_path(path_of_state_of_type_change)
-    new_state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
-    check_state_elements(check_list_root_ES, new_state, new_state_m,
+    state_m = sm_m.get_state_model_by_path(path_of_state_of_type_change)
+    check_state_elements(check_list_root_ES, new_state, state_m,
                          stored_state_elements_after, stored_state_m_elements_after)
     if with_gui:
-        call_gui_callback(check_state_editor_models, sm_m, new_state_m, logger)
+        call_gui_callback(select_child_states_and_state_sequentially, sm_m, state_m, logger)
         # final wait for gaphas
         testing_utils.call_gui_callback(testing_utils.wait_for_gui)
     else:
@@ -1312,7 +1178,7 @@ def trigger_state_type_change_typical_bug_tests():
 
     logger.info("DO_TYPE_CHANGE")
     h_state1_m = sm_m.get_state_model_by_path(h_state1.get_path())
-    call_gui_callback(do_type_change, sm_m, h_state1_m, ExecutionState.__name__, logger)
+    call_gui_callback(do_type_change, sm_m, h_state1_m, ExecutionState.__name__, True)
 
     logger.info("UNDO \n{0}".format(sm_m.history.modifications.single_trail_history()[-1].before_overview))
     call_gui_callback(sm_m.history.undo)
