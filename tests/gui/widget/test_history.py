@@ -782,28 +782,18 @@ def test_state_machine_modifications_with_gui(with_gui, caplog):
     print("FINISH test_state_machine_modifications_with_gui", with_gui)
 
 
-@pytest.mark.parametrize("with_gui", [True])
-def test_state_type_change_bugs_with_gui(with_gui, caplog):
+def test_state_type_change_bugs_with_gui(caplog):
 
     testing_utils.dummy_gui(None)
 
-    if with_gui:
-        testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
-        e = None
-        try:
-            trigger_state_type_change_typical_bug_tests(with_gui=True)
-        except:
-            raise  # required, otherwise the exception cannot be accessed within finally
-        finally:
-            testing_utils.close_gui()
-            testing_utils.shutdown_environment(caplog=caplog)
-    else:
-        testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True},
-                                             gui_already_started=False)
-        trigger_state_type_change_typical_bug_tests(with_gui)
-        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
-
-    print("FINISH", test_state_type_change_bugs_with_gui, "with_gui", with_gui)
+    testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
+    try:
+        trigger_state_type_change_typical_bug_tests()
+    except:
+        raise  # required, otherwise the exception cannot be accessed within finally
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 def test_multiple_undo_redo_bug_with_gui(caplog):
@@ -1278,15 +1268,11 @@ def trigger_state_type_change_tests(with_gui):
     print(check_elements_ignores)
 
 
-def trigger_state_type_change_typical_bug_tests(with_gui):
+def trigger_state_type_change_typical_bug_tests():
     import rafcon.gui.singleton
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
-    main_window_controller = rafcon.gui.singleton.main_window_controller
 
-    sm_m, state_dict = create_state_machine_m(with_gui)
-
-    if not with_gui:
-        testing_utils.wait_for_gui()
+    sm_m, state_dict = create_state_machine_m(True)
 
     check_elements_ignores.append("internal_transitions")
 
@@ -1295,20 +1281,10 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
     parent_of_type_change = 'Container'
 
     # do state_type_change with gui
-    if with_gui:
-        call_gui_callback(sm_m.history.modifications.reset)
-    else:
-        sm_m.history.modifications.reset()
+    call_gui_callback(sm_m.history.modifications.reset)
 
-    state_parent_m = sm_m.get_state_model_by_path(state_dict[parent_of_type_change].get_path())
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    print("\n\n %s \n\n" % state_m.state.name)
-    if with_gui:
-        call_gui_callback(sm_m.selection.set, [state_m])
-    else:
-        sm_m.selection.set([state_m])
-
-    [stored_state_elements, stored_state_m_elements] = store_state_elements(state_dict[state_of_type_change], state_m)
+    call_gui_callback(sm_m.selection.set, [state_m])
 
     current_sm_length = len(sm_manager_model.state_machines)
     # print "1:", sm_manager_model.state_machines.keys()
@@ -1320,60 +1296,30 @@ def trigger_state_type_change_typical_bug_tests(with_gui):
         sm_manager_model.state_machine_manager.add_state_machine(state_machine)
         return state_machine
 
-    state_machine_path = TEST_PATH + '_state_type_change_bug_tests'
-    if with_gui:
-        # call_gui_callback(sm_manager_model.state_machine_manager.add_state_machine, state_machine)
-        state_machine = call_gui_callback(create_state_machine)
-    else:
-        logger.debug("Creating new state-machine...")
-        state_machine = create_state_machine()
+    state_machine = call_gui_callback(create_state_machine)
 
     logger.debug('number of sm is : {0}'.format(sm_manager_model.state_machines.keys()))
     assert len(sm_manager_model.state_machines) == current_sm_length+1
     sm_m = sm_manager_model.state_machines[state_machine.state_machine_id]
-    # save_state_machine(sm_m, state_machine_path + '_before1', logger, with_gui, menubar_ctrl)
     h_state1 = HierarchyState(state_id='HSTATE1')
-    if with_gui:
-        call_gui_callback(sm_m.state_machine.root_state.add_state, h_state1)
-    else:
-        sm_m.state_machine.root_state.add_state(h_state1)
+    call_gui_callback(sm_m.state_machine.root_state.add_state, h_state1)
     h_state2 = HierarchyState(state_id='HSTATE2')
-    if with_gui:
-        call_gui_callback(h_state1.add_state, h_state2)
-    else:
-        h_state1.add_state(h_state2)
+    call_gui_callback(h_state1.add_state, h_state2)
     ex_state1 = ExecutionState(state_id='EXSTATE1')
-    if with_gui:
-        call_gui_callback(h_state1.add_state, ex_state1)
-    else:
-        h_state1.add_state(ex_state1)
+    call_gui_callback(h_state1.add_state, ex_state1)
     ex_state2 = ExecutionState(state_id='EXSTATE2')
-    if with_gui:
-        call_gui_callback(h_state2.add_state, ex_state2)
-    else:
-        h_state2.add_state(ex_state2)
+    call_gui_callback(h_state2.add_state, ex_state2)
 
     logger.info("DO_TYPE_CHANGE")
-    if with_gui:
-        print(h_state1.get_path())
-        h_state1_m = sm_m.get_state_model_by_path(h_state1.get_path())
-        call_gui_callback(do_type_change, sm_m, h_state1_m, ExecutionState.__name__, logger)
-        # call_gui_callback(sm_m.state_machine.root_state.change_state_type, h_state1, ExecutionState)
-    else:
-        sm_m.state_machine.root_state.change_state_type(h_state1, ExecutionState)
+    h_state1_m = sm_m.get_state_model_by_path(h_state1.get_path())
+    call_gui_callback(do_type_change, sm_m, h_state1_m, ExecutionState.__name__, logger)
 
     logger.info("UNDO \n{0}".format(sm_m.history.modifications.single_trail_history()[-1].before_overview))
-    if with_gui:
-        call_gui_callback(sm_m.history.undo)
-    else:
-        sm_m.history.undo()
-    # save_state_machine(sm_m, state_machine_path + '_before1', logger, with_gui, menubar_ctrl)
+    call_gui_callback(sm_m.history.undo)
+
     logger.info("UNDO finished")
     logger.info("REDO")
-    if with_gui:
-        call_gui_callback(sm_m.history.redo)
-    else:
-        sm_m.history.redo()
+    call_gui_callback(sm_m.history.redo)
     logger.info("REDO finished")
 
     check_elements_ignores.remove("internal_transitions")
