@@ -675,7 +675,7 @@ def test_scoped_variable_modify(caplog):
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
-def test_data_flow_property_modifications_history(caplog):
+def test_data_flow_property_modifications(caplog):
     ##################
     # data_flow properties
 
@@ -693,103 +693,63 @@ def test_data_flow_property_modifications_history(caplog):
     testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     sm_model, state_dict = create_state_machine_m()
+    nested_state = state_dict['Nested']
 
     state1 = ExecutionState('State1')
     output_state1 = state1.add_output_data_port("output", "int")
-    input_state1 = state1.add_input_data_port("input", "str", "zero")
+    state1.add_input_data_port("input", "str", "zero")
     state2 = ExecutionState('State2')
     input_par_state2 = state2.add_input_data_port("par", "int", 0)
     output_res_state2 = state2.add_output_data_port("res", "int")
-    state_dict['Nested'].add_state(state1)
-    state_dict['Nested'].add_state(state2)
-    output_res_nested = state_dict['Nested'].add_output_data_port("res", "int")
+    nested_state.add_state(state1)
+    nested_state.add_state(state2)
+    output_res_nested = nested_state.add_output_data_port("res", "int")
     output_count_state1 = state1.add_output_data_port("count", "int")
     input_number_state2 = state2.add_input_data_port("number", "int", 5)
 
-    new_df_id = state_dict['Nested'].add_data_flow(from_state_id=state2.state_id, from_data_port_id=output_res_state2,
-                                                   to_state_id=state_dict['Nested'].state_id,
-                                                   to_data_port_id=output_res_nested)
+    new_df_id, nested_state = perform_history_action(nested_state.add_data_flow,
+                                                     from_state_id=state2.state_id, from_data_port_id=output_res_state2,
+                                                     to_state_id=nested_state.state_id, to_data_port_id=output_res_nested)
 
     ##### modify from data_flow #######
     # modify_origin(self, from_state, from_key)
-    state_dict['Nested'].data_flows[new_df_id].modify_origin(from_state=state1.state_id, from_key=output_state1)
-    sm_model.history.undo()
-    sm_model.history.redo()
-    # resolve reference
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
+    _, nested_state = perform_history_action(nested_state.data_flows[new_df_id].modify_origin,
+                                             from_state=state1.state_id, from_key=output_state1)
 
     # from_key(self, from_key)
-    state_dict['Nested'].data_flows[new_df_id].from_key = output_count_state1
-    sm_model.history.undo()
-    sm_model.history.redo()
-    # resolve reference
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
+    _, nested_state = perform_history_action(nested_state.data_flows[new_df_id].__setattr__, "from_key",
+                                             output_count_state1)
 
     # modify_target(self, to_state, to_key)
-    state_dict['Nested'].data_flows[new_df_id].modify_target(to_state=state2.state_id, to_key=input_par_state2)
-    sm_model.history.undo()
-    sm_model.history.redo()
-    # resolve reference
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
+    _, nested_state = perform_history_action(nested_state.data_flows[new_df_id].modify_target,
+                                             to_state=state2.state_id, to_key=input_par_state2)
 
     # to_key(self, to_key)
-    state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
-    sm_model.history.undo()
-    sm_model.history.redo()
-    # resolve reference
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
-
-    # data_flow_id(self, data_flow_id) -> no data_fow_id setter anymore
-
-    # resolve reference
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
-    new_df_id = state_dict['Nested'].data_flows[new_df_id].data_flow_id  # only if history.redo was not run
+    _, nested_state = perform_history_action(nested_state.data_flows[new_df_id].__setattr__, "to_key",
+                                             input_number_state2)
 
     # reset observer and testbed
-    state_dict['Nested'].remove_data_flow(new_df_id)
-    sm_model.history.undo()
-    sm_model.history.redo()
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
-    new_df_id = state_dict['Nested'].add_data_flow(from_state_id=state2.state_id, from_data_port_id=output_res_state2,
-                                                   to_state_id=state_dict['Nested'].state_id,
-                                                   to_data_port_id=output_res_nested)
-    sm_model.history.undo()
-    sm_model.history.redo()
-    # resolve reference
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
+    _, nested_state = perform_history_action(nested_state.remove_data_flow, new_df_id)
+
+    new_df_id, nested_state = perform_history_action(nested_state.add_data_flow,
+                                                     from_state_id=state2.state_id, from_data_port_id=output_res_state2,
+                                                     to_state_id=nested_state.state_id, to_data_port_id=output_res_nested)
 
     ##### modify from parent state #######
-    # modify_data_flow_from_state(self, data_flow_id, from_state, from_key)
-    # state_dict['Nested'].modify_data_flow_from_state(new_df_id, from_state=state1.state_id, from_key=output_state1)
-    state_dict['Nested'].data_flows[new_df_id].modify_origin(state1.state_id, output_state1)
-    sm_model.history.undo()
-    sm_model.history.redo()
-    # resolve reference
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
+    _, nested_state = perform_history_action(nested_state.data_flows[new_df_id].modify_origin,
+                                             state1.state_id, output_state1)
 
     # modify_data_flow_from_key(self, data_flow_id, from_key)
-    # state_dict['Nested'].modify_data_flow_from_key(new_df_id, from_key=output_count_state1)
-    state_dict['Nested'].data_flows[new_df_id].from_key = output_count_state1
-    sm_model.history.undo()
-    sm_model.history.redo()
-    # resolve reference
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
+    _, nested_state = perform_history_action(nested_state.data_flows[new_df_id].__setattr__, "from_key",
+                                             output_count_state1)
 
     # modify_data_flow_to_state(self, data_flow_id, to_state, to_key)
-    # state_dict['Nested'].modify_data_flow_to_state(new_df_id, to_state=state2.state_id, to_key=input_par_state2)
-    state_dict['Nested'].data_flows[new_df_id].modify_target(state2.state_id, input_par_state2)
-    sm_model.history.undo()
-    sm_model.history.redo()
-    # resolve reference
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
+    _, nested_state = perform_history_action(nested_state.data_flows[new_df_id].modify_target,
+                                             state2.state_id, input_par_state2)
 
     # modify_data_flow_to_key(self, data_flow_id, to_key)
-    # state_dict['Nested'].modify_data_flow_to_key(new_df_id, to_key=input_number_state2)
-    state_dict['Nested'].data_flows[new_df_id].to_key = input_number_state2
-    sm_model.history.undo()
-    sm_model.history.redo()
-
-    save_state_machine(sm_model, TEST_PATH + "_data_flow_properties", logger, with_gui=False)
+    _, nested_state = perform_history_action(nested_state.data_flows[new_df_id].__setattr__, "to_key",
+                                             input_number_state2)
 
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
