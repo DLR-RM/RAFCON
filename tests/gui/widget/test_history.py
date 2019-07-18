@@ -183,40 +183,25 @@ def test_add_remove_history(caplog):
 
     # add state
     # - change state
-
     # remove state
-
     # add outcome
     # - change outcome
-
     # remove outcome
-
     # add transition
     # - change transition
-
     # remove transition
-
     # add input_data_port
     # - change input_data_port
-
     # remove input_data_port
-
     # add output_data_port
     # - change output_data_port
-
     # remove output_data_port
-
     # add scoped_variable
     # - change scoped_variable
-
     # remove scoped_variable
-
     # add data_flow
     # - change data_flow
-
     # remove data_flow
-
-    # create testbed
 
     testing_utils.dummy_gui(None)
 
@@ -360,38 +345,21 @@ def test_state_property_modifications_history(caplog):
     # TODO LibraryState test for properties like mentioned in the notification-test but also general for add and remove
 
     # change name
-
     # change parent
-
     # change states
-
     # change outcomes
-
     # change transitions
-
     # change input_data_ports
-
     # change output_data_ports
-
     # change scoped_variables
-
     # change data_flows
-
     # change script
-
     # change script_text
-
     # change description
-
     # change active
-
     # set_start_state
-
     # change start_state_id
-
     # change child_execution
-
-    # create testbed
 
     testing_utils.dummy_gui(None)
 
@@ -487,8 +455,6 @@ def test_outcome_property_modifications_history(caplog):
     # outcome properties
 
     # change name
-
-    # create testbed
 
     testing_utils.dummy_gui(None)
 
@@ -669,13 +635,9 @@ def test_scoped_variable_modify(caplog):
     # scoped_variable properties
 
     # change name
-
     # change data_type
-
     # change default_value
-
     # change datatype
-
     # create testbed
 
     testing_utils.dummy_gui(None)
@@ -718,22 +680,13 @@ def test_data_flow_property_modifications_history(caplog):
     # data_flow properties
 
     # change modify_origin
-
     # change from_key
-
     # change modify_target
-
     # change to_key
-
     # modify_transition_from_state
-
     # modify_transition_from_key
-
     # modify_transition_to_key
-
     # modify_transition_to_state
-
-    # create testbed
 
     testing_utils.dummy_gui(None)
 
