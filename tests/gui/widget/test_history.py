@@ -664,7 +664,7 @@ def test_output_port_modify(caplog):
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
-def test_scoped_variable_modify_notification(caplog):
+def test_scoped_variable_modify(caplog):
     ##################
     # scoped_variable properties
 
@@ -684,40 +684,31 @@ def test_scoped_variable_modify_notification(caplog):
                                                      'HISTORY_ENABLED': True}, gui_already_started=False)
     sm_model, state_dict = create_state_machine_m()
 
-    new_scoped_variable_id = state_dict['Nested'].add_scoped_variable(name='new_output', data_type='str')
+    nested_state = state_dict['Nested']
+
+    new_scoped_variable_id, nested_state = perform_history_action(nested_state.add_scoped_variable,
+                                                                   name='new_output', data_type='str')
 
     ################################
     # check for modification of name
-    # state_dict['Nested'].modify_scoped_variable_name('changed_new_scoped_var_name', new_scoped_variable_id)
-    state_dict['Nested'].scoped_variables[new_scoped_variable_id].name = 'changed_new_scoped_var_name'
-    sm_model.history.undo()
-    sm_model.history.redo()
-    # resolve reference
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
+    _, nested_state = perform_history_action(nested_state.scoped_variables[new_scoped_variable_id].__setattr__,
+                                             "name",
+                                             "changed_new_scoped_var_name")
 
     #####################################
     # check for modification of data_type
-    state_dict['Nested'].scoped_variables[new_scoped_variable_id].data_type = 'int'
-    sm_model.history.undo()
-    sm_model.history.redo()
-    # resolve reference
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
+    _, nested_state = perform_history_action(nested_state.scoped_variables[new_scoped_variable_id].__setattr__,
+                                             "data_type", "int")
 
     #########################################
     # check for modification of default_value
-    state_dict['Nested'].scoped_variables[new_scoped_variable_id].default_value = 5
-    sm_model.history.undo()
-    sm_model.history.redo()
-    # resolve reference
-    state_dict['Nested'] = sm_model.get_state_model_by_path(state_dict['Nested'].get_path()).state
+    _, nested_state = perform_history_action(nested_state.scoped_variables[new_scoped_variable_id].__setattr__,
+                                             "default_value", 5)
 
     ###########################################
     # check for modification of change_datatype
-    state_dict['Nested'].scoped_variables[new_scoped_variable_id].change_data_type(data_type='str',
-                                                                                   default_value='awesome_tool')
-    sm_model.history.undo()
-    sm_model.history.redo()
-    save_state_machine(sm_model, TEST_PATH + "_scoped_variable_properties", logger, with_gui=False)
+    _, nested_state = perform_history_action(nested_state.scoped_variables[new_scoped_variable_id].change_data_type,
+                                             data_type='str', default_value='awesome_tool')
 
     testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
