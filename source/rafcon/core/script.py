@@ -74,11 +74,14 @@ class Script(Observable, yaml.YAMLObject):
         return self._script
 
     @script.setter
-    def script(self, value):
-        if not isinstance(value, string_types):
-            raise ValueError("The script text needs to be string")
-        self._script = value
+    def script(self, script_text):
+        if not isinstance(script_text, string_types):
+            raise ValueError("The script text needs to be a string")
+        self._script = script_text
         self._compile_module()
+
+    def set_script_without_compilation(self, script_text):
+        self._script = script_text
 
     def execute(self, state, inputs=None, outputs=None, backward_execution=False):
         """Execute the user 'execute' function specified in the script
