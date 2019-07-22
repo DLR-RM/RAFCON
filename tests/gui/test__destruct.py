@@ -450,9 +450,9 @@ def run_simple_controller_construction():
     testing_utils.call_gui_callback(create_models)
 
     import rafcon.gui.singleton
-    from tests.gui.widget.test_states_editor import check_state_editor_models
+    from tests.gui.widget.test_states_editor import select_child_states_and_state_sequentially
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
-    testing_utils.call_gui_callback(check_state_editor_models, sm_m, sm_m.root_state)
+    testing_utils.call_gui_callback(select_child_states_and_state_sequentially, sm_m, sm_m.root_state)
 
 
 def run_simple_modification_construction():
@@ -460,9 +460,9 @@ def run_simple_modification_construction():
     testing_utils.call_gui_callback(create_models)
 
     import rafcon.gui.singleton
-    from tests.gui.widget.test_states_editor import check_state_editor_models
+    from tests.gui.widget.test_states_editor import select_child_states_and_state_sequentially
     sm_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
-    testing_utils.call_gui_callback(check_state_editor_models, sm_m, sm_m.root_state)
+    testing_utils.call_gui_callback(select_child_states_and_state_sequentially, sm_m, sm_m.root_state)
     import rafcon.gui.helpers.state
     list_exsisting_state_ids = list(sm_m.root_state.states.keys())
 
