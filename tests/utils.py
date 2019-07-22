@@ -334,13 +334,6 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     if patch_threading:
         patch_gtkmvc3_model_mt()
     global gui_ready, gui_thread, gui_executed_once
-    # careful import
-    try:
-        import gtk.gtkgl
-        import gtk.gdkgl
-        GL_ENABLED = True
-    except (ImportError, RuntimeError):
-        GL_ENABLED = False
 
     print("WT thread: ", currentThread(), currentThread().ident)
     gui_ready = Event()
