@@ -2,6 +2,8 @@ import pytest
 
 from tests import utils
 
+from rafcon.utils.gui_functions import call_gui_callback
+
 
 class GUITester(object):
 
@@ -16,7 +18,7 @@ class GUITester(object):
         self.core_singletons = core_singletons
 
     def __call__(self, *args, **kwargs):
-        utils.call_gui_callback(*args, **kwargs)
+        return call_gui_callback(*args, **kwargs)
 
 
 
