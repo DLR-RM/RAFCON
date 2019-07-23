@@ -40,3 +40,5 @@ def gui(request, caplog):
     utils.close_gui()
     utils.shutdown_environment(caplog=caplog, expected_warnings=gui_tester.expected_warnings, expected_errors=gui_tester.expected_errors)
 
+    gui_tester.post_test and gui_tester.post_test()
+
