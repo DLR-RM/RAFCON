@@ -130,6 +130,8 @@ def rewind_and_set_libraries(libraries=None):
         libraries = {}
     if "generic" not in libraries:
         libraries["generic"] = join(RAFCON_SHARED_LIBRARY_PATH, 'generic')
+    if "unit_test_state_machines" not in libraries:
+        libraries["unit_test_state_machines"] = get_test_sm_path("unit_test_state_machines")
     global_config.set_config_value("LIBRARY_PATHS", libraries)
     environ['RAFCON_LIB_PATH'] = RAFCON_SHARED_LIBRARY_PATH
     rafcon.core.singleton.library_manager.initialize()
