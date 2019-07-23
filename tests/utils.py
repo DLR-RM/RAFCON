@@ -8,6 +8,7 @@ from builtins import str
 import copy
 import datetime
 import signal
+import os
 import sys
 import tempfile
 import time
@@ -71,6 +72,9 @@ def reload_config(config=True, gui_config=True):
         import rafcon.gui.config
         rafcon.gui.config.global_gui_config.load(path=RAFCON_TEMP_PATH_CONFIGS)
 
+def remove_configs():
+    for filename in os.listdir(RAFCON_TEMP_PATH_CONFIGS):
+        os.remove(os.path.join(RAFCON_TEMP_PATH_CONFIGS, filename))
 
 def remove_all_libraries(init_library_manager=True):
     from rafcon.core.config import global_config
@@ -274,7 +278,7 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
             pass
         finally:
             rewind_and_set_libraries()
-            reload_config(config, gui_config)
+            remove_configs()
             if not core_only:
                 wait_for_gui()  # is needed to empty the idle add queue and not party destroy elements in next test
             GUI_INITIALIZED = GUI_SIGNAL_INITIALIZED = False
