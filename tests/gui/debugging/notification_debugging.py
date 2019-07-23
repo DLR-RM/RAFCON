@@ -44,28 +44,19 @@ def create_bigger_state_machine():
     rafcon.core.singleton.state_machine_manager.add_state_machine(sm)
 
 
-def patch_notifications():
+def test_notification_debugging_example(gui):
     enable_debugging()
-    # call_gui_callback(create_bigger_state_machine)
-    call_gui_callback(create_small_state_machine)
+    # gui(create_bigger_state_machine)
+    gui(create_small_state_machine)
     # from rafcon.gui.widget.test_storage import create_models
-    # call_gui_callback(create_models)
+    # gui(create_models)
     testing_utils.wait_for_gui()
-    call_gui_callback(show_debug_graph)
+    gui(show_debug_graph)
     disable_debugging()
 
     from tests.utils import RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE
     assert exists(join(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE, 'notification_output.gv'))
     assert exists(join(RAFCON_TEMP_PATH_TEST_BASE_ONLY_USER_SAVE, 'notification_print_out.txt'))
-
-
-def test_notification_debugging_example(caplog):
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    try:
-        patch_notifications()
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
 
 if __name__ == '__main__':
