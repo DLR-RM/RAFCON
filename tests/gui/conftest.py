@@ -11,6 +11,8 @@ class GUITester(object):
         import rafcon.core.singleton as core_singletons
         import rafcon.gui.singleton as gui_singletons
 
+        self.post_test = None
+
         self.expected_warnings = 0
         self.expected_errors = 0
 
@@ -27,7 +29,10 @@ def gui(request, caplog):
     utils.dummy_gui(caplog)
 
     parameters = {} if not hasattr(request, "param") else request.param
-    utils.run_gui(core_config=parameters.get("core_config"), gui_config=parameters.get("gui_config"))
+    utils.run_gui(core_config=parameters.get("core_config"),
+                  gui_config=parameters.get("gui_config"),
+                  runtime_config=parameters.get("runtime_config"),
+                  libraries=parameters.get("libraries"))
 
     gui_tester = GUITester()
     yield gui_tester
