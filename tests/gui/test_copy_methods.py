@@ -405,68 +405,17 @@ def test_simple(caplog):
     print("test simple finished")
 
 
-def test_complex(caplog):
+def test_complex(gui):
     """Do all copy strategies possible in RAFCON and check if all Objects have different memory location to secure
     reference free assignments from origin to new state.
     :param caplog:
     :return:
     """
-    testing_utils.dummy_gui(None)
-    with_gui = True
-
-    if with_gui:
-        print("test_complex with gui")
-        try:
-            testing_utils.run_gui(
-                gui_config={'HISTORY_ENABLED': False,
-                            'AUTO_BACKUP_ENABLED': False},
-                libraries={"unit_test_state_machines":
-                               os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")}
-            )
-            output_list = list()
-            testing_utils.call_gui_callback(create_models_lib, output_list)
-            sm_model = output_list[0]
-            testing_utils.call_gui_callback(run_copy_test, sm_model, with_gui=True)
-            testing_utils.call_gui_callback(run_copy_performance_test_and_check_storage_copy, sm_model)
-        except:
-            raise
-        finally:
-            testing_utils.close_gui()
-            testing_utils.shutdown_environment(caplog=caplog)
-        print("finish test_complex with gui")
-
-        # import threading
-        # print "&" * 50
-        # print "end of copy method"
-        # print threading.currentThread().ident
-        # print threading.currentThread()
-        # print "&" * 50
-    else:
-        print("test_complex without gui")
-        testing_utils.initialize_environment(
-            gui_config={'HISTORY_ENABLED': False,
-                        'AUTO_BACKUP_ENABLED': False},
-            libraries={"unit_test_state_machines":
-                           os.path.join(testing_utils.TEST_ASSETS_PATH, "unit_test_state_machines")},
-            gui_already_started=False)
-
-        output_list = list()
-        create_models_lib(output_list)
-        sm_model = output_list[0]
-        run_copy_test(sm_model)
-        run_copy_performance_test_and_check_storage_copy(sm_model)
-        sm_model.destroy()
-        import rafcon.core.singleton
-        rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
-        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
-        print("after test_complex without gui")
-
-    # import conftest
-    # import shutil
-    # for elem in os.listdir(testing_utils.constants.RAFCON_TEMP_PATH_BASE):
-    #     path = os.path.join(testing_utils.constants.RAFCON_TEMP_PATH_BASE, elem)
-    #     if os.path.isdir(path) and not path == testing_utils.RAFCON_TEMP_PATH_TEST_BASE:
-    #         shutil.rmtree(path)
+    output_list = list()
+    gui(create_models_lib, output_list)
+    sm_model = output_list[0]
+    gui(run_copy_test, sm_model, with_gui=True)
+    gui(run_copy_performance_test_and_check_storage_copy, sm_model)
 
     # This test must not be called by py.test directly!
     # As it is a test without gui it must not create the core and gui singletons,
