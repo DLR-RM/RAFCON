@@ -310,22 +310,22 @@ done if the type of the string matters.
 Why is RAFCON not event-based?
 """""""""""""""""""""""""""""""""""""""""""""""""""
 
-Short answer: RAFCON was created to enable the development of goal-driven behavior opposed to reactive behavior
+**tl; dr**: RAFCON was created to enable the development of goal-driven behavior, in contrast to reactive behavior
 (for which many frameworks rely on events).
-However, RAFCON can be used to implement reactive behaviors as well. Quite nicely actually, using observers!
+However, RAFCON can be used to implement reactive behaviors as well. Quite elegantly, using observers!
 
 Long Answer:
-RAFCON state machine's are no state machines in the classical sense.
-A state in RAFCON is not a state as in a FSM (i.e. a system state), but in which a certain action is executed.
-Thus, its rather related to flowcharts. The HPFD formalization underlying RAFCON is defined in (see https://elib.dlr.de/112067/).
-Related to robotics, a RAFCON state is a state in the robot's behavior (i.e. currently performing pick-up action)
+RAFCON state machines are no state machines in the classical sense.
+A state in RAFCON is not a state like in a FSM (i.e., a system state), but in which a certain action is executed.
+Thus, a state is rather related to flowchart block. The HPFD formalization underlying RAFCON is defined in (see https://elib.dlr.de/112067/).
+Related to robotics, a RAFCON state is a state in the robot's behavior (e.g., performing pick-up action)
 and not a robot's system state (battery at 20V, position at [x, y]).
 
-We employed RAFCON for many goal-driven scenarios (see https://dlr-rm.github.io/RAFCON/projects).
+We have employed RAFCON for many goal-driven scenarios (see https://dlr-rm.github.io/RAFCON/projects).
 In goal-driven scenarios (in contrast to reactive ones) all changes of the environment are an effect of the robot's own actions.
 There are only a few "external events" the robot has to react to (low voltage, bad signal etc.).
 
-As stated out, RAFCON can be used to build reactive systems as well.
+As stated before, RAFCON can be used to build reactive systems as well.
 Classical state machines or state-charts are just another way to do so and they rely on events. Behavior trees are also a very powerful concept
 (which can also be programmed using RAFCON) and they do not rely on events.
 For RAFCON, we don't rely on events as well.
@@ -335,11 +335,11 @@ E.g. you can set up a preemptive concurrency state with 5 observers, the first o
 You can place different observers on different hierarchy levels.
 Thereby, you can define the scope of your 'event' and your 'event handler'.
 
-We have a lot of experience with event base state machines like boost statechart, due to our experience in Robocup
-(see: https://link.springer.com/chapter/10.1007/978-3-642-39250-4_5 ).
-One lesson learned in this case was that applying event-based state machines does not scale.
+We have a lot of experience with event-based state machines like boost statechart, due to our experience in the RoboCup competition
+(see https://link.springer.com/chapter/10.1007/978-3-642-39250-4_5).
+One lesson learned was that applying event-based state machines does not scale.
 
-To understand this, imagine a classical use case scenario:
+To understand this, imagine a classical use-case scenario:
 
 * You are using a non-graphical library for programming event-based state machines like boost statechart.
 * You have a hierarchical state machine with several hundreds of states inside several hierarchy layers.
@@ -348,35 +348,36 @@ To understand this, imagine a classical use case scenario:
 * Most of the time you neglect 90% of the events and are only interested in some events defined by the current set of active states.
   (and you still allow all events to annoy the events arbiter although you are just interested in 10% ... sounds inefficient, doesn't it!?)
 
-Now try to answer the following questions, that you would like to get answered during runtime:
+Now try to answer the following questions, that would be raised during runtime:
 
 1. What is the set of currently active states?
 2. What events do I currently listen to?
 3. What is the context (hierarchy level, possible predecessors, possible successors) of each of those state?
 4. Since when do I listen to event_x? Until which state will I listen to event_x?
-5. I receive an event that I cannot process know. I defer it to a later point in time (event deferral).
-   How long are events valid (event caching)? Another event with the same type arrives meanwhile. Should I keep the old event (event expiration)?
-   Another event, which is more important arrives. Should I react to the new event and preempt the current event handling (event priorization)?
+5. I receive an event that I cannot process know. I defer it to a later point in time (*event deferral*).
+  * How long are events valid (*event caching*)?
+  * Another event with the same type arrives meanwhile. Should I keep the old event (*event expiration*)?
+  * Another event, which is more important arrives. Should I react to the new event and preempt the current event handling (*event priorization*)?
 
-It is obviously not trivial! Of course, you could answer those questions, but it is cubersome! You loose the overview quickly!
+It is obviously not trivial! Of course, you could answer those questions, but it is cubersome and you quickly loose the overview.
 
 Thus, we implemented a graphical user interface, where you can easily answer those questions:
 
 1. You clearly see all currently executed states, highlighted in green in the graphical 2.5D layout and in your execution history tree!
-2. As observers are used to check events and as observers map to states, see 1. ;-)
-3. You clearly see the context of each state visually drawn (if you want to have a closer look, simply zoom in!)
-4. Events map to observers, observers to states; their entry and exit is clearly visualized => see 3. ;-)
-5. As we do use observers instead of events we don't have to care about all this complex topics using the limited power of events!
-   (Events are error-prone anyways! Adobe reported that 50% of all bugs are related to event handling: https://stlab.cc/legacy/figures/Boostcon_possible_future.pdf)
+2. Event observers are states. For active state, see answer 1.
+3. You clearly see the context of each state visually drawn (if you want to have a closer look, simply zoom in)
+4. Events map to observers, observers to states; their entry and exit is clearly visualized => see 3.
+5. As we do use observers instead of events we don't have to care about all this complex topics using the limited power of events
+   (Events are error-prone anyways. Adobe reported that 50% of all bugs are related to event handling: https://stlab.cc/legacy/figures/Boostcon_possible_future.pdf)
    Instead of complex event handling, you can create powerful observer structures also in a nested manner using hierarchies and outcome forwarding.
 
 Concerning how to deal with the four mentioned event-challenges using observers:
 
-* Event deferral: Use a proper hierarchical layout for your observers!
-  The observer in a higher hierarchy layer will defer its events, until the execution of its child observers is finished!
-* Event caching: As you have one observer per event, caching is done automatically until the preemption of the observer!
-* Event expiration: By preempting an observer sibling you clear the 'cache' for this event. Make sure you have a proper hierarchical observer layout:
-  i.e. if an observer must not clear the cache for a certain event pull it's observer one hierarchy up!
+* Event deferral: Use a proper hierarchical layout for your observers.
+  The observer in a higher hierarchy layer will defer its events, until the execution of its child observers is finished.
+* Event caching: As you have one observer per event, caching is done automatically until the observer is preempted.
+* Event expiration: By preempting an observer sibling you clear the "cache" for this event. Make sure you have a proper hierarchical observer layout:
+  i.e., if an observer must not clear the cache for a certain event, pull it's observer one hierarchy up!
 * Event priorization: Make sure you have a proper hierarchical observer layout.
   Observers on a higher hierarchy layer can preempt observers on a lower hierarhcy level, but not vice versa.
 
@@ -385,8 +386,6 @@ in which only a subset of events is of interest in certain semantic situations.
 For GUIs, in which you are normally prepared to react to the majority of events the whole time, classical event handling is of course a reasonable way to go!
 
 Take away message: Observers are more powerful than events. RAFCON goes with observers!
-
-
 
 
 .. _faq_filesystem_names:
