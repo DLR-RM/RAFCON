@@ -1217,7 +1217,7 @@ class DataFlowAction(StateElementAction):
 
     def update_data_flow_from_image(self, df, arguments):
         if self.action_type in self.possible_args:
-            exec("df.{0} = arguments['{0}']".format(self.action_type))
+            setattr(df, self.action_type, arguments[self.action_type])
         elif self.action_type == 'modify_origin':
             df.modify_origin(from_state=arguments['from_state'], from_key=arguments['from_key'])
         elif self.action_type == 'modify_target':
@@ -1252,7 +1252,7 @@ class TransitionAction(StateElementAction):
 
     def update_transition_from_image(self, t, arguments):
         if self.action_type in self.possible_args:
-            exec("t.{0} = arguments['{0}']".format(self.action_type))
+            setattr(t, self.action_type, arguments[self.action_type])
         elif self.action_type == 'modify_origin':
             t.modify_origin(from_state=arguments['from_state'], from_outcome=arguments['from_outcome'])
         elif self.action_type == 'modify_target':
@@ -1285,7 +1285,7 @@ class DataPortAction(StateElementAction):
 
     def update_data_port_from_image(self, dp, arguments):
         if self.action_type in self.possible_args:
-            exec("dp.{0} = arguments['{0}']".format(self.action_type))
+            setattr(dp, self.action_type, arguments[self.action_type])
         elif self.action_type == 'data_type':
             dp.data_type = arguments['data_type']
             dp.default_value = arguments['default_value']
@@ -1325,7 +1325,7 @@ class OutcomeAction(StateElementAction):
 
     def update_outcome_from_image(self, oc, arguments):
         if self.action_type in self.possible_args:
-            exec("oc.{0} = arguments['{0}']".format(self.action_type))
+            setattr(oc, self.action_type, arguments[self.action_type])
         else:
             raise TypeError("Only types of the following list are allowed. {0}".format(self.possible_method_names))
 
@@ -1460,8 +1460,8 @@ class StateAction(Action):
 
     def update_property_from_image(self, s, arguments):
         if self.action_type in self.possible_args:
-            exec("s.{0} = copy.deepcopy(arguments['{0}'])".format(self.substitute_dict.get(self.action_type,
-                                                                                           self.action_type)))
+            property = self.substitute_dict.get(self.action_type, self.action_type)
+            setattr(s, property, copy.deepcopy(arguments[property]))
         else:
             assert False
 
