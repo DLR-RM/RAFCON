@@ -13,7 +13,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from __future__ import print_function
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Command
 import distutils.log
 
 import os
@@ -68,6 +68,26 @@ global_requirements = ['pylint>=1.6,<2', 'psutil', 'jsonconversion~=0.2.12', 'ya
 test_requirements = ['pytest>=3.5,<5', 'pytest-timeout', 'pytest-mock', 'graphviz', 'pyuserinput']
 test_requirements += global_requirements
 
+
+class BuildMOFiles(Command):
+    description = "Create/update mo translation files"
+    user_options = []
+
+    def initialize_options(self):
+        pass  # must be overridden
+
+    def finalize_options(self):
+        pass  # must be overridden
+
+    def run(self):
+        import sys
+        import importlib
+        sys.path.insert(0, "./source")
+        i18n = importlib.import_module("rafcon.utils.i18n")
+        i18n.create_mo_files(distutils.log)
+        sys.path.pop()
+
+
 setup(
     name='rafcon',
     version=version,
@@ -100,6 +120,10 @@ setup(
 
     extras_require={
         'testing': test_requirements
+    },
+
+    cmdclass={
+        'build_i18n': BuildMOFiles,
     },
 
     sass_manifests={
