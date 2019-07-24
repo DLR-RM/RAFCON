@@ -16,16 +16,13 @@ import locale
 import gettext
 
 from pkg_resources import resource_filename
-from rafcon.utils import log
-
-logger = log.get_logger(__name__)
 
 
-def setup_l10n():
+def setup_l10n(logger=None):
     try:
         locale.setlocale(locale.LC_ALL, '')
     except locale.Error as e:
-        logger.warning("Cannot setup translations: {}".format(e))
+        logger and logger.warning("Cannot setup translations: {}".format(e))
 
     localedir = resource_filename('rafcon', 'locale')
 
