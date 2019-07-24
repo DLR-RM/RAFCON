@@ -349,6 +349,13 @@ def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=Non
 class CoreObjectIdentifier(object):
     # TODO generalize and include into utils
 
+    _sm_id = None
+    _path = None
+    # type can be object types (of type Transition e.g.) or class
+    _type = None
+    _id = None
+    _list_name = None
+
     type_related_list_name_dict = {InputDataPort.__name__: 'input_data_ports',
                                    OutputDataPort.__name__: 'output_data_ports',
                                    ScopedVariable.__name__: 'scoped_variables',
@@ -360,14 +367,8 @@ class CoreObjectIdentifier(object):
 
     def __init__(self, core_obj_or_cls):
         if not(type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list):
-            logger.warning("\n{0}\n{1}\n{2}".format(core_obj_or_cls, type(core_obj_or_cls),core_object_list))
+            logger.warning("\n{0}\n{1}\n{2}".format(core_obj_or_cls, type(core_obj_or_cls), core_object_list))
         assert type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list
-        self._sm_id = None
-        self._path = None
-        # type can be, object types (of type Transition e.g.) or class
-        self._type = None
-        self._id = None
-        self._list_name = None
 
         if type(core_obj_or_cls) in core_object_list:
             self._type = type(core_obj_or_cls).__name__
@@ -419,16 +420,16 @@ class CoreObjectIdentifier(object):
 class AbstractAction(object):
     __version_id = None
 
+    action_type = None
+    after_overview = None
+    after_state_image = None
+
     def __init__(self, parent_path, state_machine_model, overview=None):
-        self.action_type = None
-        self.state_machine_model = state_machine_model
         self.parent_path = parent_path
+        self.state_machine_model = state_machine_model
 
         self.before_overview = NotificationOverview() if overview is None else overview
         self.before_state_image = self.get_state_image()  # tuple of state and states-list of storage tuple
-
-        self.after_overview = None
-        self.after_state_image = None  # tuple of state and states-list of storage tuple
 
     def prepare_destruction(self):
         self.before_overview.prepare_destruction()
@@ -1147,6 +1148,7 @@ class StateElementAction(AbstractAction):
     possible_method_names = []
     possible_args = []
     _object_class = None
+    after_arguments = None
 
     def __init__(self, parent_path, state_machine_model, overview):
         AbstractAction.__init__(self, parent_path, state_machine_model, overview)
@@ -1165,7 +1167,6 @@ class StateElementAction(AbstractAction):
         assert self.parent_path == self.object_identifier._path
 
         self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
-        self.after_arguments = None
 
         self.state_machine = state_machine_model.state_machine
 
