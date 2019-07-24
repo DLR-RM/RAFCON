@@ -325,13 +325,8 @@ We have employed RAFCON for many goal-driven scenarios (see https://dlr-rm.githu
 In goal-driven scenarios (in contrast to reactive ones) all changes of the environment are an effect of the robot's own actions.
 There are only a few "external events" the robot has to react to (low voltage, bad signal etc.).
 
-As stated before, RAFCON can be used to build reactive systems as well.
-Classical state machines or state-charts are just another way to do so and they rely on events. Behavior trees are also a very powerful concept
-(which can also be programmed using RAFCON) and they do not rely on events.
-For RAFCON, we don't rely on events as well.
-However, we employ observers to take care of events.
-To implement these you have to use (preemptive) concurrency states.
-E.g. you can set up a preemptive concurrency state with 5 observers, the first one who fires decides the course of action.
+As stated before, RAFCON can be used to build reactive systems as well. For implementation, you have to use (preemptive) concurrency states.
+E.g. you can set up a preemptive concurrency state with 5 observers. The first one who fires decides the course of action.
 You can place different observers on different hierarchy levels.
 Thereby, you can define the scope of your 'event' and your 'event handler'.
 
@@ -345,8 +340,7 @@ To understand this, imagine a classical use-case scenario:
 * You have a hierarchical state machine with several hundreds of states inside several hierarchy layers.
 * Your have 30 types of events that are continuously firing onto your state machine.
 * In certain states you react to some events.
-* Most of the time you neglect 90% of the events and are only interested in some events defined by the current set of active states.
-  (and you still allow all events to annoy the events arbiter although you are just interested in 10% ... sounds inefficient, doesn't it!?)
+* Most of the time you neglect 90% of the events and are only interested in some events defined by the current set of active states. Nevertheless, the events arbiter has to handle *every* event, which can be inefficient.
 
 Now try to answer the following questions, that would be raised during runtime:
 
