@@ -31,7 +31,7 @@ from gtkmvc3.observable import Observable
 
 from rafcon.gui.action import ActionDummy, Action, StateMachineAction, StateAction, DataPortAction, \
     ScopedVariableAction, OutcomeAction, TransitionAction, DataFlowAction, AddObjectAction, RemoveObjectAction, \
-    MetaAction, get_state_element_meta
+    MetaDataAction, get_state_element_meta
 from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
 
 from rafcon.core.states.state import State
@@ -469,7 +469,7 @@ class ModificationsHistoryModel(ModelMT):
         return result
 
     def finish_new_action(self, overview):
-        if isinstance(self.active_action, MetaAction) and self.check_gaphas_consistency:
+        if isinstance(self.active_action, MetaDataAction) and self.check_gaphas_consistency:
             check_gaphas_state_machine_meta_data_consistency(self.state_machine_model, with_logger_messages=True)
 
         # logger.debug("History stores AFTER")
@@ -531,9 +531,9 @@ class ModificationsHistoryModel(ModelMT):
                 return
 
             if self.count_before == 0:
-                self.active_action = MetaAction(changed_parent_model.state.get_path(),
-                                                state_machine_model=self.state_machine_model,
-                                                overview=overview)
+                self.active_action = MetaDataAction(changed_parent_model.state.get_path(),
+                                                    state_machine_model=self.state_machine_model,
+                                                    overview=overview)
                 # b_tuple = self.actual_action.before_state_image
                 meta_dict = self.get_state_element_meta_from_internal_tmp_storage(changed_parent_state_path)
                 self.active_action.before_storage = meta_dict

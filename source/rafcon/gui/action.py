@@ -475,7 +475,7 @@ class ActionDummy(AbstractAction):
         self.action_type = 'do_nothing'
 
 
-class MetaAction(AbstractAction):
+class MetaDataAction(AbstractAction):
 
     def __init__(self, parent_path, state_machine_model, overview):
 
