@@ -176,66 +176,41 @@ class ModificationsHistoryModel(ModelMT):
             self.change_count += 1
 
     def _undo(self, version_id):
+        action = self.modifications.all_time_history[version_id].action
         self.busy = True
-        # print("undo 1", self.modifications, self.modifications.all_time_history[version_id].action)
-        self.modifications.all_time_history[version_id].action.undo()
-        self.modifications.trail_pointer -= 1
+        self.modifications.undo()
         self.busy = False
-        if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
-            # logger.debug("StateMachineAction Undo")
+        if isinstance(action, StateMachineAction):
             self._re_initiate_observation()
         self.update_internal_tmp_storage()
 
     def undo(self):
-        if not self.modifications.trail_history or self.modifications.trail_pointer == 0 \
-                or not self.modifications.trail_pointer < len(self.modifications.trail_history):
+        if not self.modifications.is_undo_possible():
             logger.debug("There is no more action that can be undone")
             return
-        # logger.debug("acquire lock 2 - for undo {0}".format(self.modifications.trail_pointer))
         if self.state_machine_model.storage_lock.locked():
-            # logger.debug("is locked already 2 - for undo {0}".format(self.modifications.trail_pointer))
             return
         with self.state_machine_model.storage_lock:
-            # logger.debug("acquired lock 2 - for undo {0}".format(self.modifications.trail_pointer))
-            self.busy = True
-            # print("undo 2", self.modifications)
-            self.modifications.undo()
-            self.busy = False
-            if isinstance(self.modifications.trail_history[self.modifications.trail_pointer + 1], StateMachineAction):
-                # logger.debug("StateMachineAction Undo")
-                self._re_initiate_observation()
-            self.update_internal_tmp_storage()
+            self._undo(self.modifications.trail_pointer)
             self.change_count += 1
 
     def _redo(self, version_id):
+        action = self.modifications.all_time_history[version_id].action
         self.busy = True
-        self.modifications.all_time_history[version_id].action.redo()
-        self.modifications.trail_pointer += 1
+        self.modifications.redo()
         self.busy = False
-        if self.modifications.trail_history is not None \
-                and self.modifications.trail_pointer < len(self.modifications.trail_history) \
-                and isinstance(self.modifications.trail_history[self.modifications.trail_pointer], StateMachineAction):
-            # logger.debug("StateMachineAction Redo")
+        if isinstance(action, StateMachineAction):
             self._re_initiate_observation()
-        self.tmp_meta_storage = get_state_element_meta(self.state_machine_model.root_state)
+        self.update_internal_tmp_storage()
 
     def redo(self):
-        if not self.modifications.trail_history or self.modifications.trail_history and not self.modifications.trail_pointer + 1 < len(
-                self.modifications.trail_history):
+        if not self.modifications.is_redo_possible():
             logger.debug("There is no more action that can be redone")
             return
-        # logger.debug("acquire lock 3 - for redo")
         if self.state_machine_model.storage_lock.locked():
-            # logger.debug("is locked already 3 - for redo {0}".format(self.modifications.trail_pointer))
             return
         with self.state_machine_model.storage_lock:
-            # logger.debug("acquired lock 3 - for redo")
-            self.busy = True
-            self.modifications.redo()
-            self.busy = False
-            if isinstance(self.modifications.trail_history[self.modifications.trail_pointer], StateMachineAction):
-                # logger.debug("StateMachineAction Redo")
-                self._re_initiate_observation()
+            self._redo(self.modifications.trail_pointer)
             self.update_internal_tmp_storage()
             self.change_count += 1
 
@@ -878,9 +853,6 @@ class ModificationsHistory(Observable):
 
         self.with_verbose = False
 
-        # self.test_action_dumps = False
-        # self._tmp_file = TEMP_PATH + '/test_mod_history.txt'
-
         # insert initial dummy element
         self.insert_action(ActionDummy())
 
@@ -889,6 +861,12 @@ class ModificationsHistory(Observable):
         for tree_element in self.all_time_history:
             tree_element.prepare_destruction()
         del self.all_time_history[:]
+
+    def is_undo_possible(self):
+        return self.trail_history and self.trail_pointer > 0
+
+    def is_redo_possible(self):
+        return self.trail_history and self.trail_pointer + 1 < len(self.trail_history)
 
     @Observable.observed
     def insert_action(self, action):
@@ -928,15 +906,6 @@ class ModificationsHistory(Observable):
         if self.with_verbose and action is not None:
             logger.verbose("New trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
         # self.write_trail_history_to_file()
-
-    # def write_trail_history_to_file(self):
-    #     if self.test_action_dumps:
-    #         with open(self._tmp_file, 'w+') as f:
-    #             for a in self.trail_history:
-    #                 h_elem = self.all_time_history[a.version_id]
-    #                 s = str(h_elem.summary()) + "--{#}--" + h_elem.as_json_string() + '\n'
-    #                 # print('\n'.join(s.split("--{#}--")))
-    #                 f.write(s)
 
     @Observable.observed
     def undo(self):
