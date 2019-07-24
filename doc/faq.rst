@@ -325,7 +325,12 @@ We have employed RAFCON for many goal-driven scenarios (see https://dlr-rm.githu
 In goal-driven scenarios (in contrast to reactive ones) all changes of the environment are an effect of the robot's own actions.
 There are only a few "external events" the robot has to react to (low voltage, bad signal etc.).
 
-As stated before, RAFCON can be used to build reactive systems as well. For implementation, you have to use (preemptive) concurrency states.
+As stated before, RAFCON can not only be used to build goal-driven behavior but also to build reactive systems.
+Classical state machines or statecharts can be used to implement reactive behavior as well and they DO rely on events.
+Behavior trees are also a very powerful concept for reactive behavior and they do NOT rely on events.
+For RAFCON, we don't rely on events either.
+We employ observers to take care of events.
+To implement them, you have to use (preemptive) concurrency states.
 E.g. you can set up a preemptive concurrency state with 5 observers. The first one who fires decides the course of action.
 You can place different observers on different hierarchy levels.
 Thereby, you can define the scope of your 'event' and your 'event handler'.
