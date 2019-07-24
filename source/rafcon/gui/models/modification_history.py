@@ -509,13 +509,13 @@ class ModificationsHistoryModel(ModelMT):
             return
 
         if self.active_action is None or overview['signal'][-1]['change'] in ['append_initial_change']:
-            # update last actions after_storage -> meta-data
+            # update last actions after_state_image -> meta-data
             self.re_initiate_meta_data()
         elif self.active_action is None or \
                 overview['signal'][-1]['change'] in ['append_to_last_change'] or \
                 overview['signal'][-1]['origin'] in ['group_states', 'ungroup_state', 'substitute_state']:
-            # update last actions after_storage -> meta-data
-            self.active_action.after_storage = self.active_action.get_storage()
+            # update last actions after_state_image -> meta-data
+            self.active_action.after_storage = self.active_action.get_state_image()
             self.update_internal_tmp_storage()
         else:
             if isinstance(overview['model'][-1], AbstractStateModel):
@@ -534,7 +534,7 @@ class ModificationsHistoryModel(ModelMT):
                 self.active_action = MetaAction(changed_parent_model.state.get_path(),
                                                 state_machine_model=self.state_machine_model,
                                                 overview=overview)
-                # b_tuple = self.actual_action.before_storage
+                # b_tuple = self.actual_action.before_state_image
                 meta_dict = self.get_state_element_meta_from_internal_tmp_storage(changed_parent_state_path)
                 self.active_action.before_storage = meta_dict
 
