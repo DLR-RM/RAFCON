@@ -99,7 +99,6 @@ def prepare_state_machine_model(state_machine):
 
     sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
     sm_m.history.fake = False
-    print("with_verbose is: ", sm_m.history.with_verbose)
     sm_m.history.with_verbose = False
     return sm_m
 
@@ -955,9 +954,52 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
         for _ in range(number):
             main_window_controller.shortcut_manager.trigger_action(action_name, None, None)
     call_gui_callback(trigger_action_repeated, "add", 10, priority=GLib.PRIORITY_HIGH)
-    assert sm_m.history.modifications.get_executed_version_ids()
+    assert sm_m.history.modifications.get_executed_history_ids()
     call_gui_callback(trigger_action_repeated, "undo", 20, priority=GLib.PRIORITY_HIGH)
     call_gui_callback(trigger_action_repeated, "redo", 20, priority=GLib.PRIORITY_HIGH)
+
+
+def test_reset_to_history_id(caplog):
+    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True})
+    try:
+        state_machine_m, state_dict = create_state_machine_m(True)
+        sm_history = state_machine_m.history
+
+        state1_id = state_dict["State1"].state_id
+        state2_id = state_dict["State2"].state_id
+
+        # Remove two child states of root state
+        call_gui_callback(state_machine_m.root_state.state.remove_state, state1_id)  # history id 1
+        call_gui_callback(state_machine_m.root_state.state.remove_state, state2_id)  # history id 2
+        history_2_hash = state_machine_m.mutable_hash().hexdigest()
+
+        # Undo removal
+        call_gui_callback(state_machine_m.history.undo)
+        call_gui_callback(state_machine_m.history.undo)
+
+        # Create new history branch by adding two new states
+        state4 = ExecutionState("State4")
+        state5 = ExecutionState("State5")
+
+        call_gui_callback(state_machine_m.root_state.state.add_state, state4)  # history id 3
+        call_gui_callback(state_machine_m.root_state.state.add_state, state5)  # history id 4
+
+        assert state_machine_m.history.modifications.current_history_element.history_id == 4
+        history_4_hash = state_machine_m.mutable_hash().hexdigest()
+
+        # Activate old branch
+        call_gui_callback(state_machine_m.history.reset_to_history_id, 2)
+        reset_history_2_hash = state_machine_m.mutable_hash().hexdigest()
+        assert history_2_hash == reset_history_2_hash
+
+        # Activate new branch
+        call_gui_callback(state_machine_m.history.reset_to_history_id, 4)
+        reset_history_4_hash = state_machine_m.mutable_hash().hexdigest()
+        assert history_4_hash == reset_history_4_hash
+
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':
