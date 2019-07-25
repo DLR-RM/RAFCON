@@ -299,17 +299,17 @@ class ModificationHistoryTreeController(ExtendedController):
         def insert_all_next_actions(version_id, parent_tree_item=None):
             """ The function defines linkage of history-tree-elements in a gtk-tree-view to create a optimal overview.
             """
-            if len(self._selected_sm_model.history.modifications.all_time_history) == 1:
+            if not self._selected_sm_model.history.modifications.current_history_element:
                 # history only contains the ActionDummy element
                 return
             next_id = version_id
             while next_id is not None:
                 version_id = next_id
-                history_tree_elem = self._selected_sm_model.history.modifications.all_time_history[next_id]
+                history_tree_elem = self._selected_sm_model.history.modifications.get_element_for_version(next_id)
                 next_id = history_tree_elem.next_id
                 prev_tree_elem = None
                 if history_tree_elem.prev_id is not None:
-                    prev_tree_elem = self._selected_sm_model.history.modifications.all_time_history[history_tree_elem.prev_id]
+                    prev_tree_elem = self._selected_sm_model.history.modifications.get_previous_element(history_tree_elem)
                 action = history_tree_elem.action
                 # logger.info("prev branch #{0} <-> {1}, trail_actions are {2}".format(history_tree_elem.action.version_id, prev_tree_elem, trail_actions))
                 in_trail = history_tree_elem.action.version_id in trail_actions
@@ -325,7 +325,7 @@ class ModificationHistoryTreeController(ExtendedController):
                     child_tree_item = insert_this_action(action, prev_id_iter, init_branch=True)
                 elif prev_tree_elem is not None and not prev_tree_elem.old_next_ids:
                     # no branch and not trail
-                    prev_prev_tree_elem = self._selected_sm_model.history.modifications.all_time_history[prev_tree_elem.prev_id]
+                    prev_prev_tree_elem = self._selected_sm_model.history.modifications.get_previous_element(prev_tree_elem)
                     branch_limit_for_extra_ident_level = 1 if prev_tree_elem.prev_id in trail_actions else 0
                     if len(prev_prev_tree_elem.old_next_ids) > branch_limit_for_extra_ident_level:
                         # -> level + 1 as previous element, because to many branches -> so prev_id iter as parent_iter
@@ -360,9 +360,6 @@ class ModificationHistoryTreeController(ExtendedController):
         # set colors of Tree
         # - is state full and all element which are open to be re-done gray
         self.doing_update = False
-        # for history_tree_elem in self._selected_sm_model.history.modifications.all_time_history:
-        #     logger.info("ActionVersionId: {0} and {1}".format(history_tree_elem.action.version_id,
-        #                                                       str(history_tree_elem)))
 
     @staticmethod
     def get_color_active(active):
