@@ -156,61 +156,38 @@ class ModificationsHistoryModel(ModelMT):
         :param pointer_on_version_to_recover: the id of the list element which is to recover
         :return:
         """
-        # search for traceable path -> list of action to undo and list of action to redo
-        logger.info("Going to history status #{0}".format(pointer_on_version_to_recover))
-        undo_redo_list = self.modifications.get_undo_redo_list_from_active_trail_history_item_to_version_id(pointer_on_version_to_recover)
-        logger.debug("Multiple undo and redo to reach modification history element of version {0} "
-                     "-> undo-redo-list is: {1}".format(pointer_on_version_to_recover, undo_redo_list))
-        # logger.debug("acquire lock 1 - for multiple action {0}".format(self.modifications.trail_pointer))
         with self.state_machine_model.storage_lock:
-            # logger.debug("acquired lock 1 - for multiple action {0}".format(self.modifications.trail_pointer))
-            for elem in undo_redo_list:
-                if elem[1] == 'undo':
-                    # do undo
-                    self._undo(elem[0])
-                else:
-                    # do redo
-                    self._redo(elem[0])
+            self.busy = True
+            self.modifications.go_to_history_element(pointer_on_version_to_recover)
+            self.busy = False
 
-            self.modifications.reorganize_trail_history_for_version_id(pointer_on_version_to_recover)
-            self.change_count += 1
-
-    def _undo(self, version_id):
-        action = self.modifications.all_time_history[version_id].action
-        self.busy = True
-        self.modifications.undo()
-        self.busy = False
-        if isinstance(action, StateMachineAction):
             self._re_initiate_observation()
-        self.update_internal_tmp_storage()
+            self.update_internal_tmp_storage()
+            self.change_count += 1
 
     def undo(self):
-        if not self.modifications.is_undo_possible():
-            logger.debug("There is no more action that can be undone")
-            return
-        if self.state_machine_model.storage_lock.locked():
-            return
+        # if self.state_machine_model.storage_lock.locked():
+        #     return
         with self.state_machine_model.storage_lock:
-            self._undo(self.modifications.trail_pointer)
+            action = self.modifications.current_history_element.action
+            self.busy = True
+            self.modifications.undo()
+            self.busy = False
+            if isinstance(action, StateMachineAction):
+                self._re_initiate_observation()
+            self.update_internal_tmp_storage()
             self.change_count += 1
 
-    def _redo(self, version_id):
-        action = self.modifications.all_time_history[version_id].action
-        self.busy = True
-        self.modifications.redo()
-        self.busy = False
-        if isinstance(action, StateMachineAction):
-            self._re_initiate_observation()
-        self.update_internal_tmp_storage()
-
     def redo(self):
-        if not self.modifications.is_redo_possible():
-            logger.debug("There is no more action that can be redone")
-            return
-        if self.state_machine_model.storage_lock.locked():
-            return
+        # if self.state_machine_model.storage_lock.locked():
+        #     return
         with self.state_machine_model.storage_lock:
-            self._redo(self.modifications.trail_pointer)
+            action = self.modifications.current_history_element.action
+            self.busy = True
+            self.modifications.redo()
+            self.busy = False
+            if isinstance(action, StateMachineAction):
+                self._re_initiate_observation()
             self.update_internal_tmp_storage()
             self.change_count += 1
 
@@ -447,18 +424,15 @@ class ModificationsHistoryModel(ModelMT):
         if isinstance(self.active_action, MetaDataAction) and self.check_gaphas_consistency:
             check_gaphas_state_machine_meta_data_consistency(self.state_machine_model, with_logger_messages=True)
 
-        # logger.debug("History stores AFTER")
         if self.with_debug_logs:
             self.store_test_log_file(str(overview) + "\n")
 
         try:
             self.active_action.set_after(overview)
             self.state_machine_model.history.modifications.insert_action(self.active_action)
-            # logger.debug("history is now: %s" % self.state_machine_model.history.modifications.single_trail_history())
             self.update_internal_tmp_storage()
         except:
             logger.exception("Failure occurred while finishing action")
-            # traceback.print_exc(file=sys.stdout)
             raise
 
         self.change_count += 1
@@ -816,8 +790,9 @@ class HistoryTreeElement(object):
 
     @next_id.setter
     def next_id(self, next_id):
-        # logger.info("new_next_id is: {0}".format(next_id))
         assert isinstance(next_id, int)
+        # move current next_id to to old_next_ids before assigning a new one
+        # => creates new branch
         if self._next_id is not None:
             self._old_next_ids.append(self._next_id)
         self._next_id = next_id
@@ -843,199 +818,141 @@ class ModificationsHistory(Observable):
     - all_actions is a type of a tree # prev_id, action, next_id, old_next_ids
     """
 
-    # TODO remove explicit trail-history -> next_id is holding the same information and old_next_ids the branching
     def __init__(self):
         Observable.__init__(self)
-        self.trail_history = []
         self.all_time_history = []
 
-        self.trail_pointer = None
+        self.current_history_element = None
 
         self.with_verbose = False
 
         # insert initial dummy element
         self.insert_action(ActionDummy())
 
+    def __len__(self):
+        return len(self.get_executed_version_ids())
+
     def prepare_destruction(self):
-        del self.trail_history[:]
         for tree_element in self.all_time_history:
             tree_element.prepare_destruction()
         del self.all_time_history[:]
 
     def is_undo_possible(self):
-        return self.trail_history and self.trail_pointer > 0
+        return self.current_history_element.prev_id is not None
 
     def is_redo_possible(self):
-        return self.trail_history and self.trail_pointer + 1 < len(self.trail_history)
+        return self.current_history_element.next_id is not None
+
+    def get_element_for_version(self, version_id):
+        return self.all_time_history[version_id]
+
+    def get_next_element(self, for_history_element=None):
+        for_history_element = for_history_element or self.current_history_element
+        if for_history_element and for_history_element.next_id is not None:
+            return self.all_time_history[for_history_element.next_id]
+        return None
+
+    def get_previous_element(self, for_history_element=None):
+        for_history_element = for_history_element or self.current_history_element
+        if for_history_element and for_history_element.prev_id is not None:
+            return self.all_time_history[for_history_element.prev_id]
+        return None
 
     @Observable.observed
     def insert_action(self, action):
 
-        prev_id = None
-        if self.all_time_history:
-            prev_id = self.trail_history[self.trail_pointer].version_id
+        prev_id = None if not self.current_history_element else self.current_history_element.action.version_id
 
         action.version_id = len(self.all_time_history)
-        self.all_time_history.append(HistoryTreeElement(prev_id=prev_id, action=action))
+        self.current_history_element = HistoryTreeElement(prev_id=prev_id, action=action)
+        self.all_time_history.append(self.current_history_element)
 
         # set pointer of previous element
         if prev_id is not None:
             prev_tree_elem = self.all_time_history[prev_id]
             prev_old_next_ids = copy.deepcopy(prev_tree_elem.old_next_ids)
-            if self.with_verbose:
-                logger.verbose("New pointer {0} element {1} -> new next_id {2}"
-                               "".format(self.all_time_history[self.trail_pointer].action.version_id,
-                                         prev_tree_elem,
-                                         len(self.all_time_history) - 1))
-            prev_tree_elem.next_id = len(self.all_time_history) - 1
+            prev_tree_elem.next_id = action.version_id
             if not prev_old_next_ids == prev_tree_elem.old_next_ids:
-                logger.info("This action has created a new branch in the state machine modification-history")
-
-        # check single trail history and reduce trail history if the trail_pointer does not point on the last element
-        if self.trail_pointer is not None:
-            if self.trail_pointer > len(self.trail_history) - 1 or self.trail_pointer < 0:
-                logger.error('History is broken may!!! %s' % self.trail_pointer)
-            while not self.trail_pointer == len(self.trail_history) - 1:
-                if self.with_verbose:
-                    logger.verbose("pointer: {0} {1}".format(self.trail_pointer, len(self.trail_history)))
-                self.trail_history.pop()
-        # append new action to trail history and set actual trail pointer
-        self.trail_history.append(action)
-        self.trail_pointer = None if len(self.trail_history) == 0 else len(self.trail_history) - 1
-
-        if self.with_verbose and action is not None:
-            logger.verbose("New trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
-        # self.write_trail_history_to_file()
+                logger.verbose("This action has created a new branch in the state machine modification-history")
 
     @Observable.observed
     def undo(self):
-        if not self.trail_history or self.trail_pointer == 0 or not self.trail_pointer < len(self.trail_history):
-            logger.debug("There is no more action that can be undone")
+        if not self.is_undo_possible():
+            logger.warning("There is no more action that can be undone")
             return
-        # print("MODEHISTORY UNDO", self.trail_history[self.trail_pointer])
-        self.trail_history[self.trail_pointer].undo()
-        self.trail_pointer -= 1
-        if self.with_verbose:
-            logger.verbose("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
+        history_element = self.current_history_element
+        history_element.action.undo()
+        self.current_history_element = self.get_previous_element()
+        return history_element
 
     @Observable.observed
     def redo(self):
-        if not self.trail_history or self.trail_history and not self.trail_pointer + 1 < len(self.trail_history):
-            logger.debug("There is no more action that can be redone")
+        if not self.is_redo_possible():
+            logger.warning("There is no more action that can be redone")
             return
-        # print("MODEHISTORY REDO", self.trail_history[self.trail_pointer])
-        self.trail_history[self.trail_pointer + 1].redo()
-        self.trail_pointer += 1
-        if self.with_verbose:
-            logger.verbose("new trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
+        self.current_history_element = self.get_next_element()
+        history_element = self.current_history_element
+        history_element.action.redo()
+        return history_element
 
-    def single_trail_history(self):
-        return self.trail_history
+    def go_to_history_element(self, target_version_id):
+        undo_version_ids, redo_version_ids, branching_element = self.get_history_path_from_current_to_target_version(target_version_id)
+        for version_id in undo_version_ids:
+            history_element = self.get_element_for_version(version_id)
+            # must be set before undo (because only undo/redo are observable)
+            self.current_history_element = self.get_previous_element(history_element)
+            history_element.action.undo()
+        for version_id in redo_version_ids:
+            history_element = self.get_element_for_version(version_id)
+            # must be set before redo (because only undo/redo are observable)
+            self.current_history_element = history_element
+            history_element.action.redo()
+        if branching_element:
+            branching_element.next_id = redo_version_ids[0]
 
-    def get_all_active_actions(self):
-        active_action_id = 0 if self.trail_pointer < 0 else self.trail_pointer
-        end_id = self.single_trail_history()[active_action_id].version_id
-        return [a.version_id for a in self.single_trail_history() if a.version_id <= end_id]
+    def get_executed_version_ids(self):
+        executed_version_ids = []
+        history_element = self.current_history_element
+        while history_element.prev_id is not None:
+            executed_version_ids.append(history_element.action.version_id)
+            history_element = self.get_previous_element(history_element)
+        executed_version_ids.append(history_element.action.version_id)
+        return executed_version_ids
 
-    def reorganize_trail_history_for_version_id(self, version_id):
+    def get_current_branch_version_ids(self):
+        current_branch_version_ids = self.get_executed_version_ids()
+        history_element = self.current_history_element
+        while history_element.next_id is not None:
+            history_element = self.get_next_element(history_element)
+            current_branch_version_ids.append(history_element.action.version_id)
+        return current_branch_version_ids
 
-        # check if something is to do
-        all_trail_action = [a.version_id for a in self.trail_history]
-        intermediate_version_id = int(version_id)
-        if intermediate_version_id in all_trail_action:
-            return
-
-        # search path back to actual trail history
-        path = []
-        if self.with_verbose:
-            logger.verbose("Old trail: {0}".format(all_trail_action))
-        while intermediate_version_id not in all_trail_action:
-            path.insert(0, intermediate_version_id)
-            intermediate_version_id = self.all_time_history[intermediate_version_id].prev_id
-        # cut of not needed actions
-        trail_index = all_trail_action.index(intermediate_version_id)
-        self.trail_history = self.trail_history[:trail_index+1]
-        if self.with_verbose:
-            logger.verbose("Cut of trail: {0}".format([a.version_id for a in self.trail_history]))
-
-        # append all actions of the path -> active actions of the branch
-        for version_id in path:
-            # set default next_id to active trail
-            self.all_time_history[self.trail_history[-1].version_id].next_id = version_id
-            self.trail_history.append(self.all_time_history[version_id].action)
-        if self.with_verbose:
-            logger.verbose("New active trail: {0}".format([a.version_id for a in self.trail_history]))
-
-        # adjust trail history point to new active id
-        self.trail_pointer = len(self.trail_history) - 1
-
-        # append all inactive actions of the branch
-        while self.all_time_history[self.trail_history[-1].version_id].next_id:
-            insert_version_id = self.all_time_history[self.trail_history[-1].version_id].next_id
-            self.trail_history.append(self.all_time_history[insert_version_id].action)
-        if self.with_verbose:
-            logger.verbose("New trail: {0} with trail_pointer: {1}".format([a.version_id for a in self.trail_history], self.trail_pointer))
-
-    def get_undo_redo_list_from_active_trail_history_item_to_version_id(self, version_id):
-        """Perform fast search from currently active branch to specific version_id and collect all recovery steps.
-        """
-        all_trail_action = [a.version_id for a in self.single_trail_history() if a is not None]
-        all_active_action = self.get_all_active_actions()
-        undo_redo_list = []
-        _undo_redo_list = []
-
-        intermediate_version_id = version_id
-        if self.with_verbose:
-            logger.verbose("Version_id    : {0} in".format(intermediate_version_id))
-            logger.verbose("Active actions: {0} in: {1}".format(all_active_action,
-                                                                intermediate_version_id in all_active_action))
-            logger.verbose("Trail actions : {0} in: {1}".format(all_trail_action,
-                                                                intermediate_version_id in all_trail_action))
-
-        if intermediate_version_id not in all_trail_action:
-            # get undo to come from version_id to trail_action
-            while intermediate_version_id not in all_trail_action:
-                _undo_redo_list.insert(0, (intermediate_version_id, 'redo'))
-                intermediate_version_id = self.all_time_history[intermediate_version_id].prev_id
-            intermediate_goal_version_id = intermediate_version_id
-        else:
-            intermediate_goal_version_id = version_id
-        intermediate_version_id = self.trail_history[self.trail_pointer].version_id
-        if self.with_verbose:
-            logger.verbose("Version_id    : {0} {1}".format(intermediate_goal_version_id, intermediate_version_id))
-            logger.verbose("Active actions: {0} in: {1}".format(all_active_action,
-                                                                intermediate_version_id in all_active_action))
-            logger.verbose("Trail actions : {0} in: {1}".format(all_trail_action,
-                                                                intermediate_version_id in all_trail_action))
-
-        # collect undo and redo on trail
-        if intermediate_goal_version_id in all_active_action:
-            # collect needed undo to reach intermediate version
-            while not intermediate_version_id == intermediate_goal_version_id:
-                undo_redo_list.append((intermediate_version_id, 'undo'))
-                intermediate_version_id = self.all_time_history[intermediate_version_id].prev_id
-
-        elif intermediate_goal_version_id in all_trail_action:
-            # collect needed redo to reach intermediate version
-            while not intermediate_version_id == intermediate_goal_version_id:
-                intermediate_version_id = self.all_time_history[intermediate_version_id].next_id
-                undo_redo_list.append((intermediate_version_id, 'redo'))
-
-        for elem in _undo_redo_list:
-            undo_redo_list.append(elem)
-
-        return undo_redo_list
-
-    def is_end(self):
-        return len(self.trail_history) - 1 == self.trail_pointer
+    def get_history_path_from_current_to_target_version(self, target_version_id):
+        if not (0 <= target_version_id < len(self.all_time_history)):
+            raise ValueError("target_version_id does not exist")
+        undo_version_ids = []
+        redo_version_ids = []
+        active_branch_ids = self.get_executed_version_ids()
+        target_element = self.get_element_for_version(target_version_id)
+        pointer_element = target_element
+        while pointer_element.action.version_id not in active_branch_ids:
+            redo_version_ids.insert(0, pointer_element.action.version_id)
+            pointer_element = self.get_previous_element(pointer_element)
+        # element only becomes branching element, if there will be undo operations
+        # => the target_version_id is in a different branch
+        possible_branching_element = pointer_element
+        while pointer_element is not self.current_history_element:
+            pointer_element = self.get_next_element(pointer_element)
+            undo_version_ids.insert(0, pointer_element.action.version_id)
+        branching_element = None
+        if redo_version_ids and undo_version_ids:
+            branching_element = possible_branching_element
+        return undo_version_ids, redo_version_ids, branching_element
 
     @Observable.observed
     def reset(self):
-        logger.debug("################ RESET ChangeHistory PUT ALL TO INITIATION")
-        self.trail_history = []
         self.all_time_history = []
-
-        self.trail_pointer = None
+        self.current_history_element = None
 
         # insert initial dummy element
         self.insert_action(ActionDummy())
