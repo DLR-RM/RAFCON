@@ -26,6 +26,7 @@ from builtins import str
 import copy
 import json
 import difflib
+from collections import namedtuple
 
 from gtkmvc3.model_mt import ModelMT
 from jsonconversion.decoder import JSONObjectDecoder
@@ -66,16 +67,10 @@ core_object_list = [Transition, DataFlow, Outcome, InputDataPort, OutputDataPort
 DEBUG_META_REFERENCES = False
 HISTORY_DEBUG_LOG_FILE = RAFCON_TEMP_PATH_BASE + '/test_file.txt'
 
-STATE_TUPLE_JSON_STR_INDEX = 0
-STATE_TUPLE_CHILD_STATES_INDEX = 1
-STATE_TUPLE_META_DICT_INDEX = 2
-STATE_TUPLE_PATH_INDEX = 3
-STATE_TUPLE_SCRIPT_TEXT_INDEX = 4
-STATE_TUPLE_FILE_SYSTEM_PATH_INDEX = 5
-STATE_TUPLE_SEMANTIC_DATA_INDEX = 6
+StateImage = namedtuple('StateImage', ['core_data', 'meta_data', 'state_path', 'semantic_data', 'file_system_path', 'script_text', 'children'])
+StateImage.__new__.__defaults__ = (None, None, None, None, None, None, None)  # Make all optional
 
-
-def get_state_tuple(state, state_m=None):
+def create_state_image(state_m):
     """ Generates a tuple that holds the state as yaml-strings and its meta data in a dictionary.
     The tuple consists of:
     [0] json_str for state,
@@ -90,31 +85,30 @@ def get_state_tuple(state, state_m=None):
     :param rafcon.core.states.state.State state: The state that should be stored
     :return: state_tuple tuple
     """
-    state_str = json.dumps(state, cls=JSONObjectEncoder,
+    state = state_m.state
+    core_data = json.dumps(state, cls=JSONObjectEncoder,
                            indent=4, check_circular=False, sort_keys=True)
 
-    state_tuples_dict = {}
+    child_state_images = {}
     if isinstance(state, ContainerState):
-        # print(state.states, "\n")
-        for child_state_id, child_state in state.states.items():
-            # print("child_state: %s" % child_state_id, child_state, "\n")
-            state_tuples_dict[child_state_id] = get_state_tuple(child_state)
+        for child_state_id, child_state_m in state_m.states.items():
+            child_state_images[child_state_id] = create_state_image(child_state_m)
 
-    state_meta_dict = {} if state_m is None else get_state_element_meta(state_m)
+    meta_data = get_state_element_meta(state_m)
 
     script_content = state.script.script if isinstance(state, ExecutionState) else None
 
-    state_tuple = (state_str, state_tuples_dict, state_meta_dict, state.get_path(), script_content,
-                   state.file_system_path, copy.deepcopy(state.semantic_data))
+    stage_image = StateImage(core_data=core_data, meta_data=meta_data, state_path=state.get_path(),
+                             semantic_data=copy.deepcopy(state.semantic_data), file_system_path=state.file_system_path,
+                             script_text=script_content, children=child_state_images)
+    return stage_image
 
-    return state_tuple
 
-
-def get_state_from_state_tuple(state_tuple):
+def create_state_from_image(state_image):
     # Transitions and data flows are not added, as also states are not added
     # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
     # validity checks for transitions and data flows would fail
-    state_info = json.loads(state_tuple[STATE_TUPLE_JSON_STR_INDEX],
+    state_info = json.loads(state_image.core_data,
                             cls=JSONObjectDecoder, substitute_modules=substitute_modules)
     if not isinstance(state_info, tuple):
         state = state_info
@@ -123,14 +117,11 @@ def get_state_from_state_tuple(state_tuple):
         transitions = state_info[1]
         data_flows = state_info[2]
 
-    state._file_system_path = state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX]
-    # print("got state tuple with sd", state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX], state_tuple[STATE_TUPLE_FILE_SYSTEM_PATH_INDEX])
-    state.semantic_data = state_tuple[STATE_TUPLE_SEMANTIC_DATA_INDEX]
+    state._file_system_path = state_image.file_system_path
+    state.semantic_data = state_image.semantic_data
 
     if isinstance(state, BarrierConcurrencyState):
-        # logger.debug("\n\ninsert decider_state\n\n")
-        child_state = get_state_from_state_tuple(state_tuple[STATE_TUPLE_CHILD_STATES_INDEX][UNIQUE_DECIDER_STATE_ID])
-        # do_storage_test(child_state)
+        child_state = create_state_from_image(state_image.children[UNIQUE_DECIDER_STATE_ID])
         for t in list(state.transitions.values()):
             if UNIQUE_DECIDER_STATE_ID in [t.from_state, t.to_state]:
                 state.remove_transition(t.transition_id)
@@ -143,12 +134,12 @@ def get_state_from_state_tuple(state_tuple):
 
     if isinstance(state, ExecutionState):
         try:
-            state.script_text = state_tuple[STATE_TUPLE_SCRIPT_TEXT_INDEX]
+            state.script_text = state_image.script_text
         except:
             pass  # Tolerate script compilation errors
     # print("------------- ", state)
-    for child_state_id, child_state_tuple in state_tuple[STATE_TUPLE_CHILD_STATES_INDEX].items():
-        child_state = get_state_from_state_tuple(child_state_tuple)
+    for child_state_id, child_state_tuple in state_image.children.items():
+        child_state = create_state_from_image(child_state_tuple)
         # do_storage_test(child_state)
 
         # print("++++ new cild", child_state  # child_state_tuple, child_state)
@@ -358,6 +349,13 @@ def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=Non
 class CoreObjectIdentifier(object):
     # TODO generalize and include into utils
 
+    _sm_id = None
+    _path = None
+    # type can be object types (of type Transition e.g.) or class
+    _type = None
+    _id = None
+    _list_name = None
+
     type_related_list_name_dict = {InputDataPort.__name__: 'input_data_ports',
                                    OutputDataPort.__name__: 'output_data_ports',
                                    ScopedVariable.__name__: 'scoped_variables',
@@ -369,14 +367,8 @@ class CoreObjectIdentifier(object):
 
     def __init__(self, core_obj_or_cls):
         if not(type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list):
-            logger.warning("\n{0}\n{1}\n{2}".format(core_obj_or_cls, type(core_obj_or_cls),core_object_list))
+            logger.warning("\n{0}\n{1}\n{2}".format(core_obj_or_cls, type(core_obj_or_cls), core_object_list))
         assert type(core_obj_or_cls) in core_object_list or core_obj_or_cls in core_object_list
-        self._sm_id = None
-        self._path = None
-        # type can be, object types (of type Transition e.g.) or class
-        self._type = None
-        self._id = None
-        self._list_name = None
 
         if type(core_obj_or_cls) in core_object_list:
             self._type = type(core_obj_or_cls).__name__
@@ -426,18 +418,16 @@ class CoreObjectIdentifier(object):
 
 
 class AbstractAction(object):
-    __version_id = None
+    action_type = None
+    after_overview = None
+    after_state_image = None
 
     def __init__(self, parent_path, state_machine_model, overview=None):
-        self.action_type = None
-        self.state_machine_model = state_machine_model
         self.parent_path = parent_path
+        self.state_machine_model = state_machine_model
 
         self.before_overview = NotificationOverview() if overview is None else overview
-        self.before_storage = self.get_storage()  # tuple of state and states-list of storage tuple
-
-        self.after_overview = None
-        self.after_storage = None  # tuple of state and states-list of storage tuple
+        self.before_state_image = self.get_state_image()  # tuple of state and states-list of storage tuple
 
     def prepare_destruction(self):
         self.before_overview.prepare_destruction()
@@ -445,30 +435,19 @@ class AbstractAction(object):
             self.after_overview.prepare_destruction()
         self.state_machine_model = None
 
-    @property
-    def version_id(self):
-        return self.__version_id
-
-    @version_id.setter
-    def version_id(self, value):
-        if self.__version_id is None:
-            self.__version_id = value
-        else:
-            logger.warning("The version_id of an action is not allowed to be modify after first assignment")
-
     def description(self):
         return "{0} {1} {2}".format(self.action_type, self.parent_path, self.__class__.__name__)
 
     def as_dict(self):
         return {"parent_path": self.parent_path,
                 "before_overview": self.before_overview, "after_overview": self.after_overview,
-                "before_storage": self.before_storage, "after_storage": self.after_storage}
+                "before_state_image": self.before_state_image, "after_state_image": self.after_state_image}
 
     def set_after(self, overview):
         self.after_overview = overview
-        self.after_storage = self.get_storage()
+        self.after_state_image = self.get_state_image()
 
-    def get_storage(self):
+    def get_state_image(self):
         pass
 
     def undo(self):
@@ -484,7 +463,7 @@ class ActionDummy(AbstractAction):
         self.action_type = 'do_nothing'
 
 
-class MetaAction(AbstractAction):
+class MetaDataAction(AbstractAction):
 
     def __init__(self, parent_path, state_machine_model, overview):
 
@@ -503,9 +482,11 @@ class MetaAction(AbstractAction):
         # print(meta_str)
         self.meta = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
 
-    def get_storage(self):
-        state_model = self.state_machine_model.get_state_model_by_path(self.parent_path)
-        return get_state_element_meta(state_model)
+    def get_state_image(self):
+        parent_state_model = self.state_machine_model.get_state_model_by_path(self.parent_path)
+        meta_data = get_state_element_meta(parent_state_model)
+        state_image = StateImage(meta_data=meta_data)
+        return state_image
 
     def get_state_model_changed(self):
         return self.state_machine_model.get_state_model_by_path(self.parent_path)
@@ -516,12 +497,12 @@ class MetaAction(AbstractAction):
         state_m = self.get_state_model_changed()
         # logger.info("META-Action undo {}".format(state_m.state.get_path()))
         if self.before_overview['signal'][-1]['affects_children']:
-            insert_state_meta_data(meta_dict=self.before_storage, state_model=state_m)
+            insert_state_meta_data(meta_dict=self.before_state_image.meta_data, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", True))
             # if state_m.state.is_root_state:
             #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
         else:
-            insert_state_meta_data(meta_dict=self.before_storage, state_model=state_m)
+            insert_state_meta_data(meta_dict=self.before_state_image.meta_data, state_model=state_m)
             # if state_m.state.is_root_state:
             #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
             state_m.meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
@@ -532,12 +513,12 @@ class MetaAction(AbstractAction):
         state_m = self.get_state_model_changed()
         # logger.info("META-Action undo {}".format(state_m.state.get_path()))
         if self.before_overview['signal'][-1]['affects_children']:
-            insert_state_meta_data(meta_dict=self.after_storage, state_model=state_m)
+            insert_state_meta_data(meta_dict=self.after_state_image.meta_data, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))
             # if state_m.state.is_root_state:
             #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
         else:
-            insert_state_meta_data(meta_dict=self.after_storage, state_model=state_m)
+            insert_state_meta_data(meta_dict=self.after_state_image.meta_data, state_model=state_m)
             # if state_m.state.is_root_state:
             #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
@@ -553,11 +534,10 @@ class Action(ModelMT, AbstractAction):
         self.action_type = overview['method_name'][-1]
         self.before_info = overview['info'][-1]
 
-    def get_storage(self):
-        state_tuple = get_state_tuple(self.state_machine_model.state_machine.get_state_by_path(self.parent_path))
-        state_model = self.state_machine_model.get_state_model_by_path(self.parent_path)
-        state_tuple[STATE_TUPLE_META_DICT_INDEX].update(get_state_element_meta(state_model))
-        return state_tuple
+    def get_state_image(self):
+        parent_state_m = self.state_machine_model.get_state_model_by_path(self.parent_path)
+        state_image = create_state_image(parent_state_m)
+        return state_image
 
     def get_state_changed(self):
         if not self.state_machine.get_state_by_path(self.parent_path) or \
@@ -578,14 +558,14 @@ class Action(ModelMT, AbstractAction):
         status.
         :return:
         """
-        self.set_state_to_version(self.get_state_changed(), self.after_storage)
+        self.update_state_from_image(self.get_state_changed(), self.after_state_image)
 
     def undo(self):
         """ General Undo, that takes all elements in the parent path state stored of the after action state machine
         status.
         :return:
         """
-        self.set_state_to_version(self.get_state_changed(), self.before_storage)
+        self.update_state_from_image(self.get_state_changed(), self.before_state_image)
 
     def emit_undo_redo_signal(self, action_parent_m, affected_models, after):
         msg = ActionSignalMsg(action='undo/redo', origin='model', action_parent_m=action_parent_m,
@@ -598,49 +578,21 @@ class Action(ModelMT, AbstractAction):
             logger.warning("The model of the state changes is performed on should not be another one, afterwards. "
                            "\n{0}\n{1}".format(previous_model, actual_model))
 
-    def set_state_to_version(self, state, storage_version):
-        # print(state.get_path(), '\n', storage_version[STATE_TUPLE_PATH_INDEX])
-        assert state.get_path() == storage_version[STATE_TUPLE_PATH_INDEX]
+    def update_state_from_image(self, state, state_image):
+        assert state.get_path() == state_image.state_path
         # print(self.parent_path, self.parent_path.split('/'), len(self.parent_path.split('/')))
         path_of_state = state.get_path()
-        storage_version_of_state = get_state_from_state_tuple(storage_version)
-
-        assert storage_version_of_state
+        state_from_image = create_state_from_image(state_image)
 
         previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         # TODO affected models should be more to allow recursive notification scheme and less updated elements
         self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
-        # if self.action_type == 'change_state_type':
-        #     self.storage_version_for_state_type_change_signal_hook = storage_version
-        #     assert isinstance(self.state_machine_model.root_state.state, State)
-        #     state_parent = self.before_overview["instance"][-1]
-        #     old_state_changed_ref = self.before_overview["args"][-1][1]
-        #     state = self.state_machine.get_state_by_path(old_state_changed_ref.get_path())
-        #     old_state_changed_in_storage = storage_version_of_state.states[state.state_id]
-        #     if isinstance(old_state_changed_in_storage, (HierarchyState,
-        #                                                  BarrierConcurrencyState,
-        #                                                  PreemptiveConcurrencyState)):
-        #         new_state_class = old_state_changed_in_storage.__class__
-        #     else:
-        #         logger.info("SM set_root_state_to_version: with NO type change")
-        #         new_state_class = ExecutionState
-        #
-        #     old_root_state_m = self.state_machine_model.root_state
-        #     self.observe_model(self.state_machine_model.root_state)
-        #
-        #     state_parent.change_state_type(state, new_state_class)
-        #     self.storage_version_for_state_type_change_signal_hook = None
-        #     actual_state_model = self.state_machine_model.get_state_model_by_path(old_state_changed_ref.get_path())
-        #     self.relieve_model(old_root_state_m)
-        # else:
+        self.update_state(state, state_from_image)
 
-        self.update_state(state, storage_version_of_state)
-
-        # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.compare_models(previous_model, actual_state_model)
-        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=actual_state_model)
+        insert_state_meta_data(meta_dict=state_image.meta_data, state_model=actual_state_model)
 
         self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
@@ -650,36 +602,29 @@ class Action(ModelMT, AbstractAction):
         if msg.action == 'change_state_type' and msg.after:
             new_state_m = msg.affected_models[-1]
             logger.info("action state-type-change action-signal hook for root {}".format(new_state_m))
-            storage_version = self.storage_version_for_state_type_change_signal_hook
-            root_state_version_from_storage = get_state_from_state_tuple(storage_version)
+            state_image = self.state_image_for_state_type_change_signal_hook
+            root_state_image = create_state_from_image(state_image)
 
-            self.update_state(new_state_m.state, root_state_version_from_storage)
+            self.update_state(new_state_m.state, root_state_image)
 
-            insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
+            insert_state_meta_data(meta_dict=state_image.meta_dict, state_model=new_state_m)
 
     def update_state(self, state, stored_state):
-        # logger.info("PPP\n{0}\n{1}".format(state, stored_state))
         assert type(stored_state) is type(state)
 
         is_root = state.is_root_state
 
         if isinstance(state, ContainerState):
 
-            # print(state.data_flows.keys())
             for data_flow_id in list(state.data_flows.keys()):
                 state.remove_data_flow(data_flow_id)
 
             if not isinstance(state, BarrierConcurrencyState):
                 for t_id in list(state.transitions.keys()):
-                    # if not UNIQUE_DECIDER_STATE_ID in [state.transitions[t_id].from_state, state.transitions[t_id].to_state]: # funst nicht
                     state.remove_transition(t_id)
 
             for old_state_id in list(state.states.keys()):
-                # try:
                 state.remove_state(old_state_id, force=True)
-                # except Exception as e:
-                #     print("ERROR: ", old_state_id, UNIQUE_DECIDER_STATE_ID, state)
-                #     raise
 
         if is_root:
             for outcome_id in list(state.outcomes.keys()):
@@ -689,19 +634,15 @@ class Action(ModelMT, AbstractAction):
             for dp_id in list(state.input_data_ports.keys()):
                 state.remove_input_data_port(dp_id)
 
-            # print(" \n\n\n ########### start removing output data_ports ", state.output_data_ports.keys(), "\n\n\n")
             for dp_id in list(state.output_data_ports.keys()):
                 state.remove_output_data_port(dp_id)
 
         if isinstance(state, ContainerState):
             for dp_id in list(state.scoped_variables.keys()):
-                # print("scoped_variable ", dp_id)
                 state.remove_scoped_variable(dp_id)
 
         state.name = stored_state.name
         state.semantic_data = stored_state.semantic_data
-        # state.script = stored_state.script
-        # logger.debug("script0: " + stored_state.script.script)
         if isinstance(state, ExecutionState):
             try:
                 state.script_text = stored_state.script_text
@@ -710,30 +651,20 @@ class Action(ModelMT, AbstractAction):
 
         if is_root:
             for dp_id, dp in stored_state.input_data_ports.items():
-                # print("generate input data port", dp_id)
                 state.add_input_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
-                # print("got input data ports", dp_id, state.input_data_ports.keys())
                 assert dp_id in state.input_data_ports
 
-            # print(" \n\n\n ########### start adding output data_ports ", state.output_data_ports.keys(), "\n\n\n")
             for dp_id, dp in stored_state.output_data_ports.items():
                 scoped_str = str([])
                 if isinstance(state, ContainerState):
                     scoped_str = str(list(state.scoped_variables.keys()))
-                # print("\n\n\n ------- ############ generate output data port", dp_id, state.input_data_ports.keys(), \)
-                #     state.output_data_ports.keys(), scoped_str, "\n\n\n"
                 state.add_output_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
-                # print("\n\n\n ------- ############ got output data ports", dp_id, state.output_data_ports.keys(), "\n\n\n")
                 assert dp_id in state.output_data_ports
 
             for oc_id, oc in stored_state.outcomes.items():
-                # print(oc_id, state.outcomes, type(oc_id), oc_id < 0, oc_id == 0, oc_id == -1, oc_id == -2)
                 if not oc_id < 0:
-                    # print("add_outcome", oc_id)
                     state.add_outcome(oc.name, oc_id)
-            # print("\n\n\n++++++++++++++++ ", stored_state.outcomes, state.outcomes, "\n\n\n++++++++++++++++ ")
             for oc_id, oc in stored_state.outcomes.items():
-                # print(oc_id, state.outcomes)
                 assert oc_id in state.outcomes
 
         if isinstance(state, ContainerState):
@@ -745,11 +676,8 @@ class Action(ModelMT, AbstractAction):
                 state.add_state(stored_state.states[UNIQUE_DECIDER_STATE_ID], storage_load=True)
 
             for new_state in stored_state.states.values():
-                # print("++++ new child", new_state)
                 if not new_state.state_id == UNIQUE_DECIDER_STATE_ID:
                     state.add_state(new_state)
-                    # state.states[new_state.state_id].script = new_state.script
-                    # logger.debug("script1: " + new_state.script_text)
                     if isinstance(new_state, ExecutionState):
                         try:
                             state.states[new_state.state_id].script_text = new_state.script_text
@@ -763,11 +691,8 @@ class Action(ModelMT, AbstractAction):
             for t_id, t in stored_state.transitions.items():
                 state.add_transition(t.from_state, t.from_outcome, t.to_state, t.to_outcome, t.transition_id)
 
-            # logger.debug("CHECK self TRANSITIONS of unique state%s" % state.transitions.keys())
             for t in list(state.transitions.values()):
-                # logger.debug(str([t.from_state, t.from_outcome, t.to_state, t.to_outcome]))
                 if UNIQUE_DECIDER_STATE_ID == t.from_state and UNIQUE_DECIDER_STATE_ID == t.to_state:
-                    # logger.error("found DECIDER_STATE_SELF_TRANSITION")
                     state.remove_transition(t.transition_id)
 
             for df_id, df in stored_state.data_flows.items():
@@ -829,24 +754,20 @@ class StateMachineAction(Action, ModelMT):
         Action.__init__(self, parent_path, state_machine_model, overview)
 
         self.with_verbose = False
-        self.storage_version_for_state_type_change_signal_hook = None
+        self.state_image_for_state_type_change_signal_hook = None
 
-    def set_root_state_to_version(self, state, storage_version):
-        # logger.debug("\n\n\n\n\n\n\nINSERT STATE: %s  || %s || StateMachineAction\n\n\n\n\n\n\n" % (state.get_path(), state))
-        # self.state_machine.root_state = get_state_from_state_tuple(storage_version)
-        root_state_version_from_storage = get_state_from_state_tuple(storage_version)
-        # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s || %s || %s || StateMachineAction\n\n\n\n\n\n\n" % (state.get_path(), state, root_state_version_fom_storage))
-        # actual_state_model = self.state_machine_model.get_state_model_by_path(state.get_path())
+    def update_root_state_from_image(self, state, state_image):
+        root_state_image = create_state_from_image(state_image)
 
         if self.with_verbose:
             logger.verbose("#H# TRY STATE_HELPER storage type {0} current type {1}"
-                           "".format(type(root_state_version_from_storage), state.__class__))
-            if root_state_version_from_storage.__class__ == state.__class__:
-                logger.verbose("SM set_root_state_to_version: with NO type change")
+                           "".format(type(root_state_image), state.__class__))
+            if root_state_image.__class__ == state.__class__:
+                logger.verbose("SM update_root_state_from_image: with NO type change")
 
-        new_state_class = root_state_version_from_storage.__class__
+        new_state_class = root_state_image.__class__
 
-        logger.debug("DO root version change " + self.action_type)
+        logger.verbose("DO root version change " + self.action_type)
 
         previous_model = self.state_machine_model.root_state
         affected_models = [previous_model, ]
@@ -855,50 +776,39 @@ class StateMachineAction(Action, ModelMT):
 
         if self.action_type == 'change_root_state_type':
             # observe root state model (type change signal)
-            self.storage_version_for_state_type_change_signal_hook = storage_version
+            self.state_image_for_state_type_change_signal_hook = state_image
             assert isinstance(self.state_machine_model.root_state.state, State)
             old_root_state_m = self.state_machine_model.root_state
             self.observe_model(self.state_machine_model.root_state)
 
-            # self.state_machine.change_root_state_type(new_state_class)
             import rafcon.gui.helpers.state as gui_helper_state
             gui_helper_state.change_state_type(old_root_state_m, new_state_class)
-            self.storage_version_for_state_type_change_signal_hook = None
+            self.state_image_for_state_type_change_signal_hook = None
             self.relieve_model(old_root_state_m)
         else:
             raise TypeError("Wrong action type")
-        # else:
-        #     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-        #     new_state = gui_helper_state_machine.create_new_state_from_state_with_type(state, new_state_class)
-        #
-        #     self.update_state(new_state, root_state_version_from_storage)
-        #
-        #     self.state_machine.root_state = new_state  # root_state_version_fom_storage
-        #     insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
-        #                            state_model=self.state_machine_model.root_state)
 
         affected_models.append(self.state_machine_model.root_state)
         self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=affected_models, after=True)
 
     @ModelMT.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
-        # logger.verbose("#H# STATE_MACHINE_REDO_UNDO: " + str(NotificationOverview(info, False, self.__class__.__name__)))
         msg = info['arg']
         if msg.action == 'change_root_state_type' and msg.after:
             new_state_m = msg.affected_models[-1]
             logger.info("action state-type-change action-signal hook for root {}".format(new_state_m))
-            storage_version = self.storage_version_for_state_type_change_signal_hook
-            root_state_version_from_storage = get_state_from_state_tuple(storage_version)
+            state_image = self.state_image_for_state_type_change_signal_hook
+            root_state_image = create_state_from_image(state_image)
 
-            self.update_state(new_state_m.state, root_state_version_from_storage)
+            self.update_state(new_state_m.state, root_state_image)
 
-            insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX], state_model=new_state_m)
+            insert_state_meta_data(meta_dict=state_image.meta_data, state_model=new_state_m)
 
     def redo(self):
         # logger.verbose("#H# STATE_MACHINE_REDO STARTED")
         state = self.state_machine.root_state
 
-        self.set_root_state_to_version(state, self.after_storage)
+        self.update_root_state_from_image(state, self.after_state_image)
         # logger.verbose("#H# STATE_MACHINE_REDO FINISHED")
 
     def undo(self):
@@ -908,7 +818,7 @@ class StateMachineAction(Action, ModelMT):
         # logger.verbose("#H# STATE_MACHINE_UNDO STARTED")
         state = self.state_machine.root_state
 
-        self.set_root_state_to_version(state, self.before_storage)
+        self.update_root_state_from_image(state, self.before_state_image)
         # logger.verbose("#H# STATE_MACHINE_UNDO FINISHED")
 
 
@@ -946,32 +856,32 @@ class AddObjectAction(Action):
 
     def redo(self):
         """
-        :return: Redo of adding object action is simply done by adding the object again from the after_storage of the
+        :return: Redo of adding object action is simply done by adding the object again from the after_state_image of the
                  parent state.
         """
         # logger.info("RUN REDO AddObject " + self.before_info['method_name'])
 
         state = self.get_state_changed()
-        storage_version = self.after_storage
+        state_image = self.after_state_image
 
-        assert state.get_path() == storage_version[STATE_TUPLE_PATH_INDEX]
+        assert state.get_path() == state_image.state_path
         path_of_state = state.get_path()
-        storage_version_of_state = get_state_from_state_tuple(storage_version)
+        state_image_of_state = create_state_from_image(state_image)
 
         previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
-            [state, storage_version_of_state] = self.correct_reference_state(state,
-                                                                             storage_version_of_state,
-                                                                             storage_path=storage_version[STATE_TUPLE_PATH_INDEX])
+            [state, state_image_of_state] = self.correct_reference_state(state,
+                                                                             state_image_of_state,
+                                                                             storage_path=state_image.state_path)
         list_name = self.action_type.replace('add_', '') + 's'
-        core_obj = getattr(storage_version_of_state, list_name)[self.added_object_identifier._id]
+        core_obj = getattr(state_image_of_state, list_name)[self.added_object_identifier._id]
         self.add_core_object_to_state(state, core_obj)
 
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.compare_models(previous_model, actual_state_model)
-        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
+        insert_state_meta_data(meta_dict=state_image.meta_data,
                                state_model=actual_state_model, level=None if self.action_type == 'add_state' else 1)
         self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
@@ -979,22 +889,22 @@ class AddObjectAction(Action):
 
         # find object
         state = self.get_state_changed()
-        storage_version = self.after_storage
+        state_image = self.after_state_image
 
-        assert state.get_path() == storage_version[STATE_TUPLE_PATH_INDEX]
+        assert state.get_path() == state_image.state_path
         path_of_state = state.get_path()
-        storage_version_of_state = get_state_from_state_tuple(storage_version)
+        state_image_of_state = create_state_from_image(state_image)
 
         previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.added_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
-            [state, storage_version_of_state] = self.correct_reference_state(state,
-                                                                             storage_version_of_state,
-                                                                             storage_path=storage_version[STATE_TUPLE_PATH_INDEX])
+            [state, state_image_of_state] = self.correct_reference_state(state,
+                                                                             state_image_of_state,
+                                                                             storage_path=state_image.state_path)
 
         list_name = self.action_type.replace('add_', '') + 's'
-        core_obj = getattr(storage_version_of_state, list_name)[self.added_object_identifier._id]
+        core_obj = getattr(state_image_of_state, list_name)[self.added_object_identifier._id]
         # logger.info(str(type(core_obj)) + str(core_obj))
         # undo
         self.remove_core_object_from_state(state, core_obj)
@@ -1002,21 +912,21 @@ class AddObjectAction(Action):
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.compare_models(previous_model, actual_state_model)
-        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
+        insert_state_meta_data(meta_dict=state_image.meta_data,
                                state_model=actual_state_model, level=1)
         self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
-    def correct_reference_state(self, state, storage_version_of_state, storage_path):
+    def correct_reference_state(self, state, state_image_of_state, storage_path):
 
         partial_path = self.added_object_identifier._path.split('/')
         for path_element in storage_path.split('/'):
             partial_path.pop(0)
         for path_element in partial_path:
-            storage_version_of_state = storage_version_of_state.states[path_element]
+            state_image_of_state = state_image_of_state.states[path_element]
             state = state.states[path_element]
-            # logger.info("state is now: {0} {1}".format(state.state_id, storage_version_of_state.state_id))
+            # logger.info("state is now: {0} {1}".format(state.state_id, state_image_of_state.state_id))
 
-        return state, storage_version_of_state
+        return state, state_image_of_state
 
 
 class RemoveObjectAction(Action):
@@ -1086,21 +996,21 @@ class RemoveObjectAction(Action):
         # logger.info("RUN UNDO RemoveObject " + self.before_info['method_name'])
 
         state = self.get_state_changed()
-        storage_version = self.before_storage
+        state_image = self.before_state_image
 
-        assert state.get_path() == storage_version[STATE_TUPLE_PATH_INDEX]
+        assert state.get_path() == state_image.state_path
         path_of_state = state.get_path()
-        storage_version_of_state = get_state_from_state_tuple(storage_version)
+        state_image_of_state = create_state_from_image(state_image)
 
         previous_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=False)
 
         if self.removed_object_identifier._type in ['InputDataPort', 'OutputDataPort', 'Outcome']:
-            [state, storage_version_of_state] = self.correct_reference_state(state,
-                                                                             storage_version_of_state,
-                                                                             storage_path=storage_version[STATE_TUPLE_PATH_INDEX])
+            [state, state_image_of_state] = self.correct_reference_state(state,
+                                                                             state_image_of_state,
+                                                                             storage_path=state_image.state_path)
         list_name = self.action_type.replace('remove_', '') + 's'
-        core_obj = getattr(storage_version_of_state, list_name)[self.removed_object_identifier._id]
+        core_obj = getattr(state_image_of_state, list_name)[self.removed_object_identifier._id]
         # logger.info(str(type(core_obj)) + str(core_obj))
         if self.action_type not in ['remove_transition', 'remove_data_flow']:
             self.add_core_object_to_state(state, core_obj)
@@ -1110,7 +1020,7 @@ class RemoveObjectAction(Action):
         # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.compare_models(previous_model, actual_state_model)
-        insert_state_meta_data(meta_dict=storage_version[STATE_TUPLE_META_DICT_INDEX],
+        insert_state_meta_data(meta_dict=state_image.meta_data,
                                state_model=actual_state_model, level=None if self.action_type == 'remove_state' else 1)
 
         self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
@@ -1139,23 +1049,23 @@ class RemoveObjectAction(Action):
         assert self.get_state_changed() is parent_with_all_changes
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_parent_with_all_changes)
         self.compare_models(previous_model, actual_state_model)
-        insert_state_meta_data(meta_dict=self.after_storage[STATE_TUPLE_META_DICT_INDEX],
+        insert_state_meta_data(meta_dict=self.after_state_image.meta_data,
                                state_model=actual_state_model, level=1)
 
         # signal that undo/redo action was performed -> run graphical editor update
         self.emit_undo_redo_signal(action_parent_m=previous_model, affected_models=[previous_model, ], after=True)
 
-    def correct_reference_state(self, state, storage_version_of_state, storage_path):
+    def correct_reference_state(self, state, state_image_of_state, storage_path):
 
         partial_path = self.removed_object_identifier._path.split('/')
         for path_element in storage_path.split('/'):
             logger.debug("pop: " + partial_path.pop(0))
         for path_element in partial_path:
-            storage_version_of_state = storage_version_of_state.states[path_element]
+            state_image_of_state = state_image_of_state.states[path_element]
             state = state.states[path_element]
-            logger.debug("state is now: {0} {1}".format(state.state_id, storage_version_of_state.state_id))
+            logger.debug("state is now: {0} {1}".format(state.state_id, state_image_of_state.state_id))
 
-        return state, storage_version_of_state
+        return state, state_image_of_state
 
     def store_related_elements(self, linkage_dict):
 
@@ -1225,6 +1135,7 @@ class StateElementAction(AbstractAction):
     possible_method_names = []
     possible_args = []
     _object_class = None
+    after_arguments = None
 
     def __init__(self, parent_path, state_machine_model, overview):
         AbstractAction.__init__(self, parent_path, state_machine_model, overview)
@@ -1243,7 +1154,6 @@ class StateElementAction(AbstractAction):
         assert self.parent_path == self.object_identifier._path
 
         self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
-        self.after_arguments = None
 
         self.state_machine = state_machine_model.state_machine
 
@@ -1256,6 +1166,12 @@ class StateElementAction(AbstractAction):
     @staticmethod
     def get_set_of_arguments(elem):
         raise NotImplementedError()
+
+    def get_state_image(self):
+        # TODO: This method should not be called. It is currently only called by AbstractAction.__init__ which is
+        # called by StateElementAction.__init__
+        # => refactor StateElementAction to not create state image
+        return None
 
     def set_after(self, overview):
         self.after_overview = overview
@@ -1281,15 +1197,15 @@ class DataFlowAction(StateElementAction):
     def undo(self):
         # if the data_flow_id would be changed and this considered in the core parent element self.after_argument here would be used
         df = self.state_machine.get_state_by_path(self.parent_path).data_flows[self.before_arguments['data_flow_id']]
-        self.set_data_flow_version(df, self.before_arguments)
+        self.update_data_flow_from_image(df, self.before_arguments)
 
     def redo(self):
         df = self.state_machine.get_state_by_path(self.parent_path).data_flows[self.before_arguments['data_flow_id']]
-        self.set_data_flow_version(df, self.after_arguments)
+        self.update_data_flow_from_image(df, self.after_arguments)
 
-    def set_data_flow_version(self, df, arguments):
+    def update_data_flow_from_image(self, df, arguments):
         if self.action_type in self.possible_args:
-            exec("df.{0} = arguments['{0}']".format(self.action_type))
+            setattr(df, self.action_type, arguments[self.action_type])
         elif self.action_type == 'modify_origin':
             df.modify_origin(from_state=arguments['from_state'], from_key=arguments['from_key'])
         elif self.action_type == 'modify_target':
@@ -1316,15 +1232,15 @@ class TransitionAction(StateElementAction):
     def undo(self):
         # if the transition_id would be changed and this considered in the core parent element self.after_argument here would be used
         t = self.state_machine.get_state_by_path(self.parent_path).transitions[self.before_arguments['transition_id']]
-        self.set_transition_version(t, self.before_arguments)
+        self.update_transition_from_image(t, self.before_arguments)
 
     def redo(self):
         t = self.state_machine.get_state_by_path(self.parent_path).transitions[self.before_arguments['transition_id']]
-        self.set_transition_version(t, self.after_arguments)
+        self.update_transition_from_image(t, self.after_arguments)
 
-    def set_transition_version(self, t, arguments):
+    def update_transition_from_image(self, t, arguments):
         if self.action_type in self.possible_args:
-            exec("t.{0} = arguments['{0}']".format(self.action_type))
+            setattr(t, self.action_type, arguments[self.action_type])
         elif self.action_type == 'modify_origin':
             t.modify_origin(from_state=arguments['from_state'], from_outcome=arguments['from_outcome'])
         elif self.action_type == 'modify_target':
@@ -1349,15 +1265,15 @@ class DataPortAction(StateElementAction):
 
     def undo(self):
         dp = self.state_machine.get_state_by_path(self.parent_path).get_data_port_by_id(self.before_arguments['data_port_id'])
-        self.set_data_port_version(dp, self.before_arguments)
+        self.update_data_port_from_image(dp, self.before_arguments)
 
     def redo(self):
         dp = self.state_machine.get_state_by_path(self.parent_path).get_data_port_by_id(self.before_arguments['data_port_id'])
-        self.set_data_port_version(dp, self.after_arguments)
+        self.update_data_port_from_image(dp, self.after_arguments)
 
-    def set_data_port_version(self, dp, arguments):
+    def update_data_port_from_image(self, dp, arguments):
         if self.action_type in self.possible_args:
-            exec("dp.{0} = arguments['{0}']".format(self.action_type))
+            setattr(dp, self.action_type, arguments[self.action_type])
         elif self.action_type == 'data_type':
             dp.data_type = arguments['data_type']
             dp.default_value = arguments['default_value']
@@ -1389,15 +1305,15 @@ class OutcomeAction(StateElementAction):
     def undo(self):
         # if the outcome_id would be changed and this considered in the core parent element self.after_argument here would be used
         oc = self.state_machine.get_state_by_path(self.parent_path).outcomes[self.before_arguments['outcome_id']]
-        self.set_outcome_version(oc, self.before_arguments)
+        self.update_outcome_from_image(oc, self.before_arguments)
 
     def redo(self):
         oc = self.state_machine.get_state_by_path(self.parent_path).outcomes[self.before_arguments['outcome_id']]
-        self.set_outcome_version(oc, self.after_arguments)
+        self.update_outcome_from_image(oc, self.after_arguments)
 
-    def set_outcome_version(self, oc, arguments):
+    def update_outcome_from_image(self, oc, arguments):
         if self.action_type in self.possible_args:
-            exec("oc.{0} = arguments['{0}']".format(self.action_type))
+            setattr(oc, self.action_type, arguments[self.action_type])
         else:
             raise TypeError("Only types of the following list are allowed. {0}".format(self.possible_method_names))
 
@@ -1511,7 +1427,7 @@ class StateAction(Action):
             logger.warning('undoing {0} for a LibraryState is not implemented'.format(self.action_type))
         elif self.action_type in self.possible_args:
             s = self.state_machine.get_state_by_path(self.parent_path)
-            self.set_attr_to_version(s, self.before_arguments)
+            self.update_property_from_image(s, self.before_arguments)
         else:
             assert False
 
@@ -1526,14 +1442,14 @@ class StateAction(Action):
             logger.warning('redoing {0} for a LibraryState is not implemented'.format(self.action_type))
         elif self.action_type in self.possible_args:
             s = self.state_machine.get_state_by_path(self.parent_path)
-            self.set_attr_to_version(s, self.after_arguments)
+            self.update_property_from_image(s, self.after_arguments)
         else:
             assert False
 
-    def set_attr_to_version(self, s, arguments):
+    def update_property_from_image(self, s, arguments):
         if self.action_type in self.possible_args:
-            exec("s.{0} = copy.deepcopy(arguments['{0}'])".format(self.substitute_dict.get(self.action_type,
-                                                                                           self.action_type)))
+            property = self.substitute_dict.get(self.action_type, self.action_type)
+            setattr(s, property, copy.deepcopy(arguments[property]))
         else:
             assert False
 

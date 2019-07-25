@@ -99,7 +99,6 @@ def prepare_state_machine_model(state_machine):
 
     sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
     sm_m.history.fake = False
-    print("with_verbose is: ", sm_m.history.with_verbose)
     sm_m.history.with_verbose = False
     return sm_m
 
@@ -130,14 +129,14 @@ def perform_history_action(operation, *args, **kwargs):
     parent = state.parent
     state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     sm_history = state_machine_m.history
-    history_length = len(sm_history.modifications.single_trail_history())
+    history_length = len(sm_history.modifications)
     origin_hash = parent.mutable_hash().hexdigest()
     additional_operations = 0
     if "additional_operations" in kwargs:
         additional_operations = kwargs["additional_operations"]
         del kwargs["additional_operations"]
     operation_result = operation(*args, **kwargs)
-    assert len(sm_history.modifications.single_trail_history()) == history_length + 1 + additional_operations
+    assert len(sm_history.modifications) == history_length + 1 + additional_operations
     after_operation_hash = parent.mutable_hash().hexdigest()
     for _ in range(1 + additional_operations):
         sm_history.undo()
@@ -252,11 +251,11 @@ def test_add_remove_history(caplog):
 
         state4 = get_state_by_name('state4', state_path_dict)
         outcome_state4 = state4.add_outcome('UsedHere')
-        assert len(sm_history.modifications.single_trail_history()) == 6
+        assert len(sm_history.modifications) == 6
 
         state5 = get_state_by_name('state5', state_path_dict)
         outcome_state5 = state5.add_outcome('UsedHere')
-        assert len(sm_history.modifications.single_trail_history()) == 7
+        assert len(sm_history.modifications) == 7
 
         ################
         # add transition from_state_id, from_outcome, to_state_id=None, to_outcome=None, transition_id
@@ -298,19 +297,19 @@ def test_add_remove_history(caplog):
         # prepare again state4
         state4.add_output_data_port("output", "int")
         state4.add_input_data_port("input_new", "str", "zero")
-        assert len(sm_history.modifications.single_trail_history()) == 17
+        assert len(sm_history.modifications) == 17
         output_state4_id = state4.add_output_data_port("output_new", "int")
-        assert len(sm_history.modifications.single_trail_history()) == 18
+        assert len(sm_history.modifications) == 18
 
         state5 = ExecutionState('State5', 'STATE5')
         state = get_state_by_name(state_name, state_path_dict)
         state.add_state(state5)
         assert state_path_dict['state5'] == state5.get_path()
-        assert len(sm_history.modifications.single_trail_history()) == 19
+        assert len(sm_history.modifications) == 19
         input_par_state5 = state5.add_input_data_port("par", "int", 0)
-        assert len(sm_history.modifications.single_trail_history()) == 20
+        assert len(sm_history.modifications) == 20
         output_res_state5 = state5.add_output_data_port("res", "int")
-        assert len(sm_history.modifications.single_trail_history()) == 21
+        assert len(sm_history.modifications) == 21
 
         #####################
         # add scoped_variable
@@ -384,15 +383,15 @@ def test_state_property_modifications_history(caplog):
     state1.add_outcome("again")
     state1.add_outcome("counted")
 
-    assert len(sm_model.history.modifications.single_trail_history()) == 6
+    assert len(sm_model.history.modifications) == 6
 
     state2.add_outcome("done")
     state2.add_outcome("best")
     state2.add_outcome("full")
-    assert len(sm_model.history.modifications.single_trail_history()) == 9
+    assert len(sm_model.history.modifications) == 9
 
     nested_state.add_outcome("great")
-    assert len(sm_model.history.modifications.single_trail_history()) == 10
+    assert len(sm_model.history.modifications) == 10
 
     #######################################
     ######## Properties of State ##########
@@ -797,7 +796,8 @@ def test_multiple_undo_redo_bug_with_gui(caplog):
         trigger_multiple_undo_redo_bug_tests(with_gui=True)
     finally:
         testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
+        # Do not pass caplog, as we want to ignore all warnings (we cannot predict how many will occur)
+        testing_utils.shutdown_environment()
 
 
 def do_type_change(state_machine_m, state_m, target_state_type, with_gui):
@@ -925,7 +925,7 @@ def trigger_state_type_change_typical_bug_tests():
     h_state1_m = sm_m.get_state_model_by_path(h_state1.get_path())
     call_gui_callback(do_type_change, sm_m, h_state1_m, ExecutionState, True)
 
-    logger.info("UNDO \n{0}".format(sm_m.history.modifications.single_trail_history()[-1].before_overview))
+    logger.info("UNDO")
     call_gui_callback(sm_m.history.undo)
 
     logger.info("UNDO finished")
@@ -954,9 +954,52 @@ def trigger_multiple_undo_redo_bug_tests(with_gui=False):
         for _ in range(number):
             main_window_controller.shortcut_manager.trigger_action(action_name, None, None)
     call_gui_callback(trigger_action_repeated, "add", 10, priority=GLib.PRIORITY_HIGH)
-    assert sm_m.history.modifications.single_trail_history()
+    assert sm_m.history.modifications.get_executed_history_ids()
     call_gui_callback(trigger_action_repeated, "undo", 20, priority=GLib.PRIORITY_HIGH)
     call_gui_callback(trigger_action_repeated, "redo", 20, priority=GLib.PRIORITY_HIGH)
+
+
+def test_reset_to_history_id(caplog):
+    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True})
+    try:
+        state_machine_m, state_dict = create_state_machine_m(True)
+        sm_history = state_machine_m.history
+
+        state1_id = state_dict["State1"].state_id
+        state2_id = state_dict["State2"].state_id
+
+        # Remove two child states of root state
+        call_gui_callback(state_machine_m.root_state.state.remove_state, state1_id)  # history id 1
+        call_gui_callback(state_machine_m.root_state.state.remove_state, state2_id)  # history id 2
+        history_2_hash = state_machine_m.mutable_hash().hexdigest()
+
+        # Undo removal
+        call_gui_callback(state_machine_m.history.undo)
+        call_gui_callback(state_machine_m.history.undo)
+
+        # Create new history branch by adding two new states
+        state4 = ExecutionState("State4")
+        state5 = ExecutionState("State5")
+
+        call_gui_callback(state_machine_m.root_state.state.add_state, state4)  # history id 3
+        call_gui_callback(state_machine_m.root_state.state.add_state, state5)  # history id 4
+
+        assert state_machine_m.history.modifications.current_history_element.history_id == 4
+        history_4_hash = state_machine_m.mutable_hash().hexdigest()
+
+        # Activate old branch
+        call_gui_callback(state_machine_m.history.reset_to_history_id, 2)
+        reset_history_2_hash = state_machine_m.mutable_hash().hexdigest()
+        assert history_2_hash == reset_history_2_hash
+
+        # Activate new branch
+        call_gui_callback(state_machine_m.history.reset_to_history_id, 4)
+        reset_history_4_hash = state_machine_m.mutable_hash().hexdigest()
+        assert history_4_hash == reset_history_4_hash
+
+    finally:
+        testing_utils.close_gui()
+        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':
