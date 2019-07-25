@@ -852,10 +852,10 @@ class ModificationsHistory(Observable):
             raise ValueError("target_history_id does not exist")
         undo_history_ids = []
         redo_history_ids = []
-        active_branch_ids = self.get_executed_history_ids()
+        executed_history_ids = self.get_executed_history_ids()
         target_element = self.get_element_for_history_id(target_history_id)
         pointer_element = target_element
-        while pointer_element.history_id not in active_branch_ids:
+        while pointer_element.history_id not in executed_history_ids:
             redo_history_ids.insert(0, pointer_element.history_id)
             pointer_element = self.get_previous_element(pointer_element)
         # element only becomes branching element, if there will be undo operations
