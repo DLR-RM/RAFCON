@@ -757,10 +757,11 @@ class ModificationsHistoryModel(ModelMT):
 
 
 class HistoryTreeElement(object):
+    __version_id = None
+    __prev_id = None
+    __next_id = None
 
     def __init__(self, prev_id, action=None, next_id=None):
-        self._prev_id = None
-        self._next_id = None
         if prev_id is not None:
             self.prev_id = prev_id
         self.action = action
@@ -769,33 +770,44 @@ class HistoryTreeElement(object):
         self._old_next_ids = []
 
     def __str__(self):
-        return "prev_id: {0} next_id: {1} and other next_ids: {2}".format(self._prev_id, self._next_id, self._old_next_ids)
+        return "prev_id: {0} next_id: {1} and other next_ids: {2}".format(self.__prev_id, self.__next_id, self._old_next_ids)
 
     def prepare_destruction(self):
         self.action.prepare_destruction()
 
     @property
+    def version_id(self):
+        return self.__version_id
+
+    @version_id.setter
+    def version_id(self, value):
+        if self.__version_id is None:
+            self.__version_id = value
+        else:
+            raise ValueError("The version_id of an action is not allowed to be modify after first assignment")
+
+    @property
     def prev_id(self):
-        return self._prev_id
+        return self.__prev_id
 
     @prev_id.setter
     def prev_id(self, prev_id):
         # logger.info("new_prev_id is: {0}".format(prev_id))
         assert isinstance(prev_id, int)
-        self._prev_id = prev_id
+        self.__prev_id = prev_id
 
     @property
     def next_id(self):
-        return self._next_id
+        return self.__next_id
 
     @next_id.setter
     def next_id(self, next_id):
         assert isinstance(next_id, int)
         # move current next_id to to old_next_ids before assigning a new one
         # => creates new branch
-        if self._next_id is not None:
-            self._old_next_ids.append(self._next_id)
-        self._next_id = next_id
+        if self.__next_id is not None:
+            self._old_next_ids.append(self.__next_id)
+        self.__next_id = next_id
         if next_id in self._old_next_ids:
             self._old_next_ids.remove(next_id)
 
@@ -864,17 +876,17 @@ class ModificationsHistory(Observable):
     @Observable.observed
     def insert_action(self, action):
 
-        prev_id = None if not self.current_history_element else self.current_history_element.action.version_id
+        prev_id = None if not self.current_history_element else self.current_history_element.version_id
 
-        action.version_id = len(self._full_history)
         self._current_history_element = HistoryTreeElement(prev_id=prev_id, action=action)
+        self._current_history_element.version_id = len(self._full_history)
         self._full_history.append(self.current_history_element)
 
         # set pointer of previous element
         if prev_id is not None:
             prev_tree_elem = self._full_history[prev_id]
             prev_old_next_ids = copy.deepcopy(prev_tree_elem.old_next_ids)
-            prev_tree_elem.next_id = action.version_id
+            prev_tree_elem.next_id = self._current_history_element.version_id
             if not prev_old_next_ids == prev_tree_elem.old_next_ids:
                 logger.verbose("This action has created a new branch in the state machine modification-history")
 
@@ -917,9 +929,9 @@ class ModificationsHistory(Observable):
         executed_version_ids = []
         history_element = self.current_history_element
         while history_element.prev_id is not None:
-            executed_version_ids.append(history_element.action.version_id)
+            executed_version_ids.append(history_element.version_id)
             history_element = self.get_previous_element(history_element)
-        executed_version_ids.append(history_element.action.version_id)
+        executed_version_ids.append(history_element.version_id)
         return executed_version_ids
 
     def get_current_branch_version_ids(self):
@@ -927,7 +939,7 @@ class ModificationsHistory(Observable):
         history_element = self.current_history_element
         while history_element.next_id is not None:
             history_element = self.get_next_element(history_element)
-            current_branch_version_ids.append(history_element.action.version_id)
+            current_branch_version_ids.append(history_element.version_id)
         return current_branch_version_ids
 
     def get_history_path_from_current_to_target_version(self, target_version_id):
@@ -938,15 +950,15 @@ class ModificationsHistory(Observable):
         active_branch_ids = self.get_executed_version_ids()
         target_element = self.get_element_for_version(target_version_id)
         pointer_element = target_element
-        while pointer_element.action.version_id not in active_branch_ids:
-            redo_version_ids.insert(0, pointer_element.action.version_id)
+        while pointer_element.version_id not in active_branch_ids:
+            redo_version_ids.insert(0, pointer_element.version_id)
             pointer_element = self.get_previous_element(pointer_element)
         # element only becomes branching element, if there will be undo operations
         # => the target_version_id is in a different branch
         possible_branching_element = pointer_element
         while pointer_element is not self.current_history_element:
             pointer_element = self.get_next_element(pointer_element)
-            undo_version_ids.insert(0, pointer_element.action.version_id)
+            undo_version_ids.insert(0, pointer_element.version_id)
         branching_element = None
         if redo_version_ids and undo_version_ids:
             branching_element = possible_branching_element

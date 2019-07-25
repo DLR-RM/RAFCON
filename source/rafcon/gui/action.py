@@ -418,8 +418,6 @@ class CoreObjectIdentifier(object):
 
 
 class AbstractAction(object):
-    __version_id = None
-
     action_type = None
     after_overview = None
     after_state_image = None
@@ -436,17 +434,6 @@ class AbstractAction(object):
         if self. after_overview:
             self.after_overview.prepare_destruction()
         self.state_machine_model = None
-
-    @property
-    def version_id(self):
-        return self.__version_id
-
-    @version_id.setter
-    def version_id(self, value):
-        if self.__version_id is None:
-            self.__version_id = value
-        else:
-            logger.warning("The version_id of an action is not allowed to be modify after first assignment")
 
     def description(self):
         return "{0} {1} {2}".format(self.action_type, self.parent_path, self.__class__.__name__)
