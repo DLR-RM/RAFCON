@@ -151,7 +151,7 @@ class ModificationsHistoryModel(ModelMT):
         return act_state_elements_meta
 
     def recover_specific_version(self, pointer_on_version_to_recover):
-        """ Recovers a specific version of the all_time_history element by doing several undos and redos.
+        """ Recovers a specific version of the _full_history element by doing several undos and redos.
 
         :param pointer_on_version_to_recover: the id of the list element which is to recover
         :return:
@@ -820,9 +820,8 @@ class ModificationsHistory(Observable):
 
     def __init__(self):
         Observable.__init__(self)
-        self.all_time_history = []
-
-        self.current_history_element = None
+        self._full_history = []
+        self._current_history_element = None
 
         self.with_verbose = False
 
@@ -832,10 +831,14 @@ class ModificationsHistory(Observable):
     def __len__(self):
         return len(self.get_executed_version_ids())
 
+    @property
+    def current_history_element(self):
+        return self._current_history_element
+
     def prepare_destruction(self):
-        for tree_element in self.all_time_history:
+        for tree_element in self._full_history:
             tree_element.prepare_destruction()
-        del self.all_time_history[:]
+        del self._full_history[:]
 
     def is_undo_possible(self):
         return self.current_history_element.prev_id is not None
@@ -844,18 +847,18 @@ class ModificationsHistory(Observable):
         return self.current_history_element.next_id is not None
 
     def get_element_for_version(self, version_id):
-        return self.all_time_history[version_id]
+        return self._full_history[version_id]
 
     def get_next_element(self, for_history_element=None):
         for_history_element = for_history_element or self.current_history_element
         if for_history_element and for_history_element.next_id is not None:
-            return self.all_time_history[for_history_element.next_id]
+            return self._full_history[for_history_element.next_id]
         return None
 
     def get_previous_element(self, for_history_element=None):
         for_history_element = for_history_element or self.current_history_element
         if for_history_element and for_history_element.prev_id is not None:
-            return self.all_time_history[for_history_element.prev_id]
+            return self._full_history[for_history_element.prev_id]
         return None
 
     @Observable.observed
@@ -863,13 +866,13 @@ class ModificationsHistory(Observable):
 
         prev_id = None if not self.current_history_element else self.current_history_element.action.version_id
 
-        action.version_id = len(self.all_time_history)
-        self.current_history_element = HistoryTreeElement(prev_id=prev_id, action=action)
-        self.all_time_history.append(self.current_history_element)
+        action.version_id = len(self._full_history)
+        self._current_history_element = HistoryTreeElement(prev_id=prev_id, action=action)
+        self._full_history.append(self.current_history_element)
 
         # set pointer of previous element
         if prev_id is not None:
-            prev_tree_elem = self.all_time_history[prev_id]
+            prev_tree_elem = self._full_history[prev_id]
             prev_old_next_ids = copy.deepcopy(prev_tree_elem.old_next_ids)
             prev_tree_elem.next_id = action.version_id
             if not prev_old_next_ids == prev_tree_elem.old_next_ids:
@@ -882,7 +885,7 @@ class ModificationsHistory(Observable):
             return
         history_element = self.current_history_element
         history_element.action.undo()
-        self.current_history_element = self.get_previous_element()
+        self._current_history_element = self.get_previous_element()
         return history_element
 
     @Observable.observed
@@ -890,7 +893,7 @@ class ModificationsHistory(Observable):
         if not self.is_redo_possible():
             logger.warning("There is no more action that can be redone")
             return
-        self.current_history_element = self.get_next_element()
+        self._current_history_element = self.get_next_element()
         history_element = self.current_history_element
         history_element.action.redo()
         return history_element
@@ -900,12 +903,12 @@ class ModificationsHistory(Observable):
         for version_id in undo_version_ids:
             history_element = self.get_element_for_version(version_id)
             # must be set before undo (because only undo/redo are observable)
-            self.current_history_element = self.get_previous_element(history_element)
+            self._current_history_element = self.get_previous_element(history_element)
             history_element.action.undo()
         for version_id in redo_version_ids:
             history_element = self.get_element_for_version(version_id)
             # must be set before redo (because only undo/redo are observable)
-            self.current_history_element = history_element
+            self._current_history_element = history_element
             history_element.action.redo()
         if branching_element:
             branching_element.next_id = redo_version_ids[0]
@@ -928,7 +931,7 @@ class ModificationsHistory(Observable):
         return current_branch_version_ids
 
     def get_history_path_from_current_to_target_version(self, target_version_id):
-        if not (0 <= target_version_id < len(self.all_time_history)):
+        if not (0 <= target_version_id < len(self._full_history)):
             raise ValueError("target_version_id does not exist")
         undo_version_ids = []
         redo_version_ids = []
@@ -951,8 +954,8 @@ class ModificationsHistory(Observable):
 
     @Observable.observed
     def reset(self):
-        self.all_time_history = []
-        self.current_history_element = None
+        self._full_history = []
+        self._current_history_element = None
 
         # insert initial dummy element
         self.insert_action(ActionDummy())
