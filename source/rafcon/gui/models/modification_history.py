@@ -422,7 +422,7 @@ class ModificationsHistoryModel(ModelMT):
                 overview['signal'][-1]['change'] in ['append_to_last_change'] or \
                 overview['signal'][-1]['origin'] in ['group_states', 'ungroup_state', 'substitute_state']:
             # update last actions after_state_image -> meta-data
-            self.active_action.after_storage = self.active_action.get_state_image()
+            self.active_action.after_state_image = self.active_action.get_state_image()
             self.update_internal_tmp_storage()
         else:
             if isinstance(overview['model'][-1], AbstractStateModel):
