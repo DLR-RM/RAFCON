@@ -150,15 +150,15 @@ class ModificationsHistoryModel(ModelMT):
         # print(act_state_elements_meta)
         return act_state_elements_meta
 
-    def recover_specific_version(self, pointer_on_version_to_recover):
-        """ Recovers a specific version of the _full_history element by doing several undos and redos.
+    def reset_to_history_id(self, target_history_id):
+        """ Recovers a specific target_history_id of the _full_history element by doing several undos and redos.
 
-        :param pointer_on_version_to_recover: the id of the list element which is to recover
+        :param target_history_id: the id of the list element which is to recover
         :return:
         """
         with self.state_machine_model.storage_lock:
             self.busy = True
-            self.modifications.go_to_history_element(pointer_on_version_to_recover)
+            self.modifications.go_to_history_element(target_history_id)
             self.busy = False
 
             self._re_initiate_observation()
@@ -757,7 +757,7 @@ class ModificationsHistoryModel(ModelMT):
 
 
 class HistoryTreeElement(object):
-    __version_id = None
+    __history_id = None
     __prev_id = None
     __next_id = None
 
@@ -776,15 +776,15 @@ class HistoryTreeElement(object):
         self.action.prepare_destruction()
 
     @property
-    def version_id(self):
-        return self.__version_id
+    def history_id(self):
+        return self.__history_id
 
-    @version_id.setter
-    def version_id(self, value):
-        if self.__version_id is None:
-            self.__version_id = value
+    @history_id.setter
+    def history_id(self, value):
+        if self.__history_id is None:
+            self.__history_id = value
         else:
-            raise ValueError("The version_id of an action is not allowed to be modify after first assignment")
+            raise ValueError("The history_id of an action is not allowed to be modify after first assignment")
 
     @property
     def prev_id(self):
@@ -822,7 +822,7 @@ class ModificationsHistory(Observable):
     modifications.
     So the all time history holds a list of all modifications ordered by time whereby the list elements are TreeElements
     that know respective previous action's list id and the possible next action list ids (multiple branches). Hereby a
-    fast search from a actual active branch (trail history) to specific version_id (some branch) can be performed and
+    fast search from a actual active branch (trail history) to specific history_id (some branch) can be performed and
     all recovery steps collected.
     Additionally there will be implemented functionalities that never forget a single
     change that was insert for debugging reasons.
@@ -841,7 +841,7 @@ class ModificationsHistory(Observable):
         self.insert_action(ActionDummy())
 
     def __len__(self):
-        return len(self.get_executed_version_ids())
+        return len(self.get_executed_history_ids())
 
     @property
     def current_history_element(self):
@@ -858,8 +858,8 @@ class ModificationsHistory(Observable):
     def is_redo_possible(self):
         return self.current_history_element.next_id is not None
 
-    def get_element_for_version(self, version_id):
-        return self._full_history[version_id]
+    def get_element_for_history_id(self, history_id):
+        return self._full_history[history_id]
 
     def get_next_element(self, for_history_element=None):
         for_history_element = for_history_element or self.current_history_element
@@ -876,17 +876,17 @@ class ModificationsHistory(Observable):
     @Observable.observed
     def insert_action(self, action):
 
-        prev_id = None if not self.current_history_element else self.current_history_element.version_id
+        prev_id = None if not self.current_history_element else self.current_history_element.history_id
 
         self._current_history_element = HistoryTreeElement(prev_id=prev_id, action=action)
-        self._current_history_element.version_id = len(self._full_history)
+        self._current_history_element.history_id = len(self._full_history)
         self._full_history.append(self.current_history_element)
 
         # set pointer of previous element
         if prev_id is not None:
             prev_tree_elem = self._full_history[prev_id]
             prev_old_next_ids = copy.deepcopy(prev_tree_elem.old_next_ids)
-            prev_tree_elem.next_id = self._current_history_element.version_id
+            prev_tree_elem.next_id = self._current_history_element.history_id
             if not prev_old_next_ids == prev_tree_elem.old_next_ids:
                 logger.verbose("This action has created a new branch in the state machine modification-history")
 
@@ -910,59 +910,59 @@ class ModificationsHistory(Observable):
         history_element.action.redo()
         return history_element
 
-    def go_to_history_element(self, target_version_id):
-        undo_version_ids, redo_version_ids, branching_element = self.get_history_path_from_current_to_target_version(target_version_id)
-        for version_id in undo_version_ids:
-            history_element = self.get_element_for_version(version_id)
+    def go_to_history_element(self, target_history_id):
+        undo_history_ids, redo_history_ids, branching_element = self.get_history_path_from_current_to_target_history_id(target_history_id)
+        for history_id in undo_history_ids:
+            history_element = self.get_element_for_history_id(history_id)
             # must be set before undo (because only undo/redo are observable)
             self._current_history_element = self.get_previous_element(history_element)
             history_element.action.undo()
-        for version_id in redo_version_ids:
-            history_element = self.get_element_for_version(version_id)
+        for history_id in redo_history_ids:
+            history_element = self.get_element_for_history_id(history_id)
             # must be set before redo (because only undo/redo are observable)
             self._current_history_element = history_element
             history_element.action.redo()
         if branching_element:
-            branching_element.next_id = redo_version_ids[0]
+            branching_element.next_id = redo_history_ids[0]
 
-    def get_executed_version_ids(self):
-        executed_version_ids = []
+    def get_executed_history_ids(self):
+        executed_history_ids = []
         history_element = self.current_history_element
         while history_element.prev_id is not None:
-            executed_version_ids.append(history_element.version_id)
+            executed_history_ids.append(history_element.history_id)
             history_element = self.get_previous_element(history_element)
-        executed_version_ids.append(history_element.version_id)
-        return executed_version_ids
+        executed_history_ids.append(history_element.history_id)
+        return executed_history_ids
 
-    def get_current_branch_version_ids(self):
-        current_branch_version_ids = self.get_executed_version_ids()
+    def get_current_branch_history_ids(self):
+        current_branch_history_ids = self.get_executed_history_ids()
         history_element = self.current_history_element
         while history_element.next_id is not None:
             history_element = self.get_next_element(history_element)
-            current_branch_version_ids.append(history_element.version_id)
-        return current_branch_version_ids
+            current_branch_history_ids.append(history_element.history_id)
+        return current_branch_history_ids
 
-    def get_history_path_from_current_to_target_version(self, target_version_id):
-        if not (0 <= target_version_id < len(self._full_history)):
-            raise ValueError("target_version_id does not exist")
-        undo_version_ids = []
-        redo_version_ids = []
-        active_branch_ids = self.get_executed_version_ids()
-        target_element = self.get_element_for_version(target_version_id)
+    def get_history_path_from_current_to_target_history_id(self, target_history_id):
+        if not (0 <= target_history_id < len(self._full_history)):
+            raise ValueError("target_history_id does not exist")
+        undo_history_ids = []
+        redo_history_ids = []
+        active_branch_ids = self.get_executed_history_ids()
+        target_element = self.get_element_for_history_id(target_history_id)
         pointer_element = target_element
-        while pointer_element.version_id not in active_branch_ids:
-            redo_version_ids.insert(0, pointer_element.version_id)
+        while pointer_element.history_id not in active_branch_ids:
+            redo_history_ids.insert(0, pointer_element.history_id)
             pointer_element = self.get_previous_element(pointer_element)
         # element only becomes branching element, if there will be undo operations
-        # => the target_version_id is in a different branch
+        # => the target_history_id is in a different branch
         possible_branching_element = pointer_element
         while pointer_element is not self.current_history_element:
             pointer_element = self.get_next_element(pointer_element)
-            undo_version_ids.insert(0, pointer_element.version_id)
+            undo_history_ids.insert(0, pointer_element.history_id)
         branching_element = None
-        if redo_version_ids and undo_version_ids:
+        if redo_history_ids and undo_history_ids:
             branching_element = possible_branching_element
-        return undo_version_ids, redo_version_ids, branching_element
+        return undo_history_ids, redo_history_ids, branching_element
 
     @Observable.observed
     def reset(self):
