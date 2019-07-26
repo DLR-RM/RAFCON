@@ -495,7 +495,7 @@ def run_simple_modification_construction(gui):
     print("%" * 50)
     from tests.gui.widget import test_menu_bar
     # TODO D-get this test also running with substitute_library
-    test_menu_bar.trigger_gui_signals(with_refresh=True, with_substitute_library=False)
+    test_menu_bar.trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=False)
     print("%" * 50)
     print("do test complex actions, group & ungroup")
     print("%" * 50)
@@ -534,7 +534,7 @@ def run_complex_controller_construction(gui):
     # from tests.gui.widget.test_states_editor import create_models, MainWindowView, \
     #     MainWindowController, trigger_state_type_change_tests, gtk, threading
     from tests.gui.widget.test_states_editor import trigger_state_type_change_tests
-    trigger_state_type_change_tests(with_gui=True)
+    trigger_state_type_change_tests(gui)
 
 
 def patch_core_classes_with_log():
@@ -897,6 +897,7 @@ def test_core_destruct(caplog):
     check_existing_objects_of_kind(elements, ignored_objects=already_existing_objects)
     run_un_patching(elements)
 
+
 def test_model_and_core_destruct(caplog):
 
     testing_utils.dummy_gui(None)
@@ -1040,9 +1041,6 @@ def test_model_and_core_modification_history_destruct_with_gui(gui):
                 (rafcon.gui.mygaphas.items.state.StateView, False),
                 (searched_class, False),
                 ]
-    libraries = {"ros": os.path.join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-                 "turtle_libraries": os.path.join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
-                 "generic": os.path.join(testing_utils.LIBRARY_SM_PATH, "generic")}
     run_setup_gui_destruct(gui, elements, searched_class, run_simple_modification_construction,
                            expected_warnings=0, expected_errors=2)
 

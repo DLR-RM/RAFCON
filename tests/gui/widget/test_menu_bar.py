@@ -108,6 +108,9 @@ def paste(gui, state_machine_model, state_m, main_window_controller, menu_bar_ct
     "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
 }}], indirect=True, ids=["with ros and turtle libraries"])
 def test_gui(gui):
+    trigger_menu_bar_items(gui)
+
+def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True):
     """The function triggers and test basic functions of the menu bar.
 
     At the moment those functions are tested:
@@ -122,9 +125,6 @@ def test_gui(gui):
     - Stop State Machine
     - Quit GUI
     """
-    with_refresh = True
-    with_substitute_library = True
-
     from rafcon.core.states.library_state import LibraryState
     import rafcon.core.singleton
     import rafcon.gui.singleton
@@ -190,7 +190,8 @@ def test_gui(gui):
     from tests.gui.widget.test_state_type_change import get_state_editor_ctrl_and_store_id_dict
     from rafcon.core.states.hierarchy_state import HierarchyState
     [state_editor_ctrl, list_store_id_from_state_type_dict] = gui(get_state_editor_ctrl_and_store_id_dict,
-                                                                                sm_m, execution_state_m, main_window_controller, 5., logger)
+                                                                  sm_m, execution_state_m, main_window_controller, 5.,
+                                                                  logger)
     state_type_row_id = list_store_id_from_state_type_dict[HierarchyState.__name__]
     gui(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
     new_state = sm_m.root_state.states[new_state_id]
@@ -206,13 +207,13 @@ def test_gui(gui):
     wait_state_m = list(sm_m.root_state.states.values())[0]
     assert len(new_state.parent.transitions) == 1
     t_m = list(new_state.parent.transitions)[0]
-    assert t_m.transition.from_state == t_m.transition.to_state and t_m.transition.from_state == wait_state_m.state.state_id
+    assert t_m.transition.from_state == t_m.transition.to_state and \
+           t_m.transition.from_state == wait_state_m.state.state_id
     gui(sm_m.root_state.state.remove_state, wait_state_m.state.state_id)
     first_sm_id += 1  # count state machine id once up because of library substitution (loads a state machine, too)
 
     assert len(sm_manager_model.state_machines) == current_sm_length + 1
-    gui(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TUTORIAL_PATH,
-                                                                      "basic_turtle_demo_sm"))
+    gui(menubar_ctrl.on_open_activate, None, None, join(testing_utils.TUTORIAL_PATH, "basic_turtle_demo_sm"))
     gui(testing_utils.wait_for_gui)
     assert len(sm_manager_model.state_machines) == current_sm_length + 2
 
@@ -244,7 +245,7 @@ def test_gui(gui):
     ##########################################################
     # group states
     # TODO improve test to related data flows
-    print("#"*30, "\n", '#### group states \n', "#"*30, "\n")
+    print("#" * 30, "\n", '#### group states \n', "#" * 30, "\n")
     state_m_parent = sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ')
     state_ids_old = [state_id for state_id in state_m_parent.state.states]
     state_m_list = [state_m_parent.states[child_state_id] for child_state_id in ['PAYECU', 'UEPNNW', 'KQDJYS']]
@@ -252,7 +253,7 @@ def test_gui(gui):
 
     ##########################################################
     # ungroup new state
-    print("#"*30, "\n", '#### ungroup state \n', "#"*30, "\n")
+    print("#" * 30, "\n", '#### ungroup state \n', "#" * 30, "\n")
     new_state = None
     for state_id in state_m_parent.state.states:
         if state_id not in state_ids_old:
@@ -261,8 +262,9 @@ def test_gui(gui):
 
     #########################################################
     print("select & copy an execution state -> and paste it somewhere")
-    select_and_paste_state(gui, sm_m, sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ'), sm_m.get_state_model_by_path(
-        'CDMJPK/RMKGEW'), menubar_ctrl, 'copy', main_window_controller, page)
+    select_and_paste_state(gui, sm_m, sm_m.get_state_model_by_path('CDMJPK/RMKGEW/KYENSZ'),
+                           sm_m.get_state_model_by_path(
+                               'CDMJPK/RMKGEW'), menubar_ctrl, 'copy', main_window_controller, page)
 
     ###########################################################
     print("select & copy a hierarchy state -> and paste it some where")
@@ -331,10 +333,10 @@ def test_gui(gui):
     gui(list(state_m_parent.states[new_state_id].state.input_data_ports.items())[0][1].__setattr__, "data_type", "int")
     gui(state_m_parent.state.add_input_data_port, 'in_time', "int")
     gui(state_m_parent.state.add_data_flow,
-                      state_m_parent.state.state_id,
-                      list(state_m_parent.state.input_data_ports.items())[0][1].data_port_id,
-                      new_state_id,
-                      list(state_m_parent.states[new_state_id].state.input_data_ports.items())[0][1].data_port_id)
+        state_m_parent.state.state_id,
+        list(state_m_parent.state.input_data_ports.items())[0][1].data_port_id,
+        new_state_id,
+        list(state_m_parent.states[new_state_id].state.input_data_ports.items())[0][1].data_port_id)
 
     ##########################################################
     # substitute state with library
@@ -376,10 +378,10 @@ def test_gui(gui):
         raise
         # state_m_parent.state.states[new_state_id].input_data_ports.items()[0][1].default_value = 2.0
     gui(state_m_parent.state.add_data_flow,
-                      state_m_parent.state.state_id,
-                      list(state_m_parent.state.input_data_ports.items())[0][1].data_port_id,
-                      new_state_id,
-                      list(state_m_parent.states[new_state_id].state.input_data_ports.items())[0][1].data_port_id)
+        state_m_parent.state.state_id,
+        list(state_m_parent.state.input_data_ports.items())[0][1].data_port_id,
+        new_state_id,
+        list(state_m_parent.states[new_state_id].state.input_data_ports.items())[0][1].data_port_id)
 
     old_keys = list(state_m_parent.state.states.keys())
     transitions_before, data_flows_before = state_m_parent.state.get_connections_for_state(new_state_id)
@@ -427,7 +429,7 @@ def test_gui(gui):
         state_ids = list(old_parent.states.keys())
         gui(lib_state.__setattr__, 'name', 'DIALOG_X')
         gui(sm_manager_model.__setattr__, 'selected_state_machine_id',
-                          lib_state.get_state_machine().state_machine_id)
+            lib_state.get_state_machine().state_machine_id)
         gui(gui_helper_state_machine.substitute_selected_library_state_with_template, True)  # keep_name=True
         new_states = [state for state in list(old_parent.states.values()) if state.state_id not in state_ids]
         assert new_states and len(new_states) == 1 and new_states[0].name == 'DIALOG_X'
@@ -439,10 +441,8 @@ def test_gui(gui):
         gui(menubar_ctrl.on_refresh_all_activate, None, None, True)
         gui(testing_utils.wait_for_gui)
         assert len(sm_manager_model.state_machines) == 2
-        
-        
-    gui.expected_errors = 1
 
+    gui.expected_errors = 1
 
 if __name__ == '__main__':
     # test_gui(None)

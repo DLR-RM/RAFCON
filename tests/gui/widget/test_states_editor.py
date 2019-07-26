@@ -123,6 +123,9 @@ def select_child_states_and_state_sequentially(sm_m, parent_state_m, logger=None
 
 @pytest.mark.timeout(20)
 def test_state_type_change_test(gui):
+    trigger_state_type_change_tests(gui)
+
+def trigger_state_type_change_tests(gui):
     import rafcon.core.singleton
     import rafcon.gui.singleton
     from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
