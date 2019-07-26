@@ -62,6 +62,13 @@ Next Release
   - Jenkinsfile: tests are now also run under Python 3.6
 
 
+- Miscellaneous:
+
+  - new ``gui`` ficture for simplifying GUI tests
+  - refactor GUI tests using the ``gui`` fixture
+  - documentation on how to write tests and how to use ``gui`` fixture
+
+
 0.13.8
 """"""
 
