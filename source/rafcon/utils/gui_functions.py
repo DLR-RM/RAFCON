@@ -67,6 +67,6 @@ def call_gui_callback(callback, *args, **kwargs):
         # TODO: implement timeout that raises an exception
         condition.wait()
     if exception_info:
-        e_type, e_value, e_traceback = exception_info
-        raise_(e_type, e_value, e_traceback)
+        e_class, e_instance, e_traceback = exception_info
+        raise_(e_instance, None, e_traceback)
     return result
