@@ -1,3 +1,6 @@
+Running tests with ``tox``
+--------------------------
+
 The simplest and most reliable way of running the tests is using tox. If you have not installed tox, do so using
 
 .. code:: bash
@@ -52,3 +55,79 @@ Pytest allows you to select tests based on markers using the ``-m`` option. Mark
 .. code:: bash
 
     $ tox -e 2.7 -- -x -m "gui and not unstable"
+
+Writing tests
+-------------
+
+RAFCON provides a lot of tests in the ``tests/`` folder. Many of these tests are integration tests, unit tests are
+unfortunately often missing. If a test only uses imports from ``rafcon.core``, it is to be placed in ``tests/core/``,
+otherwise in ``tests/gui/``.
+
+RAFCON uses ``pytest`` as testing framework. It e.g. auto detects your test files starting with ``test_*``. Please have
+a look at the documentation before writing tests: https://pytest.org/
+
+GUI tests
+=========
+
+When you want to write an integration test using the GUI, a custom fixture named ``gui`` is provided
+(``tests/gui/conftest.py``). Simply add ``gui`` as parameter to your test (no import is required for tests residing
+beneath ``test/gui/``). The fixture automatically starts the GUI before the test and closes it thereafter.
+
+**Important:** Do not import any module from ``rafcon.gui`` outside of a function!
+
+When calling an operation that causes changes (in the core, models, GUI), you need to add the operation to the GTK queue
+and wait until the operation has finished. This is simply done by calling ``gui(function_reference, *args, **kwargs)``
+instead of ``function_reference(*args, **kwargs)``.
+
+If your test commands causes any ``logger.warning`` or ``logger.error``, you need to specify the expected numbers. Do so
+by calling ``gui.expected_warnings += 1``, respectively  ``gui.expected_errors += 1``, directly after the command that
+causes the warning/error.
+
+The fixture will load the default core and gui config options and the libraries ``generic`` and
+``unit_test_state_machines``. If you want to override certain settings or add more libraries, use the following
+decorator:
+
+.. code-block:: python
+
+    @pytest.mark.parametrize('gui', [{
+        "gui_config": {
+            'AUTO_BACKUP_ENABLED': True,
+            'HISTORY_ENABLED': True
+        },
+        "libraries": {
+            "ros": os.path.join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
+            "turtle_libraries": os.path.join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
+        }
+    }], indirect=True, ids=["with history, auto backup, ros and turtle libraries"])
+    def test_name(gui):
+        pass  # test code
+
+Using the ``ids`` argument, you can specify a label for your configuration. Other possible keys are ``core_config``
+(``dict``), ``runtime_config`` (``dict``) and ``with_gui`` (``bool``, for tests that operate on models but do not
+require the controllers and views). It is also possible to combine this with parameter sets:
+
+.. code-block:: python
+
+    config_options = {
+        "gui_config": {
+            'HISTORY_ENABLED': True
+        }
+    }
+    @pytest.mark.parametrize("gui,state_path,recursive,rel_size", [
+        (config_options, state_path_root, False, (40, 40)),
+        (config_options, state_path_root, True, (40, 40)),
+        (config_options, state_path_P, False, (20, 20)),
+        (config_options, state_path_P, True, (20, 20)),
+    ], indirect=["gui"])
+    def test_name(gui, state_path, recursive, rel_size, monkeypatch):
+        pass  # test code
+
+Note that in this case, you need to set the ``indirect`` parameter to `["gui"]`.
+
+The ``gui`` fixture offers some features:
+
+* if you want to restart the GUI *within* a test, call ``gui.restart()``
+* the fixture provides shorthand access the gui singletons via ``gui.singletons`` and core singletons via
+  ``gui.core_singletons``, without requiring any further imports.
+* if you want to run a test *after* the GUI was closed, you can set the function to be run via
+  ``gui.post_test = functools.partial(function_reference, *args, **kwargs)``
