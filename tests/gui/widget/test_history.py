@@ -23,11 +23,7 @@ logger.setLevel(logging.VERBOSE)
 
 # test environment elements
 from tests import utils as testing_utils
-from tests.utils import call_gui_callback
-from tests.gui.widget.test_state_type_change import store_state_elements, check_state_elements, \
-     check_list_ES, check_list_HS, check_list_BCS, check_list_PCS, \
-     check_list_root_ES, check_list_root_HS, check_list_root_BCS, check_list_root_PCS, \
-     get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
+from tests.gui.widget.test_state_type_change import get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
 from tests.gui.widget.test_states_editor import select_child_states_and_state_sequentially
 import pytest
 
@@ -61,9 +57,9 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
 
     print("do SAVING OF STATEMACHINE")
     if with_gui:
-        call_gui_callback(sm_model.state_machine.__setattr__, "file_system_path", path)
+        gui(sm_model.state_machine.__setattr__, "file_system_path", path)
         print("by Menubar_ctrl")
-        call_gui_callback(menubar_ctrl.on_save_activate, None)
+        gui(menubar_ctrl.on_save_activate, None)
     else:
         sm_model.state_machine.file_system_path = path
         print("by Function")
@@ -72,7 +68,7 @@ def save_state_machine(sm_model, path, logger, with_gui=False, menubar_ctrl=None
     from .test_storage import check_that_all_files_are_there
 
     if with_gui:
-        call_gui_callback(check_that_all_files_are_there, sm_model.state_machine, path, False, True)
+        gui(check_that_all_files_are_there, sm_model.state_machine, path, False, True)
     else:
         check_that_all_files_are_there(sm_model.state_machine, path, False, True)
 
@@ -98,15 +94,13 @@ def prepare_state_machine_model(state_machine):
     rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = state_machine.state_machine_id
 
     sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
-    sm_m.history.fake = False
-    sm_m.history.with_verbose = False
     return sm_m
 
 
-def create_state_machine_m(with_gui=False):
-    if with_gui:
-        state_machine, state_dict = call_gui_callback(create_state_machine)
-        state_machine_m = call_gui_callback(prepare_state_machine_model, state_machine)
+def create_state_machine_m(gui=None):
+    if gui and gui.with_gui:
+        state_machine, state_dict = gui(create_state_machine)
+        state_machine_m = gui(prepare_state_machine_model, state_machine)
     else:
         state_machine, state_dict = create_state_machine()
         state_machine_m = prepare_state_machine_model(state_machine)
@@ -169,6 +163,19 @@ def get_state_by_name(state_name, state_path_dict):
 def get_state_model_by_name(state_name, state_path_dict):
     state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     return state_machine_m.get_state_model_by_path(state_path_dict[state_name])
+
+
+def do_type_change(state_machine_m, state_m, target_state_type, gui):
+    if not gui.with_gui:
+        import rafcon.gui.helpers.state as gui_helper_state
+        gui(gui_helper_state.change_state_type, state_m, target_state_type)
+    else:
+        main_window_controller = gui.singletons.main_window_controller
+        [state_editor_ctrl, list_store_id_from_state_type_dict] = \
+            gui(get_state_editor_ctrl_and_store_id_dict, state_machine_m, state_m, main_window_controller, 5., logger)
+        # - do state type change
+        state_type_row_id = list_store_id_from_state_type_dict[target_state_type.__name__]
+        gui(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
 
 
 # TODO introduce test_add_remove_history with_gui=True to have a more reliable unit-test
@@ -751,77 +758,13 @@ def test_data_flow_property_modifications(caplog):
 
 
 @pytest.mark.timeout(60)
-@pytest.mark.parametrize("with_gui", [False, True])
-def test_state_type_changes_with_gui(with_gui, caplog):
+@pytest.mark.parametrize('gui', [
+    {"gui_config": {'HISTORY_ENABLED': True}, "with_gui": False},
+    {"gui_config": {'HISTORY_ENABLED': True}, "with_gui": True}
+], indirect=True, ids=["with history without gui", "with history with gui"])
+def test_state_type_changes_with_gui(gui):
 
-    testing_utils.dummy_gui(None)
-
-    if with_gui:
-        testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
-        e = None
-        try:
-            trigger_state_type_change_tests(with_gui)
-        except Exception as e:
-            pass
-        finally:
-            testing_utils.close_gui()
-            if e:
-                logging.exception("Test failed with exception {0}".format(e))
-            testing_utils.shutdown_environment(caplog=caplog)
-    else:
-        testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True},
-                                             gui_already_started=False)
-        trigger_state_type_change_tests(with_gui)
-        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
-
-
-
-def test_state_type_change_bugs_with_gui(caplog):
-
-    testing_utils.dummy_gui(None)
-
-    testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': True})
-    try:
-        trigger_state_type_change_typical_bug_tests()
-    except:
-        raise  # required, otherwise the exception cannot be accessed within finally
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
-
-
-def test_multiple_undo_redo_bug_with_gui(caplog):
-    testing_utils.run_gui(gui_config={'AUTO_BACKUP_ENABLED': True, 'HISTORY_ENABLED': True})
-    try:
-        trigger_multiple_undo_redo_bug_tests(with_gui=True)
-    finally:
-        testing_utils.close_gui()
-        # Do not pass caplog, as we want to ignore all warnings (we cannot predict how many will occur)
-        testing_utils.shutdown_environment()
-
-
-def do_type_change(state_machine_m, state_m, target_state_type, with_gui):
-    if not with_gui:
-        import rafcon.gui.helpers.state as gui_helper_state
-        gui_helper_state.change_state_type(state_m, target_state_type)
-    else:
-        import rafcon.gui.singleton
-        main_window_controller = rafcon.gui.singleton.main_window_controller
-        [state_editor_ctrl, list_store_id_from_state_type_dict] = \
-            get_state_editor_ctrl_and_store_id_dict(state_machine_m, state_m, main_window_controller, 5., logger)
-        # - do state type change
-        state_type_row_id = list_store_id_from_state_type_dict[target_state_type.__name__]
-        state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active(state_type_row_id)
-
-
-def trigger_state_type_change_tests(with_gui):
-
-    def perform_operation(with_gui, operation, *args, **kwargs):
-        if with_gui:
-            return call_gui_callback(operation, *args, **kwargs)
-        return operation(*args, **kwargs)
-
-    def perform_state_type_change(state_path, state_machine_m, target_state_type, with_gui, open_all_states=False):
+    def perform_state_type_change(state_path, state_machine_m, target_state_type, open_all_states=False):
         original_state_m = sm_m.get_state_model_by_path(state_path)
 
         def parental_hash(state_m):
@@ -830,30 +773,30 @@ def trigger_state_type_change_tests(with_gui):
 
         logger.info("State type change from {} to {}".format(original_state_m.state.__class__.__name__, target_state_type.__name__))
         parent_state_m_hash = parental_hash(original_state_m)
-        perform_operation(with_gui, do_type_change, state_machine_m, original_state_m, target_state_type, with_gui)
+        do_type_change(state_machine_m, original_state_m, target_state_type, gui)
         type_changed_state_m = state_machine_m.get_state_model_by_path(state_path)
         parent_changed_state_m_hash = parental_hash(type_changed_state_m)
 
         logger.info("Undo state type change")
-        perform_operation(with_gui, state_machine_m.history.undo)
+        gui(state_machine_m.history.undo)
         undone_state_m = state_machine_m.get_state_model_by_path(state_path)
         assert parent_state_m_hash == parental_hash(undone_state_m), "Model hash not identical"
 
-        if with_gui and open_all_states:
-            call_gui_callback(select_child_states_and_state_sequentially, state_machine_m, undone_state_m, logger)
+        if gui.with_gui and open_all_states:
+            gui(select_child_states_and_state_sequentially, state_machine_m, undone_state_m, logger)
 
         logger.info("Redo state type change")
-        perform_operation(with_gui, state_machine_m.history.redo)
+        gui(state_machine_m.history.redo)
         redone_state_m = state_machine_m.get_state_model_by_path(state_path)
         assert parent_changed_state_m_hash == parental_hash(redone_state_m), "Model hash not identical"
 
-        if with_gui and open_all_states:
-            call_gui_callback(select_child_states_and_state_sequentially, state_machine_m, redone_state_m, logger)
+        if gui.with_gui and open_all_states:
+            gui(select_child_states_and_state_sequentially, state_machine_m, redone_state_m, logger)
 
         return redone_state_m
 
-    sm_m, state_dict = create_state_machine_m(with_gui)
-    perform_operation(with_gui, sm_m.history.modifications.reset)
+    sm_m, state_dict = create_state_machine_m(gui)
+    gui(sm_m.history.modifications.reset)
 
     ####### General Type Change of CHILD STATE ############
     state_name = 'State3'
@@ -861,11 +804,11 @@ def trigger_state_type_change_tests(with_gui):
 
     # Select state
     state_m = sm_m.get_state_model_by_path(state_path)
-    perform_operation(with_gui, sm_m.selection.set, [state_m])
+    gui(sm_m.selection.set, [state_m])
 
     type_change_order = [BarrierConcurrencyState, HierarchyState, PreemptiveConcurrencyState, ExecutionState]
     for i, state_class in enumerate(type_change_order):
-        perform_state_type_change(state_path, sm_m, state_class, with_gui, i == 0)
+        perform_state_type_change(state_path, sm_m, state_class, i == 0)
 
     ####### General Type Change of ROOT STATE ############
     state_name = 'Container'
@@ -873,17 +816,18 @@ def trigger_state_type_change_tests(with_gui):
 
     # Select state
     state_m = sm_m.get_state_model_by_path(state_path)
-    perform_operation(with_gui, sm_m.selection.set, [state_m])
+    gui(sm_m.selection.set, [state_m])
 
     for i, state_class in enumerate(type_change_order):
-        perform_state_type_change(state_path, sm_m, state_class, with_gui, i == 0)
+        perform_state_type_change(state_path, sm_m, state_class, i == 0)
 
 
-def trigger_state_type_change_typical_bug_tests():
-    import rafcon.gui.singleton
-    sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
+@pytest.mark.parametrize('gui', [{"gui_config": {'HISTORY_ENABLED': True}}], indirect=True, ids=["with history"])
+def test_state_type_change_bugs_with_gui(gui):
 
-    sm_m, state_dict = create_state_machine_m(True)
+    sm_manager_model = gui.singletons.state_machine_manager_model
+
+    sm_m, state_dict = create_state_machine_m(gui)
 
     check_elements_ignores.append("internal_transitions")
 
@@ -892,114 +836,117 @@ def trigger_state_type_change_typical_bug_tests():
     parent_of_type_change = 'Container'
 
     # do state_type_change with gui
-    call_gui_callback(sm_m.history.modifications.reset)
+    gui(sm_m.history.modifications.reset)
 
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-    call_gui_callback(sm_m.selection.set, [state_m])
+    gui(sm_m.selection.set, [state_m])
 
     current_sm_length = len(sm_manager_model.state_machines)
     # print "1:", sm_manager_model.state_machines.keys()
     logger.debug('number of sm is : {0}'.format(sm_manager_model.state_machines.keys()))
 
-    def create_state_machine():
+    def create_simple_state_machine():
         root_state = HierarchyState("new root state", state_id="ROOT")
         state_machine = StateMachine(root_state)
         sm_manager_model.state_machine_manager.add_state_machine(state_machine)
         return state_machine
 
-    state_machine = call_gui_callback(create_state_machine)
+    state_machine = gui(create_simple_state_machine)
 
     logger.debug('number of sm is : {0}'.format(sm_manager_model.state_machines.keys()))
     assert len(sm_manager_model.state_machines) == current_sm_length+1
     sm_m = sm_manager_model.state_machines[state_machine.state_machine_id]
     h_state1 = HierarchyState(state_id='HSTATE1')
-    call_gui_callback(sm_m.state_machine.root_state.add_state, h_state1)
+    gui(sm_m.state_machine.root_state.add_state, h_state1)
     h_state2 = HierarchyState(state_id='HSTATE2')
-    call_gui_callback(h_state1.add_state, h_state2)
+    gui(h_state1.add_state, h_state2)
     ex_state1 = ExecutionState(state_id='EXSTATE1')
-    call_gui_callback(h_state1.add_state, ex_state1)
+    gui(h_state1.add_state, ex_state1)
     ex_state2 = ExecutionState(state_id='EXSTATE2')
-    call_gui_callback(h_state2.add_state, ex_state2)
+    gui(h_state2.add_state, ex_state2)
 
     logger.info("DO_TYPE_CHANGE")
     h_state1_m = sm_m.get_state_model_by_path(h_state1.get_path())
-    call_gui_callback(do_type_change, sm_m, h_state1_m, ExecutionState, True)
+    do_type_change(sm_m, h_state1_m, ExecutionState, gui)
 
     logger.info("UNDO")
-    call_gui_callback(sm_m.history.undo)
+    gui(sm_m.history.undo)
 
     logger.info("UNDO finished")
     logger.info("REDO")
-    call_gui_callback(sm_m.history.redo)
+    gui(sm_m.history.redo)
     logger.info("REDO finished")
 
     check_elements_ignores.remove("internal_transitions")
     print(check_elements_ignores)
 
 
-def trigger_multiple_undo_redo_bug_tests(with_gui=False):
+@pytest.mark.parametrize('gui', [{"gui_config": {'HISTORY_ENABLED': True}}], indirect=True, ids=["with history"])
+def test_multiple_undo_redo_bug_with_gui(gui):
     from gi.repository import GLib
     import rafcon.gui.singleton
+
+    num_add = 10
+    num_undo = 20
+    num_redo = 20
+
     sm = StateMachine(HierarchyState())
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
+    gui(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
     sm_m = list(rafcon.gui.singleton.state_machine_manager_model.state_machines.values())[-1]
-    call_gui_callback(sm_m.selection.set, [sm_m.root_state])
+    gui(sm_m.selection.set, [sm_m.root_state])
 
     main_window_controller = rafcon.gui.singleton.main_window_controller
     sm_id = sm_m.state_machine.state_machine_id
-    state_machines_editor_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
+    state_machines_editor_ctrl = main_window_controller.state_machines_editor_ctrl
     state_machines_editor_ctrl.get_controller(sm_id).view.get_top_widget().grab_focus()
     state_machines_editor_ctrl.get_controller(sm_id).view.editor.grab_focus()
     def trigger_action_repeated(action_name, number):
         for _ in range(number):
             main_window_controller.shortcut_manager.trigger_action(action_name, None, None)
-    call_gui_callback(trigger_action_repeated, "add", 10, priority=GLib.PRIORITY_HIGH)
-    assert sm_m.history.modifications.get_executed_history_ids()
-    call_gui_callback(trigger_action_repeated, "undo", 20, priority=GLib.PRIORITY_HIGH)
-    call_gui_callback(trigger_action_repeated, "redo", 20, priority=GLib.PRIORITY_HIGH)
+    gui(trigger_action_repeated, "add", num_add, priority=GLib.PRIORITY_HIGH)
+    assert len(sm_m.history.modifications) == num_add + 1
+    gui(trigger_action_repeated, "undo", num_undo, priority=GLib.PRIORITY_HIGH)
+    gui.expected_warnings += max(num_undo - num_add, 0)
+    gui(trigger_action_repeated, "redo", num_redo, priority=GLib.PRIORITY_HIGH)
+    gui.expected_warnings += max(num_redo - min(num_add, num_undo), 0)
 
 
-def test_reset_to_history_id(caplog):
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True})
-    try:
-        state_machine_m, state_dict = create_state_machine_m(True)
-        sm_history = state_machine_m.history
+@pytest.mark.parametrize('gui', [{"gui_config": {'HISTORY_ENABLED': True}}], indirect=True, ids=["with history"])
+def test_reset_to_history_id(gui):
+    state_machine_m, state_dict = create_state_machine_m(gui)
+    sm_history = state_machine_m.history
 
-        state1_id = state_dict["State1"].state_id
-        state2_id = state_dict["State2"].state_id
+    state1_id = state_dict["State1"].state_id
+    state2_id = state_dict["State2"].state_id
 
-        # Remove two child states of root state
-        call_gui_callback(state_machine_m.root_state.state.remove_state, state1_id)  # history id 1
-        call_gui_callback(state_machine_m.root_state.state.remove_state, state2_id)  # history id 2
-        history_2_hash = state_machine_m.mutable_hash().hexdigest()
+    # Remove two child states of root state
+    gui(state_machine_m.root_state.state.remove_state, state1_id)  # history id 1
+    gui(state_machine_m.root_state.state.remove_state, state2_id)  # history id 2
+    history_2_hash = state_machine_m.mutable_hash().hexdigest()
 
-        # Undo removal
-        call_gui_callback(state_machine_m.history.undo)
-        call_gui_callback(state_machine_m.history.undo)
+    # Undo removal
+    gui(state_machine_m.history.undo)
+    gui(state_machine_m.history.undo)
 
-        # Create new history branch by adding two new states
-        state4 = ExecutionState("State4")
-        state5 = ExecutionState("State5")
+    # Create new history branch by adding two new states
+    state4 = ExecutionState("State4")
+    state5 = ExecutionState("State5")
 
-        call_gui_callback(state_machine_m.root_state.state.add_state, state4)  # history id 3
-        call_gui_callback(state_machine_m.root_state.state.add_state, state5)  # history id 4
+    gui(state_machine_m.root_state.state.add_state, state4)  # history id 3
+    gui(state_machine_m.root_state.state.add_state, state5)  # history id 4
 
-        assert state_machine_m.history.modifications.current_history_element.history_id == 4
-        history_4_hash = state_machine_m.mutable_hash().hexdigest()
+    assert state_machine_m.history.modifications.current_history_element.history_id == 4
+    history_4_hash = state_machine_m.mutable_hash().hexdigest()
 
-        # Activate old branch
-        call_gui_callback(state_machine_m.history.reset_to_history_id, 2)
-        reset_history_2_hash = state_machine_m.mutable_hash().hexdigest()
-        assert history_2_hash == reset_history_2_hash
+    # Activate old branch
+    gui(state_machine_m.history.reset_to_history_id, 2)
+    reset_history_2_hash = state_machine_m.mutable_hash().hexdigest()
+    assert history_2_hash == reset_history_2_hash
 
-        # Activate new branch
-        call_gui_callback(state_machine_m.history.reset_to_history_id, 4)
-        reset_history_4_hash = state_machine_m.mutable_hash().hexdigest()
-        assert history_4_hash == reset_history_4_hash
-
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
+    # Activate new branch
+    gui(state_machine_m.history.reset_to_history_id, 4)
+    reset_history_4_hash = state_machine_m.mutable_hash().hexdigest()
+    assert history_4_hash == reset_history_4_hash
 
 
 if __name__ == '__main__':

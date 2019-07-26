@@ -17,7 +17,7 @@ def xor(_list):
     return result
 
 
-def trigger_dialog_tests():
+def test_dialog_test(gui):
     test_text = "test_text"
     from gi.repository import Gtk
     from rafcon.gui.utils import dialog
@@ -47,41 +47,41 @@ def trigger_dialog_tests():
 
         assert not xor(widget.get_checkbox_states())
 
-    dialog_window = call_gui_callback(dialog.RAFCONMessageDialog, test_text, on_ok_clicked)
+    dialog_window = gui(dialog.RAFCONMessageDialog, test_text, on_ok_clicked)
     # First button of the dialog, in this case the standard "Ok" button
-    call_gui_callback(dialog_window.response, 1)
-    call_gui_callback(dialog_window.destroy)
+    gui(dialog_window.response, 1)
+    gui(dialog_window.destroy)
     button_texts = ["First", "Second", "Third", "Fourth"]
 
-    dialog_window = call_gui_callback(dialog.RAFCONButtonDialog, test_text, button_texts, on_button_clicked)
+    dialog_window = gui(dialog.RAFCONButtonDialog, test_text, button_texts, on_button_clicked)
 
     for index, button_text in enumerate(button_texts):
         # Check if the button order is the same as requested by the button_texts list
         button = dialog_window.buttons[index]
         assert str(button.get_label()) == button_texts[index]
 
-    call_gui_callback(button.clicked)
-    call_gui_callback(dialog_window.destroy)
+    gui(button.clicked)
+    gui(dialog_window.destroy)
 
-    dialog_window = call_gui_callback(dialog.RAFCONInputDialog, test_text, button_texts, test_text, on_entry_activated)
-    call_gui_callback(dialog_window.entry.set_text, test_text)
-    call_gui_callback(dialog_window.checkbox.set_active, True)
+    dialog_window = gui(dialog.RAFCONInputDialog, test_text, button_texts, test_text, on_entry_activated)
+    gui(dialog_window.entry.set_text, test_text)
+    gui(dialog_window.checkbox.set_active, True)
     # Represents hitting the enter button
-    call_gui_callback(dialog_window.entry.activate)
-    call_gui_callback(dialog_window.destroy)
+    gui(dialog_window.entry.activate)
+    gui(dialog_window.destroy)
 
-    dialog_window = call_gui_callback(dialog.RAFCONColumnCheckboxDialog,
+    dialog_window = gui(dialog.RAFCONColumnCheckboxDialog,
                                       test_text, button_texts, [test_text, test_text, test_text, test_text],
                                       on_checkbox_dialog_approval, (), Gtk.MessageType.QUESTION)
 
     for index, checkbox in enumerate(dialog_window.checkboxes):
         # Check the checkboxes in an alternating order
-        call_gui_callback(checkbox.set_active, index % 2)
+        gui(checkbox.set_active, index % 2)
 
-    call_gui_callback(dialog_window.response, 1)
-    call_gui_callback(button.clicked)
+    gui(dialog_window.response, 1)
+    gui(button.clicked)
 
-    call_gui_callback(dialog_window.destroy)
+    gui(dialog_window.destroy)
 
 
 # def test_dialog_test(caplog):
@@ -94,19 +94,6 @@ def trigger_dialog_tests():
 #     thread = threading.Thread(target=trigger_dialog_tests)
 #     thread.start()
 #     testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0, unpatch_threading=False)
-
-
-def test_dialog_test(caplog):
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    logger.debug("Dialog test started.")
-    try:
-        trigger_dialog_tests()
-    except Exception:
-        raise
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
-
 
 #TODO dialog tests in rafcon by mouse click and callback or only by callback and respective dialog objects response call
 

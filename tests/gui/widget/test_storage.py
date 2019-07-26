@@ -117,30 +117,6 @@ def on_save_activate(state_machine_m, logger):
     logger.debug("Successfully saved graphics meta data.")
 
 
-def save_state_machine(with_gui=True):
-    import rafcon
-    from rafcon.core.singleton import state_machine_execution_engine
-    import rafcon.gui.singleton as gui_singleton
-    from rafcon.core.storage import storage
-
-    path = testing_utils.get_unique_temp_path()
-    if with_gui:
-        state_machine = call_gui_callback(create_models)
-    else:
-        state_machine = create_models()
-
-    if with_gui:
-        sm_model = rafcon.gui.singleton.state_machine_manager_model.state_machines[state_machine.state_machine_id]
-        menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
-        # sm_model.state_machine.base_path = path
-        call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, path)
-        # call_gui_callback(menubar_ctrl.on_quit_activate, None)
-        call_gui_callback(check_that_all_files_are_there, state_machine, with_print=False)
-    else:
-        storage.save_state_machine_to_path(state_machine, path, delete_old_state_machine=False)
-        check_that_all_files_are_there(state_machine, with_print=False)
-
-
 def check_file(file_path, kind, missing_elements=None, existing_elements=None):
     if os.path.isfile(file_path):
         logger.debug("%s: '%s' exists" % (kind, file_path))
@@ -279,34 +255,23 @@ def check_id_and_name_plus_id_format(path_old_format, path_new_format, sm_m):
     check_state(sm_m.state_machine, state_machine=True)
 
 
-@pytest.mark.parametrize("with_gui", [True, False])
-def test_storage_with_gui(with_gui, caplog):
-    print("test storage with gui", with_gui)
+@pytest.mark.parametrize('gui', [
+    {"with_gui": False},
+    {"with_gui": True}
+], indirect=True, ids=["without gui", "with gui"])
+def test_storage_with_gui(gui):
+    from rafcon.core.storage import storage
 
-    testing_utils.dummy_gui(None)
+    path = testing_utils.get_unique_temp_path()
+    state_machine = gui(create_models)
 
-    if with_gui:
-        testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
+    if gui.with_gui:
+        sm_model = gui.singletons.state_machine_manager_model.state_machines[state_machine.state_machine_id]
+        menubar_ctrl = gui.singletons.main_window_controller.menu_bar_controller
+        gui(menubar_ctrl.on_save_as_activate, None, None, path)
     else:
-        testing_utils.initialize_environment(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
-                                             gui_already_started=False)
-
-    e = None
-    try:
-        save_state_machine(with_gui)
-    except Exception as e:
-        pass
-    finally:
-        if with_gui:
-            testing_utils.close_gui()
-            testing_utils.shutdown_environment(caplog=caplog)
-        else:
-            testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
-
-    if e:
-        raise e
-    print("test storage with gui {0} finished".format(with_gui))
-
+        storage.save_state_machine_to_path(state_machine, path, delete_old_state_machine=False)
+    gui(check_that_all_files_are_there, state_machine, with_print=False)
 
 # TODO add examples of bad naming that cause before problems \n or [ ] and so on
 def check_state_recursively_if_state_scripts_are_valid(state):
@@ -321,8 +286,6 @@ def check_state_recursively_if_state_scripts_are_valid(state):
 
 
 def test_on_clean_storing_with_name_in_path(caplog):
-    print("test_on_clean_storing_with_name_in_path")
-
     testing_utils.dummy_gui(None)
 
     testing_utils.initialize_environment(
