@@ -881,6 +881,7 @@ def test_state_type_change_bugs_with_gui(gui):
     print(check_elements_ignores)
 
 
+@pytest.mark.unstable
 @pytest.mark.parametrize('gui', [{"gui_config": {'HISTORY_ENABLED': True}}], indirect=True, ids=["with history"])
 def test_multiple_undo_redo_bug_with_gui(gui):
     from gi.repository import GLib
