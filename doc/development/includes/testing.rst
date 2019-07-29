@@ -73,7 +73,9 @@ When you want to write an integration test using the GUI, a custom fixture named
 (``tests/gui/conftest.py``). Simply add ``gui`` as parameter to your test (no import is required for tests residing
 beneath ``test/gui/``). The fixture automatically starts the GUI before the test and closes it thereafter.
 
-**Important:** Do not import any module from ``rafcon.gui`` outside of a function!
+**Important:** Do not import any module from ``rafcon.gui`` outside of a function! Otherwise, models might be created
+withing the wrong thread, which leads to ``gtkmvc`` forwarding observer notifications asynchronously (via ``idle_add``)
+instead of synchronously.
 
 When calling an operation that causes changes (in the core, models, GUI), you need to add the operation to the GTK queue
 and wait until the operation has finished. This is simply done by calling ``gui(function_reference, *args, **kwargs)``
@@ -122,7 +124,7 @@ require the controllers and views). It is also possible to combine this with par
     def test_name(gui, state_path, recursive, rel_size, monkeypatch):
         pass  # test code
 
-Note that in this case, you need to set the ``indirect`` parameter to `["gui"]`.
+Note that in this case, you need to set the ``indirect`` parameter to ``["gui"]``.
 
 The ``gui`` fixture offers some features:
 
