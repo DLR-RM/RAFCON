@@ -38,6 +38,7 @@ Next Release
   - make installation more robust, especially against missing font files
   - simplify installation process
   - clear separation in handling of ``data_files`` and ``package_files``
+  - create translation files automatically when building dist packages
   - refactored many parts of modification history
 
 

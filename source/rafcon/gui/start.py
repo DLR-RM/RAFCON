@@ -326,7 +326,7 @@ def main():
 
     register_signal_handlers(signal_handler)
 
-    setup_l10n()
+    setup_l10n(logger)
 
     splash_screen = SplashScreen(contains_image=True, width=530, height=350)
     splash_screen.rotate_image(random_=True)
