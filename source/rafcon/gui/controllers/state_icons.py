@@ -68,7 +68,7 @@ class StateIconController(ExtendedController):
         :param widget:
         :param context:
         """
-        self.view.drag_source_set_icon_stock(Gtk.STOCK_NEW)
+        pass
 
     def on_drag_end(self, widget, context):
         """if the drag is finished, all icons are unselected

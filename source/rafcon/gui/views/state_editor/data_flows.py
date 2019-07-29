@@ -28,9 +28,6 @@ class StateDataFlowsListView(TreeView):
         super(StateDataFlowsListView, self).__init__()
         self.tree_view = self['tree_view']
 
-    def get_top_widget(self):
-        return self.tree_view
-
 
 class StateDataFlowsEditorView(View):
     builder = glade.get_glade_path("state_data_flows_widget.glade")

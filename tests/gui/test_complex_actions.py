@@ -57,66 +57,64 @@ def set_state_name(state, new_value):
     state.name = new_value
 
 
-@log.log_exceptions(None, gtk_quit=True)
-def trigger_repetitive_group_ungroup(*args):
+def trigger_repetitive_group_ungroup(gui):
     import rafcon.gui.helpers.state as gui_helper_state
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-    import rafcon.gui.singleton as gui_singletons
     from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, UNIQUE_DECIDER_STATE_ID
 
-    call_gui_callback(create_models)
-    call_gui_callback(testing_utils.wait_for_gui)
+    gui(create_models)
+    gui(testing_utils.wait_for_gui)
 
-    sm_m = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
+    sm_m = gui.singletons.state_machine_manager_model.get_selected_state_machine_model()
     print("select: ", list(sm_m.root_state.states.values()))
-    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values()))
+    gui(sm_m.selection.set, list(sm_m.root_state.states.values()))
 
-    call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
-    # call_gui_callback(sm_m.root_state.states.values()[0].state.name, "Stage 1")
+    gui(gui_helper_state_machine.group_selected_states_and_scoped_variables)
+    # gui(sm_m.root_state.states.values()[0].state.name, "Stage 1")
     print("Stage 1", list(sm_m.root_state.states.values())[0].state.get_path())
-    call_gui_callback(set_state_name, list(sm_m.root_state.states.values())[0].state, "Stage 1")
+    gui(set_state_name, list(sm_m.root_state.states.values())[0].state, "Stage 1")
 
     print("select: ", list(sm_m.root_state.states.values()))
-    call_gui_callback(sm_m.selection.set, list(list(sm_m.root_state.states.values())[0].states.values()))
+    gui(sm_m.selection.set, list(list(sm_m.root_state.states.values())[0].states.values()))
     # time.sleep(1)
-    call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
+    gui(gui_helper_state_machine.group_selected_states_and_scoped_variables)
     print("Stage 2", list(list(sm_m.root_state.states.values())[0].states.values())[0].state.get_path())
-    call_gui_callback(set_state_name, list(list(sm_m.root_state.states.values())[0].states.values())[0].state, "Stage 2")
+    gui(set_state_name, list(list(sm_m.root_state.states.values())[0].states.values())[0].state, "Stage 2")
 
     print("select: ", list(sm_m.root_state.states.values()))
-    call_gui_callback(sm_m.selection.set, list(list(sm_m.root_state.states.values())[0].states.values())[0].states.values())
+    gui(sm_m.selection.set, list(list(sm_m.root_state.states.values())[0].states.values())[0].states.values())
     # time.sleep(1)
-    call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
+    gui(gui_helper_state_machine.group_selected_states_and_scoped_variables)
     print("Stage 3", list(list(list(sm_m.root_state.states.values())[0].states.values())[0].states.values())[0].state.get_path())
-    call_gui_callback(
+    gui(
         set_state_name,
         list(list(list(sm_m.root_state.states.values())[0].states.values())[0].states.values())[0].state, "Stage 3"
     )
     # time.sleep(5)
 
     # raw_input("press enter")
-    call_gui_callback(sm_m.selection.set, list(list(sm_m.root_state.states.values())[0].states.values())[0])
+    gui(sm_m.selection.set, list(list(sm_m.root_state.states.values())[0].states.values())[0])
     # time.sleep(1)
     s = list(list(sm_m.root_state.states.values())[0].states.values())[0]
     print("ungroup Stage 2", s.state.get_path(), s)
-    call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
-    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values())[0])
+    gui(gui_helper_state_machine.ungroup_selected_state)
+    gui(sm_m.selection.set, list(sm_m.root_state.states.values())[0])
     # time.sleep(1)
-    call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
+    gui(gui_helper_state_machine.ungroup_selected_state)
 
-    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values())[0])
+    gui(sm_m.selection.set, list(sm_m.root_state.states.values())[0])
     # time.sleep(1)
-    call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
+    gui(gui_helper_state_machine.ungroup_selected_state)
 
     print("make Stage 1 group all states of root state")
-    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values()))
+    gui(sm_m.selection.set, list(sm_m.root_state.states.values()))
     # time.sleep(1)
-    call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
-    call_gui_callback(set_state_name, list(sm_m.root_state.states.values())[0].state, "Stage 1")
+    gui(gui_helper_state_machine.group_selected_states_and_scoped_variables)
+    gui(set_state_name, list(sm_m.root_state.states.values())[0].state, "Stage 1")
 
     print("make Stage 1 to barrier state")
-    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values())[0])
-    call_gui_callback(gui_helper_state.change_state_type, list(sm_m.root_state.states.values())[0], BarrierConcurrencyState)
+    gui(sm_m.selection.set, list(sm_m.root_state.states.values())[0])
+    gui(gui_helper_state.change_state_type, list(sm_m.root_state.states.values())[0], BarrierConcurrencyState)
     # time.sleep(1)
 
     # raw_input("enter")
@@ -124,18 +122,18 @@ def trigger_repetitive_group_ungroup(*args):
     selected_states = [list(sm_m.root_state.states.values())[0].states[state_id] for state_id in ['State1', 'State2']]
     print("\n" * 50)
     print("select: ", [str(state_m) for state_m in selected_states])
-    call_gui_callback(sm_m.selection.set, selected_states)
+    gui(sm_m.selection.set, selected_states)
     # time.sleep(1)
-    call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
+    gui(gui_helper_state_machine.group_selected_states_and_scoped_variables)
 
     # core test
-    # call_gui_callback(sm_m.root_state.states.values()[0].state.group_states, ['State1', 'State2'])
+    # gui(sm_m.root_state.states.values()[0].state.group_states, ['State1', 'State2'])
     # sm_m.root_state.states.values()[0].states.values()[0].state.name = "Stage 2"
     print("\n" * 50)
     # raw_input("enter")
     print("ungroup by undo again")
     # time.sleep(10)
-    call_gui_callback(sm_m.history.undo)
+    gui(sm_m.history.undo)
     print("wait2 undo")
     # import time
     # time.sleep(10)
@@ -144,33 +142,33 @@ def trigger_repetitive_group_ungroup(*args):
     selected_states = [list(sm_m.root_state.states.values())[0].states[state_id] for state_id in
                        ['State1', 'State2', UNIQUE_DECIDER_STATE_ID]]
     print("select: ", [str(state_m) for state_m in selected_states])
-    call_gui_callback(sm_m.selection.set, list(list(sm_m.root_state.states.values())[0].states.values()))
-    call_gui_callback(gui_helper_state_machine.group_selected_states_and_scoped_variables)
+    gui(sm_m.selection.set, list(list(sm_m.root_state.states.values())[0].states.values()))
+    gui(gui_helper_state_machine.group_selected_states_and_scoped_variables)
 
     print('#'*30, '\n', '### positive example #2 ungroup a barrier state \n', '#'*30)
-    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values())[0])
-    call_gui_callback(gui_helper_state_machine.ungroup_selected_state)
+    gui(sm_m.selection.set, list(sm_m.root_state.states.values())[0])
+    gui(gui_helper_state_machine.ungroup_selected_state)
 
     # exception core test
-    # call_gui_callback(sm_m.root_state.states.values()[0].state.group_states, ['State1', 'State2', UNIQUE_DECIDER_STATE_ID])
+    # gui(sm_m.root_state.states.values()[0].state.group_states, ['State1', 'State2', UNIQUE_DECIDER_STATE_ID])
     # print "wait3 failure"
 
 
-def test_repetitive_ungroup_state_and_group_states(caplog):
+@pytest.mark.parametrize('gui', [{"gui_config": {'HISTORY_ENABLED': True}}], indirect=True, ids=["with history"])
+def test_repetitive_ungroup_state_and_group_states(gui):
     """Check if repetitive group and ungroup works"""
-    libraries = {"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True}, libraries=libraries)
-    try:
-        trigger_repetitive_group_ungroup()
-    except Exception:
-        raise
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=1)
+    trigger_repetitive_group_ungroup(gui)
+    gui.expected_errors = 1
 
 
-@log.log_exceptions(None, gtk_quit=True)
-def trigger_cut_multiple_states(*args):
+@pytest.mark.parametrize('gui', [{"gui_config": {'HISTORY_ENABLED': True}}], indirect=True, ids=["with history"])
+def test_cut_of_multiple_states(gui):
+    """Check if order of selection and deselection while a cut operation can create a problem with 
+    the states editor generation and destruction
+    
+    - covers bug issue #631 cut multiple states fails
+    """
+
     import rafcon.gui.singleton
     from rafcon.gui.controllers.menu_bar import MenuBarController
     from rafcon.gui.controllers.states_editor import StatesEditorController
@@ -183,43 +181,25 @@ def trigger_cut_multiple_states(*args):
     assert isinstance(states_editor_ctrl, StatesEditorController)
 
     # generate new state machine -> it should be selected directly
-    call_gui_callback(menubar_ctrl.on_new_activate, None)
+    gui(menubar_ctrl.on_new_activate, None)
     sm_m = sm_manager_model.get_selected_state_machine_model()
 
     # add two states
-    call_gui_callback(menubar_ctrl.on_add_state_activate, None)
-    call_gui_callback(menubar_ctrl.on_add_state_activate, None)
+    gui(menubar_ctrl.on_add_state_activate, None)
+    gui(menubar_ctrl.on_add_state_activate, None)
     assert len(sm_m.root_state.states) == 2
 
     # select them step by step and check that only one state editor is created
     state_ids = list(sm_m.root_state.states.keys())
     print("states in root state are {0}".format(state_ids))
-    call_gui_callback(sm_m.selection.set, sm_m.root_state.states[state_ids[0]])
-    call_gui_callback(sm_m.selection.add, sm_m.root_state.states[state_ids[1]])
+    gui(sm_m.selection.set, sm_m.root_state.states[state_ids[0]])
+    gui(sm_m.selection.add, sm_m.root_state.states[state_ids[1]])
     print("selected states are {0}".format(sm_m.selection.states))
     assert len(states_editor_ctrl.tabs) == 1
 
     # cut and check that both states are removed
-    call_gui_callback(global_clipboard.cut, sm_m.selection)
+    gui(global_clipboard.cut, sm_m.selection)
     assert len(sm_m.root_state.states) == 0
-
-
-def test_cut_of_multiple_states(caplog):
-    """Check if order of selection and deselection while a cut operation can create a problem with 
-    the states editor generation and destruction
-    
-    - covers bug issue #631 cut multiple states fails
-    """
-
-    libraries = {"unit_test_state_machines": testing_utils.get_test_sm_path("unit_test_state_machines")}
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': True}, libraries=libraries)
-    try:
-        trigger_cut_multiple_states()
-    except Exception:
-        raise
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
 
 # def test_paste_method(caplog):

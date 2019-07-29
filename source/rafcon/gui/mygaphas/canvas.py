@@ -99,6 +99,8 @@ class MyCanvas(gaphas.canvas.Canvas):
     def get_first_view(self):
         """Return first registered view object
         """
+        if len(self._registered_views) == 0:
+            return None
         return next(iter(self._registered_views))
 
     def get_view_for_model(self, model):

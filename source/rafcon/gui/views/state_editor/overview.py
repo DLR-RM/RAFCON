@@ -19,7 +19,7 @@ from rafcon.gui.utils import constants
 
 class StateOverviewView(View):
     builder = glade.get_glade_path("state_overview_widget.glade")
-    top = 'properties_widget_bg'
+    top = 'properties_widget'
 
     def __init__(self):
         View.__init__(self)

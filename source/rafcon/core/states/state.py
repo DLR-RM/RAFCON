@@ -119,8 +119,9 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self._semantic_data = Vividict()
 
         if name is None:
-            name = "Untitled"
+            name = "{} {}".format(self.__class__.__name__, generate_state_name_id())
         self.name = str(name) if isinstance(name, (int, float)) else name
+
         if state_id is None:
             self._state_id = state_id_generator()
         else:
@@ -1038,14 +1039,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def input_data_ports(self):
         """Property for the _input_data_ports field
 
-        The setter-method substitute State._input_data_ports with a handed dictionary. The method checks if the
-        elements in the dictionary are of the right type and the keys consistent (DataPort.data_port_id==key).
-        The method does check validity of the elements by calling the parent-setter and in case of failure cancel
-        the operation and recover old _input_data_ports.
+        See Property.
 
-        :return: Dictionary input_data_ports[:class:`int`, :class:`rafcon.core.state_elements.data_port.InputDataPort`]
-                 that maps :class:`int` data_port_ids onto values of type InputDataPort
-        :rtype: dict
+        :param dict input_data_ports: Dictionary that maps :class:`int` data_port_ids onto values of type
+                                      :class:`rafcon.core.state_elements.data_port.InputDataPort`
+        :raises exceptions.TypeError: if the input_data_ports parameter has the wrong type
+        :raises exceptions.AttributeError: if the key of the input dictionary and the id of the data port do not match
         """
         return self._input_data_ports
 
@@ -1055,12 +1054,14 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     def input_data_ports(self, input_data_ports):
         """Property for the _input_data_ports field
 
-        See Property.
+        The setter-method substitute State._input_data_ports with a handed dictionary. The method checks if the
+        elements in the dictionary are of the right type and the keys consistent (DataPort.data_port_id==key).
+        The method does check validity of the elements by calling the parent-setter and in case of failure cancel
+        the operation and recover old _input_data_ports.
 
-        :param dict input_data_ports: Dictionary that maps :class:`int` data_port_ids onto values of type
-                                      :class:`rafcon.core.state_elements.data_port.InputDataPort`
-        :raises exceptions.TypeError: if the input_data_ports parameter has the wrong type
-        :raises exceptions.AttributeError: if the key of the input dictionary and the id of the data port do not match
+        :return: Dictionary input_data_ports[:class:`int`, :class:`rafcon.core.state_elements.data_port.InputDataPort`]
+                 that maps :class:`int` data_port_ids onto values of type InputDataPort
+        :rtype: dict
         """
         if not isinstance(input_data_ports, dict):
             raise TypeError("input_data_ports must be of type dict")

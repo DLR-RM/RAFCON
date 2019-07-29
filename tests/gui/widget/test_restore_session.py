@@ -1,4 +1,5 @@
 from __future__ import print_function
+from copy import deepcopy
 from builtins import range
 from os.path import join, exists
 
@@ -84,8 +85,7 @@ def prepare_tab_data_of_open_state_machines(main_window_controller, sm_manager_m
         open_state_machines['selection_state_machine'] = None
 
 
-@log.log_exceptions(None, gtk_quit=True)
-def trigger_gui_signals_first_run(*args):
+def trigger_gui_signals_first_run(gui, open_state_machines):
     """The function triggers the creation of different state machines that should be backup-ed.
     In another run those are restored and checked onto correctness.
 
@@ -111,7 +111,6 @@ def trigger_gui_signals_first_run(*args):
     testing_utils.wait_for_gui()
     main_window_controller = rafcon.gui.singleton.main_window_controller
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
-    open_state_machines = args[0]
     library_manager = rafcon.gui.singleton.library_manager
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     assert isinstance(menubar_ctrl, MenuBarController)
@@ -132,8 +131,8 @@ def trigger_gui_signals_first_run(*args):
 
     # new state machine without storage
     state_machine = create_state_machine()
-    call_gui_callback(sm_manager_model.state_machine_manager.add_state_machine, state_machine)
-    call_gui_callback(testing_utils.wait_for_gui)
+    gui(sm_manager_model.state_machine_manager.add_state_machine, state_machine)
+    gui(testing_utils.wait_for_gui)
     print(sm_manager_model.state_machines.keys())
     current_sm_id = list(sm_manager_model.state_machines.keys())[0]
     current_number_of_sm = len(sm_manager_model.state_machines)
@@ -141,26 +140,26 @@ def trigger_gui_signals_first_run(*args):
     # new state machine with storage and no changes
     current_number_of_sm += 1
     current_sm_id += 1
-    call_gui_callback(menubar_ctrl.on_new_activate, None)
-    call_gui_callback(sm_manager_model.__setattr__, 'selected_state_machine_id', current_sm_id)
+    gui(menubar_ctrl.on_new_activate, None)
+    gui(sm_manager_model.__setattr__, 'selected_state_machine_id', current_sm_id)
     assert len(sm_manager_model.state_machines) == current_number_of_sm
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
+    gui(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
 
     # new state machine with storage and with changes
     current_number_of_sm += 1
     current_sm_id += 1
-    call_gui_callback(menubar_ctrl.on_new_activate, None)
-    call_gui_callback(sm_manager_model.__setattr__, 'selected_state_machine_id', current_sm_id)
+    gui(menubar_ctrl.on_new_activate, None)
+    gui(sm_manager_model.__setattr__, 'selected_state_machine_id', current_sm_id)
     assert len(sm_manager_model.state_machines) == current_number_of_sm
-    call_gui_callback(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
+    gui(menubar_ctrl.on_save_as_activate, None, None, testing_utils.get_unique_temp_path())
     add_two_states_to_root_state_of_selected_state_machine()
 
     # state machine loaded and no changes
     current_number_of_sm += 1
     current_sm_id += 1
     basic_turtle_sm_path = join(testing_utils.TUTORIAL_PATH, "basic_turtle_demo_sm")
-    call_gui_callback(menubar_ctrl.on_open_activate, None, None, basic_turtle_sm_path)
-    call_gui_callback(sm_manager_model.__setattr__, 'selected_state_machine_id', current_sm_id)
+    gui(menubar_ctrl.on_open_activate, None, None, basic_turtle_sm_path)
+    gui(sm_manager_model.__setattr__, 'selected_state_machine_id', current_sm_id)
     move_this_sm_id = sm_manager_model.selected_state_machine_id
     assert len(sm_manager_model.state_machines) == current_number_of_sm
 
@@ -169,8 +168,8 @@ def trigger_gui_signals_first_run(*args):
     current_sm_id += 1
     print("BUGS")
     basic_turtle_sm_path = join(testing_utils.TUTORIAL_PATH, "99_bugs")
-    call_gui_callback(menubar_ctrl.on_open_activate, None, None, basic_turtle_sm_path)
-    call_gui_callback(testing_utils.wait_for_gui)
+    gui(menubar_ctrl.on_open_activate, None, None, basic_turtle_sm_path)
+    gui(testing_utils.wait_for_gui)
     assert len(sm_manager_model.state_machines) == current_number_of_sm
     assert sm_manager_model.get_selected_state_machine_model().state_machine.file_system_path == basic_turtle_sm_path
     add_two_states_to_root_state_of_selected_state_machine()
@@ -178,8 +177,8 @@ def trigger_gui_signals_first_run(*args):
     # library not changed (needs state machine that has meta data already -> that should not be changed by opening)
     print("LIB no changes")
     library_os_path = library_manager.get_os_path_to_library("turtle_libraries", "clear_field")[0]
-    call_gui_callback(menubar_ctrl.on_open_activate, None, None, library_os_path)
-    call_gui_callback(testing_utils.wait_for_gui)
+    gui(menubar_ctrl.on_open_activate, None, None, library_os_path)
+    gui(testing_utils.wait_for_gui)
     # use artificial marked dirty to check for recovery of the flag
     assert not sm_manager_model.get_selected_state_machine_model().state_machine.marked_dirty
     sm_manager_model.get_selected_state_machine_model().state_machine._marked_dirty = True
@@ -188,8 +187,8 @@ def trigger_gui_signals_first_run(*args):
     # library with changes
     print("LIB with changes")
     library_os_path = library_manager.get_os_path_to_library("turtle_libraries", "teleport_turtle")[0]
-    call_gui_callback(menubar_ctrl.on_open_activate, None, None, library_os_path)
-    call_gui_callback(testing_utils.wait_for_gui)
+    gui(menubar_ctrl.on_open_activate, None, None, library_os_path)
+    gui(testing_utils.wait_for_gui)
     lib_sm_m = sm_manager_model.get_selected_state_machine_model()
 
     def do_type_change():
@@ -199,21 +198,21 @@ def trigger_gui_signals_first_run(*args):
         state_type_row_id = list_store_id_from_state_type_dict[HierarchyState.__name__]
         state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active(state_type_row_id)
 
-    call_gui_callback(lib_sm_m.selection.set, [lib_sm_m.root_state])
+    gui(lib_sm_m.selection.set, [lib_sm_m.root_state])
     print(lib_sm_m.root_state)
-    call_gui_callback(do_type_change)
+    gui(do_type_change)
     print(lib_sm_m.root_state)
     add_two_states_to_root_state_of_selected_state_machine()
     print(lib_sm_m.root_state)
 
     # change tab position
     state_machines_editor_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
-    call_gui_callback(state_machines_editor_ctrl.rearrange_state_machines, {move_this_sm_id: 0})
+    gui(state_machines_editor_ctrl.rearrange_state_machines, {move_this_sm_id: 0})
 
     # defined selection
     sm_m = sm_manager_model.state_machines[move_this_sm_id]
-    call_gui_callback(sm_manager_model.__setattr__, 'selected_state_machine_id', move_this_sm_id)
-    call_gui_callback(sm_m.selection.set, list(sm_m.root_state.states.values())[0])
+    gui(sm_manager_model.__setattr__, 'selected_state_machine_id', move_this_sm_id)
+    gui(sm_m.selection.set, list(sm_m.root_state.states.values())[0])
     print("last state machine:", sm_m.state_machine.file_system_path)
 
     ####################
@@ -225,24 +224,22 @@ def trigger_gui_signals_first_run(*args):
     ####################
     # collect open state machine data
     ####################
-    call_gui_callback(prepare_tab_data_of_open_state_machines, main_window_controller, sm_manager_model, open_state_machines)
+    gui(prepare_tab_data_of_open_state_machines, main_window_controller, sm_manager_model, open_state_machines)
 
     ####################
     # shout down gui
     ####################
-    call_gui_callback(menubar_ctrl.on_stop_activate, None)  # TODO why this is some how important for correct restore
+    gui(menubar_ctrl.on_stop_activate, None)  # TODO why this is some how important for correct restore
 
 
-@log.log_exceptions(None, gtk_quit=True)
-def trigger_gui_signals_second_run(*args):
+def trigger_gui_signals_second_run(gui, open_state_machines):
     import rafcon.gui.singleton
     main_window_controller = rafcon.gui.singleton.main_window_controller
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
-    open_state_machines = args[0]
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     import rafcon.gui.backup.session as backup_session
     if rafcon.gui.singleton.global_gui_config.get_config_value("SESSION_RESTORE_ENABLED"):
-        call_gui_callback(backup_session.restore_session_from_runtime_config)
+        gui(backup_session.restore_session_from_runtime_config)
     print("restore config", rafcon.gui.singleton.global_runtime_config.config_file_path)
     with open(rafcon.gui.singleton.global_runtime_config.config_file_path, 'r') as f:
         found_flag = False
@@ -253,47 +250,33 @@ def trigger_gui_signals_second_run(*args):
             if found_flag:
                 print(line)
         print("#"*20, "\n"*5)
-    call_gui_callback(testing_utils.wait_for_gui)
-    call_gui_callback(prepare_tab_data_of_open_state_machines,
+    gui(testing_utils.wait_for_gui)
+    gui(prepare_tab_data_of_open_state_machines,
                       main_window_controller, sm_manager_model, open_state_machines)
-    call_gui_callback(backup_session.reset_session)
+    gui(backup_session.reset_session)
 
+
+configuration = {
+    "gui_config": {'SESSION_RESTORE_ENABLED': True},
+    "libraries": {
+        "ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
+        "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
+    }
+}
 
 @pytest.mark.timeout(20)
-def test_restore_session(caplog):
+@pytest.mark.parametrize('gui', [deepcopy(configuration)], indirect=True, ids=["with session restore, ros and turtle libraries"])
+def test_restore_session(gui):
     from rafcon.core.storage import storage
 
-    change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False,
-                            'SESSION_RESTORE_ENABLED': True}
-
     # first run
-    libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-                 "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
-                 "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
-    testing_utils.run_gui(gui_config=change_in_gui_config, libraries=libraries)
-    try:
-        open_state_machines = {'list_of_hash_path_tab_page_number_tuple': [], 'selected_sm_page_number': None}
-        trigger_gui_signals_first_run(open_state_machines)
-    finally:
-        testing_utils.close_gui(force_quit=False)
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
+    open_state_machines = {'list_of_hash_path_tab_page_number_tuple': [], 'selected_sm_page_number': None}
+    trigger_gui_signals_first_run(gui, open_state_machines)
 
-    # second run
-    libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-                 "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
-                 "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
-    testing_utils.run_gui(gui_config=change_in_gui_config, libraries=libraries)
+    gui.restart()
 
-    try:
-        final_open_state_machines = {'list_of_hash_path_tab_page_number_tuple': [], 'selected_sm_page_number': None}
-        trigger_gui_signals_second_run(final_open_state_machines)
-    except:
-        raise
-    finally:
-        testing_utils.close_gui()
-
-    print(open_state_machines)
-    print(final_open_state_machines)
+    final_open_state_machines = {'list_of_hash_path_tab_page_number_tuple': [], 'selected_sm_page_number': None}
+    trigger_gui_signals_second_run(gui, final_open_state_machines)
 
     # test selection, page number and path
     # TODO find if there is a proper hash value test
@@ -341,8 +324,6 @@ def test_restore_session(caplog):
                   "".format(final_tuple_list[index][MARKED_DIRTY_INDEX], order_of_pages_to_be_dirty[index],
                             sm_tuple[PATH_INDEX], sm_tuple[MARKED_DIRTY_INDEX], sm_tuple[PAGE_NUMBER_INDEX]))
         # TODO check to put here an assert, too, -> maybe the implementation of this check is bad (because tabs look OK)
-
-    testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
 
 if __name__ == '__main__':

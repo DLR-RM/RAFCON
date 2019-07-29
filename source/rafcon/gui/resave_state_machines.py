@@ -73,7 +73,7 @@ def trigger_gui_signals(*args):
 
 def convert(config_path, source_path, target_path=None, gui_config_path=None):
     logger.info("RAFCON launcher")
-    rafcon.gui.start.setup_l10n()
+    rafcon.gui.start.setup_l10n(logger)
     from rafcon.gui.controllers.main_window import MainWindowController
     from rafcon.gui.views.main_window import MainWindowView
 

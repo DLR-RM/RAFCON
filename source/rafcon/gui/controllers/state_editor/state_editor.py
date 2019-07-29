@@ -175,23 +175,6 @@ class StateEditorController(ExtendedController):
                     self.view.remove_source_tab()
                 self.view.linkage_overview.scope_view.hide()
 
-    @ExtendedController.observe("action_signal", signal=True)
-    def state_type_changed(self, model, prop_name, info):
-        """Reopen state editor when state type is changed
-
-        When the type of the observed state changes, a new model is created. The look of this controller's view
-        depends on the kind of model. Therefore, we have to destroy this editor and open a new one with the new model.
-        """
-        msg = info['arg']
-        # print(self.__class__.__name__, "state_type_changed check", info)
-        if msg.action in ['change_state_type', 'change_root_state_type'] and msg.after:
-            # print(self.__class__.__name__, "state_type_changed")
-            import rafcon.gui.singleton as gui_singletons
-            msg = info['arg']
-            new_state_m = msg.affected_models[-1]
-            states_editor_ctrl = gui_singletons.main_window_controller.get_controller('states_editor_ctrl')
-            states_editor_ctrl.recreate_state_editor(self.model, new_state_m)
-
     @ExtendedController.observe("destruction_signal", signal=True)
     def state_destruction(self, model, prop_name, info):
         """ Close state editor when state is being destructed """

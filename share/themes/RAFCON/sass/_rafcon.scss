@@ -1,0 +1,139 @@
+
+//
+// RAFCON specific styles
+//
+
+.widget-title {
+    background-color: $bg_color;
+    border-top: 1px solid $borders_color;
+    border-bottom: 1px solid $borders_color;
+    > label {
+        color: $secondary_text_color;
+        font-family: 'Source Sans Pro';
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 1.1px;
+        min-height:40px;
+        padding-left: $padding_left;
+    }
+}
+
+.widget-toolbar {
+    background-color: $base_color;
+    border-top: 1px solid $borders_color_light;
+
+    toolbar, iconview {
+        background-color: $base_color;
+    }
+}
+
+// Custom button styling for sidebar toggle buttons
+box {
+    .sidebar-toggle {
+        border-color: $borders_color;
+        border-radius: 0;
+        padding: 0px 0px;
+        background-color: $bg_color;
+        min-width: 20px;
+        min-height: 20px;
+    }
+}
+
+label.secondary, checkbutton.secondary label {
+    color: $tertiary_text_color;
+    font-weight: 500;
+}
+
+label.execution-running {
+    color: $success_color;
+}
+
+// Square buttons for execution buttons
+#graphical_editor_toolbar button {
+    padding: 5px 6px;
+}
+
+// Align add-state buttons vertically in the middle
+#state_icons_box {
+	margin:5px 5px 0 0;
+}
+
+// Add margin to the toolbar to have a spacer below it following the style of the paned spaces
+#toolbar {
+	margin-bottom: $paned_separator_wide_width;
+}
+
+// Color for the margin of the #toolbar
+#top_level_vbox {
+	background-color: $borders_color;
+}
+
+// Proper background color when no state is loaded
+#state_machines_notebook, #state_editor_eventbox {
+    background-color: $base_color;
+}
+
+// Make labels above columns look like column headers
+#linkage_container {
+    #input_box > label, #output_box > label, #scoped_box > label, #outcomes_box > label {
+        color: $tertiary_text_color;
+        margin-left: $padding_left;
+        font-weight: 500;
+    }
+}
+
+notebook.secondary > header {
+
+    @each $_pos, $_bpos in (top, bottom), (bottom, top), (right, left), (left, right) {
+      // sizing and borders
+      &.#{$_pos} {
+
+        > tabs > tab {
+          padding: 6px $padding_left;
+          border: none;
+          border-#{$_bpos}: 1px solid $borders_color;
+          &:checked {
+              border: 1px solid $borders_color;
+              border-#{$_pos}: none;
+              border-#{$_bpos}: none;
+          }
+        }
+      }
+    }
+
+    > tabs > tab {
+        color: $tertiary_text_color;
+
+
+        &:hover:not(:checked) {
+            //color: mix($fg_color, $insensitive_fg_color, 50%);
+            background-color: $base_color;
+        }
+        &:checked {
+            color: $secondary_text_color;
+            background-color: $base_color;
+        }
+    }
+}
+
+//
+// GtkInfoBar
+//
+infobar {
+
+  &.other {
+    background-color: $selected_bg_color;
+  }
+
+  &.info {
+    background-color: $success_color;
+  }
+
+  &.warning {
+    background-color: $warning_color;
+  }
+
+  &.error {
+    background-color: $error_color;
+  }
+}

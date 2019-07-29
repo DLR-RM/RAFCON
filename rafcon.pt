@@ -22,12 +22,12 @@ DEPENDS             =
 DEPENDS.osl*        = python-gtkmvc3==1.0,
                       python-gaphas==1.0,
                       python-jsonconversion==0.2,
-                      python_yaml_configuration==0.1,
+                      python_yaml_configuration==0.2,
                       sw.common.pango==1.40
 
 ARCHS               = osl42-x86_64
 PYTHON_PATHS        = ${PKGROOT}/source
-ADDITIONAL_ENV.osl* = RAFCON_LIB_PATH=${PKGROOT}/share/libraries,
+ADDITIONAL_ENV.osl* = RAFCON_LIB_PATH=${PKGROOT}/share/rafcon/libraries,
                       RAFCON_CHECK_INSTALLATION=True,
                       PATH=${PKGROOT}/bin:$${PATH}
 

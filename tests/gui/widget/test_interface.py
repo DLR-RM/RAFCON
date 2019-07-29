@@ -58,29 +58,6 @@ def test_core_create_folder(monkeypatch):
     assert core_interface.create_folder_cmd_line("query", "new_folder") is None
 
 
-def test_gui_tests(monkeypatch, caplog):
-    # let the gui thread create the gui singletons by opening and closing an empty gui
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-
-    try:
-        pass
-    except:
-        raise
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
-
-    # # creating a new monkeypatch object will only work in a py.test case, not by calling test_gui_tests directly
-    # from _pytest.monkeypatch import MonkeyPatch
-    # monkeypatch = MonkeyPatch()
-
-    # This test must not be called by py.test directly!
-    # As it is a test without gui it must not create the core and gui singletons,
-    # otherwise the multi-threading test will fail
-    # _test_gui_open_folder(monkeypatch)
-    # _test_gui_create_folder(monkeypatch)
-
-
 def test_gui_open_folder(monkeypatch):
     """Tests `open_folder` function from `rafcon.core.interface`"""
     testing_utils.dummy_gui(None)

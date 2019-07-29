@@ -2,21 +2,33 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import time
+from os.path import join
 
 # general tool elements
 from rafcon.utils import log
 
 # test environment elements
 from tests import utils as testing_utils
-from tests.utils import call_gui_callback
 
 import pytest
 
 logger = log.get_logger(__name__)
 
 
-@log.log_exceptions(None, gtk_quit=True)
-def trigger_logging_view_gui_signals():
+@pytest.mark.unstable
+@pytest.mark.parametrize('gui', [{
+"gui_config": {
+    "CONSOLE_FOLLOW_LOGGING": False,
+    "LOGGING_SHOW_VERBOSE": True,
+    "LOGGING_SHOW_DEBUG": True,
+    "LOGGING_SHOW_WARNING": True,
+    "LOGGING_SHOW_ERROR": True
+},
+"libraries": {
+    "ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
+    "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries")
+}}], indirect=True, ids=["with logging on, ros and turtle libraries"])
+def test_logging_view_widget(gui):
     """The function triggers and test basic functions of the logging widget in the debug console.
 
     At the moment those functions are tested:
@@ -28,20 +40,18 @@ def trigger_logging_view_gui_signals():
         - the scrollbar is positioned to see the last logs if follow mode is enabled
         - if the follow mode is disabled the cursor is on its last position and the focus jumps back (TODO #2)
     """
-    import rafcon.core.singleton
-    import rafcon.gui.singleton
     from rafcon.gui.config import global_gui_config
     from .test_menu_bar import create_state_machine
-    main_window_controller = rafcon.gui.singleton.main_window_controller
+    main_window_controller = gui.singletons.main_window_controller
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
 
     # take the cursor on the first debug line
-    debug_console_ctrl = main_window_controller.get_controller('debug_console_controller')
-    logging_console_ctrl = debug_console_ctrl.get_controller('logging_console_controller')
+    debug_console_ctrl = main_window_controller.debug_console_controller
+    logging_console_ctrl = debug_console_ctrl.logging_console_controller
 
     def check_scrollbar_adjustment_to_be_at_bottom():
         testing_utils.wait_for_gui()
-        call_gui_callback(testing_utils.wait_for_gui)
+        gui(testing_utils.wait_for_gui)
         # waiting for the gui is not sufficient
         # calling show(), show_now(), show_all(), realize() or reset_style() on the scrollbar does not work either
         scrolled_down = False
@@ -61,43 +71,43 @@ def trigger_logging_view_gui_signals():
 
     line_number = 8
     line_offset = 10
-    call_gui_callback(logging_console_ctrl.view.set_cursor_position, line_number, line_offset)
-    call_gui_callback(logging_console_ctrl.view.scroll_to_cursor_onscreen)
+    gui(logging_console_ctrl.view.set_cursor_position, line_number, line_offset)
+    gui(logging_console_ctrl.view.scroll_to_cursor_onscreen)
 
     logger.debug("0 test if line was selected")
-    current_line_number, current_line_offset = call_gui_callback(logging_console_ctrl.view.get_cursor_position)
-    text_of_line_number = call_gui_callback(logging_console_ctrl.view.get_text_of_line, line_number)
-    text_of_current_line = call_gui_callback(logging_console_ctrl.view.get_text_of_line, current_line_number)
+    current_line_number, current_line_offset = gui(logging_console_ctrl.view.get_cursor_position)
+    text_of_line_number = gui(logging_console_ctrl.view.get_text_of_line, line_number)
+    text_of_current_line = gui(logging_console_ctrl.view.get_text_of_line, current_line_number)
     assert text_of_current_line == text_of_line_number
     print('#'*20, "\n\nThis is focused {0} \n\n".format(text_of_current_line), '#'*20)
 
     logger.debug("1 test if cursor line is constant for change to 'CONSOLE_FOLLOW_LOGGING' True")
-    call_gui_callback(global_gui_config.set_config_value, 'CONSOLE_FOLLOW_LOGGING', True)
-    current_line_number, current_line_offset = call_gui_callback(logging_console_ctrl.view.get_cursor_position)
-    current_lenght = call_gui_callback(logging_console_ctrl.view.len)
+    gui(global_gui_config.set_config_value, 'CONSOLE_FOLLOW_LOGGING', True)
+    current_line_number, current_line_offset = gui(logging_console_ctrl.view.get_cursor_position)
+    current_lenght = gui(logging_console_ctrl.view.len)
     assert line_number == current_line_number
     # 1.1 test check if scrollbar is on max position"
     check_scrollbar_adjustment_to_be_at_bottom()
 
     logger.debug("2 test if cursor line is constant for change to 'CONSOLE_FOLLOW_LOGGING' False")
-    call_gui_callback(global_gui_config.set_config_value, 'CONSOLE_FOLLOW_LOGGING', False)
-    current_line_number, current_line_offset = call_gui_callback(logging_console_ctrl.view.get_cursor_position)
+    gui(global_gui_config.set_config_value, 'CONSOLE_FOLLOW_LOGGING', False)
+    current_line_number, current_line_offset = gui(logging_console_ctrl.view.get_cursor_position)
     assert line_number == current_line_number
     # TODO #1 check that the scrollbar position allows to see the cursor
 
     logger.debug("3 test if cursor line is constant for active logging")
     state_machine = create_state_machine()
     first_sm_id = state_machine.state_machine_id
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, state_machine)
+    gui(gui.core_singletons.state_machine_manager.add_state_machine, state_machine)
 
-    current_line_number, current_line_offset = call_gui_callback(logging_console_ctrl.view.get_cursor_position)
+    current_line_number, current_line_offset = gui(logging_console_ctrl.view.get_cursor_position)
     assert line_number == current_line_number
 
-    call_gui_callback(global_gui_config.set_config_value, 'CONSOLE_FOLLOW_LOGGING', True)
+    gui(global_gui_config.set_config_value, 'CONSOLE_FOLLOW_LOGGING', True)
 
-    call_gui_callback(menubar_ctrl.on_new_activate, None)
+    gui(menubar_ctrl.on_new_activate, None)
 
-    current_line_number, current_line_offset = call_gui_callback(logging_console_ctrl.view.get_cursor_position)
+    current_line_number, current_line_offset = gui(logging_console_ctrl.view.get_cursor_position)
     assert line_number == current_line_number
     # 3.1 test check if scrollbar is on max position"
     check_scrollbar_adjustment_to_be_at_bottom()
@@ -108,7 +118,7 @@ def trigger_logging_view_gui_signals():
     with open(global_gui_config.config_file_path, 'r') as f:
         config_file_start = f.read()
 
-    call_gui_callback(global_gui_config.set_config_value, 'CONSOLE_FOLLOW_LOGGING', False)
+    gui(global_gui_config.set_config_value, 'CONSOLE_FOLLOW_LOGGING', False)
 
     with open(global_gui_config.config_file_path, 'r') as f:
         config_file_end = f.read()
@@ -116,28 +126,6 @@ def trigger_logging_view_gui_signals():
     assert config_file_end == config_file_start
 
     print("finished debug console test")
-
-
-@pytest.mark.unstable
-def test_logging_view_widget(caplog):
-    from os.path import join
-
-    change_in_gui_config = {'AUTO_BACKUP_ENABLED': False, 'HISTORY_ENABLED': False,
-                            "CONSOLE_FOLLOW_LOGGING": False,
-                            "LOGGING_SHOW_VERBOSE": True, "LOGGING_SHOW_DEBUG": True,
-                            "LOGGING_SHOW_WARNING": True, "LOGGING_SHOW_ERROR": True}
-
-    libraries = {"ros": join(testing_utils.EXAMPLES_PATH, "libraries", "ros_libraries"),
-                 "turtle_libraries": join(testing_utils.EXAMPLES_PATH, "libraries", "turtle_libraries"),
-                 "generic": join(testing_utils.LIBRARY_SM_PATH, "generic")}
-
-    testing_utils.run_gui(gui_config=change_in_gui_config, libraries=libraries)
-
-    try:
-        trigger_logging_view_gui_signals()
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0, expected_errors=0)
 
 if __name__ == '__main__':
     # test_logging_view_widget(None)

@@ -35,7 +35,7 @@ logger = log.get_logger(__name__)
 
 
 def reduce_to_parent_states(models):
-    """Remove all models of states that have a state model with parent relation in the list
+    """Remove all state models that also have their parents in the list
 
     The function filters the list of models, so that for no model in the list, one of it (grand-)parents is also in
     the list. E.g. if the input models consists of a hierarchy state with two of its child states, the resulting list
@@ -213,7 +213,7 @@ class Selection(ModelMT):
         selection of the state machine.
 
         If no modifier key (indicating to extend the selection) is pressed, the state machine selection is set to the
-        passed selection. If the selection is to be extended, the state machine collection will consist of the widget
+        passed selection. If the selection is to be extended, the state machine collection will consist of the widget's
         selection plus all previously selected elements not having the core class `core_class`.
 
         :param State | StateElement core_class: The core class of the elements the widget handles

@@ -7,19 +7,19 @@ from distutils.version import StrictVersion
 
 # general tool elements
 from tests import utils as testing_utils
-from tests.utils import call_gui_callback, run_gui, initialize_environment
+from tests.utils import call_gui_callback, initialize_environment
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
-def run_backward_compatibility_state_machines(state_machines_path):
+def run_backward_compatibility_state_machines(gui, state_machines_path):
     for state_machine_folder in os.listdir(state_machines_path):
         state_machine_path = os.path.join(state_machines_path, state_machine_folder)
         if not os.path.isdir(state_machine_path):
             continue
 
-        run_state_machine(state_machine_path)
+        run_state_machine(gui, state_machine_path)
 
 
 def assert_correctness_of_execution():
@@ -32,40 +32,37 @@ def assert_correctness_of_execution():
     assert gvm.get_variable("l1") == 1
 
 
-def run_state_machine(state_machine_path):
+def run_state_machine(gui, state_machine_path):
     import rafcon.core.config
-    import rafcon.core.singleton as singletons
     import rafcon.gui.helpers.state_machine as gui_helper_statemachine
 
-    gvm = rafcon.core.singleton.global_variable_manager
-    execution_engine = singletons.state_machine_execution_engine
-    state_machine_manager = singletons.state_machine_manager
+    gvm = gui.core_singletons.global_variable_manager
+    execution_engine = gui.core_singletons.state_machine_execution_engine
+    state_machine_manager = gui.core_singletons.state_machine_manager
 
     if not execution_engine.finished_or_stopped():
         raise RuntimeError("The execution engine is not stopped")
 
     print("Loading state machine from path: {}".format(state_machine_path))
 
-    state_machine = call_gui_callback(gui_helper_statemachine.open_state_machine, state_machine_path)
-    call_gui_callback(testing_utils.remove_all_gvm_variables)
-    call_gui_callback(execution_engine.start, state_machine.state_machine_id)
+    state_machine = gui(gui_helper_statemachine.open_state_machine, state_machine_path)
+    gui(testing_utils.remove_all_gvm_variables)
+    gui(execution_engine.start, state_machine.state_machine_id)
 
     if not execution_engine.join(3):
         raise RuntimeError("State machine did not finish within the given time")
 
-    call_gui_callback(assert_correctness_of_execution)
-    call_gui_callback(state_machine_manager.remove_state_machine, state_machine.state_machine_id)
+    gui(assert_correctness_of_execution)
+    gui(state_machine_manager.remove_state_machine, state_machine.state_machine_id)
 
 
 def get_backward_compatibility_state_machines_path():
-    python_version = "python" + str(sys.version_info.major) + "." + str(sys.version_info.minor)
     path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines",
-                                                       "backward_compatibility",
-                                                       python_version))
+                                                       "backward_compatibility"))
     return path
 
 
-def test_backward_compatibility_storage(caplog):
+def test_backward_compatibility_storage(gui):
     """This test ensures that old state machines storage formats can still be opened with the current RAFCON version"""
     path = get_backward_compatibility_state_machines_path()
 
@@ -73,32 +70,14 @@ def test_backward_compatibility_storage(caplog):
         logger.info("test_backward_compatibility_storage: the current python interpreter version is not supported")
         return
 
-    run_gui(gui_config={'HISTORY_ENABLED': False,
-                        'AUTO_BACKUP_ENABLED': False},
-            libraries={'unit_test_state_machines': testing_utils.get_test_sm_path("unit_test_state_machines")})
+    logger.info("Run backward compatibility state machine for own version")
+    run_backward_compatibility_state_machines(gui, path)
 
-    try:
-        logger.info("Run backward compatibility state machine for own version")
-        run_backward_compatibility_state_machines(path)
+    logger.info("Run backward compatibility state machine for other versions")
+    all_versions_path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines",
+                                                                    "backward_compatibility"))
+    run_backward_compatibility_state_machines(gui, all_versions_path)
 
-        logger.info("Run backward compatibility state machine for other versions")
-        all_versions_path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines",
-                                                                        "backward_compatibility"))
-        for python_version_folder in os.listdir(all_versions_path):
-            full_python_version_path = os.path.join(all_versions_path, python_version_folder)
-            if os.path.isdir(full_python_version_path):
-                if full_python_version_path == path:
-                    pass
-                else:
-                    run_backward_compatibility_state_machines(full_python_version_path)
-
-    except Exception:
-        raise
-    finally:
-        # two warning per minor version lower than the current RAFCON version
-        state_machines = len([filename for filename in os.listdir(path) if os.path.isdir(os.path.join(path, filename))])
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=0)
 
 
 def test_unchanged_storage_format(caplog):
@@ -158,9 +137,15 @@ def calculate_state_machine_hash(path):
     paths_to_hash = []
     for root, dirs, filenames in os.walk(path):
         for filename in filenames:
+            file_path = os.path.join(root, filename)
             # The STATEMACHINE_FILE cannot be used for the hash as it e.g. includes a timestamp
-            if filename != storage.STATEMACHINE_FILE:
-                paths_to_hash.append(os.path.join(root, filename))
+            if filename == storage.STATEMACHINE_FILE:
+                continue
+            if filename == storage.SEMANTIC_DATA_FILE:
+                semantic_data = open(file_path, 'r').read()
+                if semantic_data == "{}":
+                    continue
+            paths_to_hash.append(file_path)
 
     paths_to_hash.sort()
     hash = hashlib.md5()

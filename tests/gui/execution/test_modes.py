@@ -50,13 +50,14 @@ def create_state_machine():
     return StateMachine(root_state=root), t_id, h4.state_id
 
 
-def iter_execution_modes():
+def test_execution_modes(gui):
     """ Test execution modes
-    
+
       - The execution history widget should be updated always if a mode is changed and not STARTED
       - the execution mode change from step mode to pause should not cause a step (change of current active state)
       - or the opposite from pause to step mode should not cause a step (change of current active state)
     """
+    call_gui_callback(initialize_global_variables)
     from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
     import rafcon.gui.singleton as gui_singleton
     from rafcon.gui.controllers.menu_bar import MenuBarController
@@ -264,20 +265,6 @@ def iter_execution_modes():
     assert len(after_so3_current_active_state.split('/')) == len(after_so2_current_active_state.split('/'))
 
     execution_observer.relieve_model(sm_m)
-
-    return
-
-
-def test_execution_modes(caplog):
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    call_gui_callback(initialize_global_variables)
-    try:
-        iter_execution_modes()
-    except Exception as e:
-        raise
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=1)
 
 
 if __name__ == '__main__':

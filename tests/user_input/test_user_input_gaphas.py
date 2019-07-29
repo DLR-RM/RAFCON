@@ -2,13 +2,11 @@ import os
 import time
 import pytest
 
-# core elements
-import rafcon.core.config
+# noinspection PyUnresolvedReferences
+from tests.gui.conftest import gui
 
-# general tool elements
+import rafcon.core.config
 from rafcon.utils import log
-from tests.utils import call_gui_callback, run_gui, wait_for_gui_quit
-from tests import utils as testing_utils
 
 logger = log.get_logger(__name__)
 
@@ -70,23 +68,13 @@ def south_east_coordinates_of_model(gaphas_view):
     return x, y
 
 
-def create_and_resize_state():
-    from gi.repository import Gtk
-    from rafcon.gui.singleton import main_window_controller
-    # gvm = rafcon.core.singleton.global_variable_manager
-    menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-    # from rafcon.gui.controllers.menu_bar import MenuBarController
-    # assert isinstance(menubar_ctrl, MenuBarController)
-    # execution_engine = singletons.state_machine_execution_engine
-    # state_machine_manager = singletons.state_machine_manager
+@pytest.mark.user_input
+def test_user_input_gaphas(gui):
+    menubar_ctrl = gui.singletons.main_window_controller.menu_bar_controller
+    sm_ctrls = gui.singletons.main_window_controller.state_machines_editor_ctrl
 
-    call_gui_callback(menubar_ctrl.on_new_activate, None)
-    # time.sleep(1.0)
-    time.sleep(0.5)
+    gui(menubar_ctrl.on_new_activate, None)
 
-    wait_for_gui()
-
-    sm_ctrls = main_window_controller.get_controller('state_machines_editor_ctrl')
     graphical_editor_controller = sm_ctrls.get_controller(1)
     # get first state machine page in state machines notebook
     sm_page = list(sm_ctrls.tabs.items())[0][1]['page']
@@ -97,7 +85,7 @@ def create_and_resize_state():
 
     # print x, y
 
-    call_gui_callback(resize_state, sm_model, sm_page, graphical_editor_controller)
+    gui(resize_state, sm_model, sm_page, graphical_editor_controller)
 
     # wait_for_gui()
     # graphical_editor_controller.canvas.update()
@@ -119,20 +107,6 @@ def create_and_resize_state():
     assert y < new_y
 
     # time.sleep(10.0)
-
-
-@pytest.mark.user_input
-def test_user_input_gaphas(caplog):
-    run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
-            libraries={'unit_test_state_machines': testing_utils.get_test_sm_path("unit_test_state_machines")})
-    try:
-        create_and_resize_state()
-    except Exception as e:
-        raise
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
-
 
 if __name__ == '__main__':
     test_user_input_gaphas(None)

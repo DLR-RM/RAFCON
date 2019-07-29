@@ -120,6 +120,11 @@ class ExtendedController(Controller):
             return self.__child_controllers[key]
         return None
 
+    def __getattr__(self, item):
+        if "_ExtendedController__child_controllers" in self.__dict__ and item in self.__child_controllers:
+            return self.__child_controllers[item]
+        return self.__getattribute__(item)
+
     def get_child_controllers(self):
         """Returns a list with all registered child controllers
 

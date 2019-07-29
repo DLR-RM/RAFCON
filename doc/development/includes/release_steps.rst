@@ -102,7 +102,7 @@ institute):
   .. code:: bash
 
      $ rm dist/*
-     $ python setup.py sdist
+     $ python setup.py sdist bdist_wheel
      $ twine upload dist/*
 
 13. Publish to GitHub

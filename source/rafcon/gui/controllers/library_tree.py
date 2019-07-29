@@ -269,7 +269,7 @@ class LibraryTreeController(ExtendedController):
         :param widget:
         :param context:
         """
-        self.view.drag_source_set_icon_stock(Gtk.STOCK_NEW)
+        pass
 
     def insert_button_clicked(self, widget, as_template=False):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine

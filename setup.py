@@ -13,56 +13,80 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from __future__ import print_function
-from setuptools import setup, find_packages
-from setuptools.command.develop import develop as DevelopCommand
-from setuptools.command.install import install as InstallCommand
-from os import path
+from setuptools import setup, find_packages, Command
+import distutils.log
+
 import os
-from imp import load_source
+
+distutils.log.set_verbosity(distutils.log.INFO)
+
+assert "setup.py" in os.listdir(os.curdir), "setup.py must be in current directory"
 
 
-rafcon_root_path = os.path.dirname(os.path.abspath(__file__))
+def include_as_data_file(path):
+    import subprocess
+    """Checks whether the given file/folder is tracked via git"""
+    if ".git" not in os.listdir("."):
+        # If this is not a git repo at all, regard the file as being tracked
+        # This can be the case if a wheel is build from a source dist
+        return True
+    # Include generated CSS files
+    if path.endswith(".css"):
+        return True
+    # Besides this, only include files tracked via git
+    return subprocess.call(['git', 'ls-files', '--error-unmatch', path],
+                           stderr=subprocess.STDOUT, stdout=open(os.devnull, 'w')) == 0
 
-script_path = path.realpath(__file__)
-install_helper = path.join(path.dirname(script_path), "source", "rafcon", "utils", "installation.py")
-installation = load_source("installation", install_helper)
 
-
-class PostDevelopCommand(DevelopCommand):
-    """Post installation step for development mode
-    """
-    def run(self):
-        installation.install_fonts()
-        installation.install_gtk_source_view_styles()
-        installation.install_libraries()
-
-
-class PostInstallCommand(InstallCommand):
-    """Post installation step for installation mode
-    """
-    def run(self):
-        InstallCommand.run(self)
-        installation.install_fonts()
-        installation.install_gtk_source_view_styles()
-        installation.install_libraries()
+def get_data_files():
+    data_files_dir = os.path.join(".", 'share')
+    exclude_data_files_folders = ["ln", "templates"]
+    data_files = []
+    for directory, folders, files in os.walk(data_files_dir):
+        folder_name = directory.rsplit(os.sep, 1)[1]
+        if folder_name in exclude_data_files_folders:
+            continue
+        data_files.append((directory, [os.path.join(directory, file) for file in files
+                                       if include_as_data_file(os.path.join(directory, file))]))
+    return data_files
 
 
 # read version from VERSION file
 # this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon
-version_file_path = os.path.join(rafcon_root_path, "VERSION")
+version_file_path = os.path.join(".", "VERSION")
 with open(version_file_path, "r") as f:
     content = f.read().splitlines()
     version = content[0]
 
-readme_file_path = os.path.join(rafcon_root_path, "README.rst")
+readme_file_path = os.path.join(".", "README.rst")
 with open(readme_file_path, "r") as f:
     long_description = f.read()
 
-global_requirements = ['pylint>=1.6,<2', 'psutil', 'jsonconversion~=0.2.9', 'yaml_configuration~=0.1',
-                       'python-gtkmvc3-dlr~=1.0.0', 'gaphas~=1.0.0rc1', 'future>=0.16,<0.18.0']
+global_requirements = ['pylint>=1.6,<2', 'psutil', 'jsonconversion~=0.2.12', 'yaml_configuration~=0.1',
+                       'python-gtkmvc3-dlr~=1.0.0', 'gaphas~=1.0.0', 'future>=0.16,<0.18.0']
 
-test_requirements = ['pytest', 'pytest-timeout', 'pytest-catchlog', 'pytest-mock', 'graphviz', 'pyuserinput']
+test_requirements = ['pytest>=3.5,<5', 'pytest-timeout', 'pytest-mock', 'graphviz', 'pyuserinput']
 test_requirements += global_requirements
+
+
+class BuildMOFiles(Command):
+    description = "Create/update mo translation files"
+    user_options = []
+
+    def initialize_options(self):
+        pass  # must be overridden
+
+    def finalize_options(self):
+        pass  # must be overridden
+
+    def run(self):
+        import sys
+        import importlib
+        sys.path.insert(0, "./source")
+        i18n = importlib.import_module("rafcon.utils.i18n")
+        i18n.create_mo_files(distutils.log)
+        sys.path.pop()
+
 
 setup(
     name='rafcon',
@@ -79,16 +103,16 @@ setup(
     package_dir={'': "source"},  # tell distutils packages are under source
 
     package_data={
-        # Include pylint and logging config
-        'rafcon': ['pylintrc', 'logging.conf'],
-        # Include core and GUI config
+        # Include pylint, logging config and localisation files
+        'rafcon': ['pylintrc', 'logging.conf', 'locale/*', 'locale/*/LC_MESSAGES/*'],
+        # Include core and GUI config plush splashscreens
         'rafcon.core': ['config.yaml'],
-        'rafcon.gui': ['gui_config.yaml'],
+        'rafcon.gui': ['gui_config.yaml', 'assets/splashscreens/*'],
         # Include all glade files
         'rafcon.gui.glade': ['*.glade']
     },
 
-    data_files=installation.generate_data_files(),
+    data_files=get_data_files(),
 
     setup_requires=['pytest-runner', 'libsass >= 0.15.0'],
     tests_require=test_requirements,
@@ -96,6 +120,10 @@ setup(
 
     extras_require={
         'testing': test_requirements
+    },
+
+    cmdclass={
+        'build_i18n': BuildMOFiles,
     },
 
     sass_manifests={
@@ -114,11 +142,6 @@ setup(
             'rafcon_execution_log_viewer = rafcon.gui.execution_log_viewer:main',
             'rafcon = rafcon.gui.start:main'
         ]
-    },
-
-    cmdclass={
-        'develop': PostDevelopCommand,
-        'install': PostInstallCommand,
     },
 
     keywords=('state machine', 'robotic', 'FSM', 'development', 'GUI', 'visual programming'),
@@ -140,6 +163,4 @@ setup(
         'Topic :: Software Development',
         'Topic :: Utilities'
     ],
-
-    zip_safe=True
 )

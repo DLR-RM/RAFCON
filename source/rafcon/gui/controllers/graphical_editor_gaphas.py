@@ -652,11 +652,13 @@ class GraphicalEditorController(ExtendedController):
 
             # 2nd Recreate connections to the replaced StateView to ensure correct connectivity
             parent_state = parent_state_v.model.state
-            connected_transitions, connected_data_flows = parent_state.related_linkage_state(new_state_m.state.state_id)
-            external_connections = connected_transitions['external']['ingoing'] + \
-                                   connected_transitions['external']['outgoing'] + \
-                                   connected_data_flows['external']['ingoing'] + \
-                                   connected_data_flows['external']['outgoing']
+            connected_transitions, connected_data_flows = parent_state.get_connections_for_state(new_state_m.state.state_id)
+            external_connections = set(connected_transitions['external']['ingoing'] +
+                                       connected_transitions['external']['outgoing'] +
+                                       connected_data_flows['external']['ingoing'] +
+                                       connected_data_flows['external']['outgoing'] +
+                                       connected_transitions['external']['self'] +
+                                       connected_data_flows['external']['self'])
             for connection_m in external_connections:
                 connection_v = self.canvas.get_view_for_core_element(connection_m)
                 if connection_v:

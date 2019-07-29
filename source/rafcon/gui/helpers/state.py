@@ -365,6 +365,9 @@ def change_state_type(state_m, target_class):
     # After the state has been changed in the core, we create a new model for it with all information extracted
     # from the old state model
     if new_state:
+        if old_state.__class__.__name__ in new_state.name:
+            new_state.name = old_state.name.replace(old_state.__class__.__name__, new_state.__class__.__name__)
+
         # Create a new state model based on the new state and apply the extracted child models
         new_state_m = create_state_model_for_state(new_state, old_state_meta, state_element_models)
         # By convention, tha last model within the affected model list, is the newly created model
@@ -390,6 +393,8 @@ def change_state_type(state_m, target_class):
 
     # Destroy all states and state elements (core and models) that are no longer required
     old_state.destroy(recursive=False)
+    # Temporarily re-register to prevent KeyError: prepare_destruction calls unregister_observer
+    old_state_m.register_observer(old_state_m)
     old_state_m.prepare_destruction(recursive=False)
     for state_element_m in obsolete_state_element_models:
         if isinstance(state_element_m, AbstractStateModel):
@@ -528,12 +533,14 @@ def substitute_state(target_state_m, state_m_to_insert, as_template=False):
                                                    action_parent_m=action_parent_m,
                                                    affected_models=[old_state_m, ], after=False,
                                                    kwargs={'state_id': state_id, 'state': state_to_insert}))
-    related_transitions, related_data_flows = action_parent_m.state.related_linkage_state(state_id)
+    related_transitions, related_data_flows = action_parent_m.state.get_connections_for_state(state_id)
     tmp_meta_data['state'] = old_state_m.meta
     # print("old state meta", old_state_m.meta)
-    for t in related_transitions['external']['ingoing'] + related_transitions['external']['outgoing']:
+    external_t = related_transitions['external']
+    for t in external_t['ingoing'] + external_t['outgoing'] + external_t['self']:
         tmp_meta_data['transitions'][t.transition_id] = action_parent_m.get_transition_m(t.transition_id).meta
-    for df in related_data_flows['external']['ingoing'] + related_data_flows['external']['outgoing']:
+    external_df = related_data_flows['external']
+    for df in external_df['ingoing'] + external_df['outgoing'] + external_df['self']:
         tmp_meta_data['data_flows'][df.data_flow_id] = action_parent_m.get_data_flow_m(df.data_flow_id).meta
     action_parent_m.substitute_state.__func__.tmp_meta_data_storage = tmp_meta_data
     action_parent_m.substitute_state.__func__.old_state_m = old_state_m
@@ -638,7 +645,7 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
     tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None,
                        'input_data_ports': {}, 'output_data_ports': {}}
     related_transitions, related_data_flows = \
-        action_parent_m.state.related_linkage_states_and_scoped_variables(state_ids, sv_ids)
+        action_parent_m.state.get_connections_for_state_and_scoped_variables(state_ids, sv_ids)
     for state_id in state_ids:
         tmp_models_dict['states'][state_id] = action_parent_m.states[state_id]
     for sv_id in sv_ids:
@@ -649,11 +656,11 @@ def group_states_and_scoped_variables(state_m_list, sv_m_list):
         tmp_models_dict['data_flows'][df.data_flow_id] = action_parent_m.get_data_flow_m(df.data_flow_id)
 
     affected_models = []
-    for elemets_dict in tmp_models_dict.values():
-        if isinstance(elemets_dict, dict):
-            affected_models.extend(elemets_dict.values())
-        elif isinstance(elemets_dict, AbstractStateModel):
-            affected_models.extend(elemets_dict)
+    for elements_dict in tmp_models_dict.values():
+        if isinstance(elements_dict, dict):
+            affected_models.extend(elements_dict.values())
+        elif isinstance(elements_dict, AbstractStateModel):
+            affected_models.extend(elements_dict)
 
     # print("EMIT-BEFORE ON ACTION PARENT")
     action_parent_m.action_signal.emit(ActionSignalMsg(action='group_states', origin='model',
@@ -718,7 +725,7 @@ def ungroup_state(state_m):
     tmp_models_dict = {'transitions': {}, 'data_flows': {}, 'states': {}, 'scoped_variables': {}, 'state': None,
                        'input_data_ports': {}, 'output_data_ports': {}}
 
-    related_transitions, related_data_flows = action_parent_m.state.related_linkage_state(state_id)
+    related_transitions, related_data_flows = action_parent_m.state.get_connections_for_state(state_id)
     tmp_models_dict['state'] = action_parent_m.states[state_id]
     for s_id, s_m in action_parent_m.states[state_id].states.items():
         tmp_models_dict['states'][s_id] = s_m

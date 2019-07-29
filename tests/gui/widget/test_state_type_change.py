@@ -593,12 +593,7 @@ def change_state_type(input_and_return_list, new_state_type, state_of_type_chang
     input_and_return_list.append(new_state_m)
 
 
-@log.log_exceptions(None, gtk_quit=True)
-def trigger_state_type_change_tests(with_gui):
-    """Only works with gui at the moment.
-
-    :param args:
-    """
+def test_state_type_change_test(gui):
     import rafcon.core.singleton
     import rafcon.gui.singleton
     from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
@@ -608,12 +603,12 @@ def trigger_state_type_change_tests(with_gui):
     sm_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
     state_dict, sm = create_state_machine()
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
-    call_gui_callback(testing_utils.wait_for_gui)
+    gui(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
+    gui(testing_utils.wait_for_gui)
 
     first_sm_id = sm.state_machine_id
     sm_m = sm_manager_model.state_machines[first_sm_id]
-    call_gui_callback(sm_manager_model.__setattr__, 'selected_state_machine_id', first_sm_id)
+    gui(sm_manager_model.__setattr__, 'selected_state_machine_id', first_sm_id)
     # General Type Change inside of a state machine (NO ROOT STATE) ############
     state_of_type_change = 'State3'
     check_elements_ignores.append("internal_transitions")
@@ -621,8 +616,8 @@ def trigger_state_type_change_tests(with_gui):
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
 
     input_and_return_list = list()
-    call_gui_callback(store_state_elements, state_dict[state_of_type_change], state_m, input_and_return_list)
-    call_gui_callback(testing_utils.wait_for_gui)
+    gui(store_state_elements, state_dict[state_of_type_change], state_m, input_and_return_list)
+    gui(testing_utils.wait_for_gui)
     stored_state_elements = input_and_return_list[0]
     stored_state_m_elements = input_and_return_list[1]
 
@@ -630,20 +625,20 @@ def trigger_state_type_change_tests(with_gui):
 
     # HS -> BCS
     input_and_return_list = [state_m]
-    call_gui_callback(sm_m.selection.set, input_and_return_list)
-    call_gui_callback(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, 'State3', check_list_BCS,
+    gui(sm_m.selection.set, input_and_return_list)
+    gui(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, 'State3', check_list_BCS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # BCS -> HS
-    call_gui_callback(change_state_type, input_and_return_list, HierarchyState.__name__, 'State3', check_list_HS,
+    gui(change_state_type, input_and_return_list, HierarchyState.__name__, 'State3', check_list_HS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # HS -> PCS
-    call_gui_callback(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, 'State3', check_list_PCS,
+    gui(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, 'State3', check_list_PCS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # PCS -> ES
-    call_gui_callback(change_state_type, input_and_return_list, ExecutionState.__name__, 'State3', check_list_ES,
+    gui(change_state_type, input_and_return_list, ExecutionState.__name__, 'State3', check_list_ES,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # TODO all test that are not root_state-test have to be performed with Preemptive and Barrier Concurrency States as parents too
@@ -653,8 +648,8 @@ def trigger_state_type_change_tests(with_gui):
     # get first storage
     state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
     input_and_return_list = []
-    call_gui_callback(store_state_elements, state_dict[state_of_type_change], state_m, input_and_return_list)
-    call_gui_callback(testing_utils.wait_for_gui)
+    gui(store_state_elements, state_dict[state_of_type_change], state_m, input_and_return_list)
+    gui(testing_utils.wait_for_gui)
     stored_state_elements = input_and_return_list[0]
     stored_state_m_elements = input_and_return_list[1]
     print("\n\n %s \n\n" % state_m.state.name)
@@ -663,36 +658,27 @@ def trigger_state_type_change_tests(with_gui):
     # HS -> BCS
     print("Test: change root state type: HS -> BCS")
     input_and_return_list = [state_m]
-    call_gui_callback(sm_m.selection.set, input_and_return_list)
-    call_gui_callback(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, 'Container', check_list_root_BCS,
+    gui(sm_m.selection.set, input_and_return_list)
+    gui(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, 'Container', check_list_root_BCS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # BCS -> HS
     print("Test: change root state type: BCS -> HS")
-    call_gui_callback(change_state_type, input_and_return_list, HierarchyState.__name__, 'Container', check_list_root_HS,
+    gui(change_state_type, input_and_return_list, HierarchyState.__name__, 'Container', check_list_root_HS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # HS -> PCS
     print("Test: change root state type: HS -> PCS")
-    call_gui_callback(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, 'Container', check_list_root_PCS,
+    gui(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, 'Container', check_list_root_PCS,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # PCS -> ES
     print("Test: change root state type: PCS -> ES")
-    call_gui_callback(change_state_type, input_and_return_list, ExecutionState.__name__, 'Container', check_list_root_ES,
+    gui(change_state_type, input_and_return_list, ExecutionState.__name__, 'Container', check_list_root_ES,
                       sm_m, state_dict, stored_state_elements, stored_state_m_elements)
 
     # simple type change of root_state -> still could be extended
     check_elements_ignores.remove("internal_transitions")
-
-
-def test_state_type_change_test(caplog):
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    try:
-        trigger_state_type_change_tests(with_gui=True)
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':

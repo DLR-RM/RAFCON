@@ -29,7 +29,7 @@ from pylint import lint
 from pylint.reporters.json import JSONReporter
 from io import StringIO
 from astroid import MANAGER
-from rafcon.utils.resources import resource_filename
+from pkg_resources import resource_filename
 
 import rafcon
 from rafcon.core.states.library_state import LibraryState
@@ -100,7 +100,10 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
 
     @source_text.setter
     def source_text(self, text):
-        self.model.state.script_text = text
+        try:
+            self.model.state.script_text = text
+        except Exception as e:
+            logger.error("The script was saved, but cannot be compiled: {}: {}".format(e.__class__.__name__, e))
 
     # ==================================== External Editor functions start ====================================
 
