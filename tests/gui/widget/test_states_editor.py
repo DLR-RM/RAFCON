@@ -121,7 +121,11 @@ def select_child_states_and_state_sequentially(sm_m, parent_state_m, logger=None
     assert state_editor_ctrl.model is parent_state_m
 
 
-def trigger_state_type_change_tests(with_gui=True):
+@pytest.mark.timeout(20)
+def test_state_type_change_test(gui):
+    trigger_state_type_change_tests(gui)
+
+def trigger_state_type_change_tests(gui):
     import rafcon.core.singleton
     import rafcon.gui.singleton
     from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
@@ -134,10 +138,10 @@ def trigger_state_type_change_tests(with_gui=True):
     first_sm_id = sm.state_machine_id
 
     # add new state machine
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
-    call_gui_callback(testing_utils.wait_for_gui)
+    gui(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
+    gui(testing_utils.wait_for_gui)
     # select state machine
-    call_gui_callback(rafcon.gui.singleton.state_machine_manager_model.__setattr__, "selected_state_machine_id", first_sm_id)
+    gui(rafcon.gui.singleton.state_machine_manager_model.__setattr__, "selected_state_machine_id", first_sm_id)
     # get state machine model
     sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
@@ -162,17 +166,17 @@ def trigger_state_type_change_tests(with_gui=True):
 
     # HS -> BCS
     input_and_return_list = [state_m]
-    call_gui_callback(sm_m.selection.set, input_and_return_list)
-    call_gui_callback(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, state_of_type_change)
+    gui(sm_m.selection.set, input_and_return_list)
+    gui(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, state_of_type_change)
 
     # BCS -> HS
-    call_gui_callback(change_state_type, input_and_return_list, HierarchyState.__name__, state_of_type_change)
+    gui(change_state_type, input_and_return_list, HierarchyState.__name__, state_of_type_change)
 
     # HS -> PCS
-    call_gui_callback(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, state_of_type_change)
+    gui(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, state_of_type_change)
 
     # PCS -> ES
-    call_gui_callback(change_state_type, input_and_return_list, ExecutionState.__name__, state_of_type_change)
+    gui(change_state_type, input_and_return_list, ExecutionState.__name__, state_of_type_change)
 
     # TODO all test that are not root_state-test have to be performed with Preemptive and Barrier Concurrency States as parents too
 
@@ -181,32 +185,19 @@ def trigger_state_type_change_tests(with_gui=True):
     input_and_return_list = [sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())]
 
     # HS -> BCS
-    call_gui_callback(sm_m.selection.set, input_and_return_list)
-    call_gui_callback(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, state_of_type_change)
+    gui(sm_m.selection.set, input_and_return_list)
+    gui(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, state_of_type_change)
 
     # BCS -> HS
-    call_gui_callback(change_state_type, input_and_return_list, HierarchyState.__name__, state_of_type_change)
+    gui(change_state_type, input_and_return_list, HierarchyState.__name__, state_of_type_change)
 
     # HS -> PCS
-    call_gui_callback(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, state_of_type_change)
+    gui(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, state_of_type_change)
 
     # PCS -> ES
-    call_gui_callback(change_state_type, input_and_return_list, ExecutionState.__name__, state_of_type_change)
+    gui(change_state_type, input_and_return_list, ExecutionState.__name__, state_of_type_change)
 
     # simple type change of root_state -> still could be extended
-
-
-@pytest.mark.timeout(20)
-def test_state_type_change_test(caplog):
-
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    try:
-        trigger_state_type_change_tests(with_gui=True)
-    except:
-        raise  # required, otherwise the exception cannot be accessed within finally
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':

@@ -1,4 +1,7 @@
 from __future__ import print_function
+
+import pytest
+
 from builtins import range
 import os
 import time
@@ -19,12 +22,17 @@ def initialize_global_variables():
     gui_singleton.global_variable_manager_model.global_variable_manager.set_variable("global_variable_2", "value2")
 
 
-def execute_library_state_forwards_backwards():
+@pytest.mark.parametrize('gui', [{"libraries": {
+    'unit_test': os.path.join(testing_utils.TESTS_PATH, 'assets', 'unit_test_state_machines',
+                              'backward_step_library_execution_test', 'test_library')}}], indirect=True, ids=["with backward step libraries"])
+def test_backward_stepping_library_state(gui):
+    gui(initialize_global_variables)
+
     from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
     import rafcon.gui.singleton as gui_singleton
 
-    menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
-    sm = call_gui_callback(
+    menubar_ctrl = gui_singleton.main_window_controller.menu_bar_controller
+    sm = gui(
         menubar_ctrl.on_open_activate, None, None,
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_step_library_execution_test"))
     )
@@ -34,22 +42,22 @@ def execute_library_state_forwards_backwards():
     with state_machine_execution_engine._status.execution_condition_variable:
         state_machine_execution_engine.synchronization_counter = 0
 
-    call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
+    gui(menubar_ctrl.on_step_mode_activate, None, None)
     current_state_machine_id = gui_singleton.state_machine_manager.active_state_machine_id
     state_machines_editor_tab_status_check(current_state_machine_id, active=True)  # execution start is synchronous
     wait_for_execution_engine_sync_counter(1, logger)
 
     # forward
     for i in range(5):
-        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+        gui(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
     # backward
     for i in range(4):
-        call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+        gui(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
-    call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+    gui(menubar_ctrl.on_backward_step_activate, None, None)
 
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
@@ -57,24 +65,7 @@ def execute_library_state_forwards_backwards():
         if sd.name == "beer_count":
             assert sd.value == 100
     # stop or finished are asynchronous but the call_gui_callback makes the check synchronous
-    call_gui_callback(state_machines_editor_tab_status_check, current_state_machine_id, False)
-
-
-def test_backward_stepping_library_state(caplog):
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False},
-                          libraries={'unit_test': os.path.join(testing_utils.TESTS_PATH, 'assets',
-                                                               'unit_test_state_machines',
-                                                               'backward_step_library_execution_test', 'test_library')
-                                     }
-                          )
-    call_gui_callback(initialize_global_variables)
-    try:
-        execute_library_state_forwards_backwards()
-    except Exception:
-        raise
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
+    gui(state_machines_editor_tab_status_check, current_state_machine_id, False)
 
 
 def verify_execute_preemptive_state_forwards_backwards():
@@ -86,13 +77,14 @@ def verify_execute_preemptive_state_forwards_backwards():
     assert whiskey == 0
 
 
-def execute_preemptive_state_forwards_backwards():
+def test_backward_stepping_preemptive_state(gui):
+    gui(initialize_global_variables)
+
     from rafcon.core.singleton import state_machine_execution_engine
-    import rafcon.gui.singleton as gui_singleton
 
-    menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
+    menubar_ctrl = gui.singletons.main_window_controller.menu_bar_controller
 
-    state_machine = call_gui_callback(
+    state_machine = gui(
         menubar_ctrl.on_open_activate, None, None,
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_step_preemtive_test"))
     )
@@ -103,67 +95,58 @@ def execute_preemptive_state_forwards_backwards():
     with state_machine_execution_engine._status.execution_condition_variable:
         state_machine_execution_engine.synchronization_counter = 0
 
-    call_gui_callback(menubar_ctrl.on_step_mode_activate, None, None)
-    current_state_machine_id = gui_singleton.state_machine_manager.active_state_machine_id
+    gui(menubar_ctrl.on_step_mode_activate, None, None)
+    current_state_machine_id = gui.singletons.state_machine_manager.active_state_machine_id
     state_machines_editor_tab_status_check(current_state_machine_id, active=True)  # execution start is synchronous
 
     wait_for_execution_engine_sync_counter(1, logger)
 
     # forward
     for i in range(3):
-        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+        gui(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(2, logger)
 
-    call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+    gui(menubar_ctrl.on_step_into_activate, None, None)
     wait_for_execution_engine_sync_counter(1, logger)
 
     # preemptive concurrency state must be finished before the next step
     while not state_machine.get_state_by_path("AOURYA/LXEMOO").final_outcome:
         time.sleep(0.010)
 
-    call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+    gui(menubar_ctrl.on_step_into_activate, None, None)
     wait_for_execution_engine_sync_counter(1, logger)
 
     # "take turn" state reached
 
     # backward
     for i in range(1):
-        call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+        gui(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
     for i in range(3):
-        call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+        gui(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(2, logger)
 
     state_machines_editor_tab_status_check(current_state_machine_id, active=True)
-    call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+    gui(menubar_ctrl.on_backward_step_activate, None, None)
 
     while not state_machine_execution_engine.finished_or_stopped():
         time.sleep(0.1)
     # stop or finished are asynchronous but the call_gui_callback makes the check synchronous
-    call_gui_callback(state_machines_editor_tab_status_check, current_state_machine_id, False)
+    gui(state_machines_editor_tab_status_check, current_state_machine_id, False)
 
-    call_gui_callback(verify_execute_preemptive_state_forwards_backwards)
-
-
-def test_backward_stepping_preemptive_state(caplog):
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    call_gui_callback(initialize_global_variables)
-    try:
-        execute_preemptive_state_forwards_backwards()
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
-        # testing_utils.wait_for_gui()
+    gui(verify_execute_preemptive_state_forwards_backwards)
 
 
-def execute_barrier_state_forwards_backwards():
+def test_backward_stepping_barrier_state(gui):
+    gui(initialize_global_variables)
+
     from rafcon.core.singleton import state_machine_execution_engine, state_machine_manager
     import rafcon.gui.singleton as gui_singleton
 
     menubar_ctrl = gui_singleton.main_window_controller.get_controller('menu_bar_controller')
 
-    sm = call_gui_callback(
+    sm = gui(
         menubar_ctrl.on_open_activate, None, None,
         testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines", "backward_step_barrier_test"))
     )
@@ -174,38 +157,38 @@ def execute_barrier_state_forwards_backwards():
     with state_machine_execution_engine._status.execution_condition_variable:
         state_machine_execution_engine.synchronization_counter = 0
 
-    call_gui_callback(menubar_ctrl.on_step_mode_activate, sm.state_machine_id, None)
+    gui(menubar_ctrl.on_step_mode_activate, sm.state_machine_id, None)
     wait_for_execution_engine_sync_counter(1, logger)
 
     # forward
     for i in range(2):
-        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+        gui(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(3, logger)
 
-    call_gui_callback(menubar_ctrl.on_step_over_activate, None, None)
+    gui(menubar_ctrl.on_step_over_activate, None, None)
     wait_for_execution_engine_sync_counter(3, logger)
 
-    call_gui_callback(menubar_ctrl.on_step_out_activate, None, None)
+    gui(menubar_ctrl.on_step_out_activate, None, None)
     wait_for_execution_engine_sync_counter(1, logger)
 
     for i in range(3):
-        call_gui_callback(menubar_ctrl.on_step_into_activate, None, None)
+        gui(menubar_ctrl.on_step_into_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
     # backward
     for i in range(3):
-        call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+        gui(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(1, logger)
 
     print("cp1")
 
     for i in range(4):
-        call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+        gui(menubar_ctrl.on_backward_step_activate, None, None)
         wait_for_execution_engine_sync_counter(3, logger)
 
     print("cp2")
 
-    call_gui_callback(menubar_ctrl.on_backward_step_activate, None, None)
+    gui(menubar_ctrl.on_backward_step_activate, None, None)
 
     print("cp3")
 
@@ -226,19 +209,7 @@ def execute_barrier_state_forwards_backwards():
         elif sd.name == "whiskey_number":
             assert sd.value == 20
 
-    call_gui_callback(menubar_ctrl.on_stop_activate, None)
-
-
-def test_backward_stepping_barrier_state(caplog):
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    call_gui_callback(initialize_global_variables)
-    try:
-        execute_barrier_state_forwards_backwards()
-    except Exception as e:
-        raise
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
+    gui(menubar_ctrl.on_stop_activate, None)
 
 
 if __name__ == '__main__':

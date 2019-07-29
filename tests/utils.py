@@ -1,19 +1,24 @@
 from __future__ import print_function
 from future import standard_library
 standard_library.install_aliases()
+
+import pytest
+
 from builtins import str
 import copy
 import datetime
 import signal
+import os
 import sys
 import tempfile
 import time
 from os import mkdir, environ
 from os.path import join, dirname, realpath, exists, abspath
-from threading import Lock, Condition, Event, Thread, currentThread
+from threading import Lock, Event, Thread, currentThread
+from logging import Formatter
 
 import rafcon
-from rafcon.utils import log, constants
+from rafcon.utils import constants
 
 test_multithreading_lock = Lock()
 
@@ -67,6 +72,9 @@ def reload_config(config=True, gui_config=True):
         import rafcon.gui.config
         rafcon.gui.config.global_gui_config.load(path=RAFCON_TEMP_PATH_CONFIGS)
 
+def remove_configs():
+    for filename in os.listdir(RAFCON_TEMP_PATH_CONFIGS):
+        os.remove(os.path.join(RAFCON_TEMP_PATH_CONFIGS, filename))
 
 def remove_all_libraries(init_library_manager=True):
     from rafcon.core.config import global_config
@@ -88,7 +96,7 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
     import logging
     counted_warnings = 0
     counted_errors = 0
-    records = caplog.records if isinstance(caplog.records, list) else caplog.records()
+    records = caplog.get_records("call")
     for record in records:
         if record.levelno == logging.WARNING:
             counted_warnings += 1
@@ -99,10 +107,15 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
         if hasattr(record, 'exc_info'):
             record.exc_info = None
 
-    print("counted_warnings == expected_warnings", counted_warnings, expected_warnings)
-    assert counted_warnings == expected_warnings
-    print("counted_errors == expected_errors", counted_errors, expected_errors)
-    assert counted_errors == expected_errors
+    formatter = Formatter("%(name)s: %(message)s")
+    if counted_warnings != expected_warnings:
+        warnings = [formatter.format(record) for record in records if record.levelno == logging.WARNING]
+        pytest.fail("{} == counted_warnings != expected_warnings == {}\n\n"
+                    "Occured warnings:\n{}".format(counted_warnings, expected_warnings, "\n".join(warnings)))
+    if counted_errors != expected_errors:
+        errors = [formatter.format(record) for record in records if record.levelno == logging.ERROR]
+        pytest.fail("{} == counted_errors == expected_errors == {}\n\n"
+                    "Occured errors:\n{}".format(counted_errors, expected_errors, "\n".join(errors)))
 
 
 def call_gui_callback(callback, *args, **kwargs):
@@ -121,6 +134,8 @@ def rewind_and_set_libraries(libraries=None):
         libraries = {}
     if "generic" not in libraries:
         libraries["generic"] = join(RAFCON_SHARED_LIBRARY_PATH, 'generic')
+    if "unit_test_state_machines" not in libraries:
+        libraries["unit_test_state_machines"] = get_test_sm_path("unit_test_state_machines")
     global_config.set_config_value("LIBRARY_PATHS", libraries)
     environ['RAFCON_LIB_PATH'] = RAFCON_SHARED_LIBRARY_PATH
     rafcon.core.singleton.library_manager.initialize()
@@ -248,8 +263,8 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
     global gui_thread, gui_ready, used_gui_threads
     e = None
     try:
-        if caplog is not None and sys.exc_info()[0] is None:
-            assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors)
+        # if caplog is not None and sys.exc_info()[0] is None:
+        assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors)
     finally:
         try:
             if gui_ready is None:  # gui was not initialized fully only the environment
@@ -263,7 +278,7 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
             pass
         finally:
             rewind_and_set_libraries()
-            reload_config(config, gui_config)
+            remove_configs()
             if not core_only:
                 wait_for_gui()  # is needed to empty the idle add queue and not party destroy elements in next test
             GUI_INITIALIZED = GUI_SIGNAL_INITIALIZED = False
