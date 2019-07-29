@@ -5,11 +5,14 @@ Information about :ref:`RAFCON` changes in each release will be published here. 
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/develop>`__.
 
 
-Patch releases 0.13.\*
+Patch releases 0.14.\*
 ----------------------
 
 Next Release
 """"""""""""
+
+0.14.0
+""""""
 
 - Features:
 
@@ -55,7 +58,7 @@ Next Release
   - use a safe loader for GUI config file
   - fix handling of symlinks in LibraryManager
   - better support of virtual envs
-  
+
 
 - Changes:
 
@@ -69,6 +72,9 @@ Next Release
   - refactor GUI tests using the ``gui`` fixture
   - documentation on how to write tests and how to use ``gui`` fixture
 
+
+Patch releases 0.13.\*
+----------------------
 
 0.13.8
 """"""
