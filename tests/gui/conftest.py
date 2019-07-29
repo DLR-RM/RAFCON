@@ -34,6 +34,9 @@ class GUITester(object):
             from rafcon.gui.utils import wait_for_gui
             func = args[0]
             result = func(*args[1:], **kwargs)
+            # Now we manually need to run the GTK main loop to handle all asynchronous notifications
+            # E.g., when a state machine is added to the manager (in the core), the models are in certain cases created
+            # asynchronously, depending in which thread the manager model was created.
             wait_for_gui()
             return result
 
