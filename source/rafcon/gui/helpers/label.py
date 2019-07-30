@@ -276,8 +276,13 @@ def set_window_size_and_position(window, window_key):
     window.resize(*size)
     if position:
         position = (max(0, position[0]), max(0, position[1]))
-        screen_width = Gdk.Screen.width()
-        screen_height = Gdk.Screen.height()
+
+        display = Gdk.Display.get_default()
+        monitor = display.get_primary_monitor()
+        geometry = monitor.get_geometry()
+        scale_factor = monitor.get_scale_factor()
+        screen_width = scale_factor * geometry.width
+        screen_height = scale_factor * geometry.height
         if position[0] < screen_width and position[1] < screen_height:
             window.move(*position)
     else:
