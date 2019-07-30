@@ -277,7 +277,7 @@ def set_window_size_and_position(window, window_key):
     window.resize(*size)
     if position:
         position = (max(0, position[0]), max(0, position[1]))
-        screen_width, screen_height = get_screen_width_and_height()
+        screen_width, screen_height = get_screen_width_and_height(window)
         if position[0] < screen_width and position[1] < screen_height:
             window.move(*position)
     else:
