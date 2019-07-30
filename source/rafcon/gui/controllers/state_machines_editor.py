@@ -58,7 +58,7 @@ def create_tab_close_button(callback, *additional_parameters):
     close_button = Gtk.Button()
     close_button.set_size_request(width=constants.GRID_SIZE*3, height=-1)
     close_button.set_relief(Gtk.ReliefStyle.NONE)
-    close_button.set_focus_on_click(True)
+    Gtk.Widget.set_focus_on_click(close_button, True)
     close_button.add(close_label)
 
     close_button.connect('released', callback, *additional_parameters)
