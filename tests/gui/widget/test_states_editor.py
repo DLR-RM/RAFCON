@@ -94,7 +94,7 @@ def wait_for_states_editor(main_window_controller, tab_key, max_time=5.0):
     return state_editor_ctrl, time_waited
 
 
-def check_state_editor_models(sm_m, parent_state_m, logger=None):
+def select_child_states_and_state_sequentially(sm_m, parent_state_m, logger=None):
     from rafcon.gui.models import ContainerStateModel
     import rafcon.gui.singleton
     main_window_controller = rafcon.gui.singleton.main_window_controller
@@ -102,27 +102,13 @@ def check_state_editor_models(sm_m, parent_state_m, logger=None):
     sleep_time_max = 5.0
     states_editor_controller = main_window_controller.get_controller('states_editor_ctrl')
     if isinstance(parent_state_m, ContainerStateModel):
-        # logger.debug("old tabs are:")
-        # for tab in states_editor_controller.tabs.values():
-        #     logger.debug("%s %s" % (tab['state_m'], tab['state_m'].state.get_path()))
-        # for tab in states_editor_controller.closed_tabs.values():
-        #     logger.debug("%s %s" % (tab['controller'].model, tab['controller'].model.state.get_path()))
         for state_m in list(parent_state_m.states.values()):
             # get widget of state-model
-            # if not state_m.state.name == "Decider":
             state_identifier = states_editor_controller.get_state_identifier(state_m)
-            # time.sleep(1)
             sm_m.selection.set([state_m])
             [state_editor_ctrl, time_waited] = wait_for_states_editor(main_window_controller,
                                                                       state_identifier,
                                                                       sleep_time_max)
-            # logger.debug("wait for state's state editor %s" % time_waited)
-            #
-            # logger.debug("models are: \n ctrl  %s path: %s\n model %s path: %s" %
-            #              (state_editor_ctrl.model, state_editor_ctrl.model.state.get_path(),
-            #               state_m, state_m.state.get_path()))
-
-            # # check if models of widget and in state_machine-model are the same
             testing_utils.wait_for_gui()
             assert state_editor_ctrl.model is state_m
 
@@ -135,7 +121,11 @@ def check_state_editor_models(sm_m, parent_state_m, logger=None):
     assert state_editor_ctrl.model is parent_state_m
 
 
-def trigger_state_type_change_tests(with_gui=True):
+@pytest.mark.timeout(20)
+def test_state_type_change_test(gui):
+    trigger_state_type_change_tests(gui)
+
+def trigger_state_type_change_tests(gui):
     import rafcon.core.singleton
     import rafcon.gui.singleton
     from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
@@ -148,10 +138,10 @@ def trigger_state_type_change_tests(with_gui=True):
     first_sm_id = sm.state_machine_id
 
     # add new state machine
-    call_gui_callback(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
-    call_gui_callback(testing_utils.wait_for_gui)
+    gui(rafcon.core.singleton.state_machine_manager.add_state_machine, sm)
+    gui(testing_utils.wait_for_gui)
     # select state machine
-    call_gui_callback(rafcon.gui.singleton.state_machine_manager_model.__setattr__, "selected_state_machine_id", first_sm_id)
+    gui(rafcon.gui.singleton.state_machine_manager_model.__setattr__, "selected_state_machine_id", first_sm_id)
     # get state machine model
     sm_m = rafcon.gui.singleton.state_machine_manager_model.state_machines[sm.state_machine_id]
 
@@ -167,7 +157,7 @@ def trigger_state_type_change_tests(with_gui=True):
         state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active(state_type_row_id)
         # - check child state editor widgets
         new_state_m = sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())
-        check_state_editor_models(sm_m, new_state_m, logger)
+        select_child_states_and_state_sequentially(sm_m, new_state_m, logger)
         input_and_return_list.append(new_state_m)
 
     ####### General Type Change inside of a state machine (NO ROOT STATE) ############
@@ -176,17 +166,17 @@ def trigger_state_type_change_tests(with_gui=True):
 
     # HS -> BCS
     input_and_return_list = [state_m]
-    call_gui_callback(sm_m.selection.set, input_and_return_list)
-    call_gui_callback(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, state_of_type_change)
+    gui(sm_m.selection.set, input_and_return_list)
+    gui(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, state_of_type_change)
 
     # BCS -> HS
-    call_gui_callback(change_state_type, input_and_return_list, HierarchyState.__name__, state_of_type_change)
+    gui(change_state_type, input_and_return_list, HierarchyState.__name__, state_of_type_change)
 
     # HS -> PCS
-    call_gui_callback(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, state_of_type_change)
+    gui(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, state_of_type_change)
 
     # PCS -> ES
-    call_gui_callback(change_state_type, input_and_return_list, ExecutionState.__name__, state_of_type_change)
+    gui(change_state_type, input_and_return_list, ExecutionState.__name__, state_of_type_change)
 
     # TODO all test that are not root_state-test have to be performed with Preemptive and Barrier Concurrency States as parents too
 
@@ -195,32 +185,19 @@ def trigger_state_type_change_tests(with_gui=True):
     input_and_return_list = [sm_m.get_state_model_by_path(state_dict[state_of_type_change].get_path())]
 
     # HS -> BCS
-    call_gui_callback(sm_m.selection.set, input_and_return_list)
-    call_gui_callback(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, state_of_type_change)
+    gui(sm_m.selection.set, input_and_return_list)
+    gui(change_state_type, input_and_return_list, BarrierConcurrencyState.__name__, state_of_type_change)
 
     # BCS -> HS
-    call_gui_callback(change_state_type, input_and_return_list, HierarchyState.__name__, state_of_type_change)
+    gui(change_state_type, input_and_return_list, HierarchyState.__name__, state_of_type_change)
 
     # HS -> PCS
-    call_gui_callback(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, state_of_type_change)
+    gui(change_state_type, input_and_return_list, PreemptiveConcurrencyState.__name__, state_of_type_change)
 
     # PCS -> ES
-    call_gui_callback(change_state_type, input_and_return_list, ExecutionState.__name__, state_of_type_change)
+    gui(change_state_type, input_and_return_list, ExecutionState.__name__, state_of_type_change)
 
     # simple type change of root_state -> still could be extended
-
-
-@pytest.mark.timeout(20)
-def test_state_type_change_test(caplog):
-
-    testing_utils.run_gui(gui_config={'HISTORY_ENABLED': False, 'AUTO_BACKUP_ENABLED': False})
-    try:
-        trigger_state_type_change_tests(with_gui=True)
-    except:
-        raise  # required, otherwise the exception cannot be accessed within finally
-    finally:
-        testing_utils.close_gui()
-        testing_utils.shutdown_environment(caplog=caplog)
 
 
 if __name__ == '__main__':

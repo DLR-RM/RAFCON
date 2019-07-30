@@ -73,18 +73,12 @@ def setup_environment():
     # The RAFCON_LIB_PATH points to a path with common RAFCON libraries
     # If the env variable is not set, we have to determine it.
     if not os.environ.get('RAFCON_LIB_PATH', None):
-        # If RAFCON is started directly from the repo (without installation), the repo libraries have precedence
-        rafcon_root_path = dirname(realpath(rafcon.__file__))
-        rafcon_repo_library_path = join(dirname(dirname(rafcon_root_path)), 'share', 'libraries')
-        if os.path.isdir(rafcon_repo_library_path):
-            os.environ['RAFCON_LIB_PATH'] = rafcon_repo_library_path
+        rafcon_library_path = resources.get_data_file_path("rafcon", "libraries")
+        if rafcon_library_path:
+            os.environ['RAFCON_LIB_PATH'] = rafcon_library_path
         else:
-            rafcon_share_library_path = resources.search_in_share_folders("rafcon", "libraries")
-            if rafcon_share_library_path:
-                os.environ['RAFCON_LIB_PATH'] = rafcon_share_library_path
-            else:
-                logger.warning("Could not find root directory of RAFCON libraries. Please specify manually using the "
-                               "env var RAFCON_LIB_PATH")
+            logger.warning("Could not find root directory of RAFCON libraries. Please specify manually using the "
+                           "env var RAFCON_LIB_PATH")
 
     # Install dummy _ builtin function in case i18.setup_l10n() is not called
     if sys.version_info >= (3,):

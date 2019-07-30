@@ -304,6 +304,89 @@ Serialized strings are stored in a file in ASCII encoding, but they are
 read from a file as unicode. Thus explicit conversions to ASCII has to
 done if the type of the string matters.
 
+
+.. _faq_event_based:
+
+Why is RAFCON not event-based?
+"""""""""""""""""""""""""""""""""""""""""""""""""""
+
+**tl; dr**: RAFCON was created to enable the development of goal-driven behavior, in contrast to reactive behavior
+(for which many frameworks rely on events).
+However, RAFCON can be used to implement reactive behaviors as well. Quite elegantly, using observers!
+
+Long Answer:
+RAFCON state machines are no state machines in the classical sense.
+A state in RAFCON is not a state like in a FSM (i.e., a system state), but in which a certain action is executed.
+Thus, a state is rather related to flowchart block. The HPFD formalization underlying RAFCON is defined in (see https://elib.dlr.de/112067/).
+Related to robotics, a RAFCON state is a state in the robot's behavior (e.g., performing pick-up action)
+and not a robot's system state (battery at 20V, position at [x, y]).
+
+We have employed RAFCON for many goal-driven scenarios (see https://dlr-rm.github.io/RAFCON/projects).
+In goal-driven scenarios (in contrast to reactive ones) all changes of the environment are an effect of the robot's own actions.
+There are only a few "external events" the robot has to react to (low voltage, bad signal etc.).
+
+As stated before, RAFCON can not only be used to build goal-driven behavior but also to build reactive systems.
+Classical state machines or statecharts can be used to implement reactive behavior as well and they DO rely on events.
+Behavior trees are also a very powerful concept for reactive behavior and they do NOT rely on events.
+For RAFCON, we don't rely on events either.
+We employ observers to take care of events.
+To implement them, you have to use (preemptive) concurrency states.
+E.g. you can set up a preemptive concurrency state with 5 observers. The first one who fires decides the course of action.
+You can place different observers on different hierarchy levels.
+Thereby, you can define the scope of your 'event' and your 'event handler'.
+
+We have a lot of experience with event-based state machines like boost statechart, due to our experience in the RoboCup competition
+(see https://link.springer.com/chapter/10.1007/978-3-642-39250-4_5).
+One lesson learned was that applying event-based state machines does not scale.
+
+To understand this, imagine a classical use-case scenario:
+
+* You are using a non-graphical library for programming event-based state machines like boost statechart.
+* You have a hierarchical state machine with several hundreds of states inside several hierarchy layers.
+* Your have 30 types of events that are continuously firing onto your state machine.
+* In certain states you react to some events.
+* Most of the time you neglect 90% of the events and are only interested in some events defined by the current set of active states. Nevertheless, the events arbiter has to handle *every* event, which can be inefficient.
+
+Now try to answer the following questions, that would be raised during runtime:
+
+1. What is the set of currently active states?
+2. What events do I currently listen to?
+3. What is the context (hierarchy level, possible predecessors, possible successors) of each of those state?
+4. Since when do I listen to event_x? Until which state will I listen to event_x?
+5. I receive an event that I cannot process know. I defer it to a later point in time (*event deferral*).
+  * How long are events valid (*event caching*)?
+  * Another event with the same type arrives meanwhile. Should I keep the old event (*event expiration*)?
+  * Another event, which is more important arrives. Should I react to the new event and preempt the current event handling (*event priorization*)?
+
+It is obviously not trivial! Of course, you could answer those questions, but it is cubersome and you quickly loose the overview.
+
+Thus, we implemented a graphical user interface, where you can easily answer those questions:
+
+1. You clearly see all currently executed states, highlighted in green in the graphical 2.5D layout and in your execution history tree!
+2. Event observers are states. For active state, see answer 1.
+3. You clearly see the context of each state visually drawn (if you want to have a closer look, simply zoom in)
+4. Events map to observers, observers to states; their entry and exit is clearly visualized => see 3.
+5. As we do use observers instead of events we don't have to care about all this complex topics using the limited power of events
+   (Events are error-prone anyways. Adobe reported that 50% of all bugs are related to event handling: https://stlab.cc/legacy/figures/Boostcon_possible_future.pdf)
+   Instead of complex event handling, you can create powerful observer structures also in a nested manner using hierarchies and outcome forwarding.
+
+Concerning how to deal with the four mentioned event-challenges using observers:
+
+* Event deferral: Use a proper hierarchical layout for your observers.
+  The observer in a higher hierarchy layer will defer its events, until the execution of its child observers is finished.
+* Event caching: As you have one observer per event, caching is done automatically until the observer is preempted.
+* Event expiration: By preempting an observer sibling you clear the "cache" for this event. Make sure you have a proper hierarchical observer layout:
+  i.e., if an observer must not clear the cache for a certain event, pull it's observer one hierarchy up!
+* Event priorization: Make sure you have a proper hierarchical observer layout.
+  Observers on a higher hierarchy layer can preempt observers on a lower hierarhcy level, but not vice versa.
+
+These statements only hold true in the case of programming complex reactive systems,
+in which only a subset of events is of interest in certain semantic situations.
+For GUIs, in which you are normally prepared to react to the majority of events the whole time, classical event handling is of course a reasonable way to go!
+
+Take away message: Observers are more powerful than events. RAFCON goes with observers!
+
+
 .. _faq_filesystem_names:
 
 API
@@ -399,7 +482,7 @@ that.
 Open a new terminal, run the following command and restart RAFCON.
 
 .. code:: bash
-    $ fdir="$HOME/.local/share/fonts" && mkdir -p $fdir && find "$(dirname $(which rafcon))/../share/rafcon/gui/assets/fonts" -type f -name "*.otf" -exec cp -t $fdir {} + && unset fdir
+    $ fdir="$HOME/.local/share/fonts" && mkdir -p $fdir && find "$(dirname $(which rafcon))/../share/fonts" -type f -name "*.otf" -exec cp -t $fdir {} + && unset fdir
 
 This will copy the RAFCON font files from the install location to your local user, so the RAFCON GUI can load them.
 

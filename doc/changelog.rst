@@ -5,11 +5,14 @@ Information about :ref:`RAFCON` changes in each release will be published here. 
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/develop>`__.
 
 
-Patch releases 0.13.\*
+Patch releases 0.14.\*
 ----------------------
 
 Next Release
 """"""""""""
+
+0.14.0
+""""""
 
 - Features:
 
@@ -34,6 +37,13 @@ Next Release
     - script of ``ExecutionState``s uses more RAFCON features (``preemptive_wait``, return outcome name)
     - name of states uses full width of state
 
+  - provide RAFCON wheel file
+  - make installation more robust, especially against missing font files
+  - simplify installation process
+  - clear separation in handling of ``data_files`` and ``package_files``
+  - create translation files automatically when building dist packages
+  - refactored many parts of modification history
+
 
 - Bug Fixes:
 
@@ -48,13 +58,23 @@ Next Release
   - use a safe loader for GUI config file
   - fix handling of symlinks in LibraryManager
   - better support of virtual envs
-  
+
 
 - Changes:
 
   - drop support for BuildBot
   - Jenkinsfile: tests are now also run under Python 3.6
 
+
+- Miscellaneous:
+
+  - new ``gui`` ficture for simplifying GUI tests
+  - refactor GUI tests using the ``gui`` fixture
+  - documentation on how to write tests and how to use ``gui`` fixture
+
+
+Patch releases 0.13.\*
+----------------------
 
 0.13.8
 """"""

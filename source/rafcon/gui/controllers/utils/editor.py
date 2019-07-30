@@ -153,10 +153,7 @@ class EditorController(ExtendedController):
     def set_script_text(self, text):
         if not self.source_text == text:
             self.source_text = text
-            logger.debug("The source was saved {}.".format(self.__class__.__name__))
-        else:
-            # logger.debug("Source is the same as in storage {}.".format(self.__class__.__name__))
-            pass
+            logger.debug("The script was saved")
 
     def cancel_clicked(self, button):
         """Triggered when the Cancel-Shortcut in the editor is triggered

@@ -309,7 +309,7 @@ class ContainerStateModel(StateModel):
                     raise RuntimeError("State model to set meta data could not be found"
                                        " -> {0}".format(old_state_m.state))
                 if new_state_m is old_state_m:
-                    logger.debug("Old {0} is new model {1}".format(old_state_m, new_state_m))
+                    logger.verbose("Old {0} is new model {1}".format(old_state_m, new_state_m))
                 else:
                     new_state_m.meta = old_state_m.meta
                     notify_logger_method("Should only happen in ungroup - new model {0}".format(new_state_m))
@@ -320,7 +320,7 @@ class ContainerStateModel(StateModel):
                     raise RuntimeError("Scoped variable model to set meta data could not be found"
                                        " -> {0}".format(old_sv_m.scoped_variable))
                 if new_sv_m is old_sv_m:
-                    logger.debug("Old {0} is new model {1}".format(old_sv_m, new_sv_m))
+                    logger.verbose("Old {0} is new model {1}".format(old_sv_m, new_sv_m))
                 else:
                     new_sv_m.meta = old_sv_m.meta
                     notify_logger_method("Should only happen in ungroup - new model {0}".format(new_sv_m))
@@ -332,7 +332,7 @@ class ContainerStateModel(StateModel):
                     raise RuntimeError("transition model to set meta data could not be found"
                                        " -> {0}".format(old_t_m.transition))
                 if new_t_m is old_t_m:
-                    logger.debug("Old {0} is new model {1}".format(old_t_m, new_t_m))
+                    logger.verbose("Old {0} is new model {1}".format(old_t_m, new_t_m))
                 else:
                     new_t_m.meta = old_t_m.meta
                     notify_logger_method("Should only happen in ungroup - new model {0}".format(new_t_m))
@@ -343,7 +343,7 @@ class ContainerStateModel(StateModel):
                     raise RuntimeError("data flow model to set meta data could not be found"
                                        " -> {0}".format(old_df_m.data_flow))
                 if new_df_m is old_df_m:
-                    logger.debug("Old model {0} is new model {1}".format(old_df_m, new_df_m))
+                    logger.verbose("Old model {0} is new model {1}".format(old_df_m, new_df_m))
                 else:
                     new_df_m.meta = old_df_m.meta
                     notify_logger_method("Should only happen in ungroup - new model {0}".format(new_df_m))
