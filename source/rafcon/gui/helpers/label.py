@@ -21,6 +21,7 @@ from gi.repository import Pango
 from rafcon.gui.utils import constants
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
+from rafcon.gui.utils.gtk_utils import get_screen_width_and_height
 
 
 def create_tab_header_label(tab_name, icons):
@@ -276,13 +277,7 @@ def set_window_size_and_position(window, window_key):
     window.resize(*size)
     if position:
         position = (max(0, position[0]), max(0, position[1]))
-
-        display = Gdk.Display.get_default()
-        monitor = display.get_primary_monitor()
-        geometry = monitor.get_geometry()
-        scale_factor = monitor.get_scale_factor()
-        screen_width = scale_factor * geometry.width
-        screen_height = scale_factor * geometry.height
+        screen_width, screen_height = get_screen_width_and_height()
         if position[0] < screen_width and position[1] < screen_height:
             window.move(*position)
     else:

@@ -33,7 +33,7 @@ from rafcon.gui.utils import wait_for_gui
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-
+from rafcon.gui.utils.gtk_utils import get_screen_width_and_height
 from rafcon.core.start import setup_environment
 
 
@@ -124,8 +124,7 @@ def convert(config_path, source_path, target_path=None, gui_config_path=None):
             main_window.resize(size[0], size[1])
         if position:
             position = (max(0, position[0]), max(0, position[1]))
-            screen_width = Gdk.Screen.width()
-            screen_height = Gdk.Screen.height()
+            screen_width, screen_height = get_screen_width_and_height()
             if position[0] < screen_width and position[1] < screen_height:
                 main_window.move(position[0], position[1])
 
