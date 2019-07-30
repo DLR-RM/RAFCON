@@ -881,7 +881,6 @@ def test_state_type_change_bugs_with_gui(gui):
     print(check_elements_ignores)
 
 
-@pytest.mark.unstable
 @pytest.mark.parametrize('gui', [{"gui_config": {'HISTORY_ENABLED': True}}], indirect=True, ids=["with history"])
 def test_multiple_undo_redo_bug_with_gui(gui):
     from gi.repository import GLib
@@ -899,8 +898,8 @@ def test_multiple_undo_redo_bug_with_gui(gui):
     main_window_controller = rafcon.gui.singleton.main_window_controller
     sm_id = sm_m.state_machine.state_machine_id
     state_machines_editor_ctrl = main_window_controller.state_machines_editor_ctrl
-    state_machines_editor_ctrl.get_controller(sm_id).view.get_top_widget().grab_focus()
-    state_machines_editor_ctrl.get_controller(sm_id).view.editor.grab_focus()
+    gui(state_machines_editor_ctrl.get_controller(sm_id).view.get_top_widget().grab_focus)
+    gui(state_machines_editor_ctrl.get_controller(sm_id).view.editor.grab_focus)
     def trigger_action_repeated(action_name, number):
         for _ in range(number):
             main_window_controller.shortcut_manager.trigger_action(action_name, None, None)
