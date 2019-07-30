@@ -146,7 +146,9 @@ def print_state_sizes(state_m, canvas, state_names=None):
         for child_state_m in state_m.states.values():
             print_state_sizes(child_state_m, canvas)
 
+
 @pytest.mark.unstable
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 @pytest.mark.parametrize("gui,state_path,recursive,rel_size", [
     (config_options, state_path_root, False, (40, 40)),
     (config_options, state_path_root, True, (40, 40)),
@@ -162,10 +164,6 @@ def print_state_sizes(state_m, canvas, state_names=None):
 def test_simple_state_size_resize(gui, state_path, recursive, rel_size, monkeypatch):
     # If the GUI widget becomes too small, the resize tests will fail; thus, all sidebars are hidden in order
     # that the gui will have enough space
-
-    # for Ubuntu 18.04 the following warning occurs otherwise:
-    # /usr/lib/python2.7/dist-packages/gi/overrides/Gdk.py:336: DeprecationWarning: Gdk.Cursor.new is deprecated
-    gui.disable_warnings = True
 
     from rafcon.gui.helpers.meta_data import check_gaphas_state_meta_data_consistency
     sm_m, canvas, view = open_test_state_machine(gui)
