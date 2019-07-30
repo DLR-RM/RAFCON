@@ -457,19 +457,6 @@ class AbstractStateModel(MetaModel, Hashable):
             # print("DONE3 NOTHING")
             pass
 
-    def _mark_state_machine_as_dirty(self):
-        state_machine = self.state.get_state_machine()
-        if state_machine:
-            state_machine_id = state_machine.state_machine_id
-            from rafcon.core.singleton import state_machine_manager
-            if state_machine_id is not None and state_machine_id in state_machine_manager.state_machines:
-                state_machine_manager.state_machines[state_machine_id].marked_dirty = True
-        if self.state.get_next_upper_library_root_state():
-            lib_state_path = self.state.get_next_upper_library_root_state().parent.get_path()
-            if self.get_state_machine_m().get_state_model_by_path(lib_state_path).is_about_to_be_destroyed_recursively:
-                return
-            logger.warning("You have modified core property of an inner state of a library state.")
-
     # ---------------------------------------- meta data methods ---------------------------------------------
 
     def load_meta_data(self, path=None):
