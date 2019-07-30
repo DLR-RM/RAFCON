@@ -90,7 +90,8 @@ def remove_all_gvm_variables():
         global_variable_manager.delete_variable(gv_name)
 
 
-def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_errors=0):
+def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_errors=0, disable_warnings=False):
+    # disabling warnings is useful to disable DeprecationWarnings created outside the code you have control over
     if caplog is None:
         return
     import logging
@@ -108,7 +109,7 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
             record.exc_info = None
 
     formatter = Formatter("%(name)s: %(message)s")
-    if counted_warnings != expected_warnings:
+    if counted_warnings != expected_warnings and not disable_warnings:
         warnings = [formatter.format(record) for record in records if record.levelno == logging.WARNING]
         pytest.fail("{} == counted_warnings != expected_warnings == {}\n\n"
                     "Occured warnings:\n{}".format(counted_warnings, expected_warnings, "\n".join(warnings)))
@@ -242,7 +243,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
 
 
 def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0,
-                         unpatch_threading=True, core_only=False):
+                         unpatch_threading=True, core_only=False, disable_warnings=False):
     """ Reset Config object classes of singletons and release multi threading lock and optional do the log-msg test
 
      The function reloads the default config files optional and release the multi threading lock. This function is
@@ -264,7 +265,7 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
     e = None
     try:
         # if caplog is not None and sys.exc_info()[0] is None:
-        assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors)
+        assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors, disable_warnings)
     finally:
         try:
             if gui_ready is None:  # gui was not initialized fully only the environment

@@ -195,6 +195,9 @@ def test_simple_state_size_resize(gui, state_path, recursive, rel_size, monkeypa
     print_state_sizes(state_m, canvas, ["C"])
     assert_state_size_and_meta_data_consistency(state_m, state_v, orig_state_size, canvas)
 
+    # for Ubuntu 18.04 the following warning occurs otherwise:
+    # /usr/lib/python2.7/dist-packages/gi/overrides/Gdk.py:336: DeprecationWarning: Gdk.Cursor.new is deprecated
+    gui.disable_warnings = True
     gui(sm_m.history.undo)
     gui(wait_for_gui)
     print("\nfirst undo:")

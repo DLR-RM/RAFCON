@@ -17,6 +17,7 @@ class GUITester(object):
 
         self.expected_warnings = 0
         self.expected_errors = 0
+        self.disable_warnings = False
 
         self.singletons = gui_singletons
         self.core_singletons = core_singletons
@@ -63,7 +64,8 @@ def gui(request, caplog):
         utils.close_gui()
     utils.shutdown_environment(caplog=caplog, unpatch_threading=with_gui,
                                expected_warnings=gui_tester.expected_warnings,
-                               expected_errors=gui_tester.expected_errors)
+                               expected_errors=gui_tester.expected_errors,
+                               disable_warnings=gui_tester.disable_warnings)
 
     gui_tester.post_test and gui_tester.post_test()
 
