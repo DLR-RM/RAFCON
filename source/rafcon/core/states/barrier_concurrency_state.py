@@ -337,7 +337,7 @@ class DeciderState(ExecutionState):
     yaml_tag = u'!DeciderState'
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, income=None,
-                 income=None, outcomes=None, path=None, filename=None, safe_init=True):
+                 outcomes=None, path=None, filename=None, safe_init=True):
 
         if state_id is None:
             state_id = UNIQUE_DECIDER_STATE_ID
