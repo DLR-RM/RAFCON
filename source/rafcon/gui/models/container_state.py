@@ -180,7 +180,7 @@ class ContainerStateModel(StateModel):
 
         # If this model has been changed (and not one of its child states), then we have to update all child models
         # This must be done before notifying anybody else, because other may relay on the updated models
-        if self.state == info['instance']:
+        if not self.child_model_changed(info):
             if 'after' in info:
                 self.update_child_models(model, prop_name, info)
                 # if there is and exception set is_about_to_be_destroyed_recursively flag to False again

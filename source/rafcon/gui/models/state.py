@@ -69,7 +69,7 @@ class StateModel(AbstractStateModel):
         """
         # If this model has been changed (and not one of its child states), then we have to update all child models
         # This must be done before notifying anybody else, because other may rely on the updated models
-        if 'after' in info and not self.child_model_changed(info):
+        if self.operation_finished(info) and not self.child_model_changed(info):
             self.update_models(model, prop_name, info)
 
         # mark the state machine this state belongs to as dirty
@@ -109,9 +109,6 @@ class StateModel(AbstractStateModel):
 
         # Notifies parent state
         super(StateModel, self).model_changed(model, prop_name, info)
-
-    def child_model_changed(self, info):
-        return self.state != info['instance']
 
     def get_model_info(self, model):
         model_key = None
