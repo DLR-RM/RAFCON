@@ -360,11 +360,20 @@ class AbstractStateModel(MetaModel, Hashable):
     def _load_outcome_models(self):
         raise NotImplementedError
 
+    def operation_finished(self, notification_info):
+        if not "after" in notification_info:
+            return False
+        notification_info = notification_info if notification_info["method_name"] is not "state_change" \
+            else notification_info["kwargs"]
+        return not isinstance(notification_info["result"], Exception)
+
+    def child_model_changed(self, notification_info):
+        return self.state != notification_info['instance']
+
     @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, prop_name, info):
         """This method notifies parent state about changes made to the state
         """
-
         # Notify the parent state about the change (this causes a recursive call up to the root state)
         if self.parent is not None:
             self.parent.model_changed(model, prop_name, info)
