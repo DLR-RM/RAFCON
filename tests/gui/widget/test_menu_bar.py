@@ -110,6 +110,7 @@ def paste(gui, state_machine_model, state_m, main_window_controller, menu_bar_ct
 def test_gui(gui):
     trigger_menu_bar_items(gui)
 
+
 def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True):
     """The function triggers and test basic functions of the menu bar.
 
@@ -172,6 +173,7 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
     decider_state_path = "/".join([barrier_state_m.state.get_path(), UNIQUE_DECIDER_STATE_ID])
     gui(sm_m.selection.set, sm_m.get_state_model_by_path(decider_state_path))
     gui(menubar_ctrl.on_delete_activate, None, None)
+    gui.expected_errors += 1
     gui(sm_m.root_state.state.remove_state, barrier_state_m.state.state_id)
 
     # Tests for issue #717 and #726
@@ -181,7 +183,7 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
     execution_state_m = list(sm_m.root_state.states.values())[0]
     new_state_id = execution_state_m.state.state_id
     idp_id = gui(execution_state_m.state.add_input_data_port, "i1", int, data_port_id=0)
-    odp_id = gui(execution_state_m.state.add_output_data_port, "o1", int, data_port_id=0)
+    odp_id = gui(execution_state_m.state.add_output_data_port, "o1", int, data_port_id=1)
     # add self transition and self data flow
     gui(execution_state_m.parent.state.add_transition, new_state_id, 0, new_state_id, None)
     gui(execution_state_m.parent.state.add_data_flow, new_state_id, odp_id, new_state_id, idp_id)
@@ -445,7 +447,6 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
         gui(testing_utils.wait_for_gui)
         assert len(sm_manager_model.state_machines) == 2
 
-    gui.expected_errors = 1
 
 if __name__ == '__main__':
     # test_gui(None)
