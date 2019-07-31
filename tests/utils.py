@@ -4,12 +4,10 @@ standard_library.install_aliases()
 
 import pytest
 
-from builtins import str
 import copy
 import datetime
 import signal
 import os
-import sys
 import tempfile
 import time
 from os import mkdir, environ
@@ -51,8 +49,6 @@ RAFCON_SHARED_LIBRARY_PATH = environ.get("RAFCON_LIB_PATH", join(RAFCON_ROOT_PAT
 print("LIBRARY_SM_PATH", LIBRARY_SM_PATH)
 print("RAFCON_SHARED_LIBRARY_PATH", RAFCON_SHARED_LIBRARY_PATH)
 
-# from rafcon.core.config import global_config
-# global_config.load(path=join(TESTS_PATH, "assets", "configs", "valid_config"))
 GUI_INITIALIZED = False
 GUI_SIGNAL_INITIALIZED = False
 
@@ -73,9 +69,11 @@ def reload_config(config=True, gui_config=True):
         import rafcon.gui.config
         rafcon.gui.config.global_gui_config.load(path=RAFCON_TEMP_PATH_CONFIGS)
 
+
 def remove_configs():
     for filename in os.listdir(RAFCON_TEMP_PATH_CONFIGS):
         os.remove(os.path.join(RAFCON_TEMP_PATH_CONFIGS, filename))
+
 
 def remove_all_libraries(init_library_manager=True):
     from rafcon.core.config import global_config
@@ -246,7 +244,7 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
     GUI_INITIALIZED = True
 
 
-def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0,
+def shutdown_environment(caplog=None, expected_warnings=0, expected_errors=0,
                          unpatch_threading=True, core_only=False):
     """ Reset Config object classes of singletons and release multi threading lock and optional do the log-msg test
 
@@ -266,9 +264,7 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
     import rafcon.core.singleton
     global GUI_INITIALIZED, GUI_SIGNAL_INITIALIZED
     global gui_thread, gui_ready, used_gui_threads
-    e = None
     try:
-        # if caplog is not None and sys.exc_info()[0] is None:
         assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors)
     finally:
         try:
@@ -278,9 +274,6 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
             assert not rafcon.core.singleton.state_machine_manager.state_machines
             if gui_ready:
                 assert not rafcon.gui.singleton.state_machine_manager_model.state_machines
-        except Exception as e:
-            raise
-            pass
         finally:
             rewind_and_set_libraries()
             remove_configs()
@@ -290,18 +283,16 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
             gui_thread = gui_ready = None
             test_multithreading_lock.release()
 
-    if unpatch_threading:
-        unpatch_gtkmvc3_model_mt()
-    if e:
-        raise e
+            if unpatch_threading:
+                unpatch_gtkmvc3_model_mt()
 
 
-def shutdown_environment_only_core(config=True, caplog=None, expected_warnings=0, expected_errors=0):
+def shutdown_environment_only_core(caplog=None, expected_warnings=0, expected_errors=0):
     from rafcon.core.singleton import state_machine_manager
     # in the gui case, the state machines have to be deleted while the gui is still running with add_gui_callback
     # if add_gui_callback is not used, then a multi threading RuntimeError will be raised by the PatchedModelMT
     state_machine_manager.delete_all_state_machines()
-    shutdown_environment(config, False, caplog, expected_warnings, expected_errors, unpatch_threading=False,
+    shutdown_environment(caplog, expected_warnings, expected_errors, unpatch_threading=False,
                          core_only=True)
 
 
