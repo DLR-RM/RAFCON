@@ -15,8 +15,8 @@ logger = log.get_logger(__name__)
 
 @pytest.mark.parametrize("state_machine_name,expected_warnings", [
     ("dynamic_library_insertion", 0),
-    ("dynamic_library_insertion_and_deletion", 0),
-    ("dynamic_state_deletion_inside_library", 23),
+    ("dynamic_library_insertion_and_deletion", 6),
+    ("dynamic_state_deletion_inside_library", 29),
 ])
 def test_dynamic_state_insertion(gui, state_machine_name, expected_warnings):
 
