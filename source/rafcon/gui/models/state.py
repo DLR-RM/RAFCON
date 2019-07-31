@@ -76,7 +76,7 @@ class StateModel(AbstractStateModel):
         if not (cause is None or cause is "income_change" or changed_list is None):
             if self.operation_started(info):
                 changed_list._notify_method_before(self.state, cause, (self.state,), info)
-            elif self.operation_finished(info):
+            else:
                 changed_list._notify_method_after(self.state, cause, None, (self.state,), info)
 
         # Notifies parent state
