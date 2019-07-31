@@ -362,8 +362,7 @@ class AbstractStateModel(MetaModel, Hashable):
 
     @staticmethod
     def operation_started(notification_info):
-        if "before" not in notification_info:
-            return False
+        return "before" in notification_info
 
     @staticmethod
     def operation_finished(notification_info):
