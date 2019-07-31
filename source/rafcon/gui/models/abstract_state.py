@@ -360,8 +360,14 @@ class AbstractStateModel(MetaModel, Hashable):
     def _load_outcome_models(self):
         raise NotImplementedError
 
-    def operation_finished(self, notification_info):
-        if not "after" in notification_info:
+    @staticmethod
+    def operation_started(notification_info):
+        if "before" not in notification_info:
+            return False
+
+    @staticmethod
+    def operation_finished(notification_info):
+        if "after" not in notification_info:
             return False
         notification_info = notification_info if notification_info["method_name"] is not "state_change" \
             else notification_info["kwargs"]
