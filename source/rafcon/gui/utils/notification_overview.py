@@ -1,4 +1,3 @@
-from __future__ import print_function
 # Copyright (C) 2016-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
@@ -9,6 +8,10 @@ from __future__ import print_function
 # Contributors:
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+
+from __future__ import print_function
+
+from gtkmvc3.observer import NTInfo
 
 from builtins import str
 import datetime
@@ -58,29 +61,22 @@ class NotificationOverview(dict):
         start_time = time.time()
         if info is None:
             info = self.empty_info
+        else:
+            assert isinstance(info, NTInfo)
         self.initiator = initiator_string
         self.info = info
-        # self._info = ref(info)
-        self.__type = 'before'
-        if 'after' in info:
-            self.__type = 'after'
-        elif 'signal' in info:
-            self.__type = 'after'
         self.with_prints = with_prints
-        s, overview_dict = self.get_nice_info_dict_string(info)
+        s, overview_dict = self._get_nice_info_dict_string(info)
+
+        # if len(overview_dict["method_name"]) >= 3:
+        #     print(overview_dict)
         self.time_stamp = datetime.datetime.now()
         self._overview_dict = overview_dict
-        dict.__init__(self, overview_dict)
+        super(NotificationOverview, self).__init__(overview_dict)
         self.__description = s
         if self.with_prints:
             print("\nNotificationOverview {}\n".format(str(self)))
         NotificationOverview._generation_time += time.time() - start_time
-    #     self.store_debug_log_file("\nNotificationOverview {}\n".format(str(self)))
-    #
-    # def store_debug_log_file(self, string):
-    #     with open(constants.RAFCON_TEMP_PATH_BASE + '/NO_debug_log_file.txt', 'a+') as f:
-    #         f.write(string)
-    #     f.closed
 
     def prepare_destruction(self):
         self.info = None
@@ -97,9 +93,11 @@ class NotificationOverview(dict):
         if key in ['info', 'model', 'prop_name', 'instance', 'method_name', 'level']:
             dict.__setitem__(self, key, value)
 
-    @property
-    def type(self):
-        return self.__type
+    def __getattr__(self, item):
+        try:
+            return self[item]
+        except KeyError:
+            raise AttributeError("Item '{}' not found".format(item))
 
     def update(self, E=None, **F):
         if E is not None:
@@ -111,7 +109,7 @@ class NotificationOverview(dict):
     def print_overview(self, overview=None):
         print(self)
 
-    def get_nice_info_dict_string(self, info, level='\t', overview=None):
+    def _get_nice_info_dict_string(self, info, level='\t', overview=None):
         """ Inserts all elements of a notification info-dictionary of gtkmvc3 or a Signal into one string and indicates
         levels of calls defined by 'kwargs'. Additionally, the elements get structured into a dict that holds all levels
         of the general notification key-value pairs in faster accessible lists. The dictionary has the element 'type'
@@ -149,9 +147,9 @@ class NotificationOverview(dict):
                 notification_dict['info'] = meta_signal_msg_tuple.notification.info
                 overview['kwargs'].append(meta_signal_msg_tuple.notification.info)
                 s += "\n{0}info=\n{1}{0}\n".format(level + "\t\t",
-                                               self.get_nice_info_dict_string(meta_signal_msg_tuple.notification.info,
-                                                                              level+'\t\t\t',
-                                                                              overview))
+                                               self._get_nice_info_dict_string(meta_signal_msg_tuple.notification.info,
+                                                                               level +'\t\t\t',
+                                                                               overview))
             return s
 
         def get_nice_action_signal_msg_tuple_string(meta_signal_msg_tuple, level, overview):
@@ -176,7 +174,6 @@ class NotificationOverview(dict):
                 meta_signal_dict['result'] = meta_signal_msg_tuple.result
 
             return s
-
 
         overview_was_none = False
         if overview is None:
@@ -224,9 +221,9 @@ class NotificationOverview(dict):
             if overview['type'] == 'after':
                 overview['result'].append(info['result'])
             # kwargs
-            s += "\n{0}'kwargs': {1}".format(level, self.get_nice_info_dict_string(info['kwargs'],
-                                                                                   level + "\t",
-                                                                                   overview))
+            s += "\n{0}'kwargs': {1}".format(level, self._get_nice_info_dict_string(info['kwargs'],
+                                                                                    level + "\t",
+                                                                                    overview))
             if overview['type'] == 'after':
                 s += "\n{0}'result': {1}".format(level, info['result'])
             # additional elements not created by gtkmvc3 or common function calls
