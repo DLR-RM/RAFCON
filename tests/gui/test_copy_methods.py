@@ -311,8 +311,8 @@ def run_copy_test(sm_m, with_gui=False):
     if with_gui:
         main_window_controller = rafcon.gui.singleton.main_window_controller
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        testing_utils.call_gui_callback(sm_m.state_machine.__setattr__, "file_system_path", tmp_sm_system_path)
-        testing_utils.call_gui_callback(menubar_ctrl.on_save_activate, None)
+        sm_m.state_machine.file_system_path= tmp_sm_system_path
+        menubar_ctrl.on_save_activate(None)
 
 
 def run_copy_performance_test_and_check_storage_copy(*args):
