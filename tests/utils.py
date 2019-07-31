@@ -15,6 +15,7 @@ import time
 from os import mkdir, environ
 from os.path import join, dirname, realpath, exists, abspath
 from threading import Lock, Event, Thread, currentThread
+import weakref
 from logging import Formatter
 
 import rafcon
@@ -88,6 +89,10 @@ def remove_all_gvm_variables():
     from rafcon.core.singleton import global_variable_manager
     for gv_name in global_variable_manager.get_all_keys():
         global_variable_manager.delete_variable(gv_name)
+
+
+def is_gui_thread(thread):
+    return thread in used_gui_threads
 
 
 def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_errors=0):
@@ -355,7 +360,7 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     gui_thread = Thread(target=run_gui_thread, args=[gui_config, runtime_config])
     gui_thread.start()
 
-    used_gui_threads.append(gui_thread)
+    used_gui_threads.add(gui_thread)
     print("used_gui_threads", used_gui_threads)
     # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
     call_gui_callback(initialize_environment_core, core_config, libraries)
@@ -393,14 +398,14 @@ original_ModelMT_notify_observer = None
 original_state_start = None
 original_run_state_machine = None
 state_threads = []
-used_gui_threads = []
+used_gui_threads = weakref.WeakSet()
 auto_backup_threads = []
 
 
 def patch_gtkmvc3_model_mt():
     print("patch")
     global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine,\
-        used_gui_threads, auto_backup_threads
+        auto_backup_threads
 
     # noinspection PyUnresolvedReferences
     import rafcon.gui
@@ -470,8 +475,8 @@ def patch_gtkmvc3_model_mt():
                 # print "Notification from state thread", _threading.currentThread()
                 GLib.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
                 return
-            elif _threading.currentThread() in used_gui_threads \
-                    and self._ModelMT__observer_threads[observer] in used_gui_threads:
+            elif is_gui_thread(_threading.currentThread()) \
+                    and is_gui_thread(self._ModelMT__observer_threads[observer]):
                 # As long as the gtk module keeps constant the gtk main thread will always have the same thread id!
                 # But, if the module is patched as in "test_interface.py" the gtk thread will get another thread id!
                 # Thus, if both threads are in used_gui_threads then we simply allow this case!
