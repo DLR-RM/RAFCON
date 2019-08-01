@@ -11,6 +11,11 @@ Patch releases 0.14.\*
 Next Release
 """"""""""""
 
+- Bug Fixes:
+
+  - :issue_ghe:`774` python setup.py build_sass not working
+
+
 0.14.0
 """"""
 
