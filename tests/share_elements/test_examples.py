@@ -109,8 +109,6 @@ def test_functionality_example(caplog):
                                            unpatch_threading=False)
 
 
-@pytest.mark.unstable27
-@pytest.mark.unstable3
 def test_plugins_example(caplog):
 
     os.environ['RAFCON_PLUGIN_PATH'] = os.path.join(testing_utils.EXAMPLES_PATH, 'plugins', 'templates')
@@ -119,10 +117,11 @@ def test_plugins_example(caplog):
     # testing_utils.initialize_environment()
     testing_utils.test_multithreading_lock.acquire()
     try:
-        cmd = "{python} {start_script} -o {state_machine} -ss".format(
+        cmd = "{python} {start_script} -o {state_machine} -ss -c {config} -g {config}".format(
             python=str(sys.executable),
             start_script=join(testing_utils.RAFCON_PATH, 'gui', 'start.py'),
-            state_machine=path_of_sm_to_run
+            state_machine=path_of_sm_to_run,
+            config=testing_utils.RAFCON_TEMP_PATH_CONFIGS
         )
         start_time = time.time()
         # use exec! otherwise the terminate() call ends up killing the shell process and cmd is still running
@@ -133,15 +132,20 @@ def test_plugins_example(caplog):
         poller = select.poll()
         poller.register(rafcon_gui_process.stdout, select.POLLIN)
 
+        started = False
         plugin_loaded = False
         while True:
             if poller.poll(100):
-                line = str(rafcon_gui_process.stdout.readline()).rstrip()
-                print("process:", line)
+                line = str(rafcon_gui_process.stdout.readline().decode("utf-8")).rstrip()
+                if line:
+                    print("process:", line)
                 if "Successfully loaded plugin 'templates'" in line:
                     print("=> plugin loaded")
                     plugin_loaded = True
-                if "rafcon.gui.controllers.main_window" in line and "Ready" in line:
+                if "Start execution engine" in line:
+                    print("=> started")
+                    started = True
+                if started and "Stop the state machine execution" in line:
                     print("=> ready")
                     assert plugin_loaded
                     time.sleep(0.5)  # safety margin...
