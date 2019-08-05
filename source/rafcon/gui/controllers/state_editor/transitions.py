@@ -633,13 +633,14 @@ class StateTransitionsListController(LinkageListController):
         # print(self, self.model.state.get_path(), overview)
         # logger.info("after_notification_of_parent_or_state_from_lists: OK")
 
-        if overview['prop_name'][0] in ['states', 'outcomes', 'transitions'] and \
+        if prop_name in ['states', 'outcomes', 'transitions'] and \
                 overview['method_name'][-1] not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove'
                                                     'from_outcome', 'to_outcome', 'from_state', 'to_state',
                                                     'modify_origin', 'modify_target']:
                 if self.model.parent:
                     # check for sibling port change
-                    if overview['prop_name'][0] == 'states' and overview['instance'][0] is self.model.parent.state and \
+                    # we need ['instance'][0], as notifications could come from changed child state elements
+                    if prop_name == 'states' and overview['instance'][0] is self.model.parent.state and \
                             (overview['instance'][-1] in self.model.parent.state.states and
                              overview['method_name'][-1] in ['add_outcome'] or
                              overview['prop_name'][-1] in ['outcome'] and
