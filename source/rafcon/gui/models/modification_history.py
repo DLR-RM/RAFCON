@@ -31,7 +31,7 @@ from gtkmvc3.observable import Observable
 
 from rafcon.gui.action import ActionDummy, Action, StateMachineAction, StateAction, DataPortAction, \
     ScopedVariableAction, OutcomeAction, TransitionAction, DataFlowAction, AddObjectAction, RemoveObjectAction, \
-    MetaDataAction, get_state_element_meta
+    MetaDataAction, get_state_element_meta, StateImage
 from rafcon.gui.models.signals import ActionSignalMsg
 
 from rafcon.core.states.state import State
@@ -441,8 +441,9 @@ class ModificationsHistoryModel(ModelMT):
                 self.active_action = MetaDataAction(changed_parent_model.state.get_path(),
                                                     state_machine_model=self.state_machine_model,
                                                     overview=overview)
-                meta_dict = self.get_state_element_meta_from_internal_tmp_storage(changed_parent_state_path)
-                self.active_action.before_storage = meta_dict
+                meta_data = self.get_state_element_meta_from_internal_tmp_storage(changed_parent_state_path)
+                state_image = StateImage(meta_data=meta_data)
+                self.active_action.before_state_image = state_image
 
                 self.finish_new_action(overview)
             else:
