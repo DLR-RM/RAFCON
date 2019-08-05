@@ -175,7 +175,7 @@ class ModificationsHistoryModel(ModelMT):
 
     def redo(self):
         with self.state_machine_model.storage_lock:
-            action = self.modifications.current_history_element.action
+            action = self.modifications.get_next_element().action
             self.busy = True
             self.modifications.redo()
             self.busy = False
