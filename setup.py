@@ -128,8 +128,8 @@ setup(
 
     sass_manifests={
         'rafcon': {
-            'sass_path': 'gui/assets/share/themes/RAFCON/sass',
-            'css_path': 'gui/assets/share/themes/RAFCON/gtk-3.0',
+            'sass_path': '../../share/themes/RAFCON/sass',
+            'css_path': '../../share/themes/RAFCON/gtk-3.0',
             'strip_extension': True
         }
     },
