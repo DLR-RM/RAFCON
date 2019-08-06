@@ -611,9 +611,9 @@ class StateTransitionsListController(LinkageListController):
         overview = NotificationOverview(info, False, self.__class__.__name__)
         # logger.info("after_notification_state: OK")
 
-        if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state or \
+        if overview.get_cause() == 'parent' and overview['instance'][-1] is self.model.state or \
                 overview['instance'][-1] in [self.model.state, self.model.state.parent] and \
-                overview['method_name'][-1] in ['name', 'group_states', 'ungroup_state', 'change_data_type',
+                overview.get_cause() in ['name', 'group_states', 'ungroup_state', 'change_data_type',
                                                 "remove_outcome", "remove_transition"]:
             # logger.info("after_notification_state: UPDATE")
             self.update(initiator=str(overview))
@@ -634,16 +634,16 @@ class StateTransitionsListController(LinkageListController):
         # logger.info("after_notification_of_parent_or_state_from_lists: OK")
 
         if overview['prop_name'][0] in ['states', 'outcomes', 'transitions'] and \
-                overview['method_name'][-1] not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove'
+                overview.get_cause() not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove'
                                                     'from_outcome', 'to_outcome', 'from_state', 'to_state',
                                                     'modify_origin', 'modify_target']:
                 if self.model.parent:
                     # check for sibling port change
                     if overview['prop_name'][0] == 'states' and overview['instance'][0] is self.model.parent.state and \
                             (overview['instance'][-1] in self.model.parent.state.states and
-                             overview['method_name'][-1] in ['add_outcome'] or
+                             overview.get_cause() in ['add_outcome'] or
                              overview['prop_name'][-1] in ['outcome'] and
-                             overview['method_name'][-1] in ['name']):
+                             overview.get_cause() in ['name']):
                         pass
                     else:
                         return

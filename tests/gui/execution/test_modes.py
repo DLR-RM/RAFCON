@@ -101,7 +101,7 @@ def test_execution_modes(gui):
         def execution_change(self, model, prop_name, info):
             from rafcon.gui.utils.notification_overview import NotificationOverview
             overview = NotificationOverview(info)
-            if overview['method_name'][-1] == 'state_execution_status':
+            if overview.get_cause() == 'state_execution_status':
                 # print("CURRENT STATE: {0}".format(overview['model'][-1].state.get_path()))
                 self.last_execution_change_at_state = overview['model'][-1].state.get_path()
 
