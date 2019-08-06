@@ -145,12 +145,16 @@ def start_state_machine(state_machine, start_state_path, quit_flag):
 
 
 def start_stop_state_machine(state_machine, start_state_path, quit_flag):
-    wait_for_gui()
+    from rafcon.utils.gui_functions import call_gui_callback
 
     state_machine_execution_engine = core_singletons.state_machine_execution_engine
-    state_machine_execution_engine.execute_state_machine_from_path(state_machine=state_machine,
-                                                                   start_state_path=start_state_path,
-                                                                   wait_for_execution_finished=True)
+    call_gui_callback(
+        state_machine_execution_engine.execute_state_machine_from_path,
+        state_machine=state_machine,
+        start_state_path=start_state_path,
+        wait_for_execution_finished=True
+    )
+
     if reactor_required():
         from twisted.internet import reactor
         reactor.callFromThread(reactor.stop)
@@ -224,8 +228,10 @@ def start_gtk():
         from twisted.internet import reactor
         import threading
         is_main_thread = isinstance(threading.current_thread(), threading._MainThread)
+        print("run reactor")
         reactor.run(installSignalHandlers=is_main_thread)
     else:
+        print("run Gtk.main")
         Gtk.main()
 
 
@@ -367,6 +373,7 @@ def main():
 
     state_machine = None
     if user_input.state_machine_paths:
+        logger.info("open_state_machines")
         state_machine = open_state_machines(user_input.state_machine_paths)
 
     if user_input.new:
