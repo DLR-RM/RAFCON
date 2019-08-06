@@ -123,10 +123,12 @@ def test_plugins_example(caplog):
             state_machine=path_of_sm_to_run,
             config=testing_utils.RAFCON_TEMP_PATH_CONFIGS
         )
+        print("cmd", cmd)
         start_time = time.time()
         # use exec! otherwise the terminate() call ends up killing the shell process and cmd is still running
         # https://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
-        rafcon_gui_process = subprocess.Popen("exec " + cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # stderr=subprocess.STDOUT redirects stderr to stdout
+        rafcon_gui_process = subprocess.Popen("exec " + cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         # See https://stackoverflow.com/a/36477512 for details
         # Note: This (select and poll) only works on POSIX systems, not on Windows!
         poller = select.poll()
