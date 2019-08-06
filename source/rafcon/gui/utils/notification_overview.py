@@ -13,6 +13,9 @@ from __future__ import print_function
 from builtins import str
 import datetime
 import time
+
+from gtkmvc3.observer import NTInfo
+
 from rafcon.utils import constants
 from rafcon.gui.models.signals import MetaSignalMsg, ActionSignalMsg
 
@@ -60,6 +63,7 @@ class NotificationOverview(dict):
             info = self.empty_info
         self.initiator = initiator_string
         self.info = info
+        self.origin = self.extract_origin(info)
         # self._info = ref(info)
         self.__type = 'before'
         if 'after' in info:
@@ -86,6 +90,34 @@ class NotificationOverview(dict):
         self.info = None
         self. _overview_dict.clear()
         dict.clear(self)
+
+    @staticmethod
+    def extract_type(info):
+        possible_types = NTInfo._NTInfo__ONE_REQUESTED
+        for type_ in possible_types:
+            if type_ in info and info[type_]:
+                return type_
+
+    @staticmethod
+    def extract_origin(info):
+        info_origin = info
+
+        # This handles before/after notifications
+        if "method_name" in info_origin and info_origin["method_name"]:
+            while info_origin["method_name"].endswith("_change"):  # e.g. root_state_change, state_change, outcome_change
+                info_origin = info_origin.kwargs
+
+        # This handles signal notifications
+        elif "signal" in info_origin:
+            message = info_origin["arg"]
+
+            # Nested MetaSignalMsg
+            if hasattr(message, "notification") and message.notification:
+                info_origin = message.notification.info
+
+        notification_type = NotificationOverview.extract_type(info_origin)
+        info_origin = NTInfo(notification_type, **info_origin)
+        return info_origin
 
     def __str__(self):
         if self.initiator is not None:
