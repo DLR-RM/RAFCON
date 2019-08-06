@@ -27,7 +27,7 @@ pipeline {
             steps {
                 sh 'printenv | sort'
                 lock("prepare-tox") {
-                    sh 'pip3 install -q --prefix="/home_local/l_buildb/.local" tox~=3.13'
+                    sh 'pip3 install -q --prefix="/home_local/l_buildb/.local" tox~=3.12.1'
                 }
             }
         }
