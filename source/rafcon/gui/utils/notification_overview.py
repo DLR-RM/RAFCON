@@ -119,6 +119,17 @@ class NotificationOverview(dict):
         info_origin = NTInfo(notification_type, **info_origin)
         return info_origin
 
+    def get_origin_type(self):
+        return self.extract_type(self.origin)
+
+    def get_cause(self):
+        origin_type = self.get_origin_type()
+        if origin_type in ["before", "after"]:
+            return self.origin.method_name
+        if origin_type == "signal":
+            if isinstance(self.origin.arg, ActionSignalMsg):
+                return self.origin.arg.action
+
     def __str__(self):
         if self.initiator is not None:
             return "Initiator: {}\n".format(self.initiator) + self.__description
