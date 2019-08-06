@@ -472,10 +472,11 @@ class ExecutionEngine(Observable):
         :param start_state_path: The path to the state from which the execution will start
         :return: a reference to the created state machine
         """
-
         import rafcon.core.singleton
-        from rafcon.core.storage import storage
         if not state_machine:
+            if not path:
+                raise ValueError("You must provide either a state machine or a path to a state machine for execution")
+            from rafcon.core.storage import storage
             state_machine = storage.load_state_machine_from_path(path)
             rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
 
