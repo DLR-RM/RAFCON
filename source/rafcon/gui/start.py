@@ -228,10 +228,8 @@ def start_gtk():
         from twisted.internet import reactor
         import threading
         is_main_thread = isinstance(threading.current_thread(), threading._MainThread)
-        print("run reactor")
         reactor.run(installSignalHandlers=is_main_thread)
     else:
-        print("run Gtk.main")
         Gtk.main()
 
 
@@ -373,7 +371,6 @@ def main():
 
     state_machine = None
     if user_input.state_machine_paths:
-        logger.info("open_state_machines")
         state_machine = open_state_machines(user_input.state_machine_paths)
 
     if user_input.new:
