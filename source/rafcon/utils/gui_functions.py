@@ -34,7 +34,6 @@ def call_gui_callback(callback, *args, **kwargs):
     from threading import Condition
     import sys
     from rafcon.utils import log
-    from rafcon.gui.utils import wait_for_gui
     global exception_info, result
     from gi.repository import GLib
     condition = Condition()
@@ -67,7 +66,6 @@ def call_gui_callback(callback, *args, **kwargs):
         # Wait for the condition to be notified
         # TODO: implement timeout that raises an exception
         condition.wait()
-        GLib.idle_add(wait_for_gui)
     if exception_info:
         e_class, e_instance, e_traceback = exception_info
         raise_(e_instance, None, e_traceback)
