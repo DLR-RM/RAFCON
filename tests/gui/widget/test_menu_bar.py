@@ -181,7 +181,7 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
     execution_state_m = list(sm_m.root_state.states.values())[0]
     new_state_id = execution_state_m.state.state_id
     idp_id = gui(execution_state_m.state.add_input_data_port, "i1", int, data_port_id=0)
-    odp_id = gui(execution_state_m.state.add_output_data_port, "o1", int, data_port_id=0)
+    odp_id = gui(execution_state_m.state.add_output_data_port, "o1", int, data_port_id=1)
     # add self transition and self data flow
     gui(execution_state_m.parent.state.add_transition, new_state_id, 0, new_state_id, None)
     gui(execution_state_m.parent.state.add_data_flow, new_state_id, odp_id, new_state_id, idp_id)
