@@ -311,7 +311,7 @@ def run_copy_test(sm_m, with_gui=False):
     if with_gui:
         main_window_controller = rafcon.gui.singleton.main_window_controller
         menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
-        sm_m.state_machine.file_system_path= tmp_sm_system_path
+        sm_m.state_machine.file_system_path = tmp_sm_system_path
         menubar_ctrl.on_save_activate(None)
 
 

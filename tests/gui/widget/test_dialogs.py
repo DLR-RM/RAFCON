@@ -2,8 +2,6 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import str
 import threading
-from tests import utils as testing_utils
-from tests.utils import call_gui_callback
 
 from rafcon.utils import log
 
@@ -22,38 +20,67 @@ def test_dialog_test(gui):
     from gi.repository import Gtk
     from rafcon.gui.utils import dialog
 
-    def on_ok_clicked(widget, response_id):
-        # Default response by the "ok" button is -5
-        assert response_id == -5
+    result = {}
 
-    def on_button_clicked(widget, response_id):
-        # Last button in the order gets the response 4 ((index=3) + 1)
-        assert response_id == 4
+    def on_ok_clicked(widget, response_id, sync_event, result):
+        try:
+            # Default response by the "ok" button is 1
+            assert response_id == 1
+        except Exception as e:
+            result["exception"] = e
+        finally:
+            sync_event.set()
 
-    def on_entry_activated(widget, response_id):
-        # The entry gets the same response as the first button
-        assert response_id == 1
-        assert widget.entry.get_text() == test_text
-        assert widget.checkbox.get_label() == test_text
-        # As Gtk.CheckButton is a ToggleButton, get_active()=True represents the "checked" state
-        assert widget.checkbox.get_active()
 
-    def on_checkbox_dialog_approval(widget, response_id):
-        # Check if all checkboxes appeared and the modulo operation worked
-        assert not widget.get_checkbox_state_by_index(0)
-        assert widget.get_checkbox_state_by_index(3)
-        # Check if the checkbutton labels are correct
-        assert len(widget.get_checkbox_state_by_name(test_text)) == 4
+    def on_button_clicked(widget, response_id, sync_event, result):
+        try:
+            # Last button in the order gets the response 4 ((index=3) + 1)
+            assert response_id == 4
+        except Exception as e:
+            result["exception"] = e
+        finally:
+            sync_event.set()
 
-        assert not xor(widget.get_checkbox_states())
+    def on_entry_activated(widget, response_id, sync_event, result):
+        try:
+            # The entry gets the same response as the first button
+            assert response_id == 1
+            assert widget.entry.get_text() == test_text
+            assert widget.checkbox.get_label() == test_text
+            # As Gtk.CheckButton is a ToggleButton, get_active()=True represents the "checked" state
+            assert widget.checkbox.get_active()
+        except Exception as e:
+            result["exception"] = e
+        finally:
+            print("sync event")
+            sync_event.set()
 
-    dialog_window = gui(dialog.RAFCONMessageDialog, test_text, on_ok_clicked)
+    def on_checkbox_dialog_approval(widget, response_id, sync_event, result):
+        try:
+            # Check if all checkboxes appeared and the modulo operation worked
+            assert not widget.get_checkbox_state_by_index(0)
+            assert widget.get_checkbox_state_by_index(3)
+            # Check if the checkbutton labels are correct
+            assert len(widget.get_checkbox_state_by_name(test_text)) == 4
+
+            assert not xor(widget.get_checkbox_states())
+        except Exception as e:
+            result["exception"] = e
+        finally:
+            sync_event.set()
+
+    sync_event = threading.Event()
+    dialog_window = gui(dialog.RAFCONMessageDialog, test_text, on_ok_clicked, (sync_event, result))
     # First button of the dialog, in this case the standard "Ok" button
     gui(dialog_window.response, 1)
+    sync_event.wait()
     gui(dialog_window.destroy)
-    button_texts = ["First", "Second", "Third", "Fourth"]
+    if result:
+        raise result["exception"]
 
-    dialog_window = gui(dialog.RAFCONButtonDialog, test_text, button_texts, on_button_clicked)
+    sync_event.clear()
+    button_texts = ["First", "Second", "Third", "Fourth"]
+    dialog_window = gui(dialog.RAFCONButtonDialog, test_text, button_texts, on_button_clicked, (sync_event, result))
 
     for index, button_text in enumerate(button_texts):
         # Check if the button order is the same as requested by the button_texts list
@@ -61,25 +88,33 @@ def test_dialog_test(gui):
         assert str(button.get_label()) == button_texts[index]
 
     gui(button.clicked)
+    sync_event.wait()
     gui(dialog_window.destroy)
+    if result:
+        raise result["exception"]
 
-    dialog_window = gui(dialog.RAFCONInputDialog, test_text, button_texts, test_text, on_entry_activated)
+    sync_event.clear()
+    dialog_window = gui(dialog.RAFCONInputDialog, test_text, button_texts, test_text, on_entry_activated, (sync_event, result))
     gui(dialog_window.entry.set_text, test_text)
     gui(dialog_window.checkbox.set_active, True)
     # Represents hitting the enter button
     gui(dialog_window.entry.activate)
+    sync_event.wait()
     gui(dialog_window.destroy)
+    if result:
+        raise result["exception"]
 
+    sync_event.clear()
     dialog_window = gui(dialog.RAFCONColumnCheckboxDialog,
                                       test_text, button_texts, [test_text, test_text, test_text, test_text],
-                                      on_checkbox_dialog_approval, (), Gtk.MessageType.QUESTION)
+                                      on_checkbox_dialog_approval, (sync_event, result), Gtk.MessageType.QUESTION)
 
     for index, checkbox in enumerate(dialog_window.checkboxes):
         # Check the checkboxes in an alternating order
         gui(checkbox.set_active, index % 2)
 
     gui(dialog_window.response, 1)
-    gui(button.clicked)
+    sync_event.wait()
 
     gui(dialog_window.destroy)
 
@@ -118,6 +153,6 @@ def test_dialog_test(gui):
 # library states those maybe should be tested, too
 
 if __name__ == '__main__':
-    # test_dialog_test(None)
-    import pytest
-    pytest.main([__file__, '-xs'])
+    test_dialog_test(None)
+    # import pytest
+    # pytest.main([__file__, '-xs'])

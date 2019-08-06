@@ -59,11 +59,13 @@ def gui(request, caplog):
     gui_tester = GUITester(with_gui, config)
     yield gui_tester
 
-    if with_gui:
-        utils.close_gui()
-    utils.shutdown_environment(caplog=caplog, unpatch_threading=with_gui,
-                               expected_warnings=gui_tester.expected_warnings,
-                               expected_errors=gui_tester.expected_errors)
+    try:
+        if with_gui:
+            utils.close_gui()
+    finally:
+        utils.shutdown_environment(caplog=caplog, unpatch_threading=with_gui,
+                                   expected_warnings=gui_tester.expected_warnings,
+                                   expected_errors=gui_tester.expected_errors)
 
-    gui_tester.post_test and gui_tester.post_test()
+        gui_tester.post_test and gui_tester.post_test()
 
