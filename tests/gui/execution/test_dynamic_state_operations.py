@@ -13,6 +13,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
+@pytest.mark.unstable
 @pytest.mark.parametrize("state_machine_name,expected_warnings", [
     ("dynamic_library_insertion", 0),
     ("dynamic_library_insertion_and_deletion", 0),
