@@ -63,7 +63,7 @@ class GuiConfig(ObservableConfig):
     def load(self, config_file=None, path=None):
         using_default_config = False
         if config_file is None:
-            if path is None:
+            if path is None or not os.path.isfile(os.path.join(path, CONFIG_FILE)):
                 using_default_config = True
                 path, config_file = os.path.split(resource_filename(__name__, CONFIG_FILE))
             else:
