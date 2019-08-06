@@ -475,7 +475,6 @@ class ExecutionEngine(Observable):
 
         import rafcon.core.singleton
         from rafcon.core.storage import storage
-        rafcon.core.singleton.library_manager.initialize()
         if not state_machine:
             state_machine = storage.load_state_machine_from_path(path)
             rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
