@@ -47,7 +47,7 @@ def call_gui_callback(callback, *args, **kwargs):
         global exception_info, result
         result = None
         try:
-            result = callback(*args)
+            result = callback(*args, **kwargs)
         except:
             # Exception within this asynchronously called function won't reach pytest. This is why we have to store
             # the information about the exception to re-raise it at the end of the synchronous call.
@@ -58,7 +58,7 @@ def call_gui_callback(callback, *args, **kwargs):
             condition.release()
 
     if "priority" in kwargs:
-        priority = kwargs["priority"]
+        priority = kwargs.pop("priority")
     else:
         priority = GLib.PRIORITY_LOW
 
