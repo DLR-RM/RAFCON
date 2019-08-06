@@ -410,7 +410,7 @@ class ModificationsHistoryModel(ModelMT):
             return
         overview = NotificationOverview(info, False, self.__class__.__name__)
         # filter self emit and avoid multiple signals of the root_state, by comparing first and last model in overview
-        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:
+        if overview["signal"][0].change.startswith("sm_notification"):
             return
         if self.busy:
             return
@@ -476,6 +476,7 @@ class ModificationsHistoryModel(ModelMT):
             if self.with_debug_logs:
                 self.store_test_log_file(str(overview) + "\n")
 
+            # TODO: Why is the overview modified here?
             overview['instance'].insert(0, self.state_machine_model.state_machine)
             overview['model'].insert(0, self.state_machine_model)
             if info['arg'].action == 'change_root_state_type':

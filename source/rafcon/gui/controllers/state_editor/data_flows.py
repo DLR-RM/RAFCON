@@ -440,14 +440,15 @@ class StateDataFlowsListController(LinkageListController):
         # logger.info("after_notification_of_parent_or_state_from_lists: OK")
 
         # avoid updates because of unimportant methods
-        if overview['prop_name'][0] in ['states', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'data_flows'] and \
+        if prop_name in ['states', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'data_flows'] and \
                 overview.get_cause() not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove',
                                                     'group_states', 'ungroup_state', 'change_data_type',
                                                     'from_key', 'to_key', 'from_state', 'to_state',
                                                     'modify_origin', 'modify_target']:
             if self.model.parent:
                 # check for a sibling port change
-                if overview['prop_name'][0] == 'states' and overview['instance'][0] is self.model.parent.state and \
+                # we need ['instance'][0], as notifications could come from changed child state elements
+                if prop_name == 'states' and overview['instance'][0] is self.model.parent.state and \
                         (overview['instance'][-1] in self.model.parent.state.states and
                          overview.get_cause() in ['add_input_data_port', 'add_output_data_port'] or
                          overview['prop_name'][-1] in ['data_port', 'scoped_variable'] and
