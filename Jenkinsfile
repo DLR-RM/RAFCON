@@ -26,7 +26,9 @@ pipeline {
         stage('Prepare tox') {
             steps {
                 sh 'printenv | sort'
-                sh 'pip3 install -q --user --ignore-installed tox==3.12'
+                lock {
+                    sh 'pip3 install -q --user --ignore-installed tox==3.12'
+                }
             }
         }
 
