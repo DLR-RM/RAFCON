@@ -63,8 +63,8 @@ def get_backward_compatibility_state_machines_path():
 
 
 @pytest.mark.parametrize('gui', [
-    {"core_config": {'LOAD_SM_WITH_CHECKS:': True}},
-    {"core_config": {'LOAD_SM_WITH_CHECKS:': False}}
+    {"core_config": {'LOAD_SM_WITH_CHECKS': True}},
+    {"core_config": {'LOAD_SM_WITH_CHECKS': False}}
 ], indirect=True, ids=["load with checks", "load without checks"])
 def test_backward_compatibility_storage(gui):
     """This test ensures that old state machines storage formats can still be opened with the current RAFCON version"""
