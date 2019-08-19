@@ -62,6 +62,10 @@ def get_backward_compatibility_state_machines_path():
     return path
 
 
+@pytest.mark.parametrize('gui', [
+    {"core_config": {'LOAD_SM_WITH_CHECKS:': True}},
+    {"core_config": {'LOAD_SM_WITH_CHECKS:': False}}
+], indirect=True, ids=["load with checks", "load without checks"])
 def test_backward_compatibility_storage(gui):
     """This test ensures that old state machines storage formats can still be opened with the current RAFCON version"""
     path = get_backward_compatibility_state_machines_path()
@@ -77,7 +81,6 @@ def test_backward_compatibility_storage(gui):
     all_versions_path = testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines",
                                                                     "backward_compatibility"))
     run_backward_compatibility_state_machines(gui, all_versions_path)
-
 
 
 def test_unchanged_storage_format(caplog):
