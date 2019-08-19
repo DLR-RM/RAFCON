@@ -1,5 +1,14 @@
 - type: Article
-  bibkey: brunner2018ral
+  bibkey: brunner2019autonomous
+  author: "Sebastian Georg Brunner and Andreas Dömel and Peter Lehner and Michael Beetz and Freek Stulp"
+  title: "Autonomous Parallelization of Resource-Aware Robotic Task Nodes"
+  booktitle: "IEEE Robotics and Automation Letters"
+  year: 2019
+  pages: "2599-2606"
+  month: jul
+  doi: "10.1109/LRA.2019.2894463"
+- type: Article
+  bibkey: brunner2018design
   author: "Brunner, Sebastian Georg and Lehner, Peter and Schuster, Martin Johannes and Riedel, Sebastian and Belder, Rico and Wedler, Armin and Leidner, Daniel and Beetz, Michael and Stulp, Freek"
   title: "Design, Execution, and Postmortem Analysis of Prolonged Autonomous Robot Operations"
   booktitle: "IEEE Robotics and Automation Letters"
