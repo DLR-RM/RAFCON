@@ -27,6 +27,7 @@ from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.singleton import library_manager
 from rafcon.core.states.state import State, PATH_SEPARATOR
 from rafcon.core.decorators import lock_state_machine
+from rafcon.core.config import global_config
 from rafcon.utils import log
 from rafcon.utils import type_helpers
 from rafcon.utils.hashable import Hashable
@@ -104,7 +105,7 @@ class LibraryState(State):
             raise AttributeError("Library does not have the correct version!")
         self.state_copy = state_copy
 
-        if safe_init:
+        if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
             LibraryState._safe_init(self, name)
         else:
             LibraryState._unsafe_init(self, name)

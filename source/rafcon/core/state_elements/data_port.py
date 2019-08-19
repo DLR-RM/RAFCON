@@ -25,6 +25,7 @@ from gtkmvc3.observable import Observable
 from rafcon.core.id_generator import generate_data_port_id
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.decorators import lock_state_machine
+import rafcon.core.config as config
 from rafcon.utils import log
 from rafcon.utils import type_helpers
 logger = log.get_logger(__name__)
@@ -67,7 +68,7 @@ class DataPort(StateElement):
 
         self._no_type_error_exceptions = False
 
-        if safe_init:
+        if safe_init or config.global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
             DataPort._safe_init(self, name, data_type, default_value, parent)
         else:
             DataPort._unsafe_init(self, name, data_type, default_value, parent)

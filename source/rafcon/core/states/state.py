@@ -43,6 +43,7 @@ from rafcon.core.state_elements.data_port import DataPort, InputDataPort, Output
 from rafcon.core.state_elements.logical_port import Income, Outcome
 from rafcon.core.state_elements.scope import ScopedData
 from rafcon.core.storage import storage
+from rafcon.core.config import global_config
 from rafcon.utils import classproperty
 from rafcon.utils import log
 from rafcon.utils import multi_event
@@ -131,7 +132,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         self.marked_dirty = False
 
-        if safe_init:
+        if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
             State._safe_init(self, name=name, input_data_ports=input_data_ports, output_data_ports=output_data_ports,
                              income=income, outcomes=outcomes, parent=parent)
         else:

@@ -22,6 +22,7 @@ from gtkmvc3 import Observable
 
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.decorators import lock_state_machine
+from rafcon.core.config import global_config
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -49,7 +50,7 @@ class Income(LogicalPort):
     def __init__(self, parent=None, safe_init=True):
         super(Income, self).__init__(safe_init=safe_init)
 
-        if safe_init:
+        if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
             Income._safe_init(self, parent)
         else:
             Income._unsafe_init(self, parent)
@@ -124,7 +125,7 @@ class Outcome(LogicalPort):
             raise TypeError("outcome_id must be of type int")
         self._outcome_id = outcome_id
 
-        if safe_init:
+        if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
             Outcome._safe_init(self, name, parent)
         else:
             Outcome._unsafe_init(self, name, parent)

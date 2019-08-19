@@ -24,6 +24,7 @@ from gtkmvc3.observable import Observable
 from rafcon.core.id_generator import generate_data_flow_id
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.decorators import lock_state_machine
+import rafcon.core.config as config
 
 
 class DataFlow(StateElement):
@@ -58,7 +59,7 @@ class DataFlow(StateElement):
                 raise ValueError("data_flow_id must be of type int")
             self._data_flow_id = data_flow_id
 
-        if safe_init:
+        if safe_init or config.global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
             DataFlow._safe_init(self, from_state, from_key, to_state, to_key, parent)
         else:
             DataFlow._unsafe_init(self, from_state, from_key, to_state, to_key, parent)

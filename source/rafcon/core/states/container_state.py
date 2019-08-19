@@ -40,6 +40,7 @@ from rafcon.core.state_elements.transition import Transition
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.state import State
 from rafcon.core.states.state import StateExecutionStatus
+from rafcon.core.config import global_config
 from rafcon.utils.type_helpers import type_inherits_of_type
 
 try:
@@ -88,7 +89,7 @@ class ContainerState(State):
         if start_state_id is not None:
             self.start_state_id = start_state_id
 
-        if safe_init:
+        if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
             ContainerState._safe_init(self, scoped_variables=scoped_variables, states=states, transitions=transitions,
                                       data_flows=data_flows)
         else:

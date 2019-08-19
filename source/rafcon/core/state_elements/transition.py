@@ -23,6 +23,7 @@ from gtkmvc3.observable import Observable
 
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.decorators import lock_state_machine
+from rafcon.core.config import global_config
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -62,7 +63,7 @@ class Transition(StateElement):
                 raise TypeError("transition_id must be of type int")
             self._transition_id = transition_id
 
-            if safe_init:
+            if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
                 Transition._safe_init(self, from_state, from_outcome, to_state, to_outcome, parent)
             else:
                 Transition._unsafe_init(self, from_state, from_outcome, to_state, to_outcome, parent)

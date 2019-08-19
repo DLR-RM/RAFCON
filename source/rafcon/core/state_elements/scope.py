@@ -26,6 +26,7 @@ from gtkmvc3.observable import Observable
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.state_elements.data_port import DataPort
 from rafcon.core.decorators import lock_state_machine
+from rafcon.core.config import global_config
 from rafcon.utils import type_helpers
 
 
@@ -130,7 +131,7 @@ class ScopedData(StateElement):
         self._timestamp = generate_time_stamp()
         # for storage purpose inside the container states (generated from key_name and from_state)
 
-        if safe_init:
+        if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
             ScopedData._safe_init(self, name, value, value_type, from_state, data_port_type, parent)
         else:
             ScopedData._unsafe_init(self, name, value, value_type, from_state, data_port_type, parent)
