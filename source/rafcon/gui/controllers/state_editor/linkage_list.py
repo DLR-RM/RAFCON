@@ -111,7 +111,7 @@ class LinkageListController(ListViewController):
             # self.no_update_self_or_parent_state_destruction = False
             return
 
-        if overview['method_name'][-1] in ['group_states', 'ungroup_state', "change_state_type",
+        if overview.get_cause() in ['group_states', 'ungroup_state', "change_state_type",
                                            "change_root_state_type"]:
             instance_is_self = self.model.state is overview['instance'][-1]
             instance_is_parent = self.model.parent and self.model.parent.state is overview['instance'][-1]
@@ -120,7 +120,7 @@ class LinkageListController(ListViewController):
             if instance_is_self or instance_is_parent or instance_is_parent_parent:
                 self.no_update = True if 'before' in info else False
 
-            if overview['prop_name'][-1] == 'state' and overview['method_name'][-1] in ["change_state_type"] and \
+            if overview['prop_name'][-1] == 'state' and overview.get_cause() in ["change_state_type"] and \
                     self.model.get_state_machine_m() is not None:
                 changed_model = self.model.get_state_machine_m().get_state_model_by_path(overview['args'][-1][1].get_path())
                 if changed_model not in self._model_observed:

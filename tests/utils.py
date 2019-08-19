@@ -4,17 +4,16 @@ standard_library.install_aliases()
 
 import pytest
 
-from builtins import str
 import copy
 import datetime
 import signal
 import os
-import sys
 import tempfile
 import time
 from os import mkdir, environ
 from os.path import join, dirname, realpath, exists, abspath
 from threading import Lock, Event, Thread, currentThread
+import weakref
 from logging import Formatter
 
 import rafcon
@@ -50,8 +49,6 @@ RAFCON_SHARED_LIBRARY_PATH = environ.get("RAFCON_LIB_PATH", join(RAFCON_ROOT_PAT
 print("LIBRARY_SM_PATH", LIBRARY_SM_PATH)
 print("RAFCON_SHARED_LIBRARY_PATH", RAFCON_SHARED_LIBRARY_PATH)
 
-# from rafcon.core.config import global_config
-# global_config.load(path=join(TESTS_PATH, "assets", "configs", "valid_config"))
 GUI_INITIALIZED = False
 GUI_SIGNAL_INITIALIZED = False
 
@@ -72,9 +69,11 @@ def reload_config(config=True, gui_config=True):
         import rafcon.gui.config
         rafcon.gui.config.global_gui_config.load(path=RAFCON_TEMP_PATH_CONFIGS)
 
+
 def remove_configs():
     for filename in os.listdir(RAFCON_TEMP_PATH_CONFIGS):
         os.remove(os.path.join(RAFCON_TEMP_PATH_CONFIGS, filename))
+
 
 def remove_all_libraries(init_library_manager=True):
     from rafcon.core.config import global_config
@@ -90,8 +89,11 @@ def remove_all_gvm_variables():
         global_variable_manager.delete_variable(gv_name)
 
 
-def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_errors=0, disable_warnings=False):
-    # disabling warnings is useful to disable DeprecationWarnings created outside the code you have control over
+def is_gui_thread(thread):
+    return thread in used_gui_threads
+
+
+def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_errors=0):
     if caplog is None:
         return
     import logging
@@ -109,7 +111,7 @@ def assert_logger_warnings_and_errors(caplog, expected_warnings=0, expected_erro
             record.exc_info = None
 
     formatter = Formatter("%(name)s: %(message)s")
-    if counted_warnings != expected_warnings and not disable_warnings:
+    if counted_warnings != expected_warnings:
         warnings = [formatter.format(record) for record in records if record.levelno == logging.WARNING]
         pytest.fail("{} == counted_warnings != expected_warnings == {}\n\n"
                     "Occured warnings:\n{}".format(counted_warnings, expected_warnings, "\n".join(warnings)))
@@ -242,8 +244,8 @@ def initialize_environment_gui(gui_config=None, runtime_config=None):
     GUI_INITIALIZED = True
 
 
-def shutdown_environment(config=True, gui_config=True, caplog=None, expected_warnings=0, expected_errors=0,
-                         unpatch_threading=True, core_only=False, disable_warnings=False):
+def shutdown_environment(caplog=None, expected_warnings=0, expected_errors=0,
+                         unpatch_threading=True, core_only=False):
     """ Reset Config object classes of singletons and release multi threading lock and optional do the log-msg test
 
      The function reloads the default config files optional and release the multi threading lock. This function is
@@ -262,10 +264,8 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
     import rafcon.core.singleton
     global GUI_INITIALIZED, GUI_SIGNAL_INITIALIZED
     global gui_thread, gui_ready, used_gui_threads
-    e = None
     try:
-        # if caplog is not None and sys.exc_info()[0] is None:
-        assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors, disable_warnings)
+        assert_logger_warnings_and_errors(caplog, expected_warnings, expected_errors)
     finally:
         try:
             if gui_ready is None:  # gui was not initialized fully only the environment
@@ -274,9 +274,6 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
             assert not rafcon.core.singleton.state_machine_manager.state_machines
             if gui_ready:
                 assert not rafcon.gui.singleton.state_machine_manager_model.state_machines
-        except Exception as e:
-            raise
-            pass
         finally:
             rewind_and_set_libraries()
             remove_configs()
@@ -286,18 +283,16 @@ def shutdown_environment(config=True, gui_config=True, caplog=None, expected_war
             gui_thread = gui_ready = None
             test_multithreading_lock.release()
 
-    if unpatch_threading:
-        unpatch_gtkmvc3_model_mt()
-    if e:
-        raise e
+            if unpatch_threading:
+                unpatch_gtkmvc3_model_mt()
 
 
-def shutdown_environment_only_core(config=True, caplog=None, expected_warnings=0, expected_errors=0):
+def shutdown_environment_only_core(caplog=None, expected_warnings=0, expected_errors=0):
     from rafcon.core.singleton import state_machine_manager
     # in the gui case, the state machines have to be deleted while the gui is still running with add_gui_callback
     # if add_gui_callback is not used, then a multi threading RuntimeError will be raised by the PatchedModelMT
     state_machine_manager.delete_all_state_machines()
-    shutdown_environment(config, False, caplog, expected_warnings, expected_errors, unpatch_threading=False,
+    shutdown_environment(caplog, expected_warnings, expected_errors, unpatch_threading=False,
                          core_only=True)
 
 
@@ -356,7 +351,7 @@ def run_gui(core_config=None, gui_config=None, runtime_config=None, libraries=No
     gui_thread = Thread(target=run_gui_thread, args=[gui_config, runtime_config])
     gui_thread.start()
 
-    used_gui_threads.append(gui_thread)
+    used_gui_threads.add(gui_thread)
     print("used_gui_threads", used_gui_threads)
     # gui callback needed as all state machine from former tests are deleted in initialize_environment_core
     call_gui_callback(initialize_environment_core, core_config, libraries)
@@ -394,14 +389,14 @@ original_ModelMT_notify_observer = None
 original_state_start = None
 original_run_state_machine = None
 state_threads = []
-used_gui_threads = []
+used_gui_threads = weakref.WeakSet()
 auto_backup_threads = []
 
 
 def patch_gtkmvc3_model_mt():
     print("patch")
     global state_threads, original_ModelMT_notify_observer, original_state_start, original_run_state_machine,\
-        used_gui_threads, auto_backup_threads
+        auto_backup_threads
 
     # noinspection PyUnresolvedReferences
     import rafcon.gui
@@ -471,8 +466,8 @@ def patch_gtkmvc3_model_mt():
                 # print "Notification from state thread", _threading.currentThread()
                 GLib.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
                 return
-            elif _threading.currentThread() in used_gui_threads \
-                    and self._ModelMT__observer_threads[observer] in used_gui_threads:
+            elif is_gui_thread(_threading.currentThread()) \
+                    and is_gui_thread(self._ModelMT__observer_threads[observer]):
                 # As long as the gtk module keeps constant the gtk main thread will always have the same thread id!
                 # But, if the module is patched as in "test_interface.py" the gtk thread will get another thread id!
                 # Thus, if both threads are in used_gui_threads then we simply allow this case!

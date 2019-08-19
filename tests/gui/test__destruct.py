@@ -996,7 +996,7 @@ def test_simple_execution_model_and_core_destruct_with_gui(gui):
     run_setup_gui_destruct(gui, elements, searched_class, run_simple_execution_controller_construction)
 
 
-@pytest.mark.timeout(60)
+@pytest.mark.timeout(120)
 @pytest.mark.parametrize('gui', [{
     "gui_config": {
         'AUTO_BACKUP_ENABLED': True,

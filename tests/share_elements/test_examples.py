@@ -105,12 +105,10 @@ def test_functionality_example(caplog):
             rafcon.core.singleton.state_machine_execution_engine.join()
     finally:
         testing_utils.wait_for_gui()  # to avoid execution and model notification clinches
-        testing_utils.shutdown_environment(gui_config=False, caplog=caplog, expected_warnings=1, expected_errors=4,
+        testing_utils.shutdown_environment(caplog=caplog, expected_warnings=3, expected_errors=4,
                                            unpatch_threading=False)
 
 
-@pytest.mark.unstable27
-@pytest.mark.unstable3
 def test_plugins_example(caplog):
 
     os.environ['RAFCON_PLUGIN_PATH'] = os.path.join(testing_utils.EXAMPLES_PATH, 'plugins', 'templates')
@@ -119,29 +117,37 @@ def test_plugins_example(caplog):
     # testing_utils.initialize_environment()
     testing_utils.test_multithreading_lock.acquire()
     try:
-        cmd = "{python} {start_script} -o {state_machine} -ss".format(
+        cmd = "{python} {start_script} -o {state_machine} -ss -c {config} -g {config}".format(
             python=str(sys.executable),
             start_script=join(testing_utils.RAFCON_PATH, 'gui', 'start.py'),
-            state_machine=path_of_sm_to_run
+            state_machine=path_of_sm_to_run,
+            config=testing_utils.RAFCON_TEMP_PATH_CONFIGS
         )
+        print("cmd", cmd)
         start_time = time.time()
         # use exec! otherwise the terminate() call ends up killing the shell process and cmd is still running
         # https://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
-        rafcon_gui_process = subprocess.Popen("exec " + cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # stderr=subprocess.STDOUT redirects stderr to stdout
+        rafcon_gui_process = subprocess.Popen("exec " + cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         # See https://stackoverflow.com/a/36477512 for details
         # Note: This (select and poll) only works on POSIX systems, not on Windows!
         poller = select.poll()
         poller.register(rafcon_gui_process.stdout, select.POLLIN)
 
+        started = False
         plugin_loaded = False
         while True:
             if poller.poll(100):
-                line = str(rafcon_gui_process.stdout.readline()).rstrip()
-                print("process:", line)
+                line = str(rafcon_gui_process.stdout.readline().decode("utf-8")).rstrip()
+                if line:
+                    print("process:", line)
                 if "Successfully loaded plugin 'templates'" in line:
                     print("=> plugin loaded")
                     plugin_loaded = True
-                if "rafcon.gui.controllers.main_window" in line and "Ready" in line:
+                if "Start execution engine" in line:
+                    print("=> started")
+                    started = True
+                if started and "Stop the state machine execution" in line:
                     print("=> ready")
                     assert plugin_loaded
                     time.sleep(0.5)  # safety margin...

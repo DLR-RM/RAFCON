@@ -3,7 +3,7 @@ import time
 
 # test environment elements
 import tests.utils as testing_utils
-from tests.utils import call_gui_callback, wait_for_execution_engine_sync_counter
+from tests.utils import call_gui_callback, wait_for_execution_engine_sync_counter, TEST_SCRIPT_PATH
 
 # general tool elements
 from rafcon.utils import log
@@ -21,20 +21,20 @@ def create_state_machine():
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.states.execution_state import ExecutionState
     root = HierarchyState(name='root')
-    ex1 = ExecutionState(name='1')
+    ex1 = ExecutionState(name='1', filename="script_small_wait.py", path=TEST_SCRIPT_PATH)
     root.add_state(ex1)
-    ex2 = ExecutionState(name='2')
+    ex2 = ExecutionState(name='2', filename="script_small_wait.py", path=TEST_SCRIPT_PATH)
     root.add_state(ex2)
-    ex3 = ExecutionState(name='3')
+    ex3 = ExecutionState(name='3', filename="script_small_wait.py", path=TEST_SCRIPT_PATH)
     root.add_state(ex3)
 
     # hierarchy state at the beginning
     h4 = HierarchyState('H4')
-    ex41 = ExecutionState(name='41')
+    ex41 = ExecutionState(name='41', filename="script_small_wait.py", path=TEST_SCRIPT_PATH)
     h4.add_state(ex41)
-    ex42 = ExecutionState(name='42')
+    ex42 = ExecutionState(name='42', filename="script_small_wait.py", path=TEST_SCRIPT_PATH)
     h4.add_state(ex42)
-    ex43 = ExecutionState(name='43')
+    ex43 = ExecutionState(name='43', filename="script_small_wait.py", path=TEST_SCRIPT_PATH)
     h4.add_state(ex43)
     h4.start_state_id = ex41.state_id
     h4.add_transition(ex41.state_id, 0, ex42.state_id, None)
@@ -101,7 +101,7 @@ def test_execution_modes(gui):
         def execution_change(self, model, prop_name, info):
             from rafcon.gui.utils.notification_overview import NotificationOverview
             overview = NotificationOverview(info)
-            if overview['method_name'][-1] == 'state_execution_status':
+            if overview.get_cause() == 'state_execution_status':
                 # print("CURRENT STATE: {0}".format(overview['model'][-1].state.get_path()))
                 self.last_execution_change_at_state = overview['model'][-1].state.get_path()
 

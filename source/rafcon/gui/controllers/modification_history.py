@@ -245,7 +245,7 @@ class ModificationHistoryTreeController(ExtendedController):
             action = history_tree_elem.action
             history_id = history_tree_elem.history_id
             model = action.before_overview['model'][-1]
-            method_name = action.before_overview['method_name'][-1]
+            method_name = action.before_overview.get_cause()
             instance = action.before_overview['instance'][-1]
             parameters = []
             tool_tip = None

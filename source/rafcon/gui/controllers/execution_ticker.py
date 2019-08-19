@@ -136,7 +136,7 @@ class ExecutionTickerController(ExtendedController):
 
         if 'kwargs' in info and 'method_name' in info['kwargs']:
             overview = NotificationOverview(info)
-            if overview['method_name'][-1] == 'state_execution_status':
+            if overview.get_cause() == 'state_execution_status':
                 active_state = overview['model'][-1].state
                 assert isinstance(active_state, State)
 
