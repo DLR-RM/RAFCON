@@ -11,6 +11,17 @@ Patch releases 0.14.\*
 Next Release
 """"""""""""
 
+
+
+0.14.1
+""""""
+
+- Bug Fixes:
+
+  - :issue_ghe:`774` python setup.py build_sass not working
+  - :issue_gh:`26` python3's "__pycache__" folder chrashes loading of examples
+
+
 0.14.0
 """"""
 

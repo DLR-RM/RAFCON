@@ -52,7 +52,7 @@ institute):
   .. code:: bash
 
      $ python setup.py build_sass
-     $ git add source/rafcon/gui/assets/share/themes/RAFCON/gtk-3.0/*.css --force
+     $ git add share/themes/RAFCON/gtk-3.0/*.css --force
 
 8. Apply the version number
 

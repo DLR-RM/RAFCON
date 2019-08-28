@@ -27,11 +27,13 @@ class GUITester(object):
         utils.run_gui(**deepcopy(self.config))
 
     def __call__(self, *args, **kwargs):
+        from rafcon.gui.utils import wait_for_gui
         if self.with_gui:
             from rafcon.utils.gui_functions import call_gui_callback
-            return call_gui_callback(*args, **kwargs)
+            return_values = call_gui_callback(*args, **kwargs)
+            call_gui_callback(wait_for_gui)
+            return return_values
         else:
-            from rafcon.gui.utils import wait_for_gui
             func = args[0]
             result = func(*args[1:], **kwargs)
             # Now we manually need to run the GTK main loop to handle all asynchronous notifications
@@ -59,11 +61,13 @@ def gui(request, caplog):
     gui_tester = GUITester(with_gui, config)
     yield gui_tester
 
-    if with_gui:
-        utils.close_gui()
-    utils.shutdown_environment(caplog=caplog, unpatch_threading=with_gui,
-                               expected_warnings=gui_tester.expected_warnings,
-                               expected_errors=gui_tester.expected_errors)
+    try:
+        if with_gui:
+            utils.close_gui()
+    finally:
+        utils.shutdown_environment(caplog=caplog, unpatch_threading=with_gui,
+                                   expected_warnings=gui_tester.expected_warnings,
+                                   expected_errors=gui_tester.expected_errors)
 
-    gui_tester.post_test and gui_tester.post_test()
+        gui_tester.post_test and gui_tester.post_test()
 

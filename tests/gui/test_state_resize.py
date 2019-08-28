@@ -21,8 +21,11 @@ state_path_Ex = "YCBQQV/PBUVVY"
 
 config_options = {
 "gui_config":  {
-    'HISTORY_ENABLED': True
+    'HISTORY_ENABLED': True,
+    'GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE': False
 },
+# If the GUI widget becomes too small, the resize tests will fail; thus, all sidebars are hidden in order
+# that the gui will have enough space
 "runtime_config": {
     'MAIN_WINDOW_MAXIMIZED': False,
     'MAIN_WINDOW_SIZE': (1500, 800),
@@ -89,25 +92,22 @@ def resize_state(gui, view, state_v, rel_size, num_motion_events, recursive, mon
     button_press_event = Gdk.Event.new(type=Gdk.EventType.BUTTON_PRESS)
     button_press_event.button = 1
     gui(resize_tool.on_button_press, button_press_event)
-    gui(wait_for_gui)
     # Do resize: Move mouse
     motion_event = Gdk.Event.new(Gdk.EventType.MOTION_NOTIFY)
     motion_event.state = motion_event.get_state()[1] | Gdk.EventMask.BUTTON_PRESS_MASK
     if recursive:
         motion_event.state = motion_event.get_state()[1] | RECURSIVE_RESIZE_MODIFIER
-    print("sent motion_event.state", motion_event.get_state())
+    print("\nsent motion_event.state", motion_event.get_state())
     for i in range(num_motion_events):
         motion_event.x = start_pos_handle[0] + rel_size[0] * (float(i + 1) / num_motion_events)
         motion_event.y = start_pos_handle[1] + rel_size[1] * (float(i + 1) / num_motion_events)
         gui(resize_tool.on_motion_notify, motion_event)
-        gui(wait_for_gui)
 
     # Stop resize: Release button
     # Gtk TODO: Check if button can be set like this
     button_release_event = Gdk.Event.new(type=Gdk.EventType.BUTTON_RELEASE)
     button_release_event.button = 1
     gui(resize_tool.on_button_release, button_release_event)
-    gui(wait_for_gui)
 
     monkeypatch.undo()
     monkeypatch.undo()
@@ -146,7 +146,7 @@ def print_state_sizes(state_m, canvas, state_names=None):
         for child_state_m in state_m.states.values():
             print_state_sizes(child_state_m, canvas)
 
-@pytest.mark.unstable
+
 @pytest.mark.parametrize("gui,state_path,recursive,rel_size", [
     (config_options, state_path_root, False, (40, 40)),
     (config_options, state_path_root, True, (40, 40)),
@@ -160,9 +160,6 @@ def print_state_sizes(state_m, canvas, state_names=None):
     (config_options, state_path_PC, True, (10, 10))
 ], indirect=["gui"])
 def test_simple_state_size_resize(gui, state_path, recursive, rel_size, monkeypatch):
-    # If the GUI widget becomes too small, the resize tests will fail; thus, all sidebars are hidden in order
-    # that the gui will have enough space
-
     from rafcon.gui.helpers.meta_data import check_gaphas_state_meta_data_consistency
     sm_m, canvas, view = open_test_state_machine(gui)
 
@@ -179,11 +176,10 @@ def test_simple_state_size_resize(gui, state_path, recursive, rel_size, monkeypa
     new_state_size = add_vectors(orig_state_size, view_rel_size)
     # sometimes (1 out of 10 cases), the initialization of gaphas elements is not correct
     # in these cases the vector entries are something around 4000 => the next loop catches these errors
-    # TODO: find the reason and fix it
+    # TODO: probably fixed by setting GAPHAS_EDITOR_AUTO_FOCUS_OF_ROOT_STATE=False, remove if no longer occurring
     for elem in new_state_size:
         if elem > 1000:
-            print("TODO Fix: wrong initialization of gaphas!")
-            return
+            raise RuntimeError("graphical editor was probably not yet ready")
 
     print_state_sizes(state_m, canvas, ["C"])
     assert_state_size_and_meta_data_consistency(state_m, state_v, new_state_size, canvas)
@@ -196,23 +192,19 @@ def test_simple_state_size_resize(gui, state_path, recursive, rel_size, monkeypa
     assert_state_size_and_meta_data_consistency(state_m, state_v, orig_state_size, canvas)
 
     gui(sm_m.history.undo)
-    gui(wait_for_gui)
     print("\nfirst undo:")
     print_state_sizes(state_m, canvas, ["C"])
     assert_state_size_and_meta_data_consistency(state_m, state_v, new_state_size, canvas)
 
     gui(sm_m.history.undo)
-    gui(wait_for_gui)
     print("\nsecond undo:")
     print_state_sizes(state_m, canvas, ["C"])
     assert_state_size_and_meta_data_consistency(state_m, state_v, orig_state_size, canvas)
 
     gui(sm_m.history.redo)
-    gui(wait_for_gui)
     assert_state_size_and_meta_data_consistency(state_m, state_v, new_state_size, canvas)
 
     gui(sm_m.history.redo)
-    gui(wait_for_gui)
     assert_state_size_and_meta_data_consistency(state_m, state_v, orig_state_size, canvas)
 
 

@@ -460,6 +460,10 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     for p in os.listdir(state_path):
         child_state_path = os.path.join(state_path, p)
         if os.path.isdir(child_state_path):
+            if not os.path.exists(os.path.join(child_state_path, FILE_NAME_CORE_DATA)):
+                # this means that child_state_path is a folder, not containing a valid state
+                # this also happens when pip creates __pycache__ folders for the script.py files upon installing rafcon
+                continue
             child_state = load_state_recursively(state, child_state_path, dirty_states)
             if not child_state:
                 return None
