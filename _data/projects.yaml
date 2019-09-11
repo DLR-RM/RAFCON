@@ -18,6 +18,14 @@
   url: "http://www.robex-allianz.de/"
   note: "Date: Nov 2012 - Nov 2017"
 
+- name: "MIRO"
+  description: "RAFCON was used for implementing an automated wound debridement workflow on the MiroSurge system.
+  The DLR MiroSurge is a molular system for minimally invasive robotic telesurgery.
+  More information about the wound debridement workflow can be found at: https://www.dlr.de/rm/en/desktopdefault.aspx/tabid-3795/16616_read-40575/"
+  image: "images/projects/miro.jpg"
+  url: "https://www.dlr.de/rm/en/desktopdefault.aspx/tabid-11674/#gallery/29790"
+  note: "Date: Jan 2017 - Nov 2017
+
 - name: "SMErobotics"
   description: "The SMErobotics project aims at significantly simplifying the deployment of robotic applications for production in the context of small and medium size manufacturing. Our mission is to enable industrial end users such as SMEs to benefit from the advantages of automation, e.g. high efficiency, constant high quality and streamlined processes."
   image: "images/projects/sme-robotics.jpg"
@@ -33,7 +41,7 @@
 - name: "Flying Robots"
   description: "The key research area Flying Robots covers several domains of the DLR Robotics and Mechatronics Center – Aeronautics, Space, Robotics, and Optical Information Systems – in order to exploit synergies in the development of robotics technologies for autonomous flying platforms. The spectrum of our work ranges from low-level control to mission planning and execution."
   image: "images/projects/flying-robots.jpg"
-  url: "http://www.dlr.de/rmc/rm/desktopdefault.aspx/tabid-4845/20104_read-47199/"
+  url: "https://www.dlr.de/rm/desktopdefault.aspx/tabid-7660/13033_read-48019/"
   note: "Date: 2015 - 2017"
 
 - name: "SpacebotCamp"
