@@ -474,10 +474,10 @@ class MetaDataAction(AbstractAction):
 
         overview['method_name'].append("change " + overview['signal'][-1]['change'])
         overview['info'][-1]['method_name'] = "change " + overview['signal'][-1]['change']
-        overview['instance'].append(overview['model'][-1])
-        overview['info'][-1]['instance'] = overview['model'][-1]
+        overview['instance'].append(overview.get_affected_model())
+        overview['info'][-1]['instance'] = overview.get_affected_model()
 
-        meta_str = json.dumps(overview['model'][-1].meta, cls=JSONObjectEncoder,
+        meta_str = json.dumps(overview.get_affected_model().meta, cls=JSONObjectEncoder,
                               indent=4, check_circular=False, sort_keys=True)
         # print(meta_str)
         self.meta = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
