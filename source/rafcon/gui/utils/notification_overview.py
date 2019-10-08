@@ -130,6 +130,9 @@ class NotificationOverview(dict):
             if isinstance(self.origin.arg, ActionSignalMsg):
                 return self.origin.arg.action
 
+    def get_affected_model(self):
+        return self.origin.model
+
     def __str__(self):
         if self.initiator is not None:
             return "Initiator: {}\n".format(self.initiator) + self.__description

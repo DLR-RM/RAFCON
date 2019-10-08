@@ -164,11 +164,11 @@ class StateMachineTreeController(TreeViewController):
 
         if overview['prop_name'][-1] == 'state' and \
                 overview.get_cause() in ["name"]:  # , "add_state", "remove_state"]:
-            self.update_tree_store_row(overview['model'][-1])
+            self.update_tree_store_row(overview.get_affected_model())
         # TODO check the work around for get_library_root_state -> maybe the notifications can be avoided if upper lib
         elif overview['prop_name'][-1] == 'state' and not overview['model'][-1].state.get_next_upper_library_root_state() and \
                 overview.get_cause() in ["add_state", "remove_state"]:
-            self.update(overview['model'][-1])
+            self.update(overview.get_affected_model())
 
     @TreeViewController.observe("state_meta_signal", signal=True)
     def state_meta_update(self, model, prop_name, info):

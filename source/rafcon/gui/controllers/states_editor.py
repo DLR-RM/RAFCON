@@ -566,7 +566,7 @@ class StatesEditorController(ExtendedController):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
-        changed_model = overview['model'][-1]
+        changed_model = overview.get_affected_model()
         method_name = overview.get_cause()
         if isinstance(changed_model, AbstractStateModel) and method_name in ['name', 'script_text']:
             self.update_tab_label(changed_model)
