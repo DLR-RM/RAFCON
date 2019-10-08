@@ -133,6 +133,9 @@ class NotificationOverview(dict):
     def get_affected_model(self):
         return self.origin.model
 
+    def get_affected_property(self):
+        return self.origin.prop_name
+
     def __str__(self):
         if self.initiator is not None:
             return "Initiator: {}\n".format(self.initiator) + self.__description

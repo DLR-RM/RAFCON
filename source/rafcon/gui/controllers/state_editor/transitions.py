@@ -642,7 +642,7 @@ class StateTransitionsListController(LinkageListController):
                     if overview['prop_name'][0] == 'states' and overview['instance'][0] is self.model.parent.state and \
                             (overview['instance'][-1] in self.model.parent.state.states and
                              overview.get_cause() in ['add_outcome'] or
-                             overview['prop_name'][-1] in ['outcome'] and
+                             overview.get_affected_property() in ['outcome'] and
                              overview.get_cause() in ['name']):
                         pass
                     else:

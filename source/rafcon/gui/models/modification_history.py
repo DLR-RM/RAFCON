@@ -361,7 +361,7 @@ class ModificationsHistoryModel(ModelMT):
             else:
                 assert False
 
-        elif overview['prop_name'][-1] == 'state':
+        elif overview.get_affected_property() == 'state':
             if "add_" in overview.get_cause():
                 if self.with_debug_logs:
                     self.store_test_log_file("$5 add Outcome,In-OutPut in root and State, ScopedVariable, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview.get_affected_model().state.get_path()))

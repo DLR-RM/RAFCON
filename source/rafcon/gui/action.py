@@ -834,7 +834,7 @@ class AddObjectAction(Action):
         # logger.info("create AddObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
 
         assert overview.get_cause() in self.possible_method_names
-        assert overview['prop_name'][-1] == 'state' and isinstance(overview['instance'][-1], State)
+        assert overview.get_affected_property() == 'state' and isinstance(overview['instance'][-1], State)
 
         self.changed_object = getattr(self.before_info['model'], self.before_info['prop_name'])
         assert self.changed_object is overview['instance'][-1]
@@ -938,7 +938,7 @@ class RemoveObjectAction(Action):
         # logger.info("create RemoveObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
 
         assert overview.get_cause() in self.possible_method_names
-        assert overview['prop_name'][-1] == 'state' and isinstance(overview['instance'][-1], State)
+        assert overview.get_affected_property() == 'state' and isinstance(overview['instance'][-1], State)
 
         self.instance_path = overview['instance'][-1].get_path()
         self.changed_object = getattr(self.before_info['model'], self.before_info['prop_name'])

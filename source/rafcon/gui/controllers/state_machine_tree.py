@@ -162,11 +162,11 @@ class StateMachineTreeController(TreeViewController):
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
 
-        if overview['prop_name'][-1] == 'state' and \
+        if overview.get_affected_property() == 'state' and \
                 overview.get_cause() in ["name"]:  # , "add_state", "remove_state"]:
             self.update_tree_store_row(overview.get_affected_model())
         # TODO check the work around for get_library_root_state -> maybe the notifications can be avoided if upper lib
-        elif overview['prop_name'][-1] == 'state' and not overview['model'][-1].state.get_next_upper_library_root_state() and \
+        elif overview.get_affected_property() == 'state' and not overview['model'][-1].state.get_next_upper_library_root_state() and \
                 overview.get_cause() in ["add_state", "remove_state"]:
             self.update(overview.get_affected_model())
 
@@ -196,7 +196,7 @@ class StateMachineTreeController(TreeViewController):
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
 
-        if overview['prop_name'][-1] == 'state' and \
+        if overview.get_affected_property() == 'state' and \
                 overview.get_cause() in ["change_state_type"]:
             changed_model = self._selected_sm_model.get_state_model_by_path(overview['args'][-1][1].get_path())
             self.observe_model(changed_model)

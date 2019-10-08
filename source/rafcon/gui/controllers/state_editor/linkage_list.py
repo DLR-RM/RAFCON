@@ -120,7 +120,7 @@ class LinkageListController(ListViewController):
             if instance_is_self or instance_is_parent or instance_is_parent_parent:
                 self.no_update = True if 'before' in info else False
 
-            if overview['prop_name'][-1] == 'state' and overview.get_cause() in ["change_state_type"] and \
+            if overview.get_affected_property() == 'state' and overview.get_cause() in ["change_state_type"] and \
                     self.model.get_state_machine_m() is not None:
                 changed_model = self.model.get_state_machine_m().get_state_model_by_path(overview['args'][-1][1].get_path())
                 if changed_model not in self._model_observed:

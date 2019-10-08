@@ -450,7 +450,7 @@ class StateDataFlowsListController(LinkageListController):
                 if overview['prop_name'][0] == 'states' and overview['instance'][0] is self.model.parent.state and \
                         (overview['instance'][-1] in self.model.parent.state.states and
                          overview.get_cause() in ['add_input_data_port', 'add_output_data_port'] or
-                         overview['prop_name'][-1] in ['data_port', 'scoped_variable'] and
+                         overview.get_affected_property() in ['data_port', 'scoped_variable'] and
                          overview.get_cause() in ['name', 'change_data_type']):
                     pass
                 else:
