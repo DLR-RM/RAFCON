@@ -141,29 +141,6 @@ class StateNotificationLogObserver(NotificationLogObserver):
 
         overview = find_parent(info, {'model': [], 'prop_name': [], 'instance': [], 'method_name': [], 'level': [],
                                       'info': []})
-        # # info_print = ''
-        # # for elem in overview['info']:
-        # #     info_print += "\n" + str(elem)
-        # # print info_print
-        # if self.with_print:
-        #     print overview['model']
-        #     print overview['prop_name']
-        #     print overview['instance']
-        #     print overview['method_name']
-        #     print overview['level']
-        #     print overview['prop_name'][-1]
-        # if overview['prop_name'][-1] == 'state':
-        #     print "path: ", overview['instance'][-1].get_path(), "\npath: ", overview['model'][-1].state.get_path()
-        #     assert overview['instance'][-1].get_path() == overview['model'][-1].state.get_path()
-        # else:
-        #     if overview['model'][-1].parent is None:  # is root_state
-        #         overview['model'][-1].state.get_path()
-        #         print "Path_root: ", overview['model'][-1].state.get_path()
-        #     else:
-        #         overview['model'][-1].parent.state.get_path()
-        #         print "Path: ", overview['model'][-2].state.get_path(), "\nPath: ", \
-        #             overview['model'][-1].parent.state.get_path()
-        #         assert overview['model'][-2].state.get_path() == overview['model'][-1].parent.state.get_path().split('/')[0]
         return overview
 
 
