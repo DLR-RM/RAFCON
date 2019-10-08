@@ -57,6 +57,7 @@ class SplashScreen(Gtk.Window):
             self.show_all()
 
     def set_text(self, text):
+        logger.info(text)
         self.label.set_text(text)
         # include this to give more time to watch
         # import time

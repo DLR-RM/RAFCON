@@ -31,7 +31,7 @@ from gtkmvc3.observable import Observable
 
 from rafcon.gui.action import ActionDummy, Action, StateMachineAction, StateAction, DataPortAction, \
     ScopedVariableAction, OutcomeAction, TransitionAction, DataFlowAction, AddObjectAction, RemoveObjectAction, \
-    MetaDataAction, get_state_element_meta
+    MetaDataAction, get_state_element_meta, StateImage
 from rafcon.gui.models.signals import ActionSignalMsg
 
 from rafcon.core.states.state import State
@@ -175,7 +175,9 @@ class ModificationsHistoryModel(ModelMT):
 
     def redo(self):
         with self.state_machine_model.storage_lock:
-            action = self.modifications.current_history_element.action
+            action = None
+            if self.modifications.get_next_element():
+                action = self.modifications.get_next_element().action
             self.busy = True
             self.modifications.redo()
             self.busy = False
@@ -208,14 +210,14 @@ class ModificationsHistoryModel(ModelMT):
             return True
 
         result = True
-        cause = overview['method_name'][-1]
+        cause = overview.get_cause()
 
         if self.with_debug_logs:
             self.store_test_log_file(str(overview) + "\n")
             if isinstance(overview['instance'][-1], State):
-                self.store_test_log_file(overview['method_name'][-1] + "\t" + str(overview['instance'][-1]) + "\t" + overview['instance'][-1].get_path() + "\n")
+                self.store_test_log_file(overview.get_cause() + "\t" + str(overview['instance'][-1]) + "\t" + overview['instance'][-1].get_path() + "\n")
             else:
-                self.store_test_log_file(overview['method_name'][-1] + "\t" + str(overview['instance'][-1]) + "\t" + overview['instance'][-1].parent.get_path() + "\n")
+                self.store_test_log_file(overview.get_cause() + "\t" + str(overview['instance'][-1]) + "\t" + overview['instance'][-1].parent.get_path() + "\n")
 
         if self.refactored_history:
             if isinstance(overview['instance'][-1], DataFlow) or \
@@ -254,7 +256,7 @@ class ModificationsHistoryModel(ModelMT):
                                                     overview=overview)
             elif isinstance(overview['instance'][-1], State):
                 assert overview['instance'][-1] is overview['model'][-1].state
-                if "semantic_data" in overview['method_name'][-1]:
+                if "semantic_data" in overview.get_cause():
                     self.active_action = StateAction(parent_path=overview['instance'][-1].get_path(),
                                                      state_machine_model=self.state_machine_model,
                                                      overview=overview)
@@ -329,7 +331,7 @@ class ModificationsHistoryModel(ModelMT):
 
         elif overview['model'][-1].parent and (isinstance(overview['instance'][-1], DataPort) or
                                                isinstance(overview['instance'][-1], Outcome) or
-                                               overview['method_name'][-1] in ['add_outcome', 'remove_outcome',
+                                               overview.get_cause() in ['add_outcome', 'remove_outcome',
                                                                                'add_output_data_port',
                                                                                'remove_output_data_port',
                                                                                'add_input_data_port',
@@ -360,7 +362,7 @@ class ModificationsHistoryModel(ModelMT):
                 assert False
 
         elif overview['prop_name'][-1] == 'state':
-            if "add_" in overview['method_name'][-1]:
+            if "add_" in overview.get_cause():
                 if self.with_debug_logs:
                     self.store_test_log_file("$5 add Outcome,In-OutPut in root and State, ScopedVariable, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview['model'][-1].state.get_path()))
                 self.active_action = Action(parent_path=overview['instance'][-1].get_path(),
@@ -408,7 +410,7 @@ class ModificationsHistoryModel(ModelMT):
             return
         overview = NotificationOverview(info, False, self.__class__.__name__)
         # filter self emit and avoid multiple signals of the root_state, by comparing first and last model in overview
-        if overview["signal"][0].change.startswith("sm_notification"):
+        if len(overview['model']) > 1 and overview['model'][0] is overview['model'][-1]:
             return
         if self.busy:
             return
@@ -441,8 +443,9 @@ class ModificationsHistoryModel(ModelMT):
                 self.active_action = MetaDataAction(changed_parent_model.state.get_path(),
                                                     state_machine_model=self.state_machine_model,
                                                     overview=overview)
-                meta_dict = self.get_state_element_meta_from_internal_tmp_storage(changed_parent_state_path)
-                self.active_action.before_storage = meta_dict
+                meta_data = self.get_state_element_meta_from_internal_tmp_storage(changed_parent_state_path)
+                state_image = StateImage(meta_data=meta_data)
+                self.active_action.before_state_image = state_image
 
                 self.finish_new_action(overview)
             else:
@@ -473,7 +476,6 @@ class ModificationsHistoryModel(ModelMT):
             if self.with_debug_logs:
                 self.store_test_log_file(str(overview) + "\n")
 
-            # TODO: Why is the overview modified here?
             overview['instance'].insert(0, self.state_machine_model.state_machine)
             overview['model'].insert(0, self.state_machine_model)
             if info['arg'].action == 'change_root_state_type':
@@ -538,7 +540,7 @@ class ModificationsHistoryModel(ModelMT):
             overview = NotificationOverview(info, False, self.__class__.__name__)
 
             # skipped state modifications
-            if not overview['method_name'][0] == 'state_change' or overview['method_name'][-1] == 'parent':
+            if not overview['method_name'][0] == 'state_change' or overview.get_cause() == 'parent':
                 return
 
             # increase counter and generate new action if not locked by action that is performed
@@ -578,7 +580,7 @@ class ModificationsHistoryModel(ModelMT):
                 pass
 
             # modifications of parent are not observed
-            if not overview['method_name'][0] == 'state_change' or overview['method_name'][-1] == 'parent':
+            if not overview['method_name'][0] == 'state_change' or overview.get_cause() == 'parent':
                 return
 
             # decrease counter and finish action if count_before = 0
@@ -610,7 +612,7 @@ class ModificationsHistoryModel(ModelMT):
         else:
             overview = NotificationOverview(info, False, self.__class__.__name__)
             # modifications of parent are not observed
-            if overview['method_name'][-1] == 'parent':
+            if overview.get_cause() == 'parent':
                 return
 
             # increase counter and generate new action if not locked by action that is performed
@@ -652,7 +654,7 @@ class ModificationsHistoryModel(ModelMT):
                 pass
 
             # modifications of parent are not observed
-            if overview['method_name'][-1] == 'parent':
+            if overview.get_cause() == 'parent':
                 return
 
             # decrease counter and finish action when reaching count=0

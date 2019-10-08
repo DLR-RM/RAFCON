@@ -145,12 +145,16 @@ def start_state_machine(state_machine, start_state_path, quit_flag):
 
 
 def start_stop_state_machine(state_machine, start_state_path, quit_flag):
-    wait_for_gui()
+    from rafcon.utils.gui_functions import call_gui_callback
 
     state_machine_execution_engine = core_singletons.state_machine_execution_engine
-    state_machine_execution_engine.execute_state_machine_from_path(state_machine=state_machine,
-                                                                   start_state_path=start_state_path,
-                                                                   wait_for_execution_finished=True)
+    call_gui_callback(
+        state_machine_execution_engine.execute_state_machine_from_path,
+        state_machine=state_machine,
+        start_state_path=start_state_path,
+        wait_for_execution_finished=True
+    )
+
     if reactor_required():
         from twisted.internet import reactor
         reactor.callFromThread(reactor.stop)

@@ -531,7 +531,7 @@ class Action(ModelMT, AbstractAction):
         assert isinstance(overview, NotificationOverview)
         AbstractAction.__init__(self, parent_path, state_machine_model, overview)
         self.state_machine = state_machine_model.state_machine
-        self.action_type = overview['method_name'][-1]
+        self.action_type = overview.get_cause()
         self.before_info = overview['info'][-1]
 
     def get_state_image(self):
@@ -750,6 +750,7 @@ class StateMachineAction(Action, ModelMT):
 
     def __init__(self, parent_path, state_machine_model, overview):
         ModelMT.__init__(self)
+        assert isinstance(overview['model'][0].state_machine, StateMachine)
         Action.__init__(self, parent_path, state_machine_model, overview)
 
         self.with_verbose = False
@@ -832,7 +833,7 @@ class AddObjectAction(Action):
         Action.__init__(self, parent_path, state_machine_model, overview)
         # logger.info("create AddObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
 
-        assert overview['method_name'][-1] in self.possible_method_names
+        assert overview.get_cause() in self.possible_method_names
         assert overview['prop_name'][-1] == 'state' and isinstance(overview['instance'][-1], State)
 
         self.changed_object = getattr(self.before_info['model'], self.before_info['prop_name'])
@@ -849,7 +850,7 @@ class AddObjectAction(Action):
         Action.set_after(self, overview)
         # logger.info("add_object \n" + str(self.after_info))
         # get new object from respective list and create identifier
-        list_name = overview['method_name'][-1].replace('add_', '') + 's'
+        list_name = overview.get_cause().replace('add_', '') + 's'
         new_object = getattr(overview['args'][-1][0], list_name)[overview['result'][-1]]
         self.added_object_identifier = CoreObjectIdentifier(new_object)
 
@@ -936,7 +937,7 @@ class RemoveObjectAction(Action):
         Action.__init__(self, parent_path, state_machine_model, overview)
         # logger.info("create RemoveObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
 
-        assert overview['method_name'][-1] in self.possible_method_names
+        assert overview.get_cause() in self.possible_method_names
         assert overview['prop_name'][-1] == 'state' and isinstance(overview['instance'][-1], State)
 
         self.instance_path = overview['instance'][-1].get_path()
@@ -978,7 +979,7 @@ class RemoveObjectAction(Action):
         # logger.info("remove_object \n" + str(self.before_info))
         overview = self.before_overview
         # get new object from respective list and create identifier
-        object_type_name = overview['method_name'][-1].replace('remove_', '')
+        object_type_name = overview.get_cause().replace('remove_', '')
         list_name = object_type_name + 's'
         if object_type_name + '_id' in overview['kwargs'][-1]:
             object_id = overview['kwargs'][-1][object_type_name + '_id']
@@ -1143,7 +1144,7 @@ class StateElementAction(AbstractAction):
         assert isinstance(self.before_overview['instance'][-1], self._object_class)
 
         # validate method call -- action type
-        self.action_type = overview['method_name'][-1]
+        self.action_type = overview.get_cause()
         if not self.action_type in self.possible_method_names:
             logger.error("{0} is not possible with overview {1}".format(self.__class__.__name__, overview))
         assert self.action_type in self.possible_method_names
@@ -1352,7 +1353,7 @@ class StateAction(Action):
     def __init__(self, parent_path, state_machine_model, overview):
         """ method_name: 'parent' is ignored
         """
-        if overview['method_name'][-1] in ['outcomes', 'input_data_ports', 'output_data_ports']:  # need State's parent
+        if overview.get_cause() in ['outcomes', 'input_data_ports', 'output_data_ports']:  # need State's parent
             if isinstance(overview['instance'][-1].parent, State):
                 parent_path = overview['instance'][-1].parent.get_path()
         Action.__init__(self, parent_path, state_machine_model, overview)
@@ -1363,7 +1364,7 @@ class StateAction(Action):
         assert self.action_type in self.possible_method_names
         assert isinstance(self.before_overview['instance'][-1], State)
         self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
-        if overview['method_name'][-1] in ['outcomes', 'input_data_ports', 'output_data_ports']:
+        if overview.get_cause() in ['outcomes', 'input_data_ports', 'output_data_ports']:
             assert self.parent_path == CoreObjectIdentifier(self.before_overview['instance'][-1].parent)._path
         else:
             assert self.parent_path == self.object_identifier._path
@@ -1383,7 +1384,7 @@ class StateAction(Action):
             self.description_diff = '\n'.join(diff)
         else:
             self.description_diff = None
-        if 'semantic_data' in overview['method_name'][-1]:
+        if 'semantic_data' in overview.get_cause():
             self.action_type = 'semantic_data'
 
     def as_dict(self):
