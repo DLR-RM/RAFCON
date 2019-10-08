@@ -834,10 +834,10 @@ class AddObjectAction(Action):
         # logger.info("create AddObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
 
         assert overview.get_cause() in self.possible_method_names
-        assert overview.get_affected_property() == 'state' and isinstance(overview['instance'][-1], State)
+        assert overview.get_affected_property() == 'state' and isinstance(overview.get_affected_core_element(), State)
 
         self.changed_object = getattr(self.before_info['model'], self.before_info['prop_name'])
-        assert self.changed_object is overview['instance'][-1]
+        assert self.changed_object is overview.get_affected_core_element()
         # logger.info("self.changed_object is {0}".format(self.changed_object))
 
         self.parent_identifier = ''
@@ -938,9 +938,9 @@ class RemoveObjectAction(Action):
         # logger.info("create RemoveObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
 
         assert overview.get_cause() in self.possible_method_names
-        assert overview.get_affected_property() == 'state' and isinstance(overview['instance'][-1], State)
+        assert overview.get_affected_property() == 'state' and isinstance(overview.get_affected_core_element(), State)
 
-        self.instance_path = overview['instance'][-1].get_path()
+        self.instance_path = overview.get_affected_core_element().get_path()
         self.changed_object = getattr(self.before_info['model'], self.before_info['prop_name'])
         # logger.info("self.changed_object is {0}".format(self.changed_object))
 
@@ -1141,7 +1141,7 @@ class StateElementAction(AbstractAction):
         AbstractAction.__init__(self, parent_path, state_machine_model, overview)
 
         # validate class type
-        assert isinstance(self.before_overview['instance'][-1], self._object_class)
+        assert isinstance(self.before_overview.get_affected_core_element(), self._object_class)
 
         # validate method call -- action type
         self.action_type = overview.get_cause()
@@ -1150,10 +1150,10 @@ class StateElementAction(AbstractAction):
         assert self.action_type in self.possible_method_names
 
         # validate object path
-        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
+        self.object_identifier = CoreObjectIdentifier(self.before_overview.get_affected_core_element())
         assert self.parent_path == self.object_identifier._path
 
-        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
+        self.before_arguments = self.get_set_of_arguments(self.before_overview.get_affected_core_element())
 
         self.state_machine = state_machine_model.state_machine
 
@@ -1175,8 +1175,8 @@ class StateElementAction(AbstractAction):
 
     def set_after(self, overview):
         self.after_overview = overview
-        assert isinstance(self.after_overview['instance'][-1], self._object_class)
-        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
+        assert isinstance(self.after_overview.get_affected_core_element(), self._object_class)
+        self.after_arguments = self.get_set_of_arguments(self.after_overview.get_affected_core_element())
 
 
 class DataFlowAction(StateElementAction):
@@ -1354,21 +1354,21 @@ class StateAction(Action):
         """ method_name: 'parent' is ignored
         """
         if overview.get_cause() in ['outcomes', 'input_data_ports', 'output_data_ports']:  # need State's parent
-            if isinstance(overview['instance'][-1].parent, State):
-                parent_path = overview['instance'][-1].parent.get_path()
+            if isinstance(overview.get_affected_core_element().parent, State):
+                parent_path = overview.get_affected_core_element().parent.get_path()
         Action.__init__(self, parent_path, state_machine_model, overview)
 
         self.state_machine = state_machine_model.state_machine
         if self.action_type not in self.possible_method_names:
             logger.error("action_type: '{0}' not in {1}".format(self.action_type, self.possible_method_names))
         assert self.action_type in self.possible_method_names
-        assert isinstance(self.before_overview['instance'][-1], State)
-        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
+        assert isinstance(self.before_overview.get_affected_core_element(), State)
+        self.object_identifier = CoreObjectIdentifier(self.before_overview.get_affected_core_element())
         if overview.get_cause() in ['outcomes', 'input_data_ports', 'output_data_ports']:
-            assert self.parent_path == CoreObjectIdentifier(self.before_overview['instance'][-1].parent)._path
+            assert self.parent_path == CoreObjectIdentifier(self.before_overview.get_affected_core_element().parent)._path
         else:
             assert self.parent_path == self.object_identifier._path
-        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
+        self.before_arguments = self.get_set_of_arguments(self.before_overview.get_affected_core_element())
         self.after_arguments = None
         if self.action_type == 'script_text' and isinstance(self.before_overview['args'][-1][1], string_types):
             d = difflib.Differ()
@@ -1413,8 +1413,8 @@ class StateAction(Action):
     def set_after(self, overview):
         Action.set_after(self, overview)
         self.after_overview = overview
-        assert isinstance(self.after_overview['instance'][-1], State)
-        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
+        assert isinstance(self.after_overview.get_affected_core_element(), State)
+        self.after_arguments = self.get_set_of_arguments(self.after_overview.get_affected_core_element())
 
     def undo(self):
         if self.action_type in ['parent', 'outcomes', 'input_data_ports', 'output_data_ports']:

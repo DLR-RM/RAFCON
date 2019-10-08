@@ -133,6 +133,9 @@ class NotificationOverview(dict):
     def get_affected_model(self):
         return self.origin.model
 
+    def get_affected_core_element(self):
+        return self.origin.instance
+
     def get_affected_property(self):
         return self.origin.prop_name
 

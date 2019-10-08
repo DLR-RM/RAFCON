@@ -113,9 +113,9 @@ class LinkageListController(ListViewController):
 
         if overview.get_cause() in ['group_states', 'ungroup_state', "change_state_type",
                                            "change_root_state_type"]:
-            instance_is_self = self.model.state is overview['instance'][-1]
-            instance_is_parent = self.model.parent and self.model.parent.state is overview['instance'][-1]
-            instance_is_parent_parent = self.model.parent and self.model.parent.parent and self.model.parent.parent.state is overview['instance'][-1]
+            instance_is_self = self.model.state is overview.get_affected_core_element()
+            instance_is_parent = self.model.parent and self.model.parent.state is overview.get_affected_core_element()
+            instance_is_parent_parent = self.model.parent and self.model.parent.parent and self.model.parent.parent.state is overview.get_affected_core_element()
             # print("no update flag: ", True if 'before' in info and (instance_is_self or instance_is_parent or instance_is_parent_parent) else False)
             if instance_is_self or instance_is_parent or instance_is_parent_parent:
                 self.no_update = True if 'before' in info else False

@@ -246,7 +246,7 @@ class ModificationHistoryTreeController(ExtendedController):
             history_id = history_tree_elem.history_id
             model = action.before_overview.get_affected_model()
             method_name = action.before_overview.get_cause()
-            instance = action.before_overview['instance'][-1]
+            instance = action.before_overview.get_affected_core_element()
             parameters = []
             tool_tip = None
             if action.before_overview['type'] == 'signal':

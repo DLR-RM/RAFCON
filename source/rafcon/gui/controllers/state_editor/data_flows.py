@@ -414,8 +414,8 @@ class StateDataFlowsListController(LinkageListController):
         overview = NotificationOverview(info, False, self.__class__.__name__)
         # logger.info("after_notification_of_parent_or_state: OK")
 
-        if overview.get_cause() == 'parent' and overview['instance'][-1] is self.model.state or \
-                overview['instance'][-1] in [self.model.state, self.model.state.parent] and \
+        if overview.get_cause() == 'parent' and overview.get_affected_core_element() is self.model.state or \
+                overview.get_affected_core_element() in [self.model.state, self.model.state.parent] and \
                 overview.get_cause() in ['name', 'group_states', 'ungroup_state', 'change_data_type',
                                                 "remove_input_data_port", "remove_output_data_port",
                                                 "remove_scoped_variable", "remove_data_flow"]:
@@ -448,7 +448,7 @@ class StateDataFlowsListController(LinkageListController):
             if self.model.parent:
                 # check for a sibling port change
                 if overview['prop_name'][0] == 'states' and overview['instance'][0] is self.model.parent.state and \
-                        (overview['instance'][-1] in self.model.parent.state.states and
+                        (overview.get_affected_core_element() in self.model.parent.state.states and
                          overview.get_cause() in ['add_input_data_port', 'add_output_data_port'] or
                          overview.get_affected_property() in ['data_port', 'scoped_variable'] and
                          overview.get_cause() in ['name', 'change_data_type']):
