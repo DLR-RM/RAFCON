@@ -414,15 +414,15 @@ class ModificationsHistoryModel(ModelMT):
             return
         if self.busy:
             return
-        if overview.get_signal_message()['origin'] == 'load_meta_data':
+        if overview.get_signal_message().origin == 'load_meta_data':
             return
 
-        if self.active_action is None or overview.get_signal_message()['change'] in ['append_initial_change']:
+        if self.active_action is None or overview.get_signal_message().change in ['append_initial_change']:
             # update last actions after_state_image -> meta-data
             self.re_initiate_meta_data()
         elif self.active_action is None or \
-                overview.get_signal_message()['change'] in ['append_to_last_change'] or \
-                overview.get_signal_message()['origin'] in ['group_states', 'ungroup_state', 'substitute_state']:
+                overview.get_signal_message().change in ['append_to_last_change'] or \
+                overview.get_signal_message().origin in ['group_states', 'ungroup_state', 'substitute_state']:
             # update last actions after_state_image -> meta-data
             self.active_action.after_state_image = self.active_action.get_state_image()
             self.update_internal_tmp_storage()
