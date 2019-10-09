@@ -129,6 +129,8 @@ class NotificationOverview(dict):
         if origin_type == "signal":
             if isinstance(self.origin.arg, ActionSignalMsg):
                 return self.origin.arg.action
+            if isinstance(self.origin.arg, MetaSignalMsg):
+                return self.origin.arg.origin
 
     def get_affected_model(self):
         return self.origin.model
@@ -138,6 +140,8 @@ class NotificationOverview(dict):
         if origin_type == "signal":
             if isinstance(self.origin.arg, ActionSignalMsg):
                 return self.origin.arg.action_parent_m.core_element
+            if isinstance(self.origin.arg, MetaSignalMsg):
+                return self.origin.model.core_element
         return self.origin.instance
 
     def get_affected_property(self):
