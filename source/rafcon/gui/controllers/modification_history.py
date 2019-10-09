@@ -250,13 +250,13 @@ class ModificationHistoryTreeController(ExtendedController):
             parameters = []
             tool_tip = None
             if action.before_overview['type'] == 'signal':
-                if isinstance(action.before_overview['signal'][0], MetaSignalMsg):
+                if isinstance(action.before_overview.get_signal_message(), MetaSignalMsg):
                     parameters.append(str(action.meta))
-                elif isinstance(action.before_overview['signal'][-1], ActionSignalMsg):
+                elif isinstance(action.before_overview.get_signal_message(), ActionSignalMsg):
                     if action.action_type not in ['paste', 'cut']:
-                        parameters.append(str(action.before_overview['signal'][-1].kwargs))
+                        parameters.append(str(action.before_overview.get_signal_message().kwargs))
                 else:
-                    logger.warning("no parameters defined for signal: {0}".format(action.before_overview['signal']))
+                    logger.warning("no parameters defined for signal: {0}".format(action.before_overview.get_signal_message()))
             else:
                 for index, value in enumerate(action.before_overview['args'][-1]):
                     if not index == 0:

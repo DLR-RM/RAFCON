@@ -470,10 +470,10 @@ class MetaDataAction(AbstractAction):
         assert isinstance(overview, NotificationOverview)
         assert overview['type'] == 'signal'
         AbstractAction.__init__(self, parent_path, state_machine_model, overview)
-        self.action_type = "change " + overview['signal'][-1]['change']
+        self.action_type = "change " + overview.get_signal_message()['change']
 
-        overview['method_name'].append("change " + overview['signal'][-1]['change'])
-        overview['info'][-1]['method_name'] = "change " + overview['signal'][-1]['change']
+        overview['method_name'].append("change " + overview.get_signal_message()['change'])
+        overview['info'][-1]['method_name'] = "change " + overview.get_signal_message()['change']
         overview['instance'].append(overview.get_affected_model())
         overview['info'][-1]['instance'] = overview.get_affected_model()
 
@@ -496,7 +496,7 @@ class MetaDataAction(AbstractAction):
         # TODO in future emit signal only for respective model
         state_m = self.get_state_model_changed()
         # logger.info("META-Action undo {}".format(state_m.state.get_path()))
-        if self.before_overview['signal'][-1]['affects_children']:
+        if self.before_overview.get_signal_message()['affects_children']:
             insert_state_meta_data(meta_dict=self.before_state_image.meta_data, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", True))
             # if state_m.state.is_root_state:
@@ -512,7 +512,7 @@ class MetaDataAction(AbstractAction):
         # TODO in future emit signal only for respective model
         state_m = self.get_state_model_changed()
         # logger.info("META-Action undo {}".format(state_m.state.get_path()))
-        if self.before_overview['signal'][-1]['affects_children']:
+        if self.before_overview.get_signal_message()['affects_children']:
             insert_state_meta_data(meta_dict=self.after_state_image.meta_data, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))
             # if state_m.state.is_root_state:

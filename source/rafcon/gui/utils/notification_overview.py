@@ -147,6 +147,11 @@ class NotificationOverview(dict):
     def get_affected_property(self):
         return self.origin.prop_name
 
+    def get_signal_message(self):
+        assert self.get_origin_type() == "signal", "Cannot retrieve message from non-signal notification"
+        return self.origin.arg
+
+
     def __str__(self):
         if self.initiator is not None:
             return "Initiator: {}\n".format(self.initiator) + self.__description
