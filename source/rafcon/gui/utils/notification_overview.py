@@ -133,9 +133,18 @@ class NotificationOverview(dict):
                 return self.origin.arg.origin
 
     def get_method_args(self):
+        origin_type = self.get_origin_type()
+        if origin_type == "signal":
+            raise ValueError("No wargs for signals")
         return self.origin.args
 
     def get_method_kwargs(self):
+        origin_type = self.get_origin_type()
+        if origin_type == "signal":
+            if isinstance(self.origin.arg, ActionSignalMsg):
+                return self.origin.arg.kwargs
+            if isinstance(self.origin.arg, MetaSignalMsg):
+                raise ValueError("No kwargs for MetaSignalMsg")
         return self.origin.kwargs
 
     def get_affected_model(self):
