@@ -132,6 +132,12 @@ class NotificationOverview(dict):
             if isinstance(self.origin.arg, MetaSignalMsg):
                 return self.origin.arg.origin
 
+    def get_method_args(self):
+        return self.origin.args
+
+    def get_method_kwargs(self):
+        return self.origin.kwargs
+
     def get_affected_model(self):
         return self.origin.model
 

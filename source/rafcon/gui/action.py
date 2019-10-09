@@ -851,7 +851,7 @@ class AddObjectAction(Action):
         # logger.info("add_object \n" + str(self.after_info))
         # get new object from respective list and create identifier
         list_name = overview.get_cause().replace('add_', '') + 's'
-        new_object = getattr(overview['args'][-1][0], list_name)[overview['result'][-1]]
+        new_object = getattr(overview.get_method_args()[0], list_name)[overview['result'][-1]]
         self.added_object_identifier = CoreObjectIdentifier(new_object)
 
     def redo(self):
@@ -981,14 +981,14 @@ class RemoveObjectAction(Action):
         # get new object from respective list and create identifier
         object_type_name = overview.get_cause().replace('remove_', '')
         list_name = object_type_name + 's'
-        if object_type_name + '_id' in overview['kwargs'][-1]:
-            object_id = overview['kwargs'][-1][object_type_name + '_id']
+        if object_type_name + '_id' in overview.get_method_kwargs():
+            object_id = overview.get_method_kwargs()[object_type_name + '_id']
         else:
-            if len(overview['args'][-1]) < 2:
+            if len(overview.get_method_args()) < 2:
                 logger.error("Length of args-tuple is shorter as assumed.")
             else:
-                object_id = overview['args'][-1][1]
-        new_object = getattr(overview['args'][-1][0], list_name)[object_id]
+                object_id = overview.get_method_args()[1]
+        new_object = getattr(overview.get_method_args()[0], list_name)[object_id]
         self.removed_object_identifier = CoreObjectIdentifier(new_object)
         # logger.info("removed_object with identifier {0}".format(self.removed_object_identifier))
 
@@ -1370,17 +1370,17 @@ class StateAction(Action):
             assert self.parent_path == self.object_identifier._path
         self.before_arguments = self.get_set_of_arguments(self.before_overview.get_affected_core_element())
         self.after_arguments = None
-        if self.action_type == 'script_text' and isinstance(self.before_overview['args'][-1][1], string_types):
+        if self.action_type == 'script_text' and isinstance(self.before_overview.get_method_args()[-1][1], string_types):
             d = difflib.Differ()
-            diff = list(d.compare(self.before_overview['args'][-1][0].script_text.split('\n'),
-                                  self.before_overview['args'][-1][1].split('\n')))
+            diff = list(d.compare(self.before_overview.get_method_args()[0].script_text.split('\n'),
+                                  self.before_overview.get_method_args()[1].split('\n')))
             self.script_diff = '\n'.join(diff)
         else:
             self.script_diff = None
         if self.action_type == 'description':
             d = difflib.Differ()
-            diff = list(d.compare(self.before_overview['args'][-1][0].description.split('\n') if self.before_overview['args'][-1][0].description else [''] ,
-                                  self.before_overview['args'][-1][1].split('\n') if self.before_overview['args'][-1][1] else ['']))
+            diff = list(d.compare(self.before_overview.get_method_args()[0].description.split('\n') if self.before_overview.get_method_args()[0].description else [''] ,
+                                  self.before_overview.get_method_args()[1].split('\n') if self.before_overview.get_method_args()[1] else ['']))
             self.description_diff = '\n'.join(diff)
         else:
             self.description_diff = None

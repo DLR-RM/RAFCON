@@ -122,7 +122,7 @@ class LinkageListController(ListViewController):
 
             if overview.get_affected_property() == 'state' and overview.get_cause() in ["change_state_type"] and \
                     self.model.get_state_machine_m() is not None:
-                changed_model = self.model.get_state_machine_m().get_state_model_by_path(overview['args'][-1][1].get_path())
+                changed_model = self.model.get_state_machine_m().get_state_model_by_path(overview.get_method_args()[1].get_path())
                 if changed_model not in self._model_observed:
                     self.observe_model(changed_model)
 

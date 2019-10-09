@@ -258,10 +258,10 @@ class ModificationHistoryTreeController(ExtendedController):
                 else:
                     logger.warning("no parameters defined for signal: {0}".format(action.before_overview.get_signal_message()))
             else:
-                for index, value in enumerate(action.before_overview['args'][-1]):
+                for index, value in enumerate(action.before_overview.get_method_args()):
                     if not index == 0:
                         parameters.append(str(value))
-            for name, value in action.before_overview['kwargs'][-1].items():
+            for name, value in action.before_overview.get_method_kwargs().items():
                 parameters.append("{0}: {1}".format(name, value))
 
             if hasattr(action, 'action_type') and action.action_type == "script_text" and hasattr(action, 'script_diff'):

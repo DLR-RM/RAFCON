@@ -198,7 +198,7 @@ class StateMachineTreeController(TreeViewController):
 
         if overview.get_affected_property() == 'state' and \
                 overview.get_cause() in ["change_state_type"]:
-            changed_model = self._selected_sm_model.get_state_model_by_path(overview['args'][-1][1].get_path())
+            changed_model = self._selected_sm_model.get_state_model_by_path(overview.get_method_args()[1].get_path())
             self.observe_model(changed_model)
 
     @TreeViewController.observe("state_action_signal", signal=True)
