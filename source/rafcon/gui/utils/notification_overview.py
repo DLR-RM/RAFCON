@@ -134,6 +134,10 @@ class NotificationOverview(dict):
         return self.origin.model
 
     def get_affected_core_element(self):
+        origin_type = self.get_origin_type()
+        if origin_type == "signal":
+            if isinstance(self.origin.arg, ActionSignalMsg):
+                return self.origin.arg.action_parent_m.core_element
         return self.origin.instance
 
     def get_affected_property(self):
