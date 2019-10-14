@@ -574,7 +574,7 @@ class ModificationsHistoryModel(ModelMT):
             overview = NotificationOverview(info, False, self.__class__.__name__)
 
             # handle interrupts of action caused by exceptions
-            if overview['result'][-1] == "CRASH in FUNCTION" or isinstance(overview['result'][-1], Exception):
+            if overview.get_result() == "CRASH in FUNCTION" or isinstance(overview.get_result(), Exception):
                 if self.count_before == 1:
                     return self._interrupt_active_action(info)
                 pass
@@ -648,7 +648,7 @@ class ModificationsHistoryModel(ModelMT):
             overview = NotificationOverview(info, False, self.__class__.__name__)
 
             # handle interrupts of action caused by exceptions
-            if overview['result'][-1] == "CRASH in FUNCTION" or isinstance(overview['result'][-1], Exception):
+            if overview.get_result() == "CRASH in FUNCTION" or isinstance(overview.get_result(), Exception):
                 if self.count_before == 1:
                     return self._interrupt_active_action(info)
                 pass

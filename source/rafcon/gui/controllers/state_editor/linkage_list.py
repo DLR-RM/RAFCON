@@ -105,7 +105,7 @@ class LinkageListController(ListViewController):
         overview = NotificationOverview(info, False, self.__class__.__name__)
 
         # The method causing the change raised an exception, thus nothing was changed and updates are allowed
-        if 'after' in info and isinstance(overview['result'][-1], Exception):
+        if 'after' in info and isinstance(overview.get_result(), Exception):
             self.no_update = False
             self.no_update_state_destruction = False
             # self.no_update_self_or_parent_state_destruction = False

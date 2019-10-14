@@ -162,6 +162,10 @@ class NotificationOverview(dict):
     def get_affected_property(self):
         return self.origin.prop_name
 
+    def get_result(self):
+        assert self.get_origin_type() == "after", "Only after notifications carry a result"
+        return self.origin.result
+
     def get_signal_message(self):
         assert self.get_origin_type() == "signal", "Cannot retrieve message from non-signal notification"
         return self.origin.arg

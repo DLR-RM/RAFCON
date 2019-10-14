@@ -851,7 +851,7 @@ class AddObjectAction(Action):
         # logger.info("add_object \n" + str(self.after_info))
         # get new object from respective list and create identifier
         list_name = overview.get_cause().replace('add_', '') + 's'
-        new_object = getattr(overview.get_method_args()[0], list_name)[overview['result'][-1]]
+        new_object = getattr(overview.get_method_args()[0], list_name)[overview.get_result()]
         self.added_object_identifier = CoreObjectIdentifier(new_object)
 
     def redo(self):
