@@ -406,20 +406,16 @@ class StateDataFlowsListController(LinkageListController):
     def after_notification_of_parent_or_state(self, model, prop_name, info):
 
         # avoid updates because of execution status updates or while multi-actions
-        # logger.info("after_notification_of_parent_or_state: {1}\n{0}".format(NotificationOverview(info),
-        #                                                                      self.model.state.get_path()))
         if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
-        # logger.info("after_notification_of_parent_or_state: OK")
 
         if overview.get_cause() == 'parent' and overview.get_affected_core_element() is self.model.state or \
                 overview.get_affected_core_element() in [self.model.state, self.model.state.parent] and \
                 overview.get_cause() in ['name', 'group_states', 'ungroup_state', 'change_data_type',
                                                 "remove_input_data_port", "remove_output_data_port",
                                                 "remove_scoped_variable", "remove_data_flow"]:
-            # logger.info("after_notification_of_parent_or_state: UPDATE")
             self.update(initiator=str(overview))
 
     @LinkageListController.observe("states", after=True)
@@ -430,24 +426,19 @@ class StateDataFlowsListController(LinkageListController):
     def after_notification_of_parent_or_state_from_lists(self, model, prop_name, info):
 
         # avoid updates because of execution status updates or while multi-actions
-        # logger.info("after_notification_of_parent_or_state_from_lists: {1}\n{0}".format(NotificationOverview(info),
-        #                                                                                 self.model.state.get_path()))
         if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
         overview = NotificationOverview(info, False, self.__class__.__name__)
-        # print(self, self.model.state.get_path(), overview)
-        # logger.info("after_notification_of_parent_or_state_from_lists: OK")
 
         # avoid updates because of unimportant methods
-        if overview['prop_name'][0] in ['states', 'input_data_ports', 'output_data_ports', 'scoped_variables', 'data_flows'] and \
-                overview.get_cause() not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove',
-                                                    'group_states', 'ungroup_state', 'change_data_type',
-                                                    'from_key', 'to_key', 'from_state', 'to_state',
-                                                    'modify_origin', 'modify_target']:
+        if overview.get_cause() not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove',
+                                        'group_states', 'ungroup_state', 'change_data_type',
+                                        'from_key', 'to_key', 'from_state', 'to_state',
+                                        'modify_origin', 'modify_target']:
             if self.model.parent:
                 # check for a sibling port change
-                if overview['prop_name'][0] == 'states' and overview['instance'][0] is self.model.parent.state and \
+                if prop_name == 'states' and overview['instance'][0] is self.model.parent.state and \
                         (overview.get_affected_core_element() in self.model.parent.state.states and
                          overview.get_cause() in ['add_input_data_port', 'add_output_data_port'] or
                          overview.get_affected_property() in ['data_port', 'scoped_variable'] and
@@ -457,10 +448,8 @@ class StateDataFlowsListController(LinkageListController):
                     return
             else:
                 return
-        # print("DUPDATE ", self, overview)
 
         try:
-            # logger.info("after_notification_of_parent_or_state_from_lists: UPDATE")
             self.update(initiator=str(overview))
         except Exception as e:
             if self.debug_log:
