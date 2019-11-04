@@ -468,7 +468,7 @@ class MetaDataAction(AbstractAction):
     def __init__(self, parent_path, state_machine_model, overview):
 
         assert isinstance(overview, NotificationOverview)
-        assert overview['type'] == 'signal'
+        assert overview.type == 'signal'
         AbstractAction.__init__(self, parent_path, state_machine_model, overview)
         self.action_type = "change " + overview.get_signal_message().change
 

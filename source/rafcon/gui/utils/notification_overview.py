@@ -64,12 +64,7 @@ class NotificationOverview(dict):
         self.initiator = initiator_string
         self.info = info
         self.origin = self.extract_origin(info)
-        # self._info = ref(info)
-        self.__type = 'before'
-        if 'after' in info:
-            self.__type = 'after'
-        elif 'signal' in info:
-            self.__type = 'after'
+        self._type = self.extract_type(info)
         self.with_prints = with_prints
         s, overview_dict = self.get_nice_info_dict_string(info)
         self.time_stamp = datetime.datetime.now()
@@ -119,28 +114,22 @@ class NotificationOverview(dict):
         info_origin = NTInfo(notification_type, **info_origin)
         return info_origin
 
-    def get_origin_type(self):
-        return self.extract_type(self.origin)
-
     def get_cause(self):
-        origin_type = self.get_origin_type()
-        if origin_type in ["before", "after"]:
+        if self.type in ["before", "after"]:
             return self.origin.method_name
-        if origin_type == "signal":
+        if self.type == "signal":
             if isinstance(self.origin.arg, ActionSignalMsg):
                 return self.origin.arg.action
             if isinstance(self.origin.arg, MetaSignalMsg):
                 return self.origin.arg.origin
 
     def get_method_args(self):
-        origin_type = self.get_origin_type()
-        if origin_type == "signal":
+        if self.type == "signal":
             return []
         return self.origin.args
 
     def get_method_kwargs(self):
-        origin_type = self.get_origin_type()
-        if origin_type == "signal":
+        if self.type == "signal":
             if isinstance(self.origin.arg, ActionSignalMsg):
                 return self.origin.arg.kwargs
             if isinstance(self.origin.arg, MetaSignalMsg):
@@ -151,8 +140,7 @@ class NotificationOverview(dict):
         return self.origin.model
 
     def get_affected_core_element(self):
-        origin_type = self.get_origin_type()
-        if origin_type == "signal":
+        if self.type == "signal":
             if isinstance(self.origin.arg, ActionSignalMsg):
                 return self.origin.arg.action_parent_m.core_element
             if isinstance(self.origin.arg, MetaSignalMsg):
@@ -163,11 +151,11 @@ class NotificationOverview(dict):
         return self.origin.prop_name
 
     def get_result(self):
-        assert self.get_origin_type() == "after", "Only after notifications carry a result"
+        assert self.type == "after", "Only after notifications carry a result"
         return self.origin.result
 
     def get_signal_message(self):
-        assert self.get_origin_type() == "signal", "Cannot retrieve message from non-signal notification"
+        assert self.type == "signal", "Cannot retrieve message from non-signal notification"
         return self.origin.arg
 
 
@@ -183,7 +171,7 @@ class NotificationOverview(dict):
 
     @property
     def type(self):
-        return self.__type
+        return self._type
 
     def update(self, E=None, **F):
         if E is not None:

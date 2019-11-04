@@ -249,7 +249,7 @@ class ModificationHistoryTreeController(ExtendedController):
             instance = action.before_overview.get_affected_core_element()
             parameters = []
             tool_tip = None
-            if action.before_overview['type'] == 'signal':
+            if action.before_overview.type == 'signal':
                 if isinstance(action.before_overview.get_signal_message(), MetaSignalMsg):
                     parameters.append(str(action.meta))
                 elif isinstance(action.before_overview.get_signal_message(), ActionSignalMsg):
