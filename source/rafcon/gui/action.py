@@ -736,7 +736,6 @@ class StateMachineAction(Action, ModelMT):
 
     def __init__(self, parent_path, state_machine_model, overview):
         ModelMT.__init__(self)
-        assert isinstance(overview['model'][0].state_machine, StateMachine)
         Action.__init__(self, parent_path, state_machine_model, overview)
 
         self.with_verbose = False
