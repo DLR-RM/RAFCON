@@ -364,7 +364,7 @@ class ModificationsHistoryModel(ModelMT):
             return
         overview = NotificationOverview(info, False, self.__class__.__name__)
         # filter self emit and avoid multiple signals of the root_state, by comparing first and last model in overview
-        if len(overview['model']) > 1 and overview['model'][0] is overview.get_affected_model():
+        if overview.get_change().startswith("sm_notification"):
             return
         if self.busy:
             return
