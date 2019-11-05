@@ -472,11 +472,6 @@ class MetaDataAction(AbstractAction):
         AbstractAction.__init__(self, parent_path, state_machine_model, overview)
         self.action_type = "change " + overview.get_signal_message().change
 
-        overview['method_name'].append("change " + overview.get_signal_message().change)
-        overview['info'][-1]['method_name'] = "change " + overview.get_signal_message().change
-        overview['instance'].append(overview.get_affected_model())
-        overview['info'][-1]['instance'] = overview.get_affected_model()
-
         meta_str = json.dumps(overview.get_affected_model().meta, cls=JSONObjectEncoder,
                               indent=4, check_circular=False, sort_keys=True)
         # print(meta_str)
