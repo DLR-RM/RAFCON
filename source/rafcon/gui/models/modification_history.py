@@ -428,8 +428,6 @@ class ModificationsHistoryModel(ModelMT):
 
             overview = NotificationOverview(info, False, self.__class__.__name__)
 
-            overview['instance'].insert(0, self.state_machine_model.state_machine)
-            overview['model'].insert(0, self.state_machine_model)
             if info['arg'].action == 'change_root_state_type':
                 assert info['arg'].action_parent_m is self.state_machine_model
                 self.active_action = StateMachineAction(parent_path=info['arg'].action_parent_m.root_state.state.get_path(),
