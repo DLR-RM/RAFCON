@@ -814,11 +814,7 @@ class AddObjectAction(Action):
     def __init__(self, parent_path, state_machine_model, overview):
         Action.__init__(self, parent_path, state_machine_model, overview)
 
-        assert overview.get_cause() in self.possible_method_names
-        assert overview.get_affected_property() == 'state' and isinstance(overview.get_affected_core_element(), State)
-
-        self.changed_object = getattr(self.before_info['model'], self.before_info['prop_name'])
-        assert self.changed_object is overview.get_affected_core_element()
+        self.changed_object = overview.get_affected_core_element()
 
         self.parent_identifier = ''
         self.added_object_identifier = ''
@@ -914,13 +910,13 @@ class RemoveObjectAction(Action):
         assert overview.get_affected_property() == 'state' and isinstance(overview.get_affected_core_element(), State)
 
         self.instance_path = overview.get_affected_core_element().get_path()
-        self.changed_object = getattr(self.before_info['model'], self.before_info['prop_name'])
-        # logger.info("self.changed_object is {0}".format(self.changed_object))
+        self.changed_object = self.changed_object = overview.get_affected_core_element()
 
         self.parent_identifier = ''
         self.removed_object_identifier = ''
         self.removed_object_args = ''
-        if "outcome" in self.before_info['method_name'] or "data_port" in self.before_info['method_name']:
+
+        if "outcome" in overview.get_cause() or "data_port" in overview.get_cause():
             pass
         else:
             self.parent_identifier = self.parent_path
