@@ -86,7 +86,6 @@ class ModificationsHistoryModel(ModelMT):
         self.fake = False
 
         self.refactored_history = True
-        self.with_debug_logs = False
         self.with_meta_data_actions = True
         self.check_gaphas_consistency = False
 
@@ -199,11 +198,6 @@ class ModificationsHistoryModel(ModelMT):
         self.observe_model(self.state_machine_model.root_state)
         self.__buffered_root_state_model = self.state_machine_model.root_state
 
-    @staticmethod
-    def store_test_log_file(string):
-        with open(HISTORY_DEBUG_LOG_FILE, 'a+') as f:
-            f.write(string)
-
     def start_new_action(self, overview):
         if self.fake:
             self.active_action = ActionDummy()
@@ -211,13 +205,6 @@ class ModificationsHistoryModel(ModelMT):
 
         result = True
         cause = overview.get_cause()
-
-        if self.with_debug_logs:
-            self.store_test_log_file(str(overview) + "\n")
-            if isinstance(overview.get_affected_core_element(), State):
-                self.store_test_log_file(overview.get_cause() + "\t" + str(overview.get_affected_core_element()) + "\t" + overview.get_affected_core_element().get_path() + "\n")
-            else:
-                self.store_test_log_file(overview.get_cause() + "\t" + str(overview.get_affected_core_element()) + "\t" + overview.get_affected_core_element().parent.get_path() + "\n")
 
         if self.refactored_history:
             if isinstance(overview.get_affected_core_element(), DataFlow) or \
@@ -232,15 +219,11 @@ class ModificationsHistoryModel(ModelMT):
                 else:
                     assert overview.get_affected_core_element() is overview.get_affected_model().scoped_variable
                     action_class = ScopedVariableAction  # is a DataPort too
-                if self.with_debug_logs:
-                    self.store_test_log_file("#1 DataFlow, Transition, ScopedVariable \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview.get_affected_core_element().parent.get_path()))
                 self.active_action = action_class(parent_path=overview.get_affected_core_element().parent.get_path(),
                                                   state_machine_model=self.state_machine_model,
                                                   overview=overview)
             elif isinstance(overview.get_affected_core_element(), Outcome):
                 assert overview.get_affected_core_element() is overview.get_affected_model().outcome
-                if self.with_debug_logs:
-                    self.store_test_log_file("#2 Outcome \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview.get_affected_core_element().parent.get_path()))
                 self.active_action = OutcomeAction(parent_path=overview.get_affected_core_element().parent.get_path(),
                                                    state_machine_model=self.state_machine_model,
                                                    overview=overview)
@@ -249,8 +232,6 @@ class ModificationsHistoryModel(ModelMT):
                     assert overview.get_affected_core_element() is overview.get_affected_model().data_port
                 else:
                     assert overview.get_affected_core_element() is overview.get_affected_model().data_port
-                if self.with_debug_logs:
-                    self.store_test_log_file("#3 DataPort \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['instance'][0].get_path(), overview.get_affected_core_element().parent.get_path()))
                 self.active_action = DataPortAction(parent_path=overview.get_affected_core_element().parent.get_path(),
                                                     state_machine_model=self.state_machine_model,
                                                     overview=overview)
@@ -261,8 +242,6 @@ class ModificationsHistoryModel(ModelMT):
                                                      state_machine_model=self.state_machine_model,
                                                      overview=overview)
                 elif "add_" in cause:
-                    if self.with_debug_logs:
-                        self.store_test_log_file("#3 ADD \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview.get_affected_model().state.get_path()))
                     self.active_action = AddObjectAction(parent_path=overview.get_affected_core_element().get_path(),
                                                          state_machine_model=self.state_machine_model,
                                                          overview=overview)
@@ -272,22 +251,16 @@ class ModificationsHistoryModel(ModelMT):
                                      "remove_state"]
                     if ("transition" in cause or "data_flow" in cause or "scoped_variable" in cause or "state" in cause) or\
                             (("data_port" in cause or "outcome" in cause or "income" in cause) and not isinstance(overview.get_affected_model().state.parent, State)):
-                        if self.with_debug_logs:
-                            self.store_test_log_file("#4 REMOVE1 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview.get_affected_model().state.get_path()))
                         self.active_action = RemoveObjectAction(parent_path=overview.get_affected_core_element().get_path(),
                                                                 state_machine_model=self.state_machine_model,
                                                                 overview=overview)
                     elif "data_port" in cause or "outcome" in cause or "income" in cause:
 
                         if isinstance(overview.get_affected_core_element().parent, State):
-                            if self.with_debug_logs:
-                                self.store_test_log_file("#5 REMOVE2 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview.get_affected_model(), overview['model'][0].state.get_path(), overview.get_affected_model().parent.state.get_path()))
                             self.active_action = RemoveObjectAction(parent_path=overview.get_affected_core_element().parent.get_path(),
                                                                     state_machine_model=self.state_machine_model,
                                                                     overview=overview)
                         else:
-                            if self.with_debug_logs:
-                                self.store_test_log_file("#5 REMOVE3 \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview.get_affected_model(), overview['model'][0].state.get_path(), overview.get_affected_model().parent.state.get_path()))
                             self.active_action = RemoveObjectAction(parent_path=overview.get_affected_core_element().get_path(),
                                                                     state_machine_model=self.state_machine_model,
                                                                     overview=overview)
@@ -295,8 +268,6 @@ class ModificationsHistoryModel(ModelMT):
                         logger.warning("un foreseen cause: {0} in remove state element".format(cause))
                         assert False
                 else:
-                    if self.with_debug_logs:
-                        self.store_test_log_file("#6 STATE \n\tmodel: {0} {1}\n\tparent_path: {2}\n".format(overview.get_affected_model(), overview['model'][0].state.get_path(), overview.get_affected_model().state.get_path()))
                     self.active_action = StateAction(parent_path=overview.get_affected_core_element().get_path(),
                                                      state_machine_model=self.state_machine_model,
                                                      overview=overview)
@@ -322,8 +293,6 @@ class ModificationsHistoryModel(ModelMT):
         if isinstance(overview.get_affected_core_element(), DataFlow) or \
                 isinstance(overview.get_affected_core_element(), Transition) or \
                 isinstance(overview.get_affected_core_element(), ScopedVariable):  # internal modifications No Add or Remove Actions
-            if self.with_debug_logs:
-                self.store_test_log_file("$1 DataFlow, Transition, ScopedVariable Change\n model_path: {0}{1}\nparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview.get_affected_model().parent.state.get_path()))
             # the model should be StateModel or ContainerStateModel and "info" from those model notification
             self.active_action = Action(parent_path=overview.get_affected_core_element().parent.get_path(),
                                         state_machine_model=self.state_machine_model,
@@ -353,24 +322,15 @@ class ModificationsHistoryModel(ModelMT):
                     self.active_action = Action(parent_path=overview.get_affected_core_element().parent.parent.get_path(),
                                                 state_machine_model=self.state_machine_model,
                                                 overview=overview)
-                if self.with_debug_logs:
-                    if isinstance(overview.get_affected_core_element(), State):
-                        self.store_test_log_file("$2 '{3}' add, remove modify of outcome, input or output\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview.get_affected_model().state.get_path(),level_status))
-                    else:
-                        self.store_test_log_file("$2 '{3}' modify of outcome, input or output\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview.get_affected_model().parent.state.get_path(),level_status))
             else:
                 assert False
 
         elif overview.get_affected_property() == 'state':
             if "add_" in overview.get_cause():
-                if self.with_debug_logs:
-                    self.store_test_log_file("$5 add Outcome,In-OutPut in root and State, ScopedVariable, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview.get_affected_model().state.get_path()))
                 self.active_action = Action(parent_path=overview.get_affected_core_element().get_path(),
                                             state_machine_model=self.state_machine_model,
                                             overview=overview)
             else:
-                if self.with_debug_logs:
-                    self.store_test_log_file("$5 remove Outcome,In-OutPut in root and State, ScopedVariables, DateFlow or Transition\n\tmodel_path: {0}{1}\n\tparent_path: {2}\n".format(overview['model'][0], overview['model'][0].state.get_path(), overview.get_affected_model().state.get_path()))
                 self.active_action = Action(parent_path=overview.get_affected_core_element().get_path(),
                                             state_machine_model=self.state_machine_model,
                                             overview=overview)
@@ -386,9 +346,6 @@ class ModificationsHistoryModel(ModelMT):
     def finish_new_action(self, overview):
         if isinstance(self.active_action, MetaDataAction) and self.check_gaphas_consistency:
             check_gaphas_state_machine_meta_data_consistency(self.state_machine_model, with_logger_messages=True)
-
-        if self.with_debug_logs:
-            self.store_test_log_file(str(overview) + "\n")
 
         try:
             self.active_action.set_after(overview)
@@ -473,8 +430,6 @@ class ModificationsHistoryModel(ModelMT):
                                                                  'substitute_state', 'group_states', 'ungroup_state']:
 
             overview = NotificationOverview(info, False, self.__class__.__name__)
-            if self.with_debug_logs:
-                self.store_test_log_file(str(overview) + "\n")
 
             overview['instance'].insert(0, self.state_machine_model.state_machine)
             overview['model'].insert(0, self.state_machine_model)
