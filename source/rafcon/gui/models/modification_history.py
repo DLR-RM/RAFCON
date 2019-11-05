@@ -492,7 +492,7 @@ class ModificationsHistoryModel(ModelMT):
             overview = NotificationOverview(info, False, self.__class__.__name__)
 
             # skipped state modifications
-            if not overview['method_name'][0] == 'state_change' or overview.get_cause() == 'parent':
+            if not overview.get_change() == 'state_change' or overview.get_cause() == 'parent':
                 return
 
             # increase counter and generate new action if not locked by action that is performed
@@ -532,7 +532,7 @@ class ModificationsHistoryModel(ModelMT):
                 pass
 
             # modifications of parent are not observed
-            if not overview['method_name'][0] == 'state_change' or overview.get_cause() == 'parent':
+            if not overview.get_change() == 'state_change' or overview.get_cause() == 'parent':
                 return
 
             # decrease counter and finish action if count_before = 0

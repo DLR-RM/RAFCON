@@ -158,6 +158,9 @@ class NotificationOverview(dict):
         assert self.type == "signal", "Cannot retrieve message from non-signal notification"
         return self.origin.arg
 
+    def get_change(self):
+        if self.info['method_name'].endswith("_change"):
+            return self.info['method_name']
 
     def __str__(self):
         if self.initiator is not None:
