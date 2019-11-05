@@ -11,6 +11,9 @@ Patch releases 0.14.\*
 Next Release
 """"""""""""
 
+- Bug Fixes:
+
+  - Make tests run with pytest-mock>=1.11.2
 
 
 0.14.1
