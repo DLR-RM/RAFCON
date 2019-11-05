@@ -159,8 +159,13 @@ class NotificationOverview(dict):
         return self.origin.arg
 
     def get_change(self):
-        if self.info['method_name'].endswith("_change"):
-            return self.info['method_name']
+        if self.type in ["before", "after"]:
+            if self.info['method_name'].endswith("_change"):
+                return self.info.method_name
+
+    def get_outer_core_element(self):
+        if self.type in ["before", "after"]:
+            return self.origin.instance
 
     def __str__(self):
         if self.initiator is not None:
