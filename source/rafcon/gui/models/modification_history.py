@@ -275,10 +275,8 @@ class ModificationsHistoryModel(ModelMT):
                 assert overview.get_affected_core_element() is overview.get_affected_model().state_machine
                 assert False  # should never happen
             else:  # FAILURE
-                logger.warning("History may need update, tried to start observation of new action that is not classifiable "
-                               "\ntype(instance): %s \nmodel[0]: %s \nprop_name[0]: %s \ninfo[-1]: %s \ninfo[0]: %s ",
-                               type(overview['info'][-1]['instance']), overview['model'][0], overview['prop_name'][0],
-                               overview['info'][-1], overview['info'][0])
+                logger.warning("History may need update, tried to start observation of new action that is not "
+                               "classifiable: \n{}".format(str(overview)))
                 assert False  # should never happen
 
         else:
@@ -336,9 +334,8 @@ class ModificationsHistoryModel(ModelMT):
                                             overview=overview)
 
         else:  # FAILURE
-            logger.warning("History may need update, tried to start observation of new action that is not classifiable "
-                           "\n%s \n%s \n%s \n%s",
-                           overview['model'][0], overview['prop_name'][0], overview['info'][-1], overview['info'][0])
+            logger.warning("History may need update, tried to start observation of new action that is not"
+                           "classifiable: \n{}".format(str(overview)))
             return False
 
         return result
