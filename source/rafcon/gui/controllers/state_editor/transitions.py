@@ -607,7 +607,7 @@ class StateTransitionsListController(LinkageListController):
         if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
-        overview = NotificationOverview(info, False, self.__class__.__name__)
+        overview = NotificationOverview(info)
 
         if overview.get_cause() == 'parent' and overview.get_affected_core_element() is self.model.state or \
                 overview.get_affected_core_element() in [self.model.state, self.model.state.parent] and \
@@ -625,7 +625,7 @@ class StateTransitionsListController(LinkageListController):
         if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
-        overview = NotificationOverview(info, False, self.__class__.__name__)
+        overview = NotificationOverview(info)
         if overview.get_cause() not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove'
                                         'from_outcome', 'to_outcome', 'from_state', 'to_state',
                                         'modify_origin', 'modify_target']:

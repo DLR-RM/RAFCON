@@ -565,7 +565,7 @@ class StatesEditorController(ExtendedController):
         if is_execution_status_update_notification_from_state_machine_model(prop_name, info):
             return
 
-        overview = NotificationOverview(info, False, self.__class__.__name__)
+        overview = NotificationOverview(info)
         changed_model = overview.get_affected_model()
         method_name = overview.get_cause()
         if isinstance(changed_model, AbstractStateModel) and method_name in ['name', 'script_text']:

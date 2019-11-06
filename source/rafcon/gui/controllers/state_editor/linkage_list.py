@@ -102,7 +102,7 @@ class LinkageListController(ListViewController):
         if not self.no_update_state_destruction and not self.no_update_self_or_parent_state_destruction and \
                 (not self.no_update and 'before' in info or 'after' in info and self.no_update):
             return
-        overview = NotificationOverview(info, False, self.__class__.__name__)
+        overview = NotificationOverview(info)
 
         # The method causing the change raised an exception, thus nothing was changed and updates are allowed
         if 'after' in info and isinstance(overview.get_result(), Exception):

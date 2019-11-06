@@ -362,7 +362,7 @@ class ModificationsHistoryModel(ModelMT):
     def meta_changed_notify_after(self, changed_model, prop_name, info):
         if not self.with_meta_data_actions:
             return
-        overview = NotificationOverview(info, False, self.__class__.__name__)
+        overview = NotificationOverview(info)
         # filter self emit and avoid multiple signals of the root_state, by comparing first and last model in overview
         if overview.get_change():
             return
@@ -426,7 +426,7 @@ class ModificationsHistoryModel(ModelMT):
                                                                  'paste', 'cut',
                                                                  'substitute_state', 'group_states', 'ungroup_state']:
 
-            overview = NotificationOverview(info, False, self.__class__.__name__)
+            overview = NotificationOverview(info)
 
             if info['arg'].action == 'change_root_state_type':
                 assert info['arg'].action_parent_m is self.state_machine_model
@@ -453,7 +453,7 @@ class ModificationsHistoryModel(ModelMT):
                                                              'paste', 'cut',
                                                              'substitute_state', 'group_states', 'ungroup_state']:
 
-            overview = NotificationOverview(info, False, "History state_machine_AFTER")
+            overview = NotificationOverview(info)
             if info['arg'].action in ['change_state_type', 'paste', 'cut',
                                       'substitute_state', 'group_states', 'ungroup_state']:
 
@@ -487,7 +487,7 @@ class ModificationsHistoryModel(ModelMT):
                     info['kwargs']['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
                 return
 
-            overview = NotificationOverview(info, False, self.__class__.__name__)
+            overview = NotificationOverview(info)
 
             # skipped state modifications
             if not overview.get_change() == 'state_change' or overview.get_cause() == 'parent':
@@ -521,7 +521,7 @@ class ModificationsHistoryModel(ModelMT):
                     info['kwargs']['method_name'] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
                 return
 
-            overview = NotificationOverview(info, False, self.__class__.__name__)
+            overview = NotificationOverview(info)
 
             # handle interrupts of action caused by exceptions
             if overview.get_result() == "CRASH in FUNCTION" or isinstance(overview.get_result(), Exception):
@@ -560,7 +560,7 @@ class ModificationsHistoryModel(ModelMT):
         #                                                        "output_data_ports", "scoped_variables"]
         # third (and last element) should be prop_name in ["data_flow", "transition", ...
         else:
-            overview = NotificationOverview(info, False, self.__class__.__name__)
+            overview = NotificationOverview(info)
             # modifications of parent are not observed
             if overview.get_cause() == 'parent':
                 return
@@ -595,7 +595,7 @@ class ModificationsHistoryModel(ModelMT):
         if self.busy or info.method_name in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
             return
         else:
-            overview = NotificationOverview(info, False, self.__class__.__name__)
+            overview = NotificationOverview(info)
 
             # handle interrupts of action caused by exceptions
             if overview.get_result() == "CRASH in FUNCTION" or isinstance(overview.get_result(), Exception):

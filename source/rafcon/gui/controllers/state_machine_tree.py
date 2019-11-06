@@ -160,7 +160,7 @@ class StateMachineTreeController(TreeViewController):
                 self._ongoing_complex_actions:
             return
 
-        overview = NotificationOverview(info, False, self.__class__.__name__)
+        overview = NotificationOverview(info)
 
         if overview.get_affected_property() == 'state' and \
                 overview.get_cause() in ["name"]:  # , "add_state", "remove_state"]:
@@ -194,7 +194,7 @@ class StateMachineTreeController(TreeViewController):
         if is_execution_status_update_notification_from_state_machine_model(prop_name, info):
             return
 
-        overview = NotificationOverview(info, False, self.__class__.__name__)
+        overview = NotificationOverview(info)
 
         if overview.get_affected_property() == 'state' and \
                 overview.get_cause() in ["change_state_type"]:
