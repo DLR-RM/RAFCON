@@ -358,14 +358,11 @@ class ModificationsHistoryModel(ModelMT):
         self.active_action = []
         self.update_internal_tmp_storage()
 
-    @ModelMT.observe("meta_signal", signal=True)  # meta data of root_state_model changed
+    @ModelMT.observe("state_meta_signal", signal=True)  # meta data of root_state_model changed
     def meta_changed_notify_after(self, changed_model, prop_name, info):
         if not self.with_meta_data_actions:
             return
         overview = NotificationOverview(info)
-        # filter self emit and avoid multiple signals of the root_state, by comparing first and last model in overview
-        if overview.get_change():
-            return
         if self.busy:
             return
         if overview.get_signal_message().origin == 'load_meta_data':
