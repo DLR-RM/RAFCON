@@ -145,9 +145,6 @@ class NotificationOverview(object):
         if self.type in ["before", "after"]:
             if self.info.method_name.endswith("_change"):
                 return self.info.method_name
-        elif self.type == "signal":
-            if self.info.arg.change.startswith("sm_notification"):
-                return self.info.arg.change
 
     def get_outer_core_element(self):
         if self.type in ["before", "after"]:
