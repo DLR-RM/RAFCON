@@ -382,7 +382,6 @@ class MainWindowController(ExtendedController):
         if max_value:
             position = min(position, max_value)
         pane_id = constants.PANE_ID[config_id]
-        print("user pos", pane_id, position)
         self.view[pane_id].set_position(position)
 
     @ExtendedController.observe("execution_engine", after=True)
