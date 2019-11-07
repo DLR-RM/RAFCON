@@ -14,6 +14,7 @@ Next Release
 - Bug Fixes:
 
   - Make tests run with pytest-mock>=1.11.2
+  - Fix several deprecation warnings
 
 
 0.14.1
