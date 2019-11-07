@@ -18,6 +18,11 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
+try:
+    from collections import OrderedDict
+except ImportError:
+    OrderedDict = dict
+
 
 def get_glade_path(glade_file):
     from os import path
@@ -91,10 +96,12 @@ MAXIMUM_NAME_TO_PARENT_STATE_SIZE_RATIO = 8.
 WINDOW_SIZE = {'MAIN_WINDOW': (1800, 900), 'LEFT_BAR_WINDOW': (300, 800), 'RIGHT_BAR_WINDOW': (300, 800),
                'CONSOLE_WINDOW': (800, 300)}
 
-PANE_ID = {'LEFT_BAR_DOCKED_POS': 'top_level_h_pane',
-           'RIGHT_BAR_DOCKED_POS': 'right_h_pane',
-           'CONSOLE_DOCKED_POS': 'central_v_pane',
-           'LEFT_BAR_INNER_PANE_POS': 'left_bar_paned'}
+PANE_ID = OrderedDict([
+    ('LEFT_BAR_DOCKED_POS', 'top_level_h_pane'),
+    ('CONSOLE_DOCKED_POS', 'central_v_pane'),
+    ('LEFT_BAR_INNER_PANE_POS', 'left_bar_paned'),
+    ('RIGHT_BAR_DOCKED_POS', 'right_h_pane')
+])
 
 # a mapping of runtime config values for the hidden status of all three main bars (left, right and console)
 # to hide functions (located in the main_window controller)
