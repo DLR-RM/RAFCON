@@ -54,7 +54,7 @@ def open_folder(query, default_path=None):
     else:
         last_path = expanduser('~')
 
-    dialog = Gtk.FileChooserDialog(title=query, parent=None,
+    dialog = Gtk.FileChooserDialog(title=query, transient_for=None,
                                    action=Gtk.FileChooserAction.SELECT_FOLDER)
     dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                        Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
@@ -120,7 +120,7 @@ def create_folder(query, default_name=None, default_path=None):
     else:
         last_path = expanduser('~')
 
-    dialog = Gtk.FileChooserDialog(title=query, parent=None,
+    dialog = Gtk.FileChooserDialog(title=query, transient_for=None,
                                    action=Gtk.FileChooserAction.CREATE_FOLDER)
     dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                        Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
@@ -188,7 +188,7 @@ def save_folder(query, default_name=None):
     else:
         last_path = expanduser('~')
 
-    dialog = Gtk.FileChooserDialog(title=query, parent=None,
+    dialog = Gtk.FileChooserDialog(title=query, transient_for=None,
                                    action=Gtk.FileChooserAction.SAVE)
     dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                        Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
