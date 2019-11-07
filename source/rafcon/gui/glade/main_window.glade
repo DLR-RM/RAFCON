@@ -30,7 +30,6 @@
           <object class="GtkPaned" id="top_level_h_pane">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="position_set">True</property>
             <property name="wide_handle">True</property>
             <child>
               <object class="GtkBox" id="left_bar_container">
@@ -353,7 +352,6 @@
               <object class="GtkPaned" id="right_h_pane">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="position_set">True</property>
                 <property name="wide_handle">True</property>
                 <child>
                   <object class="GtkBox" id="hbox1">
@@ -378,8 +376,6 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="orientation">vertical</property>
-                        <property name="position">2</property>
-                        <property name="position_set">True</property>
                         <property name="wide_handle">True</property>
                         <child>
                           <object class="GtkBox" id="central_vbox">
