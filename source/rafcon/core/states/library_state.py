@@ -105,7 +105,7 @@ class LibraryState(State):
             raise AttributeError("Library does not have the correct version!")
         self.state_copy = state_copy
 
-        if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
+        if safe_init:
             LibraryState._safe_init(self, name)
         else:
             LibraryState._unsafe_init(self, name)
@@ -217,12 +217,13 @@ class LibraryState(State):
     def __copy__(self):
         income = self._income
         outcomes = {elem_id: copy(elem) for elem_id, elem in self.outcomes.items()}
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         state = self.__class__(self._library_path, self._library_name, self._version,  # library specific attributes
                                # the following are the container state specific attributes
                                self._name, self._state_id, income, outcomes,
                                copy(self.input_data_port_runtime_values), copy(self.use_runtime_value_input_data_ports),
                                copy(self.output_data_port_runtime_values), copy(self.use_runtime_value_output_data_ports),
-                               False, safe_init=False, skip_runtime_data_initialization=True)
+                               False, safe_init=safe_init, skip_runtime_data_initialization=True)
 
         state._semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
@@ -403,9 +404,10 @@ class LibraryState(State):
             output_data_port_runtime_values = dictionary['output_data_port_runtime_values']
             use_runtime_value_output_data_ports = dictionary['use_runtime_value_output_data_ports']
 
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         return cls(library_path, library_name, version, name, state_id, income, outcomes,
                    input_data_port_runtime_values, use_runtime_value_input_data_ports,
-                   output_data_port_runtime_values, use_runtime_value_output_data_ports, safe_init=False)
+                   output_data_port_runtime_values, use_runtime_value_output_data_ports, safe_init=safe_init)
 
     def update_hash(self, obj_hash):
         super(LibraryState, self).update_hash(obj_hash)

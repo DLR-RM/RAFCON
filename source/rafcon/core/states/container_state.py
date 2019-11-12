@@ -89,7 +89,7 @@ class ContainerState(State):
         if start_state_id is not None:
             self.start_state_id = start_state_id
 
-        if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
+        if safe_init:
             ContainerState._safe_init(self, scoped_variables=scoped_variables, states=states, transitions=transitions,
                                       data_flows=data_flows)
         else:
@@ -150,6 +150,7 @@ class ContainerState(State):
         states = None if 'states' not in dictionary else dictionary['states']
         transitions = dictionary['transitions']
         data_flows = dictionary['data_flows']
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         state = cls(name=dictionary['name'],
                     state_id=dictionary['state_id'],
                     input_data_ports=dictionary['input_data_ports'],
@@ -160,7 +161,7 @@ class ContainerState(State):
                     transitions=transitions if states else None,
                     data_flows=data_flows if states else None,
                     scoped_variables=dictionary['scoped_variables'],
-                    safe_init=False)
+                    safe_init=safe_init)
         try:
             state.description = dictionary['description']
         except (TypeError, KeyError):  # (Very) old state machines do not have a description field
@@ -206,8 +207,9 @@ class ContainerState(State):
         data_flows = {elem_id: copy(elem) for elem_id, elem in self._data_flows.items()}
         transitions = {elem_id: copy(elem) for elem_id, elem in self._transitions.items()}
 
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, states,
-                               transitions, data_flows, None, scoped_variables, safe_init=False)
+                               transitions, data_flows, None, scoped_variables, safe_init=safe_init)
         state._description = deepcopy(self.description)
         state._semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path

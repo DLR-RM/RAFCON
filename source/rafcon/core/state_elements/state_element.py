@@ -53,12 +53,14 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
         if type(self) == StateElement:
             raise NotImplementedError
 
-        if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
+        if safe_init:
             StateElement._safe_init(self, parent)
         else:
             StateElement._unsafe_init(self, parent)
 
     def _safe_init(self, parent):
+        # uncomment this line when using LOAD_SM_WITH_CHECKS to check if unsafe_init triggers safe_init
+        # raise Exception("Must not be executed during unsafe init")
         self.parent = parent
 
     def _unsafe_init(self, parent):

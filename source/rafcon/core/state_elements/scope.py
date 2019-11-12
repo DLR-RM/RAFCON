@@ -76,8 +76,9 @@ class ScopedVariable(DataPort):
                                                              self.default_value)
 
     def __copy__(self):
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         return self.__class__(self._name, self._data_type, self._default_value, self._data_port_id, None,
-                              safe_init=False)
+                              safe_init=safe_init)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
@@ -91,7 +92,8 @@ class ScopedVariable(DataPort):
         name = dictionary['name']
         data_type = dictionary['data_type']
         default_value = dictionary['default_value']
-        return cls(name, data_type, default_value, data_port_id, safe_init=False)
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
+        return cls(name, data_type, default_value, data_port_id, safe_init=safe_init)
 
     @staticmethod
     def state_element_to_dict(state_element):
@@ -131,7 +133,7 @@ class ScopedData(StateElement):
         self._timestamp = generate_time_stamp()
         # for storage purpose inside the container states (generated from key_name and from_state)
 
-        if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
+        if safe_init:
             ScopedData._safe_init(self, name, value, value_type, from_state, data_port_type, parent)
         else:
             ScopedData._unsafe_init(self, name, value, value_type, from_state, data_port_type, parent)
@@ -169,9 +171,10 @@ class ScopedData(StateElement):
 
     @classmethod
     def from_dict(cls, dictionary):
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         return ScopedData(dictionary['name'],
                           dictionary['value'], dictionary['value_type'],
-                          dictionary['from_state'], dictionary['data_port_type'], safe_init=False)
+                          dictionary['from_state'], dictionary['data_port_type'], safe_init=safe_init)
 
     @staticmethod
     def state_element_to_dict(state_element):

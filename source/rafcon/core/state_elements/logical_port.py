@@ -50,7 +50,7 @@ class Income(LogicalPort):
     def __init__(self, parent=None, safe_init=True):
         super(Income, self).__init__(safe_init=safe_init)
 
-        if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
+        if safe_init:
             Income._safe_init(self, parent)
         else:
             Income._unsafe_init(self, parent)
@@ -67,7 +67,8 @@ class Income(LogicalPort):
         return "Income"
 
     def __copy__(self):
-        return self.__class__(safe_init=False)
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
+        return self.__class__(safe_init=safe_init)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
@@ -84,7 +85,8 @@ class Income(LogicalPort):
 
     @classmethod
     def from_dict(cls, dictionary):
-        return Income(safe_init=False)
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
+        return Income(safe_init=safe_init)
 
     @staticmethod
     def state_element_to_dict(state_element):
@@ -125,7 +127,7 @@ class Outcome(LogicalPort):
             raise TypeError("outcome_id must be of type int")
         self._outcome_id = outcome_id
 
-        if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
+        if safe_init:
             Outcome._safe_init(self, name, parent)
         else:
             Outcome._unsafe_init(self, name, parent)
@@ -144,7 +146,8 @@ class Outcome(LogicalPort):
         return "Outcome '{0}' [{1}]".format(self.name, self.outcome_id)
 
     def __copy__(self):
-        return self.__class__(self._outcome_id, self._name, None, safe_init=False)
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
+        return self.__class__(self._outcome_id, self._name, None, safe_init=safe_init)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
@@ -155,7 +158,8 @@ class Outcome(LogicalPort):
 
     @classmethod
     def from_dict(cls, dictionary):
-        return Outcome(dictionary['outcome_id'], dictionary['name'], safe_init=False)
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
+        return Outcome(dictionary['outcome_id'], dictionary['name'], safe_init=safe_init)
 
     @staticmethod
     def state_element_to_dict(state_element):

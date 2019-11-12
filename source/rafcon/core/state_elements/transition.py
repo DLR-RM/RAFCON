@@ -54,7 +54,7 @@ class Transition(StateElement):
     _to_outcome = None
 
     def __init__(self, from_state, from_outcome, to_state, to_outcome, transition_id, parent=None, safe_init=True):
-        super(Transition, self).__init__()
+        super(Transition, self).__init__(safe_init=safe_init)
 
         if transition_id is None:
             self._transition_id = generate_transition_id()
@@ -63,7 +63,7 @@ class Transition(StateElement):
                 raise TypeError("transition_id must be of type int")
             self._transition_id = transition_id
 
-            if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
+            if safe_init:
                 Transition._safe_init(self, from_state, from_outcome, to_state, to_outcome, parent)
             else:
                 Transition._unsafe_init(self, from_state, from_outcome, to_state, to_outcome, parent)
@@ -89,8 +89,9 @@ class Transition(StateElement):
                (self._from_state, self._from_outcome, self._to_state, self._to_outcome, self._transition_id)
 
     def __copy__(self):
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         return self.__class__(self._from_state, self._from_outcome, self._to_state, self._to_outcome,
-                              self._transition_id, None, safe_init=False)
+                              self._transition_id, None, safe_init=safe_init)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
@@ -106,7 +107,8 @@ class Transition(StateElement):
         from_outcome = dictionary['from_outcome']
         to_state = dictionary['to_state']
         to_outcome = dictionary['to_outcome']
-        return cls(from_state, from_outcome, to_state, to_outcome, transition_id, safe_init=False)
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
+        return cls(from_state, from_outcome, to_state, to_outcome, transition_id, safe_init=safe_init)
 
     @staticmethod
     def state_element_to_dict(state_element):

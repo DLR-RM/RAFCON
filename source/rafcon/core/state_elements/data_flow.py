@@ -24,7 +24,7 @@ from gtkmvc3.observable import Observable
 from rafcon.core.id_generator import generate_data_flow_id
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.decorators import lock_state_machine
-import rafcon.core.config as config
+from rafcon.core.config import global_config
 
 
 class DataFlow(StateElement):
@@ -59,7 +59,7 @@ class DataFlow(StateElement):
                 raise ValueError("data_flow_id must be of type int")
             self._data_flow_id = data_flow_id
 
-        if safe_init or config.global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
+        if safe_init:
             DataFlow._safe_init(self, from_state, from_key, to_state, to_key, parent)
         else:
             DataFlow._unsafe_init(self, from_state, from_key, to_state, to_key, parent)
@@ -107,8 +107,9 @@ class DataFlow(StateElement):
             return default_string
 
     def __copy__(self):
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         return self.__class__(self._from_state, self._from_key, self._to_state, self._to_key, self._data_flow_id,
-                              None, safe_init=False)
+                              None, safe_init=safe_init)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
@@ -124,7 +125,8 @@ class DataFlow(StateElement):
         to_state = dictionary['to_state']
         to_key = dictionary['to_key']
         data_flow_id = dictionary['data_flow_id']
-        return cls(from_state, from_key, to_state, to_key, data_flow_id, safe_init=False)
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
+        return cls(from_state, from_key, to_state, to_key, data_flow_id, safe_init=safe_init)
 
     @staticmethod
     def state_element_to_dict(state_element):

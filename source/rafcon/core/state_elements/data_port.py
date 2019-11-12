@@ -25,7 +25,7 @@ from gtkmvc3.observable import Observable
 from rafcon.core.id_generator import generate_data_port_id
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.decorators import lock_state_machine
-import rafcon.core.config as config
+from rafcon.core.config import global_config
 from rafcon.utils import log
 from rafcon.utils import type_helpers
 logger = log.get_logger(__name__)
@@ -68,7 +68,7 @@ class DataPort(StateElement):
 
         self._no_type_error_exceptions = False
 
-        if safe_init or config.global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
+        if safe_init:
             DataPort._safe_init(self, name, data_type, default_value, parent)
         else:
             DataPort._unsafe_init(self, name, data_type, default_value, parent)
@@ -100,8 +100,9 @@ class DataPort(StateElement):
     yaml_tag = u'!DataPort'
 
     def __copy__(self):
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         return self.__class__(self._name, self._data_type, self._default_value, self._data_port_id, None,
-                              self._was_forced_type, safe_init=False)
+                              self._was_forced_type, safe_init=safe_init)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()
@@ -117,13 +118,14 @@ class DataPort(StateElement):
         data_type = dictionary['data_type']
         default_value = dictionary['default_value']
         # Allow creation of DataPort class when loading from YAML file
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         if cls == DataPort:
             return DataPort(name, data_type, default_value, data_port_id, force_type=True,
-                            init_without_default_value_type_exceptions=True, safe_init=False)
+                            init_without_default_value_type_exceptions=True, safe_init=safe_init)
         # Call appropriate constructor, e.g. InputDataPort(...) for input data ports
         else:
             return cls(name, data_type, default_value, data_port_id, force_type=True,
-                       init_without_default_value_type_exceptions=True, safe_init=False)
+                       init_without_default_value_type_exceptions=True, safe_init=safe_init)
 
     @staticmethod
     def state_element_to_dict(state_element):

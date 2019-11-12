@@ -132,7 +132,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         self.marked_dirty = False
 
-        if safe_init or global_config.get_config_value("LOAD_SM_WITH_CHECKS", True):
+        if safe_init:
             State._safe_init(self, name=name, input_data_ports=input_data_ports, output_data_ports=output_data_ports,
                              income=income, outcomes=outcomes, parent=parent)
         else:
@@ -167,7 +167,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self._output_data_ports = output_data_ports if output_data_ports is not None else {}
         for port_id, port in self._output_data_ports.items():
             port._parent = ref(self)
-        self._income = income if income is not None else Income()
+        self._income = income if income is not None else Income(safe_init=False)
         self._income._parent = ref(self)
         self._outcomes = outcomes if outcomes is not None else {0: Outcome(outcome_id=0, name="success")}
         for outcome_id, outcome in self._outcomes.items():

@@ -32,6 +32,7 @@ from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.utils import log
+from rafcon.core.config import global_config
 logger = log.get_logger(__name__)
 
 
@@ -303,6 +304,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         states = None if 'states' not in dictionary else dictionary['states']
         transitions = dictionary['transitions']
         data_flows = dictionary['data_flows']
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         state = cls(name=dictionary['name'],
                     state_id=dictionary['state_id'],
                     input_data_ports=dictionary['input_data_ports'],
@@ -313,7 +315,7 @@ class BarrierConcurrencyState(ConcurrencyState):
                     data_flows=data_flows if states else None,
                     scoped_variables=dictionary['scoped_variables'],
                     load_from_storage=True,
-                    safe_init=False)
+                    safe_init=safe_init)
         try:
             state.description = dictionary['description']
         except (TypeError, KeyError):  # (Very) old state machines do not have a description field
