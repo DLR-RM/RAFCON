@@ -47,7 +47,7 @@ logger = log.get_logger(__name__)
 STATE_NAME_MAX_CHARS = 16
 
 
-def create_button(toggle, font, font_size, icon_code, release_callback=None, *additional_parameters):
+def create_button(toggle, font_size, icon_code, release_callback=None, *additional_parameters):
     if toggle:
         button = Gtk.ToggleButton()
     else:
@@ -58,7 +58,7 @@ def create_button(toggle, font, font_size, icon_code, release_callback=None, *ad
     button.set_size_request(width=constants.GRID_SIZE*3, height=-1)
 
     label = Gtk.Label()
-    set_label_markup(label, icon_code, font=font, size=font_size)
+    set_label_markup(label, icon_code, is_icon=True, size=font_size)
     button.add(label)
 
     if release_callback:
@@ -68,14 +68,14 @@ def create_button(toggle, font, font_size, icon_code, release_callback=None, *ad
 
 
 def create_tab_close_button(callback, *additional_parameters):
-    close_button = create_button(False, constants.ICON_FONT, constants.FONT_SIZE_SMALL, constants.BUTTON_CLOSE,
+    close_button = create_button(False, constants.FONT_SIZE_SMALL, constants.BUTTON_CLOSE,
                                  callback, *additional_parameters)
 
     return close_button
 
 
 def create_sticky_button(callback, *additional_parameters):
-    sticky_button = create_button(True, constants.ICON_FONT, constants.FONT_SIZE_SMALL, constants.ICON_STICKY,
+    sticky_button = create_button(True, constants.FONT_SIZE_SMALL, constants.ICON_STICKY,
                                   callback, *additional_parameters)
 
     return sticky_button

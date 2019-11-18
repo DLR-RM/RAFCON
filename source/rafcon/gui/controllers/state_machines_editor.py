@@ -53,7 +53,7 @@ ROOT_STATE_NAME_MAX_CHARS = 25
 
 def create_tab_close_button(callback, *additional_parameters):
     close_label = Gtk.Label()
-    set_label_markup(close_label, constants.BUTTON_CLOSE, font=constants.ICON_FONT, size=constants.FONT_SIZE_SMALL)
+    set_label_markup(close_label, constants.BUTTON_CLOSE, is_icon=True, size=constants.FONT_SIZE_SMALL)
     close_button = Gtk.Button()
     close_button.set_size_request(width=constants.GRID_SIZE*3, height=-1)
     close_button.set_relief(Gtk.ReliefStyle.NONE)

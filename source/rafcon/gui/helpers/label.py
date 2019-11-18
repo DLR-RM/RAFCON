@@ -35,7 +35,7 @@ def create_tab_header_label(tab_name, icons):
     tooltip_event_box.set_tooltip_text(tab_name)
     tab_label = Gtk.Label()
     if global_gui_config.get_config_value('USE_ICONS_AS_TAB_LABELS', True):
-        set_label_markup(tab_label, icons[tab_name], font=constants.ICON_FONT, size=constants.FONT_SIZE_BIG)
+        set_label_markup(tab_label, icons[tab_name], is_icon=True, size=constants.FONT_SIZE_BIG)
     else:
         tab_label.set_text(get_widget_title(tab_name))
         tab_label.set_angle(90)
@@ -46,19 +46,11 @@ def create_tab_header_label(tab_name, icons):
     return tooltip_event_box
 
 
-def create_label_with_text_and_spacing(text, font=constants.INTERFACE_FONT, font_size=constants.FONT_SIZE_NORMAL,
-                                       letter_spacing=constants.LETTER_SPACING_NONE):
-    label = Gtk.Label()
-    set_label_markup(label, text, font, font_size, letter_spacing)
-    label.show()
-    return label
-
-
 def create_label_widget_with_icon(icon, text, tooltip=None):
     hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
 
     icon_label = Gtk.Label()
-    set_label_markup(icon_label, icon, font=constants.ICON_FONT)
+    set_label_markup(icon_label, icon, is_icon=True)
     icon_label.show()
     hbox.pack_start(icon_label, False, True, 2)
 
@@ -101,7 +93,7 @@ def set_icon_and_text_box_of_menu_item(menu_item, uni_code):
 
     # now add the awesome icon to the icon_label
     if uni_code is not None:
-        set_label_markup(icon_label, uni_code, font=constants.ICON_FONT)
+        set_label_markup(icon_label, uni_code, is_icon=True)
 
 
 def create_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=(),
@@ -153,7 +145,7 @@ def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
     :return: The created label
     """
     label = Gtk.Label()
-    set_label_markup(label, icon, constants.ICON_FONT, font_size)
+    set_label_markup(label, icon, is_icon=True, size=font_size)
     label.show()
     return label
 
@@ -217,7 +209,7 @@ def set_notebook_title(notebook, page_num, title_label):
     :return: The new title of the notebook
     """
     text = get_notebook_tab_title(notebook, page_num)
-    set_label_markup(title_label, text, constants.INTERFACE_FONT, constants.FONT_SIZE_BIG, constants.LETTER_SPACING_1PT)
+    set_label_markup(title_label, text, size=constants.FONT_SIZE_BIG, letter_spacing=constants.LETTER_SPACING_1PT)
     return text
 
 
@@ -239,10 +231,16 @@ def create_menu_box_with_icon_and_label(label_text):
     return box, icon_label, text_label
 
 
-def set_label_markup(label, text, font=constants.INTERFACE_FONT, size=constants.FONT_SIZE_NORMAL,
+def set_label_markup(label, text, is_icon=False, size=constants.FONT_SIZE_NORMAL,
                      letter_spacing=constants.LETTER_SPACING_NONE):
+    font_family = constants.INTERFACE_FONT
+    if is_icon:
+        if text in constants.ICONS_IN_RAFCON_FONT:
+            font_family = constants.ICON_FONT_RAFCON
+        else:
+            font_family = constants.ICON_FONT_FONTAWESOME
     label.set_markup('<span font_desc="{family} {size}" weight="{weight}" letter_spacing="{letter_spacing}">{text}</span>'.format(
-        family=font,
+        family=font_family,
         size=size,
         weight=900 if text in constants.ICONS_WITH_BOLD_FACE else 400,
         letter_spacing=letter_spacing,

@@ -509,10 +509,8 @@ class StateView(Element):
 
         layout = PangoCairo.create_layout(cairo_context)
 
-        font_name = constants.ICON_FONT
-
         def set_font_description():
-            set_label_markup(layout, symbol, font=font_name, size=font_size)
+            set_label_markup(layout, symbol, is_icon=True, size=font_size)
 
         if symbol in self.__symbol_size_cache and \
                 self.__symbol_size_cache[symbol]['width'] == width and \

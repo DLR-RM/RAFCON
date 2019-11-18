@@ -46,7 +46,7 @@ class StateIconView(View, Gtk.IconView):
 
         for shorthand, state_class in self.states:
             liststore.append(['<span font_desc="{font} {size}" color="{color}">{icon}</span> {text}'.format(
-                font=constants.ICON_FONT,
+                font=constants.ICON_FONT_FONTAWESOME,
                 size=constants.FONT_SIZE_NORMAL,
                 color=global_gui_config.colors['BUTTON_TEXT_COLOR'],
                 icon=constants.BUTTON_ADD,
