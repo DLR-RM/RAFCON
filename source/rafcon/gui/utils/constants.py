@@ -161,6 +161,8 @@ ICON_NET = "&#xf0ec;"
 ICON_STICKY = "&#xf08d;"
 ICON_ERASE = "&#xf12d;"
 
+ICONS_WITH_BOLD_FACE = [BUTTON_QUIT, BUTTON_STEPM]
+
 RAFCON_INSTANCE_LOCK_FILE_PATH = os.path.join(RAFCON_TEMP_PATH_BASE, 'lock')
 
 complex_actions = ['change_root_state_type', 'change_state_type',

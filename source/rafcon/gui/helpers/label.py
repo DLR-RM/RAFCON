@@ -244,7 +244,7 @@ def set_label_markup(label, text, font=constants.INTERFACE_FONT, size=constants.
     label.set_markup('<span font_desc="{family} {size}" weight="{weight}" letter_spacing="{letter_spacing}">{text}</span>'.format(
         family=font,
         size=size,
-        weight=400,
+        weight=900 if text in constants.ICONS_WITH_BOLD_FACE else 400,
         letter_spacing=letter_spacing,
         text=text))
 
