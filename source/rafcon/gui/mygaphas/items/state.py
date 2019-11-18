@@ -511,7 +511,7 @@ class StateView(Element):
         font_name = constants.ICON_FONT
 
         def set_font_description():
-            layout.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
+            layout.set_markup('<span font_desc="%s %s">%s</span>' %
                               (font_name,
                                font_size,
                                symbol))

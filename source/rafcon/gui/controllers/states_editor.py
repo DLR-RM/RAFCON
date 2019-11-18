@@ -57,7 +57,7 @@ def create_button(toggle, font, font_size, icon_code, release_callback=None, *ad
     button.set_size_request(width=constants.GRID_SIZE*3, height=-1)
 
     label = Gtk.Label()
-    label.set_markup("<span font_desc='{0} {1}'>&#x{2};</span>".format(font, font_size, icon_code))
+    label.set_markup("<span font_desc='{0} {1}'>{2}</span>".format(font, font_size, icon_code))
     button.add(label)
 
     if release_callback:

@@ -35,7 +35,7 @@ def create_tab_header_label(tab_name, icons):
     tooltip_event_box.set_tooltip_text(tab_name)
     tab_label = Gtk.Label()
     if global_gui_config.get_config_value('USE_ICONS_AS_TAB_LABELS', True):
-        tab_label.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
+        tab_label.set_markup('<span font_desc="%s %s">%s</span>' %
                             (constants.ICON_FONT,
                             constants.FONT_SIZE_BIG,
                             icons[tab_name]))
@@ -61,7 +61,7 @@ def create_label_widget_with_icon(icon, text, tooltip=None):
     hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
 
     icon_label = Gtk.Label()
-    icon_label.set_markup('<span font_desc="{0} {1}">&#x{2};</span>'.format(constants.ICON_FONT,
+    icon_label.set_markup('<span font_desc="{0} {1}">{2}</span>'.format(constants.ICON_FONT,
                                                                             constants.FONT_SIZE_NORMAL,
                                                                             icon))
     icon_label.show()
@@ -109,7 +109,7 @@ def set_icon_and_text_box_of_menu_item(menu_item, uni_code):
 
     # now add the awesome icon to the icon_label
     if uni_code is not None:
-        set_label_markup(icon_label, '&#x' + uni_code + ';',
+        set_label_markup(icon_label, uni_code,
                          font=constants.ICON_FONT, font_size=constants.FONT_SIZE_NORMAL)
 
 
@@ -162,7 +162,7 @@ def create_button_label(icon, font_size=constants.FONT_SIZE_NORMAL):
     :return: The created label
     """
     label = Gtk.Label()
-    set_label_markup(label, '&#x' + icon + ';', constants.ICON_FONT, font_size)
+    set_label_markup(label, icon, constants.ICON_FONT, font_size)
     label.show()
     return label
 
