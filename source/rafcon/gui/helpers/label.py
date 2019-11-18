@@ -35,10 +35,7 @@ def create_tab_header_label(tab_name, icons):
     tooltip_event_box.set_tooltip_text(tab_name)
     tab_label = Gtk.Label()
     if global_gui_config.get_config_value('USE_ICONS_AS_TAB_LABELS', True):
-        tab_label.set_markup('<span font_desc="%s %s">%s</span>' %
-                            (constants.ICON_FONT,
-                            constants.FONT_SIZE_BIG,
-                            icons[tab_name]))
+        set_label_markup(tab_label, icons[tab_name], font=constants.ICON_FONT, size=constants.FONT_SIZE_BIG)
     else:
         tab_label.set_text(get_widget_title(tab_name))
         tab_label.set_angle(90)
@@ -61,17 +58,12 @@ def create_label_widget_with_icon(icon, text, tooltip=None):
     hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
 
     icon_label = Gtk.Label()
-    icon_label.set_markup('<span font_desc="{0} {1}">{2}</span>'.format(constants.ICON_FONT,
-                                                                            constants.FONT_SIZE_NORMAL,
-                                                                            icon))
+    set_label_markup(icon_label, icon, font=constants.ICON_FONT)
     icon_label.show()
     hbox.pack_start(icon_label, False, True, 2)
 
     text_label = Gtk.Label()
-    text_label.set_markup('<span font_desc="{0} {1}" letter_spacing="{2}">{3}</span>'.format(constants.INTERFACE_FONT,
-                                                                                             constants.FONT_SIZE_NORMAL,
-                                                                                             constants.LETTER_SPACING_075PT,
-                                                                                            text))
+    set_label_markup(text_label, text, letter_spacing=constants.LETTER_SPACING_075PT)
     if tooltip is not None:
         text_label.set_tooltip_text(tooltip)
     text_label.show()
@@ -109,8 +101,7 @@ def set_icon_and_text_box_of_menu_item(menu_item, uni_code):
 
     # now add the awesome icon to the icon_label
     if uni_code is not None:
-        set_label_markup(icon_label, uni_code,
-                         font=constants.ICON_FONT, font_size=constants.FONT_SIZE_NORMAL)
+        set_label_markup(icon_label, uni_code, font=constants.ICON_FONT)
 
 
 def create_menu_item(label_text="", icon_code=constants.BUTTON_COPY, callback=None, callback_args=(),
@@ -248,10 +239,14 @@ def create_menu_box_with_icon_and_label(label_text):
     return box, icon_label, text_label
 
 
-def set_label_markup(label, text, font=constants.INTERFACE_FONT, font_size=constants.FONT_SIZE_NORMAL,
+def set_label_markup(label, text, font=constants.INTERFACE_FONT, size=constants.FONT_SIZE_NORMAL,
                      letter_spacing=constants.LETTER_SPACING_NONE):
-    label.set_markup('<span font_desc="{0} {1}" letter_spacing="{2}">{3}</span>'.format(font, font_size,
-                                                                                        letter_spacing, text))
+    label.set_markup('<span font_desc="{family} {size}" weight="{weight}" letter_spacing="{letter_spacing}">{text}</span>'.format(
+        family=font,
+        size=size,
+        weight=400,
+        letter_spacing=letter_spacing,
+        text=text))
 
 
 def set_window_size_and_position(window, window_key):

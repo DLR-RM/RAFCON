@@ -42,7 +42,7 @@ from rafcon.gui.views.graphical_editor_gaphas import GraphicalEditorView as Grap
 from rafcon.gui.views.state_machines_editor import StateMachinesEditorView
 from rafcon.gui.helpers import text_formatting
 from rafcon.gui.helpers.state_machine import new_state_machine
-from rafcon.gui.helpers.label import create_menu_item
+from rafcon.gui.helpers.label import create_menu_item, set_label_markup
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -53,8 +53,7 @@ ROOT_STATE_NAME_MAX_CHARS = 25
 
 def create_tab_close_button(callback, *additional_parameters):
     close_label = Gtk.Label()
-    close_label.set_markup('<span font_desc="%s %s">%s</span>' % (constants.ICON_FONT, constants.FONT_SIZE_SMALL,
-                                                                      constants.BUTTON_CLOSE))
+    set_label_markup(close_label, constants.BUTTON_CLOSE, font=constants.ICON_FONT, size=constants.FONT_SIZE_SMALL)
     close_button = Gtk.Button()
     close_button.set_size_request(width=constants.GRID_SIZE*3, height=-1)
     close_button.set_relief(Gtk.ReliefStyle.NONE)

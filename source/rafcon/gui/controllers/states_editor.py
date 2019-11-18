@@ -38,6 +38,7 @@ from rafcon.gui.utils.notification_overview import NotificationOverview, \
     is_execution_status_update_notification_from_state_machine_model
 from rafcon.gui.views.state_editor.state_editor import StateEditorView
 from rafcon.gui.helpers import text_formatting
+from rafcon.gui.helpers.label import set_label_markup
 
 from rafcon.utils import log
 
@@ -57,7 +58,7 @@ def create_button(toggle, font, font_size, icon_code, release_callback=None, *ad
     button.set_size_request(width=constants.GRID_SIZE*3, height=-1)
 
     label = Gtk.Label()
-    label.set_markup("<span font_desc='{0} {1}'>{2}</span>".format(font, font_size, icon_code))
+    set_label_markup(label, icon_code, font=font, size=font_size)
     button.add(label)
 
     if release_callback:
