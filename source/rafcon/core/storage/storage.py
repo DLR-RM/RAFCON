@@ -16,6 +16,7 @@
 
 """
 
+from weakref import ref
 from future.utils import string_types
 from builtins import str
 import os
@@ -431,7 +432,7 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     else:
         state.parent = parent
 
-    # read script file if an execution state
+    # read script file if state is an ExecutionState
     if isinstance(state, ExecutionState):
         script_text = read_file(state_path, state.script.filename)
         if not global_config.get_config_value("SCRIPT_COMPILE_ON_FILESYSTEM_LOAD", True):
@@ -476,8 +477,15 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     else:
         # Now we can add transitions and data flows, as all child states were added
         if isinstance(state_info, tuple):
-            state.transitions = transitions
-            state.data_flows = data_flows
+            # safe version
+            # state.transitions = transitions
+            # state.data_flows = data_flows
+            state._transitions = transitions
+            for _, transition in state.transitions.items():
+                transition._parent = ref(state)
+            state._data_flows = data_flows
+            for _, data_flow in state.data_flows.items():
+                data_flow._parent = ref(state)
 
     state.file_system_path = state_path
 

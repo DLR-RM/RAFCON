@@ -54,7 +54,7 @@ def create_button(toggle, font_size, icon_code, release_callback=None, *addition
         button = Gtk.Button()
 
     button.set_relief(Gtk.ReliefStyle.NONE)
-    button.set_focus_on_click(False)
+    Gtk.Widget.set_focus_on_click(button, True)
     button.set_size_request(width=constants.GRID_SIZE*3, height=-1)
 
     label = Gtk.Label()

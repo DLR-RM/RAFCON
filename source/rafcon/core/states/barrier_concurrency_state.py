@@ -32,6 +32,7 @@ from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.constants import UNIQUE_DECIDER_STATE_ID
 from rafcon.utils import log
+from rafcon.core.config import global_config
 logger = log.get_logger(__name__)
 
 
@@ -62,9 +63,8 @@ class BarrierConcurrencyState(ConcurrencyState):
     yaml_tag = u'!BarrierConcurrencyState'
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
-                 income=None, outcomes=None,
-                 states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None,
-                 decider_state=None, load_from_storage=False):
+                 income=None, outcomes=None, states=None, transitions=None, data_flows=None, start_state_id=None,
+                 scoped_variables=None, decider_state=None, load_from_storage=False, safe_init=True):
         self.__init_running = True
         states = {} if states is None else states
         if decider_state is not None:
@@ -78,8 +78,8 @@ class BarrierConcurrencyState(ConcurrencyState):
             states[UNIQUE_DECIDER_STATE_ID] = DeciderState(name='Decider', state_id=UNIQUE_DECIDER_STATE_ID)
 
         # TODO figure out how to solve those two clinch better of copy/add state and already existing transitions #1 #2
-        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes,
-                                  states, transitions, data_flows, start_state_id, scoped_variables)
+        ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, states,
+                                  transitions, data_flows, start_state_id, scoped_variables, safe_init=safe_init)
 
         for state_id, state in self.states.items():
             if state_id != UNIQUE_DECIDER_STATE_ID:
@@ -304,6 +304,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         states = None if 'states' not in dictionary else dictionary['states']
         transitions = dictionary['transitions']
         data_flows = dictionary['data_flows']
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         state = cls(name=dictionary['name'],
                     state_id=dictionary['state_id'],
                     input_data_ports=dictionary['input_data_ports'],
@@ -313,7 +314,8 @@ class BarrierConcurrencyState(ConcurrencyState):
                     transitions=transitions if states else None,
                     data_flows=data_flows if states else None,
                     scoped_variables=dictionary['scoped_variables'],
-                    load_from_storage=True)
+                    load_from_storage=True,
+                    safe_init=safe_init)
         try:
             state.description = dictionary['description']
         except (TypeError, KeyError):  # (Very) old state machines do not have a description field
@@ -337,12 +339,12 @@ class DeciderState(ExecutionState):
     yaml_tag = u'!DeciderState'
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, income=None,
-                 outcomes=None, path=None, filename=None):
+                 outcomes=None, path=None, filename=None, safe_init=True):
 
         if state_id is None:
             state_id = UNIQUE_DECIDER_STATE_ID
         ExecutionState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, path,
-                                filename)
+                                filename, safe_init=safe_init)
 
         self.child_errors = {}
         self.final_outcomes_dict = {}

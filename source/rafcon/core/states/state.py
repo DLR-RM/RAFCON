@@ -43,6 +43,7 @@ from rafcon.core.state_elements.data_port import DataPort, InputDataPort, Output
 from rafcon.core.state_elements.logical_port import Income, Outcome
 from rafcon.core.state_elements.scope import ScopedData
 from rafcon.core.storage import storage
+from rafcon.core.config import global_config
 from rafcon.utils import classproperty
 from rafcon.utils import log
 from rafcon.utils import multi_event
@@ -76,7 +77,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
     _state_element_attrs = ['income', 'outcomes', 'input_data_ports', 'output_data_ports']
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
-                 income=None, outcomes=None, parent=None):
+                 income=None, outcomes=None, parent=None, safe_init=True):
 
         Observable.__init__(self)
         self._state_id = None
@@ -118,21 +119,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         self._semantic_data = Vividict()
 
-        if name is None:
-            name = "{} {}".format(self.__class__.__name__, generate_state_name_id())
-        self.name = str(name) if isinstance(name, (int, float)) else name
-
         if state_id is None:
             self._state_id = state_id_generator()
         else:
             self._state_id = state_id
 
-        self.parent = parent
-        self.input_data_ports = input_data_ports if input_data_ports is not None else {}
-        self.output_data_ports = output_data_ports if output_data_ports is not None else {}
-
-        self.income = income if income is not None else Income()
-        self.outcomes = outcomes if outcomes is not None else {0: Outcome(outcome_id=0, name="success")}
         self.state_execution_status = StateExecutionStatus.INACTIVE
 
         self.edited_since_last_execution = False
@@ -141,6 +132,46 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         self.marked_dirty = False
 
+        if safe_init:
+            State._safe_init(self, name=name, input_data_ports=input_data_ports, output_data_ports=output_data_ports,
+                             income=income, outcomes=outcomes, parent=parent)
+        else:
+            State._unsafe_init(self, name=name, input_data_ports=input_data_ports, output_data_ports=output_data_ports,
+                               income=income, outcomes=outcomes, parent=parent)
+
+    # Look out! If _safe_init or _unsafe_init is changed, remember to edit the other function as well!
+    def _safe_init(self, name=None, input_data_ports=None, output_data_ports=None, income=None, outcomes=None,
+                   parent=None):
+        if name is None:
+            name = "{} {}".format(self.__class__.__name__, generate_state_name_id())
+        self.name = str(name) if isinstance(name, (int, float)) else name
+        self.parent = parent
+        self.input_data_ports = input_data_ports if input_data_ports is not None else {}
+        self.output_data_ports = output_data_ports if output_data_ports is not None else {}
+        self.income = income if income is not None else Income()
+        self.outcomes = outcomes if outcomes is not None else {0: Outcome(outcome_id=0, name="success")}
+
+    def _unsafe_init(self, name=None, input_data_ports=None, output_data_ports=None, income=None, outcomes=None,
+                     parent=None):
+        if name is None:
+            name = "{} {}".format(self.__class__.__name__, generate_state_name_id())
+        self._name = str(name) if isinstance(name, (int, float)) else name
+        if parent:
+            self._parent = ref(parent)
+        else:
+            self._parent = None
+        self._input_data_ports = input_data_ports if input_data_ports is not None else {}
+        # add parents manually
+        for port_id, port in self._input_data_ports.items():
+            port._parent = ref(self)
+        self._output_data_ports = output_data_ports if output_data_ports is not None else {}
+        for port_id, port in self._output_data_ports.items():
+            port._parent = ref(self)
+        self._income = income if income is not None else Income(safe_init=False)
+        self._income._parent = ref(self)
+        self._outcomes = outcomes if outcomes is not None else {0: Outcome(outcome_id=0, name="success")}
+        for outcome_id, outcome in self._outcomes.items():
+            outcome._parent = ref(self)
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- generic methods -----------------------------------------
@@ -850,10 +881,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             if data_port.name in self.input_data and self.input_data[data_port.name] is not None:
                 #check for class
                 if not isinstance(self.input_data[data_port.name], data_port.data_type):
-                    logger.error("{0} had an data port error: Input of execute function must be of type '{1}' not '{2}'"
-                                 " as current value '{3}'".format(self, data_port.data_type.__name__,
-                                                               type(self.input_data[data_port.name]).__name__,
-                                                               self.input_data[data_port.name]))
+                    logger.error("{0} had an data port error: Input data type of value '{3}' must be '{1}'"
+                                 " and not '{2}'".format(self, data_port.data_type.__name__,
+                                              type(self.input_data[data_port.name]).__name__,
+                                              self.input_data[data_port.name]))
 
     def check_output_data_type(self):
         """Check the output data types of the state
@@ -865,10 +896,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             if data_port.name in self.output_data and self.output_data[data_port.name] is not None:
                 # check for class
                 if not isinstance(self.output_data[data_port.name], data_port.data_type):
-                    logger.error("{0} had an data port error: Output of execute function must be of type '{1}' not "
-                                 "'{2}' as current value {3}".format(self, data_port.data_type.__name__,
-                                                               type(self.output_data[data_port.name]).__name__,
-                                                               self.output_data[data_port.name]))
+                    logger.error("{0} had an data port error: Output data type of value {3}' must be '{1}'"
+                                 " and not '{2}'".format(self, data_port.data_type.__name__,
+                                                         type(self.output_data[data_port.name]).__name__,
+                                                         self.output_data[data_port.name]))
 
     def _check_scoped_data_validity(self, check_scoped_data):
         return True, "valid"  # no validity checks, yet

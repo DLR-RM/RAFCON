@@ -19,6 +19,7 @@
 """
 from future.utils import string_types
 from builtins import str
+from weakref import ref
 from copy import copy, deepcopy
 
 from gtkmvc3.observable import Observable
@@ -26,6 +27,7 @@ from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.singleton import library_manager
 from rafcon.core.states.state import State, PATH_SEPARATOR
 from rafcon.core.decorators import lock_state_machine
+from rafcon.core.config import global_config
 from rafcon.utils import log
 from rafcon.utils import type_helpers
 from rafcon.utils.hashable import Hashable
@@ -51,6 +53,9 @@ class LibraryState(State):
     :ivar dict output_data_port_runtime_values: a dict to store all the runtime values for the output data ports
     :ivar dict use_runtime_value_output_data_ports: flags to indicate if the runtime or the default value should be used
                                                     for a specific output data port
+    :ivar dict allow_user_interaction: flag to indicate if the user can support in localizing moved libraries
+    :ivar skip_runtime_data_initialization: flag to indicate if the runtime-data data structures have to be initialized,
+                                            this is not needed e.g. in the case of a copy
     """
 
     yaml_tag = u'!LibraryState'
@@ -71,12 +76,12 @@ class LibraryState(State):
                  income=None, outcomes=None,
                  input_data_port_runtime_values=None, use_runtime_value_input_data_ports=None,
                  output_data_port_runtime_values=None, use_runtime_value_output_data_ports=None,
-                 allow_user_interaction=True):
+                 allow_user_interaction=True, safe_init=True, skip_runtime_data_initialization=False):
 
         # this variable is set to true if the state initialization is finished! after initialization no change to the
         # library state is allowed any more
         self.initialized = False
-        State.__init__(self, name, state_id, None, None, income, outcomes)
+        State.__init__(self, name, state_id, None, None, income, outcomes, safe_init=safe_init)
 
         self.library_path = library_path
         self.library_name = library_name
@@ -96,21 +101,54 @@ class LibraryState(State):
 
         # key = load_library_root_state_timer.start()
         lib_version, state_copy = library_manager.get_library_state_copy_instance(self.lib_os_path)
-        self.state_copy = state_copy
-        # load_library_root_state_timer.stop(key)
-        self.state_copy.parent = self
         if not str(lib_version) == version and not str(lib_version) == "None":
             raise AttributeError("Library does not have the correct version!")
+        self.state_copy = state_copy
 
+        if safe_init:
+            LibraryState._safe_init(self, name)
+        else:
+            LibraryState._unsafe_init(self, name)
+
+        if not skip_runtime_data_initialization:
+            # load_library_root_state_timer.stop(key)
+            self._handle_runtime_values(input_data_port_runtime_values, use_runtime_value_input_data_ports,
+                                        output_data_port_runtime_values, use_runtime_value_output_data_ports)
+        else:
+            self._input_data_port_runtime_values = input_data_port_runtime_values
+            self._use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
+            self._output_data_port_runtime_values = output_data_port_runtime_values
+            self._use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
+
+        self.initialized = True
+
+    def _safe_init(self, name):
+        self.state_copy.parent = self
         if name is None:
             self.name = self.state_copy.name
-
         # copy all ports and outcomes of self.state_copy to let the library state appear like the container state
         # this will also set the parent of all outcomes and data ports to self
         self.outcomes = self.state_copy.outcomes
         self.input_data_ports = self.state_copy.input_data_ports
         self.output_data_ports = self.state_copy.output_data_ports
 
+    def _unsafe_init(self, name):
+        self.state_copy._parent = ref(self)
+        if name is None:
+            self._name = self.state_copy.name
+        self._outcomes = self.state_copy.outcomes
+        # add parents manually
+        for outcome_id, outcome in self._outcomes.items():
+            outcome._parent = ref(self)
+        self._input_data_ports = self.state_copy.input_data_ports
+        for port_id, port in self._input_data_ports.items():
+            port._parent = ref(self)
+        self._output_data_ports = self.state_copy.output_data_ports
+        for port_id, port in self._output_data_ports.items():
+            port._parent = ref(self)
+
+    def _handle_runtime_values(self, input_data_port_runtime_values, use_runtime_value_input_data_ports,
+                               output_data_port_runtime_values, use_runtime_value_output_data_ports):
         # handle input runtime values
         self.input_data_port_runtime_values = input_data_port_runtime_values
         self.use_runtime_value_input_data_ports = use_runtime_value_input_data_ports
@@ -168,8 +206,6 @@ class LibraryState(State):
                 # state machine cannot be marked dirty directly, as it does not exist yet
                 self.marked_dirty = True
 
-        self.initialized = True
-
     def __hash__(self):
         return id(self)
 
@@ -186,12 +222,9 @@ class LibraryState(State):
                                self._name, self._state_id, income, outcomes,
                                copy(self.input_data_port_runtime_values), copy(self.use_runtime_value_input_data_ports),
                                copy(self.output_data_port_runtime_values), copy(self.use_runtime_value_output_data_ports),
-                               False)
+                               False, safe_init=False, skip_runtime_data_initialization=True)
 
-        # overwrite may by default set True flags by False
-        state.use_runtime_value_input_data_ports = copy(self.use_runtime_value_input_data_ports)
-        state.use_runtime_value_output_data_ports = copy(self.use_runtime_value_output_data_ports)
-        state.semantic_data = deepcopy(self.semantic_data)
+        state._semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
         return state
 
@@ -372,7 +405,7 @@ class LibraryState(State):
 
         return cls(library_path, library_name, version, name, state_id, income, outcomes,
                    input_data_port_runtime_values, use_runtime_value_input_data_ports,
-                   output_data_port_runtime_values, use_runtime_value_output_data_ports)
+                   output_data_port_runtime_values, use_runtime_value_output_data_ports, safe_init=False)
 
     def update_hash(self, obj_hash):
         super(LibraryState, self).update_hash(obj_hash)

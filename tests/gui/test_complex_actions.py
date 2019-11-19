@@ -210,6 +210,6 @@ def test_cut_of_multiple_states(gui):
 
 if __name__ == '__main__':
     testing_utils.dummy_gui(None)
-    # test_repetitive_ungroup_state_and_group_states(None)
+    test_repetitive_ungroup_state_and_group_states(None)
     # test_cut_of_multiple_states(None)
     pytest.main([__file__, '-xs'])
