@@ -331,9 +331,6 @@ class MainWindowController(ExtendedController):
             # position of last pane needs to be set again if its max-position property changes
             self.view[last_pane_id].connect("notify", last_pane_property_changed)
 
-        for pane_id in constants.PANE_ID.values():
-            self.view[pane_id].connect("notify", pane_property_changed)
-
         # Set positions after all panes have been drawn once
         self.view[first_pane_id].connect_after("draw", deferred_pane_positioning)
 
