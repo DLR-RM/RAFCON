@@ -111,5 +111,5 @@ class StateIconController(ExtendedController):
         selected = self.view.get_selected_items()
         if not selected:
             return
-        shorthand, state_class = self.view.states[selected[0][0]]
+        _, state_class, _ = self.view.states[selected[0][0]]
         return state_class()

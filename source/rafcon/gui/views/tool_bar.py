@@ -35,7 +35,7 @@ class ToolBarView(View):
                                                                       "Refresh all libraries and state machines"))
 
         button_refresh_selected = self['button_refresh_selected']
-        button_refresh_selected.set_label_widget(create_label_widget_with_icon(constants.BUTTON_REFR,
+        button_refresh_selected.set_label_widget(create_label_widget_with_icon(constants.ICON_REFRESH_SELECTED,
                                                                                _("Refresh Selected"),
                                                                                "Refresh selected state machine"))
 
@@ -47,7 +47,7 @@ class ToolBarView(View):
 
         button_refresh_libs = self['button_refresh_libs']
         button_refresh_libs.set_label_widget(
-            create_label_widget_with_icon(constants.BUTTON_REFR, _("Refresh Libraries"), "Refresh all libraries"))
+            create_label_widget_with_icon(constants.ICON_REFRESH_LIBS, _("Refresh Libraries"), "Refresh all libraries"))
 
         button_bake_state_machine = self['button_bake_state_machine']
         button_bake_state_machine.set_label_widget(

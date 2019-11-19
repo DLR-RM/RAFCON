@@ -38,6 +38,7 @@ from rafcon.gui.utils.notification_overview import NotificationOverview, \
     is_execution_status_update_notification_from_state_machine_model
 from rafcon.gui.views.state_editor.state_editor import StateEditorView
 from rafcon.gui.helpers import text_formatting
+from rafcon.gui.helpers.label import set_label_markup
 
 from rafcon.utils import log
 
@@ -46,7 +47,7 @@ logger = log.get_logger(__name__)
 STATE_NAME_MAX_CHARS = 16
 
 
-def create_button(toggle, font, font_size, icon_code, release_callback=None, *additional_parameters):
+def create_button(toggle, font_size, icon_code, release_callback=None, *additional_parameters):
     if toggle:
         button = Gtk.ToggleButton()
     else:
@@ -57,7 +58,7 @@ def create_button(toggle, font, font_size, icon_code, release_callback=None, *ad
     button.set_size_request(width=constants.GRID_SIZE*3, height=-1)
 
     label = Gtk.Label()
-    label.set_markup("<span font_desc='{0} {1}'>&#x{2};</span>".format(font, font_size, icon_code))
+    set_label_markup(label, icon_code, is_icon=True, size=font_size)
     button.add(label)
 
     if release_callback:
@@ -67,14 +68,14 @@ def create_button(toggle, font, font_size, icon_code, release_callback=None, *ad
 
 
 def create_tab_close_button(callback, *additional_parameters):
-    close_button = create_button(False, constants.ICON_FONT, constants.FONT_SIZE_SMALL, constants.BUTTON_CLOSE,
+    close_button = create_button(False, constants.FONT_SIZE_SMALL, constants.BUTTON_CLOSE,
                                  callback, *additional_parameters)
 
     return close_button
 
 
 def create_sticky_button(callback, *additional_parameters):
-    sticky_button = create_button(True, constants.ICON_FONT, constants.FONT_SIZE_SMALL, constants.ICON_STICKY,
+    sticky_button = create_button(True, constants.FONT_SIZE_SMALL, constants.ICON_STICKY,
                                   callback, *additional_parameters)
 
     return sticky_button
