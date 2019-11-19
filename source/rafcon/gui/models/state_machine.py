@@ -36,6 +36,7 @@ from rafcon.utils import log
 from rafcon.utils import storage_utils
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
+from rafcon.utils.timer import measure_time
 
 logger = log.get_logger(__name__)
 
@@ -65,6 +66,7 @@ class StateMachineModel(MetaModel, Hashable):
     __observables__ = ("state_machine", "root_state", "meta_signal", "state_meta_signal", "sm_selection_changed_signal",
                        "action_signal", "state_action_signal", "destruction_signal", "ongoing_complex_actions")
 
+    @measure_time
     def __init__(self, state_machine, meta=None, load_meta_data=True):
         """Constructor
         """

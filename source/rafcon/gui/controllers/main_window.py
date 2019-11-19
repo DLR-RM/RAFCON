@@ -206,6 +206,10 @@ class MainWindowController(ExtendedController):
         self.console_hidden = False
 
     def destroy(self):
+        if hasattr(self, '_max_position_notification_id'):
+            last_pane_id = next(reversed(constants.PANE_ID.values()))
+            self.view[last_pane_id].disconnect(self._max_position_notification_id)
+
         super(MainWindowController, self).destroy()
         # The sidebars have no corresponding controller that could destroy the views what cause the connected methods
         # to stay connected to (hold references on) the main window controller. So, we do this here. TODO D-solve it
@@ -329,7 +333,7 @@ class MainWindowController(ExtendedController):
             for config_id in constants.PANE_ID:
                 self.set_pane_position(config_id)
             # position of last pane needs to be set again if its max-position property changes
-            self.view[last_pane_id].connect("notify", last_pane_property_changed)
+            self._max_position_notification_id = self.view[last_pane_id].connect("notify", last_pane_property_changed)
 
         # Set positions after all panes have been drawn once
         self.view[first_pane_id].connect_after("draw", deferred_pane_positioning)

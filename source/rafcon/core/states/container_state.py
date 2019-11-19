@@ -19,6 +19,7 @@
    :synopsis: A module to represent a generic container state in the state machine
 
 """
+from weakref import ref
 from builtins import str
 from copy import copy, deepcopy
 from threading import Condition
@@ -39,6 +40,7 @@ from rafcon.core.state_elements.transition import Transition
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.state import State
 from rafcon.core.states.state import StateExecutionStatus
+from rafcon.core.config import global_config
 from rafcon.utils.type_helpers import type_inherits_of_type
 
 try:
@@ -69,7 +71,7 @@ class ContainerState(State):
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None,
-                 scoped_variables=None):
+                 scoped_variables=None, safe_init=True):
 
         self._states = OrderedDict()
         self._transitions = {}
@@ -82,14 +84,38 @@ class ContainerState(State):
         self._child_execution = False
         self._start_state_modified = False
 
-        State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes)
+        State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, safe_init=safe_init)
 
+        if start_state_id is not None:
+            self.start_state_id = start_state_id
+
+        if safe_init:
+            ContainerState._safe_init(self, scoped_variables=scoped_variables, states=states, transitions=transitions,
+                                      data_flows=data_flows)
+        else:
+            ContainerState._unsafe_init(self, scoped_variables=scoped_variables, states=states, transitions=transitions,
+                                        data_flows=data_flows)
+
+    def _safe_init(self, scoped_variables, states, transitions, data_flows):
         self.scoped_variables = scoped_variables if scoped_variables is not None else {}
         self.states = states if states is not None else {}
         self.transitions = transitions if transitions is not None else {}
         self.data_flows = data_flows if data_flows is not None else {}
-        if start_state_id is not None:
-            self.start_state_id = start_state_id
+
+    def _unsafe_init(self, scoped_variables, states, transitions, data_flows):
+        self._scoped_variables = scoped_variables if scoped_variables is not None else {}
+        # set parents manually
+        for _, scoped_variable in self._scoped_variables.items():
+            scoped_variable._parent = ref(self)
+        self._states = states if states is not None else {}
+        for _, state in self._states.items():
+            state._parent = ref(self)
+        self._transitions = transitions if transitions is not None else {}
+        for _, transition in self._transitions.items():
+            transition._parent = ref(self)
+        self._data_flows = data_flows if data_flows is not None else {}
+        for _, data_flow in self._data_flows.items():
+            data_flow._parent = ref(self)
 
     # ---------------------------------------------------------------------------------------------
     # ----------------------------------- generic methods -----------------------------------------
@@ -124,6 +150,7 @@ class ContainerState(State):
         states = None if 'states' not in dictionary else dictionary['states']
         transitions = dictionary['transitions']
         data_flows = dictionary['data_flows']
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         state = cls(name=dictionary['name'],
                     state_id=dictionary['state_id'],
                     input_data_ports=dictionary['input_data_ports'],
@@ -133,7 +160,8 @@ class ContainerState(State):
                     states=None,
                     transitions=transitions if states else None,
                     data_flows=data_flows if states else None,
-                    scoped_variables=dictionary['scoped_variables'])
+                    scoped_variables=dictionary['scoped_variables'],
+                    safe_init=safe_init)
         try:
             state.description = dictionary['description']
         except (TypeError, KeyError):  # (Very) old state machines do not have a description field
@@ -180,9 +208,9 @@ class ContainerState(State):
         transitions = {elem_id: copy(elem) for elem_id, elem in self._transitions.items()}
 
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, states,
-                               transitions, data_flows, None, scoped_variables)
-        state.description = deepcopy(self.description)
-        state.semantic_data = deepcopy(self.semantic_data)
+                               transitions, data_flows, None, scoped_variables, safe_init=False)
+        state._description = deepcopy(self.description)
+        state._semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path
         return state
 
@@ -2159,7 +2187,7 @@ class ContainerState(State):
                 self._states = old_states
                 raise
 
-        # check that all old_states are no more referencing self as there parent
+        # check that all old_states are no more referencing self as their parent
         for old_state in old_states.values():
             if old_state not in self._states.values() and old_state.parent is self:
                 old_state.parent = None

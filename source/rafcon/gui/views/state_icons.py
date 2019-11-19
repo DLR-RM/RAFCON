@@ -24,8 +24,10 @@ from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrenc
 
 
 class StateIconView(View, Gtk.IconView):
-    states = [("HS", HierarchyState), ("ES", ExecutionState),
-              ("PS", PreemptiveConcurrencyState), ("BS", BarrierConcurrencyState)]
+    states = [("HS", HierarchyState, constants.ICON_STATE_HIERARCHY),
+              ("ES", ExecutionState, constants.ICON_STATE_EXECUTION),
+              ("PS", PreemptiveConcurrencyState, constants.ICON_STATE_CONC_PREEMPTIVE),
+              ("BS", BarrierConcurrencyState, constants.ICON_STATE_CONS_BARRIER)]
 
     def __init__(self):
         View.__init__(self)
@@ -44,12 +46,12 @@ class StateIconView(View, Gtk.IconView):
         self.set_markup_column(0)
         self.set_tooltip_column(1)
 
-        for shorthand, state_class in self.states:
-            liststore.append(['<span font_desc="{font} {size}" color="{color}">&#x{icon};</span> {text}'.format(
-                font=constants.ICON_FONT,
-                size=constants.FONT_SIZE_NORMAL,
+        for shorthand, state_class, icon in self.states:
+            liststore.append(['<span font_desc="{font} {size}" color="{color}">{icon}</span> {text}'.format(
+                font=constants.ICON_FONT_FONTAWESOME,
+                size=constants.FONT_SIZE_BIG,
                 color=global_gui_config.colors['BUTTON_TEXT_COLOR'],
-                icon=constants.BUTTON_ADD,
+                icon=icon,
                 text=shorthand
             ), "Add/Drag and Drop " + state_class.__name__])
 
