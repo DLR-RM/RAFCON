@@ -54,7 +54,7 @@ def open_folder(query, default_path=None):
     else:
         last_path = expanduser('~')
 
-    dialog = Gtk.FileChooserDialog(title=query, parent=None,
+    dialog = Gtk.FileChooserDialog(title=query, transient_for=None,
                                    action=Gtk.FileChooserAction.SELECT_FOLDER)
     dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                        Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
@@ -102,7 +102,7 @@ def create_folder(query, default_name=None, default_path=None):
     :param str query: Prompt asking the user for a specific folder
     :param str default_name: Default name of the folder to be created 
     :param str default_path: Path in which the folder is created if the user doesn't specify a path 
-    :return: Path created by the user or `default_path`\`default_name` if no path was specified or None if none of the
+    :return: Path created by the user or `default_path`/`default_name` if no path was specified or None if none of the
       paths is valid
     :rtype: str
     """
@@ -120,7 +120,7 @@ def create_folder(query, default_name=None, default_path=None):
     else:
         last_path = expanduser('~')
 
-    dialog = Gtk.FileChooserDialog(title=query, parent=None,
+    dialog = Gtk.FileChooserDialog(title=query, transient_for=None,
                                    action=Gtk.FileChooserAction.CREATE_FOLDER)
     dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                        Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
@@ -170,7 +170,7 @@ def save_folder(query, default_name=None):
 
     :param str query: Prompt asking the user for a specific path and a name in the entry widget
     :param str default_name: Default name of mounting point/library root key
-    :return: Path handed by the user or `last_path`\`default_name` if no path was specified and None if directory
+    :return: Path handed by the user or `last_path`/`default_name` if no path was specified and None if directory
       does not exist (parent of name)
     :rtype: str
     """
@@ -188,7 +188,7 @@ def save_folder(query, default_name=None):
     else:
         last_path = expanduser('~')
 
-    dialog = Gtk.FileChooserDialog(title=query, parent=None,
+    dialog = Gtk.FileChooserDialog(title=query, transient_for=None,
                                    action=Gtk.FileChooserAction.SAVE)
     dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                        Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
