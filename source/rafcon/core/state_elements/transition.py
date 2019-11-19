@@ -89,9 +89,8 @@ class Transition(StateElement):
                (self._from_state, self._from_outcome, self._to_state, self._to_outcome, self._transition_id)
 
     def __copy__(self):
-        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         return self.__class__(self._from_state, self._from_outcome, self._to_state, self._to_outcome,
-                              self._transition_id, None, safe_init=safe_init)
+                              self._transition_id, None, safe_init=False)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()

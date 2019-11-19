@@ -76,9 +76,8 @@ class ScopedVariable(DataPort):
                                                              self.default_value)
 
     def __copy__(self):
-        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         return self.__class__(self._name, self._data_type, self._default_value, self._data_port_id, None,
-                              safe_init=safe_init)
+                              safe_init=False)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()

@@ -100,9 +100,8 @@ class DataPort(StateElement):
     yaml_tag = u'!DataPort'
 
     def __copy__(self):
-        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         return self.__class__(self._name, self._data_type, self._default_value, self._data_port_id, None,
-                              self._was_forced_type, safe_init=safe_init)
+                              self._was_forced_type, safe_init=False)
 
     def __deepcopy__(self, memo=None, _nil=[]):
         return self.__copy__()

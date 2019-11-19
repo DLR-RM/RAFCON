@@ -207,9 +207,8 @@ class ContainerState(State):
         data_flows = {elem_id: copy(elem) for elem_id, elem in self._data_flows.items()}
         transitions = {elem_id: copy(elem) for elem_id, elem in self._transitions.items()}
 
-        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, states,
-                               transitions, data_flows, None, scoped_variables, safe_init=safe_init)
+                               transitions, data_flows, None, scoped_variables, safe_init=False)
         state._description = deepcopy(self.description)
         state._semantic_data = deepcopy(self.semantic_data)
         state._file_system_path = self.file_system_path

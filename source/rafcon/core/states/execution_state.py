@@ -69,9 +69,8 @@ class ExecutionState(State):
         output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.items()}
         income = copy(self._income)
         outcomes = {elem_id: copy(elem) for elem_id, elem in list(self._outcomes.items())}
-        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, None,
-                               safe_init=safe_init)
+                               safe_init=False)
         try:
             # use setter here! the acutal value, which is changed is self._script.script!
             state.script_text = deepcopy(self.script_text)
