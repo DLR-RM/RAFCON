@@ -251,7 +251,7 @@ class StateMachineModel(MetaModel, Hashable):
     def _state_machine_was_modified(info):
         if info["method_name"] == "marked_dirty":
             return False
-        # if 'root_state_change', the sate machien was modfied
+        # if 'root_state_change', the state machine was modfied
         info = info if info["method_name"] is not "root_state_change" else info["kwargs"]
         # if not 'state_change', the root state itself was modified, otherwise one if its child states
         info = info if info["method_name"] is not "state_change" else info["kwargs"]

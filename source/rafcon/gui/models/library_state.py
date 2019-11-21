@@ -230,7 +230,7 @@ class LibraryStateModel(AbstractStateModel):
     @ModelMT.observe("state", before=True, after=True)
     def model_changed(self, model, prop_name, info):
         if self.operation_finished(info) and self.child_model_changed(info):
-            # The only operations allowed is allow setting the parent of the state_copy and
+            # The only operations allowed are setting the parent of the state_copy and
             # changing the state_execution_status
             if not (info["instance"] == self.state_copy.state and info["method_name"] == "parent" or
                     info["method_name"] == "state_execution_status"):
