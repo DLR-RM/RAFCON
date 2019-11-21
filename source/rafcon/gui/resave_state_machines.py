@@ -61,9 +61,7 @@ def trigger_gui_signals(*args):
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     try:
         sm_manager_model.selected_state_machine_id = state_machine.state_machine_id
-        gui_helper_state_machine.save_state_machine_as(path=setup_config['target_path'][0])
-        while state_machine.marked_dirty:
-            time.sleep(0.1)
+        call_gui_callback(gui_helper_state_machine.save_state_machine_as, path=setup_config['target_path'][0])
     except:
         logger.exception("Could not save state machine")
     finally:
@@ -159,7 +157,6 @@ def convert_libraries_in_path(config_path, lib_path, target_path=None, gui_confi
             if os.path.isdir(child_lib_path) and '.' == lib[0]:
                 logger.debug("lib_root_path/lib_path .*-folder are ignored if within lib_path, "
                              "e.g. -> {0} -> full path is {1}".format(lib, child_lib_path))
-
 
 if __name__ == '__main__':
     import sys

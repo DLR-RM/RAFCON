@@ -14,12 +14,15 @@
 
 from copy import deepcopy
 
+from gtkmvc3.model_mt import ModelMT
+
 from rafcon.core.states.state import State
 from rafcon.core.states.library_state import LibraryState
 
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.abstract_state import get_state_model_class_for_state
 
+from rafcon.gui.utils.notification_overview import NotificationOverview
 from rafcon.gui.config import global_gui_config
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -225,3 +228,15 @@ class LibraryStateModel(AbstractStateModel):
         if not self.state_copy_initialized:
             return 
         super(LibraryStateModel, self)._parse_for_element_meta_data(meta_data)
+
+    @ModelMT.observe("state", before=True, after=True)
+    def model_changed(self, model, prop_name, info):
+        overview = NotificationOverview(info)
+        if overview.operation_finished() and self.child_model_changed(overview):
+            # The only operations allowed are setting the parent of the state_copy and
+            # changing the state_execution_status
+            if not (info["instance"] == self.state_copy.state and info["method_name"] == "parent" or
+                    info["method_name"] == "state_execution_status"):
+                if not self.is_about_to_be_destroyed_recursively:
+                    logger.warning("You have modified core property of an inner state of a library state.")
+        super(LibraryStateModel, self).model_changed(model, prop_name, info)

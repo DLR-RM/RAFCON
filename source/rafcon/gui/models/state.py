@@ -18,9 +18,9 @@ from builtins import range
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.logical_port import IncomeModel, OutcomeModel
-from rafcon.core.state_elements.logical_port import Income, Outcome
+from rafcon.gui.utils.notification_overview import NotificationOverview
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.utils import log, type_helpers
-from rafcon.utils.constants import BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 
 logger = log.get_logger(__name__)
 
@@ -67,48 +67,45 @@ class StateModel(AbstractStateModel):
         :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
+        overview = NotificationOverview(info)
+
         # If this model has been changed (and not one of its child states), then we have to update all child models
-        # This must be done before notifying anybody else, because other may relay on the updated models
-        if 'after' in info and self.state == info['instance']:
+        # This must be done before notifying anybody else, because other may rely on the updated models
+        if overview.operation_finished() and not self.child_model_changed(overview):
             self.update_models(model, prop_name, info)
 
-        # mark the state machine this state belongs to as dirty
-        no_save_change = info["method_name"] in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
-        if isinstance(model, AbstractStateModel) and prop_name == "state" and no_save_change:
-            # do not track the active flag when marking the sm dirty
-            pass
-        else:
-            # if the state_execution state is changed the sm must not be marked dirty
-            if "after" in info and info["method_name"] not in BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS:
-                self._mark_state_machine_as_dirty()
-
-        changed_list = None
-        cause = None
-
-        if isinstance(model, DataPortModel) and model.parent is self:
-            if model in self.input_data_ports:
-                changed_list = self.input_data_ports
-                cause = "input_data_port_change"
-            elif model in self.output_data_ports:
-                changed_list = self.output_data_ports
-                cause = "output_data_port_change"
-
-        elif isinstance(info.instance, Income) and self is model.parent:
-            changed_list = self.income
-            cause = "income_change"
-
-        elif isinstance(info.instance, Outcome) and self is model.parent:
-            changed_list = self.outcomes
-            cause = "outcome_change"
+        cause, changed_list = self.get_cause_and_affected_model_list(model)
 
         if not (cause is None or cause is "income_change" or changed_list is None):
-            if 'before' in info:
+            if overview.operation_started():
                 changed_list._notify_method_before(self.state, cause, (self.state,), info)
-            elif 'after' in info:
+            else:
                 changed_list._notify_method_after(self.state, cause, None, (self.state,), info)
 
         # Notifies parent state
         super(StateModel, self).model_changed(model, prop_name, info)
+
+    def get_cause_and_affected_model_list(self, model):
+        changed_list = None
+        cause = None
+
+        if isinstance(model, DataPortModel) and model.parent is self:
+            if isinstance(model.core_element, InputDataPort):
+                changed_list = self.input_data_ports
+                cause = "input_data_port_change"
+            elif isinstance(model.core_element, OutputDataPort):
+                changed_list = self.output_data_ports
+                cause = "output_data_port_change"
+
+        elif isinstance(model, IncomeModel) and self is model.parent:
+            changed_list = self.income
+            cause = "income_change"
+
+        elif isinstance(model, OutcomeModel) and self is model.parent:
+            changed_list = self.outcomes
+            cause = "outcome_change"
+
+        return cause, changed_list
 
     def get_model_info(self, model):
         model_key = None

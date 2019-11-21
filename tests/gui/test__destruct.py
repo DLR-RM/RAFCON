@@ -1043,7 +1043,7 @@ def test_model_and_core_modification_history_destruct_with_gui(gui):
                 (searched_class, False),
                 ]
     run_setup_gui_destruct(gui, elements, searched_class, run_simple_modification_construction,
-                           expected_warnings=0, expected_errors=2)
+                           expected_warnings=2, expected_errors=2)
 
 
 def run_copy_cut_and_paste(gui):
