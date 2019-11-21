@@ -78,7 +78,7 @@ def install_fonts(restart=False):
     if font_installed:
         logger.info("Running font detection ...")
         if not update_font_cache(user_otf_fonts_folder):
-            logger.warn("Could not run font detection. RAFCON might not find the correct fonts.")
+            logger.warn("Could not run font detection using 'fc-cache'. RAFCON might not find the correct fonts.")
         if restart:
             python = sys.executable
             environ = dict(**os.environ)

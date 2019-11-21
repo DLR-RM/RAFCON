@@ -15,7 +15,6 @@
 from future import standard_library
 standard_library.install_aliases()
 import os
-from gi.repository import Gtk
 from os.path import join, expanduser
 import threading
 import time
@@ -33,7 +32,7 @@ from rafcon.gui.utils import wait_for_gui
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-
+from rafcon.gui.utils.gtk_utils import is_point_on_screen
 from rafcon.core.start import setup_environment
 
 
@@ -72,6 +71,8 @@ def trigger_gui_signals(*args):
 def convert(config_path, source_path, target_path=None, gui_config_path=None):
     logger.info("RAFCON launcher")
     rafcon.gui.start.setup_l10n(logger)
+
+    from gi.repository import Gtk
     from rafcon.gui.controllers.main_window import MainWindowController
     from rafcon.gui.views.main_window import MainWindowView
 
@@ -122,10 +123,8 @@ def convert(config_path, source_path, target_path=None, gui_config_path=None):
             main_window.resize(size[0], size[1])
         if position:
             position = (max(0, position[0]), max(0, position[1]))
-            screen_width = Gdk.Screen.width()
-            screen_height = Gdk.Screen.height()
-            if position[0] < screen_width and position[1] < screen_height:
-                main_window.move(position[0], position[1])
+            if is_point_on_screen(*position):
+                main_window.move(*position)
 
     wait_for_gui()
     thread = threading.Thread(target=trigger_gui_signals, args=[sm_manager_model,

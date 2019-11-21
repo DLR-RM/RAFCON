@@ -160,15 +160,15 @@ class StateMachineTreeController(TreeViewController):
                 self._ongoing_complex_actions:
             return
 
-        overview = NotificationOverview(info, False, self.__class__.__name__)
+        overview = NotificationOverview(info)
 
-        if overview['prop_name'][-1] == 'state' and \
-                overview['method_name'][-1] in ["name"]:  # , "add_state", "remove_state"]:
-            self.update_tree_store_row(overview['model'][-1])
+        if overview.get_affected_property() == 'state' and \
+                overview.get_cause() in ["name"]:  # , "add_state", "remove_state"]:
+            self.update_tree_store_row(overview.get_affected_model())
         # TODO check the work around for get_library_root_state -> maybe the notifications can be avoided if upper lib
-        elif overview['prop_name'][-1] == 'state' and not overview['model'][-1].state.get_next_upper_library_root_state() and \
-                overview['method_name'][-1] in ["add_state", "remove_state"]:
-            self.update(overview['model'][-1])
+        elif overview.get_affected_property() == 'state' and not overview.get_affected_model().state.get_next_upper_library_root_state() and \
+                overview.get_cause() in ["add_state", "remove_state"]:
+            self.update(overview.get_affected_model())
 
     @TreeViewController.observe("state_meta_signal", signal=True)
     def state_meta_update(self, model, prop_name, info):
@@ -194,11 +194,11 @@ class StateMachineTreeController(TreeViewController):
         if is_execution_status_update_notification_from_state_machine_model(prop_name, info):
             return
 
-        overview = NotificationOverview(info, False, self.__class__.__name__)
+        overview = NotificationOverview(info)
 
-        if overview['prop_name'][-1] == 'state' and \
-                overview['method_name'][-1] in ["change_state_type"]:
-            changed_model = self._selected_sm_model.get_state_model_by_path(overview['args'][-1][1].get_path())
+        if overview.get_affected_property() == 'state' and \
+                overview.get_cause() in ["change_state_type"]:
+            changed_model = self._selected_sm_model.get_state_model_by_path(overview.get_method_args()[1].get_path())
             self.observe_model(changed_model)
 
     @TreeViewController.observe("state_action_signal", signal=True)

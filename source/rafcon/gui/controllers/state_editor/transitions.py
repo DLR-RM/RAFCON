@@ -604,18 +604,15 @@ class StateTransitionsListController(LinkageListController):
     def after_notification_state(self, model, prop_name, info):
 
         # avoid updates because of execution status updates or while multi-actions
-        # logger.info("after_notification_state: ".format(NotificationOverview(info)))
         if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
-        overview = NotificationOverview(info, False, self.__class__.__name__)
-        # logger.info("after_notification_state: OK")
+        overview = NotificationOverview(info)
 
-        if overview['method_name'][-1] == 'parent' and overview['instance'][-1] is self.model.state or \
-                overview['instance'][-1] in [self.model.state, self.model.state.parent] and \
-                overview['method_name'][-1] in ['name', 'group_states', 'ungroup_state', 'change_data_type',
+        if overview.get_cause() == 'parent' and overview.get_affected_core_element() is self.model.state or \
+                overview.get_affected_core_element() in [self.model.state, self.model.state.parent] and \
+                overview.get_cause() in ['name', 'group_states', 'ungroup_state', 'change_data_type',
                                                 "remove_outcome", "remove_transition"]:
-            # logger.info("after_notification_state: UPDATE")
             self.update(initiator=str(overview))
 
     @LinkageListController.observe("states", after=True)
@@ -625,34 +622,27 @@ class StateTransitionsListController(LinkageListController):
         """ Activates the update after update if outcomes, transitions or states list has been changed.
         """
         # avoid updates because of execution status updates or while multi-actions
-        # logger.info("after_notification_of_parent_or_state_from_lists: ".format(NotificationOverview(info)))
         if self.check_no_update_flags_and_return_combined_flag(prop_name, info):
             return
 
-        overview = NotificationOverview(info, False, self.__class__.__name__)
-        # print(self, self.model.state.get_path(), overview)
-        # logger.info("after_notification_of_parent_or_state_from_lists: OK")
-
-        if overview['prop_name'][0] in ['states', 'outcomes', 'transitions'] and \
-                overview['method_name'][-1] not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove'
-                                                    'from_outcome', 'to_outcome', 'from_state', 'to_state',
-                                                    'modify_origin', 'modify_target']:
+        overview = NotificationOverview(info)
+        if overview.get_cause() not in ['name', 'append', '__setitem__',  # '__delitem__', 'remove'
+                                        'from_outcome', 'to_outcome', 'from_state', 'to_state',
+                                        'modify_origin', 'modify_target']:
                 if self.model.parent:
                     # check for sibling port change
-                    if overview['prop_name'][0] == 'states' and overview['instance'][0] is self.model.parent.state and \
-                            (overview['instance'][-1] in self.model.parent.state.states and
-                             overview['method_name'][-1] in ['add_outcome'] or
-                             overview['prop_name'][-1] in ['outcome'] and
-                             overview['method_name'][-1] in ['name']):
+                    if prop_name == 'states' and overview.get_affected_core_element() is self.model.parent.state and \
+                            (overview.get_affected_core_element() in self.model.parent.state.states and
+                             overview.get_cause() in ['add_outcome'] or
+                             overview.get_affected_property() in ['outcome'] and
+                             overview.get_cause() in ['name']):
                         pass
                     else:
                         return
                 else:
                     return
-        # print("TUPDATE ", self, overview)
 
         try:
-            # logger.info("after_notification_of_parent_or_state_from_lists: UPDATE")
             self.update(initiator=str(overview))
         except KeyError as e:
             if self.debug_log:

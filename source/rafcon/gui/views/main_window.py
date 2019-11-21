@@ -61,7 +61,7 @@ class MainWindowView(View):
         self['undock_left_bar_button'].set_tooltip_text("Undock left side bar widget")
         self['undock_right_bar_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_UNDOCK))
         self['undock_right_bar_button'].set_tooltip_text("Undock right side bar widget")
-        self['collapse_tree_button'].set_image(gui_helper_label.create_button_label(constants.BUTTON_COLLAPSE))
+        self['collapse_tree_button'].set_image(gui_helper_label.create_button_label(constants.ICON_TREE_FOLD))
         self['collapse_tree_button'].set_tooltip_text("Collapse tree of widget")
 
         ######################################################

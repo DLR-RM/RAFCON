@@ -35,11 +35,11 @@ class PreemptiveConcurrencyState(ConcurrencyState):
     yaml_tag = u'!PreemptiveConcurrencyState'
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
-                 income=None, outcomes=None,
-                 states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None):
+                 income=None, outcomes=None, states=None, transitions=None, data_flows=None, start_state_id=None,
+                 scoped_variables=None, safe_init=True):
 
         ConcurrencyState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, states,
-                                  transitions, data_flows, start_state_id, scoped_variables)
+                                  transitions, data_flows, start_state_id, scoped_variables, safe_init=safe_init)
 
     def run(self):
         """ This defines the sequence of actions that are taken when the preemptive concurrency state is executed

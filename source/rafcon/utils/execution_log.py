@@ -17,6 +17,7 @@ import shelve
 import json
 import pickle
 
+from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -250,12 +251,12 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
 
             # assemble grouped item
             execution_item = {}
-            ## add base properties will throw if not existing
+            # add base properties will throw if not existing
             for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type', 'path']:
                 execution_item[l] = call_item[l]
 
-            ## add extended properties (added in later rafcon versions),
-            ## will add default value if not existing instead
+            # add extended properties (added in later rafcon versions),
+            # will add default value if not existing instead
             for l, default in [('semantic_data', {}),
                                  ('is_library', None),
                                  ('library_state_name', None),
@@ -276,7 +277,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                     r = json.loads(data_dict)
                 else:
                     for k, v in data_dict.items():
-                        if not k.startswith('!'): # ! indicates storage error
+                        if not k.startswith('!'):  # ! indicates storage error
                             try:
                                 r[k] = pickle.loads(v)
                             except Exception as e:
@@ -285,7 +286,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                 elif include_erroneous_data_ports:
                                     r['!' + k] = (str(e), v)
                                 else:
-                                    pass # ignore
+                                    pass  # ignore
                         elif include_erroneous_data_ports:
                             r[k] = v
 
@@ -295,7 +296,11 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             execution_item['data_outs'] = unpickle_data(return_item['input_output_data'])
             execution_item['scoped_data_ins'] = unpickle_data(call_item['scoped_data'])
             execution_item['scoped_data_outs'] = unpickle_data(return_item['scoped_data'])
-            execution_item['semantic_data'] = unpickle_data(execution_item['semantic_data'])
+            # backward compatibility
+            if isinstance(execution_item['semantic_data'], Vividict):
+                execution_item['semantic_data'] = execution_item['semantic_data']
+            else:
+                execution_item['semantic_data'] = unpickle_data(execution_item['semantic_data'])
 
             collapsed_items[rid] = execution_item
 

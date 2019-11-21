@@ -36,10 +36,10 @@ class ConcurrencyState(ContainerState):
     """
 
     def __init__(self, name=None, state_id=None, input_keys=None, output_keys=None,
-                 income=None, outcomes=None,
-                 states=None, transitions=None, data_flows=None, start_state_id=None, scoped_variables=None):
+                 income=None, outcomes=None, states=None, transitions=None, data_flows=None, start_state_id=None,
+                 scoped_variables=None, safe_init=True):
         ContainerState.__init__(self, name, state_id, input_keys, output_keys, income, outcomes, states, transitions,
-                                data_flows, start_state_id, scoped_variables)
+                                data_flows, start_state_id, scoped_variables, safe_init=safe_init)
 
     def run(self, *args, **kwargs):
         """ The abstract run method that has to be implemented by all concurrency states.

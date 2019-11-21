@@ -16,6 +16,7 @@ pipe_include rmpm_do env --env-format ln rafcon
 process_template rafcon_template(new_state_machine, open_state_machines)
     use_template: rafcon_environment
     pass_environment: HOME, USER, DISPLAY
+    append environment PATH: :/usr/bin
     command: %(ifexists "/usr/bin/python2.7", "/usr/bin/python2.7", "/opt/python/python2.7/bin/python2.7") %(RAFCON_ROOT_PATH)/source/rafcon/gui/start.py %(ifeq "%(new_state_machine)", "True", "-n", "") -o %(open_state_machines) -c %(RAFCON_CONFIG_PATH) -g %(RAFCON_GUI_CONFIG_PATH)
     line_highlight_regexes: WARNING, ERROR
     flags: no_error_on_stop, start_in_shell, forward_x11
