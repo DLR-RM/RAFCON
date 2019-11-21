@@ -192,7 +192,6 @@ def get_state_element_meta(state_model, with_parent_linkage=True, with_verbose=F
                 if data_flow.from_state == child_state_id or data_flow.to_state == child_state_id:
                     meta_dict['related_parent_data_flows'][data_flow.data_flow_id] = meta_dump_or_deepcopy(data_flow_m.meta)
 
-    # logger.verbose("get meta {0} {1}".format(state_model.state.state_id, state_model.meta))
     if with_verbose:
         logger.verbose("STORE META for STATE: {0} {1}".format(state_model.state.state_id, state_model.state.name))
     meta_dict['is_start'] = state_model.is_start
@@ -215,7 +214,6 @@ def get_state_element_meta(state_model, with_parent_linkage=True, with_verbose=F
             logger.verbose("output: id {0} all ids {1} ids in dict {2}"
                            "".format(elem.data_port.data_port_id, elem.parent.state.output_data_ports.keys(), meta_dict['output_data_ports'].keys()))
 
-    # logger.verbose("store meta of state id {0} data -> {1}".format(state_model.state.state_id, state_model.meta))
     meta_dict['state'] = meta_dump_or_deepcopy(state_model.meta)
     if isinstance(state_model, ContainerStateModel):
         for child_state_id, child_state_m in state_model.states.items():
@@ -270,7 +268,6 @@ def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=Non
                                                               meta_dict[dict_key],
                                                               dict_key[:-1].replace('_', '-')))
 
-    # logger.verbose("insert meta data of state {0} data -> {1}".format(state_model.state.state_id, meta_dict['state']))
     state_model.meta = meta_dump_or_deepcopy(meta_dict['state'])
     if with_verbose:
         logger.verbose("INSERT META for STATE: {0} {1}".format(state_model.state.state_id, state_model.state.name))
@@ -468,16 +465,11 @@ class MetaDataAction(AbstractAction):
     def __init__(self, parent_path, state_machine_model, overview):
 
         assert isinstance(overview, NotificationOverview)
-        assert overview['type'] == 'signal'
+        assert overview.type == 'signal'
         AbstractAction.__init__(self, parent_path, state_machine_model, overview)
-        self.action_type = "change " + overview['signal'][-1]['change']
+        self.action_type = "change " + overview.get_signal_message().change
 
-        overview['method_name'].append("change " + overview['signal'][-1]['change'])
-        overview['info'][-1]['method_name'] = "change " + overview['signal'][-1]['change']
-        overview['instance'].append(overview['model'][-1])
-        overview['info'][-1]['instance'] = overview['model'][-1]
-
-        meta_str = json.dumps(overview['model'][-1].meta, cls=JSONObjectEncoder,
+        meta_str = json.dumps(overview.get_affected_model().meta, cls=JSONObjectEncoder,
                               indent=4, check_circular=False, sort_keys=True)
         # print(meta_str)
         self.meta = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
@@ -495,8 +487,7 @@ class MetaDataAction(AbstractAction):
         # TODO check why levels are not working
         # TODO in future emit signal only for respective model
         state_m = self.get_state_model_changed()
-        # logger.info("META-Action undo {}".format(state_m.state.get_path()))
-        if self.before_overview['signal'][-1]['affects_children']:
+        if self.before_overview.get_signal_message().affects_children:
             insert_state_meta_data(meta_dict=self.before_state_image.meta_data, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", True))
             # if state_m.state.is_root_state:
@@ -511,8 +502,7 @@ class MetaDataAction(AbstractAction):
         # TODO check why levels are not working
         # TODO in future emit signal only for respective model
         state_m = self.get_state_model_changed()
-        # logger.info("META-Action undo {}".format(state_m.state.get_path()))
-        if self.before_overview['signal'][-1]['affects_children']:
+        if self.before_overview.get_signal_message().affects_children:
             insert_state_meta_data(meta_dict=self.after_state_image.meta_data, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))
             # if state_m.state.is_root_state:
@@ -532,7 +522,6 @@ class Action(ModelMT, AbstractAction):
         AbstractAction.__init__(self, parent_path, state_machine_model, overview)
         self.state_machine = state_machine_model.state_machine
         self.action_type = overview.get_cause()
-        self.before_info = overview['info'][-1]
 
     def get_state_image(self):
         parent_state_m = self.state_machine_model.get_state_model_by_path(self.parent_path)
@@ -570,7 +559,6 @@ class Action(ModelMT, AbstractAction):
     def emit_undo_redo_signal(self, action_parent_m, affected_models, after):
         msg = ActionSignalMsg(action='undo/redo', origin='model', action_parent_m=action_parent_m,
                               affected_models=affected_models, after=after, kwargs={})
-        # logger.info("{1} emit history signal: {0}".format(msg, self.__class__.__name__))
         action_parent_m.action_signal.emit(msg)
 
     def compare_models(self, previous_model, actual_model):
@@ -668,7 +656,6 @@ class Action(ModelMT, AbstractAction):
                 assert oc_id in state.outcomes
 
         if isinstance(state, ContainerState):
-            # logger.debug("UPDATE STATES")
             for dp_id, sv in stored_state.scoped_variables.items():
                 state.add_scoped_variable(sv.name, sv.data_type, sv.default_value, sv.data_port_id)
 
@@ -699,7 +686,6 @@ class Action(ModelMT, AbstractAction):
                 state.add_data_flow(df.from_state, df.from_key, df.to_state, df.to_key, df.data_flow_id)
 
     def add_core_object_to_state(self, state, core_obj):
-        # logger.info("RUN ADD CORE OBJECT FOR {0} {1}".format(state.state_id, core_obj))
         if isinstance(core_obj, State):
             state.add_state(core_obj)
         elif isinstance(core_obj, Transition):
@@ -750,7 +736,6 @@ class StateMachineAction(Action, ModelMT):
 
     def __init__(self, parent_path, state_machine_model, overview):
         ModelMT.__init__(self)
-        assert isinstance(overview['model'][0].state_machine, StateMachine)
         Action.__init__(self, parent_path, state_machine_model, overview)
 
         self.with_verbose = False
@@ -805,21 +790,17 @@ class StateMachineAction(Action, ModelMT):
             insert_state_meta_data(meta_dict=state_image.meta_data, state_model=new_state_m)
 
     def redo(self):
-        # logger.verbose("#H# STATE_MACHINE_REDO STARTED")
         state = self.state_machine.root_state
 
         self.update_root_state_from_image(state, self.after_state_image)
-        # logger.verbose("#H# STATE_MACHINE_REDO FINISHED")
 
     def undo(self):
         """ General Undo, that takes all elements in the parent and
         :return:
         """
-        # logger.verbose("#H# STATE_MACHINE_UNDO STARTED")
         state = self.state_machine.root_state
 
         self.update_root_state_from_image(state, self.before_state_image)
-        # logger.verbose("#H# STATE_MACHINE_UNDO FINISHED")
 
 
 class AddObjectAction(Action):
@@ -831,14 +812,8 @@ class AddObjectAction(Action):
 
     def __init__(self, parent_path, state_machine_model, overview):
         Action.__init__(self, parent_path, state_machine_model, overview)
-        # logger.info("create AddObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
 
-        assert overview.get_cause() in self.possible_method_names
-        assert overview['prop_name'][-1] == 'state' and isinstance(overview['instance'][-1], State)
-
-        self.changed_object = getattr(self.before_info['model'], self.before_info['prop_name'])
-        assert self.changed_object is overview['instance'][-1]
-        # logger.info("self.changed_object is {0}".format(self.changed_object))
+        self.changed_object = overview.get_affected_core_element()
 
         self.parent_identifier = ''
         self.added_object_identifier = ''
@@ -848,10 +823,9 @@ class AddObjectAction(Action):
 
     def set_after(self, overview):
         Action.set_after(self, overview)
-        # logger.info("add_object \n" + str(self.after_info))
         # get new object from respective list and create identifier
         list_name = overview.get_cause().replace('add_', '') + 's'
-        new_object = getattr(overview['args'][-1][0], list_name)[overview['result'][-1]]
+        new_object = getattr(overview.get_method_args()[0], list_name)[overview.get_result()]
         self.added_object_identifier = CoreObjectIdentifier(new_object)
 
     def redo(self):
@@ -859,8 +833,6 @@ class AddObjectAction(Action):
         :return: Redo of adding object action is simply done by adding the object again from the after_state_image of the
                  parent state.
         """
-        # logger.info("RUN REDO AddObject " + self.before_info['method_name'])
-
         state = self.get_state_changed()
         state_image = self.after_state_image
 
@@ -905,11 +877,9 @@ class AddObjectAction(Action):
 
         list_name = self.action_type.replace('add_', '') + 's'
         core_obj = getattr(state_image_of_state, list_name)[self.added_object_identifier._id]
-        # logger.info(str(type(core_obj)) + str(core_obj))
         # undo
         self.remove_core_object_from_state(state, core_obj)
 
-        # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=state_image.meta_data,
@@ -924,7 +894,6 @@ class AddObjectAction(Action):
         for path_element in partial_path:
             state_image_of_state = state_image_of_state.states[path_element]
             state = state.states[path_element]
-            # logger.info("state is now: {0} {1}".format(state.state_id, state_image_of_state.state_id))
 
         return state, state_image_of_state
 
@@ -935,19 +904,18 @@ class RemoveObjectAction(Action):
 
     def __init__(self, parent_path, state_machine_model, overview):
         Action.__init__(self, parent_path, state_machine_model, overview)
-        # logger.info("create RemoveObject Action for: {0} for prop_name: {1}".format(self.before_info['method_name'], self.before_info['prop_name']))
 
         assert overview.get_cause() in self.possible_method_names
-        assert overview['prop_name'][-1] == 'state' and isinstance(overview['instance'][-1], State)
+        assert overview.get_affected_property() == 'state' and isinstance(overview.get_affected_core_element(), State)
 
-        self.instance_path = overview['instance'][-1].get_path()
-        self.changed_object = getattr(self.before_info['model'], self.before_info['prop_name'])
-        # logger.info("self.changed_object is {0}".format(self.changed_object))
+        self.instance_path = overview.get_affected_core_element().get_path()
+        self.changed_object = self.changed_object = overview.get_affected_core_element()
 
         self.parent_identifier = ''
         self.removed_object_identifier = ''
         self.removed_object_args = ''
-        if "outcome" in self.before_info['method_name'] or "data_port" in self.before_info['method_name']:
+
+        if "outcome" in overview.get_cause() or "data_port" in overview.get_cause():
             pass
         else:
             self.parent_identifier = self.parent_path
@@ -976,25 +944,21 @@ class RemoveObjectAction(Action):
         self.diff_related_elements()
 
     def get_object_identifier(self):
-        # logger.info("remove_object \n" + str(self.before_info))
         overview = self.before_overview
         # get new object from respective list and create identifier
         object_type_name = overview.get_cause().replace('remove_', '')
         list_name = object_type_name + 's'
-        if object_type_name + '_id' in overview['kwargs'][-1]:
-            object_id = overview['kwargs'][-1][object_type_name + '_id']
+        if object_type_name + '_id' in overview.get_method_kwargs():
+            object_id = overview.get_method_kwargs()[object_type_name + '_id']
         else:
-            if len(overview['args'][-1]) < 2:
+            if len(overview.get_method_args()) < 2:
                 logger.error("Length of args-tuple is shorter as assumed.")
             else:
-                object_id = overview['args'][-1][1]
-        new_object = getattr(overview['args'][-1][0], list_name)[object_id]
+                object_id = overview.get_method_args()[1]
+        new_object = getattr(overview.get_method_args()[0], list_name)[object_id]
         self.removed_object_identifier = CoreObjectIdentifier(new_object)
-        # logger.info("removed_object with identifier {0}".format(self.removed_object_identifier))
 
     def undo(self):
-        # logger.info("RUN UNDO RemoveObject " + self.before_info['method_name'])
-
         state = self.get_state_changed()
         state_image = self.before_state_image
 
@@ -1011,13 +975,12 @@ class RemoveObjectAction(Action):
                                                                              storage_path=state_image.state_path)
         list_name = self.action_type.replace('remove_', '') + 's'
         core_obj = getattr(state_image_of_state, list_name)[self.removed_object_identifier._id]
-        # logger.info(str(type(core_obj)) + str(core_obj))
+
         if self.action_type not in ['remove_transition', 'remove_data_flow']:
             self.add_core_object_to_state(state, core_obj)
 
         self.adjust_linkage()
 
-        # logger.debug("\n\n\n\n\n\n\nINSERT STATE META: %s %s || Action\n\n\n\n\n\n\n" % (path_of_state, state))
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.compare_models(previous_model, actual_state_model)
         insert_state_meta_data(meta_dict=state_image.meta_data,
@@ -1141,7 +1104,7 @@ class StateElementAction(AbstractAction):
         AbstractAction.__init__(self, parent_path, state_machine_model, overview)
 
         # validate class type
-        assert isinstance(self.before_overview['instance'][-1], self._object_class)
+        assert isinstance(self.before_overview.get_affected_core_element(), self._object_class)
 
         # validate method call -- action type
         self.action_type = overview.get_cause()
@@ -1150,10 +1113,10 @@ class StateElementAction(AbstractAction):
         assert self.action_type in self.possible_method_names
 
         # validate object path
-        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
+        self.object_identifier = CoreObjectIdentifier(self.before_overview.get_affected_core_element())
         assert self.parent_path == self.object_identifier._path
 
-        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
+        self.before_arguments = self.get_set_of_arguments(self.before_overview.get_affected_core_element())
 
         self.state_machine = state_machine_model.state_machine
 
@@ -1175,8 +1138,8 @@ class StateElementAction(AbstractAction):
 
     def set_after(self, overview):
         self.after_overview = overview
-        assert isinstance(self.after_overview['instance'][-1], self._object_class)
-        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
+        assert isinstance(self.after_overview.get_affected_core_element(), self._object_class)
+        self.after_arguments = self.get_set_of_arguments(self.after_overview.get_affected_core_element())
 
 
 class DataFlowAction(StateElementAction):
@@ -1354,33 +1317,33 @@ class StateAction(Action):
         """ method_name: 'parent' is ignored
         """
         if overview.get_cause() in ['outcomes', 'input_data_ports', 'output_data_ports']:  # need State's parent
-            if isinstance(overview['instance'][-1].parent, State):
-                parent_path = overview['instance'][-1].parent.get_path()
+            if isinstance(overview.get_affected_core_element().parent, State):
+                parent_path = overview.get_affected_core_element().parent.get_path()
         Action.__init__(self, parent_path, state_machine_model, overview)
 
         self.state_machine = state_machine_model.state_machine
         if self.action_type not in self.possible_method_names:
             logger.error("action_type: '{0}' not in {1}".format(self.action_type, self.possible_method_names))
         assert self.action_type in self.possible_method_names
-        assert isinstance(self.before_overview['instance'][-1], State)
-        self.object_identifier = CoreObjectIdentifier(self.before_overview['instance'][-1])
+        assert isinstance(self.before_overview.get_affected_core_element(), State)
+        self.object_identifier = CoreObjectIdentifier(self.before_overview.get_affected_core_element())
         if overview.get_cause() in ['outcomes', 'input_data_ports', 'output_data_ports']:
-            assert self.parent_path == CoreObjectIdentifier(self.before_overview['instance'][-1].parent)._path
+            assert self.parent_path == CoreObjectIdentifier(self.before_overview.get_affected_core_element().parent)._path
         else:
             assert self.parent_path == self.object_identifier._path
-        self.before_arguments = self.get_set_of_arguments(self.before_overview['instance'][-1])
+        self.before_arguments = self.get_set_of_arguments(self.before_overview.get_affected_core_element())
         self.after_arguments = None
-        if self.action_type == 'script_text' and isinstance(self.before_overview['args'][-1][1], string_types):
+        if self.action_type == 'script_text' and isinstance(self.before_overview.get_method_args()[-1][1], string_types):
             d = difflib.Differ()
-            diff = list(d.compare(self.before_overview['args'][-1][0].script_text.split('\n'),
-                                  self.before_overview['args'][-1][1].split('\n')))
+            diff = list(d.compare(self.before_overview.get_method_args()[0].script_text.split('\n'),
+                                  self.before_overview.get_method_args()[1].split('\n')))
             self.script_diff = '\n'.join(diff)
         else:
             self.script_diff = None
         if self.action_type == 'description':
             d = difflib.Differ()
-            diff = list(d.compare(self.before_overview['args'][-1][0].description.split('\n') if self.before_overview['args'][-1][0].description else [''] ,
-                                  self.before_overview['args'][-1][1].split('\n') if self.before_overview['args'][-1][1] else ['']))
+            diff = list(d.compare(self.before_overview.get_method_args()[0].description.split('\n') if self.before_overview.get_method_args()[0].description else [''] ,
+                                  self.before_overview.get_method_args()[1].split('\n') if self.before_overview.get_method_args()[1] else ['']))
             self.description_diff = '\n'.join(diff)
         else:
             self.description_diff = None
@@ -1413,8 +1376,8 @@ class StateAction(Action):
     def set_after(self, overview):
         Action.set_after(self, overview)
         self.after_overview = overview
-        assert isinstance(self.after_overview['instance'][-1], State)
-        self.after_arguments = self.get_set_of_arguments(self.after_overview['instance'][-1])
+        assert isinstance(self.after_overview.get_affected_core_element(), State)
+        self.after_arguments = self.get_set_of_arguments(self.after_overview.get_affected_core_element())
 
     def undo(self):
         if self.action_type in ['parent', 'outcomes', 'input_data_ports', 'output_data_ports']:
