@@ -106,7 +106,7 @@ class AbstractExternalEditor(object):
             def open_text_window():
                 markup_text = "No external editor specified. Please specify a shell command to open scripts externally"
                 # create a new RAFCONButtonInputDialog, add a checkbox and add the text 'remember' to it
-                text_input = RAFCONInputDialog(markup_text, ["Apply", "Cancel"], checkbox_text='remember')
+                text_input = RAFCONInputDialog(markup_text, ["Apply", "Cancel"], checkbox_text='remember', parent=True)
                 # Run the text_input Dialog until a response is emitted. The apply button and the 'activate' signal of
                 # the text input send response 1
                 if text_input.run() == 1:
