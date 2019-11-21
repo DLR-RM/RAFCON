@@ -631,7 +631,7 @@ class StateTransitionsListController(LinkageListController):
                                         'modify_origin', 'modify_target']:
                 if self.model.parent:
                     # check for sibling port change
-                    if prop_name == 'states' and overview.get_outer_core_element() is self.model.parent.state and \
+                    if prop_name == 'states' and overview.get_affected_core_element() is self.model.parent.state and \
                             (overview.get_affected_core_element() in self.model.parent.state.states and
                              overview.get_cause() in ['add_outcome'] or
                              overview.get_affected_property() in ['outcome'] and

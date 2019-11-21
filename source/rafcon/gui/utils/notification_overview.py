@@ -128,7 +128,8 @@ class NotificationOverview(object):
                 return self.origin.arg.action_parent_m.core_element
             if isinstance(self.origin.arg, MetaSignalMsg):
                 return self.origin.model.core_element
-        return self.origin.instance
+        if self.type in ["before", "after"]:
+            return self.origin.instance
 
     def get_affected_property(self):
         return self.origin.prop_name
@@ -145,10 +146,6 @@ class NotificationOverview(object):
         if self.type in ["before", "after"]:
             if self.info.method_name.endswith("_change"):
                 return self.info.method_name
-
-    def get_outer_core_element(self):
-        if self.type in ["before", "after"]:
-            return self.origin.instance
 
     def __str__(self):
         text = \

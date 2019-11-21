@@ -438,7 +438,7 @@ class StateDataFlowsListController(LinkageListController):
                                         'modify_origin', 'modify_target']:
             if self.model.parent:
                 # check for a sibling port change
-                if prop_name == 'states' and overview.get_outer_core_element() is self.model.parent.state and \
+                if prop_name == 'states' and overview.get_affected_core_element() is self.model.parent.state and \
                         (overview.get_affected_core_element() in self.model.parent.state.states and
                          overview.get_cause() in ['add_input_data_port', 'add_output_data_port'] or
                          overview.get_affected_property() in ['data_port', 'scoped_variable'] and
