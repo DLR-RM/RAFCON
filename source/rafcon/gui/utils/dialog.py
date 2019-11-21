@@ -177,6 +177,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
             # If a checkbox_text is specified by the caller, we can assume that one should be used.
             self.checkbox = Gtk.CheckButton(label=checkbox_text)
             hbox.pack_end(self.checkbox, False, True, 1)
+        hbox.show_all()
 
         self.show_grab_focus_and_run(standalone)
 
