@@ -26,6 +26,7 @@ from rafcon.gui.models.scoped_variable import ScopedVariableModel
 from rafcon.gui.models.state import StateModel
 from rafcon.gui.models.transition import TransitionModel
 
+from rafcon.gui.utils.notification_overview import NotificationOverview
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -174,19 +175,20 @@ class ContainerStateModel(StateModel):
         :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
+        overview = NotificationOverview(info)
         # if info.method_name == 'change_state_type':  # Handled in method 'change_state_type'
         #     return
 
         # If this model has been changed (and not one of its child states), then we have to update all child models
         # This must be done before notifying anybody else, because other may relay on the updated models
-        if not self.child_model_changed(info):
-            if self.operation_finished(info):
+        if not self.child_model_changed(overview):
+            if overview.operation_finished():
                 self.update_child_models(model, prop_name, info)
                 # if there is and exception set is_about_to_be_destroyed_recursively flag to False again
                 if info.method_name in ["remove_state"] and isinstance(info.result, Exception):
                     state_id = info.kwargs['state_id'] if 'state_id' in info.kwargs else info.args[1]
                     self.states[state_id].is_about_to_be_destroyed_recursively = False
-            elif self.operation_started(info):
+            elif overview.operation_started():
                 # while before notification mark all states which get destroyed recursively
                 if info.method_name in ["remove_state"] and \
                         info.kwargs.get('destroy', True) and info.kwargs.get('recursive', True):

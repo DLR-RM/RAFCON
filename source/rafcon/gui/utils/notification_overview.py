@@ -147,6 +147,14 @@ class NotificationOverview(object):
             if self.info.method_name.endswith("_change"):
                 return self.info.method_name
 
+    def operation_started(self):
+        return "before" == self.type
+
+    def operation_finished(self):
+        if "after" != self.type:
+            return False
+        return not isinstance(self.get_result(), Exception)
+
     def __str__(self):
         text = \
             "{type} notification:\n" \

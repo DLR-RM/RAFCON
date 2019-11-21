@@ -363,20 +363,8 @@ class AbstractStateModel(MetaModel, Hashable):
     def _load_outcome_models(self):
         raise NotImplementedError
 
-    @staticmethod
-    def operation_started(notification_info):
-        return "before" in notification_info
-
-    @staticmethod
-    def operation_finished(notification_info):
-        if "after" not in notification_info:
-            return False
-        notification_info = notification_info if notification_info["method_name"] is not "state_change" \
-            else notification_info["kwargs"]
-        return not isinstance(notification_info["result"], Exception)
-
-    def child_model_changed(self, notification_info):
-        return self.state != notification_info['instance']
+    def child_model_changed(self, notification_overview):
+        return self.state != notification_overview.get_affected_core_element()
 
     @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, prop_name, info):

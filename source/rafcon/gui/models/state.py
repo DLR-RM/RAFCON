@@ -18,6 +18,7 @@ from builtins import range
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.data_port import DataPortModel
 from rafcon.gui.models.logical_port import IncomeModel, OutcomeModel
+from rafcon.gui.utils.notification_overview import NotificationOverview
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.utils import log, type_helpers
 
@@ -66,15 +67,17 @@ class StateModel(AbstractStateModel):
         :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
+        overview = NotificationOverview(info)
+
         # If this model has been changed (and not one of its child states), then we have to update all child models
         # This must be done before notifying anybody else, because other may rely on the updated models
-        if self.operation_finished(info) and not self.child_model_changed(info):
+        if overview.operation_finished() and not self.child_model_changed(overview):
             self.update_models(model, prop_name, info)
 
         cause, changed_list = self.get_cause_and_affected_model_list(model)
 
         if not (cause is None or cause is "income_change" or changed_list is None):
-            if self.operation_started(info):
+            if overview.operation_started():
                 changed_list._notify_method_before(self.state, cause, (self.state,), info)
             else:
                 changed_list._notify_method_after(self.state, cause, None, (self.state,), info)
