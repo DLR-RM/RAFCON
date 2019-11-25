@@ -523,7 +523,8 @@ class StateView(Element):
             set_font_description()
 
             pango_size = (width * SCALE, height * SCALE)
-            while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
+            while layout.get_size()[0] > pango_size[0] * constants.ICON_STATE_FILL_FACTOR or \
+                    layout.get_size()[1] > pango_size[1] * constants.ICON_STATE_FILL_FACTOR:
                 font_size *= 0.9
                 set_font_description()
 
