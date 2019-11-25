@@ -23,16 +23,9 @@ logger = log.get_logger(__name__)
 def get_root_window():
     try:
         from rafcon.gui.singleton import main_window_controller
-    except ImportError:
-        main_window_controller = None
-    if main_window_controller:
         return main_window_controller.get_root_window()
-
-
-def set_transient_parent_to_main_window_for_dialog(dialog):
-    gui_root_widget = get_root_window()
-    if gui_root_widget:
-        dialog.set_transient_for(gui_root_widget)
+    except ImportError:
+        pass
 
 
 class RAFCONMessageDialog(Gtk.MessageDialog):
@@ -44,7 +37,7 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
     :param markup_text: The text inside the dialog
     :param message_type: The gtk type of the dialog, e.g. Gtk.MessageType.INFO, Gtk.MessageType.QUESTION etc.
     :param flags: gtk flags passed to the __init__ of Gtk.MessageDialog
-    :param parent: The parent widget of this dialog
+    :param bool | Gtk.Window parent: The parent widget of this dialog or `True` if the RAFCON root window is to be used
     :param standalone: specify if the dialog should run by itself and is only cancelable by a callback function
     """
 
@@ -55,20 +48,26 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
         modal_flag = destroy_with_parent = False
         if flags is Gtk.DialogFlags.MODAL:
             modal_flag = destroy_with_parent = True
+        if parent is True:
+            transient_for = get_root_window()
+        elif isinstance(parent, Gtk.Window):
+            transient_for = parent
+        else:
+            transient_for = None
+
+        # See https://stackoverflow.com/a/11589779 for how to pass parameters to GTK constructors
         if self.__class__.__name__ == "RAFCONMessageDialog":
             super(RAFCONMessageDialog, self).__init__(message_type=message_type, buttons=Gtk.ButtonsType.OK,
                                                       modal=modal_flag, destroy_with_parent=destroy_with_parent,
-                                                      transient_for=parent)
+                                                      transient_for=transient_for)
         else:
             super(RAFCONMessageDialog, self).__init__(message_type=message_type,
                                                       modal=modal_flag, destroy_with_parent=destroy_with_parent,
-                                                      transient_for=parent)
+                                                      transient_for=transient_for)
         self.set_title(title)
 
         self.set_default_size(width, height)
 
-        if parent:
-            self.set_transient_for(parent)
         if isinstance(markup_text, string_types):
             from xml.sax.saxutils import escape
             self.set_markup(escape(str(markup_text)))
@@ -177,6 +176,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
             # If a checkbox_text is specified by the caller, we can assume that one should be used.
             self.checkbox = Gtk.CheckButton(label=checkbox_text)
             hbox.pack_end(self.checkbox, False, True, 1)
+        hbox.show_all()
 
         self.show_grab_focus_and_run(standalone)
 

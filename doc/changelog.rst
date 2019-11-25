@@ -13,6 +13,7 @@ Next Release
 
 - Bug Fixes:
 
+  - :issue_gh:`28` Setting of external editor via dialog does not work
   - Make tests run with pytest-mock>=1.11.2
   - Fix several deprecation warnings
 
