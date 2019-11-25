@@ -37,7 +37,7 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
     :param markup_text: The text inside the dialog
     :param message_type: The gtk type of the dialog, e.g. Gtk.MessageType.INFO, Gtk.MessageType.QUESTION etc.
     :param flags: gtk flags passed to the __init__ of Gtk.MessageDialog
-    :param parent: The parent widget of this dialog
+    :param bool | Gtk.Window parent: The parent widget of this dialog or `True` if the RAFCON root window is to be used
     :param standalone: specify if the dialog should run by itself and is only cancelable by a callback function
     """
 
@@ -55,6 +55,7 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
         else:
             transient_for = None
 
+        # See https://stackoverflow.com/a/11589779 for how to pass parameters to GTK constructors
         if self.__class__.__name__ == "RAFCONMessageDialog":
             super(RAFCONMessageDialog, self).__init__(message_type=message_type, buttons=Gtk.ButtonsType.OK,
                                                       modal=modal_flag, destroy_with_parent=destroy_with_parent,
