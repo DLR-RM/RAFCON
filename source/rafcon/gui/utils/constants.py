@@ -14,14 +14,11 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import os
-from gi.repository import Gtk
-from gi.repository import Gdk
-from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
+from collections import OrderedDict
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    OrderedDict = dict
+from gi.repository import Gdk
+
+from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 
 
 def get_glade_path(glade_file):

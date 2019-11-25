@@ -23,6 +23,7 @@ from weakref import ref
 from builtins import str
 from copy import copy, deepcopy
 from threading import Condition
+from collections import OrderedDict
 
 from gtkmvc3.observable import Observable
 
@@ -42,12 +43,6 @@ from rafcon.core.states.state import State
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.config import global_config
 from rafcon.utils.type_helpers import type_inherits_of_type
-
-try:
-    from collections import OrderedDict
-except ImportError:
-    OrderedDict = dict
-
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
