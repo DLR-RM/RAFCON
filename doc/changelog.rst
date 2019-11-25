@@ -15,6 +15,7 @@ Next Release
 
   - :issue_gh:`28` Setting of external editor via dialog does not work
   - Make tests run with pytest-mock>=1.11.2
+  - Positions of panes should be restored correctly
   - Fix several deprecation warnings
 
 
