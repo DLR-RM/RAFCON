@@ -10,7 +10,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 import os
-from os.path import join, dirname, abspath, isfile, isdir, splitext
+from os.path import join, dirname, abspath, isfile, isdir
 import sys
 import subprocess
 from distutils.dir_util import copy_tree
@@ -50,7 +50,8 @@ def installed_font_faces_for_font(font_name):
 
 
 def install_fonts(restart=False):
-    font_names_to_be_installed = ["SourceSansPro", "FontAwesome"]
+    # do not import from rafcon.gui.constants, as this script can be used standalone
+    font_names_to_be_installed = ["SourceSansPro", "FontAwesome5Free", "RAFCON"]
 
     user_otf_fonts_folder = join(resources.xdg_user_data_folder, "fonts")
 
@@ -78,7 +79,7 @@ def install_fonts(restart=False):
     if font_installed:
         logger.info("Running font detection ...")
         if not update_font_cache(user_otf_fonts_folder):
-            logger.warn("Could not run font detection. RAFCON might not find the correct fonts.")
+            logger.warning("Could not run font detection using 'fc-cache'. RAFCON might not find the correct fonts.")
         if restart:
             python = sys.executable
             environ = dict(**os.environ)

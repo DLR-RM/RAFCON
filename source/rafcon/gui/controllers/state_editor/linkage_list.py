@@ -102,10 +102,10 @@ class LinkageListController(ListViewController):
         if not self.no_update_state_destruction and not self.no_update_self_or_parent_state_destruction and \
                 (not self.no_update and 'before' in info or 'after' in info and self.no_update):
             return
-        overview = NotificationOverview(info, False, self.__class__.__name__)
+        overview = NotificationOverview(info)
 
         # The method causing the change raised an exception, thus nothing was changed and updates are allowed
-        if 'after' in info and isinstance(overview['result'][-1], Exception):
+        if 'after' in info and isinstance(overview.get_result(), Exception):
             self.no_update = False
             self.no_update_state_destruction = False
             # self.no_update_self_or_parent_state_destruction = False
@@ -113,16 +113,16 @@ class LinkageListController(ListViewController):
 
         if overview.get_cause() in ['group_states', 'ungroup_state', "change_state_type",
                                            "change_root_state_type"]:
-            instance_is_self = self.model.state is overview['instance'][-1]
-            instance_is_parent = self.model.parent and self.model.parent.state is overview['instance'][-1]
-            instance_is_parent_parent = self.model.parent and self.model.parent.parent and self.model.parent.parent.state is overview['instance'][-1]
+            instance_is_self = self.model.state is overview.get_affected_core_element()
+            instance_is_parent = self.model.parent and self.model.parent.state is overview.get_affected_core_element()
+            instance_is_parent_parent = self.model.parent and self.model.parent.parent and self.model.parent.parent.state is overview.get_affected_core_element()
             # print("no update flag: ", True if 'before' in info and (instance_is_self or instance_is_parent or instance_is_parent_parent) else False)
             if instance_is_self or instance_is_parent or instance_is_parent_parent:
                 self.no_update = True if 'before' in info else False
 
-            if overview['prop_name'][-1] == 'state' and overview.get_cause() in ["change_state_type"] and \
+            if overview.get_affected_property() == 'state' and overview.get_cause() in ["change_state_type"] and \
                     self.model.get_state_machine_m() is not None:
-                changed_model = self.model.get_state_machine_m().get_state_model_by_path(overview['args'][-1][1].get_path())
+                changed_model = self.model.get_state_machine_m().get_state_model_by_path(overview.get_method_args()[1].get_path())
                 if changed_model not in self._model_observed:
                     self.observe_model(changed_model)
 

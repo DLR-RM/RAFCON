@@ -21,6 +21,7 @@ from rafcon.gui.models.state_machine import StateMachineModel
 
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
+from rafcon.utils.timer import measure_time
 
 logger = log.get_logger(__name__)
 
@@ -77,6 +78,7 @@ class StateMachineManagerModel(ModelMT):
         return self.state_machine_manager
 
     @ModelMT.observe("state_machine_manager", after=True)
+    # @measure_time
     def model_changed(self, model, prop_name, info):
         if isinstance(info['result'], Exception):
             from rafcon.gui.utils.notification_overview import NotificationOverview
@@ -93,6 +95,8 @@ class StateMachineManagerModel(ModelMT):
                 sm = self.state_machine_manager.state_machines[sm_id]
                 with sm.modification_lock():
                     self.state_machines[sm_id] = StateMachineModel(sm)
+                    from rafcon.gui.models.abstract_state import AbstractStateModel
+                    logger.verbose("Number of created state models {}".format(AbstractStateModel.state_counter))
                     self.selected_state_machine_id = sm_id
             else:
                 logger.error("Model of state machine {0} is supposed to not exist but the state machine object should."

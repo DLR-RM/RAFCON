@@ -90,7 +90,7 @@ class StateOverviewController(ExtendedController):
         l_store = Gtk.ListStore(GObject.TYPE_STRING)
         combo = Gtk.ComboBoxText()
         combo.set_name("state_type_combo")
-        combo.set_focus_on_click(False)
+        Gtk.Widget.set_focus_on_click(combo, True)
         combo.set_model(l_store)
         combo.show_all()
         self.view['properties_widget'].attach(combo, 1, 3, 1, 1)

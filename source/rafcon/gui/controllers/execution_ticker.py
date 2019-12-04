@@ -137,7 +137,7 @@ class ExecutionTickerController(ExtendedController):
         if 'kwargs' in info and 'method_name' in info['kwargs']:
             overview = NotificationOverview(info)
             if overview.get_cause() == 'state_execution_status':
-                active_state = overview['model'][-1].state
+                active_state = overview.get_affected_model().state
                 assert isinstance(active_state, State)
 
                 path_depth = rafcon.gui.singleton.global_gui_config.get_config_value("EXECUTION_TICKER_PATH_DEPTH", 3)

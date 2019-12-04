@@ -244,27 +244,24 @@ class ModificationHistoryTreeController(ExtendedController):
             """
             action = history_tree_elem.action
             history_id = history_tree_elem.history_id
-            model = action.before_overview['model'][-1]
+            model = action.before_overview.get_affected_model()
             method_name = action.before_overview.get_cause()
-            instance = action.before_overview['instance'][-1]
+            instance = action.before_overview.get_affected_core_element()
             parameters = []
             tool_tip = None
-            if action.before_overview['type'] == 'signal':
-                if isinstance(action.before_overview['signal'][0], MetaSignalMsg):
-                    # logger.info(action.before_overview._overview_dict)
+            if action.before_overview.type == 'signal':
+                if isinstance(action.before_overview.get_signal_message(), MetaSignalMsg):
                     parameters.append(str(action.meta))
-                elif isinstance(action.before_overview['signal'][-1], ActionSignalMsg):
+                elif isinstance(action.before_overview.get_signal_message(), ActionSignalMsg):
                     if action.action_type not in ['paste', 'cut']:
-                        parameters.append(str(action.before_overview['signal'][-1].kwargs))
+                        parameters.append(str(action.before_overview.get_signal_message().kwargs))
                 else:
-                    logger.warning("no parameters defined for signal: {0}".format(action.before_overview['signal']))
-                    # for index, signal in enumerate(action.before_overview['signal']):
-                    #     print("\n", index, signal)
+                    logger.warning("no parameters defined for signal: {0}".format(action.before_overview.get_signal_message()))
             else:
-                for index, value in enumerate(action.before_overview['args'][-1]):
+                for index, value in enumerate(action.before_overview.get_method_args()):
                     if not index == 0:
                         parameters.append(str(value))
-            for name, value in action.before_overview['kwargs'][-1].items():
+            for name, value in action.before_overview.get_method_kwargs().items():
                 parameters.append("{0}: {1}".format(name, value))
 
             if hasattr(action, 'action_type') and action.action_type == "script_text" and hasattr(action, 'script_diff'):

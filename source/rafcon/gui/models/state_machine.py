@@ -32,10 +32,11 @@ from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateMode
 from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.signals import MetaSignalMsg
 import rafcon.gui.utils.constants
-from rafcon.utils import log
+from rafcon.utils import log, constants
 from rafcon.utils import storage_utils
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
+from rafcon.utils.timer import measure_time
 
 logger = log.get_logger(__name__)
 
@@ -65,6 +66,7 @@ class StateMachineModel(MetaModel, Hashable):
     __observables__ = ("state_machine", "root_state", "meta_signal", "state_meta_signal", "sm_selection_changed_signal",
                        "action_signal", "state_action_signal", "destruction_signal", "ongoing_complex_actions")
 
+    @measure_time
     def __init__(self, state_machine, meta=None, load_meta_data=True):
         """Constructor
         """
@@ -211,6 +213,12 @@ class StateMachineModel(MetaModel, Hashable):
         if not self._list_modified(prop_name, info):
             self._send_root_state_notification(model, prop_name, info)
 
+    @ModelMT.observe("state_machine", after=True)
+    def state_machine_model_after_change(self, model, prop_name, info):
+        if self._state_machine_was_modified(info):
+            if not self.state_machine.marked_dirty:
+                self.state_machine.marked_dirty = True
+
     @ModelMT.observe("meta_signal", signal=True)
     def meta_changed(self, model, prop_name, info):
         """When the meta was changed, we have to set the dirty flag, as the changes are unsaved"""
@@ -240,6 +248,17 @@ class StateMachineModel(MetaModel, Hashable):
         else:
             # print("DONE2 S", self.state_machine.state_machine_id, msg)
             pass
+
+    @staticmethod
+    def _state_machine_was_modified(info):
+        if info["method_name"] == "marked_dirty":
+            return False
+        # if 'root_state_change', the state machine was modfied
+        info = info if info["method_name"] is not "root_state_change" else info["kwargs"]
+        # if not 'state_change', the root state itself was modified, otherwise one if its child states
+        info = info if info["method_name"] is not "state_change" else info["kwargs"]
+        # StateExecutionStatus changes ar no modifications
+        return info["method_name"] not in constants.BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 
     @staticmethod
     def _list_modified(prop_name, info):

@@ -21,6 +21,7 @@ import os
 import shutil
 import copy
 import warnings
+from collections import OrderedDict
 from gtkmvc3.observable import Observable
 
 from rafcon.core import interface
@@ -30,11 +31,6 @@ import rafcon.core.config as config
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-
-try:
-    from collections import OrderedDict
-except ImportError:
-    OrderedDict = dict
 
 
 class LibraryManager(Observable):

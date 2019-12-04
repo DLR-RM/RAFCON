@@ -550,7 +550,7 @@ def patch_core_classes_with_log():
     check_log_files(CORE_FILES)
 
     def state_init(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
-                   income=None, outcomes=None, parent=None):
+                   income=None, outcomes=None, parent=None, safe_init=False):
         self._name = name
         if state_id is None:
             self._state_id = rafcon.core.states.state.state_id_generator()
@@ -560,14 +560,15 @@ def patch_core_classes_with_log():
         gen_file = os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format("state", GENERATION_LOG_FILE_APPENDIX))
         with open(gen_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(self, id(self), "state", self.gen_time_stamp))
-        old_state_init(self, name, self._state_id, input_data_ports, output_data_ports, income, outcomes, parent)
+        old_state_init(self, name, self._state_id, input_data_ports, output_data_ports, income, outcomes, parent,
+                       safe_init=safe_init)
 
-    def state_element_init(self, parent=None):
+    def state_element_init(self, parent=None, safe_init=False):
         self.gen_time_stamp = int(round(time.time() * 1000))
         gen_file = os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format("state_element", GENERATION_LOG_FILE_APPENDIX))
         with open(gen_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(self, id(self), "state_element", self.gen_time_stamp))
-        old_state_element_init(self, parent)
+        old_state_element_init(self, parent, safe_init=safe_init)
 
     rafcon.core.states.state.State.__init__ = state_init
     rafcon.core.state_elements.state_element.StateElement.__init__ = state_element_init
@@ -1042,7 +1043,7 @@ def test_model_and_core_modification_history_destruct_with_gui(gui):
                 (searched_class, False),
                 ]
     run_setup_gui_destruct(gui, elements, searched_class, run_simple_modification_construction,
-                           expected_warnings=0, expected_errors=2)
+                           expected_warnings=2, expected_errors=2)
 
 
 def run_copy_cut_and_paste(gui):

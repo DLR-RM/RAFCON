@@ -42,6 +42,7 @@ from rafcon.gui.mygaphas.utils.cache.image_cache import ImageCache
 
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel, ContainerStateModel
 from rafcon.gui.helpers.meta_data import contains_geometric_info
+from rafcon.gui.helpers.label import set_label_markup
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
@@ -508,13 +509,8 @@ class StateView(Element):
 
         layout = PangoCairo.create_layout(cairo_context)
 
-        font_name = constants.ICON_FONT
-
         def set_font_description():
-            layout.set_markup('<span font_desc="%s %s">&#x%s;</span>' %
-                              (font_name,
-                               font_size,
-                               symbol))
+            set_label_markup(layout, symbol, is_icon=True, size=font_size)
 
         if symbol in self.__symbol_size_cache and \
                 self.__symbol_size_cache[symbol]['width'] == width and \
@@ -527,7 +523,8 @@ class StateView(Element):
             set_font_description()
 
             pango_size = (width * SCALE, height * SCALE)
-            while layout.get_size()[0] > pango_size[0] or layout.get_size()[1] > pango_size[1]:
+            while layout.get_size()[0] > pango_size[0] * constants.ICON_STATE_FILL_FACTOR or \
+                    layout.get_size()[1] > pango_size[1] * constants.ICON_STATE_FILL_FACTOR:
                 font_size *= 0.9
                 set_font_description()
 

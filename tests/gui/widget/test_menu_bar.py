@@ -110,6 +110,7 @@ def paste(gui, state_machine_model, state_m, main_window_controller, menu_bar_ct
 def test_gui(gui):
     trigger_menu_bar_items(gui)
 
+
 def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True):
     """The function triggers and test basic functions of the menu bar.
 
@@ -172,6 +173,7 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
     decider_state_path = "/".join([barrier_state_m.state.get_path(), UNIQUE_DECIDER_STATE_ID])
     gui(sm_m.selection.set, sm_m.get_state_model_by_path(decider_state_path))
     gui(menubar_ctrl.on_delete_activate, None, None)
+    gui.expected_errors += 1
     gui(sm_m.root_state.state.remove_state, barrier_state_m.state.state_id)
 
     # Tests for issue #717 and #726
@@ -316,6 +318,7 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
     library_path, library_name = ('generic', 'wait')
     gui(lib_tree_ctrl.select_library_tree_element_of_lib_tree_path, join(library_path, library_name))
     gui(lib_tree_ctrl.substitute_as_template_clicked, None, True)
+    gui.expected_warnings += 1  # The name of a temporarily generated LibraryState is changed
 
     new_state_id = None
     for state_id in state_m_parent.state.states.keys():
@@ -393,6 +396,7 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
     library_path, library_name = ('generic', 'wait')
     gui(lib_tree_ctrl.select_library_tree_element_of_lib_tree_path, join(library_path, library_name))
     gui(lib_tree_ctrl.substitute_as_template_clicked, None, True)
+    gui.expected_warnings += 1  # The name of a temporarily generated LibraryState is changed
     new_state_id = None
     for state_id in list(state_m_parent.state.states.keys()):
         if state_id not in old_keys:
@@ -431,6 +435,7 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
         gui(sm_manager_model.__setattr__, 'selected_state_machine_id',
             lib_state.get_state_machine().state_machine_id)
         gui(gui_helper_state_machine.substitute_selected_library_state_with_template, True)  # keep_name=True
+        gui.expected_warnings += 1  # The name of a temporarily generated LibraryState is changed
         new_states = [state for state in list(old_parent.states.values()) if state.state_id not in state_ids]
         assert new_states and len(new_states) == 1 and new_states[0].name == 'DIALOG_X'
         ##########################################################
@@ -442,7 +447,6 @@ def trigger_menu_bar_items(gui, with_refresh=True, with_substitute_library=True)
         gui(testing_utils.wait_for_gui)
         assert len(sm_manager_model.state_machines) == 2
 
-    gui.expected_errors = 1
 
 if __name__ == '__main__':
     # test_gui(None)

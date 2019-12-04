@@ -50,53 +50,55 @@ def test_add_data_flow_to_state(mocker):
     fi1_m = floating_state_m.get_input_data_port_m(0)
     fo1_m = floating_state_m.get_output_data_port_m(1)
 
-    with mocker.patch.object(root_state, "add_data_flow"), mocker.patch.object(child_container, "add_data_flow"):
-        # Data flow in root state from input to output
-        add_data_flow_to_state(ri1_m, ro1_m)
-        root_state.add_data_flow.assert_called_with("root", 0, "root", 2)
-        # Data flow in root state from input to scope
-        add_data_flow_to_state(ri1_m, rs1_m)
-        root_state.add_data_flow.assert_called_with("root", 0, "root", 3)
-        # Data flow in root state from scope to output
-        add_data_flow_to_state(rs1_m, ro1_m)
-        root_state.add_data_flow.assert_called_with("root", 3, "root", 2)
+    mocker.patch.object(root_state, "add_data_flow")
+    mocker.patch.object(child_container, "add_data_flow")
 
-        # Data flow from root state input to container state input
-        add_data_flow_to_state(ri1_m, ci1_m)
-        root_state.add_data_flow.assert_called_with("root", 0, "cc", 0)
-        # Data flow from root state input to execution state input
-        add_data_flow_to_state(ri1_m, ei1_m)
-        root_state.add_data_flow.assert_called_with("root", 0, "ce", 0)
+    # Data flow in root state from input to output
+    add_data_flow_to_state(ri1_m, ro1_m)
+    root_state.add_data_flow.assert_called_with("root", 0, "root", 2)
+    # Data flow in root state from input to scope
+    add_data_flow_to_state(ri1_m, rs1_m)
+    root_state.add_data_flow.assert_called_with("root", 0, "root", 3)
+    # Data flow in root state from scope to output
+    add_data_flow_to_state(rs1_m, ro1_m)
+    root_state.add_data_flow.assert_called_with("root", 3, "root", 2)
 
-        # Data flow from container state output to execution state input
-        add_data_flow_to_state(co1_m, ei1_m)
-        root_state.add_data_flow.assert_called_with("cc", 2, "ce", 0)
-        # Data flow from execution state output to container state input
-        add_data_flow_to_state(eo1_m, ci1_m)
-        root_state.add_data_flow.assert_called_with("ce", 2, "cc", 0)
+    # Data flow from root state input to container state input
+    add_data_flow_to_state(ri1_m, ci1_m)
+    root_state.add_data_flow.assert_called_with("root", 0, "cc", 0)
+    # Data flow from root state input to execution state input
+    add_data_flow_to_state(ri1_m, ei1_m)
+    root_state.add_data_flow.assert_called_with("root", 0, "ce", 0)
 
-        # Data flow from container state output to container state input, see issue #711
-        add_data_flow_to_state(co1_m, ci1_m)
-        root_state.add_data_flow.assert_called_with("cc", 2, "cc", 0)
-        # Data flow from execution state output to container state input, see issue #711
-        add_data_flow_to_state(eo1_m, ei1_m)
-        root_state.add_data_flow.assert_called_with("ce", 2, "ce", 0)
+    # Data flow from container state output to execution state input
+    add_data_flow_to_state(co1_m, ei1_m)
+    root_state.add_data_flow.assert_called_with("cc", 2, "ce", 0)
+    # Data flow from execution state output to container state input
+    add_data_flow_to_state(eo1_m, ci1_m)
+    root_state.add_data_flow.assert_called_with("ce", 2, "cc", 0)
 
-        # Data flow from container state output to root state output
-        add_data_flow_to_state(co1_m, ro1_m)
-        root_state.add_data_flow.assert_called_with("cc", 2, "root", 2)
-        # Data flow from execution state output to root state output
-        add_data_flow_to_state(eo1_m, ro1_m)
-        root_state.add_data_flow.assert_called_with("ce", 2, "root", 2)
-        # Data flow from execution state output to root state scope
-        add_data_flow_to_state(eo1_m, rs1_m)
-        root_state.add_data_flow.assert_called_with("ce", 2, "root", 3)
+    # Data flow from container state output to container state input, see issue #711
+    add_data_flow_to_state(co1_m, ci1_m)
+    root_state.add_data_flow.assert_called_with("cc", 2, "cc", 0)
+    # Data flow from execution state output to container state input, see issue #711
+    add_data_flow_to_state(eo1_m, ei1_m)
+    root_state.add_data_flow.assert_called_with("ce", 2, "ce", 0)
 
-        # Data flow from floating state output to execution state input
-        with pytest.raises(ValueError):
-            add_data_flow_to_state(fo1_m, ei1_m)
-        # Data flow from execution state output to floating state input
-        with pytest.raises(ValueError):
-            add_data_flow_to_state(eo1_m, fi1_m)
+    # Data flow from container state output to root state output
+    add_data_flow_to_state(co1_m, ro1_m)
+    root_state.add_data_flow.assert_called_with("cc", 2, "root", 2)
+    # Data flow from execution state output to root state output
+    add_data_flow_to_state(eo1_m, ro1_m)
+    root_state.add_data_flow.assert_called_with("ce", 2, "root", 2)
+    # Data flow from execution state output to root state scope
+    add_data_flow_to_state(eo1_m, rs1_m)
+    root_state.add_data_flow.assert_called_with("ce", 2, "root", 3)
+
+    # Data flow from floating state output to execution state input
+    with pytest.raises(ValueError):
+        add_data_flow_to_state(fo1_m, ei1_m)
+    # Data flow from execution state output to floating state input
+    with pytest.raises(ValueError):
+        add_data_flow_to_state(eo1_m, fi1_m)
 
 

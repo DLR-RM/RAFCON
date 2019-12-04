@@ -83,9 +83,11 @@ def setup_installation():
 
     If RAFCON is started directly from the repo or from RMPM (without a previous installation), it can be forced to
     install all additionally required files (icons and gtksourceview styles) by setting the env variable
-    `RAFCON_CHECK_INSTALLATION` to "True".
+    `RAFCON_CHECK_INSTALLATION` to "True". If `RAFCON_CHECK_INSTALLATION` is set to "False", it will prevent a restart
+    of RAFCON e.g. after updating the font cache.
     """
     force_check_installation = os.environ.get("RAFCON_CHECK_INSTALLATION", False) == "True"
+    prevent_restart = os.environ.get("RAFCON_CHECK_INSTALLATION", True) == "False"
 
     if not force_check_installation and data_files_version_up_to_date():
         return
@@ -93,7 +95,7 @@ def setup_installation():
     if force_check_installation or installation.started_without_installation() or installation.started_in_virtualenv():
         installation.install_locally_required_files()
 
-    installation.install_fonts(restart=True)
+    installation.install_fonts(restart=(not prevent_restart))
 
     update_data_files_version()
 

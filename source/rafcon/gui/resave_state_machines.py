@@ -15,7 +15,6 @@
 from future import standard_library
 standard_library.install_aliases()
 import os
-from gi.repository import Gtk
 from os.path import join, expanduser
 import threading
 import time
@@ -33,7 +32,7 @@ from rafcon.gui.utils import wait_for_gui
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-
+from rafcon.gui.utils.gtk_utils import is_point_on_screen
 from rafcon.core.start import setup_environment
 
 
@@ -62,9 +61,7 @@ def trigger_gui_signals(*args):
     menubar_ctrl = main_window_controller.get_controller('menu_bar_controller')
     try:
         sm_manager_model.selected_state_machine_id = state_machine.state_machine_id
-        gui_helper_state_machine.save_state_machine_as(path=setup_config['target_path'][0])
-        while state_machine.marked_dirty:
-            time.sleep(0.1)
+        call_gui_callback(gui_helper_state_machine.save_state_machine_as, path=setup_config['target_path'][0])
     except:
         logger.exception("Could not save state machine")
     finally:
@@ -74,6 +71,8 @@ def trigger_gui_signals(*args):
 def convert(config_path, source_path, target_path=None, gui_config_path=None):
     logger.info("RAFCON launcher")
     rafcon.gui.start.setup_l10n(logger)
+
+    from gi.repository import Gtk
     from rafcon.gui.controllers.main_window import MainWindowController
     from rafcon.gui.views.main_window import MainWindowView
 
@@ -124,10 +123,8 @@ def convert(config_path, source_path, target_path=None, gui_config_path=None):
             main_window.resize(size[0], size[1])
         if position:
             position = (max(0, position[0]), max(0, position[1]))
-            screen_width = Gdk.Screen.width()
-            screen_height = Gdk.Screen.height()
-            if position[0] < screen_width and position[1] < screen_height:
-                main_window.move(position[0], position[1])
+            if is_point_on_screen(*position):
+                main_window.move(*position)
 
     wait_for_gui()
     thread = threading.Thread(target=trigger_gui_signals, args=[sm_manager_model,
@@ -160,7 +157,6 @@ def convert_libraries_in_path(config_path, lib_path, target_path=None, gui_confi
             if os.path.isdir(child_lib_path) and '.' == lib[0]:
                 logger.debug("lib_root_path/lib_path .*-folder are ignored if within lib_path, "
                              "e.g. -> {0} -> full path is {1}".format(lib, child_lib_path))
-
 
 if __name__ == '__main__':
     import sys

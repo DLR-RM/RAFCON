@@ -87,10 +87,13 @@ class AbstractStateModel(MetaModel, Hashable):
     action_signal = Signal()
     destruction_signal = Signal()
 
+    state_counter = 0
+
     __observables__ = ("state", "input_data_ports", "output_data_ports", "income", "outcomes", "is_start",
                        "meta_signal", "action_signal", "destruction_signal")
 
     def __init__(self, state, parent=None, meta=None):
+        AbstractStateModel.state_counter += 1
         if type(self) == AbstractStateModel:
             raise NotImplementedError
 
@@ -360,11 +363,13 @@ class AbstractStateModel(MetaModel, Hashable):
     def _load_outcome_models(self):
         raise NotImplementedError
 
+    def child_model_changed(self, notification_overview):
+        return self.state != notification_overview.get_affected_core_element()
+
     @ModelMT.observe("state", after=True, before=True)
     def model_changed(self, model, prop_name, info):
         """This method notifies parent state about changes made to the state
         """
-
         # Notify the parent state about the change (this causes a recursive call up to the root state)
         if self.parent is not None:
             self.parent.model_changed(model, prop_name, info)
@@ -447,19 +452,6 @@ class AbstractStateModel(MetaModel, Hashable):
         else:
             # print("DONE3 NOTHING")
             pass
-
-    def _mark_state_machine_as_dirty(self):
-        state_machine = self.state.get_state_machine()
-        if state_machine:
-            state_machine_id = state_machine.state_machine_id
-            from rafcon.core.singleton import state_machine_manager
-            if state_machine_id is not None and state_machine_id in state_machine_manager.state_machines:
-                state_machine_manager.state_machines[state_machine_id].marked_dirty = True
-        if self.state.get_next_upper_library_root_state():
-            lib_state_path = self.state.get_next_upper_library_root_state().parent.get_path()
-            if self.get_state_machine_m().get_state_model_by_path(lib_state_path).is_about_to_be_destroyed_recursively:
-                return
-            logger.warning("You have modified core property of an inner state of a library state.")
 
     # ---------------------------------------- meta data methods ---------------------------------------------
 

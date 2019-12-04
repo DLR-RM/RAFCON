@@ -19,14 +19,14 @@ from copy import deepcopy
 from gtkmvc3.model_mt import ModelMT
 
 from rafcon.core.states.container_state import ContainerState
-from rafcon.gui.models.abstract_state import AbstractStateModel, MetaSignalMsg
+from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.abstract_state import get_state_model_class_for_state
 from rafcon.gui.models.data_flow import DataFlowModel, StateElementModel
 from rafcon.gui.models.scoped_variable import ScopedVariableModel
-from rafcon.gui.models.signals import ActionSignalMsg
 from rafcon.gui.models.state import StateModel
 from rafcon.gui.models.transition import TransitionModel
 
+from rafcon.gui.utils.notification_overview import NotificationOverview
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
@@ -175,53 +175,53 @@ class ContainerStateModel(StateModel):
         :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
+        overview = NotificationOverview(info)
         # if info.method_name == 'change_state_type':  # Handled in method 'change_state_type'
         #     return
 
         # If this model has been changed (and not one of its child states), then we have to update all child models
         # This must be done before notifying anybody else, because other may relay on the updated models
-        if self.state == info['instance']:
-            if 'after' in info:
+        if not self.child_model_changed(overview):
+            if overview.operation_finished():
                 self.update_child_models(model, prop_name, info)
                 # if there is and exception set is_about_to_be_destroyed_recursively flag to False again
                 if info.method_name in ["remove_state"] and isinstance(info.result, Exception):
                     state_id = info.kwargs['state_id'] if 'state_id' in info.kwargs else info.args[1]
                     self.states[state_id].is_about_to_be_destroyed_recursively = False
-            else:
+            elif overview.operation_started():
                 # while before notification mark all states which get destroyed recursively
                 if info.method_name in ["remove_state"] and \
                         info.kwargs.get('destroy', True) and info.kwargs.get('recursive', True):
                     state_id = info.kwargs['state_id'] if 'state_id' in info.kwargs else info.args[1]
                     self.states[state_id].is_about_to_be_destroyed_recursively = True
 
-        changed_list = None
-        cause = None
-        # If the change happened in a child state, notify the list of all child states
-        if (isinstance(model, AbstractStateModel) and model is not self) or (  # The state was changed directly
-                not isinstance(model, AbstractStateModel) and model.parent is not self):  # One of the member models was changed
-            changed_list = self.states
-            cause = 'state_change'
-        # If the change happened in one of the transitions, notify the list of all transitions
-        elif isinstance(model, TransitionModel) and model.parent is self:
-            changed_list = self.transitions
-            cause = 'transition_change'
-        # If the change happened in one of the data flows, notify the list of all data flows
-        elif isinstance(model, DataFlowModel) and model.parent is self:
-            changed_list = self.data_flows
-            cause = 'data_flow_change'
-        # If the change happened in one of the scoped variables, notify the list of all scoped variables
-        elif isinstance(model, ScopedVariableModel) and model.parent is self:
-            changed_list = self.scoped_variables
-            cause = 'scoped_variable_change'
-
-        if not (cause is None or changed_list is None):
-            if 'before' in info:
-                changed_list._notify_method_before(self.state, cause, (self.state,), info)
-            elif 'after' in info:
-                changed_list._notify_method_after(self.state, cause, None, (self.state,), info)
-
         # Finally call the method of the base class, to forward changes in ports and outcomes
         super(ContainerStateModel, self).model_changed(model, prop_name, info)
+
+    def get_cause_and_affected_model_list(self, model):
+        cause, changed_list = super(ContainerStateModel, self).get_cause_and_affected_model_list(model)
+
+        if cause is None:
+            # If the change happened in a child state, notify the list of all child states
+            if (isinstance(model, AbstractStateModel) and model is not self) or (  # The state was changed directly
+                    not isinstance(model, AbstractStateModel) and model.parent is not self):  # One of the member models was changed
+                changed_list = self.states
+                cause = 'state_change'
+            # If the change happened in one of the transitions, notify the list of all transitions
+            elif isinstance(model, TransitionModel) and model.parent is self:
+                changed_list = self.transitions
+                cause = 'transition_change'
+            # If the change happened in one of the data flows, notify the list of all data flows
+            elif isinstance(model, DataFlowModel) and model.parent is self:
+                changed_list = self.data_flows
+                cause = 'data_flow_change'
+            # If the change happened in one of the scoped variables, notify the list of all scoped variables
+            elif isinstance(model, ScopedVariableModel) and model.parent is self:
+                changed_list = self.scoped_variables
+                cause = 'scoped_variable_change'
+
+        return cause, changed_list
+
 
     def update_child_is_start(self):
         """ Updates the `is_child` property of its child states """

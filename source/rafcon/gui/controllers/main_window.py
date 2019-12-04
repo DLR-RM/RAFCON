@@ -206,6 +206,10 @@ class MainWindowController(ExtendedController):
         self.console_hidden = False
 
     def destroy(self):
+        if hasattr(self, '_max_position_notification_id'):
+            last_pane_id = next(reversed(constants.PANE_ID.values()))
+            self.view[last_pane_id].disconnect(self._max_position_notification_id)
+
         super(MainWindowController, self).destroy()
         # The sidebars have no corresponding controller that could destroy the views what cause the connected methods
         # to stay connected to (hold references on) the main window controller. So, we do this here. TODO D-solve it
@@ -299,10 +303,6 @@ class MainWindowController(ExtendedController):
 
         wait_for_gui()
 
-        # Initializing Pane positions
-        for config_id in constants.PANE_ID:
-            self.set_pane_position(config_id)
-
         # set the hidden status of all bars
         for window_key in constants.UNDOCKABLE_WINDOW_KEYS:
             if global_runtime_config.get_config_value(window_key + '_HIDDEN'):
@@ -320,12 +320,30 @@ class MainWindowController(ExtendedController):
             wait_for_gui()
             view.get_top_widget().maximize()
 
+        # Restore position of Gtk.Paned widgets
+        first_pane_id = next(iter(constants.PANE_ID.values()))
+        last_pane_config, last_pane_id = next(reversed(constants.PANE_ID.items()))
+
+        def last_pane_property_changed(widget, property):
+            if property.name == "max-position":
+                self.set_pane_position(last_pane_config, max_value=widget.props.max_position)
+
+        def deferred_pane_positioning(*args):
+            self.view[first_pane_id].disconnect_by_func(deferred_pane_positioning)
+            for config_id in constants.PANE_ID:
+                self.set_pane_position(config_id)
+            # position of last pane needs to be set again if its max-position property changes
+            self._max_position_notification_id = self.view[last_pane_id].connect("notify", last_pane_property_changed)
+
+        # Set positions after all panes have been drawn once
+        self.view[first_pane_id].connect_after("draw", deferred_pane_positioning)
+
+        plugins.run_hook("main_window_setup", self)
+
         # check for auto backups
         if gui_config.get_config_value('AUTO_BACKUP_ENABLED') and gui_config.get_config_value('AUTO_RECOVERY_CHECK'):
             import rafcon.gui.models.auto_backup as auto_backup
             auto_backup.check_for_crashed_rafcon_instances()
-
-        plugins.run_hook("main_window_setup", self)
 
         wait_for_gui()
         # Ensure that the next message is being printed (needed for LN manager to detect finished startup)
@@ -354,7 +372,7 @@ class MainWindowController(ExtendedController):
         # inform observing controllers
         self.state_machines_editor_ctrl.switch_state_machine_execution_engine(new_state_machine_execution_engine)
 
-    def set_pane_position(self, config_id):
+    def set_pane_position(self, config_id, max_value=None):
         """Adjusts the position of a GTK Pane to a value stored in the runtime config file. If there was no value
         stored, the pane's position is set to a default value.
 
@@ -362,6 +380,8 @@ class MainWindowController(ExtendedController):
         """
         default_pos = constants.DEFAULT_PANE_POS[config_id]
         position = global_runtime_config.get_config_value(config_id, default_pos)
+        if max_value:
+            position = min(position, max_value)
         pane_id = constants.PANE_ID[config_id]
         self.view[pane_id].set_position(position)
 
