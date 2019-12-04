@@ -56,9 +56,16 @@ Installation requirements for Ubuntu 16.04
 
 .. code-block:: bash
 
-   sudo apt-get install python-dev python-pip
-   sudo -H pip install --upgrade pip
-   sudo -H pip install --upgrade setuptools
+    # rafcon needs gtk > 3.20; the easiest way to install it is installing gnome3
+    sudo add-apt-repository ppa:gnome3-team/gnome3-staging
+    sudo add-apt-repository ppa:gnome3-team/gnome3
+    sudo apt update sudo apt dist-upgrade
+
+    # restart system
+
+    sudo apt-get install python-dev python-pip libcairo2-dev gir1.2-gtksource-3.0 python-gi-cairo
+    sudo -H pip install --upgrade pip
+    sudo -H pip install --upgrade setuptools
 
 Installation requirements for Ubuntu 18.04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
