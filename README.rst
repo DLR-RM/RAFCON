@@ -72,7 +72,7 @@ Installation requirements for Ubuntu 18.04
 
 .. code-block:: bash
 
-   sudo apt-get install python-dev python-pip build-essential glade
+   sudo apt-get install python-dev python-pip build-essential glade python-gi-cairo
    sudo -H pip install --upgrade pip
    sudo -H pip install --upgrade setuptools
 
@@ -100,7 +100,7 @@ via:
 
 .. code-block:: bash
 
-   pip install --user pycairo<2.0.0,>=1.10.0
+   pip install --user "pycairo<2.0.0,>=1.10.0"
 
 If you are using Python 3.4, you will need a ``pip`` version <= 8. Run the following command, to downgrade ``pip``:
 
