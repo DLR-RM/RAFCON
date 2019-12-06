@@ -18,6 +18,7 @@ Next Release
   - Add compatibility with pylint>=2.4
   - Positions of panes should be restored correctly
   - Fix several deprecation warnings
+  - Fix script compilation if `SCRIPT_COMPILE_ON_FILESYSTEM_LOAD` is set to `False`
 
 
 0.14.1
