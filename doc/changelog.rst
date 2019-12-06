@@ -17,6 +17,7 @@ Next Release
   - Make tests run with pytest-mock>=1.11.2
   - Positions of panes should be restored correctly
   - Fix several deprecation warnings
+  - Fix script compilation if `SCRIPT_COMPILE_ON_FILESYSTEM_LOAD` is set to `False`
 
 
 0.14.1
