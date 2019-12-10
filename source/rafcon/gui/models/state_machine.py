@@ -31,6 +31,7 @@ from rafcon.gui.models.meta import MetaModel
 from rafcon.gui.models import ContainerStateModel, AbstractStateModel, StateModel, LibraryStateModel
 from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.signals import MetaSignalMsg
+from rafcon.gui.utils.notification_overview import NotificationOverview
 import rafcon.gui.utils.constants
 from rafcon.utils import log, constants
 from rafcon.utils import storage_utils
@@ -215,7 +216,8 @@ class StateMachineModel(MetaModel, Hashable):
 
     @ModelMT.observe("state_machine", after=True)
     def state_machine_model_after_change(self, model, prop_name, info):
-        if self._state_machine_was_modified(info):
+        overview = NotificationOverview(info)
+        if overview.caused_modification():
             if not self.state_machine.marked_dirty:
                 self.state_machine.marked_dirty = True
 
@@ -248,17 +250,6 @@ class StateMachineModel(MetaModel, Hashable):
         else:
             # print("DONE2 S", self.state_machine.state_machine_id, msg)
             pass
-
-    @staticmethod
-    def _state_machine_was_modified(info):
-        if info["method_name"] == "marked_dirty":
-            return False
-        # if 'root_state_change', the state machine was modfied
-        info = info if info["method_name"] is not "root_state_change" else info["kwargs"]
-        # if not 'state_change', the root state itself was modified, otherwise one if its child states
-        info = info if info["method_name"] is not "state_change" else info["kwargs"]
-        # StateExecutionStatus changes ar no modifications
-        return info["method_name"] not in constants.BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS
 
     @staticmethod
     def _list_modified(prop_name, info):
