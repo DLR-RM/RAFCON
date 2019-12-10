@@ -155,6 +155,9 @@ class NotificationOverview(object):
             return False
         return not isinstance(self.get_result(), Exception)
 
+    def caused_modification(self):
+        return self.get_cause() not in constants.BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS + ["marked_dirty"]
+
     def __str__(self):
         text = \
             "{type} notification:\n" \
