@@ -10,9 +10,7 @@
 # Rico Belder <rico.belder@dlr.de>
 
 from rafcon.gui.controllers.utils.tree_view_controller import ListViewController
-from rafcon.gui.utils.notification_overview import NotificationOverview, \
-    is_execution_status_update_notification_from_state_machine_model, \
-    is_execution_status_update_notification_from_state_model
+from rafcon.gui.utils.notification_overview import NotificationOverview
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
@@ -128,8 +126,9 @@ class LinkageListController(ListViewController):
 
     def check_no_update_flags_and_return_combined_flag(self, prop_name, info):
         # avoid updates because of execution status updates
-        if is_execution_status_update_notification_from_state_model(prop_name, info):
-            return True
+        overview = NotificationOverview(info)
+        if not overview.caused_modification():
+            return
 
         self.check_info_on_no_update_flags(info)
 
@@ -154,7 +153,8 @@ class LinkageListController(ListViewController):
     @ListViewController.observe("state_machine", before=True)
     def before_notification_state_machine_observation_control(self, model, prop_name, info):
         """Check for multi-actions and set respective no update flags. """
-        if is_execution_status_update_notification_from_state_machine_model(prop_name, info):
+        overview = NotificationOverview(info)
+        if not overview.caused_modification():
             return
         # do not update while multi-actions
         self.check_info_on_no_update_flags(info)
