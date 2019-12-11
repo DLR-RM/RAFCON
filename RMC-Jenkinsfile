@@ -27,7 +27,7 @@ pipeline {
             steps {
                 sh 'printenv | sort'
                 lock("prepare-tox") {
-                    sh 'pip3 install -q --prefix="/home_local/l_buildb/.local" tox~=3.12.1'
+                    sh '/opt/python/osl42-x86_64/python3/default/bin/pip3 install -q --prefix="/home_local/l_buildb/.local" tox~=3.14.2'
                 }
             }
         }
