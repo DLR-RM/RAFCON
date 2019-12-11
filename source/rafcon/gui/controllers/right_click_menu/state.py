@@ -209,7 +209,7 @@ class StateMachineRightClickMenu(object):
 
     def insert_execution_sub_menu_in_menu(self, menu, shortcuts_dict, accel_group):
         execution_sub_menu_item, execution_sub_menu = append_sub_menu_to_parent_menu("Execution", menu,
-                                                                                 constants.BUTTON_EXP)
+                                                                                 constants.BUTTON_START)
         execution_sub_menu.append(create_menu_item("from here", constants.BUTTON_START_FROM_SELECTED_STATE,
                                                    self.on_run_from_selected_state_activate,
                                                    accel_code=shortcuts_dict['start_from_selected'][0],
