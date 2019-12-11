@@ -60,6 +60,9 @@ pipeline {
                 }
 
                 stage('Test Python 2.7 Coverage') {
+                    when {
+                        anyOf { branch 'master'; branch 'develop' }
+                    }
                     steps {
                         timeout(time: 10, unit: 'MINUTES') {
                             wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
