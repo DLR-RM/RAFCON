@@ -56,16 +56,23 @@ Installation requirements for Ubuntu 16.04
 
 .. code-block:: bash
 
-   sudo apt-get install python-dev python-pip
-   sudo -H pip install --upgrade pip
-   sudo -H pip install --upgrade setuptools
+    # rafcon needs gtk > 3.20; the easiest way to install it is installing gnome3
+    sudo add-apt-repository ppa:gnome3-team/gnome3-staging
+    sudo add-apt-repository ppa:gnome3-team/gnome3
+    sudo apt update sudo apt dist-upgrade
+
+    # restart system
+
+    sudo apt-get install python-dev python-pip libcairo2-dev gir1.2-gtksource-3.0 python-gi-cairo
+    sudo -H pip install --upgrade pip
+    sudo -H pip install --upgrade setuptools
 
 Installation requirements for Ubuntu 18.04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
-   sudo apt-get install python-dev python-pip build-essential glade
+   sudo apt-get install python-dev python-pip build-essential glade python-gi-cairo
    sudo -H pip install --upgrade pip
    sudo -H pip install --upgrade setuptools
 
@@ -93,7 +100,7 @@ via:
 
 .. code-block:: bash
 
-   pip install --user pycairo<2.0.0,>=1.10.0
+   pip install --user "pycairo<2.0.0,>=1.10.0"
 
 If you are using Python 3.4, you will need a ``pip`` version <= 8. Run the following command, to downgrade ``pip``:
 

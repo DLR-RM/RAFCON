@@ -20,6 +20,12 @@ Next Release
   - Fix script compilation if `SCRIPT_COMPILE_ON_FILESYSTEM_LOAD` is set to `False`
 
 
+- Miscellaneous:
+
+  - do not test Python 3.4 on Jenkins
+  - Coverage test only on ``develop`` and ``master`` branch
+
+
 0.14.1
 """"""
 
