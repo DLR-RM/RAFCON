@@ -64,7 +64,7 @@ def create_mo_files(logger):
         msgfmt_cmd = 'msgfmt -o {} {}'.format(mo_path, po_path)
         result = subprocess.call(msgfmt_cmd, shell=True)
         if result != 0:  # Compilation successful
-            logger.warn("Could not compile translation '{}'. RAFCON will not be available in this "
+            logger.warning("Could not compile translation '{}'. RAFCON will not be available in this "
                         "language.".format(lang))
         else:
             logger.info("Sucessfully compiled '{}' translation file".format(lang))

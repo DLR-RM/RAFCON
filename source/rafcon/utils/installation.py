@@ -94,7 +94,7 @@ def install_fonts(restart=False):
 def install_locally_required_files():
     source_share_folder = resources.get_data_file_path()
     if not source_share_folder:
-        logger.warn("Cannot find repository required for installation of icons and gtksourceview styles")
+        logger.warning("Cannot find repository required for installation of icons and gtksourceview styles")
 
     for folder in ["gtksourceview-3.0", "icons"]:
         try:

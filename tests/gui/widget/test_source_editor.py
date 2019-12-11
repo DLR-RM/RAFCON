@@ -121,18 +121,18 @@ def test_gui(gui):
     try:
         psutil.process_iter()
     except psutil.AccessDenied:
-        logger.warn("Cannot finish test: Cannot access process list")
+        logger.warning("Cannot finish test: Cannot access process list")
         gui.expected_warnings += 1
         return
 
     # ----------- Test requiring gedit to work ------------
     try:
         if not check_for_editor('gedit'):
-            logger.warn("Cannot finish test: Cannot find gedit")
+            logger.warning("Cannot finish test: Cannot find gedit")
             gui.expected_warnings += 1
             return
     except psutil.AccessDenied:
-        logger.warn("Cannot finish test: Cannot access gedit")
+        logger.warning("Cannot finish test: Cannot access gedit")
         gui.expected_warnings += 1
         return
 
@@ -142,7 +142,7 @@ def test_gui(gui):
     try:
         kill_running_processes('gedit')
     except psutil.AccessDenied:
-        logger.warn("Cannot finish test: Cannot kill gedit")
+        logger.warning("Cannot finish test: Cannot kill gedit")
         gui.expected_warnings += 1
         return
 
