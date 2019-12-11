@@ -35,7 +35,7 @@ pipeline {
         stage("Run tests") {
             // Run tests in parallel:
             // * wrapped in Xvfb for having an X server
-            // * specify tox environment (py27, py34, py36, coverage)
+            // * specify tox environment (py27, py36, coverage)
             // * run only stable tests
             // * collect pytest results in XML file
             parallel {
