@@ -19,6 +19,12 @@ Next Release
   - Fix several deprecation warnings
 
 
+- Miscellaneous:
+
+  - do not test Python 3.4 on Jenkins
+  - Coverage test only on ``develop`` and ``master`` branch
+
+
 0.14.1
 """"""
 

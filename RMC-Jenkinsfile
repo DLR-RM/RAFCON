@@ -5,7 +5,7 @@ pipeline {
 
     parameters {
         string(name: 'tox_args', defaultValue: '-v', description: 'Arguments passed to tox besides the environment name', )
-        string(name: 'pytest_args', defaultValue: '-vx --timeout 0 -m "(core or gui or share_elements) and not unstable and not user_input"', description: 'Arguments passed to pytest')
+        string(name: 'pytest_args', defaultValue: '-vx -p no:timeout -m "(core or gui or share_elements) and not unstable and not user_input"', description: 'Arguments passed to pytest')
     }
 
     environment {
@@ -27,7 +27,7 @@ pipeline {
             steps {
                 sh 'printenv | sort'
                 lock("prepare-tox") {
-                    sh 'pip3 install -q --prefix="/home_local/l_buildb/.local" tox~=3.12.1'
+                    sh '/opt/python/osl42-x86_64/python3/default/bin/pip3 install -q --prefix="/home_local/l_buildb/.local" tox~=3.14.2'
                 }
             }
         }
@@ -49,16 +49,6 @@ pipeline {
                     }
                 }
 
-                stage('Test Python 3.4') {
-                    steps {
-                        timeout(time: 10, unit: 'MINUTES') {
-                            wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
-                                sh "tox -e py34 $tox_args -- $pytest_args --junitxml $WORKSPACE/pytest_py34_results.xml"
-                            }
-                        }
-                    }
-                }
-
                 stage('Test Python 3.6') {
                     steps {
                         timeout(time: 10, unit: 'MINUTES') {
@@ -70,6 +60,9 @@ pipeline {
                 }
 
                 stage('Test Python 2.7 Coverage') {
+                    when {
+                        anyOf { branch 'master'; branch 'develop' }
+                    }
                     steps {
                         timeout(time: 10, unit: 'MINUTES') {
                             wrap([$class: 'Xvfb', autoDisplayName: true, installationName: 'default', parallelBuild: true, screen: '1920x1200x24', timeout: 3]) {
@@ -113,7 +106,7 @@ pipeline {
                 conditionalCoverageTargets: '70, 0, 0', lineCoverageTargets: '80, 0, 0', methodCoverageTargets: '80, 0, 0',
                 maxNumberOfBuilds: 0,
                 enableNewApi: true,
-                failUnhealthy: false, failUnstable: false,
+                failUnhealthy: false, failUnstable: false, failNoReports: false,
                 sourceEncoding: 'ASCII', zoomCoverageChart: false
             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'build_doc', reportFiles: 'index.html', reportName: 'Documentation', reportTitles: 'RAFCON documentation'])
             rocketSend channel: 'rafcon-jenkins', avatar: 'https://rmc-jenkins.robotic.dlr.de/jenkins/static/ff676c77/images/headshot.png', message: ":tada: <$BUILD_URL|Build $BUILD_NUMBER> on branch '$BRANCH_NAME' *succeeded*! Commit: <https://rmc-github.robotic.dlr.de/common/rafcon/commit/$GIT_COMMIT|$GIT_COMMIT> :tada:", rawMessage: true
