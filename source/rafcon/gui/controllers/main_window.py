@@ -513,7 +513,9 @@ class MainWindowController(ExtendedController):
             undocked_window.iconify()
 
         gui_helper_label.set_window_size_and_position(undocked_window, window_key)
-        self.view[widget_name].reparent(undocked_window_view['central_eventbox'])
+
+        self.view[widget_name].get_parent().remove(self.view[widget_name])
+        undocked_window_view['central_eventbox'].add(self.view[widget_name])
         self.view['undock_{}_button'.format(widget_name)].hide()
         getattr(self, 'on_{}_hide_clicked'.format(widget_name))(None)
         self.view['{}_return_button'.format(widget_name)].hide()
@@ -535,12 +537,11 @@ class MainWindowController(ExtendedController):
         config_id_for_pane_position = window_key + '_DOCKED_POS'
         undocked_window_name = window_key.lower() + '_window'
         widget_name = window_key.lower()
-        undocked_window_view = getattr(self.view, undocked_window_name)
 
         self.view['main_window'].disconnect(self.handler_ids[undocked_window_name]['state'])
         getattr(self, 'on_{}_return_clicked'.format(widget_name))(None)
 
-        undocked_window_view['central_eventbox'].remove(self.view[widget_name])
+        self.view[widget_name].get_parent().remove(self.view[widget_name])
         self.view[sidebar_name].pack_start(self.view[widget_name], True, True, 0)
 
         self.get_controller(controller_name).hide_window()
