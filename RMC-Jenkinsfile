@@ -17,10 +17,6 @@ pipeline {
         pytest_args = "${params.pytest_args}"
     }
 
-    options {
-        timestamps()
-    }
-
     stages {
 
         stage("Run tests") {
