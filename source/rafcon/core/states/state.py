@@ -1118,7 +1118,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 self._input_data_ports = old_input_data_ports
                 raise
 
-        # check that all old_input_data_ports are no more referencing self as there parent
+        # check that all old_input_data_ports are no more referencing self as their parent
         for old_input_data_port in old_input_data_ports.values():
             if old_input_data_port not in self._input_data_ports.values() and old_input_data_port.parent is self:
                 old_input_data_port.parent = None
