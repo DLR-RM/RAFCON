@@ -19,7 +19,6 @@ def test_thread_observer_creation_list(gui):
     print("WT_ident: ", threading.currentThread().ident)
     print("CORE_singleton_init_thread_ident: ", gui.core_singletons.thread_identifier)
     print("GUI_singleton_init_thread_ident: ", gui.singletons.thread_identifier)
-    assert gui.core_singletons.thread_identifier == gui.singletons.thread_identifier
     assert gui.singletons.thread_identifier != threading.currentThread().ident
     main_window_controller = gui.singletons.main_window_controller
     menubar_ctrl = main_window_controller.menu_bar_controller
