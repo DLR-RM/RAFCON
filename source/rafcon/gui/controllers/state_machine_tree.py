@@ -35,8 +35,7 @@ import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.models import ContainerStateModel, LibraryStateModel, AbstractStateModel
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
-from rafcon.gui.utils.notification_overview import NotificationOverview, \
-    is_execution_status_update_notification_from_state_machine_model
+from rafcon.gui.utils.notification_overview import NotificationOverview
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -155,12 +154,9 @@ class StateMachineTreeController(TreeViewController):
 
     @TreeViewController.observe("state_machine", after=True)
     def states_update(self, model, prop_name, info):
-
-        if is_execution_status_update_notification_from_state_machine_model(prop_name, info) or \
-                self._ongoing_complex_actions:
-            return
-
         overview = NotificationOverview(info)
+        if not overview.caused_modification():
+            return
 
         if overview.get_affected_property() == 'state' and \
                 overview.get_cause() in ["name"]:  # , "add_state", "remove_state"]:
@@ -190,11 +186,9 @@ class StateMachineTreeController(TreeViewController):
 
     @TreeViewController.observe("state_machine", before=True)
     def states_update_before(self, model, prop_name, info):
-
-        if is_execution_status_update_notification_from_state_machine_model(prop_name, info):
-            return
-
         overview = NotificationOverview(info)
+        if not overview.caused_modification():
+            return
 
         if overview.get_affected_property() == 'state' and \
                 overview.get_cause() in ["change_state_type"]:

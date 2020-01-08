@@ -34,8 +34,7 @@ from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
 from rafcon.gui.singleton import gui_config_model
 from rafcon.gui.utils import constants
-from rafcon.gui.utils.notification_overview import NotificationOverview, \
-    is_execution_status_update_notification_from_state_machine_model
+from rafcon.gui.utils.notification_overview import NotificationOverview
 from rafcon.gui.views.state_editor.state_editor import StateEditorView
 from rafcon.gui.helpers import text_formatting
 from rafcon.gui.helpers.label import set_label_markup
@@ -562,11 +561,10 @@ class StatesEditorController(ExtendedController):
     def notify_state_name_change(self, model, prop_name, info):
         """Checks whether the name of a state was changed and change the tab label accordingly
         """
-        # avoid updates or checks because of execution status updates
-        if is_execution_status_update_notification_from_state_machine_model(prop_name, info):
-            return
-
         overview = NotificationOverview(info)
+        # avoid updates or checks because of execution status updates
+        if not overview.caused_modification():
+            return
         changed_model = overview.get_affected_model()
         method_name = overview.get_cause()
         if isinstance(changed_model, AbstractStateModel) and method_name in ['name', 'script_text']:
