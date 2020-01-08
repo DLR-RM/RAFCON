@@ -82,6 +82,7 @@ class Script(Observable, yaml.YAMLObject):
 
     def set_script_without_compilation(self, script_text):
         self._script = script_text
+        self._compiled_module = None
 
     def execute(self, state, inputs=None, outputs=None, backward_execution=False):
         """Execute the user 'execute' function specified in the script
