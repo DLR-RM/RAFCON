@@ -59,7 +59,8 @@ Installation requirements for Ubuntu 16.04
     # rafcon needs gtk > 3.20; the easiest way to install it is installing gnome3
     sudo add-apt-repository ppa:gnome3-team/gnome3-staging
     sudo add-apt-repository ppa:gnome3-team/gnome3
-    sudo apt update sudo apt dist-upgrade
+    sudo apt update
+    sudo apt dist-upgrade
 
     # restart system
 
