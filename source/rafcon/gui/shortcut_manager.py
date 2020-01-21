@@ -175,5 +175,7 @@ class ShortcutManager(object):
         self.accel_group = None
 
         self.__action_to_callbacks.clear()
-        self.__action_to_shortcuts.clear()
+        # this deletes the shortcuts form the global gui config, which is unnecessary!
+        # self.__action_to_shortcuts.clear()
+        self.__action_to_shortcuts = None
 

@@ -84,6 +84,7 @@ class Config(ObservableConfig):
         """
         if config_file is None:
             if path is None:
+                # using the config from the repository is needed during tests
                 path, config_file = split(resource_filename(__name__, CONFIG_FILE))
             else:
                 config_file = CONFIG_FILE
