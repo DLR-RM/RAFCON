@@ -14,6 +14,7 @@ Next Release
 - Bug Fixes:
 
   - :issue_gh:`28` Setting of external editor via dialog does not work
+  - :issue_ghe:`790` gui_config.yaml not saved anymore automatically
   - Make tests run with pytest-mock>=1.11.2
   - Add compatibility with pylint>=2.4
   - Positions of panes should be restored correctly
