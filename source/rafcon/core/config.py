@@ -36,15 +36,11 @@ class ObservableConfig(DefaultConfig, Observable):
 
     keys_requiring_state_machine_refresh = set()
     keys_requiring_restart = set()
+    keys_not_to_fill_up = set()
 
-    def __init__(self, default_config_filename, logger_object=None, keys_to_not_fill_up=None):
+    def __init__(self, default_config_filename, logger_object=None):
         DefaultConfig.__init__(self, default_config_filename, logger_object, rel_config_path='rafcon')
         Observable.__init__(self)
-        # TODO: for next minor: pass keys_to_not_fill_up to DefaultConfig constructor
-        if not keys_to_not_fill_up:
-            self.keys_to_not_fill_up = list()
-        else:
-            self.keys_to_not_fill_up = keys_to_not_fill_up
 
     @Observable.observed
     def set_config_value(self, key, value):
@@ -69,14 +65,15 @@ class Config(ObservableConfig):
     """
 
     keys_requiring_restart = ()
+    keys_not_to_fill_up = {"LIBRARY_PATHS"}
 
-    def __init__(self, logger_object=None, keys_to_not_fill_up=None):
+    def __init__(self, logger_object=None):
         """Default constructor
 
         :param logger_object: the logger object to pass the log output to
         :raises ConfigError: if the config type is not given in the config file
         """
-        super(Config, self).__init__(DEFAULT_CONFIG, logger_object, keys_to_not_fill_up)
+        super(Config, self).__init__(DEFAULT_CONFIG, logger_object)
         if self.get_config_value("TYPE") != "SM_CONFIG":
             raise ConfigError("Type should be SM_CONFIG for state machine configuration. "
                               "Please add \"TYPE: SM_CONFIG\" to your config.yaml file.")
@@ -93,4 +90,4 @@ class Config(ObservableConfig):
 
 
 # This variable holds the global configuration parameters for the state machine
-global_config = Config(logger, keys_to_not_fill_up=["LIBRARY_PATHS"])
+global_config = Config(logger)
