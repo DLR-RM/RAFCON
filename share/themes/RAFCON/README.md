@@ -31,3 +31,5 @@ all names of all objects that will be rendered. Just execute the ``render-asstes
 you want to re-create the.
 * Some named objects in the `assets.svg` file are groups. Do not ungroup these, otherwise the name and (sometimes) 
 the transparency will be lost. You can use the `Edit paths` tool to access objects within a group.
+* The file `RAFCON.json` is the font project file for [IcoMoon](https://icomoon.io), from which the RAFCON icon font is
+created
