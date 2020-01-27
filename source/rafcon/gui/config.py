@@ -41,12 +41,12 @@ class GuiConfig(ObservableConfig):
     Class to hold and load the global GUI configurations.
     """
 
-    keys_requiring_state_machine_refresh = ('MAX_VISIBLE_LIBRARY_HIERARCHY', 'HISTORY_ENABLED',
+    keys_requiring_state_machine_refresh = {'MAX_VISIBLE_LIBRARY_HIERARCHY', 'HISTORY_ENABLED',
                                             'AUTO_BACKUP_ENABLED', 'AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL',
                                             'AUTO_BACKUP_FORCED_STORAGE_INTERVAL',
                                             'AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL',
-                                            'AUTO_RECOVERY_CHECK', 'AUTO_RECOVERY_LOCK_ENABLED')
-    keys_requiring_restart = ('USE_ICONS_AS_TAB_LABELS', 'THEME_DARK_VARIANT')
+                                            'AUTO_RECOVERY_CHECK', 'AUTO_RECOVERY_LOCK_ENABLED'}
+    keys_requiring_restart = {'USE_ICONS_AS_TAB_LABELS', 'THEME_DARK_VARIANT'}
 
     colors = {}
     gtk_colors = {}
