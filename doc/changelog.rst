@@ -11,6 +11,12 @@ Patch releases 0.14.\*
 Next Release
 """"""""""""
 
+- Feature
+
+  - Replace ``SCRIPT_COMPILE_ON_FILESYSTEM_LOAD`` in favor of ``SCRIPT_RECOMPILATION_ON_STATE_EXECUTION``. See the
+    documentation of the configuration for details.
+
+
 - Bug Fixes:
 
   - :issue_gh:`28` Setting of external editor via dialog does not work
@@ -19,7 +25,6 @@ Next Release
   - Add compatibility with pylint>=2.4
   - Positions of panes should be restored correctly
   - Fix several deprecation warnings
-  - Fix script compilation if `SCRIPT_COMPILE_ON_FILESYSTEM_LOAD` is set to `False`
 
 
 - Miscellaneous:
