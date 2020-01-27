@@ -30,6 +30,7 @@ import sys
 from gtkmvc3.observable import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
+from rafcon.core.config import global_config
 from rafcon.utils import log
 from rafcon.utils import plugins
 
@@ -129,6 +130,9 @@ class ExecutionEngine(Observable):
             if not self.state_machine_manager.active_state_machine_id:
                 logger.error("There exists no active state machine!")
                 return
+
+            if not global_config.get_config_value("SCRIPT_RECOMPILATION_ON_STATE_EXECUTION", True):
+                self.recompile_execution_scripts_recursively()
 
             self.set_execution_mode(StateMachineExecutionStatus.STARTED)
 
@@ -487,6 +491,31 @@ class ExecutionEngine(Observable):
             self.join()
             self.stop()
         return state_machine
+
+    def recompile_execution_scripts_recursively(self):
+        from rafcon.core.states.execution_state import ExecutionState
+        from rafcon.core.states.container_state import ContainerState
+
+        def recompile_execution_state_scripts(state):
+            if isinstance(state, ExecutionState):
+                try:
+                    state.script.compile_module()
+                except ImportError as e:
+                    logger.info(
+                        "The script of the state '{}' (id {}) uses a module that is not available: {}".format(
+                            state.name, state.state_id, str(e)))
+                except Exception as e:
+                    logger.error("The script of the state '{}' (id {}) contains a {}: {}".format(
+                        state.name, state.state_id, e.__class__.__name__, str(e)))
+            elif isinstance(state, ContainerState):
+                for child_state in state.states.values():
+                    recompile_execution_state_scripts(child_state)
+
+        state_machine = self.state_machine_manager.get_active_state_machine()
+        recompile_execution_state_scripts(state_machine.root_state)
+
+
+
 
     @Observable.observed
     def set_execution_mode(self, execution_mode, notify=True):
