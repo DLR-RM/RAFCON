@@ -295,6 +295,8 @@ def signal_handler(signal, frame=None):
 
     post_gui_destruction()
 
+    logging.shutdown()
+
     # Do not use sys.exit() in signal handler:
     # http://thushw.blogspot.de/2010/12/python-dont-use-sysexit-inside-signal.html
     # noinspection PyProtectedMember
@@ -406,6 +408,7 @@ def main():
         core_singletons.state_machine_manager.delete_all_state_machines()
 
     logger.info(_("Exiting ..."))
+    logging.shutdown()
 
 
 if __name__ == '__main__':

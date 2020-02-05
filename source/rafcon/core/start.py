@@ -31,6 +31,7 @@ import time
 from queue import Empty
 import threading
 import sys
+import logging
 
 import rafcon
 from yaml_configuration.config import config_path
@@ -235,6 +236,8 @@ def signal_handler(signal, frame):
             plugins.run_hook("pre_destruction")
             reactor.callFromThread(reactor.stop)
 
+    logging.shutdown()
+
 
 def register_signal_handlers(callback):
     for signal_code in [signal.SIGHUP, signal.SIGINT, signal.SIGTERM]:
@@ -284,6 +287,7 @@ def main():
 
     logger.info("State machine execution finished!")
     plugins.run_hook("post_destruction")
+    logging.shutdown()
 
 
 if __name__ == '__main__':
