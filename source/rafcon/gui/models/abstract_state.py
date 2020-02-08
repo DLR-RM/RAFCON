@@ -528,7 +528,11 @@ class AbstractStateModel(MetaModel, Hashable):
         :param str copy_path: Optional copy path if meta data is not stored to the file system path of state machine
         """
         if copy_path:
-            meta_file_path_json = os.path.join(copy_path, self.state.get_storage_path(), storage.FILE_NAME_META_DATA)
+            from rafcon.core.states.execution_state import ExecutionState
+            if self.state.is_root_state and isinstance(self.state, ExecutionState):
+                meta_file_path_json = os.path.join(copy_path, storage.FILE_NAME_META_DATA)
+            else:
+                meta_file_path_json = os.path.join(copy_path, self.state.get_storage_path(), storage.FILE_NAME_META_DATA)
         else:
             if self.state.file_system_path is None:
                 logger.error("Meta data of {0} can be stored temporary arbitrary but by default first after the "
