@@ -11,10 +11,21 @@ Patch releases 0.14.\*
 Next Release
 """"""""""""
 
-- Feature
+- Features:
 
-  - Replace ``SCRIPT_COMPILE_ON_FILESYSTEM_LOAD`` in favor of ``SCRIPT_RECOMPILATION_ON_STATE_EXECUTION``. See the
-    documentation of the configuration for details.
+
+- Bug Fixes:
+
+
+- Miscellaneous:
+
+
+0.14.2
+""""""
+
+- Features:
+
+  - Replace ``SCRIPT_COMPILE_ON_FILESYSTEM_LOAD`` in favor of ``SCRIPT_RECOMPILATION_ON_STATE_EXECUTION``. See the documentation of the configuration for details.
 
 
 - Bug Fixes:
@@ -31,6 +42,7 @@ Next Release
 
   - do not test Python 3.4 on Jenkins
   - Coverage test only on ``develop`` and ``master`` branch
+  - prepare for new ``yaml_configuration`` release
 
 
 0.14.1
