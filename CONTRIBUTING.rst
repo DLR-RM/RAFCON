@@ -1,1 +1,0 @@
-doc/development/development.rst
