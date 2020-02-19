@@ -36,6 +36,7 @@ class ObservableConfig(DefaultConfig, Observable):
 
     keys_requiring_state_machine_refresh = set()
     keys_requiring_restart = set()
+    keys_not_to_fill_up = set()
 
     def __init__(self, default_config_filename, logger_object=None):
         DefaultConfig.__init__(self, default_config_filename, logger_object, rel_config_path='rafcon')
@@ -64,6 +65,7 @@ class Config(ObservableConfig):
     """
 
     keys_requiring_restart = ()
+    keys_not_to_fill_up = {"LIBRARY_PATHS"}
 
     def __init__(self, logger_object=None):
         """Default constructor
@@ -83,10 +85,7 @@ class Config(ObservableConfig):
         :param path: the path to the config file
         """
         if config_file is None:
-            if path is None:
-                path, config_file = split(resource_filename(__name__, CONFIG_FILE))
-            else:
-                config_file = CONFIG_FILE
+            config_file = CONFIG_FILE
         super(Config, self).load(config_file, path)
 
 

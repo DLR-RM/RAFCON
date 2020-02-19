@@ -21,12 +21,13 @@
 from future import standard_library
 standard_library.install_aliases()
 import os
-import subprocess
 from gi.repository import Gtk
-import shlex
 import contextlib
 from pylint import lint
-from pylint.reporters.json import JSONReporter
+try:
+    from pylint.reporters.json import JSONReporter
+except ModuleNotFoundError:
+    from pylint.reporters.json_reporter import JSONReporter
 from io import StringIO
 from astroid import MANAGER
 from pkg_resources import resource_filename

@@ -40,6 +40,8 @@ A typical config file looks like this:
     EXECUTION_LOG_PATH: "%RAFCON_TEMP_PATH_BASE/execution_logs"
     EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL: False
 
+    SCRIPT_RECOMPILATION_ON_STATE_EXECUTION: True
+
 .. _core_config_docs:
 
 Documentation
@@ -75,14 +77,14 @@ STORAGE\_PATH\_WITH\_STATE\_NAME
   | Type: boolean
   | Default: ``True``
   | If set to True the paths to save states will contain the state names.
-  If False only the state IDs will be used to create the storage path.
+    If False only the state IDs will be used to create the storage path.
 
 MAX\_LENGTH\_FOR\_STATE\_NAME\_IN\_STORAGE\_PATH
   | Default: ``None``
   | Unit: number
   | Specifies the maximum length of a state name in the storage path.
-  If the state name is longer than the specified value, the state name is truncated.
-  If the value is set to None the whole state name is used inside the path.
+    If the state name is longer than the specified value, the state name is truncated.
+    If the value is set to None the whole state name is used inside the path.
 
 NO\_PROGRAMMATIC\_CHANGE\_OF\_LIBRARY\_STATES\_PERFORMED
   | Type: boolean
@@ -103,6 +105,16 @@ EXECUTION\_LOG\_SET\_READ\_AND\_WRITABLE\_FOR\_ALL:
   | Type: boolean
   | Default: ``False``
   | If True, the file permissions of the log file are set such that all users have read access to this file.
+
+SCRIPT\_RECOMPILATION\_ON\_STATE\_EXECUTION:
+  | Type: boolean
+  | Default: ``True``
+  | If True, the script of an ``ExecutionState`` will be recompiled each time the state is executed, effectively
+    resetting all global variables. For reasons of backwards compatibility, the default value is ``True``. It is
+    recommended to set the value to ``False``, causing a recompilation only when the execution of a state machine is
+    newly started, which is a bit faster and allows to share data between consecutive state executions.
+
+
   
 GUI configuration
 -----------------

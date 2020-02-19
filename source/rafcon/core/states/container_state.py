@@ -1720,7 +1720,7 @@ class ContainerState(State):
             return self.states[transition.to_state]
 
     def write_output_data(self, specific_output_dictionary=None):
-        """ Write the scoped data to output of the state. Called before exiting the container state.
+        """ Write the scoped data to the output of the state. Called before exiting the container state.
 
         :param specific_output_dictionary: an optional dictionary to write the output data in
         :return:

@@ -146,7 +146,7 @@ class ExecutionTickerController(ExtendedController):
                 if rafcon.gui.singleton.main_window_controller.view is not None:
                     self.ticker_text_label.set_text(message)
                 else:
-                    logger.warn("Not initialized yet")
+                    logger.warning("Not initialized yet")
 
     def stop_sm_m_observation(self, sm_m):
         self.relieve_model(sm_m)

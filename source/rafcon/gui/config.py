@@ -41,12 +41,12 @@ class GuiConfig(ObservableConfig):
     Class to hold and load the global GUI configurations.
     """
 
-    keys_requiring_state_machine_refresh = ('MAX_VISIBLE_LIBRARY_HIERARCHY', 'HISTORY_ENABLED',
+    keys_requiring_state_machine_refresh = {'MAX_VISIBLE_LIBRARY_HIERARCHY', 'HISTORY_ENABLED',
                                             'AUTO_BACKUP_ENABLED', 'AUTO_BACKUP_ONLY_FIX_FORCED_INTERVAL',
                                             'AUTO_BACKUP_FORCED_STORAGE_INTERVAL',
                                             'AUTO_BACKUP_DYNAMIC_STORAGE_INTERVAL',
-                                            'AUTO_RECOVERY_CHECK', 'AUTO_RECOVERY_LOCK_ENABLED')
-    keys_requiring_restart = ('USE_ICONS_AS_TAB_LABELS', 'THEME_DARK_VARIANT')
+                                            'AUTO_RECOVERY_CHECK', 'AUTO_RECOVERY_LOCK_ENABLED'}
+    keys_requiring_restart = {'USE_ICONS_AS_TAB_LABELS', 'THEME_DARK_VARIANT'}
 
     colors = {}
     gtk_colors = {}
@@ -61,27 +61,12 @@ class GuiConfig(ObservableConfig):
         self.configure_colors()
 
     def load(self, config_file=None, path=None):
-        using_default_config = False
         if config_file is None:
-            if path is None or not os.path.isfile(os.path.join(path, CONFIG_FILE)):
-                using_default_config = True
-                path, config_file = os.path.split(resource_filename(__name__, CONFIG_FILE))
-            else:
-                config_file = CONFIG_FILE
+            config_file = CONFIG_FILE
         super(GuiConfig, self).load(config_file, path)
 
         self.configure_gtk()
         self.configure_colors()
-
-        # fill up shortcuts
-        if not using_default_config:
-            default_gui_config = yaml.load(self.default_config, Loader=FullLoader) if self.default_config else {}
-            shortcuts_dict = self.get_config_value('SHORTCUTS')
-            for shortcut_name, shortcuts_list in default_gui_config.get('SHORTCUTS', {}).items():
-                if shortcut_name not in shortcuts_dict:
-                    self.logger.info("Shortcut for '{0}' is {1}, now, and was taken from default config."
-                                     "".format(shortcut_name, shortcuts_list))
-                    shortcuts_dict[shortcut_name] = shortcuts_list if isinstance(shortcuts_list, list) else [shortcuts_list]
 
     def get_theme_path(self):
         return get_data_file_path("themes", "RAFCON")
