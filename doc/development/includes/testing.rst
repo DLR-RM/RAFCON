@@ -67,7 +67,7 @@ RAFCON uses ``pytest`` as testing framework. It e.g. auto detects your test file
 a look at the documentation before writing tests: https://pytest.org/
 
 GUI tests
-=========
+"""""""""
 
 When you want to write an integration test using the GUI, a custom fixture named ``gui`` is provided
 (``tests/gui/conftest.py``). Simply add ``gui`` as parameter to your test (no import is required for tests residing
