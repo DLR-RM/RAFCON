@@ -369,7 +369,7 @@ class StateMachineModel(MetaModel, Hashable):
         meta_data_path = path if path is not None else self.state_machine.file_system_path
 
         if meta_data_path:
-            path_meta_data = os.path.join(meta_data_path, storage.FILE_NAME_META_DATA)
+            path_meta_data = os.path.join(meta_data_path, storage.FILE_NAME_META_DATA_SM)
 
             try:
                 tmp_meta = storage.load_data_file(path_meta_data)
@@ -398,9 +398,9 @@ class StateMachineModel(MetaModel, Hashable):
         :param str copy_path: Optional, if the path is specified, it will be used instead of the file system path
         """
         if copy_path:
-            meta_file_json = os.path.join(copy_path, storage.FILE_NAME_META_DATA)
+            meta_file_json = os.path.join(copy_path, storage.FILE_NAME_META_DATA_SM)
         else:
-            meta_file_json = os.path.join(self.state_machine.file_system_path, storage.FILE_NAME_META_DATA)
+            meta_file_json = os.path.join(self.state_machine.file_system_path, storage.FILE_NAME_META_DATA_SM)
 
         storage_utils.write_dict_to_json(self.meta, meta_file_json)
 
