@@ -1043,9 +1043,8 @@ def get_root_state_file_path(sm_file_system_path):
         except ValueError:
             return
         if 'root_state_id' not in sm_dict and 'root_state_storage_id' not in sm_dict:
-            # This is a single-state state machine, so its data is stored in the same directory
             return os.path.join(sm_file_system_path, storage.FILE_NAME_CORE_DATA)
-        else:
+        else:  # deprecated, new state machines (>=0.15) have the root state located in the base path
             root_state_folder = sm_dict['root_state_id'] if 'root_state_id' in sm_dict else sm_dict['root_state_storage_id']
             return os.path.join(sm_file_system_path, root_state_folder, storage.FILE_NAME_CORE_DATA)
 

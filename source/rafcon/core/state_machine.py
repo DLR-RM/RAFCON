@@ -133,8 +133,6 @@ class StateMachine(Observable, JSONObject, Hashable):
             'creation_time': state_machine.creation_time,
             'last_update': state_machine.last_update,
         }
-        if not isinstance(state_machine.root_state, ExecutionState):
-            dict_representation['root_state_storage_id'] = get_storage_id_for_state(state_machine.root_state)
 
         return dict_representation
 

@@ -605,10 +605,11 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             else:
                 return self.parent.get_storage_path(state_identifier + PATH_SEPARATOR + appendix)
         else:
+            # the root state is located in the root state machine folder
             if appendix is None:
-                return state_identifier
+                return ""
             else:
-                return state_identifier + PATH_SEPARATOR + appendix
+                return appendix
 
     def get_state_machine(self):
         """Get a reference of the state_machine the state belongs to

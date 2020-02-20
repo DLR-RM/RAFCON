@@ -242,25 +242,6 @@ def save_semantic_data_for_state(state, state_path_full):
             raise
 
 
-def save_single_state(state, base_path, parent_path, as_copy=False):
-    """Saves an ExecutionState directly in the provided path.
-
-    :param state: ExecutionState to be stored
-    :param base_path: Path to the state machine
-    :param parent_path: Path to the parent state
-    :param bool as_copy: Temporary storage flag to signal that the given path is not the new file_system_path
-    """
-    state_path_full = os.path.join(base_path, parent_path)
-    if not os.path.exists(state_path_full):
-        os.makedirs(state_path_full)
-
-    storage_utils.write_dict_to_json(state, os.path.join(state_path_full, FILE_NAME_CORE_DATA))
-    if not as_copy:
-        state.file_system_path = state_path_full
-
-    save_script_file_for_state_and_source_path(state, state_path_full, as_copy)
-
-
 def save_state_recursively(state, base_path, parent_path, as_copy=False):
     """Recursively saves a state to a json file
 
@@ -275,11 +256,7 @@ def save_state_recursively(state, base_path, parent_path, as_copy=False):
     from rafcon.core.states.execution_state import ExecutionState
     from rafcon.core.states.container_state import ContainerState
 
-    if state.is_root_state and isinstance(state, ExecutionState):
-        save_single_state(state, base_path, parent_path, as_copy)
-        return
-
-    state_path = os.path.join(parent_path, get_storage_id_for_state(state))
+    state_path = state.get_storage_path()
     state_path_full = os.path.join(base_path, state_path)
     if not os.path.exists(state_path_full):
         os.makedirs(state_path_full)
@@ -371,7 +348,11 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     else:
         root_state_storage_id = state_machine_dict['root_state_storage_id']
 
-    root_state_path = os.path.join(base_path, root_state_storage_id)
+    if root_state_storage_id:  # deprecated, new state machines (>=0.15) have the root state located in the base path
+        root_state_path = os.path.join(base_path, root_state_storage_id)
+    else:
+        root_state_path = base_path
+
     state_machine.file_system_path = base_path
     dirty_states = []
     state_machine.root_state = load_state_recursively(parent=state_machine, state_path=root_state_path,
