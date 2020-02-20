@@ -653,7 +653,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         The path is not fully secure because the all state ids are not globally unique.
         """
-        return os.path.join(RAFCON_TEMP_PATH_STORAGE, str(self.get_path()))
+        return os.path.join(RAFCON_TEMP_PATH_STORAGE, self.get_storage_path())
 
     @lock_state_machine
     @Observable.observed
