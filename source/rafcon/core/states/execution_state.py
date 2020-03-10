@@ -69,8 +69,10 @@ class ExecutionState(State):
         output_data_ports = {key: copy(self._output_data_ports[key]) for key in self._output_data_ports.keys()}
         income = copy(self._income)
         outcomes = {elem_id: copy(self._outcomes[elem_id]) for elem_id in self._outcomes.keys()}
-        state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes,
-                               path=self.script.path, filename=self.script.filename, safe_init=False)
+        state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, None,
+                               safe_init=False)
+
+        state.script_text = deepcopy(self.script_text)
 
         state._description = deepcopy(self.description)
         state._semantic_data = deepcopy(self.semantic_data)
