@@ -193,14 +193,14 @@ class ContainerState(State):
         return all(diff_states) and str(self) == str(other)
 
     def __copy__(self):
-        input_data_ports = {elem_id: copy(elem) for elem_id, elem in self._input_data_ports.items()}
-        output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.items()}
+        input_data_ports = {key: copy(self._input_data_ports[key]) for key in self._input_data_ports.keys()}
+        output_data_ports = {key: copy(self._output_data_ports[key]) for key in self._output_data_ports.keys()}
         income = copy(self._income)
-        outcomes = {elem_id: copy(elem) for elem_id, elem in self._outcomes.items()}
-        states = {elem_id: copy(elem) for elem_id, elem in self._states.items()}
-        scoped_variables = {elem_id: copy(elem) for elem_id, elem in self._scoped_variables.items()}
-        data_flows = {elem_id: copy(elem) for elem_id, elem in self._data_flows.items()}
-        transitions = {elem_id: copy(elem) for elem_id, elem in self._transitions.items()}
+        outcomes = {key: copy(self._outcomes[key]) for key in self._outcomes.keys()}
+        states = {key: copy(self._states[key]) for key in self._states.keys()}
+        scoped_variables = {key: copy(self._scoped_variables[key]) for key in self._scoped_variables.keys()}
+        data_flows = {key: copy(self._data_flows[key]) for key in self._data_flows.keys()}
+        transitions = {key: copy(self._transitions[key]) for key in self._transitions.keys()}
 
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, states,
                                transitions, data_flows, None, scoped_variables, safe_init=False)

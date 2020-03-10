@@ -65,8 +65,8 @@ class ExecutionState(State):
         return str(self) == str(other) and self.script_text == other.script_text
 
     def __copy__(self):
-        input_data_ports = {elem_id: copy(elem) for elem_id, elem in self._input_data_ports.items()}
-        output_data_ports = {elem_id: copy(elem) for elem_id, elem in self._output_data_ports.items()}
+        input_data_ports = {key: copy(self._input_data_ports[key]) for key in self._input_data_ports.keys()}
+        output_data_ports = {key: copy(self._output_data_ports[key]) for key in self._output_data_ports.keys()}
         income = copy(self._income)
         outcomes = {elem_id: copy(elem) for elem_id, elem in list(self._outcomes.items())}
         state = self.__class__(self.name, self.state_id, input_data_ports, output_data_ports, income, outcomes, None,
