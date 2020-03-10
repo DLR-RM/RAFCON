@@ -160,6 +160,13 @@ class ScopedData(StateElement):
         if parent:
             self._parent = ref(parent)
 
+    def __copy__(self):
+        return self.__class__(self._name, self._value, self._value_type, self._from_state, self._data_port_type,
+                              parent=self.parent, safe_init=False)
+
+    def __deepcopy__(self, memo=None, _nil=[]):
+        return self.__copy__()
+
     @property
     def state_element_id(self):
         return self._primary_key
