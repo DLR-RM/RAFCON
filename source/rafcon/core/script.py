@@ -79,7 +79,6 @@ class Script(Observable, yaml.YAMLObject):
         if not isinstance(script_text, string_types):
             raise ValueError("The script text needs to be a string")
         self._script = script_text
-        self.compile_module()
 
     def set_script_without_compilation(self, script_text):
         self._script = script_text
