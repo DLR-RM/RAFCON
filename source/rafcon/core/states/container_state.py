@@ -2131,13 +2131,23 @@ class ContainerState(State):
 
     def get_number_of_transitions(self):
         """
-        Returns the numer of child states
+        Returns the number of transitions
         :return:
         """
         number_of_all_transitions = 0
         for s in self.states.values():
             number_of_all_transitions += s.get_number_of_transitions()
         return number_of_all_transitions + len(self.transitions)
+
+    def get_number_of_data_flows(self):
+        """
+        Returns the number of data flows
+        :return:
+        """
+        number_of_all_data_flows = 0
+        for s in self.states.values():
+            number_of_all_data_flows += s.get_number_of_data_flows()
+        return number_of_all_data_flows + len(self.data_flows)
 
     # ---------------------------------------------------------------------------------------------
     # ------------ Properties for all class fields that must be observed by gtkmvc3 ----------------

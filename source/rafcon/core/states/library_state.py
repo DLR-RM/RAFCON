@@ -441,6 +441,13 @@ class LibraryState(State):
         """
         return self.state_copy.get_number_of_transitions()
 
+    def get_number_of_data_flows(self):
+        """
+        Return the number of data flows for a state. Per default states do not have data flows.
+        :return:
+        """
+        return self.state_copy.get_number_of_data_flows()
+
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc3
     #########################################################################
