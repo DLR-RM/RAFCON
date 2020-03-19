@@ -216,7 +216,7 @@ class LibraryState(State):
 
     def __copy__(self):
         income = self._income
-        outcomes = {elem_id: copy(elem) for elem_id, elem in self.outcomes.items()}
+        outcomes = {key: copy(self.outcomes[key]) for key in self.outcomes.keys()}
         state = self.__class__(self._library_path, self._library_name, self._version,  # library specific attributes
                                # the following are the container state specific attributes
                                self._name, self._state_id, income, outcomes,
