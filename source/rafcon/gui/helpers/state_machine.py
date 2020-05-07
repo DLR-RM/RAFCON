@@ -697,7 +697,10 @@ def delete_selected_elements(state_machine_m):
         return True
 
 
-def paste_into_selected_state(state_machine_m):
+def paste_into_selected_state(state_machine_m, cursor_position=None):
+    """
+    :param (float, float) cursor_position: the cursor position relative to the main window.
+    """
     selection = state_machine_m.selection
     if len(selection.states) != 1:
         logger.warning("Please select a single container state for pasting the clipboard")
@@ -705,7 +708,14 @@ def paste_into_selected_state(state_machine_m):
 
     # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
     target_state_m = selection.get_selected_state()
-    global_clipboard.paste(target_state_m)
+    item_coordinates = None
+    if cursor_position:
+        from rafcon.gui.helpers.coordinate_translation import CoordinateTranslator
+        translator = CoordinateTranslator()
+        notebook_coordinates = translator.main_window_coordinates_to_notebook_coordinates(cursor_position)
+        item_coordinates = translator.notebook_coordinates_to_item_coordinates(state_machine_m, target_state_m,
+                                                                               notebook_coordinates)
+    global_clipboard.paste(target_state_m, item_coordinates)
 
 
 def selected_state_toggle_is_start_state():

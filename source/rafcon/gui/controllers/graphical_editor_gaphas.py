@@ -254,7 +254,7 @@ class GraphicalEditorController(ExtendedController):
         """
         if react_to_event(self.view, self.view.editor, event):
             logger.debug("Paste")
-            gui_helper_state_machine.paste_into_selected_state(self.model)
+            gui_helper_state_machine.paste_into_selected_state(self.model, self.get_root_window().get_pointer())
             return True
 
     def _move_focused_item_into_viewport(self, view, focused_item):
