@@ -444,12 +444,19 @@ class StateRightClickMenuControllerOpenGLEditor(StateMachineRightClickMenuContro
 
 
 class StateRightClickMenuGaphas(StateMachineRightClickMenu):
+    menu_position = None
 
     def activate_menu(self, event, menu):
         # logger.info("activate_menu by " + self.__class__.__name__)
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) > 0 or len(selection.scoped_variables) > 0:
             menu.popup(None, None, None, None, event.get_button()[1], event.time)
+            # Note: As currently implemented, the menus root window is not the rafcon root window, but the screen itself
+            # so get_root_window().get_pointer() returns the pointer in screen coordinates.
+            self.menu_position = menu.get_root_window().get_pointer().x, menu.get_root_window().get_pointer().y
+            from rafcon.gui.helpers.coordinate_translation import CoordinateTranslator
+            translator = CoordinateTranslator()
+            self.menu_position = translator.screen_coordinates_to_main_window_coordiantes(self.menu_position)
             return True
         else:
             return False
@@ -460,7 +467,7 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
 
     def on_paste_activate(self, widget, data=None):
         # logger.info("trigger gaphas paste")
-        self.shortcut_manager.trigger_action("paste", None, None)
+        self.shortcut_manager.trigger_action("paste", None, None, self.menu_position)
 
     def on_cut_activate(self, widget, data=None):
         # logger.info("trigger gaphas cut")

@@ -254,7 +254,13 @@ class GraphicalEditorController(ExtendedController):
         """
         if react_to_event(self.view, self.view.editor, event):
             logger.debug("Paste")
-            gui_helper_state_machine.paste_into_selected_state(self.model, self.get_root_window().get_pointer())
+            cursor_position = None
+            if len(event) >= 3 and event[2]:
+                #case if call back was triggered by the right-click menu.
+                cursor_position = event[2]
+            else:
+                cursor_position = self.get_root_window().get_pointer()
+            gui_helper_state_machine.paste_into_selected_state(self.model, cursor_position)
             return True
 
     def _move_focused_item_into_viewport(self, view, focused_item):

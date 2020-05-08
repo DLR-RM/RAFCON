@@ -135,12 +135,13 @@ class ShortcutManager(object):
             return self.__action_to_shortcuts[action]
         return None
 
-    def trigger_action(self, action, key_value, modifier_mask):
+    def trigger_action(self, action, key_value, modifier_mask, cursor_position=None):
         """Calls the appropriate callback function(s) for the given action
 
         :param str action: The name of the action that was triggered
         :param key_value: The key value of the shortcut that caused the trigger
         :param modifier_mask: The modifier mask of the shortcut that caused the trigger
+        :param cursor_position: The position of the cursor, relative to the main window.
         :return: Whether a callback was triggered
         :rtype: bool
         """
@@ -148,7 +149,7 @@ class ShortcutManager(object):
         if action in self.__action_to_callbacks:
             for callback_function in self.__action_to_callbacks[action]:
                 try:
-                    ret = callback_function(key_value, modifier_mask)
+                    ret = callback_function(key_value, modifier_mask, cursor_position)
                     # If at least one controller returns True, the whole result becomes True
                     res |= (False if ret is None else ret)
                 except Exception as e:
