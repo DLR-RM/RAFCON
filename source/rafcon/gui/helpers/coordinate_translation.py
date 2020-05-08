@@ -1,3 +1,13 @@
+# Copyright (C) 2020 DLR
+#
+# All rights reserved. This program and the accompanying materials are made
+# available under the terms of the Eclipse Public License v1.0 which
+# accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+#
+# Contributors:
+# Christoph Suerig <christoph.suerig@dlr.de>
+
 from rafcon.gui.singleton import main_window_controller
 from rafcon.utils import log
 
@@ -7,7 +17,7 @@ logger = log.get_logger(__name__)
 class CoordinateTranslator:
     """
     The CoordinateTranslator is a helper class, helping to transform coordinates between different coordinate systems
-    (e.g absolute, item, window, and view coordinates) in the GUI.
+    (e.g screen, item, window, and view coordinates) in the GUI.
     """
     main_window = None
     sm_notebook_page = None

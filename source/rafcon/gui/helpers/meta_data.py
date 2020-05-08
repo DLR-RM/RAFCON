@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2018 DLR
+# Copyright (C) 2017-2020 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
 # available under the terms of the Eclipse Public License v1.0 which
@@ -8,6 +8,7 @@
 # Contributors:
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
+# Christoph Suerig <christoph.suerig@dlr.de
 
 from future.utils import string_types
 from builtins import range
@@ -24,7 +25,6 @@ from rafcon.gui.models import LibraryStateModel, ContainerStateModel
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.utils import constants
 from rafcon.utils import log, geometry
-
 
 logger = log.get_logger(__name__)
 
@@ -601,104 +601,110 @@ def scale_meta_data_according_states(models_dict):
 
 
 def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False, fill_up=False):
-    # TODO Documentation needed....
-    """ Scale elements in dict to fit into dict state key element.
+    """
+    Scales all elements of the dict to fit into the dict "state"-key element.
+    If the elements are small enough already, and fill_up is false, no resize is performed.
+    If rel_pos is None, or not a valid pos, the elements are positioned to
+    a valid position inside of the "state"-key element.
 
-    If elements are already small enough no resize is performed.
+    :param models_dict: The objects in question as dict.
+    :param (float, float) rel_pos: A position in item coordinates, relative to the parent.
+    :param bool as_template: Not used by the method.
+    :param bool fill_up: If true, the objects in question will not only be scaled, down, but also scaled up.
+    :return: The scale factor, the objects in question where scaled with, as tuple.
+    The first and second value of the tuple are always the same.
+    :rtype: (float,float)
     """
     # TODO check about positions of input-data- and output-data- or scoped variable-ports is needed
     # TODO adjustments of data ports positions are not sufficient -> origin state size is maybe needed for that
     # TODO consistency check on boundary and scale parameter for every if else case
 
+    # This tuple must always have the same value at all indices.
+    scale_factor = (1.0, 1.0)
     if 'states' in models_dict or 'scoped_variables' in models_dict:
-        left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict)
         parent_size = models_dict['state'].get_meta_data_editor()['size']
-        margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, parent_size, group=False)
-        automatic_mode = True if rel_pos is None else False
-        clearance = 0.2 if rel_pos is None else 0.
-        rel_pos = (margin, margin) if rel_pos is None else rel_pos
-        # rel_pos = (0., 0.) if fill_up else rel_pos
-        clearance_scale = 1 + clearance
-
-        assert parent_size[0] > rel_pos[0]
-        assert parent_size[1] > rel_pos[1]
-        # print("edges:", left, right, top, bottom)
-        # print("margin:", margin, "rel_pos:", rel_pos, "old_rel_pos", old_rel_pos, "size:", size)
-
         parent_width, parent_height = parent_size
+        # Determines, wheter the relative position of the object in question can be altered, or is fixed.
+        fixed_rel_pos = not (rel_pos is None)
+        # If rel_pos was none, it sets it to parent_size.
+        # So is ensured, that rel_pos_x and rel_pos_y will be reassigned later in this method.
+        rel_pos_x, rel_pos_y = rel_pos if rel_pos else parent_size
+        # Get the coordinates of the boundaries of the object in question e.g. a state
+        left_b, right_b, top_b, bottom_b = get_boundaries_of_elements_in_dict(models_dict)
+        # calculate the margin, the position and the size of the object in question.
+        margin, old_rel_pos, size = cal_frame_according_boundaries(left_b, right_b, top_b, bottom_b, parent_size,
+                                                                   group=False)
+        width, height = size  # The width and the height of the object in question, neglecting the margin.
+        # Looks if the given rel pos is valid. If not, it sets the margin as rel pos.
+        if rel_pos_x >= parent_width or rel_pos_x < 0 or rel_pos_y >= parent_height or rel_pos_y < 0:
+            rel_pos_x = margin
+            rel_pos_y = margin
+            fixed_rel_pos = False
 
-        boundary_width, boundary_height = size
-        # print("parent width:   {0}, parent_height:   {1}".format(parent_width, parent_height))
-        # print("boundary width: {0}, boundary_height: {1}".format(boundary_width, boundary_height))
+        clearance = 0 if fixed_rel_pos else 0.2
+        clearance_scale = clearance + 1
+        max_possible_width = parent_width - rel_pos_x
+        max_possible_height = parent_height - rel_pos_y
+        scaled_width = width
+        scaled_height = height
+        use_horizontal_scale_factor = False
+        # look if the object in question fits into the parent. If so, and fill_up is false, no rescaling has to happen.
+        if fill_up or max_possible_width <= width * clearance_scale or max_possible_height <= height * clearance_scale:
+            # get the boundaries again, but with clearance added.
+            left_b, right_b, top_b, bottom_b = get_boundaries_of_elements_in_dict(models_dict, clearance)
+            # calculate the margin, the position and the size of the object in question again, but now with clearance
+            margin, old_rel_pos, size = cal_frame_according_boundaries(left_b, right_b, top_b, bottom_b, parent_size,
+                                                                       group=False)
+            # The width and height of the object in question (neglecting the margin), but with clearance.
+            width, height = size
+            horizontal_scale_factor = (parent_height - margin - rel_pos_y) / height
+            vertical_scale_factor = (parent_width - margin - rel_pos_x) / width
+            use_horizontal_scale_factor = horizontal_scale_factor < vertical_scale_factor
+            scale_factor = (horizontal_scale_factor, horizontal_scale_factor) if use_horizontal_scale_factor else \
+                (vertical_scale_factor, vertical_scale_factor)
+            scaled_width = horizontal_scale_factor * width
+            scaled_height = vertical_scale_factor * height
+        # set new relative position, if relative position is not fixed.
+        if not fixed_rel_pos:
+            new_right_b_with_margin = rel_pos_x + scaled_width + margin
+            # The half distance between the right outer border of the object in question,
+            # and the right inner border of the parent.
+            width_pos_offset_to_middle = (parent_width - new_right_b_with_margin) / 2.
+            new_bottom_b_with_margin = rel_pos_y + scaled_height + margin
+            # The half distance between the bottom outer border of the object in question,
+            # and the bottom inner border of the parent.
+            height_pos_offset_to_middle = (parent_height - new_bottom_b_with_margin) / 2.
 
-        # no site scale
-        if parent_width - rel_pos[0] > boundary_width * clearance_scale and \
-                parent_height - rel_pos[1] > boundary_height * clearance_scale and not fill_up:
-            if automatic_mode:
-                resize_factor = 1.
-                boundary_width_in_parent = boundary_width*resize_factor
-                # print(boundary_width, resize_factor, boundary_width*resize_factor, boundary_height*resize_factor + margin*2, parent_height)
-                # print("left over width: ", parent_width - boundary_width_in_parent - rel_pos[0] - margin)
-                width_pos_offset_to_middle = (parent_width - boundary_width_in_parent - rel_pos[0] - margin)/2.
-                rel_pos = add_pos(rel_pos, (width_pos_offset_to_middle, 0.))
-                boundary_height_in_parent = boundary_height*resize_factor
-                # print("left over height: ", parent_height - boundary_height_in_parent - rel_pos[0] - margin)
-                height_pos_offset_to_middle = (parent_height - boundary_height_in_parent - rel_pos[1] - margin)/2.
-                rel_pos = add_pos(rel_pos, (0., height_pos_offset_to_middle))
-            offset = subtract_pos((0., 0.), subtract_pos(old_rel_pos, rel_pos))
-            offset_rel_pos_of_all_models_in_dict(models_dict, offset)
-            return 1, 1  # (1, 1), offset, rel_pos
-        # smallest site scale
-        else:
-            # increase of boundary or clearance results into bigger estimated size and finally stronger
-            # reduction of original element sizes
-            left, right, top, bottom = get_boundaries_of_elements_in_dict(models_dict=models_dict, clearance=clearance)
-            parent_size = models_dict['state'].get_meta_data_editor()['size']
-            margin, old_rel_pos, size = cal_frame_according_boundaries(left, right, top, bottom, parent_size, group=False)
-
-            rel_pos = (margin, margin) if rel_pos is None else rel_pos
-            assert parent_size[0] > rel_pos[0]
-            assert parent_size[1] > rel_pos[1]
-            # print("edges:", left, right, top, bottom)
-            # print("margin:", margin, "rel_pos:", rel_pos, "old_rel_pos", old_rel_pos, "size:", size)
-
-            parent_width, parent_height = parent_size
-
-            boundary_width, boundary_height = size
-            if (parent_height - rel_pos[1] - margin)/boundary_height < \
-                    (parent_width - rel_pos[0] - margin)/boundary_width:
-                # print("#2"*20, 1, "#"*20, rel_pos)
-                resize_factor = (parent_height - rel_pos[1] - margin)/boundary_height
-                boundary_width_in_parent = boundary_width*resize_factor
-                # print(boundary_width, resize_factor, boundary_width*resize_factor)
-                # print("left over width: ", parent_width - boundary_width_in_parent - rel_pos[0] - margin)
-                width_pos_offset_to_middle = (parent_width - boundary_width_in_parent - rel_pos[0] - margin)/2.
-                rel_pos = add_pos(rel_pos, (width_pos_offset_to_middle, 0.))
-                # print(resize_factor, rel_pos)
+            if scaled_width == width and scaled_height == height:
+                # Set position, if no scaling happened.
+                rel_pos_x, rel_pos_y = add_pos((rel_pos_x, rel_pos_y),
+                                               (width_pos_offset_to_middle, height_pos_offset_to_middle))
+            elif use_horizontal_scale_factor:
+                # Adjust the x coordinate, if the horizontal scale factor was used.
+                rel_pos_x = add_pos((rel_pos_x, rel_pos_y), (width_pos_offset_to_middle, 0.))[0]
             else:
-                # print("#2"*20, 2, "#"*20, rel_pos)
-                resize_factor = (parent_width - rel_pos[0] - margin)/boundary_width
-                boundary_height_in_parent = boundary_height*resize_factor
-                # print(boundary_width, resize_factor, boundary_width*resize_factor)
-                # print("left over height: ", parent_height - boundary_height_in_parent - rel_pos[0] - margin)
-                height_pos_offset_to_middle = (parent_height - boundary_height_in_parent - rel_pos[1] - margin)/2.
-                rel_pos = add_pos(rel_pos, (0., height_pos_offset_to_middle))
-                # print(resize_factor, rel_pos)
-            frame = {'rel_pos': rel_pos, 'size': mult_two_vectors((resize_factor, resize_factor), size)}
-            # print(models_dict['state'].get_meta_data_editor()['rel_pos'], \)
-            #     parent_size, models_dict['state'].parent.get_meta_data_editor()['size']
-            # print("frame", frame, resize_factor)
-            # # rel_pos = mult_two_vectors((1, -1), frame['rel_pos'])
-            offset = subtract_pos((0., 0.), old_rel_pos)
-            offset_rel_pos_of_all_models_in_dict(models_dict, offset)
+                # Adjust the y coordinate, if the vertical scale factor was used.
+                rel_pos_y = add_pos((rel_pos_x, rel_pos_y), (0., height_pos_offset_to_middle))[1]
+            assert parent_width > rel_pos_x
+            assert parent_height > rel_pos_y
 
-            resize_of_all_models_in_dict(models_dict, (resize_factor, resize_factor))
-
+        if scale_factor[0] == 1.0:
+            # Adjust the position of all other elements in the models_dict, if not scaling happened.
+            position_offset = subtract_pos((0., 0.), subtract_pos(old_rel_pos, (rel_pos_x, rel_pos_y)))
+            offset_rel_pos_of_all_models_in_dict(models_dict,
+                                                 position_offset)
+        else:
+            # Scale the object in question
+            frame = {'rel_pos': (rel_pos_x, rel_pos_y), 'size': mult_two_vectors(scale_factor, size)}
+            # Adjust the position of all other elements in the models_dict.
+            position_offset = subtract_pos((0., 0.), old_rel_pos)
+            offset_rel_pos_of_all_models_in_dict(models_dict, position_offset)
+            # Scale all other objects of the models_dict.
+            resize_of_all_models_in_dict(models_dict, scale_factor)
+            # Adjust the position of all resized elements of the models_dict.
             offset_rel_pos_of_all_models_in_dict(models_dict, frame['rel_pos'])
-            # scale_meta_data_according_frame(models_dict, frame)
-            return resize_factor, resize_factor  # (resize_factor, resize_factor) , offset, frame['rel_pos']
-    else:
-        return 1, 1  # (1, 1) , (0., 0.), (0., 0.)
+
+    return scale_factor
 
 
 def scale_meta_data_according_frame(models_dict, frame):
