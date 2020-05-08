@@ -256,10 +256,10 @@ class GraphicalEditorController(ExtendedController):
             logger.debug("Paste")
             cursor_position = None
             if len(event) >= 3 and event[2]:
-                #case if call back was triggered by the right-click menu.
                 cursor_position = event[2]
             else:
-                cursor_position = self.get_root_window().get_pointer()
+                logger.warning("Got no paste position.")
+
             gui_helper_state_machine.paste_into_selected_state(self.model, cursor_position)
             return True
 

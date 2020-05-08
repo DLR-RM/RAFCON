@@ -56,7 +56,8 @@ class ShortcutManager(object):
                 self.accel_group.connect(keyval, modifier_mask, Gtk.AccelFlags.VISIBLE, callback)
 
     def __on_shortcut(self, action, accel_group, window, key_value, modifier_mask):
-        res = self.trigger_action(action, key_value, modifier_mask)
+        res = self.trigger_action(action, key_value, modifier_mask,
+                                  (self.main_window.get_pointer().x, self.main_window.get_pointer().y))
         # If returning False, the shortcut is forwarded to GTK to be used for default actions (like copy and paste in
         #  a text field). If a controller wants to prevent this, it has to return True.
         return res
