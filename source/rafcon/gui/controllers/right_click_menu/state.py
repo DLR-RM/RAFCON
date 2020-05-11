@@ -456,7 +456,7 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
             self.menu_position = menu.get_root_window().get_pointer().x, menu.get_root_window().get_pointer().y
             from rafcon.gui.helpers.coordinate_translation import CoordinateTranslator
             translator = CoordinateTranslator()
-            self.menu_position = translator.screen_coordinates_to_main_window_coordiantes(self.menu_position)
+            self.menu_position = translator.screen_coordinates_to_main_window_coordinates(self.menu_position)
             return True
         else:
             return False

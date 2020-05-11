@@ -33,7 +33,8 @@ class CoordinateTranslator:
         """
         Transforms a point relative to the main window, into a point relative to the state machine notebook.
         (window coordinates --> view coordinates).
-        :param (float, float) main_window_coordinates: A tuple containing a x and a y coordinate relative to the main window.
+        :param (float, float) main_window_coordinates:
+        A tuple containing x and y coordinates relative to the main window.
         :return: The same point, but relative to the state machine notebook (That's the view coordinate system).
         :rtype: (float, float)
         """
@@ -44,7 +45,8 @@ class CoordinateTranslator:
         """
         Transforms a point relative to the state machine notebook, into a point relative to the main window.
         (view coordinates --> window coordinates)
-        :param (float, float) notebook_coordinates: A tuple containing a x and a y coordinate relative to the state machine notebook.
+        :param (float, float) notebook_coordinates:
+        A tuple containing a x and a y coordinate relative to the state machine notebook.
         :return: The same point, but relative to the main window.
         :rtype: (float, float)
         """
@@ -57,7 +59,8 @@ class CoordinateTranslator:
         (view coordinates --> item coordinates)
         :param StateMachineModel state_machine_m: The state machine model, the target state model belongs to.
         :param StateModel target_state_m: The state model, the resulting point should be relative to.
-        :param (float,float) notebook_coordinates: A tuple containing a x and a y coordinate relative to the state machine notebook.
+        :param (float,float) notebook_coordinates:
+        A tuple containing a x and a y coordinate relative to the state machine notebook.
         :return: The same point, relative to the target state model.
         :rtype: (float,float)
         """
@@ -75,7 +78,8 @@ class CoordinateTranslator:
         (item coordinates --> view coordinates)
         :param StateMachineModel state_machine_m: The state machine model, the target state model belongs to.
         :param StateModel target_state_m: The state model, the given point is relative to.
-        :param (float,float) item_coordinates: A tuple containing a x and a y coordinate relative to the given target state model.
+        :param (float,float) item_coordinates:
+        A tuple containing a x and a y coordinate relative to the given target state model.
         :return: The same point, but relative to the state machine notebook.
         :rtype: (float,float)
         """
@@ -88,7 +92,7 @@ class CoordinateTranslator:
         notebook_coordinates = i2v.transform_point(item_coordinates[0], item_coordinates[1])
         return notebook_coordinates
 
-    def screen_coordinates_to_main_window_coordiantes(self, screen_coordinates):
+    def screen_coordinates_to_main_window_coordinates(self, screen_coordinates):
         """
         Transforms a point in absolute screen coordinates, into a point relative to the main window.
         :param (float,float) screen_coordinates: A tuple of x and y coordinate in absolute screen coordinates.
@@ -111,7 +115,7 @@ class CoordinateTranslator:
     def __get_root_state(self, state):
         """
         :param State state: A state of a state machine.
-        :return: The root state of state machine, the given state belongs to. The state itself, if the state is the root state.
+        :return: The root state of state machine, the given state belongs to.
         :rtype: State
         """
         root_state = state
