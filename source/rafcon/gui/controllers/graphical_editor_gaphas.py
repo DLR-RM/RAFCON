@@ -235,7 +235,7 @@ class GraphicalEditorController(ExtendedController):
         """Copies the current selection to the clipboard.
         """
         if react_to_event(self.view, self.view.editor, event):
-            logger.debug("copy selection")
+            logger.verbose("copy selection")
             global_clipboard.copy(self.model.selection)
             return True
 
@@ -244,7 +244,7 @@ class GraphicalEditorController(ExtendedController):
         """Cuts the current selection and copys it to the clipboard.
         """
         if react_to_event(self.view, self.view.editor, event):
-            logger.debug("cut selection")
+            logger.verbose("cut selection")
             global_clipboard.cut(self.model.selection)
             return True
 
@@ -253,12 +253,8 @@ class GraphicalEditorController(ExtendedController):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
         if react_to_event(self.view, self.view.editor, event):
-            logger.debug("Paste")
-            cursor_position = None
-            if len(event) >= 3 and event[2]:
-                cursor_position = event[2]
-            else:
-                logger.warning("Got no paste position.")
+            logger.verbose("Paste")
+            cursor_position = event[2] if len(event) >= 3 else None
 
             gui_helper_state_machine.paste_into_selected_state(self.model, cursor_position)
             return True
