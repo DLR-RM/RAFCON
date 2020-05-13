@@ -710,11 +710,10 @@ def paste_into_selected_state(state_machine_m, cursor_position=None):
     target_state_m = selection.get_selected_state()
     item_coordinates = None
     if cursor_position:
-        from rafcon.gui.helpers.coordinate_translation import CoordinateTranslator
-        translator = CoordinateTranslator()
-        notebook_coordinates = translator.main_window_coordinates_to_notebook_coordinates(cursor_position)
-        item_coordinates = translator.notebook_coordinates_to_item_coordinates(state_machine_m, target_state_m,
-                                                                               notebook_coordinates)
+        from rafcon.gui.helpers.coordinates import main_window2graphical_editor
+        from rafcon.gui.helpers.coordinates import graphical_editor2item
+        gc_coordinates = main_window2graphical_editor(cursor_position)
+        item_coordinates = graphical_editor2item(state_machine_m, target_state_m, gc_coordinates)
     global_clipboard.paste(target_state_m, item_coordinates)
 
 
