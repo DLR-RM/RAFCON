@@ -468,7 +468,7 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
 
     def on_paste_activate(self, widget, data=None):
         # logger.info("trigger gaphas paste")
-        self.shortcut_manager.trigger_action("paste", None, None, self.menu_position)
+        self.shortcut_manager.trigger_action("paste", None, None, cursor_position=self.menu_position)
 
     def on_cut_activate(self, widget, data=None):
         # logger.info("trigger gaphas cut")
