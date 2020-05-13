@@ -136,7 +136,7 @@ class ShortcutManager(object):
             return self.__action_to_shortcuts[action]
         return None
 
-    def trigger_action(self, action, key_value, modifier_mask, cursor_position=None):
+    def trigger_action(self, action, key_value, modifier_mask, **kwargs):
         """Calls the appropriate callback function(s) for the given action
 
         :param str action: The name of the action that was triggered
