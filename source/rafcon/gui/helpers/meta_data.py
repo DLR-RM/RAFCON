@@ -449,7 +449,7 @@ def scale_library_content(library_state_m, gaphas_editor=True):
         models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
 
     # perform final resize
-    resize_factor = (1., 1.)
+    resize_factor = 1.0
     try:
         if not models_dict['states'] and (not models_dict['scoped_variables'] or gaphas_editor):
             logger.info("Skip scaling for empty root state {0}.".format(library_state_m.state))
@@ -458,7 +458,7 @@ def scale_library_content(library_state_m, gaphas_editor=True):
     except:
         logger.exception("Scale library content of {0} cause a problem.".format(library_state_m.state))
     finally:
-        resize_income_of_state_m(library_state_m.state_copy, resize_factor, gaphas_editor)
+        resize_income_of_state_m(library_state_m.state_copy, (resize_factor, resize_factor), gaphas_editor)
 
 
 def _resize_port_models_list(port_models, rel_pos_key, factor, gaphas_editor=True):
@@ -611,16 +611,14 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
     :param (float, float) rel_pos: A position in item coordinates, relative to the parent.
     :param bool as_template: Not used by the method.
     :param bool fill_up: If true, the objects in question will not only be scaled, down, but also scaled up.
-    :return: The scale factor, the objects in question where scaled with, as tuple.
-    The first and second value of the tuple are always the same.
-    :rtype: (float,float)
+    :return: The factor, the elements where scaled with.
+    :rtype: float
     """
     # TODO check about positions of input-data- and output-data- or scoped variable-ports is needed
     # TODO adjustments of data ports positions are not sufficient -> origin state size is maybe needed for that
     # TODO consistency check on boundary and scale parameter for every if else case
 
-    # This tuple must always have the same value at all indices.
-    scale_factor = (1.0, 1.0)
+    scale_factor = 1.0
     if 'states' in models_dict or 'scoped_variables' in models_dict:
         parent_size = models_dict['state'].get_meta_data_editor()['size']
         parent_width, parent_height = parent_size
@@ -660,8 +658,7 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
             horizontal_scale_factor = (parent_height - margin - rel_pos_y) / height
             vertical_scale_factor = (parent_width - margin - rel_pos_x) / width
             use_horizontal_scale_factor = horizontal_scale_factor < vertical_scale_factor
-            scale_factor = (horizontal_scale_factor, horizontal_scale_factor) if use_horizontal_scale_factor else \
-                (vertical_scale_factor, vertical_scale_factor)
+            scale_factor = horizontal_scale_factor if use_horizontal_scale_factor else vertical_scale_factor
             scaled_width = horizontal_scale_factor * width
             scaled_height = vertical_scale_factor * height
         # set new relative position, if relative position is not fixed.
@@ -688,19 +685,19 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
             assert parent_width > rel_pos_x
             assert parent_height > rel_pos_y
 
-        if scale_factor[0] == 1.0:
+        if scale_factor == 1.0:
             # Adjust the position of all other elements in the models_dict, if not scaling happened.
             position_offset = subtract_pos((0., 0.), subtract_pos(old_rel_pos, (rel_pos_x, rel_pos_y)))
             offset_rel_pos_of_all_models_in_dict(models_dict,
                                                  position_offset)
         else:
             # Scale the object in question
-            frame = {'rel_pos': (rel_pos_x, rel_pos_y), 'size': mult_two_vectors(scale_factor, size)}
+            frame = {'rel_pos': (rel_pos_x, rel_pos_y), 'size': mult_two_vectors((scale_factor, scale_factor), size)}
             # Adjust the position of all other elements in the models_dict.
             position_offset = subtract_pos((0., 0.), old_rel_pos)
             offset_rel_pos_of_all_models_in_dict(models_dict, position_offset)
             # Scale all other objects of the models_dict.
-            resize_of_all_models_in_dict(models_dict, scale_factor)
+            resize_of_all_models_in_dict(models_dict, (scale_factor, scale_factor))
             # Adjust the position of all resized elements of the models_dict.
             offset_rel_pos_of_all_models_in_dict(models_dict, frame['rel_pos'])
 

@@ -437,7 +437,7 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
                 models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
 
             resize_factor = gui_helper_meta_data.scale_meta_data_according_state(models_dict, as_template=True)
-            gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor)
+            gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, (resize_factor, resize_factor))
 
         elif isinstance(state_m_to_insert, StateModel):
             # print("TARGET2", state_m_to_insert.state.state_element_attrs)
