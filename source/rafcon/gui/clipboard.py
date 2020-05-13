@@ -504,7 +504,6 @@ class Clipboard(Observable):
         new_content_of_clipboard = ', '.join(["{0} {1}".format(
             len(elements), (camel_case(element_name) if len(elements) > 1 else camel_case(singular_form(element_name)))
         ) for element_name, elements in self.model_copies.items() if elements])
-        logger.info("The new content is {0}".format(new_content_of_clipboard))
 
         return selected_models_dict, parent_m
 
