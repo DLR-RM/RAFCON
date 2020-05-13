@@ -150,7 +150,7 @@ class ShortcutManager(object):
         if action in self.__action_to_callbacks:
             for callback_function in self.__action_to_callbacks[action]:
                 try:
-                    ret = callback_function(key_value, modifier_mask, cursor_position)
+                    ret = callback_function(key_value, modifier_mask, **kwargs)
                     # If at least one controller returns True, the whole result becomes True
                     res |= (False if ret is None else ret)
                 except Exception as e:
@@ -180,4 +180,3 @@ class ShortcutManager(object):
         # this deletes the shortcuts form the global gui config, which is unnecessary!
         # self.__action_to_shortcuts.clear()
         self.__action_to_shortcuts = None
-
