@@ -625,7 +625,7 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
         parent_size = models_dict['state'].get_meta_data_editor()['size']
         parent_width, parent_height = parent_size
         # Determines, whether the relative position of the object in question can be altered, or is fixed.
-        fixed_rel_pos = not (rel_pos is None)
+        fixed_rel_pos = rel_pos is not None
         # If rel_pos was none, it sets it to parent_size.
         # So is ensured, that rel_pos_x and rel_pos_y will be reassigned later in this method.
         rel_pos_x, rel_pos_y = rel_pos if rel_pos else parent_size
