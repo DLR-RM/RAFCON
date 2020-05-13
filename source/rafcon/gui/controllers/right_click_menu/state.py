@@ -453,7 +453,8 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
             menu.popup(None, None, None, None, event.get_button()[1], event.time)
             # Note: As currently implemented, the menus root window is not the rafcon root window, but the screen itself
             # so get_root_window().get_pointer() returns the pointer in screen coordinates.
-            self.menu_position = menu.get_root_window().get_pointer().x, menu.get_root_window().get_pointer().y
+            pointer = menu.get_root_window().get_pointer()
+            self.menu_position = pointer.x, pointer.y
             from rafcon.gui.helpers.coordinate_translation import CoordinateTranslator
             translator = CoordinateTranslator()
             self.menu_position = translator.screen_coordinates_to_main_window_coordinates(self.menu_position)
