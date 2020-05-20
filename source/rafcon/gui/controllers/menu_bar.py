@@ -369,7 +369,7 @@ class MenuBarController(ExtendedController):
 
         self.add_callback_to_shortcut_manager('fullscreen', self.on_toggle_full_screen_mode)
 
-    def call_action_callback(self, callback_name, *args):
+    def call_action_callback(self, callback_name, *args, **kwargs):
         """Wrapper for action callbacks
 
         Returns True after executing the callback. This is needed in order to prevent the shortcut from being passed

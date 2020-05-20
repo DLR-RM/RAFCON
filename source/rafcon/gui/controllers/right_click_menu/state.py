@@ -457,6 +457,8 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
             self.menu_position = menu.get_root_window().get_pointer().x, menu.get_root_window().get_pointer().y
             from rafcon.gui.helpers.coordinates import screen2main_window
             self.menu_position = screen2main_window(self.menu_position)
+            pointer = menu.get_root_window().get_pointer()
+            self.menu_position = pointer.x, pointer.y
             return True
         else:
             return False

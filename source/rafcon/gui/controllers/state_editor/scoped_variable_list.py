@@ -105,7 +105,7 @@ class ScopedVariableListController(ListViewController):
         shortcut_manager.add_callback_for_action("cut", self.cut_action_callback)
         shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
 
-    def paste_action_callback(self, *event):
+    def paste_action_callback(self, *event, **kwargs):
         """Callback method for paste action
 
          The method trigger the clipboard paste of the list of scoped variables in the clipboard or in case this list is

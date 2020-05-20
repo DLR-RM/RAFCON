@@ -253,7 +253,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         """
         return tuple([int(path_elem_str) for path_elem_str in path.split(":")])
 
-    def copy_action_callback(self, *event):
+    def copy_action_callback(self, *event, **kwargs):
         """Add a copy of all selected row dict value pairs to the clipboard"""
         if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
             _, dict_paths = self.get_view_selection()
@@ -265,7 +265,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
                 selected_data_list.append((path_element, value))
             rafcon.gui.clipboard.global_clipboard.set_semantic_dictionary_list(selected_data_list)
 
-    def paste_action_callback(self, *event):
+    def paste_action_callback(self, *event, **kwargs):
         """Add clipboard key value pairs into all selected sub-dictionary"""
         if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
             _, dict_paths = self.get_view_selection()
@@ -289,7 +289,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
                         self.model.state.add_semantic_data(target_dict_path_as_list, value_to_add, key_to_paste)
             self.reload_tree_store_data()
 
-    def cut_action_callback(self, *event):
+    def cut_action_callback(self, *event, **kwargs):
         """Add a copy and cut all selected row dict value pairs to the clipboard"""
         if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
             _, dict_paths = self.get_view_selection()
