@@ -254,9 +254,7 @@ class GraphicalEditorController(ExtendedController):
         """
         if react_to_event(self.view, self.view.editor, event):
             logger.verbose("Paste")
-            cursor_position = None
-            if kwargs and 'cursor_position' in kwargs.keys():
-                cursor_position = kwargs['cursor_position']
+            cursor_position = kwargs.get("cursor_position", None)
 
             gui_helper_state_machine.paste_into_selected_state(self.model, cursor_position)
             return True
