@@ -450,15 +450,13 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
         # logger.info("activate_menu by " + self.__class__.__name__)
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) > 0 or len(selection.scoped_variables) > 0:
-            menu.popup(None, None, None, None, event.get_button()[1], event.time)
-            #menu.popup_at_widget()
-            # Note: As currently implemented, the menus root window is not the rafcon root window, but the screen itself
-            # so get_root_window().get_pointer() returns the pointer in screen coordinates.
-            self.menu_position = menu.get_root_window().get_pointer().x, menu.get_root_window().get_pointer().y
-            from rafcon.gui.helpers.coordinates import screen2main_window
-            self.menu_position = screen2main_window(self.menu_position)
-            pointer = menu.get_root_window().get_pointer()
+            from rafcon.gui.singleton import main_window_controller
+            main_window = main_window_controller.view.get_top_widget()
+            pointer = main_window.get_pointer()
             self.menu_position = pointer.x, pointer.y
+            menu.props.rect_anchor_dx = pointer.x
+            menu.props.rect_anchor_dy = pointer.y
+            menu.popup_at_widget(main_window, Gdk.Gravity.STATIC, Gdk.Gravity.STATIC, event)
             return True
         else:
             return False
@@ -469,7 +467,7 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
 
     def on_paste_activate(self, widget, data=None):
         # logger.info("trigger gaphas paste")
-        self.shortcut_manager.trigger_action("paste", None, None, self.menu_position)
+        self.shortcut_manager.trigger_action("paste", None, None, cursor_position=self.menu_position)
 
     def on_cut_activate(self, widget, data=None):
         # logger.info("trigger gaphas cut")

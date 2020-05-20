@@ -713,7 +713,7 @@ def paste_into_selected_state(state_machine_m, cursor_position=None):
         from rafcon.gui.helpers.coordinates import main_window2graphical_editor
         from rafcon.gui.helpers.coordinates import graphical_editor2item
         gc_coordinates = main_window2graphical_editor(cursor_position)
-        item_coordinates = graphical_editor2item(state_machine_m, target_state_m, gc_coordinates)
+        item_coordinates = graphical_editor2item(target_state_m, gc_coordinates)
     global_clipboard.paste(target_state_m, item_coordinates)
 
 

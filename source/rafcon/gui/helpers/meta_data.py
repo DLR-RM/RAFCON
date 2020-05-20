@@ -605,11 +605,11 @@ def scale_meta_data_according_state(models_dict, rel_pos=None, as_template=False
     Scales all elements of the dict to fit into the dict "state"-key element.
     If the elements are small enough already, and fill_up is false, no resize is performed.
     If rel_pos is None, or not a valid pos, the elements are positioned to
-    a valid position inside of the "state"-key element.
+    a valid position inside of the "state"-key element. If fill_up is true, elemets are also scaled up.
 
     :param models_dict: The objects in question as dict.
     :param (float, float) rel_pos: A position in item coordinates, relative to the parent.
-    :param bool as_template: Not used by the method.
+    :param bool as_template: Not used by the method yet.
     :param bool fill_up: If true, the objects in question will not only be scaled, down, but also scaled up.
     :return: The factor, the elements where scaled with.
     :rtype: float

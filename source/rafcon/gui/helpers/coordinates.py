@@ -45,17 +45,18 @@ def graphical_editor2main_window(ge_coordinates):
     return sm_notebook_page.translate_coordinates(main_window, ge_coordinates[0], ge_coordinates[1])
 
 
-def graphical_editor2item(state_machine_m, target_state_m, ge_coordinates):
+def graphical_editor2item(target_state_m, ge_coordinates):
     """
     Transforms a point relative to the graphical editor, into a point relative to the target state model.
     (view coordinates --> item coordinates)
-    :param StateMachineModel state_machine_m: The state machine model, the target state model belongs to.
     :param StateModel target_state_m: The state model, the resulting point should be relative to.
     :param (float,float) ge_coordinates: A tuple containing a x and a y coordinate relative to the graphical editor.
     :return: The same point, relative to the target state model.
     :rtype: (float,float)
     """
     from rafcon.gui.singleton import main_window_controller
+    from rafcon.gui.singleton import state_machine_manager_model
+    state_machine_m = state_machine_manager_model.get_state_machine_model(target_state_m)
     sm_controllers = main_window_controller.state_machines_editor_ctrl
     graphical_editor_controller = sm_controllers.get_controller(1)
     root_state_m = state_machine_m.root_state
@@ -66,11 +67,10 @@ def graphical_editor2item(state_machine_m, target_state_m, ge_coordinates):
     return item_coordinates
 
 
-def item2graphical_editor(state_machine_m, target_state_m, item_coordinates):
+def item2graphical_editor(target_state_m, item_coordinates):
     """
     Transforms a point relative to given target state model, into a point relative to the graphical editor.
     (item coordinates --> view coordinates)
-    :param StateMachineModel state_machine_m: The state machine model, the target state model belongs to.
     :param StateModel target_state_m: The state model, the given point is relative to.
     :param (float,float) item_coordinates:
     A tuple containing a x and a y coordinate relative to the given target state model.
@@ -78,6 +78,8 @@ def item2graphical_editor(state_machine_m, target_state_m, item_coordinates):
     :rtype: (float,float)
     """
     from rafcon.gui.singleton import main_window_controller
+    from rafcon.gui.singleton import state_machine_manager_model
+    state_machine_m = state_machine_manager_model.get_state_machine_model(target_state_m)
     sm_controllers = main_window_controller.state_machines_editor_ctrl
     graphical_editor_controller = sm_controllers.get_controller(1)
     root_state_m = state_machine_m.root_state
@@ -113,4 +115,3 @@ def main_window2screen(main_window_coordinates):
     main_window = main_window_controller.view.get_top_widget()
     main_window_pos = main_window.get_position()
     return main_window_pos[0] + main_window_coordinates[0], main_window_pos[1] + main_window_coordinates[1]
-
