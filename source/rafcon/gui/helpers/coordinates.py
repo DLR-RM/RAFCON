@@ -57,8 +57,9 @@ def graphical_editor2item(target_state_m, ge_coordinates):
     from rafcon.gui.singleton import main_window_controller
     from rafcon.gui.singleton import state_machine_manager_model
     state_machine_m = state_machine_manager_model.get_state_machine_model(target_state_m)
+    sm_id = state_machine_m.state_machine.state_machine_id
     sm_controllers = main_window_controller.state_machines_editor_ctrl
-    graphical_editor_controller = sm_controllers.get_controller(1)
+    graphical_editor_controller = sm_controllers.get_controller(sm_id)
     root_state_m = state_machine_m.root_state
     state_view_for_root_state = graphical_editor_controller.canvas.get_view_for_model(root_state_m)
     state_view_for_target_state = graphical_editor_controller.canvas.get_view_for_model(target_state_m)
@@ -80,8 +81,9 @@ def item2graphical_editor(target_state_m, item_coordinates):
     from rafcon.gui.singleton import main_window_controller
     from rafcon.gui.singleton import state_machine_manager_model
     state_machine_m = state_machine_manager_model.get_state_machine_model(target_state_m)
+    sm_id = state_machine_m.state_machine.state_machine_id
     sm_controllers = main_window_controller.state_machines_editor_ctrl
-    graphical_editor_controller = sm_controllers.get_controller(1)
+    graphical_editor_controller = sm_controllers.get_controller(sm_id)
     root_state_m = state_machine_m.root_state
     state_view_for_root_state = graphical_editor_controller.canvas.get_view_for_model(root_state_m)
     state_view_for_target_state = graphical_editor_controller.canvas.get_view_for_model(target_state_m)
