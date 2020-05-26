@@ -230,7 +230,7 @@ class MenuBarController(ExtendedController):
 
         self.view.sub_menu_open_recently.show_all()
 
-    def on_toggle_full_screen_mode(self, *args):
+    def on_toggle_full_screen_mode(self, *args, **kwargs):
             self.view["full_screen"].set_active(False if self.view["full_screen"].get_active() else True)
 
     def on_full_screen_mode_toggled(self, *args):
@@ -594,25 +594,25 @@ class MenuBarController(ExtendedController):
     ######################################################
     # menu bar functionality - View
     ######################################################
-    def data_flow_mode_toggled_shortcut(self, *args):
+    def data_flow_mode_toggled_shortcut(self, *args, **kwargs):
         if self.view["data_flow_mode"].get_active():
             self.view["data_flow_mode"].set_active(False)
         else:
             self.view["data_flow_mode"].set_active(True)
 
-    def show_data_flows_toggled_shortcut(self, *args):
+    def show_data_flows_toggled_shortcut(self, *args, **kwargs):
         if self.view["show_data_flows"].get_active():
             self.view["show_data_flows"].set_active(False)
         else:
             self.view["show_data_flows"].set_active(True)
 
-    def show_data_values_toggled_shortcut(self, *args):
+    def show_data_values_toggled_shortcut(self, *args, **kwargs):
         if self.view["show_data_values"].get_active():
             self.view["show_data_values"].set_active(False)
         else:
             self.view["show_data_values"].set_active(True)
 
-    def show_aborted_preempted(self, *args):
+    def show_aborted_preempted(self, *args, **kwargs):
         if self.view["show_aborted_preempted"].get_active():
             self.view["show_aborted_preempted"].set_active(False)
         else:

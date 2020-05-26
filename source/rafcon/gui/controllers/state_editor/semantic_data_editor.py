@@ -106,7 +106,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
     def register_actions(self, shortcut_manager):
         shortcut_manager.add_callback_for_action("delete", self.remove_action_callback)
         shortcut_manager.add_callback_for_action("add", self.add_action_callback)
-        shortcut_manager.add_callback_for_action("add_hierarchy_state", partial(self.add_action_callback, True))
+        shortcut_manager.add_callback_for_action("add_hierarchy_state", partial(self.add_action_callback, a_dict=True))
         shortcut_manager.add_callback_for_action("copy", self.copy_action_callback)
         shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
         shortcut_manager.add_callback_for_action("cut", self.cut_action_callback)
@@ -167,7 +167,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         logger.debug("Added new semantic data entry!")
         return True
 
-    def add_action_callback(self, key_value, modifier_mask, a_dict=False):
+    def add_action_callback(self, key_value, modifier_mask, a_dict=False, **kwargs):
         """Callback method for add action"""
         if react_to_event(self.view, self.tree_view, event=(key_value, modifier_mask)) and self.active_entry_widget is None:
             self.on_add(None, a_dict)

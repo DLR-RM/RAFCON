@@ -101,7 +101,7 @@ class EditorController(ExtendedController):
             return True
         return False
 
-    def _open_external_editor(self, *event):
+    def _open_external_editor(self, *event, **kwargs):
         if react_to_event(self.view, self.view.textview, event):
             self.view['open_external_button'].set_active(True)
             return True

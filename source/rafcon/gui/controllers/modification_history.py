@@ -175,7 +175,7 @@ class ModificationHistoryTreeController(ExtendedController):
                 self.update(None, None, None)
         self.no_cursor_observation = False
 
-    def undo(self, key_value, modifier_mask,**kwargs):
+    def undo(self, key_value, modifier_mask, **kwargs):
         """Undo for selected state-machine if no state-source-editor is open and focused in states-editor-controller.
 
         :return: True if a undo was performed, False if focus on source-editor.
