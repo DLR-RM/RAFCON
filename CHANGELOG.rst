@@ -12,6 +12,7 @@ Next Release
 """"""""""""
 
 - Features:
+    - :issue_gh:`836` Added and pasted states are now inserted at the cursor position, respectively the position of the right-click-menu, or a default position, in case the given coordinates are invalid.
 
 
 - Bug Fixes:

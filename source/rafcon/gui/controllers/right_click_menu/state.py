@@ -44,6 +44,7 @@ logger = log.get_logger(__name__)
 
 
 class StateMachineRightClickMenu(object):
+    menu_position = None
 
     def __init__(self, state_machine_manager_model=None):
         if state_machine_manager_model is None:
@@ -278,16 +279,16 @@ class StateMachineRightClickMenu(object):
         self.shortcut_manager.trigger_action("is_start_state", None, None)
 
     def on_add_execution_state_activate(self, widget=None, data=None):
-        self.shortcut_manager.trigger_action('add_execution_state', None, None)
+        self.shortcut_manager.trigger_action('add_execution_state', None, None, cursor_position=self.menu_position)
 
     def on_add_hierarchy_state_activate(self, widget=None, data=None):
-        self.shortcut_manager.trigger_action('add_hierarchy_state', None, None)
+        self.shortcut_manager.trigger_action('add_hierarchy_state', None, None, cursor_position=self.menu_position)
 
     def on_add_preemptive_state_activate(self, widget=None, data=None):
-        self.shortcut_manager.trigger_action('add_preemptive_state', None, None)
+        self.shortcut_manager.trigger_action('add_preemptive_state', None, None, cursor_position=self.menu_position)
 
     def on_add_barrier_state_activate(self, widget=None, data=None):
-        self.shortcut_manager.trigger_action('add_barrier_state', None, None)
+        self.shortcut_manager.trigger_action('add_barrier_state', None, None, cursor_position=self.menu_position)
 
     def on_add_outcome(self, widget=None, data=None):
         self.shortcut_manager.trigger_action('add_outcome', None, None)
@@ -444,7 +445,7 @@ class StateRightClickMenuControllerOpenGLEditor(StateMachineRightClickMenuContro
 
 
 class StateRightClickMenuGaphas(StateMachineRightClickMenu):
-    menu_position = None
+
 
     def activate_menu(self, event, menu):
         # logger.info("activate_menu by " + self.__class__.__name__)

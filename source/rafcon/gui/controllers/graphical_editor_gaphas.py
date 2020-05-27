@@ -228,7 +228,11 @@ class GraphicalEditorController(ExtendedController):
         """
         if react_to_event(self.view, self.view.editor, event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-            return gui_helper_state_machine.add_new_state(self.model, state_type)
+            cursor_position = kwargs.get("cursor_position", None)
+            if cursor_position is not None:
+                from rafcon.gui.helpers.coordinates import main_window2graphical_editor
+                cursor_position = main_window2graphical_editor(cursor_position)
+            return gui_helper_state_machine.add_new_state(self.model, state_type, cursor_position)
 
     @lock_state_machine
     def _copy_selection(self, *event, **kwargs):

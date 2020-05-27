@@ -744,11 +744,13 @@ def selected_state_toggle_is_start_state():
         return False
 
 
-def add_new_state(state_machine_m, state_type):
+def add_new_state(state_machine_m, state_type, add_position=None):
     """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
 
     Adds a new state only if the parent state (selected state) is a container state, and if the graphical editor or
     the state machine tree are in focus.
+
+    :param (float, float) add_position: The position, to add the state at, relative to the graphical editor.
     """
     assert isinstance(state_machine_m, StateMachineModel)
 
@@ -764,7 +766,11 @@ def add_new_state(state_machine_m, state_type):
         return
 
     if isinstance(state_m, StateModel):
-        return gui_helper_state.add_state(state_m, state_type)
+        rel_pos_to_state = None
+        if add_position is not None:
+            from rafcon.gui.helpers.coordinates import  graphical_editor2item
+            rel_pos_to_state = graphical_editor2item(state_m, add_position)
+        return gui_helper_state.add_state(state_m, state_type, rel_pos_to_state)
     else:
         logger.warning("Add new state is not performed because target state indication has to be a {1} not {0}"
                     "".format(state_m.__class__.__name__, StateModel.__name__))
