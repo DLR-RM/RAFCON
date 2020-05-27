@@ -450,13 +450,11 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
         # logger.info("activate_menu by " + self.__class__.__name__)
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) > 0 or len(selection.scoped_variables) > 0:
-            from rafcon.gui.singleton import main_window_controller
-            main_window = main_window_controller.view.get_top_widget()
-            pointer = main_window.get_pointer()
-            self.menu_position = pointer.x, pointer.y
-            menu.props.rect_anchor_dx = pointer.x
-            menu.props.rect_anchor_dy = pointer.y
-            menu.popup_at_widget(main_window, Gdk.Gravity.STATIC, Gdk.Gravity.STATIC, event)
+            from rafcon.gui.helpers.coordinates import screen2main_window
+            menu.popup(None, None, None, None, event.get_button()[1], event.time)
+            #The pointer in screen coordinates.
+            pointer = menu.get_root_window().get_pointer()
+            self.menu_position = screen2main_window((pointer.x, pointer.y))
             return True
         else:
             return False
