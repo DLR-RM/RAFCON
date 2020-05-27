@@ -12,7 +12,8 @@ Next Release
 """"""""""""
 
 - Features:
-    - :issue_gh:`836` Added and pasted states are now inserted at the cursor position, respectively the position of the right-click-menu, or a default position, in case the given coordinates are invalid.
+    - :issue_gh:`290` paste state at current mouse position (both via context menu and shortcut) @CSuerig
+    - add state at context menu position when using context menu to add states @CSuerig
 
 
 - Bug Fixes:
