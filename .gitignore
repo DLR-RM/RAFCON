@@ -89,6 +89,7 @@ coverage.xml
 .idea/**/markdown-navigator/
 .idea/**/markdown-exported-files.xml
 .idea/**/markdown-navigator.xml
+.idea/markdown-navigator-enh.xml
 
 # as the jetbrains recommendation is not sufficient, custom files have to be added here as well
 .idea/misc.xml
