@@ -5,7 +5,7 @@
 
 .widget-title {
     background-color: $bg_color;
-    border-top: 1px solid $borders_color;
+    border-top: 1px solid #ff80ed;
     border-bottom: 1px solid $borders_color;
     > label {
         color: $secondary_text_color;
@@ -96,6 +96,7 @@ notebook.secondary > header {
               border: 1px solid $borders_color;
               border-#{$_pos}: none;
               border-#{$_bpos}: none;
+              border-left: 2px solid #f8646c;
           }
         }
       }
@@ -108,10 +109,14 @@ notebook.secondary > header {
         &:hover:not(:checked) {
             //color: mix($fg_color, $insensitive_fg_color, 50%);
             background-color: $base_color;
+            border-left: 2px solid #f8646c;
         }
         &:checked {
-            color: $secondary_text_color;
+//             color: $secondary_text_color;
             background-color: $base_color;
+//             background-image: -gtk-scaled(url("../assets/switch.png"),url("../assets/switch@2.png"));
+//             background-image: url("../assets/switch.png");
+            border-left: 2px solid #f8646c;
         }
     }
 }

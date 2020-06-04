@@ -11,7 +11,7 @@ Use `sass` to compile the SCSS file to CSS:
 > sass --scss --sourcemap=none --force --update sass:gtk-3.0
 ```
 
-You can also run `sass` as background process that autmatically compiles the SCSS files as soon as changes are detected.
+You can also run `sass` as background process that automatically compiles the SCSS files as soon as changes are detected.
  This can for example be used in a PyCharm External Tool:
  
  ```commandline

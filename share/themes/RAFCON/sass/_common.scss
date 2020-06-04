@@ -1852,8 +1852,13 @@ notebook {
         background-color: $rafcon_color;
       }
       &:checked {
-        color: $rafcon_fg_color;
-        background-color: $rafcon_color;
+//         color: $rafcon_fg_color;
+//         background-color: $rafcon_color;
+//         background-image: -gtk-scaled(url("../assets/switch.png"),url("../assets/switch@2.png"));
+//         background-image: -gtk-scaled(url("../assets/switch.png"));
+        background: url("../assets/switch.png") no-repeat;
+//         background-position: 16px 0;
+        border-left: 2px solid #f8646c;
       }
       // close button
       button.flat {
