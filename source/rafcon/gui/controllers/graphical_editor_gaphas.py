@@ -213,11 +213,11 @@ class GraphicalEditorController(ExtendedController):
             if not rafcon.gui.singleton.global_gui_config.get_config_value('DRAG_N_DROP_WITH_FOCUS'):
                 self.view.editor.handler_unblock(self.focus_changed_handler_id)
 
-    def update_view(self, *args):
+    def update_view(self, *args, **kwargs):
         self.canvas.update_root_items()
 
     @lock_state_machine
-    def data_flow_mode(self, *args):
+    def data_flow_mode(self, *args, **kwargs):
         pass
 
     @lock_state_machine
@@ -228,33 +228,39 @@ class GraphicalEditorController(ExtendedController):
         """
         if react_to_event(self.view, self.view.editor, event):
             state_type = StateType.EXECUTION if 'state_type' not in kwargs else kwargs['state_type']
-            return gui_helper_state_machine.add_new_state(self.model, state_type)
+            cursor_position = kwargs.get("cursor_position", None)
+            if cursor_position:
+                from rafcon.gui.helpers.coordinates import main_window2graphical_editor
+                cursor_position = main_window2graphical_editor(cursor_position)
+            return gui_helper_state_machine.add_new_state(self.model, state_type, cursor_position)
 
     @lock_state_machine
-    def _copy_selection(self, *event):
+    def _copy_selection(self, *event, **kwargs):
         """Copies the current selection to the clipboard.
         """
         if react_to_event(self.view, self.view.editor, event):
-            logger.debug("copy selection")
+            logger.verbose("copy selection")
             global_clipboard.copy(self.model.selection)
             return True
 
     @lock_state_machine
-    def _cut_selection(self, *event):
-        """Cuts the current selection and copys it to the clipboard.
+    def _cut_selection(self, *event, **kwargs):
+        """Cuts the current selection and copies it to the clipboard.
         """
         if react_to_event(self.view, self.view.editor, event):
-            logger.debug("cut selection")
+            logger.verbose("cut selection")
             global_clipboard.cut(self.model.selection)
             return True
 
     @lock_state_machine
-    def _paste_clipboard(self, *event):
+    def _paste_clipboard(self, *event, **kwargs):
         """Paste the current clipboard into the current selection if the current selection is a container state.
         """
         if react_to_event(self.view, self.view.editor, event):
-            logger.debug("Paste")
-            gui_helper_state_machine.paste_into_selected_state(self.model)
+            logger.verbose("Paste")
+            cursor_position = kwargs.get("cursor_position", None)
+
+            gui_helper_state_machine.paste_into_selected_state(self.model, cursor_position)
             return True
 
     def _move_focused_item_into_viewport(self, view, focused_item):
@@ -1034,16 +1040,16 @@ class GraphicalEditorController(ExtendedController):
             gui_helper_state_machine.add_data_port_to_selected_states(data_port_type)
 
     @lock_state_machine
-    def _add_scoped_variable_to_selected_state(self, *event):
+    def _add_scoped_variable_to_selected_state(self, *event, **kwargs):
         if self.react_to_event(event):
             gui_helper_state_machine.add_scoped_variable_to_selected_states()
 
     @lock_state_machine
-    def _add_outcome_to_selected_state(self, *event):
+    def _add_outcome_to_selected_state(self, *event, **kwargs):
         if self.react_to_event(event):
             gui_helper_state_machine.add_outcome_to_selected_states()
 
     @lock_state_machine
-    def _remove_selected_elements(self, *event):
+    def _remove_selected_elements(self, *event, **kwargs):
         if self.react_to_event(event):
             gui_helper_state_machine.delete_selected_elements(self.model)

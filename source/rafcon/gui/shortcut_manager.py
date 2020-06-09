@@ -56,7 +56,8 @@ class ShortcutManager(object):
                 self.accel_group.connect(keyval, modifier_mask, Gtk.AccelFlags.VISIBLE, callback)
 
     def __on_shortcut(self, action, accel_group, window, key_value, modifier_mask):
-        res = self.trigger_action(action, key_value, modifier_mask)
+        pointer = self.main_window.get_pointer()
+        res = self.trigger_action(action, key_value, modifier_mask, cursor_position=(pointer.x, pointer.y))
         # If returning False, the shortcut is forwarded to GTK to be used for default actions (like copy and paste in
         #  a text field). If a controller wants to prevent this, it has to return True.
         return res
@@ -135,12 +136,13 @@ class ShortcutManager(object):
             return self.__action_to_shortcuts[action]
         return None
 
-    def trigger_action(self, action, key_value, modifier_mask):
+    def trigger_action(self, action, key_value, modifier_mask, **kwargs):
         """Calls the appropriate callback function(s) for the given action
 
         :param str action: The name of the action that was triggered
         :param key_value: The key value of the shortcut that caused the trigger
         :param modifier_mask: The modifier mask of the shortcut that caused the trigger
+        :param cursor_position: The position of the cursor, relative to the main window.
         :return: Whether a callback was triggered
         :rtype: bool
         """
@@ -148,7 +150,7 @@ class ShortcutManager(object):
         if action in self.__action_to_callbacks:
             for callback_function in self.__action_to_callbacks[action]:
                 try:
-                    ret = callback_function(key_value, modifier_mask)
+                    ret = callback_function(key_value, modifier_mask, **kwargs)
                     # If at least one controller returns True, the whole result becomes True
                     res |= (False if ret is None else ret)
                 except Exception as e:

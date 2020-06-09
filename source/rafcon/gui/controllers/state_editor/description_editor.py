@@ -61,7 +61,7 @@ class DescriptionEditorController(EditorController):
         super(DescriptionEditorController, self).register_actions(shortcut_manager)
         shortcut_manager.add_callback_for_action("abort", self._abort)
 
-    def _abort(self, *event):
+    def _abort(self, *event, **kwargs):
         if react_to_event(self.view, self.view.textview, event):
             logger.debug("Abort shortcut pressed {}".format(self.__class__.__name__))
             self.cancel_clicked(None)

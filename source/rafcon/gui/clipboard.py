@@ -140,8 +140,8 @@ class Clipboard(Observable):
         Related data flows and transitions are determined by origin and target keys and respective objects which has to
         be in the state machine selection, too. Thus, transitions or data flows without the related objects are not copied.
         :param target_state_m: state in which the copied/cut elements should be insert
-        :param cursor_position: cursor position used to adapt meta data positioning of elements e.g states and
-        via points
+        :param cursor_position: cursor position relative to the target_state_m as item coordinates,
+        used to adapt meta data positioning of elements e.g states and via points.
         :return:
         """
         if all([not elems for elems in self.model_copies.values()]):
@@ -243,7 +243,7 @@ class Clipboard(Observable):
                 for elems_list in insert_dict.values()]) or \
                                 len(dict_of_non_empty_lists_of_model_copies) == 1 and 'states' in dict_of_non_empty_lists_of_model_copies:
             try:
-                gui_helpers_meta_data.scale_meta_data_according_state(models_dict)
+                gui_helpers_meta_data.scale_meta_data_according_state(models_dict, cursor_position)
             except:
                 logger.exception("Scale of pasted content {0} cause a problems.".format(models_dict))
         else:
@@ -504,7 +504,6 @@ class Clipboard(Observable):
         new_content_of_clipboard = ', '.join(["{0} {1}".format(
             len(elements), (camel_case(element_name) if len(elements) > 1 else camel_case(singular_form(element_name)))
         ) for element_name, elements in self.model_copies.items() if elements])
-        logger.info("The new content is {0}".format(new_content_of_clipboard))
 
         return selected_models_dict, parent_m
 
