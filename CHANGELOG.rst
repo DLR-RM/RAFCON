@@ -22,12 +22,18 @@ Next Release
 
 
 
-0.14.3
+0.14.4
 """"""
 
 - Features:
     - :issue_gh:`290` paste state at current mouse position (both via context menu and shortcut) @CSuerig
     - add state at context menu position when using context menu to add states @CSuerig
+
+
+0.14.3
+""""""
+
+Maintenance release.
 
 
 0.14.2
