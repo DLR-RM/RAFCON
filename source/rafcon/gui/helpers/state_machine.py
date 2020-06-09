@@ -697,7 +697,10 @@ def delete_selected_elements(state_machine_m):
         return True
 
 
-def paste_into_selected_state(state_machine_m):
+def paste_into_selected_state(state_machine_m, cursor_position=None):
+    """
+    :param (float, float) cursor_position: the cursor position relative to the main window.
+    """
     selection = state_machine_m.selection
     if len(selection.states) != 1:
         logger.warning("Please select a single container state for pasting the clipboard")
@@ -705,7 +708,13 @@ def paste_into_selected_state(state_machine_m):
 
     # Note: in multi-selection case, a loop over all selected items is necessary instead of the 0 index
     target_state_m = selection.get_selected_state()
-    global_clipboard.paste(target_state_m)
+    item_coordinates = None
+    if cursor_position:
+        from rafcon.gui.helpers.coordinates import main_window2graphical_editor
+        from rafcon.gui.helpers.coordinates import graphical_editor2item
+        gc_coordinates = main_window2graphical_editor(cursor_position)
+        item_coordinates = graphical_editor2item(target_state_m, gc_coordinates)
+    global_clipboard.paste(target_state_m, item_coordinates)
 
 
 def selected_state_toggle_is_start_state():
@@ -735,11 +744,15 @@ def selected_state_toggle_is_start_state():
         return False
 
 
-def add_new_state(state_machine_m, state_type):
+def add_new_state(state_machine_m, state_type, target_position=None):
     """Triggered when shortcut keys for adding a new state are pressed, or Menu Bar "Edit, Add State" is clicked.
 
     Adds a new state only if the parent state (selected state) is a container state, and if the graphical editor or
     the state machine tree are in focus.
+
+    :param state_machine_m: the state machine model to add the state to
+    :param state_type: the state type of the state to be added
+    :param (float, float) target_position: The position, to add the state at, relative to the graphical editor.
     """
     assert isinstance(state_machine_m, StateMachineModel)
 
@@ -755,10 +768,14 @@ def add_new_state(state_machine_m, state_type):
         return
 
     if isinstance(state_m, StateModel):
-        return gui_helper_state.add_state(state_m, state_type)
+        rel_pos_to_state = None
+        if target_position:
+            from rafcon.gui.helpers.coordinates import graphical_editor2item
+            rel_pos_to_state = graphical_editor2item(state_m, target_position)
+        return gui_helper_state.add_state(state_m, state_type, rel_pos_to_state)
     else:
         logger.warning("Add new state is not performed because target state indication has to be a {1} not {0}"
-                    "".format(state_m.__class__.__name__, StateModel.__name__))
+                       "".format(state_m.__class__.__name__, StateModel.__name__))
 
     # TODO this code can not be reached -> recover again? -> e.g. feature select transition add's state to parent
     if isinstance(state_m, (TransitionModel, DataFlowModel)) or \

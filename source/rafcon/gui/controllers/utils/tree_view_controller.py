@@ -160,7 +160,7 @@ class AbstractTreeViewController(ExtendedController):
         """An abstract add method for a respective new core element and final selection of those"""
         raise NotImplementedError
 
-    def add_action_callback(self, *event):
+    def add_action_callback(self, *event, **kwargs):
         """Callback method for add action"""
         if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
             self.on_add(None)
@@ -189,7 +189,7 @@ class AbstractTreeViewController(ExtendedController):
         """Remove respective selected core elements and select the next one"""
         raise NotImplementedError
 
-    def remove_action_callback(self, *event):
+    def remove_action_callback(self, *event, **kwargs):
         """Callback method for remove action
 
         The method checks whether a shortcut ('Delete') is in the gui config model which shadow the delete functionality
@@ -200,7 +200,7 @@ class AbstractTreeViewController(ExtendedController):
             self.on_remove(None)
             return True
 
-    def copy_action_callback(self, *event):
+    def copy_action_callback(self, *event, **kwargs):
         """Callback method for copy action"""
         if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
             sm_selection, sm_selected_model_list = self.get_state_machine_selection()
@@ -210,7 +210,7 @@ class AbstractTreeViewController(ExtendedController):
                 global_clipboard.copy(sm_selection)
                 return True
 
-    def cut_action_callback(self, *event):
+    def cut_action_callback(self, *event, **kwargs):
         """Callback method for copy action"""
         if react_to_event(self.view, self.tree_view, event) and self.active_entry_widget is None:
             sm_selection, sm_selected_model_list = self.get_state_machine_selection()

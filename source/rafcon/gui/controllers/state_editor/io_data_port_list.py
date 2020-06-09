@@ -116,7 +116,7 @@ class DataPortListController(ListViewController):
         shortcut_manager.add_callback_for_action("cut", self.cut_action_callback)
         shortcut_manager.add_callback_for_action("paste", self.paste_action_callback)
 
-    def paste_action_callback(self, *event):
+    def paste_action_callback(self, *event, **kwargs):
         raise NotImplementedError()
 
     def on_add(self, widget, data=None):
@@ -333,7 +333,7 @@ class InputPortListController(DataPortListController):
                 self.model is model:
             self._data_ports_changed(model)
 
-    def paste_action_callback(self, *event):
+    def paste_action_callback(self, *event, **kwargs):
         """Callback method for paste action
 
         The method triggers the paste method of the clipboard paste. If there are InputDataPorts in the clipboard, 
@@ -404,7 +404,7 @@ class OutputPortListController(DataPortListController):
                 self.model is model:
             self._data_ports_changed(model)
 
-    def paste_action_callback(self, *event):
+    def paste_action_callback(self, *event, **kwargs):
         """Callback method for paste action
 
         The method triggers the paste method of the clipboard paste. If there are OutputDataPorts in the clipboard, 

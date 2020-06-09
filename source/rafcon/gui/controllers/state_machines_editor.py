@@ -153,7 +153,7 @@ class StateMachinesEditorController(ExtendedController):
                 self.on_close_clicked(event, state_machine_m, None, force=False)
                 return
 
-    def on_close_shortcut(self, *args):
+    def on_close_shortcut(self, *args, **kwargs):
         """Close selected state machine (triggered by shortcut)"""
         state_machine_m = self.model.get_selected_state_machine_model()
         if state_machine_m is None:

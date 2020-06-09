@@ -119,7 +119,7 @@ class StateMachineTreeController(TreeViewController):
             self.tree_store.clear()
         self._do_selection_update = False
 
-    def paste_action_callback(self, *event):
+    def paste_action_callback(self, *event, **kwargs):
         """Callback method for paste action"""
         if react_to_event(self.view, self.tree_view, event):
             sm_selection, _ = self.get_state_machine_selection()
@@ -140,7 +140,7 @@ class StateMachineTreeController(TreeViewController):
             gui_helper_state_machine.add_new_state(self._selected_sm_model, state_type)
             return True
 
-    def _delete_selection(self, *event):
+    def _delete_selection(self, *event, **kwargs):
         if react_to_event(self.view, self.view['state_machine_tree_view'], event):
             return gui_helper_state_machine.delete_selected_elements(self._selected_sm_model)
 
