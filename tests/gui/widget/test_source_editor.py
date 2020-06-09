@@ -45,6 +45,13 @@ def check_for_editor(editor):
         return False
 
 
+def compile_script(gui, state_m):
+    try:
+        gui(state_m.state.script.compile_module)
+    except Exception as e:  # dedicated exception needed as setting the script text does not compile the script
+        logger.error("Error in script")
+
+
 def test_gui(gui):
     # queue = Queue.Queue() # TODO think about to use this to get call_back methods return value by a generic scheme
     # thread = threading.Thread(target=lambda q, arg1: q.put(trigger_source_editor_signals(arg1)), args=(queue, main_window_controller))
@@ -80,6 +87,7 @@ def test_gui(gui):
     content = 'Test'
     # This adds an additional error, as this script cannot be compiled
     gui(source_editor_controller.set_script_text, content)
+    compile_script(gui, state_m)
     assert content == source_editor_controller.source_text
     gui.expected_errors += 1  # NameError: name 'Test' is not defined
 
@@ -114,6 +122,7 @@ def test_gui(gui):
                                                 include_hidden_chars=True))
     apply_button = source_view['apply_button']
     gui(source_editor_controller.apply_clicked, apply_button)
+    compile_script(gui, state_m)
     assert source_editor_controller.source_text == test_text
     gui.expected_errors += 1  # NameError: name 'apply_test' is not defined
 

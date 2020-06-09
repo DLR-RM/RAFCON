@@ -12,6 +12,8 @@ Next Release
 """"""""""""
 
 - Features:
+    - :issue_gh:`290` paste state at current mouse position (both via context menu and shortcut) @CSuerig
+    - add state at context menu position when using context menu to add states @CSuerig
 
 
 - Bug Fixes:

@@ -942,6 +942,14 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         return 0
 
+    def get_number_of_data_flows(self):
+        """Generate the number of data flows
+
+        :rtype: int
+        :return: The number of data flows for a state. Per default states do not have data flows.
+        """
+        return 0
+
     def get_semantic_data(self, path_as_list):
         """ Retrieves an entry of the semantic data.
 

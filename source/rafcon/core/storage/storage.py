@@ -363,6 +363,8 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
         number_of_states, base_path, hierarchy_level))
     logger.debug("Loaded state machine ({1}) has {0} transitions.".format(
         state_machine.root_state.get_number_of_transitions(), base_path))
+    logger.debug("Loaded state machine ({1}) has {0} data flows.".format(
+        state_machine.root_state.get_number_of_data_flows(), base_path))
 
     return state_machine
 

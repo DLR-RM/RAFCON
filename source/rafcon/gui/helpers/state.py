@@ -110,7 +110,7 @@ def update_models_recursively(state_m, expected=True):
             update_models_recursively(child_state_m, expected)
 
 
-def add_state(container_state_m, state_type):
+def add_state(container_state_m, state_type, add_position=None):
     """Add a state to a container state
 
     Adds a state of type state_type to the given container_state
@@ -118,6 +118,7 @@ def add_state(container_state_m, state_type):
     :param rafcon.gui.models.container_state.ContainerState container_state_m: A model of a container state to add
       the new state to
     :param rafcon.core.enums.StateType state_type: The type of state that should be added
+    :param (float, float) add_position: The position, to add the state at, relative to the container_state_m in item coordinates.
     :return: True if successful, False else
     """
     if container_state_m is None:
@@ -139,6 +140,8 @@ def add_state(container_state_m, state_type):
     from rafcon.gui.models.abstract_state import get_state_model_class_for_state
     new_state_m = get_state_model_class_for_state(new_state)(new_state)
     gui_helper_meta_data.put_default_meta_on_state_m(new_state_m, container_state_m)
+    if add_position is not None:
+        new_state_m.set_meta_data_editor('rel_pos', add_position)
     container_state_m.expected_future_models.add(new_state_m)
     container_state_m.state.add_state(new_state)
     return True
@@ -437,7 +440,7 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
                 models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}
 
             resize_factor = gui_helper_meta_data.scale_meta_data_according_state(models_dict, as_template=True)
-            gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, resize_factor)
+            gui_helper_meta_data.resize_income_of_state_m(state_m_to_insert, (resize_factor, resize_factor))
 
         elif isinstance(state_m_to_insert, StateModel):
             # print("TARGET2", state_m_to_insert.state.state_element_attrs)

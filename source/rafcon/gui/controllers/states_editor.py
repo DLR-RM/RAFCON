@@ -582,7 +582,7 @@ class StatesEditorController(ExtendedController):
         page = tab_info['page']
         set_tab_label_texts(page.title_label, state_m, tab_info['source_code_view_is_dirty'])
 
-    def rename_selected_state(self, key_value, modifier_mask):
+    def rename_selected_state(self, key_value, modifier_mask, **kwargs):
         """Callback method for shortcut action rename
 
         Searches for a single selected state model and open the according page. Page is created if it is not

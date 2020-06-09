@@ -216,7 +216,7 @@ class LibraryState(State):
 
     def __copy__(self):
         income = self._income
-        outcomes = {elem_id: copy(elem) for elem_id, elem in self.outcomes.items()}
+        outcomes = {key: copy(self.outcomes[key]) for key in self.outcomes.keys()}
         state = self.__class__(self._library_path, self._library_name, self._version,  # library specific attributes
                                # the following are the container state specific attributes
                                self._name, self._state_id, income, outcomes,
@@ -440,6 +440,13 @@ class LibraryState(State):
         :return:
         """
         return self.state_copy.get_number_of_transitions()
+
+    def get_number_of_data_flows(self):
+        """
+        Return the number of data flows for a state. Per default states do not have data flows.
+        :return:
+        """
+        return self.state_copy.get_number_of_data_flows()
 
     #########################################################################
     # Properties for all class fields that must be observed by gtkmvc3
