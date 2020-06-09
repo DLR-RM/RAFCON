@@ -44,6 +44,12 @@ logger = log.get_logger(__name__)
 
 
 class StateMachineRightClickMenu(object):
+
+    """ A class for handling all right click menus inside rafcon.
+    Examples are the right click menu of the state machine tree or the gaphas editor.
+
+    """
+
     menu_position = None
 
     def __init__(self, state_machine_manager_model=None):
@@ -445,7 +451,9 @@ class StateRightClickMenuControllerOpenGLEditor(StateMachineRightClickMenuContro
 
 
 class StateRightClickMenuGaphas(StateMachineRightClickMenu):
+    """ A class for handling the right click menu inside gaphas
 
+    """
 
     def activate_menu(self, event, menu):
         # logger.info("activate_menu by " + self.__class__.__name__)
@@ -453,7 +461,7 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
         if len(selection.states) > 0 or len(selection.scoped_variables) > 0:
             from rafcon.gui.helpers.coordinates import screen2main_window
             menu.popup(None, None, None, None, event.get_button()[1], event.time)
-            #The pointer in screen coordinates.
+            # The pointer in screen coordinates.
             pointer = menu.get_root_window().get_pointer()
             self.menu_position = screen2main_window((pointer.x, pointer.y))
             return True

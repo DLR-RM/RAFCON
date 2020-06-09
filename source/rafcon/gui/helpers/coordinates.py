@@ -19,7 +19,7 @@ def main_window2graphical_editor(main_window_coordinates):
     (window coordinates --> view coordinates).
     :param (float, float) main_window_coordinates:
     A tuple containing x and y coordinates relative to the main window.
-    :return: The same point, but relative to the graphical editor (That's the view coordinate system).
+    :return: The same point relative to the graphical editor (the view coordinate system).
     :rtype: (float, float)
     """
     from rafcon.gui.singleton import main_window_controller
@@ -35,7 +35,7 @@ def graphical_editor2main_window(ge_coordinates):
     (view coordinates --> window coordinates)
     :param (float, float) ge_coordinates:
     A tuple containing a x and a y coordinate relative to the state machine notebook.
-    :return: The same point, but relative to the main window.
+    :return: The same point relative to the main window.
     :rtype: (float, float)
     """
     from rafcon.gui.singleton import main_window_controller
@@ -51,7 +51,7 @@ def graphical_editor2item(target_state_m, ge_coordinates):
     (view coordinates --> item coordinates)
     :param StateModel target_state_m: The state model, the resulting point should be relative to.
     :param (float,float) ge_coordinates: A tuple containing a x and a y coordinate relative to the graphical editor.
-    :return: The same point, relative to the target state model.
+    :return: The same point relative to the target state model.
     :rtype: (float,float)
     """
     from rafcon.gui.singleton import main_window_controller
@@ -75,7 +75,7 @@ def item2graphical_editor(target_state_m, item_coordinates):
     :param StateModel target_state_m: The state model, the given point is relative to.
     :param (float,float) item_coordinates:
     A tuple containing a x and a y coordinate relative to the given target state model.
-    :return: The same point, but relative to the graphical editor.
+    :return: The same point relative to the graphical editor.
     :rtype: (float,float)
     """
     from rafcon.gui.singleton import main_window_controller
@@ -97,7 +97,7 @@ def screen2main_window(screen_coordinates):
     """
     Transforms a point in absolute screen coordinates, into a point relative to the main window.
     :param (float,float) screen_coordinates: A tuple of x and y coordinate in absolute screen coordinates.
-    :return: The same point, but relative to the main window.
+    :return: The same point relative to the main window.
     :rtype: (float,float)
     """
     from rafcon.gui.singleton import main_window_controller
@@ -110,7 +110,7 @@ def main_window2screen(main_window_coordinates):
     """
     Transforms a point relative to the main window, into a point in absolute screen coordinates.
     :param (float, float) main_window_coordinates: A tuple of x and y coordinate relative to the main window.
-    :return: The same point, but in absolute screen coordinates.
+    :return: The same point in absolute screen coordinates.
     :rtype: (float, float)
     """
     from rafcon.gui.singleton import main_window_controller
