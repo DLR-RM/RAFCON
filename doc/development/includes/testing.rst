@@ -1,5 +1,5 @@
 Running tests with ``tox``
---------------------------
+""""""""""""""""""""""""""
 
 The simplest and most reliable way of running the tests is using tox. If you have not installed tox, do so using
 
@@ -57,7 +57,7 @@ Pytest allows you to select tests based on markers using the ``-m`` option. Mark
     $ tox -e 2.7 -- -x -m "gui and not unstable"
 
 Writing tests
--------------
+"""""""""""""
 
 RAFCON provides a lot of tests in the ``tests/`` folder. Many of these tests are integration tests, unit tests are
 unfortunately often missing. If a test only uses imports from ``rafcon.core``, it is to be placed in ``tests/core/``,
@@ -67,7 +67,7 @@ RAFCON uses ``pytest`` as testing framework. It e.g. auto detects your test file
 a look at the documentation before writing tests: https://pytest.org/
 
 GUI tests
-"""""""""
+^^^^^^^^^
 
 When you want to write an integration test using the GUI, a custom fixture named ``gui`` is provided
 (``tests/gui/conftest.py``). Simply add ``gui`` as parameter to your test (no import is required for tests residing
