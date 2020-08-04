@@ -22,6 +22,12 @@ Next Release
 
 
 
+0.14.6
+""""""
+
+- Miscellaneous:
+    - fix buggy pypi upload
+
 
 0.14.5
 """"""
