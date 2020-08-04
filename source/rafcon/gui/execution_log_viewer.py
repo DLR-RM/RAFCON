@@ -7,7 +7,7 @@ from rafcon.gui.controllers.utils.single_widget_window import SingleWidgetWindow
 from rafcon.gui.controllers.execution_log_viewer import ExecutionLogTreeController
 
 
-if __name__ == "__main__":
+def main():
     from gi.repository import Gtk  # import here to avoid warning
     import argparse
     parser = argparse.ArgumentParser()
@@ -26,3 +26,7 @@ if __name__ == "__main__":
     # log_tree_ctrl = SingleWidgetWindowController(None, single_view, ExecutionLogTreeController, file, run_id)
 
     Gtk.main()
+
+
+if __name__ == "__main__":
+    main()
