@@ -22,6 +22,14 @@ Next Release
 
 
 
+
+0.14.5
+""""""
+
+- Bug Fixes:
+    - execution log viewer now works via released script in bin folder
+
+
 0.14.4
 """"""
 
