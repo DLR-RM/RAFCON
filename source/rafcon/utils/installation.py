@@ -51,7 +51,8 @@ def installed_font_faces_for_font(font_name):
 
 def install_fonts(restart=False):
     # do not import from rafcon.gui.constants, as this script can be used standalone
-    font_names_to_be_installed = ["SourceSansPro", "FontAwesome5Free", "RAFCON"]
+    # font_names_to_be_installed = ["DancingScript", "FontAwesome5Free", "RAFCON"]
+    font_names_to_be_installed = ["Mont", "FontAwesome5Free", "RAFCON"]
 
     user_otf_fonts_folder = join(resources.xdg_user_data_folder, "fonts")
 

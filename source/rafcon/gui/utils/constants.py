@@ -27,7 +27,8 @@ def get_glade_path(glade_file):
     return path.join(mvc_dir, "glade", glade_file)
 
 
-INTERFACE_FONT = "Source Sans Pro"
+# INTERFACE_FONT = "Source Sans Pro" "Mont" "Syne" "Quicksand" "Dancing Script" "Le Murmure" "Quaerite Regnum Dei"
+INTERFACE_FONT = "Mont"
 ICON_FONT_FONTAWESOME = "FontAwesome5Free"
 ICON_FONT_RAFCON = "RAFCON"
 FONTS = [INTERFACE_FONT, ICON_FONT_FONTAWESOME, ICON_FONT_RAFCON]
