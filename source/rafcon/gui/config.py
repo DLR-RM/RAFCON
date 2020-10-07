@@ -68,14 +68,15 @@ class GuiConfig(ObservableConfig):
         self.configure_gtk()
         self.configure_colors()
 
-    def get_theme_path(self):
+    def _get_theme_path(self):
         return get_data_file_path("themes", "RAFCON")
 
     def configure_gtk(self):
-        theme_path = self.get_theme_path()
+        theme_path = self._get_theme_path()
         if not theme_path:
             raise ValueError("GTK theme 'RAFCON' does not exist")
 
+        # TODO: design
         theme_name = "RAFCON"
         dark_theme = self.get_config_value('THEME_DARK_VARIANT', True)
 
@@ -108,10 +109,11 @@ class GuiConfig(ObservableConfig):
             self.gtk_colors = defaultdict(lambda: None)
             return
 
+        # TODO: design
         dark_theme = self.get_config_value('THEME_DARK_VARIANT', True)
         css_filename = "gtk-dark.css" if dark_theme else "gtk.css"
         # Get colors from GTKrc file
-        theme_path = self.get_theme_path()
+        theme_path = self._get_theme_path()
         css_file_path = os.path.join(theme_path, "gtk-3.0", css_filename)
         if not os.path.isfile(css_file_path):
             raise ValueError("GTK theme does not exist")
@@ -135,6 +137,7 @@ class GuiConfig(ObservableConfig):
                                                                                                     color_code))
 
         # Get color definitions
+        # TODO: design
         colors_filename = "colors-dark.json" if dark_theme else "colors.json"
         color_file_path = os.path.join(theme_path, colors_filename)
         try:
