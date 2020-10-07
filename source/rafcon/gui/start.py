@@ -29,6 +29,7 @@ from yaml_configuration.config import config_path
 # gui
 import rafcon
 from rafcon.gui.config import global_gui_config
+from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils.splash_screen import SplashScreen
@@ -89,6 +90,8 @@ def setup_installation():
     force_check_installation = os.environ.get("RAFCON_CHECK_INSTALLATION", False) == "True"
     prevent_restart = os.environ.get("RAFCON_CHECK_INSTALLATION", True) == "False"
 
+    # TODO: design: install locally_required + fonts
+
     if not force_check_installation and data_files_version_up_to_date():
         return
 
@@ -98,7 +101,6 @@ def setup_installation():
     installation.install_fonts(restart=(not prevent_restart))
 
     update_data_files_version()
-
 
 
 def setup_gtkmvc3_logger():
@@ -189,6 +191,11 @@ def setup_argument_parser():
                         help=_("path to the configuration file gui_config.yaml. "
                                "Use 'None' to prevent the generation of a config file and use the default "
                                "configuration. Default: {0}").format(default_config_path))
+    parser.add_argument('-d', '--design_config', action='store', type=config_path, metavar='path',
+                        dest='design_config_path', default=default_config_path, nargs='?', const=default_config_path,
+                        help=_("path to the configuration file design_config.yaml. "
+                               "Use 'None' to prevent the generation of a config file and use the default "
+                               "configuration. Default: {0}").format(default_config_path))
     parser.add_argument('-ss', '--start_state_machine', dest='start_state_machine_flag', action='store_true',
                         help=_("a flag to specify if the first state machine of -o should be started after opening"))
     parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path', default=None, nargs='?',
@@ -200,12 +207,23 @@ def setup_argument_parser():
     return parser
 
 
-def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_path):
+def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_path, design_config):
+    """ Loads all configurations from disk
+
+    :param core_config_path: the path to the core configuration file
+    :param gui_config_path:  the path to the gui configuration file
+    :param runtime_config_path:  the path to the runtime configuration file
+    :param design_config:  the path to the core configuration file
+    :return:
+    """
+
     setup_configuration(core_config_path)
     gui_config_path, gui_config_file = filesystem.separate_folder_path_and_file_name(gui_config_path)
     global_gui_config.load(gui_config_file, gui_config_path)
     runtime_config_path, runtime_config_file = filesystem.separate_folder_path_and_file_name(runtime_config_path)
     global_runtime_config.load(runtime_config_file, runtime_config_path)
+    design_config_path, design_config_file = filesystem.separate_folder_path_and_file_name(design_config)
+    global_design_config.load(design_config_file, design_config_path)
 
 
 def setup_gui():
@@ -357,7 +375,8 @@ def main():
     user_input = parser.parse_args()
 
     splash_screen.set_text("Loading configurations...")
-    setup_mvc_configuration(user_input.config_path, user_input.gui_config_path, user_input.gui_config_path)
+    setup_mvc_configuration(user_input.config_path, user_input.gui_config_path,
+                            user_input.gui_config_path, user_input.design_config_path)
 
     # create lock file -> keep behavior for hole instance
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
