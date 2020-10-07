@@ -355,7 +355,13 @@ def main():
 
     setup_l10n(logger)
 
-    splash_screen = SplashScreen(contains_image=True, width=530, height=350)
+    if is_custom_design_enabled:
+        splash_screen_width = global_design_config.get_config_value("SPLASHSCREEN_RESOLUTION_WIDTH")
+        splash_screen_height = global_design_config.get_config_value("SPLASHSCREEN_RESOLUTION_HEIGHT")
+    else:
+        splash_screen_width = 530
+        splash_screen_height = 350
+    splash_screen = SplashScreen(contains_image=True, width=splash_screen_width, height=splash_screen_height)
     splash_screen.rotate_image(random_=True)
     splash_screen.set_text(_("Starting RAFCON..."))
     while Gtk.events_pending():
