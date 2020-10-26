@@ -4,7 +4,7 @@ FONTS_FOLDER: /home/basti/develop_agile/rafcon_ar_skin/fonts
 PRIMARY_FONT: "Quaerite Regnum Dei"
 THEMES_FOLDER: /home/basti/develop_agile/rafcon_ar_skin/themes
 THEME_NAME: RAFCON
-SOURCE_VIEW_FOLDER: /home/basti/develop_agile/rafcon_ar_skin/themes
+SOURCE_VIEW_FOLDER: /home/basti/develop_agile/rafcon_ar_skin/gtksourceview-3.0
 # overwrites gui_config.SOURCE_EDITOR_STYLE
 SOURCE_VIEW_THEME: rafcon-agile
 ICONS_FOLDER: /home/basti/develop_agile/rafcon_ar_skin/icons
