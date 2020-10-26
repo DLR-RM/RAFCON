@@ -14,6 +14,7 @@ from os.path import join, dirname, abspath, isfile, isdir
 import sys
 import subprocess
 from distutils.dir_util import copy_tree
+from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
 
 from rafcon.utils import resources, log
 
@@ -53,6 +54,11 @@ def install_fonts(restart=False):
     # do not import from rafcon.gui.constants, as this script can be used standalone
     font_names_to_be_installed = ["SourceSansPro", "FontAwesome5Free", "RAFCON"]
 
+    custom_fonts = list()  # support a list in case we also support secondary or tertiary fonts
+    if is_custom_design_enabled():
+        custom_fonts.append(global_design_config.get_config_value("PRIMARY_FONT"))
+    font_names_to_be_installed += custom_fonts
+
     user_otf_fonts_folder = join(resources.xdg_user_data_folder, "fonts")
 
     font_installed = False
@@ -61,13 +67,14 @@ def install_fonts(restart=False):
             # A font is a folder one or more font faces
             rel_font_folder = join("type1", font_name)
             fonts_folder = resources.get_data_file_path("fonts", rel_font_folder)
+            if not os.path.exists(fonts_folder):  # this is the case for a custom font
+                fonts_folder = join(global_design_config.get_config_value("FONTS_FOLDER"), rel_font_folder)
+                assert os.path.exists(fonts_folder), "Custom font path does not exist"
             num_faces_to_be_installed = len([name for name in os.listdir(fonts_folder) if name.endswith(".otf")])
             num_faces_installed = installed_font_faces_for_font(font_name)
-
             if num_faces_to_be_installed <= num_faces_installed:
                 logger.debug("Font '{0}' already installed".format(font_name))
                 continue
-
             specific_user_otf_fonts_folder = join(user_otf_fonts_folder, rel_font_folder)
             logger.info("Installing font '{0}' to {1}".format(font_name, specific_user_otf_fonts_folder))
             copy_tree(fonts_folder, specific_user_otf_fonts_folder, update=1)
