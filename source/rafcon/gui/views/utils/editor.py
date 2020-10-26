@@ -17,6 +17,7 @@ from gtkmvc3.view import View
 
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.config import global_gui_config
+from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 
@@ -113,6 +114,8 @@ class EditorView(View):
             dark_theme = global_gui_config.get_config_value('THEME_DARK_VARIANT', True)
             if dark_theme:
                 user_editor_style = "rafcon-dark"
+        if is_custom_design_enabled():
+            user_editor_style = global_design_config.get_config_value("SOURCE_VIEW_THEME")
         scheme = style_scheme_manager.get_scheme(user_editor_style)
         if scheme:
             self.style_scheme = scheme

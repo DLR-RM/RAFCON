@@ -109,3 +109,13 @@ def install_locally_required_files():
             copy_tree(join(source_share_folder, folder), join(resources.xdg_user_data_folder, folder), update=1)
         except IOError as e:
             logger.error("Could not copy '{}' files: {}".format(folder, str(e)))
+
+    if is_custom_design_enabled():
+        try:
+            logger.info("Copying custom design files '{}' files...".format(folder))
+            copy_tree(global_design_config.get_config_value("SOURCE_VIEW_FOLDER"),
+                      join(resources.xdg_user_data_folder, "gtksourceview-3.0"), update=1)
+            copy_tree(global_design_config.get_config_value("ICONS_FOLDER"),
+                      join(resources.xdg_user_data_folder, "icons"), update=1)
+        except IOError as e:
+            logger.error("Could not copy '{}' files: {}".format(folder, str(e)))
