@@ -1,7 +1,7 @@
 TYPE: DESIGN_CONFIG
 USE_CUSTOM_DESIGN: True
 FONTS_FOLDER: /home/basti/develop_agile/rafcon_ar_skin/fonts
-PRIMARY_FONT: "barlow"
+PRIMARY_FONT: "Quaerite Regnum Dei"
 THEMES_FOLDER: /home/basti/develop_agile/rafcon_ar_skin/themes
 THEME_NAME: RAFCON
 SOURCE_VIEW_FOLDER: /home/basti/develop_agile/rafcon_ar_skin/themes
