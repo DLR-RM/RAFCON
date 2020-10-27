@@ -58,8 +58,9 @@ class GuiConfig(ObservableConfig):
             raise ConfigError("Type should be GUI_CONFIG for GUI configuration. "
                               "Please add \"TYPE: GUI_CONFIG\" to your gui_config.yaml file.")
         self.path_to_tool = os.path.dirname(os.path.realpath(__file__))
-        self.configure_gtk()
-        self.configure_colors()
+        if not is_custom_design_enabled():
+            self.configure_gtk()
+            self.configure_colors()
 
     def load(self, config_file=None, path=None):
         if config_file is None:

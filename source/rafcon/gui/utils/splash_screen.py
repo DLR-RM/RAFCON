@@ -46,7 +46,7 @@ class SplashScreen(Gtk.Window):
         if contains_image:
             main_vbox.pack_start(self.image, True, True, 0)
 
-        if is_custom_design_enabled() and not global_design_config.get_config_value("SPLASHSCREEN_SHOW_TEXT"):
+        if is_custom_design_enabled() and not global_design_config.get_config_value("SPLASH_SCREEN_SHOW_TEXT", True):
             pass
         else:
             # add label to display text, the text can be changed by the text() method.
@@ -58,14 +58,14 @@ class SplashScreen(Gtk.Window):
             main_vbox.set_spacing(0)
             label_height = 40
             if is_custom_design_enabled():
-                label_height = global_design_config.get_config_value("SPLASHSCREEN_LABEL_HEIGHT")
+                label_height = global_design_config.get_config_value("SPLASH_SCREEN_LABEL_HEIGHT")
             self.label.set_size_request(-1, label_height)
 
         if not os.getenv("RAFCON_START_MINIMIZED", False):
             self.show_all()
 
     def set_text(self, text):
-        if is_custom_design_enabled() and not global_design_config.get_config_value("SPLASHSCREEN_SHOW_TEXT"):
+        if is_custom_design_enabled() and not global_design_config.get_config_value("SPLASH_SCREEN_SHOW_TEXT", True):
             return
         logger.info(text)
         self.label.set_text(text)
@@ -80,7 +80,7 @@ class SplashScreen(Gtk.Window):
         if image_path:
             horizontal_spacing = 50
             if is_custom_design_enabled():
-                horizontal_spacing = global_design_config.get_config_value("SPLASHSCREEN_HORIZONTAL_SPACING")
+                horizontal_spacing = global_design_config.get_config_value("SPLASH_SCREEN_HORIZONTAL_SPACING")
             pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(image_path, self.get_size()[0] - horizontal_spacing,
                                                             self.get_size()[1] - horizontal_spacing)
             self.image.set_from_pixbuf(pixbuf)
@@ -91,12 +91,15 @@ class SplashScreen(Gtk.Window):
 
     def get_images(self):
         images = list()
-        if is_custom_design_enabled:
-            splash_screen_path = global_design_config.get_config_value("SPLASHSCREEN_FOLDER")
+        if is_custom_design_enabled():
+            splash_screen_path = global_design_config.get_config_value("SPLASH_SCREEN_FOLDER")
+            for image_filename in os.listdir(splash_screen_path):
+                images.append(os.path.join(splash_screen_path, image_filename))
         else:
-            splash_screen_path = os.path.join(rafcon.gui.__name__, "assets", "splashscreens")
-        for image_filename in os.listdir(splash_screen_path):
-            images.append(os.path.join(splash_screen_path, image_filename))
+            for image_filename in resource_listdir(rafcon.gui.__name__, os.path.join("assets", "splashscreens")):
+                images.append(resource_filename(rafcon.gui.__name__, os.path.join(
+                    "assets", "splashscreens", image_filename)))
+
         return images
 
     def rotate_image(self, random_=True):
