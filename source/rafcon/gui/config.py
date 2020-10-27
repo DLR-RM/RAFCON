@@ -127,7 +127,7 @@ class GuiConfig(ObservableConfig):
 
         css_file_path = os.path.join(theme_path, "gtk-3.0", css_filename)
         if not os.path.isfile(css_file_path):
-            raise ValueError("GTK theme does not exist")
+            raise ValueError("GTK theme does not exist: {}".format(str(css_file_path)))
 
         with open(css_file_path) as f:
             lines = f.readlines()

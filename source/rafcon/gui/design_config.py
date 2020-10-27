@@ -56,6 +56,9 @@ class DesignConfig(ObservableConfig):
             config_file = CONFIG_FILE
         super(DesignConfig, self).load(config_file, path)
 
+    def save_configuration(self):
+        super(DesignConfig, self).save_configuration()
+
 
 # This variable holds the global configuration parameters for the state machine
 global_design_config = DesignConfig(logger)
