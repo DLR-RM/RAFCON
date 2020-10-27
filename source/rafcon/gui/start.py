@@ -192,7 +192,7 @@ def setup_argument_parser():
                                "Use 'None' to prevent the generation of a config file and use the default "
                                "configuration. Default: {0}").format(default_config_path))
     parser.add_argument('-d', '--design_config', action='store', type=config_path, metavar='path',
-                        dest='design_config_path', default=default_config_path, nargs='?', const=default_config_path,
+                        dest='design_config_path', default=None, nargs='?', const=default_config_path,
                         help=_("path to the configuration file design_config.yaml. "
                                "Use 'None' to prevent the generation of a config file and use the default "
                                "configuration. Default: {0}").format(default_config_path))
@@ -218,8 +218,15 @@ def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_pa
     """
     setup_configuration(core_config_path)
     # the design config has to be loaded before loading the gui config as it is used by the gui config
-    design_config_path, design_config_file = filesystem.separate_folder_path_and_file_name(design_config)
-    global_design_config.load(design_config_file, design_config_path)
+    if design_config:
+        design_config_path, design_config_file = filesystem.separate_folder_path_and_file_name(design_config)
+        global_design_config.load(design_config_file, design_config_path)
+    else:
+        # no design config file specified => check environment variable
+        if os.environ.get('RAFCON_CUSTOM_DESIGN'):
+            design_config = os.environ.get('RAFCON_CUSTOM_DESIGN')
+            design_config_path, design_config_file = filesystem.separate_folder_path_and_file_name(design_config)
+            global_design_config.load(design_config_file, design_config_path)
     gui_config_path, gui_config_file = filesystem.separate_folder_path_and_file_name(gui_config_path)
     global_gui_config.load(gui_config_file, gui_config_path)
     runtime_config_path, runtime_config_file = filesystem.separate_folder_path_and_file_name(runtime_config_path)
