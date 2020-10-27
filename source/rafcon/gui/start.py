@@ -213,17 +213,17 @@ def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_pa
     :param core_config_path: the path to the core configuration file
     :param gui_config_path:  the path to the gui configuration file
     :param runtime_config_path:  the path to the runtime configuration file
-    :param design_config:  the path to the core configuration file
+    :param design_config:  the path to the design configuration file
     :return:
     """
-
     setup_configuration(core_config_path)
+    # the design config has to be loaded before loading the gui config as it is used by the gui config
+    design_config_path, design_config_file = filesystem.separate_folder_path_and_file_name(design_config)
+    global_design_config.load(design_config_file, design_config_path)
     gui_config_path, gui_config_file = filesystem.separate_folder_path_and_file_name(gui_config_path)
     global_gui_config.load(gui_config_file, gui_config_path)
     runtime_config_path, runtime_config_file = filesystem.separate_folder_path_and_file_name(runtime_config_path)
     global_runtime_config.load(runtime_config_file, runtime_config_path)
-    design_config_path, design_config_file = filesystem.separate_folder_path_and_file_name(design_config)
-    global_design_config.load(design_config_file, design_config_path)
 
 
 def setup_gui():
@@ -343,6 +343,19 @@ def register_signal_handlers(callback):
         GLib.idle_add(install_glib_handler, signal_code, priority=GLib.PRIORITY_HIGH)
 
 
+def create_splash_screen():
+    if is_custom_design_enabled:
+        splash_screen_width = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_WIDTH")
+        splash_screen_height = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_HEIGHT")
+    else:
+        splash_screen_width = 530
+        splash_screen_height = 350
+    splash_screen = SplashScreen(contains_image=True, width=splash_screen_width, height=splash_screen_height)
+    splash_screen.rotate_image(random_=True)
+    splash_screen.set_text(_("Starting RAFCON..."))
+    return splash_screen
+
+
 def main():
 
     # check if all env variables are set
@@ -354,18 +367,16 @@ def main():
 
     setup_l10n(logger)
 
-    if is_custom_design_enabled:
-        splash_screen_width = global_design_config.get_config_value("SPLASHSCREEN_RESOLUTION_WIDTH")
-        splash_screen_height = global_design_config.get_config_value("SPLASHSCREEN_RESOLUTION_HEIGHT")
-    else:
-        splash_screen_width = 530
-        splash_screen_height = 350
-    splash_screen = SplashScreen(contains_image=True, width=splash_screen_width, height=splash_screen_height)
-    splash_screen.rotate_image(random_=True)
-    splash_screen.set_text(_("Starting RAFCON..."))
+    parser = setup_argument_parser()
+    user_input = parser.parse_args()
+    setup_mvc_configuration(user_input.config_path, user_input.gui_config_path,
+                            user_input.gui_config_path, user_input.design_config_path)
+
+    splash_screen = create_splash_screen()
     while Gtk.events_pending():
         Gtk.main_iteration()
 
+    splash_screen.set_text("Install missing resources ...")
     setup_installation()
 
     splash_screen.set_text("Setting up logger...")
@@ -377,13 +388,6 @@ def main():
     splash_screen.set_text("Setting up environment...")
     setup_mvc_environment()
 
-    parser = setup_argument_parser()
-    user_input = parser.parse_args()
-
-    splash_screen.set_text("Loading configurations...")
-    setup_mvc_configuration(user_input.config_path, user_input.gui_config_path,
-                            user_input.gui_config_path, user_input.design_config_path)
-
     # create lock file -> keep behavior for hole instance
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
         import rafcon.gui.models.auto_backup
@@ -393,7 +397,6 @@ def main():
     # loading the state state machine
     splash_screen.set_text("Loading GUI...")
     setup_gui()
-
     wait_for_gui()
 
     post_setup_plugins(user_input)
