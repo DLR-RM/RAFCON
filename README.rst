@@ -1,8 +1,3 @@
-Develop branch: |build_status_develop|
-
-.. |build_status_develop| image:: http://213.136.81.227:8080/buildStatus/icon?job=rafcon_github
-   :target: http://213.136.81.227:8080/buildStatus/icon?job=rafcon_github
-
 
 RAFCON
 ======
