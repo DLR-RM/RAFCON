@@ -47,7 +47,9 @@ class StateIconView(View, Gtk.IconView):
         self.set_tooltip_column(1)
 
         for shorthand, state_class, icon in self.states:
-            liststore.append(['<span font_desc="{font} {size}" color="{color}">{icon}</span> {text}'.format(
+            # use this line if the shorthand description of the state type should be included
+            # liststore.append(['<span font_desc="{font} {size}" color="{color}">{icon}</span> {text}'.format(
+            liststore.append(['<span font_desc="{font} {size}" color="{color}">{icon}</span>'.format(
                 font=constants.ICON_FONT_RAFCON,
                 size=constants.FONT_SIZE_BIG,
                 color=global_gui_config.colors['BUTTON_TEXT_COLOR'],
