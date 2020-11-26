@@ -51,7 +51,7 @@ class StateIconView(View, Gtk.IconView):
             # liststore.append(['<span font_desc="{font} {size}" color="{color}">{icon}</span> {text}'.format(
             liststore.append(['<span font_desc="{font} {size}" color="{color}">{icon}</span>'.format(
                 font=constants.ICON_FONT_RAFCON,
-                size=constants.FONT_SIZE_BIG,
+                size=constants.FONT_SIZE_HUGE,
                 color=global_gui_config.colors['BUTTON_TEXT_COLOR'],
                 icon=icon,
                 text=shorthand
