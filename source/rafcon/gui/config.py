@@ -135,6 +135,8 @@ class GuiConfig(ObservableConfig):
         for line in lines:
             match = re.match("\s*@define-color (\w*) (#[\w]{3,6})", line)
             if match:
+                # css colors are mapped to capital-case color names
+                # these colors can then be used in the colors definition file for the gaphas colors (e.g., colors.json)
                 color_name = match.group(1).upper()
                 color_code = match.group(2)
                 self.colors[color_name] = color_code
