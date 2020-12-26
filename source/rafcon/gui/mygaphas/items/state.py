@@ -997,7 +997,10 @@ class NameView(Element):
             'draw_all': context.draw_all
         }
 
-        upper_left_corner = (0, 0)
+        # factor = 1 / (BASE_WIDTH / width)
+        factor = width / BASE_WIDTH
+        upper_left_corner = (factor, factor)
+        # upper_left_corner = (0, 0)
         current_zoom = self.view.get_zoom_factor()
         from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters)
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
