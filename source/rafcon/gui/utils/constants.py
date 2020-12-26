@@ -30,6 +30,7 @@ def get_glade_path(glade_file):
 
 INTERFACE_FONT = "Source Sans Pro"
 if is_custom_design_enabled():
+    # this statement has no effect if the design_config is loaded after this module is imported the first time
     INTERFACE_FONT = global_design_config.get_config_value("PRIMARY_FONT")
 
 ICON_FONT_FONTAWESOME = "FontAwesome5Free"
