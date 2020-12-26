@@ -190,7 +190,7 @@
             <property name="hexpand">True</property>
             <child>
               <object class="GtkLabel" id="custom_toolbar_label">
-                <property name="width_request">138</property>
+                <property name="width_request">200</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="track_visited_links">False</property>
