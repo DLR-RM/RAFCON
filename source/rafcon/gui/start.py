@@ -221,6 +221,10 @@ def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_pa
     if design_config:
         design_config_path, design_config_file = filesystem.separate_folder_path_and_file_name(design_config)
         global_design_config.load(design_config_file, design_config_path)
+        # the constant has to be overwritten here,
+        # as the singleton was already loaded that hus the wrong INTERFACE_FONT was chosen
+        from rafcon.gui.utils import constants
+        constants.INTERFACE_FONT = global_design_config.get_config_value("PRIMARY_FONT")
     else:
         # no design config file specified => check environment variable
         if os.environ.get('RAFCON_CUSTOM_DESIGN'):

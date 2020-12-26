@@ -232,20 +232,44 @@ def create_menu_box_with_icon_and_label(label_text):
     return box, icon_label, text_label
 
 
-def set_label_markup(label, text, is_icon=False, size=constants.FONT_SIZE_NORMAL,
-                     letter_spacing=constants.LETTER_SPACING_NONE):
+def set_label_markup(label, text, is_icon=False, size=None, letter_spacing=None):
     font_family = constants.INTERFACE_FONT
     if is_icon:
         if text in constants.ICONS_IN_RAFCON_FONT:
             font_family = constants.ICON_FONT_RAFCON
         else:
             font_family = constants.ICON_FONT_FONTAWESOME
-    label.set_markup('<span font_desc="{family} {size}" weight="{weight}" letter_spacing="{letter_spacing}">{text}</span>'.format(
-        family=font_family,
-        size=size,
-        weight=900 if text in constants.ICONS_WITH_BOLD_FACE else 400,
-        letter_spacing=letter_spacing,
-        text=text))
+
+    # only add manual markup here if really required by the code
+    # once set here, the markup cannot be changed via css styling anymore
+
+    # font
+    if size:
+        size_tag = size
+    else:
+        size_tag = ''
+    if font_family == constants.INTERFACE_FONT:
+        font_tag = ''
+    else:
+        font_tag = 'font_desc="{family} {size_tag}"'.format(family=font_family, size_tag=size_tag)
+
+    # weight
+    if text in constants.ICONS_WITH_BOLD_FACE:
+        weight_tag = 'weight="900"'
+    else:
+        weight_tag = ''
+
+    # spacing
+    if letter_spacing:
+        letter_spacing_tag = 'letter_spacing="{letter_spacing}"'.format(letter_spacing=str(letter_spacing))
+    else:
+        letter_spacing_tag = ''
+    markup = '<span {font_tag} {weight_tag} {letter_spacing_tag}>{text}</span>'.format(
+        font_tag=font_tag,
+        weight_tag=weight_tag,
+        letter_spacing_tag=letter_spacing_tag,
+        text=text)
+    label.set_markup(markup)
 
 
 def set_window_size_and_position(window, window_key):
