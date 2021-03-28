@@ -2,7 +2,7 @@ from __future__ import print_function
 from tests.core.test_i18n import use_locale, create_mo_files
 
 
-def test_gtk_translation(gui, monkeypatch):
+def _test_gtk_translation(gui, monkeypatch):
     create_mo_files()
 
     with use_locale("de_DE.UTF-8", monkeypatch):
