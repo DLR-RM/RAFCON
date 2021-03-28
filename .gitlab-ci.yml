@@ -1,0 +1,26 @@
+
+include:
+  - local: '/ci/templates/default.yml'
+
+# From https://docs.gitlab.com/ee/ci/merge_request_pipelines/#excluding-certain-jobs
+.only-default: &only-default
+  only:
+    # only: [branches, tags] is the default
+    # extend it by merge_reguests
+    # and limit branches to master and release/*
+    # See also: https://docs.gitlab.com/ee/ci/yaml/#onlyexcept-basic
+    - master
+    - /^release/.*$
+    - tags
+    - merge_requests
+
+test pyln-manager:
+  <<: *only-default
+  stage: Test
+  tags:
+    - Agile_GUI_Docker
+  script:
+    - python2 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
+  dependencies: [ ]
+  needs: [ ]
+
