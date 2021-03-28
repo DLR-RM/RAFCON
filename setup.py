@@ -68,6 +68,7 @@ global_requirements = ['pylint>=1.6,<2', 'psutil', 'jsonconversion~=0.2.12', 'ya
 # test_requirements = ['pytest>=3.5,<5', 'pytest-timeout', 'pytest-mock', 'pytest-faulthandler~=1.6.0',
 test_requirements = ['pytest>=3.5,<5', 'pytest-timeout', 'pytest-mock>=1.9.0,<3', 'pytest-faulthandler~=1.6.0',
                      'importlib-metadata~=2.0.0', 'zipp~=1.0.0', 'pyparsing~=2.4.0', 'mock~=3.0.0',
+                     'isort~=4.3.0',
                      'graphviz', 'pyuserinput']
 test_requirements += global_requirements
 
