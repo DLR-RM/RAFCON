@@ -1,9 +1,5 @@
 stages:
-    - build
-    - lint
     - test
-    - deploy
-    - format
 
 # From https://docs.gitlab.com/ee/ci/merge_request_pipelines/#excluding-certain-jobs
 .only-default: &only-default
@@ -26,6 +22,4 @@ test pyln-manager:
     - pip2 install --user --upgrade pytest
     - pip2 install pytest-runner==5.2
     - python2 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
-  dependencies: [ ]
-  needs: [ ]
 
