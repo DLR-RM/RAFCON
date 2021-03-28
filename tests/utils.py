@@ -552,7 +552,7 @@ def focus_graphical_editor_in_page(page):
 def check_if_locale_exists(locale):
     import subprocess
     output = subprocess.check_output(["locale", "-a"])
-    if locale in output:
+    if locale.encode() in output:
         return True
     else:
         return False
