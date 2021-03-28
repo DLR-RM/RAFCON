@@ -13,7 +13,7 @@ stages:
     - tags
     - merge_requests
 
-test pyln-manager:
+test py2-tests:
   <<: *only-default
   stage: test
   tags:
@@ -21,7 +21,12 @@ test pyln-manager:
   script:
     - pip2 install --user --upgrade pytest
     - pip2 install pytest-runner==5.2  # this is py2 compatible, ver 5.3 is not
-    - pip2 install pyyaml==5.3.1
-    - pip2 install --user --upgrade pyyaml==5.3.1
     - xvfb-run -as "-screen 0 1920x1200x24" python2 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
 
+test py3-tests:
+  <<: *only-default
+  stage: test
+  tags:
+    - Agile_GUI_Docker
+  script:
+    - xvfb-run -as "-screen 0 1920x1200x24" python3 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
