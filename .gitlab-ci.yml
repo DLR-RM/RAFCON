@@ -1,3 +1,9 @@
+stages:
+    - build
+    - lint
+    - test
+    - deploy
+    - format
 
 # From https://docs.gitlab.com/ee/ci/merge_request_pipelines/#excluding-certain-jobs
 .only-default: &only-default
@@ -13,7 +19,7 @@
 
 test pyln-manager:
   <<: *only-default
-  stage: Test
+  stage: test
   tags:
     - Agile_GUI_Docker
   script:
