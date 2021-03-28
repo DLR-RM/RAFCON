@@ -21,5 +21,5 @@ test pyln-manager:
   script:
     - pip2 install --user --upgrade pytest
     - pip2 install pytest-runner==5.2
-    - python2 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
+    - xvfb-run -as "-screen 0 1920x1200x24" python2 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
 
