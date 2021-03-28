@@ -1,7 +1,4 @@
 
-include:
-  - local: '/ci/templates/default.yml'
-
 # From https://docs.gitlab.com/ee/ci/merge_request_pipelines/#excluding-certain-jobs
 .only-default: &only-default
   only:
