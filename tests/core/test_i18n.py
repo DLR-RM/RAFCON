@@ -41,7 +41,7 @@ def test_invalid_locale_setting(caplog, monkeypatch):
     testing_utils.assert_logger_warnings_and_errors(caplog=caplog, expected_warnings=1)
 
 
-def test_basic_string_translation(caplog, monkeypatch):
+def _test_basic_string_translation(caplog, monkeypatch):
     with use_locale("de_DE.UTF-8", monkeypatch):
         i18n.setup_l10n(logger)
         assert _("Remove") == "Entfernen"
