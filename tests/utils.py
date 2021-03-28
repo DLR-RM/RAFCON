@@ -547,3 +547,12 @@ def focus_graphical_editor_in_page(page):
     if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
         graphical_controller = graphical_controller.get_children()[0]
     graphical_controller.grab_focus()
+
+
+def check_if_locale_exists(locale):
+    import subprocess
+    output = subprocess.check_output(["locale", "-a"])
+    if locale in output:
+        return True
+    else:
+        return False
