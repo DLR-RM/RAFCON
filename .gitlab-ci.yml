@@ -23,7 +23,7 @@ test pyln-manager:
   tags:
     - Agile_GUI_Docker
   script:
-    - pip2 install pytest
+    - pip2 install --user --upgrade pytest
     - pip2 install pytest-runner==5.2
     - python2 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
   dependencies: [ ]
