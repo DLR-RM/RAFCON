@@ -94,7 +94,7 @@ NO\_PROGRAMMATIC\_CHANGE\_OF\_LIBRARY\_STATES\_PERFORMED
 EXECUTION\_LOG\_ENABLE
   | Type: boolean
   | Default: ``True``
-  | Enables the logging of rafcon exeuction histories to the file system. Every time a statemachine is executed, a python shelve is created in the execution log directory, e.g. ``/tmp/rafcon_execution_logs/rafcon_execution_log_99-Bottles-of-Beer_2017-08-31-16-07-17.shelve``. Some helpful utility functions for working with log files through python are in: ``import rafcon.utils.execution_log``. A tiny tiny code snippet which shows how to use the pandas.DataFrame representation to query the outcomes of a state named ‘CheckFinished’ is here: ``https://rmc-github.robotic.dlr.de/common/rafcon/pull/324#issuecomment-2520``
+  | Enables the logging of rafcon execution histories to the file system. Every time a statemachine is executed, a python shelve is created in the execution log directory, e.g. ``/tmp/rafcon_execution_logs/rafcon_execution_log_99-Bottles-of-Beer_2017-08-31-16-07-17.shelve``. Some helpful utility functions for working with log files through python are in: ``import rafcon.utils.execution_log``. A tiny tiny code snippet which shows how to use the pandas.DataFrame representation to query the outcomes of a state named ‘CheckFinished’ is here: ``https://rmc-github.robotic.dlr.de/common/rafcon/pull/324#issuecomment-2520``
 
 EXECUTION\_LOG\_PATH:
   | Type: String
@@ -318,7 +318,7 @@ THEME\_DARK\_VARIANT:
 PORT\_SNAP\_DISTANCE
   | Default: ``5``
   | Unit: Pixel
-  | Maximum distane to a port, at which the moved end of a connection is
+  | Maximum distance to a port, at which the moved end of a connection is
     snapped to a port (outcome, input, output, scoped variable).
 
 LOGGING\_SHOW\_VERBOSE
