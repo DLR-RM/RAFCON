@@ -1,0 +1,37 @@
+stages:
+    - test
+
+# From https://docs.gitlab.com/ee/ci/merge_request_pipelines/#excluding-certain-jobs
+.only-default: &only-default
+  only:
+    # only: [branches, tags] is the default
+    # extend it by merge_reguests
+    # and limit branches to master and release/*
+    # See also: https://docs.gitlab.com/ee/ci/yaml/#onlyexcept-basic
+    - master
+    - /^release/.*$
+    - tags
+    - merge_requests
+
+test py2-tests:
+  <<: *only-default
+  stage: test
+  tags:
+    - Agile_GUI_Docker
+  script:
+    - pip2 install --user --upgrade pytest
+    - pip2 install pytest-runner==5.2  # this is py2 compatible, ver 5.3 is not
+    - xvfb-run -as "-screen 0 1920x1200x24" python2 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
+
+test py3-tests:
+  <<: *only-default
+  stage: test
+  tags:
+    - Agile_GUI_Docker
+  script:
+    - pip3 install tox
+    - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e py36
+# running pytest directly does not work
+# as the test_start_script.py test_start_script_valid_config always uses "python" to start "rafcon_core"
+# which fails if tests are run using python3 as the "python" always maps to python2 on Ubuntu 18.04
+#    - xvfb-run -as "-screen 0 1920x1200x24" python3 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
