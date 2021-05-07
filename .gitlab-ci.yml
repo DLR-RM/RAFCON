@@ -40,7 +40,7 @@ test py3-tests:
       cobertura: coverage.xml
     paths:
       - coverage.xml
-      - tests/coverage_python/*
+      # - tests/coverage_python/*
 # running pytest directly does not work
 # as the test_start_script.py test_start_script_valid_config always uses "python" to start "rafcon_core"
 # which fails if tests are run using python3 as the "python" always maps to python2 on Ubuntu 18.04
