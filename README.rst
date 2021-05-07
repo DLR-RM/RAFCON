@@ -7,7 +7,7 @@ Develop branch: |build_status_develop|
 RAFCON
 ======
 
-.. figure:: https://raw.githubusercontent.com/DLR-RM/RAFCON/master/documents/assets/Screenshot_Drill_Skill.png
+.. figure:: documents/assets/Screenshot_Drill_Skill_Scaled.png
    :figwidth: 100%
    :width: 800px
    :align: left
