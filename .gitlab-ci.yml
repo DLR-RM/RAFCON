@@ -9,7 +9,9 @@ stages:
     # and limit branches to master and release/*
     # See also: https://docs.gitlab.com/ee/ci/yaml/#onlyexcept-basic
     - master
+    - develop
     - /^release/.*$
+    - /^release.*$
     - tags
     - merge_requests
 
