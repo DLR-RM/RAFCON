@@ -48,6 +48,8 @@ def create_models(*args, **kargs):
     rafcon.gui.singleton.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
 
+@pytest.mark.unstable
+# @pytest.mark.unstable36  # runs for python 2.7
 @pytest.mark.parametrize('gui', [{"runtime_config": {
     'MAIN_WINDOW_MAXIMIZED': False,
     'MAIN_WINDOW_SIZE': (1500, 800),
