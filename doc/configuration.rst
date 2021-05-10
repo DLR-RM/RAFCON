@@ -9,7 +9,7 @@ your home folder: ``~/.config/rafcon/`` with name ``config.yaml`` and
 the ``start.py`` script with argument "-c". The syntax used is
 `YAML <https://en.wikipedia.org/wiki/YAML>`__.
 
-Core configuration
+Core Configuration
 ------------------
 
 .. _core_config_example:
@@ -116,7 +116,7 @@ SCRIPT\_RECOMPILATION\_ON\_STATE\_EXECUTION:
 
 
   
-GUI configuration
+GUI Configuration
 -----------------
 
 .. _gui_config_example:
