@@ -9,7 +9,6 @@ dependencies:
   - pip:
     - psutil==5.*
     - pylint
-    - PyYAML==3.13
     - git+https://github.com/gaphor/gaphas.git@1.0.0#egg=gaphas
     - git+https://github.com/DLR-RM/python-jsonconversion.git@0.2.10#egg=jsonconversion
     - git+https://github.com/DLR-RM/python-yaml-configuration.git@master#egg=yaml_configuration
