@@ -41,6 +41,23 @@ test py3-tests:
     paths:
       - coverage.xml
       - htmlcov/*
+
+test py3-tests-core:
+  <<: *only-default
+  stage: test
+  tags:
+    - Agile_GUI_Docker
+  script:
+    - pip3 install tox
+    - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e core
+  coverage: /^TOTAL.+?(\d+\%)$/
+  artifacts:
+    expire_in: 7 days
+    reports:
+      cobertura: coverage_core.xml
+    paths:
+      - coverage_core.xml
+      - htmlcov_core/*
 # running pytest directly does not work
 # as the test_start_script.py test_start_script_valid_config always uses "python" to start "rafcon_core"
 # which fails if tests are run using python3 as the "python" always maps to python2 on Ubuntu 18.04
