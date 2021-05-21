@@ -1,5 +1,4 @@
-
-def execute(self, inputs, outputs, gvm):
+def execute(self, inputs, outputs, gvm):  # pragma no cover
     self.logger.info("Hello {}".format(self.name))
     self.preemptive_wait(2)
     return "success"
