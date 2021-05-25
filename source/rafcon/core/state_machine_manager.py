@@ -12,7 +12,6 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
-
 """
 .. module:: state_machine_manager
    :synopsis: A module to organize a open state machine with all its main components
@@ -64,7 +63,8 @@ class StateMachineManager(Observable):
             if sm.root_state.state_id == root_state_id:
                 return sm_id
 
-        logger.debug("sm_id is not found as long root_state_id is not found or identity check failed")
+        logger.debug(
+            "sm_id is not found as long root_state_id is not found or identity check failed")
         return None
 
     def has_dirty_state_machine(self):
@@ -101,7 +101,8 @@ class StateMachineManager(Observable):
             raise AttributeError("State machine must be of type StateMachine")
         if state_machine.file_system_path is not None:
             if self.is_state_machine_open(state_machine.file_system_path):
-                raise AttributeError("The state machine is already open {0}".format(state_machine.file_system_path))
+                raise AttributeError("The state machine is already open {0}".format(
+                    state_machine.file_system_path))
         logger.debug("Add new state machine with id {0}".format(state_machine.state_machine_id))
         self._state_machines[state_machine.state_machine_id] = state_machine
         return state_machine.state_machine_id
@@ -167,6 +168,8 @@ class StateMachineManager(Observable):
                 raise AttributeError("State machine not in list of all state machines")
         if not core_singletons.state_machine_execution_engine.finished_or_stopped() and \
                 state_machine_id != self._active_state_machine_id:
-            raise AttributeError("Active state machine can not be changed because state machine execution is active.")
+            raise AttributeError(
+                "Active state machine can not be changed because state machine execution is active."
+            )
 
         self._active_state_machine_id = state_machine_id

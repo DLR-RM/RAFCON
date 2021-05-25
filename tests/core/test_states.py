@@ -289,6 +289,8 @@ def test_container_state(caplog):
     assert (old_state1_id == state1.state_id)
     assert (not new_state.state_id == old_state1_id)
 
+    assert_logger_warnings_and_errors(caplog)
+
 
 def test_group_states(caplog):
     container = ContainerState("Container")
@@ -328,6 +330,8 @@ def test_group_states(caplog):
     group_state = container.group_states([state1.state_id, state2.state_id])
 
     container.ungroup_state(group_state.state_id)
+
+    assert_logger_warnings_and_errors(caplog)
 
 
 def test_port_and_outcome_removal(caplog):
