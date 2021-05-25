@@ -46,8 +46,6 @@ def test_state_machine_manager(caplog):
 
     manager = StateMachineManager([state_machine])
 
-    print("CACACACACACACACACACACACACACACACACACACA")
-
     sm_id = manager.get_sm_id_for_root_state_id(state1.state_id)
 
     sm_id = manager.get_sm_id_for_root_state_id('FakeId')
