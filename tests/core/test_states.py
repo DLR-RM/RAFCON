@@ -277,12 +277,6 @@ def test_container_state(caplog):
     # print(dict_state)
     container2, transitions, data_flows = ContainerState.from_dict(dict_state)
 
-    # print("class1: ", container.__class__)
-    # print("class2: ", container2.__class__)
-
-    new_hash = '12345'
-    # print(container == container2)
-    # container2.update_hash(new_hash)
     print(container)
     print(container2)
     assert (container == copy.copy(container))
@@ -294,6 +288,46 @@ def test_container_state(caplog):
 
     assert (old_state1_id == state1.state_id)
     assert (not new_state.state_id == old_state1_id)
+
+
+def test_group_states(caplog):
+    container = ContainerState("Container")
+    input_port_container_state = container.add_input_data_port("input", "float")
+    container.add_output_data_port("output", "float")
+    container.add_scoped_variable("scope_1", "float")
+    container.add_scoped_variable("scope_2", "float")
+
+    state1 = ExecutionState("MyFirstState")
+    container.add_state(state1)
+    new_state_id = container.add_state(
+        ExecutionState("test_execution_state", state_id=state1.state_id))
+    container.remove_state(new_state_id)
+
+    state2 = ExecutionState("2nd State", state_id=container.state_id)
+    logger.debug("Old state id: {0}".format(str(state2.state_id)))
+    new_state_id = container.add_state(state2)
+    logger.debug("New state id: {0}".format(str(new_state_id)))
+
+    input_state1 = state1.add_input_data_port("input", "float")
+    output_state1 = state1.add_output_data_port("output", "float")
+    input_state2 = state2.add_input_data_port("input", "float")
+    input2_state2 = state2.add_input_data_port("input2", "float")
+    output_state2 = state2.add_output_data_port("output", "float")
+
+    container.add_data_flow(state1.state_id, output_state1, state2.state_id, input_state2)
+
+    container.add_data_flow(container.state_id, input_port_container_state, state1.state_id,
+                            input_state1)
+
+    container.add_data_flow(state2.state_id, output_state2, state2.state_id, input2_state2)
+
+    container.add_transition(state1.state_id, -1, state2.state_id, None)
+    container.add_transition(state1.state_id, -2, container.state_id, -2)
+    container.add_transition(state2.state_id, -1, container.state_id, -1)
+
+    group_state = container.group_states([state1.state_id, state2.state_id])
+
+    container.ungroup_state(group_state.state_id)
 
 
 def test_port_and_outcome_removal(caplog):
@@ -342,7 +376,8 @@ def test_port_and_outcome_removal(caplog):
 
 if __name__ == '__main__':
     test_create_state(None)
-    test_port_and_outcome_removal(None)
     test_create_container_state(None)
     test_container_state(None)
+    test_group_states(None)
+    test_port_and_outcome_removal(None)
     # pytest.main([__file__])
