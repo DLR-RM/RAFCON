@@ -150,7 +150,6 @@ def test_keys(caplog):
     assert (len(gvm.get_all_keys()) == 4)
     assert (len(key_start_a) == 3)
 
-    # dic = gvm.global_variable_dictionary()
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
