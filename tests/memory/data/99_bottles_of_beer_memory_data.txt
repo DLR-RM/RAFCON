@@ -1,0 +1,1 @@
+{"state_machine_index": "99_bottles_of_beer", "data": [4023.7666015625], "uncollected": 0}
