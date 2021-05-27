@@ -9,6 +9,7 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+
 """
 .. module:: interface
    :synopsis: This is a interface for user input. In absence of a GUI the input is read from stdin.
@@ -35,7 +36,6 @@ def open_folder_cmd_line(query, default_path=None):
         return None
     return user_input
 
-
 open_folder_func = open_folder_cmd_line
 
 
@@ -60,10 +60,9 @@ def create_folder_cmd_line(query, default_name=None, default_path=None):
     if not os.path.isdir(user_input):
         try:
             os.makedirs(user_input)
-        except OSError:  # pragma no cover
+        except OSError:
             return None
     return user_input
-
 
 create_folder_func = create_folder_cmd_line
 
@@ -91,15 +90,14 @@ def save_folder_cmd_line(query, default_name=None, default_path=None):
         return None
     return user_input
 
-
 save_folder_func = save_folder_cmd_line
 
 
 def show_notice(notice):
-    """Shows a notice on the console that has to be acknowledged
-    :param str notice: Notice to show to the user
+    """Shows a notice on the console that has to be acknowledged 
+    
+    :param str notice: Notice to show to the user 
     """
     input(notice)
-
 
 show_notice_func = show_notice

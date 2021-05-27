@@ -13,6 +13,7 @@
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
+
 """
 .. module:: global_variable_manager
    :synopsis: A module to organize all global variables of the state machine
@@ -61,8 +62,7 @@ class GlobalVariableManager(Observable):
         :param access_key: if the variable was explicitly locked with the  rafcon.state lock_variable
         :raises exceptions.RuntimeError: if a wrong access key is passed
         """
-        key = str(
-            key)  # Ensure that we have the same string type for all keys (under Python2 and 3!)
+        key = str(key)  # Ensure that we have the same string type for all keys (under Python2 and 3!)
         if self.variable_exist(key):
             if data_type is None:
                 data_type = self.__global_variable_type_dictionary[key]
@@ -75,15 +75,10 @@ class GlobalVariableManager(Observable):
         with self.__global_lock:
             unlock = True
             if self.variable_exist(key):
-                if self.is_locked(
-                        key
-                ) and not access_key:  # case: locked, no access key; thus, wait until I get lock # pragma no cover
+                if self.is_locked(key) and not access_key:  # case: locked, no access key; thus, wait until I get lock
                     access_key = self.lock_variable(key, block=True)
-                elif self.is_locked(
-                        key
-                ) and self.__access_keys[key] != access_key:  # case: locked, but wrong access key
-                    raise RuntimeError(
-                        "Wrong access key for accessing global variable")  # pragma no cover
+                elif self.is_locked(key) and self.__access_keys[key] != access_key:  # case: locked, but wrong access key
+                    raise RuntimeError("Wrong access key for accessing global variable")
                 elif self.is_locked(key):  # case: locked and correct access key
                     unlock = False
                 else:  # case not locked
@@ -106,8 +101,7 @@ class GlobalVariableManager(Observable):
             if unlock:
                 self.unlock_variable(key, access_key)
 
-        logger.debug("Global variable '{}' was set to value '{}' with type '{}'".format(
-            key, value, data_type.__name__))
+        logger.debug("Global variable '{}' was set to value '{}' with type '{}'".format(key, value, data_type.__name__))
 
     def get_variable(self, key, per_reference=None, access_key=None, default=None):
         """Fetches the value of a global variable
@@ -125,7 +119,7 @@ class GlobalVariableManager(Observable):
             if self.is_locked(key):
                 if self.__access_keys[key] == access_key:
                     unlock = False
-                else:  # pragma no cover
+                else:
                     if not access_key:
                         access_key = self.lock_variable(key, block=True)
                     else:
@@ -171,7 +165,7 @@ class GlobalVariableManager(Observable):
         :raises exceptions.AttributeError:  if the global variable does not exist
         """
         key = str(key)
-        if self.is_locked(key):  # pragma no cover
+        if self.is_locked(key):
             raise RuntimeError("Global variable is locked")
 
         with self.__global_lock:
@@ -181,7 +175,7 @@ class GlobalVariableManager(Observable):
                 self.unlock_variable(key, access_key)
                 del self.__variable_locks[key]
                 del self.__variable_references[key]
-            else:  # pragma no cover
+            else:
                 raise AttributeError("Global variable %s does not exist!" % str(key))
 
         logger.debug("Global variable %s was deleted!" % str(key))
@@ -199,30 +193,27 @@ class GlobalVariableManager(Observable):
             if key in self.__variable_locks:
                 # acquire without arguments is blocking
                 lock_successful = self.__variable_locks[key].acquire(False)
-                if lock_successful or block:  # pragma no cover
-                    if (
-                            not lock_successful
-                    ) and block:  # case: lock could not be acquired => wait for it as block=True
+                if lock_successful or block:
+                    if (not lock_successful) and block:  # case: lock could not be acquired => wait for it as block=True
                         duration = 0.
                         loop_time = 0.1
                         while not self.__variable_locks[key].acquire(False):
                             time.sleep(loop_time)
                             duration += loop_time
-                            if int(duration * 10) % 20 == 0:
+                            if int(duration*10) % 20 == 0:
                                 # while loops informs the user about long locked variables
-                                logger.verbose(
-                                    "Variable '{2}' is locked and thread {0} waits already {1} seconds to "
-                                    "access it.".format(currentThread(), duration, key))
+                                logger.verbose("Variable '{2}' is locked and thread {0} waits already {1} seconds to "
+                                               "access it.".format(currentThread(), duration, key))
                     access_key = global_variable_id_generator()
                     self.__access_keys[key] = access_key
                     return access_key
                 else:
                     logger.warning("Global variable {} already locked".format(str(key)))
                     return False
-            else:  # pragma no cover
+            else:
                 logger.error("Global variable key {} does not exist".format(str(key)))
                 return False
-        except Exception as e:  # pragma no cover
+        except Exception as e:
             logger.error("Exception thrown: {}".format(str(e)))
             return False
 
@@ -243,12 +234,11 @@ class GlobalVariableManager(Observable):
                     self.__variable_locks[key].release()
                     return True
                 else:
-                    logger.error("Global variable {} is not locked, thus cannot unlock it".format(
-                        str(key)))
+                    logger.error("Global variable {} is not locked, thus cannot unlock it".format(str(key)))
                     return False
-            else:  # pragma no cover
+            else:
                 raise AttributeError("Global variable %s does not exist!" % str(key))
-        else:  # pragma no cover
+        else:
             raise RuntimeError("Wrong access key for accessing global variable")
 
     @Observable.observed
@@ -314,7 +304,6 @@ class GlobalVariableManager(Observable):
                 output_list.append(g_key)
         return output_list
 
-
 #########################################################################
 # Properties for all class fields that must be observed by gtkmvc3
 #########################################################################
@@ -361,5 +350,5 @@ class GlobalVariableManager(Observable):
         if value is not None and data_type is not type(None):
             # if not isinstance(value, data_type):
             if not type_inherits_of_type(data_type, type(value)):
-                raise TypeError("Value: '{0}' is not of data type: '{1}', value type: {2}".format(
-                    value, data_type, type(value)))
+                raise TypeError(
+                    "Value: '{0}' is not of data type: '{1}', value type: {2}".format(value, data_type, type(value)))
