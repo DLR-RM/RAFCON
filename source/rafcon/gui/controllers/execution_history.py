@@ -131,7 +131,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                             run_id=run_id)
             execute_command_in_process(cmd, shell=True, cwd=source_path, logger=logger)
         else:
-            logger.info("Set EXECUTION_LOG_ENABLE to True in your config to activate execution file logging and to use "
+            logger.info("Set EXECUTION_LOG_TO_FILESYSTEM_ENABLE to True in your config to activate execution file logging and to use "
                         "the external execution history viewer.")
 
     def append_string_to_menu(self, popup_menu, menu_item_string):

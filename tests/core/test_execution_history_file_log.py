@@ -12,7 +12,7 @@ import os
 def test_execution_log(caplog):
     try:
         testing_utils.initialize_environment_core(
-            core_config={'EXECUTION_LOG_ENABLE': True,
+            core_config={'EXECUTION_LOG_TO_FILESYSTEM_ENABLE': True,
                          'EXECUTION_LOG_PATH': testing_utils.get_unique_temp_path()+'/test_execution_log'})
 
         state_machine = global_storage.load_state_machine_from_path(

@@ -227,7 +227,7 @@ class StateMachine(Observable, JSONObject, Hashable):
     def _add_new_execution_history(self):
         new_execution_history = ExecutionHistory()
 
-        if global_config.get_config_value("EXECUTION_LOG_ENABLE", False):
+        if global_config.get_config_value("EXECUTION_LOG_TO_FILESYSTEM_ENABLE", False):
             base_dir = global_config.get_config_value("EXECUTION_LOG_PATH", "%RAFCON_TEMP_PATH_BASE/execution_logs")
             if base_dir.startswith('%RAFCON_TEMP_PATH_BASE'):
                 base_dir = base_dir.replace('%RAFCON_TEMP_PATH_BASE', RAFCON_TEMP_PATH_BASE)
