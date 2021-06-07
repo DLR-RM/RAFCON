@@ -142,7 +142,8 @@ class StateMachine(Observable, JSONObject, Hashable):
         self._root_state.input_data = self._root_state.get_default_input_values_for_state(self._root_state)
         self._root_state.output_data = self._root_state.create_output_dictionary_for_state(self._root_state)
         new_execution_history = self._add_new_execution_history()
-        new_execution_history.push_state_machine_start_history_item(self, run_id_generator())
+        if new_execution_history:
+            new_execution_history.push_state_machine_start_history_item(self, run_id_generator())
         self._root_state.start(new_execution_history)
 
     def join(self):
@@ -225,6 +226,11 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     @Observable.observed
     def _add_new_execution_history(self):
+
+        if not global_config.get_config_value("EXECUTION_LOG_ENABLE", True):
+            logger.debug("Execution history logging has been disabled")
+            return None
+
         new_execution_history = ExecutionHistory()
 
         if global_config.get_config_value("EXECUTION_LOG_TO_FILESYSTEM_ENABLE", False):

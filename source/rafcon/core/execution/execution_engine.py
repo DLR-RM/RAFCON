@@ -66,6 +66,7 @@ class ExecutionEngine(Observable):
         # counts how often a state asks for the current execution status
         self.state_counter = 0
         self.state_counter_lock = Lock()
+        self.new_execution_command_handled = True
 
     @Observable.observed
     def pause(self):
@@ -228,6 +229,11 @@ class ExecutionEngine(Observable):
         """Take a backward step for all active states in the state machine
         """
         logger.debug("Executing backward step ...")
+
+        if not global_config.get_config_value("EXECUTION_LOG_ENABLE", True):
+            logger.error("Backward stepping is not allowed if the execution histories are disabled")
+            return
+
         self.run_to_states = []
         self.set_execution_mode(StateMachineExecutionStatus.BACKWARD)
 
@@ -358,7 +364,7 @@ class ExecutionEngine(Observable):
             # if the status was set to PAUSED or STEP_MODE don't wake up!
             self._wait_while_in_pause_or_in_step_mode()
             # container_state was notified => thus, a new user command was issued, which has to be handled!
-            container_state.execution_history.new_execution_command_handled = False
+            self.new_execution_command_handled = False
 
     def handle_execution_mode(self, container_state, next_child_state_to_execute=None):
         """Checks the current execution status and returns it.
@@ -382,8 +388,8 @@ class ExecutionEngine(Observable):
         if (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
                 or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
             self._wait_while_in_pause_or_in_step_mode()
-            # new command was triggered => execution command has to handled
-            container_state.execution_history.new_execution_command_handled = False
+            # new command was triggered => execution command not handled yet
+            self.new_execution_command_handled = False
             woke_up_from_pause_or_step_mode = True
 
         # no elif here: if the execution woke up from e.g. paused mode, it has to check the current execution mode
@@ -410,16 +416,16 @@ class ExecutionEngine(Observable):
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_INTO:
                 pass
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OVER:
-                if not container_state.execution_history.new_execution_command_handled:
+                if not self.new_execution_command_handled:
                     # the state that called this method is a hierarchy state => thus we save this state and wait until
-                    # thise very state will execute its next state; only then we will wait on the condition variable
+                    # this very state will execute its next state; only then we will wait on the condition variable
                     self.run_to_states.append(container_state.get_path())
                 else:
                     pass
             elif self._status.execution_mode is StateMachineExecutionStatus.FORWARD_OUT:
                 from rafcon.core.states.state import State
                 if isinstance(container_state.parent, State):
-                    if not container_state.execution_history.new_execution_command_handled:
+                    if not self.new_execution_command_handled:
                         from rafcon.core.states.library_state import LibraryState
                         if isinstance(container_state.parent, LibraryState):
                             parent_path = container_state.parent.parent.get_path()
@@ -436,7 +442,7 @@ class ExecutionEngine(Observable):
                 # "run_to_states" were already updated thus doing nothing
                 pass
 
-        container_state.execution_history.new_execution_command_handled = True
+        self.new_execution_command_handled = True
 
         # in the case that the stop method wakes up the paused or step mode a StateMachineExecutionStatus.STOPPED
         # will be returned
@@ -557,4 +563,3 @@ class ExecutionEngine(Observable):
             raise TypeError("run_to_states must be of type list")
         with self.execution_engine_lock:
             self._run_to_states = run_to_states
-
