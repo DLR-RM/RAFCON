@@ -352,7 +352,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         :return: The last state in the execution history
         """
-        if self.execution_history:
+        if self.execution_history is not None:
             return self.execution_history.get_last_history_item().prev.state_reference
         else:
             logger.error("State does not have an execution history. "

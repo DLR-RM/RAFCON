@@ -73,13 +73,13 @@ class HierarchyState(ContainerState):
         self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
         if self.backward_execution:
             # if-clause actually not needed as in backward execution case there always exist an execution_history
-            if self.execution_history:
+            if self.execution_history is not None:
                 last_history_item = self.execution_history.pop_last_item()
             assert isinstance(last_history_item, ReturnItem)
             self.scoped_data = last_history_item.scoped_data
 
         else:  # forward_execution
-            if self.execution_history:
+            if self.execution_history is not None:
                 self.execution_history.push_call_history_item(self, CallType.CONTAINER, self, self.input_data)
             self.child_state = self.get_start_state(set_final_outcome=True)
             if self.child_state is None:
@@ -202,7 +202,7 @@ class HierarchyState(ContainerState):
 
         self.child_state.generate_run_id()
         if not self.backward_execution:  # only add history item if it is not a backward execution
-            if self.execution_history:
+            if self.execution_history is not None:
                 self.execution_history.push_call_history_item(
                     self.child_state, CallType.EXECUTE, self, self.child_state.input_data)
         self.child_state.start(self.execution_history, backward_execution=self.backward_execution,
@@ -267,7 +267,7 @@ class HierarchyState(ContainerState):
         """
         self.add_state_execution_output_to_scoped_data(self.child_state.output_data, self.child_state)
         self.update_scoped_variables_with_output_dictionary(self.child_state.output_data, self.child_state)
-        if self.execution_history:
+        if self.execution_history is not None:
             self.execution_history.push_return_history_item(
                 self.child_state, CallType.EXECUTE, self, self.child_state.output_data)
         # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
@@ -302,7 +302,7 @@ class HierarchyState(ContainerState):
                 self.output_data['error'] = copy.deepcopy(self.last_error)
             self.write_output_data()
             self.check_output_data_type()
-            if self.execution_history:
+            if self.execution_history is not None:
                 self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
             # add error message from child_state to own output_data
 

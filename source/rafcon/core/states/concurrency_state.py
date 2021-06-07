@@ -73,7 +73,7 @@ class ConcurrencyState(ContainerState):
             assert isinstance(concurrency_history_item, ConcurrencyItem)
 
         else:  # forward_execution
-            if self.execution_history:
+            if self.execution_history is not None:
                 self.execution_history.push_call_history_item(self, CallType.CONTAINER, self, self.input_data)
                 concurrency_history_item = self.execution_history.push_concurrency_history_item(self, len(self.states))
             else:
@@ -139,7 +139,7 @@ class ConcurrencyState(ContainerState):
         if not self.backward_execution:
             state.concurrency_queue = None
             # add the data of all child states to the scoped data and the scoped variables
-            if state.execution_history:
+            if state.execution_history is not None:
                 state.execution_history.push_return_history_item(state, CallType.EXECUTE, self, state.output_data)
         else:  # backward execution case
             # in case of a backward execution the concurrency_history_item always exists
@@ -173,7 +173,7 @@ class ConcurrencyState(ContainerState):
         final_outcome = outcome
         self.write_output_data()
         self.check_output_data_type()
-        if self.execution_history:
+        if self.execution_history is not None:
             self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
         self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
 
