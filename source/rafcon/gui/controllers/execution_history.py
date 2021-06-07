@@ -95,6 +95,10 @@ class ExecutionHistoryTreeController(ExtendedController):
 
     def open_selected_history_separately(self, widget, event=None):
         model, row = self.history_tree.get_selection().get_selected()
+        if not row:
+            logger.info("Now execution run is selected. "
+                        "Please select an execution run that should be opened externally")
+            return
         item_path = self.history_tree_store.get_path(row)
         selected_history_item = model[row][self.HISTORY_ITEM_STORAGE_ID]
 
@@ -131,8 +135,8 @@ class ExecutionHistoryTreeController(ExtendedController):
                             run_id=run_id)
             execute_command_in_process(cmd, shell=True, cwd=source_path, logger=logger)
         else:
-            logger.info("Set EXECUTION_LOG_TO_FILESYSTEM_ENABLE to True in your config to activate execution file logging and to use "
-                        "the external execution history viewer.")
+            logger.info("Set EXECUTION_LOG_TO_FILESYSTEM_ENABLE to True in your config in order to "
+                        "activate execution file logging and to use the external execution history viewer.")
 
     def append_string_to_menu(self, popup_menu, menu_item_string):
         final_string = menu_item_string
