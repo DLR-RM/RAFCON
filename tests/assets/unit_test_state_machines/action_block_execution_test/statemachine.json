@@ -1,6 +1,7 @@
 {
     "creation_time": "2015-09-28 09:39:20", 
-    "last_update": "2016-03-23 07:27:02", 
-    "root_state_id": "PTLNJT", 
-    "version": "None"
+    "last_update": "2021-06-07 20:00:08", 
+    "root_state_storage_id": "Outer_Action_Block_PTLNJT", 
+    "state_machine_version": "None", 
+    "used_rafcon_version": "0.14.6"
 }
