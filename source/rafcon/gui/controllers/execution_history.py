@@ -130,9 +130,14 @@ class ExecutionHistoryTreeController(ExtendedController):
             source_path = path.dirname(path.dirname(gui_path))
             viewer_path = path.join(gui_path, "execution_log_viewer.py")
             # TODO run in fully separate process but from here to use the option for selection synchronization via dict
-            cmd = "{path} {filename} {run_id}" \
-                  "".format(path=viewer_path, filename=execution_history.execution_history_storage.filename,
-                            run_id=run_id)
+            import sys
+            if sys.version_info[0] == 2:
+                python_version = "python2"
+            else:
+                python_version = "python3"
+            cmd = "{python_version} {path} {filename} {run_id}" \
+                  "".format(python_version=python_version, path=viewer_path,
+                            filename=execution_history.execution_history_storage.filename, run_id=run_id)
             execute_command_in_process(cmd, shell=True, cwd=source_path, logger=logger)
         else:
             logger.info("Set EXECUTION_LOG_TO_FILESYSTEM_ENABLE to True in your config in order to "
