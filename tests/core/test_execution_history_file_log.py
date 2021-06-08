@@ -1,19 +1,23 @@
+import os
+import time
+
 # singleton elements
 import rafcon.core.singleton
 from rafcon.core.storage import storage as global_storage
 import rafcon.utils.execution_log as log_helper
 
-# test environment elements
-import pytest
+# testing imports
 from tests import utils as testing_utils
-import os
 
 
 def test_execution_log(caplog):
     try:
         testing_utils.initialize_environment_core(
-            core_config={'EXECUTION_LOG_TO_FILESYSTEM_ENABLE': True,
-                         'EXECUTION_LOG_PATH': testing_utils.get_unique_temp_path()+'/test_execution_log'})
+            core_config={
+                'EXECUTION_LOG_ENABLE': True,
+                'EXECUTION_LOG_TO_FILESYSTEM_ENABLE': True,
+                'EXECUTION_LOG_PATH': testing_utils.get_unique_temp_path()+'/test_execution_log'}
+        )
 
         state_machine = global_storage.load_state_machine_from_path(
             testing_utils.get_test_sm_path(os.path.join("unit_test_state_machines",
@@ -21,11 +25,18 @@ def test_execution_log(caplog):
 
         rafcon.core.singleton.state_machine_manager.add_state_machine(state_machine)
         rafcon.core.singleton.state_machine_execution_engine.start(state_machine.state_machine_id)
+        while not state_machine.root_state.final_outcome:
+            time.sleep(0.1)
         rafcon.core.singleton.state_machine_execution_engine.join()
 
         import shelve
         import json
         ss = shelve.open(state_machine.get_last_execution_log_filename())
+
+        target_dict = {}  # can be used for debugging
+        for key, value in ss.items():
+            # print(value)
+            target_dict[int(key[-3:].lstrip("0"))] = value
 
         assert len(ss) == 36
 
@@ -58,9 +69,10 @@ def test_execution_log(caplog):
 
         rafcon.core.singleton.state_machine_manager.remove_state_machine(state_machine.state_machine_id)
     except ImportError:  # if pandas is not installed
-        pass
+        print("test_execution_log skipped as pandas is not installed")
     finally:
         testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=0)
+
 
 if __name__ == '__main__':
     test_execution_log(None)
