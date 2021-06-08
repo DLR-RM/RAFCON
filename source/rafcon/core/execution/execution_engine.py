@@ -230,7 +230,7 @@ class ExecutionEngine(Observable):
         """
         logger.debug("Executing backward step ...")
 
-        if not global_config.get_config_value("EXECUTION_LOG_ENABLE", True):
+        if not global_config.get_config_value("EXECUTION_HISTORY_ENABLED", True):
             logger.error("Backward stepping is not allowed if the execution histories are disabled")
             return
 
