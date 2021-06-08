@@ -227,13 +227,13 @@ class StateMachine(Observable, JSONObject, Hashable):
     @Observable.observed
     def _add_new_execution_history(self):
 
-        if not global_config.get_config_value("EXECUTION_HISTORY_ENABLED", True):
+        if not global_config.get_config_value("EXECUTION_HISTORY_ENABLE", True):
             logger.debug("Execution history logging has been disabled")
             return None
 
         new_execution_history = ExecutionHistory()
 
-        if global_config.get_config_value("EXECUTION_LOG_ENABLED", False):
+        if global_config.get_config_value("EXECUTION_LOG_ENABLE", False):
             base_dir = global_config.get_config_value("EXECUTION_LOG_PATH", "%RAFCON_TEMP_PATH_BASE/execution_logs")
             if base_dir.startswith('%RAFCON_TEMP_PATH_BASE'):
                 base_dir = base_dir.replace('%RAFCON_TEMP_PATH_BASE', RAFCON_TEMP_PATH_BASE)
