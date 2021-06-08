@@ -14,7 +14,7 @@ def test_execution_log(caplog):
     try:
         testing_utils.initialize_environment_core(
             core_config={
-                '.execution_history is not None:': True,
+                'EXECUTION_HISTORY_ENABLE': True,
                 'EXECUTION_LOG_ENABLE': True,
                 'EXECUTION_LOG_PATH': testing_utils.get_unique_temp_path()+'/test_execution_log'}
         )
