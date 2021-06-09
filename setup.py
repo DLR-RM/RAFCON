@@ -72,7 +72,8 @@ if sys.version_info[0] < 3:  # python2
                          'importlib-metadata~=2.0.0', 'zipp~=1.0.0', 'pyparsing~=2.4.0', 'mock~=3.0.0',
                          'isort~=4.3.0',
                          'graphviz', 'pyuserinput', 'pandas', 'numpy']
-    setup_requirements = ['pytest-runner==4.5.1', 'libsass >= 0.15.0', 'six~=1.11.0', 'setuptools~=44.1.1']
+    # setup_requirements = ['pytest-runner==4.5.1', 'libsass >= 0.15.0', 'six~=1.11.0', 'setuptools~=44.1.1']
+    setup_requirements = ['pytest-runner==4.5.1', 'libsass >= 0.15.0', 'six~=1.11.0']
 else:  # python3
     global_requirements = ['pylint>=1.6,<2', 'psutil', 'jsonconversion~=0.2.12', 'yaml_configuration~=0.1',
                            'python-gtkmvc3-dlr~=1.0.0', 'gaphas~=1.0.0', 'future>=0.16,<0.18.0']
