@@ -13,10 +13,13 @@ Next Release
 
 
 - Features:
-
+    - Add memory leak test
+    - Add states for execution control
+    - Add config option to disable execution history completely
+    - Add additional tests
 
 - Bug Fixes:
-
+    - Fix race condition in 'call_gui_callback'
 
 - Miscellaneous:
 
