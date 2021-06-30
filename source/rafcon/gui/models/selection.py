@@ -297,7 +297,7 @@ class Selection(ModelMT):
         return item in self._selected
 
     def __getitem__(self, key):
-        return [s for s in self._selected][key]
+        return list(self._selected)[key]
 
     def update_core_element_lists(self):
         """ Maintains inner lists of selected elements with a specific core element class """

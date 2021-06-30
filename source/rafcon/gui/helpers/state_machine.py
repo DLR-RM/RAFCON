@@ -1021,7 +1021,7 @@ def group_selected_states_and_scoped_variables():
     selected_states = list(selection.states)
     selected_scoped_vars = list(selection.scoped_variables)
     selected_state_m = selection.get_selected_state()
-    if len(selected_states) > 0 and isinstance(selected_state_m.parent, StateModel) or len(selected_scoped_vars):
+    if len(selected_states) > 0 and isinstance(selected_state_m.parent, StateModel) or selected_scoped_vars:
         # check if all elements have the same parent or leave it to the parent
         parent_list = []
         for state_m in selected_states:

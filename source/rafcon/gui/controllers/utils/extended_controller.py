@@ -175,7 +175,7 @@ class ExtendedController(Controller):
         assert isinstance(self.__child_controllers, dict)
         for controller in self.__child_controllers.values():
             register_function = getattr(controller, "register_actions", None)
-            if hasattr(register_function, '__call__'):
+             if callable(register_function):
                 register_function(self.__shortcut_manager)
 
     def connect_signal(self, widget, signal, callback):
@@ -195,7 +195,7 @@ class ExtendedController(Controller):
         all registered models are relieved and and the widget hand by the initial view argument is destroyed.
         """
         self.disconnect_all_signals()
-        controller_names = [key for key in self.__child_controllers]
+        controller_names = list(self.__child_controllers)
         for controller_name in controller_names:
             self.remove_controller(controller_name)
         self.relieve_all_models()

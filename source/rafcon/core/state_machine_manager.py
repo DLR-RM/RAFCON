@@ -48,7 +48,7 @@ class StateMachineManager(Observable):
                 self.add_state_machine(state_machine)
 
     def delete_all_state_machines(self):
-        sm_ids = [sm_id for sm_id in self.state_machines]
+        sm_ids = list(self.state_machines)
         for sm_id in sm_ids:
             if not (sm_id == self.active_state_machine_id):
                 self.remove_state_machine(sm_id)
