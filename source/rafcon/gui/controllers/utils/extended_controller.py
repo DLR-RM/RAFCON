@@ -175,7 +175,7 @@ class ExtendedController(Controller):
         assert isinstance(self.__child_controllers, dict)
         for controller in self.__child_controllers.values():
             register_function = getattr(controller, "register_actions", None)
-             if callable(register_function):
+            if callable(register_function):
                 register_function(self.__shortcut_manager)
 
     def connect_signal(self, widget, signal, callback):
