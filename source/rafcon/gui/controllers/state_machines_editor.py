@@ -173,7 +173,7 @@ class StateMachinesEditorController(ExtendedController):
                 if self.model.selected_state_machine_id != new_sm_id:
                     self.model.selected_state_machine_id = new_sm_id
                 if self.last_focused_state_machine_ids and \
-                        self.last_focused_state_machine_ids[len(self.last_focused_state_machine_ids) - 1] != new_sm_id:
+                        self.last_focused_state_machine_ids[-1] != new_sm_id:
                     self.last_focused_state_machine_ids.append(new_sm_id)
                 return page
 

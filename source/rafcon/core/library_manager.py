@@ -36,14 +36,14 @@ logger = log.get_logger(__name__)
 class LibraryManager(Observable):
     """This class manages all libraries
 
-    Libraries are essentially just (reusable) state machines. A set of state machines from path library_root_path 
+    Libraries are essentially just (reusable) state machines. A set of state machines from path library_root_path
     are mounted at point/name library_root_key in the library_manager.
     With library_path and library_name the respective library state machine is found in the library manager.
     Hereby a library_root_key has to be the first element of the library_path.
-    The library_root_paths are handed in the config.yaml in the LIBRARY_PATHS dictionary as pairs of library_root_key 
+    The library_root_paths are handed in the config.yaml in the LIBRARY_PATHS dictionary as pairs of library_root_key
     and library_root_path.
     The library_root_path can be relative paths and could include environment variables.
-    A library is pointed on by the file system path library_os_path which again partial consists of 
+    A library is pointed on by the file system path library_os_path which again partial consists of
     library_root_path + library_path (partly) + library_name.
     :ivar _libraries: a dictionary to hold  all libraries
     """
@@ -210,11 +210,11 @@ class LibraryManager(Observable):
     def get_os_path_to_library(self, library_path, library_name, allow_user_interaction=True):
         """Find library_os_path of library
 
-        This function retrieves the file system library_os_path of a library specified by a library_path and a 
-        library_name. In case the library does not exist any more at its original location, the user has to specify 
+        This function retrieves the file system library_os_path of a library specified by a library_path and a
+        library_name. In case the library does not exist any more at its original location, the user has to specify
         an alternative location.
 
-        :param str library_path: The library_path of the library, that must be relative and within a library_root_path 
+        :param str library_path: The library_path of the library, that must be relative and within a library_root_path
                              given in the config.yaml by LIBRARY_PATHS
         :param str library_name: The name of the library
         :param bool allow_user_interaction: Whether the user may be asked to specify library location
@@ -343,7 +343,7 @@ class LibraryManager(Observable):
     def get_library_path_and_name_for_os_path(self, path):
         """Generate valid library_path and library_name
 
-        The method checks if the given os path is in the list of loaded library root paths and use respective 
+        The method checks if the given os path is in the list of loaded library root paths and use respective
         library root key/mounting point to concatenate the respective library_path and separate respective library_name.
 
         :param str path: A library os path a library is situated in.
@@ -359,7 +359,7 @@ class LibraryManager(Observable):
             path_elements_without_library_root = path[len(library_root_path)+1:].split(os.sep)
             library_name = path_elements_without_library_root[-1]
             sub_library_path = ''
-            if len(path_elements_without_library_root[:-1]):
+            if path_elements_without_library_root[:-1]:
                 sub_library_path = os.sep + os.sep.join(path_elements_without_library_root[:-1])
             library_path = library_root_key + sub_library_path
         return library_path, library_name
