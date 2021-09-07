@@ -16,6 +16,7 @@ Next Release
     - Add memory leak test
     - Add states for execution control
     - Add config option to disable execution history completely
+    - Add new config (``RAISE_ERROR_ON_MISSING_LIBRARY_STATES``) to make Rafcon raise error when loading an sm with missing library states
     - Add additional tests
 
 - Bug Fixes:
