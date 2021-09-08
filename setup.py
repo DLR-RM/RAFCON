@@ -71,7 +71,7 @@ if sys.version_info[0] < 3:  # python2
     test_requirements = ['pytest>=3.5,<5', 'pytest-timeout', 'pytest-mock>=1.9.0,<3', 'pytest-faulthandler~=1.6.0',
                          'importlib-metadata~=2.0.0', 'zipp~=1.0.0', 'pyparsing~=2.4.0', 'mock~=3.0.0',
                          'isort~=4.3.0',
-                         'graphviz', 'pyuserinput', 'pandas', 'numpy']
+                         'graphviz==0.16', 'pyuserinput', 'pandas', 'numpy']
     # setup_requirements = ['pytest-runner==4.5.1', 'libsass >= 0.15.0', 'six~=1.11.0', 'setuptools~=44.1.1']
     setup_requirements = ['pytest-runner==4.5.1', 'libsass >= 0.15.0', 'six~=1.11.0']
 else:  # python3
