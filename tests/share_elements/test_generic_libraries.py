@@ -39,7 +39,7 @@ def execute_all_generic_libraries_with_keyboard_only(gui):
 
 
 @pytest.mark.user_input
-@pytest.mark.timeout(30)
+@pytest.mark.timeout(40)
 def test_all_generic_libraries_in_a_row(gui):
     gui(initialize_global_variables)
     with pytest.warns(log.RAFCONDeprecationWarning) as deprecations_warnings:
