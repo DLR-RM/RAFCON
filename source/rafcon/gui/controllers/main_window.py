@@ -277,6 +277,9 @@ class MainWindowController(ExtendedController):
                                         "clicked",
                                         self.on_button_step_backward_shortcut_clicked)
 
+        view['state_machine_search'].connect("search_changed", self.state_machine_search_changed)
+
+
         view['upper_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['upper_notebook_title'],
                                        view.left_bar_window, 'upper')
         view['lower_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['lower_notebook_title'],
@@ -599,6 +602,12 @@ class MainWindowController(ExtendedController):
 
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_backward_step_activate(None)
+
+    def state_machine_search_changed(self, search):
+        library_controller = self.get_controller('library_controller')
+        library_controller.view.collapse_all()
+        library_controller.tree_store_filter_value = search.get_text().lower()
+        library_controller.tree_store_filter.refilter()
 
     def on_notebook_tab_switch(self, notebook, page, page_num, title_label, window, notebook_identifier):
         """Triggered whenever a left-bar notebook tab is changed.
