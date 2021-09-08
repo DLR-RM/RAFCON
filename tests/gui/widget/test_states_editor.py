@@ -121,7 +121,7 @@ def select_child_states_and_state_sequentially(sm_m, parent_state_m, logger=None
     assert state_editor_ctrl.model is parent_state_m
 
 
-@pytest.mark.timeout(20)
+@pytest.mark.timeout(40)
 def test_state_type_change_test(gui):
     trigger_state_type_change_tests(gui)
 
