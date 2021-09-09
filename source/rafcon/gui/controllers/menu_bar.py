@@ -722,8 +722,8 @@ class MenuBarController(ExtendedController):
         if len(selection.states) is not 1:
             logger.error("Exactly one state must be selected!")
         else:
-            self.state_machine_execution_engine.run_to_selected_state(selection.get_selected_state().state.get_path(),
-                                                                      self.model.selected_state_machine_id)
+            self.state_machine_execution_engine.run_selected_state(selection.get_selected_state().state.get_path(),
+                                                                   self.model.selected_state_machine_id)
 
     ######################################################
     # menu bar functionality - Help
