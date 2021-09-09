@@ -217,6 +217,7 @@ class MainWindowView(View):
         button_pause_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_PAUSE))
         button_start_from_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_START_FROM_SELECTED_STATE))
         button_run_to_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_RUN_TO_SELECTED_STATE))
+        button_run_to_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_RUN_SELECTED_STATE))
         button_step_mode_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STEPM))
         button_step_in_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STEP_INTO))
         button_step_over_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STEP_OVER))
