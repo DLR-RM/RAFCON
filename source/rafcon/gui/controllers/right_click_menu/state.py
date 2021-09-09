@@ -225,6 +225,10 @@ class StateMachineRightClickMenu(object):
                                                    self.on_run_to_selected_state_activate,
                                                    accel_code=shortcuts_dict['run_to_selected'][0],
                                                    accel_group=accel_group))
+        execution_sub_menu.append(create_menu_item("run this state", constants.BUTTON_RUN_SELECTED_STATE,
+                                                   self.on_run_selected_state_activate,
+                                                   accel_code=shortcuts_dict['run_selected'][0],
+                                                   accel_group=accel_group))
 
     def insert_copy_cut_paste_in_menu(self, menu, shortcuts_dict, accel_group, no_paste=False):
         menu.append(create_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate,
