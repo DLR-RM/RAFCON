@@ -9,11 +9,11 @@ from rafcon.core.states.library_state import LibraryState
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.storage import storage
 from rafcon.core.state_machine import StateMachine
+from rafcon.core.custom_exceptions import LibraryNotFoundException
 
 # test environment elements
 from tests import utils as testing_utils
 import pytest
-
 
 TEST_LIBRARY_PATH = os.path.join(testing_utils.RAFCON_TEMP_PATH_TEST_BASE, "test_libraries")
 
@@ -69,7 +69,7 @@ def test_save_libraries(caplog):
     s.save_state_machine_to_path(StateMachine(state3), join(TEST_LIBRARY_PATH, "library_container", "library_nested1"),
                                  delete_old_state_machine=True)
     state3.name = "library_nested2"
-    s.save_state_machine_to_path(StateMachine(state3),  join(TEST_LIBRARY_PATH, "library_container", "library_nested2"),
+    s.save_state_machine_to_path(StateMachine(state3), join(TEST_LIBRARY_PATH, "library_container", "library_nested2"),
                                  delete_old_state_machine=True)
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
@@ -185,6 +185,23 @@ def test_rafcon_library_path_variable(caplog):
     libraries = rafcon.core.singleton.library_manager.libraries
     assert 'generic' in libraries
     assert isinstance(libraries['generic'], dict)
+
+
+def test_missing_rafcon_library_state_error_raise(caplog):
+    config_before = rafcon.core.config.global_config.get_config_value("RAISE_ERROR_ON_MISSING_LIBRARY_STATES", None)
+    rafcon.core.config.global_config.set_config_value("RAISE_ERROR_ON_MISSING_LIBRARY_STATES", True)
+    test_path = testing_utils.get_test_sm_path(
+        os.path.join("unit_test_state_machines", "test_sm_with_missing_lib_state"))
+    try:
+        storage.load_state_machine_from_path(test_path)
+        if config_before is not None:
+            rafcon.core.config.global_config.set_config_value("RAISE_ERROR_ON_MISSING_LIBRARY_STATES", config_before)
+        pytest.fail(msg="Loading a state machine with missing library state did not raise a LibraryNotFoundException",
+                    pytrace=True)
+    except Exception as e:
+        if config_before is not None:
+            rafcon.core.config.global_config.set_config_value("RAISE_ERROR_ON_MISSING_LIBRARY_STATES", config_before)
+        assert type(e) is LibraryNotFoundException
 
 
 def teardown_module(module=None):
