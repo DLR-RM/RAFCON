@@ -406,6 +406,8 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         logger.exception("Error while loading state data: {0}".format(e))
         return
     except LibraryNotFoundException as e:
+        if global_config.get_config_value("RAISE_ERROR_ON_MISSING_LIBRARY_STATES", False):
+            raise e        
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(e))
         state_info = storage_utils.load_objects_from_json(path_core_data, as_dict=True)
