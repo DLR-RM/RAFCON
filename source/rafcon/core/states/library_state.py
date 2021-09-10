@@ -87,6 +87,9 @@ class LibraryState(State):
         self.library_name = library_name
         self.version = version
 
+        if global_config.get_config_value("RAISE_ERROR_ON_MISSING_LIBRARY_STATES", False):
+            allow_user_interaction = False
+
         lib_os_path, new_library_path, new_library_name = \
             library_manager.get_os_path_to_library(library_path, library_name, allow_user_interaction)
         self.lib_os_path = lib_os_path
