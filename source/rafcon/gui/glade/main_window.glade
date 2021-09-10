@@ -144,6 +144,9 @@
                                 <property name="primary_icon_name">edit-find-symbolic</property>
                                 <property name="primary_icon_activatable">False</property>
                                 <property name="primary_icon_sensitive">False</property>
+                                <style>
+                                  <class name="flat"/>
+                                </style>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
