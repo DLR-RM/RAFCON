@@ -306,6 +306,24 @@ class ExecutionEngine(Observable):
             self.run_to_states.append(path)
             self._run_active_state_machine()
 
+    def run_selected_state(self, path, state_machine_id=None):
+        """Execute the selected state machine.
+        """
+        if self.state_machine_manager.get_active_state_machine() is not None:
+            self.state_machine_manager.get_active_state_machine().root_state.recursively_resume_states()
+
+        if not self.finished_or_stopped():
+            logger.debug("Resume execution engine and run to selected state!")
+            self.run_to_states = []
+            self.run_to_states.append(path)
+            self.set_execution_mode(StateMachineExecutionStatus.RUN_SELECTED_STATE)
+        else:
+            logger.debug("Start execution engine and run selected state!")
+            if state_machine_id is not None:
+                self.state_machine_manager.active_state_machine_id = state_machine_id
+            self.set_execution_mode(StateMachineExecutionStatus.RUN_SELECTED_STATE)
+            self._run_active_state_machine()
+
     def _wait_while_in_pause_or_in_step_mode(self):
         """ Waits as long as the execution_mode is in paused or step_mode
         """
