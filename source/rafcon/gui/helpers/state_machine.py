@@ -1081,3 +1081,10 @@ def get_root_state_description_of_sm_file_system_path(file_system_path):
         if 'description' in state_dict:
             return state_dict['description']
         return
+
+def find_usages(library_path):
+    library_usages_controller = rafcon.gui.singleton.main_window_controller.get_controller('library_usages_controller')
+    library_usages_controller.library_usages_value = library_path
+    library_usages_controller.library_usages_filter.refilter()
+    library_usages_controller.view.expand_all()
+    rafcon.gui.singleton.main_window_controller.upper_notebook.set_current_page(3)
