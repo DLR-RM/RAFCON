@@ -457,7 +457,7 @@ class LibraryTreeController(ExtendedController):
         return LibraryState(library_path, library_name, "0.1", format_folder_name_human_readable(library_name))
 
     def _search_filter(self, model, iter, data):
-        if self.search_filter_value == '' or self.search_filter_value in model.get_value(iter, self.ID_STORAGE_ID).lower():
+        if not self.search_filter_value or self.search_filter_value in model.get_value(iter, self.ID_STORAGE_ID).lower():
             return True
         else:
             parent_iter = model.iter_parent(iter)
@@ -467,11 +467,11 @@ class LibraryTreeController(ExtendedController):
                 parent_iter = model.iter_parent(parent_iter)
             queue = [iter]
             while len(queue) > 0:
-                node = queue.pop(0)
-                if model.iter_has_child(node):
-                    for i in range(model.iter_n_children(node)):
-                        queue.append(model.iter_nth_child(node, i))
-                if self.search_filter_value in model.get_value(node, self.ID_STORAGE_ID).lower():
+                node_iter = queue.pop(0)
+                if model.iter_has_child(node_iter):
+                    for i in range(model.iter_n_children(node_iter)):
+                        queue.append(model.iter_nth_child(node_iter, i))
+                if self.search_filter_value in model.get_value(node_iter, self.ID_STORAGE_ID).lower():
                     self.view.expand_all()
                     return True
         return False
