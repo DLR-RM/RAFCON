@@ -166,6 +166,7 @@ ICON_EHIST = "&#xf1b3;"
 ICON_NET = "&#xf0ec;"
 ICON_STICKY = "&#xf08d;"
 ICON_ERASE = "&#xf12d;"
+ICON_FIND_USAGES = "&#xf46d;"
 
 ICON_STATE_EXECUTION = "&#xe904;"
 ICON_STATE_HIERARCHY = "&#xe905;"

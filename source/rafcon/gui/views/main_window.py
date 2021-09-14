@@ -72,6 +72,13 @@ class MainWindowView(View):
         self['libraries_scrolledwindow'].add(self.library_tree)
 
         ######################################################
+        # Library Usages Tree
+        ######################################################
+        self.library_usages_tree = LibraryTreeView()
+        self.library_usages_tree.show()
+        self['library_usages_scrolledwindow'].add(self.library_usages_tree)
+
+        ######################################################
         # State Icons
         ######################################################
         self.state_icons = StateIconView()
@@ -237,8 +244,9 @@ class MainWindowView(View):
         :param notebook: GTK Notebook container, whose tab labels are to be rotated and made detachable
         """
         icons = {'Libraries': constants.SIGN_LIB, 'States Tree': constants.ICON_TREE,
-                 'Global Variables': constants.ICON_GLOB, 'Modification History': constants.ICON_HIST,
-                 'Execution History': constants.ICON_EHIST, 'network': constants.ICON_NET}
+                 'Global Variables': constants.ICON_GLOB, 'Library Usages': constants.ICON_FIND_USAGES,
+                 'Modification History': constants.ICON_HIST, 'Execution History': constants.ICON_EHIST,
+                 'network': constants.ICON_NET}
         for notebook in self.left_bar_notebooks:
             for i in range(notebook.get_n_pages()):
                 child = notebook.get_nth_page(i)
