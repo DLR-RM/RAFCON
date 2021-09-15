@@ -57,6 +57,7 @@ class LibraryTreeController(ExtendedController):
         assert isinstance(view, Gtk.TreeView)
         ExtendedController.__init__(self, model, view)
         self.tree_store = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_PYOBJECT, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING)
+        # view.set_model(self.tree_store)
         self.search_filter = self.tree_store.filter_new()
         self.search_filter.set_visible_func(self._search_filter)
         self.search_filter_value = ''
@@ -284,7 +285,10 @@ class LibraryTreeController(ExtendedController):
         if state_row_path is not None:
             self.view.expand_to_path(state_row_path)
         self.view.scroll_to_cell(state_row_path, None)
-        self.view.get_selection().select_iter(library_state_row_iter)
+        # Important: do not use select_iter() here!
+        # The iters of the view (whose model is the TreeModelFilter) won't match
+        # the iters stored in library_row_iter_dict_by_library_path as those directly point to the TreeModel
+        self.view.get_selection().select_path(state_row_path)
         self.view.grab_focus()
 
     def select_library_tree_element_of_library_state_model(self, state_m):
