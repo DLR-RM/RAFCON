@@ -141,6 +141,14 @@ class LibraryTreeController(ExtendedController):
                         self.view.expand_to_path(state_row_path)
                 return False
             self.open_button_clicked(None)
+
+            state_machine_model = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
+            selected_states = []
+            for state in state_machine_model.root_state.states.values():
+                if hasattr(state.state, 'lib_os_path') and state.state.lib_os_path == self.library_usages_value:
+                    selected_states.append(state)
+            state_machine_model.selection.set(selected_states)
+
             return True
 
         # Single right click
