@@ -222,6 +222,12 @@ class MainWindowController(ExtendedController):
     def update_widget_runtime_config(widget, event, name):
         global_runtime_config.store_widget_properties(widget, name)
 
+    def update_search_bar_visibility(self, widget, event):
+        toggle = widget.get_active()
+        if not toggle:
+            self.view['state_machine_search'].set_text('')
+        self.view['state_machine_search'].set_visible(toggle)
+
     def register_view(self, view):
         super(MainWindowController, self).register_view(view)
         self.register_actions(self.shortcut_manager)
@@ -294,6 +300,7 @@ class MainWindowController(ExtendedController):
         view['top_level_h_pane'].connect("button-release-event", self.update_widget_runtime_config, "LEFT_BAR_DOCKED")
         view['right_h_pane'].connect("button-release-event", self.update_widget_runtime_config, "RIGHT_BAR_DOCKED")
         view['central_v_pane'].connect("button-release-event", self.update_widget_runtime_config, "CONSOLE_DOCKED")
+        view['show_search_bar'].connect("toggled", self.update_search_bar_visibility, "TOGGLED")
 
         # hide not usable buttons
         self.view['step_buttons'].hide()
