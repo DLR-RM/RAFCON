@@ -11,18 +11,45 @@ Patch releases 0.14.\*
 Next Release
 """"""""""""
 
-
 - Features:
-    - Add memory leak test
-    - Add states for execution control
-    - Add config option to disable execution history completely
-    - Add additional tests
 
 - Bug Fixes:
-    - Fix race condition in 'call_gui_callback'
 
 - Miscellaneous:
 
+
+0.14.10
+"""""""
+
+- Features:
+    - Add new config (``RAISE_ERROR_ON_MISSING_LIBRARY_STATES``) to make Rafcon raise error when loading
+
+
+0.14.9
+""""""
+
+- Features:
+    - add states for execution control
+
+
+0.14.8
+""""""
+
+- Bug Fixes:
+    - Fix py2 support
+    - Make rafcon installation robust against local PYTHONPATH settings + python packages in ~/.local
+
+
+0.14.7
+""""""
+
+- Features:
+    - increase test coverage
+    - add gitlab runners support
+    - differentiate between py3 and py2 dependencies in setup.py
+    - differentiate between EXECUTION_LOG_ENABLE and EXECUTION_LOG_TO_FILESYSTEM_ENABLE config options i.e. keep memory footprint of RAFCON constant
+    - add memory leak test
+    - Fix race condition in 'call_gui_callback'
 
 
 0.14.6
