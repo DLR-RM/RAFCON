@@ -18,6 +18,13 @@ Next Release
 - Miscellaneous:
 
 
+0.14.11
+"""""""
+
+- Features:
+    - Add find usage for finding the usages of state machine libraries
+
+
 0.14.10
 """""""
 
