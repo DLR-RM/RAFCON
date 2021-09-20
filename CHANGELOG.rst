@@ -18,6 +18,12 @@ Next Release
 - Miscellaneous:
 
 
+0.14.11
+"""""""
+
+- Features:
+    - Add search bar for lookup through state machine libraries
+
 0.14.10
 """""""
 
