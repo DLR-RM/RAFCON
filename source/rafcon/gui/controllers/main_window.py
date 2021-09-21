@@ -231,6 +231,12 @@ class MainWindowController(ExtendedController):
     def update_widget_runtime_config(widget, event, name):
         global_runtime_config.store_widget_properties(widget, name)
 
+    def update_search_bar_visibility(self, widget, event):
+        toggle = widget.get_active()
+        if not toggle:
+            self.view['state_machine_search'].set_text('')
+        self.view['state_machine_search'].set_visible(toggle)
+
     def register_view(self, view):
         super(MainWindowController, self).register_view(view)
         self.register_actions(self.shortcut_manager)
@@ -286,6 +292,9 @@ class MainWindowController(ExtendedController):
                                         "clicked",
                                         self.on_button_step_backward_shortcut_clicked)
 
+        view['state_machine_search'].connect("search_changed", self.state_machine_search_changed)
+
+
         view['upper_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['upper_notebook_title'],
                                        view.left_bar_window, 'upper')
         view['lower_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['lower_notebook_title'],
@@ -300,6 +309,7 @@ class MainWindowController(ExtendedController):
         view['top_level_h_pane'].connect("button-release-event", self.update_widget_runtime_config, "LEFT_BAR_DOCKED")
         view['right_h_pane'].connect("button-release-event", self.update_widget_runtime_config, "RIGHT_BAR_DOCKED")
         view['central_v_pane'].connect("button-release-event", self.update_widget_runtime_config, "CONSOLE_DOCKED")
+        view['show_search_bar'].connect("toggled", self.update_search_bar_visibility, "TOGGLED")
 
         # hide not usable buttons
         self.view['step_buttons'].hide()
@@ -608,6 +618,12 @@ class MainWindowController(ExtendedController):
 
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_backward_step_activate(None)
+
+    def state_machine_search_changed(self, search):
+        library_controller = self.get_controller('library_controller')
+        library_controller.view.collapse_all()
+        library_controller.search_filter_value = search.get_text().lower()
+        library_controller.search_filter.refilter()
 
     def on_notebook_tab_switch(self, notebook, page, page_num, title_label, window, notebook_identifier):
         """Triggered whenever a left-bar notebook tab is changed.
