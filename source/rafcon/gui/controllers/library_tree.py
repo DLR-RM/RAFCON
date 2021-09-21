@@ -29,6 +29,7 @@ import os
 from functools import partial
 
 from rafcon.core.states.library_state import LibraryState
+from rafcon.core.storage import storage
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -52,16 +53,22 @@ class LibraryTreeController(ExtendedController):
     TOOL_TIP_STORAGE_ID = 3
     LIB_KEY_STORAGE_ID = 4
 
-    def __init__(self, model, view):
+    def __init__(self, model, view, find_usages=False):
         assert isinstance(model, LibraryManagerModel)
         assert isinstance(view, Gtk.TreeView)
         ExtendedController.__init__(self, model, view)
         self.tree_store = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_PYOBJECT, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING)
-        # view.set_model(self.tree_store)
-        self.search_filter = self.tree_store.filter_new()
-        self.search_filter.set_visible_func(self._search_filter)
-        self.search_filter_value = ''
-        view.set_model(self.search_filter)
+
+        if find_usages:
+            self.library_usages_filter = self.tree_store.filter_new()
+            self.library_usages_filter.set_visible_func(self._library_usages_filter)
+            self.library_usages_value = ''
+            view.set_model(self.library_usages_filter)
+        else:
+            self.search_filter = self.tree_store.filter_new()
+            self.search_filter.set_visible_func(self._search_filter)
+            self.search_filter_value = ''
+            view.set_model(self.search_filter)
         view.set_tooltip_column(3)
 
         # Gtk TODO: solve via Gtk.TargetList? https://python-gtk-3-tutorial.readthedocs.io/en/latest/drag_and_drop.html
@@ -108,6 +115,10 @@ class LibraryTreeController(ExtendedController):
                                              partial(self.substitute_as_template_clicked, keep_name=True)))
             sub_menu.append(create_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
                                              partial(self.substitute_as_template_clicked, keep_name=False)))
+
+            menu.append(create_menu_item("Find Usages", constants.ICON_FIND_USAGES,
+                                         self.menu_item_find_usages_clicked))
+
         elif kind in ['library root', 'library tree']:
             menu.append(create_menu_item("Add library root", constants.BUTTON_DEL,
                                          self.menu_item_add_library_root_clicked))
@@ -133,6 +144,14 @@ class LibraryTreeController(ExtendedController):
                         self.view.expand_to_path(state_row_path)
                 return False
             self.open_button_clicked(None)
+
+            state_machine_model = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
+            selected_states = []
+            for state in state_machine_model.root_state.states.values():
+                if hasattr(state.state, 'lib_os_path') and state.state.lib_os_path == self.library_usages_value:
+                    selected_states.append(state)
+            state_machine_model.selection.set(selected_states)
+
             return True
 
         # Single right click
@@ -418,6 +437,11 @@ class LibraryTreeController(ExtendedController):
             return True
         return False
 
+    def menu_item_find_usages_clicked(self, widget):
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+        library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
+        gui_helper_state_machine.find_usages(library_os_path)
+
     def substitute_as_library_clicked(self, widget, keep_name=True):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         gui_helper_state_machine.substitute_selected_state(self._get_selected_library_state(), as_template=False,
@@ -427,6 +451,7 @@ class LibraryTreeController(ExtendedController):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         gui_helper_state_machine.substitute_selected_state(self._get_selected_library_state(), as_template=True,
                                                            keep_name=keep_name)
+
 
     def extract_library_properties_from_selected_row(self):
         """ Extracts properties library_os_path, library_path, library_name and tree_item_key from tree store row """
@@ -460,6 +485,14 @@ class LibraryTreeController(ExtendedController):
         library_name = library_os_path.split(os.path.sep)[-1]
         return LibraryState(library_path, library_name, "0.1", format_folder_name_human_readable(library_name))
 
+    def _is_library_used(self, library_path, state_machine_path):
+        state_machine = storage.load_state_machine_from_path(state_machine_path)
+        if hasattr(state_machine.root_state, 'states'):
+            for library in state_machine.root_state.states.values():
+                if hasattr(library, 'lib_os_path') and library.lib_os_path == library_path:
+                    return True
+        return False
+
     def _search_filter(self, model, iter, data):
         if not self.search_filter_value or self.search_filter_value in model.get_value(iter, self.ID_STORAGE_ID).lower():
             return True
@@ -478,4 +511,21 @@ class LibraryTreeController(ExtendedController):
                 if self.search_filter_value in model.get_value(node_iter, self.ID_STORAGE_ID).lower():
                     self.view.expand_all()
                     return True
+        return False
+
+    def _library_usages_filter(self, model, iter, data):
+        if self.library_usages_value and self.library_usages_value != model.get_value(iter, self.ITEM_STORAGE_ID):
+            if not model.iter_has_child(iter):
+                return self._is_library_used(self.library_usages_value, model.get_value(iter, self.ITEM_STORAGE_ID))
+            else:
+                queue = [iter]
+                while len(queue) > 0:
+                    node_iter = queue.pop(0)
+                    if model.iter_has_child(node_iter):
+                        for i in range(model.iter_n_children(node_iter)):
+                            queue.append(model.iter_nth_child(node_iter, i))
+                    else:
+                        node = model.get_value(node_iter, self.ITEM_STORAGE_ID)
+                        if self.library_usages_value != node and self._is_library_used(self.library_usages_value, node):
+                            return True
         return False

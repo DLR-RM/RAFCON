@@ -87,6 +87,8 @@ class MainWindowController(ExtendedController):
         # shortcut manager
         self.shortcut_manager = ShortcutManager(view['main_window'])
 
+        self.upper_notebook = view['upper_notebook']
+
         ######################################################
         # debug console
         ######################################################
@@ -100,6 +102,13 @@ class MainWindowController(ExtendedController):
         self.library_manager_model = gui_singletons.library_manager_model
         library_controller = LibraryTreeController(self.library_manager_model, view.library_tree)
         self.add_controller('library_controller', library_controller)
+
+        ######################################################
+        # library usages tree
+        ######################################################
+        library_usages_controller = LibraryTreeController(self.library_manager_model, view.library_usages_tree, True)
+        self.add_controller('library_usages_controller', library_usages_controller)
+
 
         ######################################################
         # state icons
