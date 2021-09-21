@@ -57,7 +57,11 @@ class LibraryTreeController(ExtendedController):
         assert isinstance(view, Gtk.TreeView)
         ExtendedController.__init__(self, model, view)
         self.tree_store = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_PYOBJECT, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING)
-        view.set_model(self.tree_store)
+        # view.set_model(self.tree_store)
+        self.search_filter = self.tree_store.filter_new()
+        self.search_filter.set_visible_func(self._search_filter)
+        self.search_filter_value = ''
+        view.set_model(self.search_filter)
         view.set_tooltip_column(3)
 
         # Gtk TODO: solve via Gtk.TargetList? https://python-gtk-3-tutorial.readthedocs.io/en/latest/drag_and_drop.html
@@ -281,7 +285,10 @@ class LibraryTreeController(ExtendedController):
         if state_row_path is not None:
             self.view.expand_to_path(state_row_path)
         self.view.scroll_to_cell(state_row_path, None)
-        self.view.get_selection().select_iter(library_state_row_iter)
+        # Important: do not use select_iter() here!
+        # The iters of the view (whose model is the TreeModelFilter) won't match
+        # the iters stored in library_row_iter_dict_by_library_path as those directly point to the TreeModel
+        self.view.get_selection().select_path(state_row_path)
         self.view.grab_focus()
 
     def select_library_tree_element_of_library_state_model(self, state_m):
@@ -452,3 +459,23 @@ class LibraryTreeController(ExtendedController):
                                        self.convert_if_human_readable(str(library_path)) + "/" + str(item_key)))
         library_name = library_os_path.split(os.path.sep)[-1]
         return LibraryState(library_path, library_name, "0.1", format_folder_name_human_readable(library_name))
+
+    def _search_filter(self, model, iter, data):
+        if not self.search_filter_value or self.search_filter_value in model.get_value(iter, self.ID_STORAGE_ID).lower():
+            return True
+        else:
+            parent_iter = model.iter_parent(iter)
+            while parent_iter is not None:
+                if self.search_filter_value in model.get_value(parent_iter, self.ID_STORAGE_ID).lower():
+                    return True
+                parent_iter = model.iter_parent(parent_iter)
+            queue = [iter]
+            while len(queue) > 0:
+                node_iter = queue.pop(0)
+                if model.iter_has_child(node_iter):
+                    for i in range(model.iter_n_children(node_iter)):
+                        queue.append(model.iter_nth_child(node_iter, i))
+                if self.search_filter_value in model.get_value(node_iter, self.ID_STORAGE_ID).lower():
+                    self.view.expand_all()
+                    return True
+        return False

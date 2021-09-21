@@ -63,6 +63,8 @@ class MainWindowView(View):
         self['undock_right_bar_button'].set_tooltip_text("Undock right side bar widget")
         self['collapse_tree_button'].set_image(gui_helper_label.create_button_label(constants.ICON_TREE_FOLD))
         self['collapse_tree_button'].set_tooltip_text("Collapse tree of widget")
+        self['show_search_bar'].set_image(gui_helper_label.create_button_label(constants.BUTTON_SHOW_SEARCH_BAR))
+        self['show_search_bar'].set_tooltip_text("Show state machine search bar")
 
         ######################################################
         # Library Tree
