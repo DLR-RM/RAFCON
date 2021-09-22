@@ -622,8 +622,8 @@ class MainWindowController(ExtendedController):
     def state_machine_search_changed(self, search):
         library_controller = self.get_controller('library_controller')
         library_controller.view.collapse_all()
-        library_controller.search_filter_value = search.get_text().lower()
-        library_controller.search_filter.refilter()
+        library_controller.filter_value = search.get_text().lower()
+        library_controller.filter.refilter()
 
     def on_notebook_tab_switch(self, notebook, page, page_num, title_label, window, notebook_identifier):
         """Triggered whenever a left-bar notebook tab is changed.

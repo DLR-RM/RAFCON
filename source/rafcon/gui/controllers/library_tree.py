@@ -58,17 +58,16 @@ class LibraryTreeController(ExtendedController):
         assert isinstance(view, Gtk.TreeView)
         ExtendedController.__init__(self, model, view)
         self.tree_store = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_PYOBJECT, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING)
+        self.filter = self.tree_store.filter_new()
+        self.filter_value = ''
+        self.find_usages = find_usages
 
         if find_usages:
-            self.library_usages_filter = self.tree_store.filter_new()
-            self.library_usages_filter.set_visible_func(self._library_usages_filter)
-            self.library_usages_value = ''
-            view.set_model(self.library_usages_filter)
+            self.filter.set_visible_func(self._library_usages_filter)
         else:
-            self.search_filter = self.tree_store.filter_new()
-            self.search_filter.set_visible_func(self._search_filter)
-            self.search_filter_value = ''
-            view.set_model(self.search_filter)
+            self.filter.set_visible_func(self._search_filter)
+
+        view.set_model(self.filter)
         view.set_tooltip_column(3)
 
         # Gtk TODO: solve via Gtk.TargetList? https://python-gtk-3-tutorial.readthedocs.io/en/latest/drag_and_drop.html
@@ -145,12 +144,13 @@ class LibraryTreeController(ExtendedController):
                 return False
             self.open_button_clicked(None)
 
-            state_machine_model = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
-            selected_states = []
-            for state in state_machine_model.root_state.states.values():
-                if hasattr(state.state, 'lib_os_path') and state.state.lib_os_path == self.library_usages_value:
-                    selected_states.append(state)
-            state_machine_model.selection.set(selected_states)
+            if self.find_usages:
+                state_machine_model = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
+                selected_states = []
+                for state in state_machine_model.root_state.states.values():
+                    if hasattr(state.state, 'lib_os_path') and state.state.lib_os_path == self.filter_value:
+                        selected_states.append(state)
+                state_machine_model.selection.set(selected_states)
 
             return True
 
@@ -384,7 +384,7 @@ class LibraryTreeController(ExtendedController):
         model, path = self.view.get_selection().get_selected()
         if path:
             # Second confirmation to delete library
-            tree_m_row = self.tree_store[path]
+            tree_m_row = self.filter[path]
             library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
             # assert isinstance(tree_m_row[self.ITEM_STORAGE_ID], str)
             library_file_system_path = library_os_path
@@ -494,12 +494,12 @@ class LibraryTreeController(ExtendedController):
         return False
 
     def _search_filter(self, model, iter, data):
-        if not self.search_filter_value or self.search_filter_value in model.get_value(iter, self.ID_STORAGE_ID).lower():
+        if not self.filter_value or self.filter_value in model.get_value(iter, self.ID_STORAGE_ID).lower():
             return True
         else:
             parent_iter = model.iter_parent(iter)
             while parent_iter is not None:
-                if self.search_filter_value in model.get_value(parent_iter, self.ID_STORAGE_ID).lower():
+                if self.filter_value in model.get_value(parent_iter, self.ID_STORAGE_ID).lower():
                     return True
                 parent_iter = model.iter_parent(parent_iter)
             queue = [iter]
@@ -508,15 +508,15 @@ class LibraryTreeController(ExtendedController):
                 if model.iter_has_child(node_iter):
                     for i in range(model.iter_n_children(node_iter)):
                         queue.append(model.iter_nth_child(node_iter, i))
-                if self.search_filter_value in model.get_value(node_iter, self.ID_STORAGE_ID).lower():
+                if self.filter_value in model.get_value(node_iter, self.ID_STORAGE_ID).lower():
                     self.view.expand_all()
                     return True
         return False
 
     def _library_usages_filter(self, model, iter, data):
-        if self.library_usages_value and self.library_usages_value != model.get_value(iter, self.ITEM_STORAGE_ID):
+        if self.filter_value and self.filter_value != model.get_value(iter, self.ITEM_STORAGE_ID):
             if not model.iter_has_child(iter):
-                return self._is_library_used(self.library_usages_value, model.get_value(iter, self.ITEM_STORAGE_ID))
+                return self._is_library_used(self.filter_value, model.get_value(iter, self.ITEM_STORAGE_ID))
             else:
                 queue = [iter]
                 while len(queue) > 0:
@@ -526,6 +526,6 @@ class LibraryTreeController(ExtendedController):
                             queue.append(model.iter_nth_child(node_iter, i))
                     else:
                         node = model.get_value(node_iter, self.ITEM_STORAGE_ID)
-                        if self.library_usages_value != node and self._is_library_used(self.library_usages_value, node):
+                        if self.filter_value != node and self._is_library_used(self.filter_value, node):
                             return True
         return False
