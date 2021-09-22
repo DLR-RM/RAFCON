@@ -233,7 +233,9 @@ class MainWindowController(ExtendedController):
 
     def update_search_bar_visibility(self, widget, event):
         toggle = widget.get_active()
-        if not toggle:
+        if toggle:
+            self.view['state_machine_search'].grab_focus()
+        else:
             self.view['state_machine_search'].set_text('')
         self.view['state_machine_search'].set_visible(toggle)
 

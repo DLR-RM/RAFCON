@@ -400,6 +400,38 @@ class LibraryManager(Observable):
                 state_copy = copy.deepcopy(state_machine.root_state)
                 return state_machine.version, state_copy
 
+    def rename_library_from_file_system(self, library_path, library_os_path, new_library_os_path, library_name, new_library_name):
+        state_machines = []
+        state_machine = storage.load_state_machine_from_path(library_os_path)
+        old_state_machine_id = state_machine.state_machine_id
+        old_state_machine_path = state_machine.file_system_path
+        state_machine.root_state.name = new_library_name
+        storage.save_state_machine_to_path(state_machine, new_library_os_path)
+        state_machines.append((old_state_machine_id, old_state_machine_path, state_machine))
+        for root in self.libraries.values():
+            queue = [root]
+            while len(queue) > 0:
+                node = queue.pop(0)
+                if type(node) == str:
+                    changed = False
+                    if node != library_os_path:
+                        state_machine = storage.load_state_machine_from_path(node)
+                        if hasattr(state_machine.root_state, 'states'):
+                            for state in state_machine.root_state.states.values():
+                                if hasattr(state, 'lib_os_path') and state.lib_os_path == library_os_path:
+                                    state.library_name = new_library_name
+                                    state.name = new_library_name
+                                    changed = True
+                        if changed:
+                            storage.save_state_machine_to_path(state_machine, node)
+                            state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
+                else:
+                    for sub_node in node.values():
+                        queue.append(sub_node)
+        self.remove_library_from_file_system(library_path, library_name)
+        self.refresh_libraries()
+        return state_machines
+
     def remove_library_from_file_system(self, library_path, library_name):
         """Remove library from hard disk."""
         library_file_system_path = self.get_os_path_to_library(library_path, library_name)[0]
