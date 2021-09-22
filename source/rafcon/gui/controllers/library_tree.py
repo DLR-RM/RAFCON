@@ -27,6 +27,7 @@ from future.utils import string_types
 from builtins import str
 import os
 from functools import partial
+from pathlib import Path
 
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
@@ -38,7 +39,7 @@ from rafcon.gui.helpers.label import create_menu_item, append_sub_menu_to_parent
 from rafcon.gui.helpers.text_formatting import format_folder_name_human_readable
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.utils import constants
-from rafcon.gui.utils.dialog import RAFCONButtonDialog
+from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -96,6 +97,8 @@ class LibraryTreeController(ExtendedController):
             menu.append(create_menu_item("Open", constants.BUTTON_OPEN, self.open_button_clicked))
             menu.append(create_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
             menu.append(Gtk.SeparatorMenuItem())
+            menu.append(create_menu_item("Rename library", constants.BUTTON_RENAME,
+                                         self.menu_item_rename_libraries_clicked))
             menu.append(create_menu_item("Remove library", constants.BUTTON_DEL,
                                          self.menu_item_remove_libraries_or_root_clicked))
 
@@ -374,6 +377,59 @@ class LibraryTreeController(ExtendedController):
         library_paths[library_root_key] = library_root_path
         global_config.save_configuration()
         self.model.library_manager.refresh_libraries()
+
+    def menu_item_rename_libraries_clicked(self, menu_item):
+        menu_item_text = self.get_menu_item_text(menu_item)
+        logger.info("Rename item '{0}' pressed.".format(menu_item_text))
+        model, path = self.view.get_selection().get_selected()
+        if path:
+            tree_m_row = self.filter[path]
+            library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
+            library_file_system_path = library_os_path
+            button_texts = [menu_item_text, "Cancel"]
+            partial_message = "This folder will be renamed from hard drive! You really wanna do that?"
+            message_string = "You choose to {2} with " \
+                             "\n\nlibrary tree path:   {0}" \
+                             "\n\nphysical path:        {1}.\n\n\n"\
+                             "{3}" \
+                             "".format(os.path.join(self.convert_if_human_readable(tree_m_row[self.LIB_PATH_STORAGE_ID]), item_key),
+                                       library_file_system_path,
+                                       menu_item_text.lower(),
+                                       partial_message)
+            width = 8 * len("physical path:        " + library_file_system_path)
+            dialog = RAFCONInputDialog(message_string,
+                                       button_texts,
+                                       message_type=Gtk.MessageType.QUESTION,
+                                       parent=self.get_root_window(),
+                                       width=min(width, 1400))
+            dialog.set_entry_text(library_name)
+            response_id = dialog.run()
+            new_library_name = dialog.get_entry_text()
+            dialog.destroy()
+            parent_library_os_path = str(Path(library_os_path).parent.absolute())
+            new_library_os_path = os.path.join(parent_library_os_path, new_library_name)
+            if response_id == 1:
+                if not new_library_name:
+                    logger.error("The given library name is invalid")
+                    return False
+                elif library_path in self.model.library_manager.libraries:
+                    for state_machine_os_path in self.model.library_manager.libraries[library_path].values():
+                        if state_machine_os_path == new_library_os_path:
+                            logger.error("The library '{0}' already exists".format(new_library_name))
+                            return False
+                del self.library_row_iter_dict_by_library_path[os.path.join(library_path, library_name)]
+                state_machines = self.model.library_manager.rename_library_from_file_system(library_path,
+                                                                                            library_os_path,
+                                                                                            new_library_os_path,
+                                                                                            library_name,
+                                                                                            new_library_name)
+                state_machine_manager = gui_singletons.state_machine_manager_model.state_machine_manager
+                for state_machine_id, state_machine_path, state_machine in state_machines:
+                    if state_machine_manager.get_open_state_machine_of_file_system_path(state_machine_path):
+                        state_machine_manager.remove_state_machine_by_path(state_machine_path)
+                        state_machine_manager.add_state_machine(state_machine)
+            return True
+        return False
 
     def menu_item_remove_libraries_or_root_clicked(self, menu_item):
         """Removes library from hard drive after request second confirmation"""

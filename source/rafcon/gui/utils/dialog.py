@@ -189,6 +189,9 @@ class RAFCONInputDialog(RAFCONButtonDialog):
         else:
             return False
 
+    def set_entry_text(self, text):
+        return self.entry.set_text(text)
+
 
 class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
     """A dialog containing a column of checkboxes in addition to a number of buttons and a markup text.
