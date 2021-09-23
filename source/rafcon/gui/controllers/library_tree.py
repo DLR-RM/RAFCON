@@ -421,7 +421,7 @@ class LibraryTreeController(ExtendedController):
                             return False
                 # del self.library_row_iter_dict_by_library_path[os.path.join(library_path, library_name)]
                 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-                gui_helper_state_machine.rename_state_machine(library_os_path, new_library_os_path, library_path, library_name, new_library_name)
+                gui_helper_state_machine.rename_state_machine(library_os_path, new_library_os_path, new_library_name)
             return True
         return False
 
