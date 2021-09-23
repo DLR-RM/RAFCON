@@ -20,6 +20,7 @@ from builtins import str
 import copy
 import time
 import os
+import shutil
 from gi.repository import Gtk
 
 import rafcon.gui.helpers.state as gui_helper_state
@@ -144,7 +145,9 @@ def open_library_state_separately():
             logger.exception('Library state {0} could not be open separately'.format(state_m.state))
 
 
-def rename_state_machine(library_os_path, new_library_os_path, library_path, library_name, new_library_name):
+def rename_state_machine(library_os_path, new_library_os_path, new_library_name):
+    library_os_path = os.path.abspath(library_os_path)
+    new_library_os_path = os.path.abspath(new_library_os_path)
     state_machines = []
     state_machine_model = StateMachineModel(storage.load_state_machine_from_path(library_os_path))
     state_machine_model.load_meta_data()
@@ -159,8 +162,8 @@ def rename_state_machine(library_os_path, new_library_os_path, library_path, lib
         while len(queue) > 0:
             node = queue.pop(0)
             if type(node) == str:
-                changed = False
                 if node != library_os_path:
+                    changed = False
                     state_machine = storage.load_state_machine_from_path(node)
                     if hasattr(state_machine.root_state, 'states'):
                         for state in state_machine.root_state.states.values():
@@ -177,7 +180,7 @@ def rename_state_machine(library_os_path, new_library_os_path, library_path, lib
             else:
                 for sub_node in node.values():
                     queue.append(sub_node)
-    library_manager_model.library_manager.remove_library_from_file_system(library_path, library_name)
+    shutil.rmtree(library_os_path)
     for state_machine_id, state_machine_path, state_machine in state_machines:
         if state_machine_manager.get_open_state_machine_of_file_system_path(state_machine_path):
             state_machine_manager.remove_state_machine_by_path(state_machine_path)
