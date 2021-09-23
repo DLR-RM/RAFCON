@@ -1,7 +1,5 @@
 import os
 
-from pathlib import Path
-
 from rafcon.core.singleton import library_manager
 from rafcon.core.storage import storage
 from rafcon.utils import log
