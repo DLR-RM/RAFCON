@@ -144,6 +144,46 @@ def open_library_state_separately():
             logger.exception('Library state {0} could not be open separately'.format(state_m.state))
 
 
+def rename_state_machine(library_os_path, new_library_os_path, library_path, library_name, new_library_name):
+    state_machines = []
+    state_machine_model = StateMachineModel(storage.load_state_machine_from_path(library_os_path))
+    state_machine_model.load_meta_data()
+    old_state_machine_id = state_machine_model.state_machine.state_machine_id
+    old_state_machine_path = state_machine_model.state_machine.file_system_path
+    state_machine_model.state_machine.root_state.name = new_library_name
+    storage.save_state_machine_to_path(state_machine_model.state_machine, new_library_os_path)
+    state_machine_model.store_meta_data()
+    state_machines.append((old_state_machine_id, old_state_machine_path, state_machine_model.state_machine))
+    for root in library_manager_model.library_manager.libraries.values():
+        queue = [root]
+        while len(queue) > 0:
+            node = queue.pop(0)
+            if type(node) == str:
+                changed = False
+                if node != library_os_path:
+                    state_machine = storage.load_state_machine_from_path(node)
+                    if hasattr(state_machine.root_state, 'states'):
+                        for state in state_machine.root_state.states.values():
+                            if hasattr(state, 'lib_os_path') and state.lib_os_path == library_os_path:
+                                state.library_name = new_library_name
+                                state.name = new_library_name
+                                changed = True
+                    if changed:
+                        state_machine_model = StateMachineModel(state_machine)
+                        state_machine_model.load_meta_data()
+                        storage.save_state_machine_to_path(state_machine, node)
+                        state_machine_model.store_meta_data()
+                        state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
+            else:
+                for sub_node in node.values():
+                    queue.append(sub_node)
+    library_manager_model.library_manager.remove_library_from_file_system(library_path, library_name)
+    for state_machine_id, state_machine_path, state_machine in state_machines:
+        if state_machine_manager.get_open_state_machine_of_file_system_path(state_machine_path):
+            state_machine_manager.remove_state_machine_by_path(state_machine_path)
+            state_machine_manager.add_state_machine(state_machine)
+
+
 def save_state_machine(delete_old_state_machine=False, recent_opened_notification=False, as_copy=False, copy_path=None):
     """ Save selected state machine
 

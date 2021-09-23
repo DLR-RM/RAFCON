@@ -35,6 +35,7 @@ from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.library_manager import LibraryManagerModel
+from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.helpers.label import create_menu_item, append_sub_menu_to_parent_menu
 from rafcon.gui.helpers.text_formatting import format_folder_name_human_readable
 import rafcon.gui.singleton as gui_singletons
@@ -212,7 +213,8 @@ class LibraryTreeController(ExtendedController):
                             self.view.expand_to_path(library_row_path)
                             # print(library_path)
             except (TypeError, KeyError):
-                logger.warning("expansion state of library tree could not be re-done")
+                pass
+                # logger.warning("expansion state of library tree could not be re-done")
 
     def update(self):
         self.store_expansion_state()
@@ -417,17 +419,9 @@ class LibraryTreeController(ExtendedController):
                         if state_machine_os_path == new_library_os_path:
                             logger.error("The library '{0}' already exists".format(new_library_name))
                             return False
-                del self.library_row_iter_dict_by_library_path[os.path.join(library_path, library_name)]
-                state_machines = self.model.library_manager.rename_library_from_file_system(library_path,
-                                                                                            library_os_path,
-                                                                                            new_library_os_path,
-                                                                                            library_name,
-                                                                                            new_library_name)
-                state_machine_manager = gui_singletons.state_machine_manager_model.state_machine_manager
-                for state_machine_id, state_machine_path, state_machine in state_machines:
-                    if state_machine_manager.get_open_state_machine_of_file_system_path(state_machine_path):
-                        state_machine_manager.remove_state_machine_by_path(state_machine_path)
-                        state_machine_manager.add_state_machine(state_machine)
+                # del self.library_row_iter_dict_by_library_path[os.path.join(library_path, library_name)]
+                import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+                gui_helper_state_machine.rename_state_machine(library_os_path, new_library_os_path, library_path, library_name, new_library_name)
             return True
         return False
 
