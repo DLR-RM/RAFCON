@@ -182,6 +182,7 @@ def rename_state_machine(library_os_path, new_library_os_path, library_path, lib
         if state_machine_manager.get_open_state_machine_of_file_system_path(state_machine_path):
             state_machine_manager.remove_state_machine_by_path(state_machine_path)
             state_machine_manager.add_state_machine(state_machine)
+    library_manager_model.library_manager.refresh_libraries()
 
 
 def save_state_machine(delete_old_state_machine=False, recent_opened_notification=False, as_copy=False, copy_path=None):
