@@ -161,7 +161,7 @@ def rename_state_machine(library_os_path, new_library_os_path, new_library_name)
         queue = [root]
         while len(queue) > 0:
             node = queue.pop(0)
-            if type(node) == str:
+            if isinstance(node, str):
                 if node != library_os_path:
                     changed = False
                     state_machine = storage.load_state_machine_from_path(node)
@@ -177,7 +177,7 @@ def rename_state_machine(library_os_path, new_library_os_path, new_library_name)
                         storage.save_state_machine_to_path(state_machine, node)
                         state_machine_model.store_meta_data()
                         state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
-            else:
+            elif isinstance(node, dict):
                 for sub_node in node.values():
                     queue.append(sub_node)
     shutil.rmtree(library_os_path)
