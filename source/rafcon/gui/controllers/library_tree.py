@@ -27,7 +27,6 @@ from future.utils import string_types
 from builtins import str
 import os
 from functools import partial
-from pathlib import Path
 
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
@@ -402,7 +401,7 @@ class LibraryTreeController(ExtendedController):
             response_id = dialog.run()
             new_library_name = dialog.get_entry_text()
             dialog.destroy()
-            parent_library_os_path = str(Path(library_os_path).parent.absolute())
+            parent_library_os_path = os.path.abspath(os.path.join(library_os_path, os.pardir))
             new_library_os_path = os.path.join(parent_library_os_path, new_library_name)
             if response_id == 1:
                 if not new_library_name:
