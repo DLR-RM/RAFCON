@@ -70,7 +70,7 @@ def test_rename_libraries(caplog):
 
         assert CURRENT_LIBRARY_NAME in [state.name for state in state_machine.root_state.states.values()]
     finally:
-        testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=0)
+        testing_utils.shutdown_environment_only_core()
 
 
 if __name__ == '__main__':
