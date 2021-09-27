@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from rafcon.core.singleton import library_manager
 from rafcon.core.storage import storage
 from rafcon.utils import log
@@ -67,5 +69,9 @@ def test_rename_libraries():
     assert CURRENT_LIBRARY_NAME in [state.name for state in state_machine.root_state.states.values()]
 
 
+def teardown_module(module=None):
+    testing_utils.test_multithreading_lock.release()
+
+
 if __name__ == '__main__':
-    test_rename_libraries()
+    pytest.main([__file__])
