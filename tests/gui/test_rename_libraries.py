@@ -1,5 +1,6 @@
-import os
+from __future__ import print_function
 
+import os
 import pytest
 
 from rafcon.core.singleton import library_manager
@@ -13,7 +14,7 @@ CURRENT_LIBRARY_NAME = '99_bottles_of_beer'
 NEW_LIBRARY_NAME = 'renamed_library'
 STATE_MACHINE_NAME = '99_bottles_of_beer_in_library'
 
-
+@pytest.mark.timeout(60)
 def test_rename_library(caplog):
     testing_utils.initialize_environment(gui_already_started=False, libraries={
         "tutorials": testing_utils.TUTORIAL_PATH,
