@@ -15,8 +15,7 @@ STATE_MACHINE_NAME = '99_bottles_of_beer_in_library'
 
 
 def test_rename_library(caplog):
-
-    testing_utils.initialize_environment_core(libraries={
+    testing_utils.initialize_environment(gui_already_started=False, libraries={
         "tutorials": testing_utils.TUTORIAL_PATH,
         "ros": testing_utils.ROS_PATH,
         "turtle_libraries": testing_utils.TURTLE_PATH,
