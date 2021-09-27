@@ -14,59 +14,64 @@ NEW_LIBRARY_NAME = 'renamed_library'
 STATE_MACHINE_NAME = '99_bottles_of_beer_in_library'
 
 
-def test_rename_libraries():
+def test_rename_libraries(caplog):
 
-    from rafcon.gui.helpers.state_machine import rename_state_machine
+    testing_utils.initialize_environment_core()
 
-    testing_utils.rewind_and_set_libraries({
-        "tutorials": testing_utils.TUTORIAL_PATH,
-        "ros": testing_utils.ROS_PATH,
-        "turtle_libraries": testing_utils.TURTLE_PATH,
-    })
+    try:
+        from rafcon.gui.helpers.state_machine import rename_state_machine
 
-    library_manager.initialize()
+        testing_utils.rewind_and_set_libraries({
+            "tutorials": testing_utils.TUTORIAL_PATH,
+            "ros": testing_utils.ROS_PATH,
+            "turtle_libraries": testing_utils.TURTLE_PATH,
+        })
 
-    if 'unit_test_state_machines' in library_manager.libraries:
-        del library_manager.libraries['unit_test_state_machines']
+        library_manager.initialize()
 
-    current_library_path = os.path.abspath(os.path.join(testing_utils.TUTORIAL_PATH, CURRENT_LIBRARY_NAME))
-    new_library_path = os.path.abspath(os.path.join(testing_utils.TUTORIAL_PATH, NEW_LIBRARY_NAME))
-    state_machine_path = os.path.abspath(os.path.join(testing_utils.TUTORIAL_PATH, STATE_MACHINE_NAME))
-    library = storage.load_state_machine_from_path(current_library_path)
+        if 'unit_test_state_machines' in library_manager.libraries:
+            del library_manager.libraries['unit_test_state_machines']
 
-    assert library.file_system_path == current_library_path
-    assert library.root_state.name.replace('_', ' ').lower() == CURRENT_LIBRARY_NAME.replace('_', ' ').lower()
+        current_library_path = os.path.abspath(os.path.join(testing_utils.TUTORIAL_PATH, CURRENT_LIBRARY_NAME))
+        new_library_path = os.path.abspath(os.path.join(testing_utils.TUTORIAL_PATH, NEW_LIBRARY_NAME))
+        state_machine_path = os.path.abspath(os.path.join(testing_utils.TUTORIAL_PATH, STATE_MACHINE_NAME))
+        library = storage.load_state_machine_from_path(current_library_path)
 
-    state_machine = storage.load_state_machine_from_path(state_machine_path)
+        assert library.file_system_path == current_library_path
+        assert library.root_state.name.replace('_', ' ').lower() == CURRENT_LIBRARY_NAME.replace('_', ' ').lower()
 
-    assert CURRENT_LIBRARY_NAME in [state.name for state in state_machine.root_state.states.values()]
+        state_machine = storage.load_state_machine_from_path(state_machine_path)
 
-    rename_state_machine(current_library_path, new_library_path, NEW_LIBRARY_NAME)
-    library = storage.load_state_machine_from_path(new_library_path)
+        assert CURRENT_LIBRARY_NAME in [state.name for state in state_machine.root_state.states.values()]
 
-    if 'unit_test_state_machines' in library_manager.libraries:
-        del library_manager.libraries['unit_test_state_machines']
+        rename_state_machine(current_library_path, new_library_path, NEW_LIBRARY_NAME)
+        library = storage.load_state_machine_from_path(new_library_path)
 
-    assert library.file_system_path == new_library_path
-    assert library.root_state.name == NEW_LIBRARY_NAME
+        if 'unit_test_state_machines' in library_manager.libraries:
+            del library_manager.libraries['unit_test_state_machines']
 
-    state_machine = storage.load_state_machine_from_path(state_machine_path)
+        assert library.file_system_path == new_library_path
+        assert library.root_state.name == NEW_LIBRARY_NAME
 
-    assert NEW_LIBRARY_NAME in [state.name for state in state_machine.root_state.states.values()]
+        state_machine = storage.load_state_machine_from_path(state_machine_path)
 
-    rename_state_machine(new_library_path, current_library_path, CURRENT_LIBRARY_NAME)
-    library = storage.load_state_machine_from_path(current_library_path)
+        assert NEW_LIBRARY_NAME in [state.name for state in state_machine.root_state.states.values()]
 
-    if 'unit_test_state_machines' in library_manager.libraries:
-        del library_manager.libraries['unit_test_state_machines']
+        rename_state_machine(new_library_path, current_library_path, CURRENT_LIBRARY_NAME)
+        library = storage.load_state_machine_from_path(current_library_path)
 
-    assert library.file_system_path == current_library_path
-    assert library.root_state.name == CURRENT_LIBRARY_NAME
+        if 'unit_test_state_machines' in library_manager.libraries:
+            del library_manager.libraries['unit_test_state_machines']
 
-    state_machine = storage.load_state_machine_from_path(state_machine_path)
+        assert library.file_system_path == current_library_path
+        assert library.root_state.name == CURRENT_LIBRARY_NAME
 
-    assert CURRENT_LIBRARY_NAME in [state.name for state in state_machine.root_state.states.values()]
+        state_machine = storage.load_state_machine_from_path(state_machine_path)
+
+        assert CURRENT_LIBRARY_NAME in [state.name for state in state_machine.root_state.states.values()]
+    finally:
+        testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=1)
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    test_rename_libraries(None)
