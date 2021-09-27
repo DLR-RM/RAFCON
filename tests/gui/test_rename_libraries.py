@@ -14,7 +14,7 @@ NEW_LIBRARY_NAME = 'renamed_library'
 STATE_MACHINE_NAME = '99_bottles_of_beer_in_library'
 
 
-def test_rename_libraries(caplog):
+def test_rename_library(caplog):
 
     testing_utils.initialize_environment_core()
 
@@ -74,4 +74,4 @@ def test_rename_libraries(caplog):
 
 
 if __name__ == '__main__':
-    test_rename_libraries(None)
+    test_rename_library(None)
