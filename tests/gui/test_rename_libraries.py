@@ -17,18 +17,14 @@ STATE_MACHINE_NAME = '99_bottles_of_beer_in_library'
 @pytest.mark.timeout(120)
 def test_rename_library():
 
-    testing_utils.initialize_environment_core()
+    testing_utils.initialize_environment_core(libraries={
+        "tutorials": testing_utils.TUTORIAL_PATH,
+        "ros": testing_utils.ROS_PATH,
+        "turtle_libraries": testing_utils.TURTLE_PATH,
+    })
 
     try:
         from rafcon.gui.helpers.state_machine import rename_state_machine
-
-        testing_utils.rewind_and_set_libraries({
-            "tutorials": testing_utils.TUTORIAL_PATH,
-            "ros": testing_utils.ROS_PATH,
-            "turtle_libraries": testing_utils.TURTLE_PATH,
-        })
-
-        library_manager.initialize()
 
         if 'unit_test_state_machines' in library_manager.libraries:
             del library_manager.libraries['unit_test_state_machines']
