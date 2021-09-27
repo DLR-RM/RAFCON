@@ -14,8 +14,7 @@ NEW_LIBRARY_NAME = 'renamed_library'
 STATE_MACHINE_NAME = '99_bottles_of_beer_in_library'
 
 
-@pytest.mark.timeout(120)
-def test_rename_library():
+def test_rename_library(caplog):
 
     testing_utils.initialize_environment_core(libraries={
         "tutorials": testing_utils.TUTORIAL_PATH,
@@ -67,8 +66,8 @@ def test_rename_library():
 
         assert CURRENT_LIBRARY_NAME in [state.name for state in state_machine.root_state.states.values()]
     finally:
-        testing_utils.shutdown_environment_only_core()
+        testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
 
 if __name__ == '__main__':
-    test_rename_library()
+    test_rename_library(None)
