@@ -69,4 +69,5 @@ def test_rename_library(caplog):
 
 
 if __name__ == '__main__':
-    test_rename_library(None)
+    pytest.main(['-s', __file__])
+
