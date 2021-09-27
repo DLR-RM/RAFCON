@@ -15,7 +15,6 @@ STATE_MACHINE_NAME = '99_bottles_of_beer_in_library'
 
 
 def test_rename_libraries():
-    testing_utils.test_multithreading_lock.acquire()
 
     from rafcon.gui.helpers.state_machine import rename_state_machine
 
@@ -67,10 +66,6 @@ def test_rename_libraries():
     state_machine = storage.load_state_machine_from_path(state_machine_path)
 
     assert CURRENT_LIBRARY_NAME in [state.name for state in state_machine.root_state.states.values()]
-
-
-def teardown_module(module=None):
-    testing_utils.test_multithreading_lock.release()
 
 
 if __name__ == '__main__':
