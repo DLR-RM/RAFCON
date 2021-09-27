@@ -61,8 +61,7 @@ class TestErrorPreemptionHandling(object):
         gvm.set_variable("inner_observer_2_finish", False)
 
     def teardown(self):
-        # variables_for_pytest.test_multithrading_lock.release()
-        pass
+        testing_utils.test_multithreading_lock.release()
 
     def run_state_machine(self):
         sms = state_machine_manager.state_machines
