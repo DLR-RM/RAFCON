@@ -382,10 +382,10 @@ class LibraryTreeController(ExtendedController):
             library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
             library_file_system_path = library_os_path
             button_texts = [menu_item_text, "Cancel"]
-            partial_message = "This folder will be renamed from hard drive! You really wanna do that?"
-            message_string = "You choose to {2} with " \
+            partial_message = "This folder will be renamed on the hard drive! Do you really want to do that?"
+            message_string = "You have chosen to {2} with " \
                              "\n\nlibrary tree path:   {0}" \
-                             "\n\nphysical path:        {1}.\n\n\n"\
+                             "\n\nphysical path:        {1}\n\n\n"\
                              "{3}" \
                              "".format(os.path.join(self.convert_if_human_readable(tree_m_row[self.LIB_PATH_STORAGE_ID]), item_key),
                                        library_file_system_path,
@@ -437,11 +437,11 @@ class LibraryTreeController(ExtendedController):
                 partial_message = "This will remove the library root from your configuration (config.yaml)."
             else:
                 button_texts = [menu_item_text, "Cancel"]
-                partial_message = "This folder will be removed from hard drive! You really wanna do that?"
+                partial_message = "This folder will be removed from your hard drive! Do you really want to do that?"
 
-            message_string = "You choose to {2} with " \
+            message_string = "You have chosen to {2} with " \
                              "\n\nlibrary tree path:   {0}" \
-                             "\n\nphysical path:        {1}.\n\n\n"\
+                             "\n\nphysical path:        {1}\n\n\n"\
                              "{3}" \
                              "".format(os.path.join(self.convert_if_human_readable(tree_m_row[self.LIB_PATH_STORAGE_ID]),
                                                     item_key),
