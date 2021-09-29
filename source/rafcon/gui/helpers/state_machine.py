@@ -168,7 +168,7 @@ def rename_state_machine(library_os_path, new_library_os_path, new_library_name)
                 if node != library_os_path:
                     changed = False
                     state_machine = storage.load_state_machine_from_path(node)
-                    if hasattr(state_machine.root_state, 'states'):
+                    if state_machine is not None and hasattr(state_machine.root_state, 'states'):
                         for state in state_machine.root_state.states.values():
                             if hasattr(state, 'lib_os_path') and state.lib_os_path == library_os_path:
                                 state.library_name = new_library_name

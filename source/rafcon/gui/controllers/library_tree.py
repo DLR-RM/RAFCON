@@ -535,11 +535,14 @@ class LibraryTreeController(ExtendedController):
         return LibraryState(library_path, library_name, "0.1", format_folder_name_human_readable(library_name))
 
     def _is_library_used(self, library_path, state_machine_path):
-        state_machine = storage.load_state_machine_from_path(state_machine_path)
-        if hasattr(state_machine.root_state, 'states'):
-            for library in state_machine.root_state.states.values():
-                if hasattr(library, 'lib_os_path') and library.lib_os_path == library_path:
-                    return True
+        try:
+            state_machine = storage.load_state_machine_from_path(state_machine_path)
+            if state_machine is not None and hasattr(state_machine.root_state, 'states'):
+                for library in state_machine.root_state.states.values():
+                    if hasattr(library, 'lib_os_path') and library.lib_os_path == library_path:
+                        return True
+        except Exception as e:
+            return False
         return False
 
     def _search_filter(self, model, iter, data):
