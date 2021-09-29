@@ -392,6 +392,8 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     from rafcon.core.states.container_state import ContainerState
     from rafcon.core.states.hierarchy_state import HierarchyState
 
+    from rafcon.core.singleton import library_manager
+
     path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA)
 
     logger.debug("Load state recursively: {0}".format(str(state_path)))
@@ -406,8 +408,8 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         logger.exception("Error while loading state data: {0}".format(e))
         return
     except LibraryNotFoundException as e:
-        if global_config.get_config_value("RAISE_ERROR_ON_MISSING_LIBRARY_STATES", False):
-            raise e        
+        if global_config.get_config_value("RAISE_ERROR_ON_MISSING_LIBRARY_STATES", False) or not library_manager.show_dialog:
+            raise e
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(e))
         state_info = storage_utils.load_objects_from_json(path_core_data, as_dict=True)

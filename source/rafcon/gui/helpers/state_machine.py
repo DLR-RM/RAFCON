@@ -34,6 +34,7 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.states.state import State, StateType
 from rafcon.core.storage import storage
+from rafcon.core.custom_exceptions import LibraryNotFoundException
 import rafcon.core.config
 
 from rafcon.gui.helpers.text_formatting import format_default_folder_name
@@ -157,6 +158,7 @@ def rename_state_machine(library_os_path, new_library_os_path, new_library_name)
     storage.save_state_machine_to_path(state_machine_model.state_machine, new_library_os_path)
     state_machine_model.store_meta_data()
     state_machines.append((old_state_machine_id, old_state_machine_path, state_machine_model.state_machine))
+    library_manager_model.library_manager.show_dialog = False
     for root in library_manager_model.library_manager.libraries.values():
         queue = [root]
         while len(queue) > 0:
@@ -167,19 +169,23 @@ def rename_state_machine(library_os_path, new_library_os_path, new_library_name)
             else:
                 if node != library_os_path:
                     changed = False
-                    state_machine = storage.load_state_machine_from_path(node)
-                    if state_machine is not None and hasattr(state_machine.root_state, 'states'):
-                        for state in state_machine.root_state.states.values():
-                            if hasattr(state, 'lib_os_path') and state.lib_os_path == library_os_path:
-                                state.library_name = new_library_name
-                                state.name = new_library_name
-                                changed = True
-                    if changed:
-                        state_machine_model = StateMachineModel(state_machine)
-                        state_machine_model.load_meta_data()
-                        storage.save_state_machine_to_path(state_machine, node)
-                        state_machine_model.store_meta_data()
-                        state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
+                    try:
+                        state_machine = storage.load_state_machine_from_path(node)
+                        if state_machine is not None and hasattr(state_machine.root_state, 'states'):
+                            for state in state_machine.root_state.states.values():
+                                if hasattr(state, 'lib_os_path') and state.lib_os_path == library_os_path:
+                                    state.library_name = new_library_name
+                                    state.name = new_library_name
+                                    changed = True
+                        if changed:
+                            state_machine_model = StateMachineModel(state_machine)
+                            state_machine_model.load_meta_data()
+                            storage.save_state_machine_to_path(state_machine, node)
+                            state_machine_model.store_meta_data()
+                            state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
+                    except LibraryNotFoundException:
+                        pass
+    library_manager_model.library_manager.show_dialog = True
     shutil.rmtree(library_os_path)
     for state_machine_id, state_machine_path, state_machine in state_machines:
         if state_machine_manager.get_open_state_machine_of_file_system_path(state_machine_path):

@@ -30,11 +30,11 @@ from functools import partial
 
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
+from rafcon.core.custom_exceptions import LibraryNotFoundException
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.library_manager import LibraryManagerModel
-from rafcon.gui.models.state_machine import StateMachineModel
 from rafcon.gui.helpers.label import create_menu_item, append_sub_menu_to_parent_menu
 from rafcon.gui.helpers.text_formatting import format_folder_name_human_readable
 import rafcon.gui.singleton as gui_singletons
@@ -529,14 +529,17 @@ class LibraryTreeController(ExtendedController):
         return LibraryState(library_path, library_name, "0.1", format_folder_name_human_readable(library_name))
 
     def _is_library_used(self, library_path, state_machine_path):
+        self.model.library_manager.show_dialog = False
         try:
             state_machine = storage.load_state_machine_from_path(state_machine_path)
             if state_machine is not None and hasattr(state_machine.root_state, 'states'):
                 for library in state_machine.root_state.states.values():
                     if hasattr(library, 'lib_os_path') and library.lib_os_path == library_path:
                         return True
-        except Exception as e:
+        except LibraryNotFoundException:
             return False
+        finally:
+            self.model.library_manager.show_dialog = True
         return False
 
     def _library_usages_filter(self, model, iter, data):
