@@ -167,19 +167,22 @@ def rename_state_machine(library_os_path, new_library_os_path, new_library_name)
             else:
                 if node != library_os_path:
                     changed = False
-                    state_machine = storage.load_state_machine_from_path(node)
-                    if state_machine is not None and hasattr(state_machine.root_state, 'states'):
-                        for state in state_machine.root_state.states.values():
-                            if hasattr(state, 'lib_os_path') and state.lib_os_path == library_os_path:
-                                state.library_name = new_library_name
-                                state.name = new_library_name
-                                changed = True
-                    if changed:
-                        state_machine_model = StateMachineModel(state_machine)
-                        state_machine_model.load_meta_data()
-                        storage.save_state_machine_to_path(state_machine, node)
-                        state_machine_model.store_meta_data()
-                        state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
+                    try:
+                        state_machine = storage.load_state_machine_from_path(node)
+                        if state_machine is not None and hasattr(state_machine.root_state, 'states'):
+                            for state in state_machine.root_state.states.values():
+                                if hasattr(state, 'lib_os_path') and state.lib_os_path == library_os_path:
+                                    state.library_name = new_library_name
+                                    state.name = new_library_name
+                                    changed = True
+                        if changed:
+                            state_machine_model = StateMachineModel(state_machine)
+                            state_machine_model.load_meta_data()
+                            storage.save_state_machine_to_path(state_machine, node)
+                            state_machine_model.store_meta_data()
+                            state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
+                    finally:
+                        pass
     shutil.rmtree(library_os_path)
     for state_machine_id, state_machine_path, state_machine in state_machines:
         if state_machine_manager.get_open_state_machine_of_file_system_path(state_machine_path):
