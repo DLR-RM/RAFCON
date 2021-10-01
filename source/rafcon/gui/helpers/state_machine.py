@@ -160,6 +160,7 @@ def rename_state_machine(library_os_path, new_library_os_path, new_library_name)
             raise LibraryNotFoundException
     except Exception:
         logger.error('The state machine is broken. The operation failed.')
+        library_manager_model.library_manager.show_dialog = True
         return
     state_machine_model = StateMachineModel(state_machine)
     state_machine_model.load_meta_data()
