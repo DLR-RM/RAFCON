@@ -150,7 +150,16 @@ def rename_state_machine(library_os_path, new_library_os_path, new_library_name)
     library_os_path = os.path.abspath(library_os_path)
     new_library_os_path = os.path.abspath(new_library_os_path)
     state_machines = []
-    state_machine_model = StateMachineModel(storage.load_state_machine_from_path(library_os_path))
+    if not rafcon.core.config.global_config.get_config_value("SHOW_DIALOGS_DURING_RENAMING", False):
+        library_manager_model.library_manager.show_dialog = False
+    try:
+        state_machine = storage.load_state_machine_from_path(library_os_path)
+        if state_machine is None:
+            raise LibraryNotFoundException
+    except Exception:
+        logger.error('The state machine is broken. The operation failed.')
+        return
+    state_machine_model = StateMachineModel(state_machine)
     state_machine_model.load_meta_data()
     old_state_machine_id = state_machine_model.state_machine.state_machine_id
     old_state_machine_path = state_machine_model.state_machine.file_system_path
@@ -158,7 +167,6 @@ def rename_state_machine(library_os_path, new_library_os_path, new_library_name)
     storage.save_state_machine_to_path(state_machine_model.state_machine, new_library_os_path)
     state_machine_model.store_meta_data()
     state_machines.append((old_state_machine_id, old_state_machine_path, state_machine_model.state_machine))
-    library_manager_model.library_manager.show_dialog = False
     for root in library_manager_model.library_manager.libraries.values():
         queue = [root]
         while len(queue) > 0:
