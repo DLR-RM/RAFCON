@@ -147,6 +147,8 @@ def open_library_state_separately():
 
 
 def rename_state_machine(library_os_path, new_library_os_path, new_library_name):
+    for state_machine in state_machine_manager.state_machines.values():
+        storage.save_state_machine_to_path(state_machine, state_machine.file_system_path)
     library_os_path = os.path.abspath(library_os_path)
     new_library_os_path = os.path.abspath(new_library_os_path)
     state_machines = []
@@ -158,6 +160,7 @@ def rename_state_machine(library_os_path, new_library_os_path, new_library_name)
             raise LibraryNotFoundException
     except Exception:
         logger.error('The state machine is broken. The operation failed.')
+        library_manager_model.library_manager.show_dialog = True
         return
     state_machine_model = StateMachineModel(state_machine)
     state_machine_model.load_meta_data()
