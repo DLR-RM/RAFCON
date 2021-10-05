@@ -146,7 +146,21 @@ def open_library_state_separately():
             logger.exception('Library state {0} could not be open separately'.format(state_m.state))
 
 
-def rename_state_machine(library_os_path, new_library_os_path, new_library_name):
+def find_usages_via_grep(root_path, library_path, library_name):
+    filenames = []
+    command_library_path = 'grep -r -l \'"library_path": "%s"\' --include \\*.json %s' % (library_path, root_path)
+    command_library_name = 'grep -r -l \'"library_name": "%s"\' --include \\*.json %s' % (library_name, root_path)
+    a1 = set(os.popen(command_library_path).read().splitlines())
+    a2 = set(os.popen(command_library_name).read().splitlines())
+    for filename in a1.intersection(a2):
+        parent = filename
+        for i in range(3):
+            parent = os.path.dirname(parent)
+        filenames.append(parent)
+    return filenames
+
+
+def rename_state_machine(library_os_path, new_library_os_path, library_path, library_name, new_library_name):
     for state_machine in state_machine_manager.state_machines.values():
         storage.save_state_machine_to_path(state_machine, state_machine.file_system_path)
     library_os_path = os.path.abspath(library_os_path)
@@ -170,32 +184,22 @@ def rename_state_machine(library_os_path, new_library_os_path, new_library_name)
     storage.save_state_machine_to_path(state_machine_model.state_machine, new_library_os_path)
     state_machine_model.store_meta_data()
     state_machines.append((old_state_machine_id, old_state_machine_path, state_machine_model.state_machine))
-    for root in library_manager_model.library_manager.libraries.values():
-        queue = [root]
-        while len(queue) > 0:
-            node = queue.pop(0)
-            if isinstance(node, dict):
-                for sub_node in node.values():
-                    queue.append(sub_node)
-            else:
-                if node != library_os_path:
-                    changed = False
-                    try:
-                        state_machine = storage.load_state_machine_from_path(node)
-                        if state_machine is not None and hasattr(state_machine.root_state, 'states'):
-                            for state in state_machine.root_state.states.values():
-                                if hasattr(state, 'lib_os_path') and state.lib_os_path == library_os_path:
-                                    state.library_name = new_library_name
-                                    state.name = new_library_name
-                                    changed = True
-                        if changed:
-                            state_machine_model = StateMachineModel(state_machine)
-                            state_machine_model.load_meta_data()
-                            storage.save_state_machine_to_path(state_machine, node)
-                            state_machine_model.store_meta_data()
-                            state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
-                    except LibraryNotFoundException:
-                        pass
+    for root in library_manager_model.library_manager.library_root_paths.values():
+        for node in find_usages_via_grep(root, library_path, library_name):
+            try:
+                state_machine = storage.load_state_machine_from_path(node)
+                if state_machine is not None and hasattr(state_machine.root_state, 'states'):
+                    for state in state_machine.root_state.states.values():
+                        if hasattr(state, 'lib_os_path') and state.lib_os_path == library_os_path:
+                            state.library_name = new_library_name
+                            state.name = new_library_name
+                state_machine_model = StateMachineModel(state_machine)
+                state_machine_model.load_meta_data()
+                storage.save_state_machine_to_path(state_machine, node)
+                state_machine_model.store_meta_data()
+                state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
+            except LibraryNotFoundException:
+                pass
     library_manager_model.library_manager.show_dialog = True
     shutil.rmtree(library_os_path)
     for state_machine_id, state_machine_path, state_machine in state_machines:
@@ -1142,10 +1146,3 @@ def get_root_state_description_of_sm_file_system_path(file_system_path):
         if 'description' in state_dict:
             return state_dict['description']
         return
-
-def find_usages(library_path):
-    library_usages_controller = rafcon.gui.singleton.main_window_controller.get_controller('library_usages_controller')
-    library_usages_controller.filter_value = library_path
-    library_usages_controller.filter.refilter()
-    library_usages_controller.view.expand_all()
-    rafcon.gui.singleton.main_window_controller.upper_notebook.set_current_page(3)
