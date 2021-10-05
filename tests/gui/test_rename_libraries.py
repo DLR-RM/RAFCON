@@ -37,7 +37,7 @@ def test_rename_library(caplog):
 
         assert CURRENT_LIBRARY_NAME in [state.name for state in state_machine.root_state.states.values()]
 
-        rename_state_machine(current_library_path, new_library_path, NEW_LIBRARY_NAME)
+        rename_state_machine(current_library_path, new_library_path, 'tutorials', CURRENT_LIBRARY_NAME, NEW_LIBRARY_NAME)
         library = storage.load_state_machine_from_path(new_library_path)
 
         assert library.file_system_path == new_library_path
@@ -47,7 +47,7 @@ def test_rename_library(caplog):
 
         assert NEW_LIBRARY_NAME in [state.name for state in state_machine.root_state.states.values()]
 
-        rename_state_machine(new_library_path, current_library_path, CURRENT_LIBRARY_NAME)
+        rename_state_machine(new_library_path, current_library_path, 'tutorials', NEW_LIBRARY_NAME, CURRENT_LIBRARY_NAME)
         library = storage.load_state_machine_from_path(current_library_path)
 
         assert library.file_system_path == current_library_path
@@ -81,7 +81,7 @@ def test_rename_library_missing_states(caplog):
 
         assert CURRENT_LIBRARY_NAME2 in [state.name for state in state_machine.root_state.states.values()]
 
-        rename_state_machine(current_library_path, new_library_path, NEW_LIBRARY_NAME2)
+        rename_state_machine(current_library_path, new_library_path, 'unit_test_state_machines/deep_libraries', CURRENT_LIBRARY_NAME2, NEW_LIBRARY_NAME2)
         library = storage.load_state_machine_from_path(new_library_path)
 
         assert library.file_system_path == new_library_path
@@ -91,7 +91,7 @@ def test_rename_library_missing_states(caplog):
 
         assert NEW_LIBRARY_NAME2 in [state.name for state in state_machine.root_state.states.values()]
 
-        rename_state_machine(new_library_path, current_library_path, CURRENT_LIBRARY_NAME2)
+        rename_state_machine(new_library_path, current_library_path, 'unit_test_state_machines/deep_libraries', NEW_LIBRARY_NAME2, CURRENT_LIBRARY_NAME2)
         library = storage.load_state_machine_from_path(current_library_path)
 
         assert library.file_system_path == current_library_path
