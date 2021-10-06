@@ -21,7 +21,7 @@ test py2-tests:
   tags:
     - Agile_GUI_Docker
   script:
-    - pip2 install --user --upgrade pytest
+    - pip2 install --user --force "pytest>=3.5,<5"
     - pip2 install pytest-runner==5.2  # this is py2 compatible, ver 5.3 is not
     - xvfb-run -as "-screen 0 1920x1200x24" python2 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
 
@@ -33,6 +33,45 @@ test py3-tests:
   script:
     - pip3 install tox
     - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e py36
+  coverage: /^TOTAL.+?(\d+\%)$/
+  artifacts:
+    expire_in: 7 days
+    reports:
+      cobertura: coverage.xml
+    paths:
+      - coverage.xml
+      - htmlcov/*
+
+test py3-tests-core:
+  <<: *only-default
+  stage: test
+  tags:
+    - Agile_GUI_Docker
+  script:
+    - pip3 install tox
+    - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e core
+  coverage: /^TOTAL.+?(\d+\%)$/
+  artifacts:
+    expire_in: 7 days
+    reports:
+      cobertura: coverage_core.xml
+    paths:
+      - coverage_core.xml
+      - htmlcov_core/*
+
+
+test py3-memory-test-core:
+  <<: *only-default
+  stage: test
+  tags:
+    - Agile_GUI_Docker
+  script:
+    - pip3 install tox
+    - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e memory_core
+  artifacts:
+    expire_in: 7 days
+
+
 # running pytest directly does not work
 # as the test_start_script.py test_start_script_valid_config always uses "python" to start "rafcon_core"
 # which fails if tests are run using python3 as the "python" always maps to python2 on Ubuntu 18.04

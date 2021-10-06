@@ -1,0 +1,9 @@
+[run]
+
+source=
+    source/rafcon
+
+omit =
+        *__init__*
+        */usr/local/lib*
+        */test*

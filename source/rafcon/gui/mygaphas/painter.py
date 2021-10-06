@@ -82,8 +82,12 @@ class CornerHandlePainter(ItemPaintHovered):
 
         cr.save()
         try:
-            cr.set_line_width(1)
-            cr.set_source_rgba(0.0, 0.0, 1.0, 0.6)
+            # a width of 1 is hardly visible when using dashed lines
+            cr.set_line_width(2)
+            # https://www.cairographics.org/manual/cairo-cairo-t.html#cairo-set-dash
+            cr.set_dash([4], 1)
+            guide_color = gui_config.gtk_colors['GUIDE_COLOR']
+            cr.set_source_rgba(*get_col_rgba(guide_color, 0.6))
             for g in guides.vertical():
                 cr.move_to(g, 0)
                 cr.line_to(g, h)

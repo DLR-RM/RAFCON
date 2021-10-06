@@ -1,0 +1,1 @@
+{"state_machine_index": "backward_step_barrier", "data": [54.3203125], "uncollected": 0}

@@ -627,7 +627,7 @@ class GraphicalEditor(Gtk.DrawingArea, Gtk.Widget):
         points.extend(waypoints)
 
         last_p = to_pos  # Transition endpoint
-        sec_last_p = points[len(points) - 1]  # Point before endpoint
+        sec_last_p = points[-1]  # Point before endpoint
         # Calculate max possible arrow length
         length = min(width, dist(sec_last_p, last_p) / 2.)
         mid, p2, p3 = self._calculate_arrow_points(last_p, sec_last_p, length)
@@ -679,7 +679,7 @@ class GraphicalEditor(Gtk.DrawingArea, Gtk.Widget):
         points.extend(waypoints)
 
         last_p = to_pos  # Transition endpoint
-        sec_last_p = points[len(points) - 1]  # Point before endpoint
+        sec_last_p = points[-1]  # Point before endpoint
         # Calculate max possible arrow length
         length = min(width / 1.2, dist(sec_last_p, last_p) / 2.)
         mid, p2, p3 = self._calculate_arrow_points(last_p, sec_last_p, length)

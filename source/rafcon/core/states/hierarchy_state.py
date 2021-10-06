@@ -24,10 +24,9 @@ from rafcon.utils import log
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.state_elements.logical_port import Outcome
 import rafcon.core.singleton as singleton
-from rafcon.core.execution.execution_history import CallItem, ReturnItem
+from rafcon.core.execution.execution_history import CallItem, CallType, ReturnItem
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.states.state import StateExecutionStatus
-from rafcon.core.execution.execution_history import CallType
 
 logger = log.get_logger(__name__)
 
@@ -73,12 +72,15 @@ class HierarchyState(ContainerState):
 
         self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
         if self.backward_execution:
-            last_history_item = self.execution_history.pop_last_item()
+            # if-clause actually not needed as in backward execution case there always exist an execution_history
+            if self.execution_history is not None:
+                last_history_item = self.execution_history.pop_last_item()
             assert isinstance(last_history_item, ReturnItem)
             self.scoped_data = last_history_item.scoped_data
 
         else:  # forward_execution
-            self.execution_history.push_call_history_item(self, CallType.CONTAINER, self, self.input_data)
+            if self.execution_history is not None:
+                self.execution_history.push_call_history_item(self, CallType.CONTAINER, self, self.input_data)
             self.child_state = self.get_start_state(set_final_outcome=True)
             if self.child_state is None:
                 self.child_state = self.handle_no_start_state()
@@ -110,7 +112,7 @@ class HierarchyState(ContainerState):
 
                 # print("hs2", self.name)
 
-                self.backward_execution = False
+                self.backward_execution = False  # TODO: why is this line needed?
                 if self.preempted:
                     if self.last_transition and self.last_transition.from_outcome == -2:
                         logger.debug("Execute preemption handling for '{0}'".format(self.child_state))
@@ -200,8 +202,9 @@ class HierarchyState(ContainerState):
 
         self.child_state.generate_run_id()
         if not self.backward_execution:  # only add history item if it is not a backward execution
-            self.execution_history.push_call_history_item(
-                self.child_state, CallType.EXECUTE, self, self.child_state.input_data)
+            if self.execution_history is not None:
+                self.execution_history.push_call_history_item(
+                    self.child_state, CallType.EXECUTE, self, self.child_state.input_data)
         self.child_state.start(self.execution_history, backward_execution=self.backward_execution,
                                generate_run_id=False)
 
@@ -264,8 +267,9 @@ class HierarchyState(ContainerState):
         """
         self.add_state_execution_output_to_scoped_data(self.child_state.output_data, self.child_state)
         self.update_scoped_variables_with_output_dictionary(self.child_state.output_data, self.child_state)
-        self.execution_history.push_return_history_item(
-            self.child_state, CallType.EXECUTE, self, self.child_state.output_data)
+        if self.execution_history is not None:
+            self.execution_history.push_return_history_item(
+                self.child_state, CallType.EXECUTE, self, self.child_state.output_data)
         # not explicitly connected preempted outcomes are implicit connected to parent preempted outcome
         transition = self.get_transition_for_outcome(self.child_state, self.child_state.final_outcome)
 
@@ -298,7 +302,8 @@ class HierarchyState(ContainerState):
                 self.output_data['error'] = copy.deepcopy(self.last_error)
             self.write_output_data()
             self.check_output_data_type()
-            self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
+            if self.execution_history is not None:
+                self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
             # add error message from child_state to own output_data
 
         self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE

@@ -5,7 +5,7 @@ import pytest
 from tests import utils as testing_utils
 
 
-@pytest.mark.timeout(40)
+@pytest.mark.timeout(60)
 def test_resave(caplog):
     testing_utils.initialize_environment(gui_already_started=False)
     folder_to_convert = testing_utils.TUTORIAL_PATH
