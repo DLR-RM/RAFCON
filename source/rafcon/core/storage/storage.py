@@ -574,3 +574,26 @@ def get_storage_id_for_state(state):
         return limit_text_to_be_path_element(state.name, max_length) + ID_NAME_DELIMITER + state.state_id
     else:
         return state.state_id
+
+
+def find_usages_via_grep(root_path, library_path, library_name):
+    """ Lookup for the state machines that use a specific library via grep
+
+    :param str root_path: file system path to search the state machines
+    :param str library_path: path of the library that is used in the other state machines
+    :param str library_name: name of the library that is used in the other state machines
+
+    :return: a list of the state machines path that use the library
+    """
+
+    filenames = []
+    command_library_path = 'grep -r -l \'"library_path": "%s"\' --include \\*.json %s' % (library_path, root_path)
+    command_library_name = 'grep -r -l \'"library_name": "%s"\' --include \\*.json %s' % (library_name, root_path)
+    a1 = set(os.popen(command_library_path).read().splitlines())
+    a2 = set(os.popen(command_library_name).read().splitlines())
+    for filename in a1.intersection(a2):
+        parent = filename
+        for i in range(3):
+            parent = os.path.dirname(parent)
+        filenames.append(parent)
+    return filenames
