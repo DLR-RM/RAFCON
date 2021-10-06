@@ -99,7 +99,7 @@ class LibraryTreeController(ExtendedController):
             menu.append(create_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
             menu.append(Gtk.SeparatorMenuItem())
             menu.append(create_menu_item("Rename library", constants.BUTTON_RENAME,
-                                         self.menu_item_rename_libraries_clicked))
+                                         self.menu_item_rename_libraries_or_root_clicked))
             menu.append(create_menu_item("Remove library", constants.BUTTON_DEL,
                                          self.menu_item_remove_libraries_or_root_clicked))
 
@@ -126,6 +126,8 @@ class LibraryTreeController(ExtendedController):
             menu.append(create_menu_item("Add library root", constants.BUTTON_DEL,
                                          self.menu_item_add_library_root_clicked))
             if kind == 'library root':
+                menu.append(create_menu_item("Rename library root", constants.BUTTON_RENAME,
+                                             self.menu_item_rename_libraries_or_root_clicked))
                 menu.append(create_menu_item("Remove library root", constants.BUTTON_DEL,
                                              self.menu_item_remove_libraries_or_root_clicked))
         elif kind == 'libraries':
@@ -380,7 +382,7 @@ class LibraryTreeController(ExtendedController):
         global_config.save_configuration()
         self.model.library_manager.refresh_libraries()
 
-    def menu_item_rename_libraries_clicked(self, menu_item):
+    def menu_item_rename_libraries_or_root_clicked(self, menu_item):
         """Rename library after request second confirmation"""
 
         menu_item_text = self.get_menu_item_text(menu_item)
@@ -390,8 +392,12 @@ class LibraryTreeController(ExtendedController):
             tree_m_row = self.filter[path]
             library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
             library_file_system_path = library_os_path
-            button_texts = [menu_item_text, "Cancel"]
-            partial_message = "This folder will be renamed on the hard drive! Do you really want to do that?"
+            if "root" in menu_item_text:
+                button_texts = [menu_item_text + "from tree and config", "Cancel"]
+                partial_message = "This will remove the library root from your configuration (config.yaml)."
+            else:
+                button_texts = [menu_item_text, "Cancel"]
+                partial_message = "This folder will be renamed on the hard drive! Do you really want to do that?"
             message_string = "You have chosen to {2} with " \
                              "\n\nlibrary tree path:   {0}" \
                              "\n\nphysical path:        {1}\n\n\n"\
@@ -406,24 +412,39 @@ class LibraryTreeController(ExtendedController):
                                        message_type=Gtk.MessageType.QUESTION,
                                        parent=self.get_root_window(),
                                        width=min(width, 1400))
-            dialog.set_entry_text(library_name)
+            dialog.set_entry_text(item_key)
             response_id = dialog.run()
-            new_library_name = dialog.get_entry_text()
+            new_name = dialog.get_entry_text()
             dialog.destroy()
             parent_library_os_path = os.path.abspath(os.path.join(library_os_path, os.pardir))
-            new_library_os_path = os.path.join(parent_library_os_path, new_library_name)
+            new_library_os_path = os.path.join(parent_library_os_path, new_name)
             if response_id == 1:
-                if not new_library_name:
-                    logger.error("The given library name is invalid")
-                    return False
-                elif library_path in self.model.library_manager.libraries:
-                    for state_machine_os_path in self.model.library_manager.libraries[library_path].values():
-                        if state_machine_os_path == new_library_os_path:
-                            logger.error("The library '{0}' already exists".format(new_library_name))
-                            return False
-                # del self.library_row_iter_dict_by_library_path[os.path.join(library_path, library_name)]
-                import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-                gui_helper_state_machine.rename_state_machine(library_os_path, new_library_os_path, library_path, library_name, new_library_name)
+                if "root" in menu_item_text:
+                    if not new_name:
+                        logger.error("The given library root name is invalid")
+                        return False
+                    from rafcon.gui.singleton import global_config
+                    library_paths = global_config.get_config_value('LIBRARY_PATHS')
+                    if new_name in library_paths:
+                        logger.error("The library root '{0}' already exists".format(new_name))
+                        return False
+                    old_name = tree_m_row[self.LIB_KEY_STORAGE_ID]
+                    library_paths[new_name] = library_paths[old_name]
+                    del library_paths[old_name]
+                    global_config.save_configuration()
+                    self.model.library_manager.refresh_libraries()
+                else:
+                    if not new_name:
+                        logger.error("The given library name is invalid")
+                        return False
+                    elif library_path in self.model.library_manager.libraries:
+                        for state_machine_os_path in self.model.library_manager.libraries[library_path].values():
+                            if state_machine_os_path == new_library_os_path:
+                                logger.error("The library '{0}' already exists".format(new_name))
+                                return False
+                    # del self.library_row_iter_dict_by_library_path[os.path.join(library_path, library_name)]
+                    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+                    gui_helper_state_machine.rename_state_machine(library_os_path, new_library_os_path, library_path, library_name, new_name)
             return True
         return False
 
