@@ -381,6 +381,8 @@ class LibraryTreeController(ExtendedController):
         self.model.library_manager.refresh_libraries()
 
     def menu_item_rename_libraries_clicked(self, menu_item):
+        """Rename library after request second confirmation"""
+
         menu_item_text = self.get_menu_item_text(menu_item)
         logger.info("Rename item '{0}' pressed.".format(menu_item_text))
         model, path = self.view.get_selection().get_selected()

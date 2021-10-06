@@ -147,6 +147,15 @@ def open_library_state_separately():
 
 
 def find_usages_via_grep(root_path, library_path, library_name):
+    """ Lookup for the state machines that use a specific library via grep
+
+    :param str root_path: file system path to search the state machines
+    :param str library_path: path of the library that is used in the other state machines
+    :param str library_name: name of the library that is used in the other state machines
+
+    :return: a list of the state machines path that use the library
+    """
+
     filenames = []
     command_library_path = 'grep -r -l \'"library_path": "%s"\' --include \\*.json %s' % (library_path, root_path)
     command_library_name = 'grep -r -l \'"library_name": "%s"\' --include \\*.json %s' % (library_name, root_path)
@@ -161,8 +170,33 @@ def find_usages_via_grep(root_path, library_path, library_name):
 
 
 def rename_state_machine(library_os_path, new_library_os_path, library_path, library_name, new_library_name):
-    for state_machine in state_machine_manager.state_machines.values():
-        storage.save_state_machine_to_path(state_machine, state_machine.file_system_path)
+    """ Relocate and Refactor a state machine library
+
+    :param str library_os_path: file system path of the current library
+    :param str new_library_os_path: file system path of the new library
+    :param str library_path: path of the library
+    :param str library_name: name of the library
+    :param str new_library_name: new name of the library
+    """
+
+    def save_open_state_machines():
+        for state_machine in state_machine_manager.state_machines.values():
+            storage.save_state_machine_to_path(state_machine, state_machine.file_system_path)
+
+    def refresh_open_state_machines(state_machines):
+        for state_machine_id, state_machine_path, state_machine in state_machines:
+            if state_machine_manager.get_open_state_machine_of_file_system_path(state_machine_path):
+                state_machine_manager.remove_state_machine_by_path(state_machine_path)
+                state_machine_manager.add_state_machine(state_machine)
+
+    def copy_state_machine(state_machine, path):
+        state_machine_model = StateMachineModel(state_machine)
+        state_machine_model.load_meta_data()
+        storage.save_state_machine_to_path(state_machine, path)
+        state_machine_model.store_meta_data()
+        return state_machine_model
+
+    save_open_state_machines()
     library_os_path = os.path.abspath(library_os_path)
     new_library_os_path = os.path.abspath(new_library_os_path)
     state_machines = []
@@ -176,14 +210,11 @@ def rename_state_machine(library_os_path, new_library_os_path, library_path, lib
         logger.error('The state machine is broken. The operation failed.')
         library_manager_model.library_manager.show_dialog = True
         return
-    state_machine_model = StateMachineModel(state_machine)
-    state_machine_model.load_meta_data()
-    old_state_machine_id = state_machine_model.state_machine.state_machine_id
-    old_state_machine_path = state_machine_model.state_machine.file_system_path
-    state_machine_model.state_machine.root_state.name = new_library_name
-    storage.save_state_machine_to_path(state_machine_model.state_machine, new_library_os_path)
-    state_machine_model.store_meta_data()
-    state_machines.append((old_state_machine_id, old_state_machine_path, state_machine_model.state_machine))
+    old_state_machine_id = state_machine.state_machine_id
+    old_state_machine_path = state_machine.file_system_path
+    state_machine.root_state.name = new_library_name
+    copy_state_machine(state_machine, new_library_os_path)
+    state_machines.append((old_state_machine_id, old_state_machine_path, state_machine))
     for root in library_manager_model.library_manager.library_root_paths.values():
         for node in find_usages_via_grep(root, library_path, library_name):
             try:
@@ -193,19 +224,13 @@ def rename_state_machine(library_os_path, new_library_os_path, library_path, lib
                         if hasattr(state, 'lib_os_path') and state.lib_os_path == library_os_path:
                             state.library_name = new_library_name
                             state.name = new_library_name
-                state_machine_model = StateMachineModel(state_machine)
-                state_machine_model.load_meta_data()
-                storage.save_state_machine_to_path(state_machine, node)
-                state_machine_model.store_meta_data()
+                copy_state_machine(state_machine, node)
                 state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
             except LibraryNotFoundException:
                 pass
     library_manager_model.library_manager.show_dialog = True
     shutil.rmtree(library_os_path)
-    for state_machine_id, state_machine_path, state_machine in state_machines:
-        if state_machine_manager.get_open_state_machine_of_file_system_path(state_machine_path):
-            state_machine_manager.remove_state_machine_by_path(state_machine_path)
-            state_machine_manager.add_state_machine(state_machine)
+    refresh_open_state_machines(state_machines)
     library_manager_model.library_manager.refresh_libraries()
 
 
