@@ -33,13 +33,14 @@ def test_rename_library_root(caplog):
 
         assert library is not None
 
+        library_paths = global_config.get_config_value('LIBRARY_PATHS')
+        del library_paths[CURRENT_LIBRARY_ROOT_NAME]
+        global_config.save_configuration()
+
         rename_library_root(NEW_LIBRARY_ROOT_NAME, CURRENT_LIBRARY_ROOT_NAME)
         library_manager.clean_loaded_libraries()
         library_manager.refresh_libraries()
 
-        library_paths = global_config.get_config_value('LIBRARY_PATHS')
-        del library_paths[CURRENT_LIBRARY_ROOT_NAME]
-        global_config.save_configuration()
         library = storage.load_state_machine_from_path(state_machine_path)
 
         assert library is not None
