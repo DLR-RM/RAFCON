@@ -580,7 +580,7 @@ def get_storage_id_for_state(state):
         return state.state_id
 
 
-def find_usages_via_grep(root_path, library_path, library_name):
+def find_usages_via_grep(root_path, library_path=None, library_name=None):
     """ Lookup for the state machines that use a specific library via grep
 
     :param str root_path: file system path to search the state machines
@@ -589,15 +589,24 @@ def find_usages_via_grep(root_path, library_path, library_name):
 
     :return: a list of the state machines path that use the library
     """
-
     filenames = []
-    command_library_path = 'grep -r -l \'"library_path": "%s"\' --include \\*.json %s' % (library_path, root_path)
+    command_library_path = 'grep -r -l -E \'"library_path": "%s"|"library_path": "%s/(.*)"\' --include \\*.json %s' % (library_path, library_path, root_path)
     command_library_name = 'grep -r -l \'"library_name": "%s"\' --include \\*.json %s' % (library_name, root_path)
-    a1 = set(os.popen(command_library_path).read().splitlines())
-    a2 = set(os.popen(command_library_name).read().splitlines())
-    for filename in a1.intersection(a2):
+    if library_path is None and library_name is None:
+        return filenames
+    elif library_path is None and library_name is not None:
+        res = set(os.popen(command_library_name).read().splitlines())
+    elif library_path is not None and library_name is None:
+        res = set(os.popen(command_library_path).read().splitlines())
+    else:
+        res_path = set(os.popen(command_library_path).read().splitlines())
+        res_name = set(os.popen(command_library_name).read().splitlines())
+        res = res_path.intersection(res_name)
+    for filename in res:
         parent = filename
-        for i in range(3):
+        while True:
             parent = os.path.dirname(parent)
+            if os.path.exists(os.path.join(parent, 'statemachine.json')):
+                break
         filenames.append(parent)
-    return filenames
+    return set(filenames)
