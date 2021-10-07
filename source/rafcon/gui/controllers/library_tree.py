@@ -385,6 +385,7 @@ class LibraryTreeController(ExtendedController):
     def menu_item_rename_libraries_or_root_clicked(self, menu_item):
         """Rename library after request second confirmation"""
 
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         menu_item_text = self.get_menu_item_text(menu_item)
         logger.info("Rename item '{0}' pressed.".format(menu_item_text))
         model, path = self.view.get_selection().get_selected()
@@ -420,31 +421,10 @@ class LibraryTreeController(ExtendedController):
             new_library_os_path = os.path.join(parent_library_os_path, new_name)
             if response_id == 1:
                 if "root" in menu_item_text:
-                    if not new_name:
-                        logger.error("The given library root name is invalid")
-                        return False
-                    from rafcon.gui.singleton import global_config
-                    library_paths = global_config.get_config_value('LIBRARY_PATHS')
-                    if new_name in library_paths:
-                        logger.error("The library root '{0}' already exists".format(new_name))
-                        return False
-                    old_name = tree_m_row[self.LIB_KEY_STORAGE_ID]
-                    library_paths[new_name] = library_paths[old_name]
-                    del library_paths[old_name]
-                    global_config.save_configuration()
-                    self.model.library_manager.refresh_libraries()
+                    gui_helper_state_machine.rename_library_root(tree_m_row[self.LIB_KEY_STORAGE_ID], new_name, logger)
+                    gui_helper_state_machine.refresh_all()
                 else:
-                    if not new_name:
-                        logger.error("The given library name is invalid")
-                        return False
-                    elif library_path in self.model.library_manager.libraries:
-                        for state_machine_os_path in self.model.library_manager.libraries[library_path].values():
-                            if state_machine_os_path == new_library_os_path:
-                                logger.error("The library '{0}' already exists".format(new_name))
-                                return False
-                    # del self.library_row_iter_dict_by_library_path[os.path.join(library_path, library_name)]
-                    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-                    gui_helper_state_machine.rename_state_machine(library_os_path, new_library_os_path, library_path, library_name, new_name)
+                    gui_helper_state_machine.rename_state_machine(library_os_path, new_library_os_path, library_path, library_name, new_name, logger)
             return True
         return False
 

@@ -103,8 +103,8 @@ def test_rename_library_missing_states(caplog):
     finally:
         testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False)
 
+
 if __name__ == '__main__':
     test_rename_library(None)
     test_rename_library_missing_states(None)
     # pytest.main(['-s', __file__])
-
