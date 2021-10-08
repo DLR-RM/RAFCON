@@ -258,6 +258,7 @@ def rename_library_root(old_library_root, new_library_root, logger=None):
     del roots[old_library_root]
     roots = list(roots.values())
     roots.insert(0, affeced_root_path)
+    changed_state_machines = []
     for root in roots:
         for node in storage.find_usages_via_grep(root, old_library_root):
             try:
@@ -272,10 +273,12 @@ def rename_library_root(old_library_root, new_library_root, logger=None):
                             state.library_path = u'/'.join(library_path_parts)
                         elif hasattr(state, 'states'):
                             queue.extend(state.states.values())
-                copy_state_machine(state_machine, node)
+                changed_state_machines.append(state_machine)
                 state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
             except LibraryNotFoundException as e:
                 pass
+    for state_machine in changed_state_machines:
+        copy_state_machine(state_machine, state_machine.file_system_path)
     library_manager_model.library_manager.show_dialog = True
     library_paths[new_library_root] = library_paths[old_library_root]
     del library_paths[old_library_root]
