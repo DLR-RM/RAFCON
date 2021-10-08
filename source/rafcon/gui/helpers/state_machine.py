@@ -210,10 +210,14 @@ def rename_state_machine(library_os_path, new_library_os_path, library_path, lib
             try:
                 state_machine = storage.load_state_machine_from_path(node)
                 if state_machine is not None and hasattr(state_machine.root_state, 'states'):
-                    for state in state_machine.root_state.states.values():
+                    queue = [state_machine.root_state]
+                    while len(queue) > 0:
+                        state = queue.pop(0)
                         if hasattr(state, 'lib_os_path') and state.lib_os_path == library_os_path:
                             state.library_name = new_library_name
                             state.name = new_library_name
+                        elif hasattr(state, 'states'):
+                            queue.extend(state.states.values())
                 copy_state_machine(state_machine, node)
                 state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
             except LibraryNotFoundException:
