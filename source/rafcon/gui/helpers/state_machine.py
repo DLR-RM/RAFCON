@@ -266,6 +266,11 @@ def rename_library_root(old_library_root, new_library_root, logger=None):
                         elif hasattr(state, 'states'):
                             queue.extend(state.states.values())
                 changed_state_machines.append(state_machine)
+                '''
+                Do not save the state machines immediately after editing, since some
+                other state machines might be dependend on them and will be broken if we save them.
+                Instead, open, edit, and gather all state machines in a list, and save them later at once.
+                '''
                 state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
             except LibraryNotFoundException as e:
                 pass
