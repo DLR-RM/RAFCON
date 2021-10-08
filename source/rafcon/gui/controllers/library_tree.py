@@ -153,9 +153,13 @@ class LibraryTreeController(ExtendedController):
             if self.find_usages:
                 state_machine_model = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
                 selected_states = []
-                for state in state_machine_model.root_state.states.values():
+                queue = [state_machine_model.root_state]
+                while len(queue) > 0:
+                    state = queue.pop(0)
                     if hasattr(state.state, 'lib_os_path') and state.state.library_path == self.filter_value[0] and state.state.library_name == self.filter_value[1]:
                         selected_states.append(state)
+                    elif hasattr(state, 'states'):
+                        queue.extend(state.states.values())
                 state_machine_model.selection.set(selected_states)
 
             return True
