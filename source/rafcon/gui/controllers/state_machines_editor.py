@@ -417,7 +417,7 @@ class StateMachinesEditorController(ExtendedController):
             return True
 
     def on_close_all_clicked(self, event):
-        self.model.state_machine_manager.delete_all_state_machines()
+        self.close_all_pages(force=False)
 
     def remove_state_machine_tab(self, state_machine_m):
         """
@@ -453,11 +453,11 @@ class StateMachinesEditorController(ExtendedController):
         else:
             self.model.selected_state_machine_id = None
 
-    def close_all_pages(self):
+    def close_all_pages(self, force=True):
         """Closes all tabs of the state machines editor."""
         state_machine_m_list = [tab['state_machine_m'] for tab in self.tabs.values()]
         for state_machine_m in state_machine_m_list:
-            self.on_close_clicked(None, state_machine_m, None, force=True)
+            self.on_close_clicked(None, state_machine_m, None, force)
 
     def refresh_state_machines(self, state_machine_ids):
         """ Refresh list af state machine tabs
