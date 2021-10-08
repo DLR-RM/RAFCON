@@ -250,16 +250,8 @@ def rename_library_root(old_library_root, new_library_root, logger=None):
     if not rafcon.core.config.global_config.get_config_value("SHOW_DIALOGS_DURING_RENAMING", False):
         library_manager_model.library_manager.show_dialog = False
     roots = dict(library_manager_model.library_manager.library_root_paths)
-    affeced_root_path = None
-    for name, path in roots.items():
-        if name == old_library_root:
-            affeced_root_path = path
-            break
-    del roots[old_library_root]
-    roots = list(roots.values())
-    roots.insert(0, affeced_root_path)
     changed_state_machines = []
-    for root in roots:
+    for root in roots.values():
         for node in storage.find_usages_via_grep(root, old_library_root):
             try:
                 state_machine = storage.load_state_machine_from_path(node)
