@@ -2239,7 +2239,8 @@ class ContainerState(State):
                 transition.parent = self
             except (ValueError, RecoveryModeException) as e:
                 if type(e) is RecoveryModeException:
-                    logger.exception("Recovery error:")
+                    logger.exception("Recovery error: " + str(e))
+                    logger.error("The transition is going to be deleted!")
                     if e.do_delete_item:
                         transition_ids_to_delete.append(transition.transition_id)
                 else:
@@ -2296,7 +2297,8 @@ class ContainerState(State):
                 data_flow.parent = self
             except (ValueError, RecoveryModeException) as e:
                 if type(e) is RecoveryModeException:
-                    logger.error("Recovery error:")
+                    logger.error("Recovery error: " + str(e))
+                    logger.error("The data-flow is going to be deleted!")
                     if e.do_delete_item:
                         data_flow_ids_to_delete.append(data_flow.data_flow_id)
                 else:
