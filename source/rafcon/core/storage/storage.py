@@ -471,10 +471,14 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     else:
         # Now we can add transitions and data flows, as all child states were added
         if isinstance(state_info, tuple):
-            # safe version
-            # state.transitions = transitions
-            # state.data_flows = data_flows
-            state._transitions = transitions
+            safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
+            if safe_init:
+                # this will trigger all validity checks the state machine
+                state.transitions = transitions
+                state.data_flows = data_flows
+            else:
+                state._transitions = transitions
+                state._data_flows = data_flows
             for _, transition in state.transitions.items():
                 transition._parent = ref(state)
             state._data_flows = data_flows
