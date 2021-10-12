@@ -1,5 +1,21 @@
+include:
+  - project: 'dev/sys/sopl/ar-dev'
+    # release branch
+    ref: 'release/3.x'
+    file:
+      - '/ci/templates/default.yml'
+
+variables:
+  AR_CI_CLANG_FORMAT_DISABLE: "true"
+  AR_CI_CLANG_TIDY_DISABLE: "true"
+  AR_CI_CPPCHECK_DISABLE: "true"
+  AR_CI_FLAKE8_DISABLE: "true"
+  AR_CI_YAPF_DISABLE: "true"
+  AR_CI_DOCS_DISABLE: "false"
+  AR_CI_DEPLOY_CONAN_DISABLE: "true"
+
 stages:
-    - test
+  - test
 
 # From https://docs.gitlab.com/ee/ci/merge_request_pipelines/#excluding-certain-jobs
 .only-default: &only-default
@@ -14,6 +30,13 @@ stages:
     - /^release.*$
     - tags
     - merge_requests
+
+docs_test_local:
+  extends: .docs_test
+  variables:
+    BUILD_DIR: build
+    CONAN_OPTIONS: ""
+    MAKE_CMD_DOCS: "make docs"
 
 test py2-tests:
   <<: *only-default
