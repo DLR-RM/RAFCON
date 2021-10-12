@@ -30,7 +30,6 @@ from functools import partial
 
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
-from rafcon.core.custom_exceptions import LibraryNotFoundException
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -40,6 +39,7 @@ from rafcon.gui.helpers.text_formatting import format_folder_name_human_readable
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
+from rafcon.gui.interface import open_folder
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -102,6 +102,8 @@ class LibraryTreeController(ExtendedController):
                                          self.menu_item_rename_libraries_or_root_clicked))
             menu.append(create_menu_item("Remove library", constants.BUTTON_DEL,
                                          self.menu_item_remove_libraries_or_root_clicked))
+            menu.append(create_menu_item("Relocate library", constants.BUTTON_RELOCATE,
+                                         self.menu_item_relocate_libraries_or_root_clicked))
 
             sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute as library", menu,
                                                                      constants.BUTTON_REFR)
@@ -130,9 +132,13 @@ class LibraryTreeController(ExtendedController):
                                              self.menu_item_rename_libraries_or_root_clicked))
                 menu.append(create_menu_item("Remove library root", constants.BUTTON_DEL,
                                              self.menu_item_remove_libraries_or_root_clicked))
+                menu.append(create_menu_item("Relocate library root", constants.BUTTON_RELOCATE,
+                                             self.menu_item_relocate_libraries_or_root_clicked))
         elif kind == 'libraries':
             menu.append(create_menu_item("Remove libraries", constants.BUTTON_DEL,
                                          self.menu_item_remove_libraries_or_root_clicked))
+            menu.append(create_menu_item("Relocate libraries", constants.BUTTON_RELOCATE,
+                                         self.menu_item_relocate_libraries_or_root_clicked))
 
         return menu
 
@@ -428,7 +434,7 @@ class LibraryTreeController(ExtendedController):
                     gui_helper_state_machine.rename_library_root(tree_m_row[self.LIB_KEY_STORAGE_ID], new_name, logger)
                     gui_helper_state_machine.refresh_all()
                 else:
-                    gui_helper_state_machine.rename_state_machine(library_os_path, new_library_os_path, library_path, library_name, new_name, logger)
+                    gui_helper_state_machine.rename_library(library_os_path, new_library_os_path, library_path, library_name, new_name, logger)
             return True
         return False
 
@@ -491,6 +497,26 @@ class LibraryTreeController(ExtendedController):
             else:
                 logger.warning("Response id: {} is not considered".format(response_id))
 
+            return True
+        return False
+
+    def menu_item_relocate_libraries_or_root_clicked(self, menu_item):
+        """Relocate library after request second confirmation"""
+
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+        menu_item_text = self.get_menu_item_text(menu_item)
+        model, path = self.view.get_selection().get_selected()
+        if path:
+            tree_m_row = self.filter[path]
+            library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
+            new_directory = open_folder('Select the new directory')
+            if new_directory:
+                if 'root' in menu_item_text:
+                    gui_helper_state_machine.relocate_library_root(tree_m_row[self.LIB_KEY_STORAGE_ID], new_directory, logger)
+                elif 'libraries' in menu_item_text:
+                    gui_helper_state_machine.relocate_libraries(library_os_path.replace('[source]:\n', ''), item_key, new_directory, logger)
+                else:
+                    gui_helper_state_machine.relocate_library(library_os_path, library_path, library_name, new_directory, logger)
             return True
         return False
 
