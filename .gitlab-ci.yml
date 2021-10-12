@@ -36,7 +36,7 @@ docs_test_local:
   variables:
     BUILD_DIR: build
     CONAN_OPTIONS: ""
-    MAKE_CMD_DOCS: "make docs"
+    MAKE_CMD_DOCS: "sphinx-build -b html doc build/docs/html"
 
 test py2-tests:
   <<: *only-default
