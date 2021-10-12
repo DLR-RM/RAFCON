@@ -23,7 +23,9 @@ Next Release
 
 - Features:
     - Add find usage for finding the usages of state machine libraries
-
+ 
+- Bug Fixes:
+    - Fix handling of library interface change
 
 0.14.10
 """""""
