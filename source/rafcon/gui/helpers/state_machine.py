@@ -146,91 +146,6 @@ def open_library_state_separately():
             logger.exception('Library state {0} could not be open separately'.format(state_m.state))
 
 
-def save_open_state_machines():
-    for state_machine in state_machine_manager.state_machines.values():
-        storage.save_state_machine_to_path(state_machine, state_machine.file_system_path)
-
-
-def save_library(library, path):
-    library_model = StateMachineModel(library)
-    library_model.load_meta_data()
-    storage.save_state_machine_to_path(library, path)
-    library_model.store_meta_data()
-    return library_model
-
-
-def rename_library_root(library_root_name, new_library_root_name, logger=None):
-    """ Rename a library root
-
-    :param str library_root_name: the current library root key name
-    :param str new_library_root_name: the new library root key name
-    :param logger logger: the logger
-    """
-
-    if not new_library_root_name:
-        if logger:
-            logger.error("The given library root name is invalid")
-        return
-    library_paths = global_config.get_config_value('LIBRARY_PATHS')
-    if new_library_root_name in library_paths:
-        if logger:
-            logger.error("The library root '{0}' already exists".format(new_library_root_name))
-        return
-    save_open_state_machines()
-    library_dependencies = find_library_root_dependencies(library_root_name, new_library_root_name)
-    library_paths[new_library_root_name] = library_paths[library_root_name]
-    del library_paths[library_root_name]
-    global_config.save_configuration()
-    refresh_after_relocate_and_rename(library_dependencies)
-
-
-def rename_library(library_os_path, new_library_os_path, library_path, library_name, new_library_name, logger=None):
-    """ Rename a library
-
-    :param str library_os_path: file system path of the current library
-    :param str new_library_os_path: file system path of the new library
-    :param str library_path: path of the library
-    :param str library_name: name of the library
-    :param str new_library_name: new name of the library
-    """
-
-    if not new_library_name:
-        if logger:
-            logger.error("The given library name is invalid")
-        return
-    elif library_path in library_manager_model.library_manager.libraries:
-        for state_machine_os_path in library_manager_model.library_manager.libraries[library_path].values():
-            if state_machine_os_path == new_library_os_path:
-                if logger:
-                    logger.error("The library '{0}' already exists".format(new_library_name))
-                return
-    affected_libraries = []
-    save_open_state_machines()
-    library_os_path = os.path.abspath(library_os_path)
-    new_library_os_path = os.path.abspath(new_library_os_path)
-    if not rafcon.core.config.global_config.get_config_value("SHOW_DIALOGS_DURING_RENAMING", False):
-        library_manager_model.library_manager.show_dialog = False
-    try:
-        state_machine = storage.load_state_machine_from_path(library_os_path)
-        if state_machine is None:
-            raise LibraryNotFoundException
-    except Exception:
-        logger.error('The state machine is broken. The operation failed.')
-        library_manager_model.library_manager.show_dialog = True
-        return
-    old_state_machine_id = state_machine.state_machine_id
-    old_state_machine_path = state_machine.file_system_path
-    state_machine.root_state.name = new_library_name
-    save_library(state_machine, new_library_os_path)
-    affected_libraries.append((old_state_machine_id, old_state_machine_path, state_machine))
-    library_dependencies = find_library_dependencies(library_os_path,
-                                                     library_path=library_path,
-                                                     library_name=library_name,
-                                                     new_library_name=new_library_name)
-    shutil.rmtree(library_os_path)
-    refresh_after_relocate_and_rename(library_dependencies, affected_libraries)
-
-
 def find_library_root_dependencies(library_root_name, new_library_root_name):
     library_dependencies = []
     if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
@@ -309,6 +224,91 @@ def find_library_dependencies(library_os_path, library_path=None, library_name=N
     return library_dependencies
 
 
+def save_open_libraries():
+    for library in state_machine_manager.state_machines.values():
+        storage.save_state_machine_to_path(library, library.file_system_path)
+
+
+def save_library(library, path):
+    library_model = StateMachineModel(library)
+    library_model.load_meta_data()
+    storage.save_state_machine_to_path(library, path)
+    library_model.store_meta_data()
+    return library_model
+
+
+def rename_library_root(library_root_name, new_library_root_name, logger=None):
+    """ Rename a library root
+
+    :param str library_root_name: the current library root key name
+    :param str new_library_root_name: the new library root key name
+    :param logger logger: the logger
+    """
+
+    if not new_library_root_name:
+        if logger:
+            logger.error("The given library root name is invalid")
+        return
+    library_paths = global_config.get_config_value('LIBRARY_PATHS')
+    if new_library_root_name in library_paths:
+        if logger:
+            logger.error("The library root '{0}' already exists".format(new_library_root_name))
+        return
+    save_open_libraries()
+    library_dependencies = find_library_root_dependencies(library_root_name, new_library_root_name)
+    library_paths[new_library_root_name] = library_paths[library_root_name]
+    del library_paths[library_root_name]
+    global_config.save_configuration()
+    refresh_after_relocate_and_rename(library_dependencies)
+
+
+def rename_library(library_os_path, new_library_os_path, library_path, library_name, new_library_name, logger=None):
+    """ Rename a library
+
+    :param str library_os_path: file system path of the current library
+    :param str new_library_os_path: file system path of the new library
+    :param str library_path: path of the library
+    :param str library_name: name of the library
+    :param str new_library_name: new name of the library
+    """
+
+    if not new_library_name:
+        if logger:
+            logger.error("The given library name is invalid")
+        return
+    elif library_path in library_manager_model.library_manager.libraries:
+        for state_machine_os_path in library_manager_model.library_manager.libraries[library_path].values():
+            if state_machine_os_path == new_library_os_path:
+                if logger:
+                    logger.error("The library '{0}' already exists".format(new_library_name))
+                return
+    affected_libraries = []
+    save_open_libraries()
+    library_os_path = os.path.abspath(library_os_path)
+    new_library_os_path = os.path.abspath(new_library_os_path)
+    if not rafcon.core.config.global_config.get_config_value("SHOW_DIALOGS_DURING_RENAMING", False):
+        library_manager_model.library_manager.show_dialog = False
+    try:
+        state_machine = storage.load_state_machine_from_path(library_os_path)
+        if state_machine is None:
+            raise LibraryNotFoundException
+    except Exception:
+        logger.error('The state machine is broken. The operation failed.')
+        library_manager_model.library_manager.show_dialog = True
+        return
+    old_state_machine_id = state_machine.state_machine_id
+    old_state_machine_path = state_machine.file_system_path
+    state_machine.root_state.name = new_library_name
+    save_library(state_machine, new_library_os_path)
+    affected_libraries.append((old_state_machine_id, old_state_machine_path, state_machine))
+    library_dependencies = find_library_dependencies(library_os_path,
+                                                     library_path=library_path,
+                                                     library_name=library_name,
+                                                     new_library_name=new_library_name)
+    shutil.rmtree(library_os_path)
+    refresh_after_relocate_and_rename(library_dependencies, affected_libraries)
+
+
 def refresh_after_relocate_and_rename(library_dependencies, affected_libraries=[]):
     for library_dependency in library_dependencies:
         affected_libraries.append((library_dependency.state_machine_id, library_dependency.file_system_path, library_dependency))
@@ -329,7 +329,7 @@ def relocate_library_root(library_root_name, new_directory, logger=None):
     """
 
     affected_libraries = []
-    save_open_state_machines()
+    save_open_libraries()
     new_library_root_name = os.path.basename(os.path.normpath(new_directory))
     if new_library_root_name in library_manager_model.library_manager.library_root_paths:
         library_root_label_number = 2
@@ -356,7 +356,7 @@ def relocate_libraries(libraries_os_path, libraries_name, new_directory, logger=
     """
 
     affected_libraries = []
-    save_open_state_machines()
+    save_open_libraries()
     library_path = None
     library_path_without_root_name = None
     for library_root_name, library_root_path in library_manager_model.library_manager.library_root_paths.items():
@@ -395,7 +395,7 @@ def relocate_library(library_os_path, library_path, library_name, new_directory,
             logger.error("The choesn directory contains a library with the similar name")
         return
     affected_libraries = []
-    save_open_state_machines()
+    save_open_libraries()
     new_library_path = os.path.basename(os.path.normpath(new_directory))
     new_root_required = True
     for library_root_path in library_manager_model.library_manager.library_root_paths.values():
