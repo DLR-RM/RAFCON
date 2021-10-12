@@ -276,6 +276,12 @@ def save_open_libraries():
 
 
 def refresh_after_relocate_and_rename(library_dependencies, affected_libraries=[]):
+    """ Save all library dependencies, refresh the open libraries and the library tree view
+
+    :param str library_dependencies: the library dependencies
+    :param str affected_libraries: the affected libraries
+    """
+
     for library_dependency in library_dependencies:
         affected_libraries.append((library_dependency.state_machine_id, library_dependency.file_system_path, library_dependency))
         save_library(library_dependency, library_dependency.file_system_path)
@@ -289,19 +295,19 @@ def refresh_after_relocate_and_rename(library_dependencies, affected_libraries=[
 def rename_library_root(library_root_name, new_library_root_name, logger=None):
     """ Rename a library root
 
-    :param str library_root_name: the current library root key name
-    :param str new_library_root_name: the new library root key name
+    :param str library_root_name: the library root name
+    :param str new_library_root_name: the new library root name
     :param logger logger: the logger
     """
 
     if not new_library_root_name:
         if logger:
-            logger.error("The given library root name is invalid")
+            logger.error('The library root name is invalid')
         return
     library_paths = global_config.get_config_value('LIBRARY_PATHS')
     if new_library_root_name in library_paths:
         if logger:
-            logger.error("The library root '{0}' already exists".format(new_library_root_name))
+            logger.error("The library root name '{0}' already exists".format(new_library_root_name))
         return
     save_open_libraries()
     library_dependencies = find_library_root_dependencies(library_root_name, new_library_root_name)
