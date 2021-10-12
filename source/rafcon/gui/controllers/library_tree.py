@@ -432,7 +432,6 @@ class LibraryTreeController(ExtendedController):
             if response_id == 1:
                 if "root" in menu_item_text:
                     gui_helper_state_machine.rename_library_root(tree_m_row[self.LIB_KEY_STORAGE_ID], new_name, logger)
-                    gui_helper_state_machine.refresh_all()
                 else:
                     gui_helper_state_machine.rename_library(library_os_path, new_library_os_path, library_path, library_name, new_name, logger)
             return True

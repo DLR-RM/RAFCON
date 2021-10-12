@@ -151,19 +151,37 @@ def save_open_state_machines():
         storage.save_state_machine_to_path(state_machine, state_machine.file_system_path)
 
 
-def refresh_open_libraries(state_machines):
-    for state_machine_id, state_machine_path, state_machine in state_machines:
-        if state_machine_manager.get_open_state_machine_of_file_system_path(state_machine_path):
-            state_machine_manager.remove_state_machine_by_path(state_machine_path)
-            state_machine_manager.add_state_machine(state_machine)
-
-
 def save_library(library, path):
     library_model = StateMachineModel(library)
     library_model.load_meta_data()
     storage.save_state_machine_to_path(library, path)
     library_model.store_meta_data()
     return library_model
+
+
+def rename_library_root(library_root_name, new_library_root_name, logger=None):
+    """ Rename a library root
+
+    :param str library_root_name: the current library root key name
+    :param str new_library_root_name: the new library root key name
+    :param logger logger: the logger
+    """
+
+    if not new_library_root_name:
+        if logger:
+            logger.error("The given library root name is invalid")
+        return
+    library_paths = global_config.get_config_value('LIBRARY_PATHS')
+    if new_library_root_name in library_paths:
+        if logger:
+            logger.error("The library root '{0}' already exists".format(new_library_root_name))
+        return
+    save_open_state_machines()
+    library_dependencies = find_library_root_dependencies(library_root_name, new_library_root_name)
+    library_paths[new_library_root_name] = library_paths[library_root_name]
+    del library_paths[library_root_name]
+    global_config.save_configuration()
+    refresh_after_relocate_and_rename(library_dependencies)
 
 
 def rename_library(library_os_path, new_library_os_path, library_path, library_name, new_library_name, logger=None):
@@ -211,59 +229,6 @@ def rename_library(library_os_path, new_library_os_path, library_path, library_n
                                                      new_library_name=new_library_name)
     shutil.rmtree(library_os_path)
     refresh_after_relocate_and_rename(library_dependencies, affected_libraries)
-
-
-def rename_library_root(old_library_root, new_library_root, logger=None):
-    """ Rename a library root
-
-    :param str old_library_root: the current library root key name
-    :param str new_library_root: the new library root key name
-    """
-
-    if not new_library_root:
-        if logger:
-            logger.error("The given library root name is invalid")
-        return
-    library_paths = global_config.get_config_value('LIBRARY_PATHS')
-    if new_library_root in library_paths:
-        if logger:
-            logger.error("The library root '{0}' already exists".format(new_library_root))
-        return
-    save_open_state_machines()
-    state_machines = []
-    if not rafcon.core.config.global_config.get_config_value("SHOW_DIALOGS_DURING_RENAMING", False):
-        library_manager_model.library_manager.show_dialog = False
-    roots = dict(library_manager_model.library_manager.library_root_paths)
-    changed_state_machines = []
-    for root in roots.values():
-        for node in storage.find_usages_via_grep(root, old_library_root):
-            try:
-                state_machine = storage.load_state_machine_from_path(node)
-                if state_machine is not None and hasattr(state_machine.root_state, 'states'):
-                    queue = [state_machine.root_state]
-                    while len(queue) > 0:
-                        state = queue.pop(0)
-                        if hasattr(state, 'library_path'):
-                            library_path_parts = state.library_path.split('/')
-                            library_path_parts[0] = new_library_root
-                            state.library_path = u'/'.join(library_path_parts)
-                        elif hasattr(state, 'states'):
-                            queue.extend(state.states.values())
-                changed_state_machines.append(state_machine)
-                '''
-                Do not save the state machines immediately after editing, since some
-                other state machines might be dependend on them and will be broken if we save them.
-                Instead, open, edit, and gather all state machines in a list, and save them later at once.
-                '''
-                state_machines.append((state_machine.state_machine_id, state_machine.file_system_path, state_machine))
-            except LibraryNotFoundException as e:
-                pass
-    for state_machine in changed_state_machines:
-        save_library(state_machine, state_machine.file_system_path)
-    library_manager_model.library_manager.show_dialog = True
-    library_paths[new_library_root] = library_paths[old_library_root]
-    del library_paths[old_library_root]
-    global_config.save_configuration()
 
 
 def find_library_root_dependencies(library_root_name, new_library_root_name):
@@ -344,11 +309,14 @@ def find_library_dependencies(library_os_path, library_path=None, library_name=N
     return library_dependencies
 
 
-def refresh_after_relocate_and_rename(library_dependencies, affected_libraries):
+def refresh_after_relocate_and_rename(library_dependencies, affected_libraries=[]):
     for library_dependency in library_dependencies:
         affected_libraries.append((library_dependency.state_machine_id, library_dependency.file_system_path, library_dependency))
         save_library(library_dependency, library_dependency.file_system_path)
-    refresh_open_libraries(affected_libraries)
+    for state_machine_id, library_path, library in affected_libraries:
+        if state_machine_manager.get_open_state_machine_of_file_system_path(library_path):
+            state_machine_manager.remove_state_machine_by_path(library_path)
+            state_machine_manager.add_state_machine(library)
     refresh_libraries()
 
 
