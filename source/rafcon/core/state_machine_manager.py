@@ -126,10 +126,11 @@ class StateMachineManager(Observable):
         return removed_state_machine
 
     def remove_state_machine_by_path(self, state_machine_path):
-        """Remove the state machine for a specified state machine path from the list of registered state machines.
+        """ Remove an open state machine by path
 
-        :param state_machine_path: the path of the state machine to be removed
+        :param str state_machine_path: the state machine path
         """
+
         state_machine_ids = []
         for state_machine_id, state_machine in self._state_machines.items():
             if state_machine.file_system_path == state_machine_path:
