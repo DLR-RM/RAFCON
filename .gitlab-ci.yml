@@ -28,7 +28,7 @@ variables:
     - tags
     - merge_requests
 
-docs_test_local:
+docs_test:
   extends: .docs_test
   variables:
     BUILD_DIR: build
