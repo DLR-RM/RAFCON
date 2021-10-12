@@ -125,7 +125,7 @@ class LibraryTreeController(ExtendedController):
                                          self.menu_item_find_usages_clicked))
 
         elif kind in ['library root', 'library tree']:
-            menu.append(create_menu_item("Add library root", constants.BUTTON_DEL,
+            menu.append(create_menu_item("Add library root", constants.BUTTON_NEW,
                                          self.menu_item_add_library_root_clicked))
             if kind == 'library root':
                 menu.append(create_menu_item("Rename library root", constants.BUTTON_RENAME,
