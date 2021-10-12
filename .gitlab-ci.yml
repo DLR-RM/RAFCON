@@ -35,6 +35,16 @@ docs_test:
     CONAN_OPTIONS: ""
     MAKE_CMD_DOCS: "sphinx-build -b html doc build/docs/html"
 
+pages:
+  extends: .docs_pages
+  variables:
+    BUILD_DIR: build
+    CONAN_OPTIONS: ""
+    MAKE_CMD_DOCS: "sphinx-build -b html doc build/docs/html"
+  except:
+    variables:
+      - $AR_CI_DOCS_DISABLE == "true"
+
 test py2-tests:
   <<: *only-default
   stage: Test
