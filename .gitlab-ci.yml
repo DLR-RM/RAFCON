@@ -14,9 +14,6 @@ variables:
   AR_CI_DOCS_DISABLE: "false"
   AR_CI_DEPLOY_CONAN_DISABLE: "true"
 
-stages:
-  - test
-
 # From https://docs.gitlab.com/ee/ci/merge_request_pipelines/#excluding-certain-jobs
 .only-default: &only-default
   only:
@@ -40,7 +37,7 @@ docs_test_local:
 
 test py2-tests:
   <<: *only-default
-  stage: test
+  stage: Test
   tags:
     - Agile_GUI_Docker
   script:
@@ -50,7 +47,7 @@ test py2-tests:
 
 test py3-tests:
   <<: *only-default
-  stage: test
+  stage: Test
   tags:
     - Agile_GUI_Docker
   script:
@@ -67,7 +64,7 @@ test py3-tests:
 
 test py3-tests-core:
   <<: *only-default
-  stage: test
+  stage: Test
   tags:
     - Agile_GUI_Docker
   script:
@@ -85,7 +82,7 @@ test py3-tests-core:
 
 test py3-memory-test-core:
   <<: *only-default
-  stage: test
+  stage: Test
   tags:
     - Agile_GUI_Docker
   script:
