@@ -167,7 +167,7 @@ def find_library_root_dependencies(library_root_name, new_library_root_name):
                     queue = [library.root_state]
                     while len(queue) > 0:
                         state = queue.pop(0)
-                        if hasattr(state, 'library_path'):
+                        if hasattr(state, 'library_path') and (state.library_path == library_root_name or state.library_path.startswith(os.path.join(library_root_name, ''))):
                             library_path_parts = state.library_path.split('/')
                             library_path_parts[0] = new_library_root_name
                             state.library_path = '/'.join(library_path_parts)
@@ -202,7 +202,7 @@ def find_libraries_dependencies(library_path, new_library_path):
                     queue = [library.root_state]
                     while len(queue) > 0:
                         state = queue.pop(0)
-                        if hasattr(state, 'library_path'):
+                        if hasattr(state, 'library_path') and state.library_path == library_path:
                             state.library_path = new_library_path
                         elif hasattr(state, 'states'):
                             queue.extend(state.states.values())
@@ -379,6 +379,9 @@ def relocate_library_root(library_root_name, new_directory, logger=None):
         if logger:
             logger.error('The library root path is invalid')
         return
+    library_root_path = library_manager_model.library_manager.library_root_paths[library_root_name]
+    if library_root_path == new_directory:
+        return
     save_open_libraries()
     affected_libraries = []
     new_library_root_name = os.path.basename(os.path.normpath(new_directory))
@@ -391,7 +394,6 @@ def relocate_library_root(library_root_name, new_directory, logger=None):
     for library_dependency in library_dependencies:
         affected_libraries.append((library_dependency.file_system_path, library_dependency))
         save_library(library_dependency, library_dependency.file_system_path)
-    library_root_path = library_manager_model.library_manager.library_root_paths[library_root_name]
     for content in os.listdir(library_root_path):
         shutil.move(os.path.join(library_root_path, content), os.path.join(new_directory, content))
     library_paths = global_config.get_config_value('LIBRARY_PATHS')
@@ -469,7 +471,7 @@ def relocate_library(library_os_path, library_path, library_name, new_directory,
     for library_root_path in library_manager_model.library_manager.library_root_paths.values():
         if library_root_path == new_directory or new_directory.startswith(os.path.join(library_root_path, '')):
             new_root_required = False
-            new_library_path = new_directory[len(library_root_path) - len(new_library_path) - 1:]
+            new_library_path = os.path.join(os.path.basename(os.path.normpath(library_root_path)), new_directory[len(library_root_path) + 1:]).strip('/')
             break
     library_dependencies = find_library_dependencies(library_os_path,
                                                      library_path=library_path,
