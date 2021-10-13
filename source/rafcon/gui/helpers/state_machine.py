@@ -275,16 +275,13 @@ def save_open_libraries():
         storage.save_state_machine_to_path(library, library.file_system_path)
 
 
-def refresh_after_relocate_and_rename(library_dependencies, affected_libraries=[]):
+def refresh_after_relocate_and_rename(affected_libraries=[]):
     """ Save all library dependencies, refresh the open libraries and the library tree view
 
     :param str library_dependencies: the library dependencies
     :param str affected_libraries: the affected libraries
     """
 
-    for library_dependency in library_dependencies:
-        affected_libraries.append((library_dependency.file_system_path, library_dependency))
-        save_library(library_dependency, library_dependency.file_system_path)
     for library_path, library in affected_libraries:
         if state_machine_manager.get_open_state_machine_of_file_system_path(library_path):
             state_machine_manager.remove_state_machine_by_path(library_path)
@@ -310,11 +307,15 @@ def rename_library_root(library_root_name, new_library_root_name, logger=None):
             logger.error("The library root name '{0}' already exists".format(new_library_root_name))
         return
     save_open_libraries()
+    affected_libraries = []
     library_dependencies = find_library_root_dependencies(library_root_name, new_library_root_name)
+    for library_dependency in library_dependencies:
+        affected_libraries.append((library_dependency.file_system_path, library_dependency))
+        save_library(library_dependency, library_dependency.file_system_path)
     library_paths[new_library_root_name] = library_paths[library_root_name]
     del library_paths[library_root_name]
     global_config.save_configuration()
-    refresh_after_relocate_and_rename(library_dependencies)
+    refresh_after_relocate_and_rename(affected_libraries)
 
 
 def rename_library(library_os_path, new_library_os_path, library_path, library_name, new_library_name, logger=None):
@@ -359,8 +360,11 @@ def rename_library(library_os_path, new_library_os_path, library_path, library_n
                                                      library_path=library_path,
                                                      library_name=library_name,
                                                      new_library_name=new_library_name)
+    for library_dependency in library_dependencies:
+        affected_libraries.append((library_dependency.file_system_path, library_dependency))
+        save_library(library_dependency, library_dependency.file_system_path)
     shutil.rmtree(library_os_path)
-    refresh_after_relocate_and_rename(library_dependencies, affected_libraries)
+    refresh_after_relocate_and_rename(affected_libraries)
 
 
 def relocate_library_root(library_root_name, new_directory, logger=None):
@@ -384,6 +388,9 @@ def relocate_library_root(library_root_name, new_directory, logger=None):
             new_library_root_name_number += 1
         new_library_root_name += str(new_library_root_name_number)
     library_dependencies = find_library_root_dependencies(library_root_name, new_library_root_name)
+    for library_dependency in library_dependencies:
+        affected_libraries.append((library_dependency.file_system_path, library_dependency))
+        save_library(library_dependency, library_dependency.file_system_path)
     library_root_path = library_manager_model.library_manager.library_root_paths[library_root_name]
     for content in os.listdir(library_root_path):
         shutil.move(os.path.join(library_root_path, content), os.path.join(new_directory, content))
@@ -391,7 +398,7 @@ def relocate_library_root(library_root_name, new_directory, logger=None):
     library_paths[new_library_root_name] = new_directory
     del library_paths[library_root_name]
     global_config.save_configuration()
-    refresh_after_relocate_and_rename(library_dependencies, affected_libraries)
+    refresh_after_relocate_and_rename(affected_libraries)
 
 
 def relocate_libraries(libraries_os_path, libraries_name, new_directory, logger=None):
@@ -425,12 +432,15 @@ def relocate_libraries(libraries_os_path, libraries_name, new_directory, logger=
             new_library_path = os.path.join(library_root_name, library_path_without_root_name)
             break
     library_dependencies = find_libraries_dependencies(library_path, new_library_path)
+    for library_dependency in library_dependencies:
+        affected_libraries.append((library_dependency.file_system_path, library_dependency))
+        save_library(library_dependency, library_dependency.file_system_path)
     shutil.move(libraries_os_path, os.path.join(new_directory, libraries_name))
     if new_root_required:
         library_paths = global_config.get_config_value('LIBRARY_PATHS')
         library_paths[os.path.basename(os.path.normpath(new_directory))] = new_directory
         global_config.save_configuration()
-    refresh_after_relocate_and_rename(library_dependencies, affected_libraries)
+    refresh_after_relocate_and_rename(affected_libraries)
 
 
 def relocate_library(library_os_path, library_path, library_name, new_directory, logger=None):
@@ -465,12 +475,15 @@ def relocate_library(library_os_path, library_path, library_name, new_directory,
                                                      library_path=library_path,
                                                      library_name=library_name,
                                                      new_library_path=new_library_path)
+    for library_dependency in library_dependencies:
+        affected_libraries.append((library_dependency.file_system_path, library_dependency))
+        save_library(library_dependency, library_dependency.file_system_path)
     shutil.move(library_os_path, os.path.join(new_directory, library_name))
     if new_root_required:
         library_paths = global_config.get_config_value('LIBRARY_PATHS')
         library_paths[os.path.basename(os.path.normpath(new_directory))] = new_directory
         global_config.save_configuration()
-    refresh_after_relocate_and_rename(library_dependencies, affected_libraries)
+    refresh_after_relocate_and_rename(affected_libraries)
 
 
 def save_state_machine(delete_old_state_machine=False, recent_opened_notification=False, as_copy=False, copy_path=None):
