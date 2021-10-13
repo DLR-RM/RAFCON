@@ -158,8 +158,8 @@ def find_library_root_dependencies(library_root_name, new_library_root_name):
 
     library_dependencies = []
     if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
-        library_manager_model.library_manager.show_dialog = False
-    for library_root_path in library_manager_model.library_manager.library_root_paths.values():
+        library_manager.show_dialog = False
+    for library_root_path in library_manager.library_root_paths.values():
         for path in storage.find_library_dependencies_via_grep(library_root_path, library_path=library_root_name):
             try:
                 library = storage.load_state_machine_from_path(path)
@@ -177,7 +177,7 @@ def find_library_root_dependencies(library_root_name, new_library_root_name):
             except LibraryNotFoundException:
                 pass
     if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
-        library_manager_model.library_manager.show_dialog = True
+        library_manager.show_dialog = True
     return library_dependencies
 
 
@@ -193,8 +193,8 @@ def find_libraries_dependencies(library_path, new_library_path):
 
     library_dependencies = []
     if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
-        library_manager_model.library_manager.show_dialog = False
-    for library_root_path in library_manager_model.library_manager.library_root_paths.values():
+        library_manager.show_dialog = False
+    for library_root_path in library_manager.library_root_paths.values():
         for path in storage.find_library_dependencies_via_grep(library_root_path, library_path=library_path):
             try:
                 library = storage.load_state_machine_from_path(path)
@@ -210,7 +210,7 @@ def find_libraries_dependencies(library_path, new_library_path):
             except LibraryNotFoundException:
                 pass
     if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
-        library_manager_model.library_manager.show_dialog = True
+        library_manager.show_dialog = True
     return library_dependencies
 
 
@@ -229,8 +229,8 @@ def find_library_dependencies(library_os_path, library_path=None, library_name=N
 
     library_dependencies = []
     if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
-        library_manager_model.library_manager.show_dialog = False
-    for library_root_path in library_manager_model.library_manager.library_root_paths.values():
+        library_manager.show_dialog = False
+    for library_root_path in library_manager.library_root_paths.values():
         for path in storage.find_library_dependencies_via_grep(library_root_path, library_path=library_path, library_name=library_name):
             try:
                 library = storage.load_state_machine_from_path(path)
@@ -250,7 +250,7 @@ def find_library_dependencies(library_os_path, library_path=None, library_name=N
             except LibraryNotFoundException:
                 pass
     if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
-        library_manager_model.library_manager.show_dialog = True
+        library_manager.show_dialog = True
     return library_dependencies
 
 
@@ -285,6 +285,7 @@ def refresh_after_relocate_and_rename(affected_libraries):
         if state_machine_manager.get_open_state_machine_of_file_system_path(library_path):
             state_machine_manager.remove_state_machine_by_path(library_path)
             state_machine_manager.add_state_machine(library)
+    library_manager.clean_loaded_libraries()
     refresh_libraries()
 
 
@@ -332,8 +333,8 @@ def rename_library(library_os_path, new_library_os_path, library_path, library_n
         if logger:
             logger.error('The library name is invalid')
         return
-    elif library_path in library_manager_model.library_manager.libraries:
-        for library_os_path_ in library_manager_model.library_manager.libraries[library_path].values():
+    elif library_path in library_manager.libraries:
+        for library_os_path_ in library_manager.libraries[library_path].values():
             if library_os_path_ == new_library_os_path:
                 if logger:
                     logger.error("The library name '{0}' already exists".format(new_library_name))
@@ -343,14 +344,14 @@ def rename_library(library_os_path, new_library_os_path, library_path, library_n
     save_open_libraries()
     affected_libraries = []
     if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
-        library_manager_model.library_manager.show_dialog = False
+        library_manager.show_dialog = False
     try:
         library = storage.load_state_machine_from_path(library_os_path)
         if library is None:
             raise LibraryNotFoundException
     except Exception:
         logger.error('The library is broken and the operation failed')
-        library_manager_model.library_manager.show_dialog = True
+        library_manager.show_dialog = True
         return
     library.root_state.name = new_library_name
     affected_libraries.append((library.file_system_path, library))
@@ -378,15 +379,15 @@ def relocate_library_root(library_root_name, new_directory, logger=None):
         if logger:
             logger.error('The library root path is invalid')
         return
-    library_root_path = library_manager_model.library_manager.library_root_paths[library_root_name]
+    library_root_path = library_manager.library_root_paths[library_root_name]
     if library_root_path == new_directory:
         return
     save_open_libraries()
     affected_libraries = []
     new_library_root_name = os.path.basename(os.path.normpath(new_directory))
-    if new_library_root_name in library_manager_model.library_manager.library_root_paths:
+    if new_library_root_name in library_manager.library_root_paths:
         new_library_root_name_number = 2
-        while new_library_root_name + str(new_library_root_name_number) in library_manager_model.library_manager.library_root_paths:
+        while new_library_root_name + str(new_library_root_name_number) in library_manager.library_root_paths:
             new_library_root_name_number += 1
         new_library_root_name += str(new_library_root_name_number)
     library_dependencies = find_library_root_dependencies(library_root_name, new_library_root_name)
@@ -420,14 +421,14 @@ def relocate_libraries(libraries_os_path, libraries_name, new_directory, logger=
     affected_libraries = []
     library_path = None
     library_path_without_root_name = None
-    for library_root_name, library_root_path in library_manager_model.library_manager.library_root_paths.items():
+    for library_root_name, library_root_path in library_manager.library_root_paths.items():
         if libraries_os_path.startswith(os.path.join(library_root_path, '')):
             library_path_without_root_name = libraries_os_path[len(library_root_path) + 1:]
             library_path = os.path.join(library_root_name, library_path_without_root_name)
             break
     new_library_path = os.path.join(os.path.basename(os.path.normpath(new_directory)), library_path_without_root_name)
     new_root_required = True
-    for library_root_name, library_root_path in library_manager_model.library_manager.library_root_paths.items():
+    for library_root_name, library_root_path in library_manager.library_root_paths.items():
         if new_directory.startswith(os.path.join(library_root_path, '')):
             new_root_required = False
             new_library_path = os.path.join(library_root_name, library_path_without_root_name)
@@ -467,7 +468,7 @@ def relocate_library(library_os_path, library_path, library_name, new_directory,
     affected_libraries = []
     new_library_path = os.path.basename(os.path.normpath(new_directory))
     new_root_required = True
-    for library_root_path in library_manager_model.library_manager.library_root_paths.values():
+    for library_root_path in library_manager.library_root_paths.values():
         if library_root_path == new_directory or new_directory.startswith(os.path.join(library_root_path, '')):
             new_root_required = False
             new_library_path = os.path.join(os.path.basename(os.path.normpath(library_root_path)), new_directory[len(library_root_path) + 1:]).strip('/')
