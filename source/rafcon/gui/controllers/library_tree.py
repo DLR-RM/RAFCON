@@ -525,7 +525,7 @@ class LibraryTreeController(ExtendedController):
         library_usages_controller.filter_value = [library_path, library_name]
         usages = []
         for root in library_usages_controller.model.library_manager.library_root_paths.values():
-            usages.extend(storage.find_usages_via_grep(root, library_usages_controller.filter_value[0], library_usages_controller.filter_value[1]))
+            usages.extend(storage.find_library_dependencies_via_grep(root, library_usages_controller.filter_value[0], library_usages_controller.filter_value[1]))
         library_usages_controller.usages = usages
         library_usages_controller.filter.refilter()
         library_usages_controller.view.expand_all()
