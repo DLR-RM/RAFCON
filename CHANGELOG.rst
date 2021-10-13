@@ -23,13 +23,10 @@ Next Release
 
 - Features:
     - Add search bar for lookup through state machine libraries
-    - Add find usage for finding the usages of state machine libraries; incl. a new widget for showing the usages
-    - Add library refactoring features; they include:
-        - Renaming a library
-        - Relocate a library
-        - Renaming a library root key
-        - Add config option SHOW_DIALOGS_DURING_RENAMING (default false): if set to true, a dialog will pop up for each library that is missing while loading a state machine; if set to false just an error will be printed
-
+    - Add find usage for finding the usages of state machine libraries
+ 
+- Bug Fixes:
+    - Fix handling of library interface change
 
 0.14.10
 """""""
