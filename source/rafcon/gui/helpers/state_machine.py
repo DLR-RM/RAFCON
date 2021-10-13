@@ -349,7 +349,7 @@ def rename_library(library_os_path, new_library_os_path, library_path, library_n
         if library is None:
             raise LibraryNotFoundException
     except Exception:
-        logger.error('The state machine is broken. The operation failed.')
+        logger.error('The library is broken and the operation failed')
         library_manager_model.library_manager.show_dialog = True
         return
     library.root_state.name = new_library_name
@@ -368,17 +368,21 @@ def relocate_library_root(library_root_name, new_directory, logger=None):
 
     :param str library_root_name: the library root name
     :param str new_directory: the new directory
-    :param str logger: the logger
+    :param logger logger: the logger
     """
 
-    affected_libraries = []
+    if new_directory == '/':
+        if logger:
+            logger.error('The library root path is invalid')
+        return
     save_open_libraries()
+    affected_libraries = []
     new_library_root_name = os.path.basename(os.path.normpath(new_directory))
     if new_library_root_name in library_manager_model.library_manager.library_root_paths:
-        library_root_label_number = 2
-        while new_library_root_name + str(library_root_label_number) in library_manager_model.library_manager.library_root_paths:
-            library_root_label_number += 1
-        new_library_root_name += str(library_root_label_number)
+        new_library_root_name_number = 2
+        while new_library_root_name + str(new_library_root_name_number) in library_manager_model.library_manager.library_root_paths:
+            new_library_root_name_number += 1
+        new_library_root_name += str(new_library_root_name_number)
     library_dependencies = find_library_root_dependencies(library_root_name, new_library_root_name)
     library_root_path = library_manager_model.library_manager.library_root_paths[library_root_name]
     for content in os.listdir(library_root_path):
@@ -391,15 +395,21 @@ def relocate_library_root(library_root_name, new_directory, logger=None):
 
 
 def relocate_libraries(libraries_os_path, libraries_name, new_directory, logger=None):
-    """ Relocate a libraries
+    """ Relocate a library directory
 
-    :param str libraries_os_path: the file system path of the libraries
+    :param str libraries_os_path: the libraries os path
+    :param str libraries_name: the libraries name
     :param str new_directory: the new directory
-    :param str logger: the logger
+    :param logger logger: the logger
     """
 
-    affected_libraries = []
+    if new_directory == '/':
+        if logger:
+            logger.error('The library directory path is invalid')
+        return
+    libraries_os_path = os.path.abspath(libraries_os_path)
     save_open_libraries()
+    affected_libraries = []
     library_path = None
     library_path_without_root_name = None
     for library_root_name, library_root_path in library_manager_model.library_manager.library_root_paths.items():
@@ -430,15 +440,20 @@ def relocate_library(library_os_path, library_path, library_name, new_directory,
     :param str library_path: the path of the library
     :param str library_name: the name of the library
     :param str new_directory: the new directory
-    :param str logger: the logger
+    :param logger logger: the logger
     """
 
-    if os.path.exists(os.path.join(new_directory, library_name)):
+    if new_directory == '/':
         if logger:
-            logger.error("The choesn directory contains a library with the similar name")
+            logger.error('The library path is invalid')
         return
-    affected_libraries = []
+    elif os.path.exists(os.path.join(new_directory, library_name)):
+        if logger:
+            logger.error('The path contains a library with the similar name')
+        return
+    library_os_path = os.path.abspath(library_os_path)
     save_open_libraries()
+    affected_libraries = []
     new_library_path = os.path.basename(os.path.normpath(new_directory))
     new_root_required = True
     for library_root_path in library_manager_model.library_manager.library_root_paths.values():
