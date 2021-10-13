@@ -160,7 +160,7 @@ def find_library_root_dependencies(library_root_name, new_library_root_name):
     if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
         library_manager_model.library_manager.show_dialog = False
     for library_root_path in library_manager_model.library_manager.library_root_paths.values():
-        for path in storage.find_usages_via_grep(library_root_path, library_path=library_root_name):
+        for path in storage.find_library_dependencies_via_grep(library_root_path, library_path=library_root_name):
             try:
                 library = storage.load_state_machine_from_path(path)
                 if library is not None:
@@ -195,7 +195,7 @@ def find_libraries_dependencies(library_path, new_library_path):
     if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
         library_manager_model.library_manager.show_dialog = False
     for library_root_path in library_manager_model.library_manager.library_root_paths.values():
-        for path in storage.find_usages_via_grep(library_root_path, library_path=library_path):
+        for path in storage.find_library_dependencies_via_grep(library_root_path, library_path=library_path):
             try:
                 library = storage.load_state_machine_from_path(path)
                 if library is not None:
@@ -231,7 +231,7 @@ def find_library_dependencies(library_os_path, library_path=None, library_name=N
     if not rafcon.core.config.global_config.get_config_value('SHOW_DIALOGS_DURING_RENAMING', False):
         library_manager_model.library_manager.show_dialog = False
     for library_root_path in library_manager_model.library_manager.library_root_paths.values():
-        for path in storage.find_usages_via_grep(library_root_path, library_path=library_path, library_name=library_name):
+        for path in storage.find_library_dependencies_via_grep(library_root_path, library_path=library_path, library_name=library_name):
             try:
                 library = storage.load_state_machine_from_path(path)
                 if library is not None:

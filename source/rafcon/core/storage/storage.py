@@ -391,7 +391,6 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     from rafcon.core.states.execution_state import ExecutionState
     from rafcon.core.states.container_state import ContainerState
     from rafcon.core.states.hierarchy_state import HierarchyState
-
     from rafcon.core.singleton import library_manager
 
     path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA)
@@ -576,33 +575,35 @@ def get_storage_id_for_state(state):
         return state.state_id
 
 
-def find_usages_via_grep(root_path, library_path=None, library_name=None):
-    """ Lookup for the state machines that use a specific library via grep
+def find_library_dependencies_via_grep(library_root_path, library_path=None, library_name=None):
+    """ Find the dependencies of a library via grep
 
-    :param str root_path: file system path to search the state machines
-    :param str library_path: path of the library that is used in the other state machines
-    :param str library_name: name of the library that is used in the other state machines
+    :param str library_root_path: the library root path
+    :param str library_path: the library path
+    :param str library_name: the library name
 
-    :return: a list of the state machines path that use the library
+    :rtype list(str)
+    :return: library dependency paths
     """
-    filenames = []
-    command_library_path = 'grep -r -l -E \'"library_path": "%s"|"library_path": "%s/(.*)"\' --include \\*.json %s' % (library_path, library_path, root_path)
-    command_library_name = 'grep -r -l \'"library_name": "%s"\' --include \\*.json %s' % (library_name, root_path)
+
+    library_dependency_paths = []
+    command_library_path = 'grep -r -l -E \'"library_path": "%s"|"library_path": "%s/(.*)"\' --include \\*.json %s' % (library_path, library_path, library_root_path)
+    command_library_name = 'grep -r -l \'"library_name": "%s"\' --include \\*.json %s' % (library_name, library_root_path)
     if library_path is None and library_name is None:
-        return filenames
+        return library_dependency_paths
     elif library_path is None and library_name is not None:
-        res = set(os.popen(command_library_name).read().splitlines())
+        final_findings = set(os.popen(command_library_name).read().splitlines())
     elif library_path is not None and library_name is None:
-        res = set(os.popen(command_library_path).read().splitlines())
+        final_findings = set(os.popen(command_library_path).read().splitlines())
     else:
-        res_path = set(os.popen(command_library_path).read().splitlines())
-        res_name = set(os.popen(command_library_name).read().splitlines())
-        res = res_path.intersection(res_name)
-    for filename in res:
-        parent = filename
+        path_findings = set(os.popen(command_library_path).read().splitlines())
+        name_findings = set(os.popen(command_library_name).read().splitlines())
+        final_findings = path_findings.intersection(name_findings)
+    for library_dependency_path in final_findings:
+        parent = library_dependency_path
         while True:
             parent = os.path.dirname(parent)
             if os.path.exists(os.path.join(parent, 'statemachine.json')):
                 break
-        filenames.append(parent)
-    return set(filenames)
+        library_dependency_paths.append(parent)
+    return set(library_dependency_paths)
