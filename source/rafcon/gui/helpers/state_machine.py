@@ -275,10 +275,9 @@ def save_open_libraries():
         storage.save_state_machine_to_path(library, library.file_system_path)
 
 
-def refresh_after_relocate_and_rename(affected_libraries=[]):
+def refresh_after_relocate_and_rename(affected_libraries):
     """ Save all library dependencies, refresh the open libraries and the library tree view
 
-    :param str library_dependencies: the library dependencies
     :param str affected_libraries: the affected libraries
     """
 
