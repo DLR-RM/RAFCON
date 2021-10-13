@@ -416,6 +416,10 @@ def relocate_libraries(libraries_os_path, libraries_name, new_directory, logger=
         if logger:
             logger.error('The library directory path is invalid')
         return
+    elif os.path.exists(os.path.join(new_directory, libraries_name)):
+        if logger:
+            logger.error('The path contains a library directory with the similar name')
+        return
     libraries_os_path = os.path.abspath(libraries_os_path)
     save_open_libraries()
     affected_libraries = []
