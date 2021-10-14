@@ -449,8 +449,6 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         # semantic data file does not have to be there
         pass
 
-    one_of_my_child_states_not_found = False
-
     # load child states
     for p in os.listdir(state_path):
         child_state_path = os.path.join(state_path, p)
@@ -462,28 +460,22 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
             child_state = load_state_recursively(state, child_state_path, dirty_states)
             if not child_state:
                 return None
-            if child_state.name is LIBRARY_NOT_FOUND_DUMMY_STATE_NAME:
-                one_of_my_child_states_not_found = True
 
-    if one_of_my_child_states_not_found:
-        # omit adding transitions and data flows in this case
-        pass
-    else:
-        # Now we can add transitions and data flows, as all child states were added
-        if isinstance(state_info, tuple):
-            safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
-            if safe_init:
-                # this will trigger all validity checks the state machine
-                state.transitions = transitions
-                state.data_flows = data_flows
-            else:
-                state._transitions = transitions
-                state._data_flows = data_flows
-            for _, transition in state.transitions.items():
-                transition._parent = ref(state)
+    # Now we can add transitions and data flows, as all child states were added
+    if isinstance(state_info, tuple):
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
+        if safe_init:
+            # this will trigger all validity checks the state machine
+            state.transitions = transitions
+            state.data_flows = data_flows
+        else:
+            state._transitions = transitions
             state._data_flows = data_flows
-            for _, data_flow in state.data_flows.items():
-                data_flow._parent = ref(state)
+        for _, transition in state.transitions.items():
+            transition._parent = ref(state)
+        state._data_flows = data_flows
+        for _, data_flow in state.data_flows.items():
+            data_flow._parent = ref(state)
 
     state.file_system_path = state_path
 
