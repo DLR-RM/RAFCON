@@ -40,6 +40,7 @@ from rafcon.core.custom_exceptions import LibraryNotFoundException
 from rafcon.core.constants import DEFAULT_SCRIPT_PATH
 from rafcon.core.config import global_config
 from rafcon.core.state_machine import StateMachine
+from rafcon.core.state_elements.logical_port import Outcome
 
 logger = log.get_logger(__name__)
 
@@ -412,7 +413,8 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
                      "Skipping library and continuing loading the state machine".format(e))
         state_info = storage_utils.load_objects_from_json(path_core_data, as_dict=True)
         state_id = state_info["state_id"]
-        dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id)
+        outcomes = {outcome['outcome_id']: Outcome(outcome['outcome_id'], outcome['name']) for outcome in state_info["outcomes"].values()}
+        dummy_state = ExecutionState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id, outcomes=outcomes)
         # set parent of dummy state
         if isinstance(parent, ContainerState):
             parent.add_state(dummy_state, storage_load=True)
@@ -467,7 +469,6 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         if safe_init:
             # this will trigger all validity checks the state machine
             state.transitions = transitions
-            state.data_flows = data_flows
         else:
             state._transitions = transitions
             state._data_flows = data_flows
