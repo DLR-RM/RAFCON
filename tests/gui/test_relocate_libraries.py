@@ -27,7 +27,7 @@ def test_relocate_library(caplog):
         assert not os.path.exists(NEW_LIBRARY_OS_PATH)
 
         state_machine = storage.load_state_machine_from_path(STATE_MACHINE_OS_PATH)
-        library = state_machine.root_state.states.values()[0]
+        library = list(state_machine.root_state.states.values())[0]
 
         assert library.library_path == LIBRARY_PATH
         assert library.library_name == LIBRARY_NAME
@@ -38,7 +38,7 @@ def test_relocate_library(caplog):
         assert os.path.exists(NEW_LIBRARY_OS_PATH)
 
         state_machine = storage.load_state_machine_from_path(STATE_MACHINE_OS_PATH)
-        library = state_machine.root_state.states.values()[0]
+        library = list(state_machine.root_state.states.values())[0]
 
         assert library.library_path == NEW_LIBRARY_PATH
         assert library.library_name == LIBRARY_NAME
@@ -49,7 +49,7 @@ def test_relocate_library(caplog):
         assert not os.path.exists(NEW_LIBRARY_OS_PATH)
 
         state_machine = storage.load_state_machine_from_path(STATE_MACHINE_OS_PATH)
-        library = state_machine.root_state.states.values()[0]
+        library = list(state_machine.root_state.states.values())[0]
 
         assert library.library_path == LIBRARY_PATH
         assert library.library_name == LIBRARY_NAME
