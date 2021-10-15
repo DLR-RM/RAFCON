@@ -42,10 +42,10 @@ class HierarchyState(ContainerState):
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None, states=None, transitions=None, data_flows=None, start_state_id=None,
-                 scoped_variables=None, safe_init=True):
+                 scoped_variables=None, missing_library_meta_data=None, safe_init=True):
 
         ContainerState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, states,
-                                transitions, data_flows, start_state_id, scoped_variables, safe_init=safe_init)
+                                transitions, data_flows, start_state_id, scoped_variables, missing_library_meta_data, safe_init=safe_init)
         self.handling_execution_mode = False
 
         self.child_state = None

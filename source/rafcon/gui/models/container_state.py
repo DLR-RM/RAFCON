@@ -59,7 +59,9 @@ class ContainerStateModel(StateModel):
 
         self.update_child_is_start()
 
-        if load_meta_data:
+        if container_state.missing_library_meta_data:
+            self.meta = container_state.missing_library_meta_data
+        elif load_meta_data:
             self.load_meta_data()
 
         # this class is an observer of its own properties:
