@@ -254,6 +254,19 @@ def find_library_dependencies(library_os_path, library_path=None, library_name=N
     return library_dependencies
 
 
+def save_library_dependencies(library_dependencies):
+    """ Save all library dependencies and their meta data to a path
+
+    :param str library_dependencies: the library dependencies
+    """
+
+    affected_libraries = []
+    for library_dependency in library_dependencies:
+        affected_libraries.append((library_dependency.file_system_path, library_dependency))
+        save_library(library_dependency, library_dependency.file_system_path)
+    return affected_libraries
+
+
 def save_library(library, path):
     """ Save a library and its meta data to a path
 
@@ -309,9 +322,7 @@ def rename_library_root(library_root_name, new_library_root_name, logger=None):
     save_open_libraries()
     affected_libraries = []
     library_dependencies = find_library_root_dependencies(library_root_name, new_library_root_name)
-    for library_dependency in library_dependencies:
-        affected_libraries.append((library_dependency.file_system_path, library_dependency))
-        save_library(library_dependency, library_dependency.file_system_path)
+    affected_libraries.extend(save_library_dependencies(library_dependencies))
     library_paths[new_library_root_name] = library_paths[library_root_name]
     del library_paths[library_root_name]
     global_config.save_configuration()
@@ -360,9 +371,7 @@ def rename_library(library_os_path, new_library_os_path, library_path, library_n
                                                      library_path=library_path,
                                                      library_name=library_name,
                                                      new_library_name=new_library_name)
-    for library_dependency in library_dependencies:
-        affected_libraries.append((library_dependency.file_system_path, library_dependency))
-        save_library(library_dependency, library_dependency.file_system_path)
+    affected_libraries.extend(save_library_dependencies(library_dependencies))
     shutil.rmtree(library_os_path)
     refresh_after_relocate_and_rename(affected_libraries)
 
@@ -391,9 +400,7 @@ def relocate_library_root(library_root_name, new_directory, logger=None):
             new_library_root_name_number += 1
         new_library_root_name += str(new_library_root_name_number)
     library_dependencies = find_library_root_dependencies(library_root_name, new_library_root_name)
-    for library_dependency in library_dependencies:
-        affected_libraries.append((library_dependency.file_system_path, library_dependency))
-        save_library(library_dependency, library_dependency.file_system_path)
+    affected_libraries.extend(save_library_dependencies(library_dependencies))
     for content in os.listdir(library_root_path):
         shutil.move(os.path.join(library_root_path, content), os.path.join(new_directory, content))
     library_paths = global_config.get_config_value('LIBRARY_PATHS')
@@ -438,9 +445,7 @@ def relocate_libraries(libraries_os_path, libraries_name, new_directory, logger=
             new_library_path = os.path.join(library_root_name, library_path_without_root_name)
             break
     library_dependencies = find_libraries_dependencies(library_path, new_library_path)
-    for library_dependency in library_dependencies:
-        affected_libraries.append((library_dependency.file_system_path, library_dependency))
-        save_library(library_dependency, library_dependency.file_system_path)
+    affected_libraries.extend(save_library_dependencies(library_dependencies))
     shutil.move(libraries_os_path, os.path.join(new_directory, libraries_name))
     if new_root_required:
         library_paths = global_config.get_config_value('LIBRARY_PATHS')
@@ -481,9 +486,7 @@ def relocate_library(library_os_path, library_path, library_name, new_directory,
                                                      library_path=library_path,
                                                      library_name=library_name,
                                                      new_library_path=new_library_path)
-    for library_dependency in library_dependencies:
-        affected_libraries.append((library_dependency.file_system_path, library_dependency))
-        save_library(library_dependency, library_dependency.file_system_path)
+    affected_libraries.extend(save_library_dependencies(library_dependencies))
     shutil.move(library_os_path, os.path.join(new_directory, library_name))
     if new_root_required:
         library_paths = global_config.get_config_value('LIBRARY_PATHS')
