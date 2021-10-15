@@ -34,6 +34,7 @@ from rafcon.utils.filesystem import read_file, write_file
 from rafcon.utils import storage_utils
 from rafcon.utils import log
 from rafcon.utils.timer import measure_time
+from rafcon.utils.vividict import Vividict
 
 from rafcon.core.custom_exceptions import LibraryNotFoundException
 from rafcon.core.constants import DEFAULT_SCRIPT_PATH
@@ -396,10 +397,6 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
 
     logger.debug("Load state recursively: {0}".format(str(state_path)))
 
-    # TODO: Should be removed with next minor release
-    if not os.path.exists(path_core_data):
-        path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA_OLD)
-
     try:
         state_info = load_data_file(path_core_data)
     except ValueError as e:
@@ -411,9 +408,10 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(e))
         state_info = storage_utils.load_objects_from_json(path_core_data, as_dict=True)
+        missing_library_meta_data = Vividict(storage_utils.load_objects_from_json(os.path.join(state_path, FILE_NAME_META_DATA)))
         state_id = state_info["state_id"]
         outcomes = {outcome['outcome_id']: Outcome(outcome['outcome_id'], outcome['name']) for outcome in state_info["outcomes"].values()}
-        dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id, outcomes=outcomes)
+        dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id, outcomes=outcomes, missing_library_meta_data=missing_library_meta_data)
         library_name = state_info['library_name']
         path_parts = os.path.join(state_info['library_path'], library_name).split(os.sep)
         dummy_state.description = 'The Missing Library Path: %s\nThe Missing Library Name: %s\n\n' % (state_info['library_path'], library_name)
