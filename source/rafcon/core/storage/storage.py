@@ -25,7 +25,6 @@ import math
 import shutil
 import glob
 import copy
-import yaml
 import warnings
 from distutils.version import StrictVersion
 
@@ -408,13 +407,21 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         return
     except LibraryNotFoundException as e:
         if global_config.get_config_value("RAISE_ERROR_ON_MISSING_LIBRARY_STATES", False):
-            raise e        
+            raise e
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(e))
         state_info = storage_utils.load_objects_from_json(path_core_data, as_dict=True)
         state_id = state_info["state_id"]
         outcomes = {outcome['outcome_id']: Outcome(outcome['outcome_id'], outcome['name']) for outcome in state_info["outcomes"].values()}
-        dummy_state = ExecutionState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id, outcomes=outcomes)
+        dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id, outcomes=outcomes)
+        library_name = state_info['library_name']
+        path_parts = os.path.join(state_info['library_path'], library_name).split(os.sep)
+        dummy_state.description = 'The Missing Library Path: %s\nThe Missing Library Name: %s\n\n' % (state_info['library_path'], library_name)
+        from rafcon.core.singleton import library_manager
+        if path_parts[0] in library_manager.library_root_paths:
+            dummy_state.description += 'The Missing Library OS Path: %s' % os.path.join(library_manager.library_root_paths[path_parts[0]], *path_parts[1:])
+        else:
+            dummy_state.description += 'The missing library was located in the missing library root "%s"' % path_parts[0]
         # set parent of dummy state
         if isinstance(parent, ContainerState):
             parent.add_state(dummy_state, storage_load=True)
