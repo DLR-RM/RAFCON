@@ -408,7 +408,10 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(e))
         state_info = storage_utils.load_objects_from_json(path_core_data, as_dict=True)
-        missing_library_meta_data = Vividict(storage_utils.load_objects_from_json(os.path.join(state_path, FILE_NAME_META_DATA)))
+        path_meta_data = os.path.join(state_path, FILE_NAME_META_DATA)
+        missing_library_meta_data = None
+        if os.path.exists(path_meta_data):
+            missing_library_meta_data = Vividict(storage_utils.load_objects_from_json(path_meta_data))
         state_id = state_info["state_id"]
         outcomes = {outcome['outcome_id']: Outcome(outcome['outcome_id'], outcome['name']) for outcome in state_info["outcomes"].values()}
         dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id, outcomes=outcomes, missing_library_meta_data=missing_library_meta_data)
