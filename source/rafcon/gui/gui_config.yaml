@@ -143,3 +143,4 @@ SHORTCUTS:
     - <Control>Up
     - <Control><Shift>Up
     fullscreen: F11
+    search: <Control>F
