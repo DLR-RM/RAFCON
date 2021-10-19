@@ -63,6 +63,16 @@ class LibraryManager(Observable):
         self._loaded_libraries = {}
         self._libraries_instances = {}
 
+        self._show_dialog = True
+
+    @property
+    def show_dialog(self):
+        return self._show_dialog
+
+    @show_dialog.setter
+    def show_dialog(self, value):
+        self._show_dialog = value
+
     def prepare_destruction(self):
         self.clean_loaded_libraries()
 
@@ -262,7 +272,7 @@ class LibraryManager(Observable):
 
             regularly_found = False
             new_library_os_path = None
-            if allow_user_interaction:
+            if allow_user_interaction and self.show_dialog:
                 notice = "Cannot find library '{0}' in library_path '{1}' in any of the library root paths. " \
                          "Please check your library root paths configuration in config.yaml " \
                          "LIBRARY_PATHS and environment variable RAFCON_LIBRARY_PATH. " \

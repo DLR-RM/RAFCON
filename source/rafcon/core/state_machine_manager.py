@@ -125,6 +125,19 @@ class StateMachineManager(Observable):
         removed_state_machine.destroy_execution_histories()
         return removed_state_machine
 
+    def remove_state_machine_by_path(self, state_machine_path):
+        """ Remove an open state machine by path
+
+        :param str state_machine_path: the state machine path
+        """
+
+        state_machine_ids = []
+        for state_machine_id, state_machine in self._state_machines.items():
+            if state_machine.file_system_path == state_machine_path:
+                state_machine_ids.append(state_machine_id)
+        for state_machine_id in state_machine_ids:
+            self.remove_state_machine(state_machine_id)
+
     def get_active_state_machine(self):
         """Return a reference to the active state-machine
         """
