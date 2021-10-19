@@ -42,6 +42,7 @@ from rafcon.core.constants import DEFAULT_SCRIPT_PATH
 from rafcon.core.config import global_config
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.state_elements.logical_port import Outcome
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 
 logger = log.get_logger(__name__)
 
@@ -352,6 +353,40 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     dirty_states = []
     state_machine.root_state = load_state_recursively(parent=state_machine, state_path=root_state_path,
                                                       dirty_states=dirty_states)
+    queue = [state_machine.root_state]
+    while len(queue) > 0:
+        state = queue.pop(0)
+        if hasattr(state, 'is_dummy') and state.is_dummy:
+            same_level_states = [state.parent]
+            for same_level_state in state.parent.states.values():
+                if same_level_state.state_id != state.state_id:
+                    same_level_states.append(same_level_state)
+            for same_level_state in same_level_states:
+                if hasattr(same_level_state, 'data_flows'):
+                    for data_flow in same_level_state.data_flows.values():
+                        data_type = int
+                        if data_flow.from_state == state.state_id and data_flow.from_key not in state.output_data_ports:
+                            if data_flow.to_key in same_level_state.input_data_ports:
+                                data_type = same_level_state.input_data_ports[data_flow.to_key].data_type
+                            elif data_flow.to_key in same_level_state.output_data_ports:
+                                data_type = same_level_state.output_data_ports[data_flow.to_key].data_type
+                            state.output_data_ports[data_flow.from_key] = OutputDataPort('output_' + str(len(state.output_data_ports)),
+                                                                                         data_type,
+                                                                                         None,
+                                                                                         data_flow.from_key,
+                                                                                         state)
+                        elif data_flow.to_state == state.state_id and data_flow.to_key not in state.input_data_ports:
+                            if data_flow.from_key in same_level_state.input_data_ports:
+                                data_type = same_level_state.input_data_ports[data_flow.from_key].data_type
+                            elif data_flow.from_key in same_level_state.output_data_ports:
+                                data_type = same_level_state.output_data_ports[data_flow.from_key].data_type
+                            state.input_data_ports[data_flow.to_key] = InputDataPort('input_' + str(len(state.input_data_ports)),
+                                                                                     data_type,
+                                                                                     None,
+                                                                                     data_flow.to_key,
+                                                                                     state)
+        elif hasattr(state, 'states'):
+            queue.extend(state.states.values())
     if state_machine.root_state is None:
         return  # a corresponding exception has been handled with a proper error log in load_state_recursively
     if len(dirty_states) > 0:
@@ -416,7 +451,11 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
             missing_library_meta_data = Vividict(storage_utils.load_objects_from_json(path_meta_data))
         state_id = state_info["state_id"]
         outcomes = {outcome['outcome_id']: Outcome(outcome['outcome_id'], outcome['name']) for outcome in state_info["outcomes"].values()}
-        dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id, outcomes=outcomes, missing_library_meta_data=missing_library_meta_data)
+        dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME,
+                                     state_id=state_id,
+                                     outcomes=outcomes,
+                                     is_dummy=True,
+                                     missing_library_meta_data=missing_library_meta_data)
         library_name = state_info['library_name']
         path_parts = os.path.join(state_info['library_path'], library_name).split(os.sep)
         dummy_state.description = 'The Missing Library Path: %s\nThe Missing Library Name: %s\n\n' % (state_info['library_path'], library_name)
