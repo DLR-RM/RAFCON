@@ -144,3 +144,5 @@ SHORTCUTS:
     - <Control><Shift>Up
     fullscreen: F11
     search: <Control>F
+
+SHOW_DIALOGS_DURING_RENAMING: false
