@@ -594,6 +594,7 @@ class MenuBarController(ExtendedController):
     def on_search_activate(self, widget, data=None, cursor_position=None):
         show_search_bar = self.main_window_view["show_search_bar"]
         show_search_bar.set_active(not show_search_bar.get_active())
+        return True
 
     def on_grid_toggled(self, widget, data=None):
         pass
