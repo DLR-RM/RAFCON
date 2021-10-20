@@ -22,9 +22,9 @@ import queue
 from gtkmvc3.observable import Observable
 
 import rafcon.core.singleton as singleton
+from rafcon.core.config import global_config
 from rafcon.core.states.container_state import ContainerState
-from rafcon.core.execution.execution_history import CallType
-from rafcon.core.execution.execution_history import CallItem, ReturnItem, ConcurrencyItem
+from rafcon.core.execution.execution_history_items import CallItem, ReturnItem, ConcurrencyItem, CallType
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.state_elements.logical_port import Outcome
 
@@ -40,6 +40,7 @@ class ConcurrencyState(ContainerState):
                  scoped_variables=None, safe_init=True):
         ContainerState.__init__(self, name, state_id, input_keys, output_keys, income, outcomes, states, transitions,
                                 data_flows, start_state_id, scoped_variables, safe_init=safe_init)
+        self.concurrency_history_item = None
 
     def run(self, *args, **kwargs):
         """ The abstract run method that has to be implemented by all concurrency states.
@@ -73,11 +74,11 @@ class ConcurrencyState(ContainerState):
             assert isinstance(concurrency_history_item, ConcurrencyItem)
 
         else:  # forward_execution
-            if self.execution_history is not None:
-                self.execution_history.push_call_history_item(self, CallType.CONTAINER, self, self.input_data)
-                concurrency_history_item = self.execution_history.push_concurrency_history_item(self, len(self.states))
-            else:
-                return None
+            self.execution_history.push_call_history_item(self, CallType.CONTAINER, self, self.input_data)
+            concurrency_history_item = self.execution_history.push_concurrency_history_item(self, len(self.states))
+            # Save a reference to the concurrency_history_item here in order to be able to destruct it
+            # after the concurrency_state execution has finished
+            self.concurrency_history_item = concurrency_history_item
         return concurrency_history_item
 
     def start_child_states(self, concurrency_history_item, do_not_start_state=None):
@@ -173,13 +174,15 @@ class ConcurrencyState(ContainerState):
         final_outcome = outcome
         self.write_output_data()
         self.check_output_data_type()
-        if self.execution_history is not None:
-            self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
+        self.execution_history.push_return_history_item(self, CallType.CONTAINER, self, self.output_data)
         self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
 
         singleton.state_machine_execution_engine._modify_run_to_states(self)
 
         if self.preempted:
             final_outcome = Outcome(-2, "preempted")
+        if not global_config.get_config_value("EXECUTION_HISTORY_ENABLE", False):
+            self.concurrency_history_item.destroy()
+        self.concurrency_history_item = None
         return self.finalize(final_outcome)
 
