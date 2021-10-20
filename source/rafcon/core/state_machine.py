@@ -219,9 +219,6 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     @Observable.observed
     def _add_new_execution_history(self):
-        if not global_config.get_config_value("EXECUTION_HISTORY_ENABLE", True):
-            logger.debug("Execution history logging has been disabled")
-            return None
         new_execution_history = ExecutionHistoryFactory.get_execution_history(root_state_name=self.root_state.name)
         self._execution_histories.append(new_execution_history)
         return new_execution_history

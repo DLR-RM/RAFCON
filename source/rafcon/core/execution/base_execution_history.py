@@ -16,6 +16,8 @@ class BaseExecutionHistory(object):
         self.initial_prev = initial_prev
         # saves the last history item in this variable in order to be able to get the pervious item id
         self.last_history_item = None
+        self.destroyed = False
+        logger.debug("BaseExecutionHistory has been created")
 
     def destroy(self):
         self.initial_prev = None
@@ -25,6 +27,10 @@ class BaseExecutionHistory(object):
     def shutdown(self):
         # we don't want to keep anyting of the last run in memory, thus we can simply destroy the execution history
         self.destroy()
+
+    # For now implement a "len" functions, as the GUI expects the history to have a len function
+    def __len__(self):
+        return 0
 
     def get_last_history_item(self):
         """Returns the history item that was added last
