@@ -43,6 +43,7 @@ class InMemoryExecutionHistory(BaseExecutionHistory, Observable, Iterable, Sized
         Iterable.__init__(self)
         Sized.__init__(self)
         self._history_items = []
+        logger.debug("InMemoryExecutionHistory has been created")
 
     def destroy(self):
         logger.verbose("Destroy execution history!")
