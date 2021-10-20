@@ -40,6 +40,7 @@ class BaseExecutionHistory(object):
         """
         return self.last_history_item
 
+    # TODO: delete the function from INEH? as it is redundant?
     def _link_item(self, current_item):
         last_history_item = self.get_last_history_item()
         if last_history_item is None:
@@ -47,8 +48,7 @@ class BaseExecutionHistory(object):
         if last_history_item is not None:
             current_item.prev = last_history_item
             last_history_item.next = current_item
-            # TODO: delete the function from INEH?
-            self.last_history_item = current_item
+        self.last_history_item = current_item
 
     def feed_consumers(self, execution_history_item):
         self.consumer_manager.add_history_item_to_queue(execution_history_item)
@@ -65,19 +65,21 @@ class BaseExecutionHistory(object):
         return history_item
 
     def push_return_history_item(self, state, call_type, state_for_scoped_data, output_data=None,
-                                 feed_item_to_consumers=True):
+                                 link_and_feed_item_to_consumers=True):
         from rafcon.core.states.library_state import LibraryState  # delayed imported on purpose
         if isinstance(state_for_scoped_data, LibraryState):
             state_for_scoped_data = state_for_scoped_data.state_copy
         history_item = ReturnItem(state, call_type, state_for_scoped_data, output_data,
                                   state.run_id)
-        if feed_item_to_consumers:
+        if link_and_feed_item_to_consumers:
+            self._link_item(history_item)
             self.feed_consumers(history_item)
         return history_item
 
-    def push_concurrency_history_item(self, state, number_concurrent_threads, feed_item_to_consumers=True):
+    def push_concurrency_history_item(self, state, number_concurrent_threads, link_and_feed_item_to_consumers=True):
         history_item = ConcurrencyItem(state, number_concurrent_threads, state.run_id, self.consumer_manager)
-        if feed_item_to_consumers:
+        if link_and_feed_item_to_consumers:
+            self._link_item(history_item)
             self.feed_consumers(history_item)
         return history_item
 

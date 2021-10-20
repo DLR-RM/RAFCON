@@ -131,7 +131,7 @@ class InMemoryExecutionHistory(BaseExecutionHistory, Observable, Iterable, Sized
             backward stepping)
         """
         return_item = super(InMemoryExecutionHistory, self).push_return_history_item(
-            state, call_type, state_for_scoped_data, output_data, feed_item_to_consumers=False)
+            state, call_type, state_for_scoped_data, output_data, link_and_feed_item_to_consumers=False)
         self._link_history_item(return_item)
         super(InMemoryExecutionHistory, self).feed_consumers(return_item)
         return self._push_item(return_item)
@@ -148,7 +148,7 @@ class InMemoryExecutionHistory(BaseExecutionHistory, Observable, Iterable, Sized
         :param number_concurrent_threads: the number of states that are launched
         """
         return_item = super(InMemoryExecutionHistory, self).push_concurrency_history_item(
-            state, number_concurrent_threads, feed_item_to_consumers=False)
+            state, number_concurrent_threads, link_and_feed_item_to_consumers=False)
         self._link_history_item(return_item)
         super(InMemoryExecutionHistory, self).feed_consumers(return_item)
         return self._push_item(return_item)
