@@ -1,4 +1,5 @@
 import threading
+
 from queue import Queue
 
 from rafcon.core.config import global_config
@@ -16,6 +17,7 @@ class ExecutionHistoryConsumerManager(object):
         self.consumers = dict()
         # Queue with infinite space
         self.execution_history_item_queue = Queue()
+        self.condition = threading.Condition()
         self.interrupt = False
         self._file_system_consumer_exists = False
         if global_config.get_config_value("EXECUTION_LOG_ENABLE", False):
@@ -41,19 +43,31 @@ class ExecutionHistoryConsumerManager(object):
             self.unregister_consumer(consumer)
 
     def stop_worker_thread(self):
+        self.condition.acquire()
         self.interrupt = True
+        self.condition.notify()
+        self.condition.release()
+        self.worker_thread.join()
 
     def register_consumer(self, consumer_name, consumer):
         self.consumers[consumer_name] = consumer
         consumer.register()
 
     def add_history_item_to_queue(self, execution_history_item):
+        self.condition.acquire()
         self.execution_history_item_queue.put(execution_history_item)
+        self.condition.notify()
+        self.condition.release()
 
     def _feed_consumers(self):
         while not self.interrupt:
-            next_execution_history_event = self.execution_history_item_queue.get(block=True)
-            self._notifyConsumers(next_execution_history_event)
+            self.condition.acquire()
+            while self.execution_history_item_queue.empty() or not self.interrupt:
+                self.condition.wait()
+            if not self.execution_history_item_queue.empty():
+                next_execution_history_event = self.execution_history_item_queue.get()
+                self._notifyConsumers(next_execution_history_event)
+            self.condition.release()
 
     def _notifyConsumers(self, execution_history_event):
         for client in self.consumers.values():
