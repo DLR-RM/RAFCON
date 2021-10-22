@@ -58,10 +58,9 @@ class ExecutionHistoryConsumerManager(object):
             self.condition.notify()
 
     def _feed_consumers(self):
-        predicate = lambda: not self.execution_history_item_queue.empty() or self.interrupt
         while not self.interrupt:
             with self.condition:
-                self.condition.wait_for(predicate)
+                self.condition.wait_for(lambda: not self.execution_history_item_queue.empty() or self.interrupt)
                 while not self.execution_history_item_queue.empty():
                     next_execution_history_event = self.execution_history_item_queue.get(block=False)
                     self._notifyConsumers(next_execution_history_event)
