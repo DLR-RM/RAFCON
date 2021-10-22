@@ -43,10 +43,9 @@ class ExecutionHistoryConsumerManager(object):
             self.unregister_consumer(consumer)
 
     def stop_worker_thread(self):
-        self.condition.acquire()
         self.interrupt = True
-        self.condition.notify()
-        self.condition.release()
+        with self.condition:
+            self.condition.notify()
         self.worker_thread.join()
 
     def register_consumer(self, consumer_name, consumer):
@@ -54,20 +53,17 @@ class ExecutionHistoryConsumerManager(object):
         consumer.register()
 
     def add_history_item_to_queue(self, execution_history_item):
-        self.condition.acquire()
         self.execution_history_item_queue.put(execution_history_item)
-        self.condition.notify()
-        self.condition.release()
+        with self.condition:
+            self.condition.notify()
 
     def _feed_consumers(self):
         while not self.interrupt:
-            self.condition.acquire()
-            while self.execution_history_item_queue.empty() or not self.interrupt:
-                self.condition.wait()
-            if not self.execution_history_item_queue.empty():
-                next_execution_history_event = self.execution_history_item_queue.get()
-                self._notifyConsumers(next_execution_history_event)
-            self.condition.release()
+            with self.condition:
+                self.condition.wait_for(lambda: not self.execution_history_item_queue.empty() or self.interrupt)
+                while not self.execution_history_item_queue.empty():
+                    next_execution_history_event = self.execution_history_item_queue.get(block=False)
+                    self._notifyConsumers(next_execution_history_event)
 
     def _notifyConsumers(self, execution_history_event):
         for client in self.consumers.values():
