@@ -15,7 +15,7 @@ class ExecutionHistoryFactory(object):
 
     @staticmethod
     def get_execution_history(initial_prev=None, root_state_name="", consumer_manager=None):
-        if global_config.get_config_value("EXECUTION_HISTORY_ENABLE", True):
+        if global_config.get_config_value("IN_MEMORY_EXECUTION_HISTORY_ENABLE", True):
             return InMemoryExecutionHistory(initial_prev=initial_prev,
                                             root_state_name=root_state_name,
                                             consumer_manager=consumer_manager)

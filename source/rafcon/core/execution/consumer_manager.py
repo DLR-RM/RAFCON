@@ -20,7 +20,7 @@ class ExecutionHistoryConsumerManager(object):
         self.condition = threading.Condition()
         self.interrupt = False
         self._file_system_consumer_exists = False
-        if global_config.get_config_value("EXECUTION_LOG_ENABLE", False):
+        if global_config.get_config_value("FILE_SYSTEM_EXECUTION_HISTORY_ENABLE", False):
             self.register_consumer(FILE_SYSTEM_CONSUMER_NAME, FileSystemConsumer(root_state_name))
             self._file_system_consumer_exists = True
         # Only have one thread here that will call the notify function of each consumer

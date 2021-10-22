@@ -14,8 +14,8 @@ def test_execution_log(caplog):
 
     testing_utils.initialize_environment_core(
         core_config={
-            'EXECUTION_HISTORY_ENABLE': False,
-            'EXECUTION_LOG_ENABLE': False,
+            'IN_MEMORY_EXECUTION_HISTORY_ENABLE': False,
+            'FILE_SYSTEM_EXECUTION_HISTORY_ENABLE': False,
             'EXECUTION_LOG_PATH': testing_utils.get_unique_temp_path()+'/test_execution_log'}
     )
 

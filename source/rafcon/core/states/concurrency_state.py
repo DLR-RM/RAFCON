@@ -181,7 +181,7 @@ class ConcurrencyState(ContainerState):
 
         if self.preempted:
             final_outcome = Outcome(-2, "preempted")
-        if not global_config.get_config_value("EXECUTION_HISTORY_ENABLE", False):
+        if not global_config.get_config_value("IN_MEMORY_EXECUTION_HISTORY_ENABLE", False):
             self.concurrency_history_item.destroy()
         self.concurrency_history_item = None
         return self.finalize(final_outcome)
