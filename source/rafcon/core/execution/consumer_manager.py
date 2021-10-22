@@ -3,7 +3,7 @@ import threading
 from queue import Queue
 
 from rafcon.core.config import global_config
-from rafcon.core.execution.file_system_consumer import FileSystemConsumer
+from rafcon.core.execution.consumers.file_system_consumer import FileSystemConsumer
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
@@ -67,7 +67,8 @@ class ExecutionHistoryConsumerManager(object):
 
     def _notifyConsumers(self, execution_history_event):
         for client in self.consumers.values():
-            client.consume(execution_history_event)
+            client.enqueue(execution_history_event)
 
     def unregister_consumer(self, consumer):
         consumer.unregister()
+        consumer.stop()
