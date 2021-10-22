@@ -146,7 +146,8 @@ class StateMachine(Observable, JSONObject, Hashable):
     def join(self):
         """Wait for root state to finish execution"""
         self._root_state.join()
-        self.execution_histories[-1].shutdown()
+        if len(self.execution_histories) > 0:
+            self.execution_histories[-1].shutdown()
         from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 

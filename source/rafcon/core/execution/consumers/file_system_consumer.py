@@ -6,24 +6,10 @@ from threading import Lock
 from future.utils import native_str
 
 from rafcon.core.config import global_config
+from rafcon.core.execution.consumers.abstract_execution_history_consumer import AbstractExecutionHistoryConsumer
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.utils import log
 logger = log.get_logger(__name__)
-
-
-class AbstractExecutionHistoryConsumer(object):
-
-    def __init__(self):
-        pass
-
-    def register(self):
-        raise NotImplementedError("The register function has to be implemented")
-
-    def consume(self, execution_history_item):
-        raise NotImplementedError("The consume function has to be implemented")
-
-    def unregister(self):
-        raise NotImplementedError("The unregister function has to be implemented")
 
 
 class FileSystemConsumer(AbstractExecutionHistoryConsumer):
@@ -33,19 +19,9 @@ class FileSystemConsumer(AbstractExecutionHistoryConsumer):
 
     """
     def __init__(self, root_state_name):
+        super(FileSystemConsumer, self).__init__()
         self.filename = self._get_storage_path_on_file_system(root_state_name)
         self.store_lock = Lock()
-
-    def _get_storage_path_on_file_system(self, root_state_name):
-        base_dir = global_config.get_config_value("EXECUTION_LOG_PATH", "%RAFCON_TEMP_PATH_BASE/execution_logs")
-        if base_dir.startswith('%RAFCON_TEMP_PATH_BASE'):
-            base_dir = base_dir.replace('%RAFCON_TEMP_PATH_BASE', RAFCON_TEMP_PATH_BASE)
-        if not os.path.exists(base_dir):
-            os.makedirs(base_dir)
-        shelve_name = os.path.join(base_dir, '%s_rafcon_execution_log_%s.shelve' %
-                                   (time.strftime('%Y-%m-%d-%H:%M:%S', time.localtime()),
-                                    root_state_name.replace(' ', '-')))
-        return shelve_name
 
     def register(self):
         try:
@@ -65,6 +41,18 @@ class FileSystemConsumer(AbstractExecutionHistoryConsumer):
                                                                        False)
         self._flush()
         self._close(set_read_and_writable_for_all)
+
+    @staticmethod
+    def _get_storage_path_on_file_system(root_state_name):
+        base_dir = global_config.get_config_value("EXECUTION_LOG_PATH", "%RAFCON_TEMP_PATH_BASE/execution_logs")
+        if base_dir.startswith('%RAFCON_TEMP_PATH_BASE'):
+            base_dir = base_dir.replace('%RAFCON_TEMP_PATH_BASE', RAFCON_TEMP_PATH_BASE)
+        if not os.path.exists(base_dir):
+            os.makedirs(base_dir)
+        shelve_name = os.path.join(base_dir, '%s_rafcon_execution_log_%s.shelve' %
+                                   (time.strftime('%Y-%m-%d-%H:%M:%S', time.localtime()),
+                                    root_state_name.replace(' ', '-')))
+        return shelve_name
 
     def _store_item(self, key, value):
         with self.store_lock:
