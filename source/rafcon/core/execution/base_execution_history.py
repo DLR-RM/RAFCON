@@ -86,6 +86,7 @@ class BaseExecutionHistory(object):
     def push_state_machine_start_history_item(self, state_machine, run_id, feed_item_to_consumers=True):
         history_item = StateMachineStartItem(state_machine, run_id)
         if feed_item_to_consumers:
+            self._link_item(history_item)
             self.feed_consumers(history_item)
         return history_item
 

@@ -53,8 +53,8 @@ class ExecutionHistoryConsumerManager(object):
         consumer.register()
 
     def add_history_item_to_queue(self, execution_history_item):
-        self.execution_history_item_queue.put(execution_history_item)
         with self.condition:
+            self.execution_history_item_queue.put(execution_history_item)
             self.condition.notify()
 
     def _feed_consumers(self):
