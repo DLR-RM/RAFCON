@@ -14,9 +14,6 @@ logger = log.get_logger(__name__)
 
 class FileSystemConsumer(AbstractExecutionHistoryConsumer):
     """A class that consumes an execution history event and writes it onto the file system.
-
-        Note: Consumers should not have a thread. This is handled in the ConsumerManager class.
-
     """
     def __init__(self, root_state_name):
         super(FileSystemConsumer, self).__init__()
