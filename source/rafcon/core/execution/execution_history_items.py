@@ -1,4 +1,5 @@
 import copy
+import json
 import os
 import pickle
 import time
@@ -75,7 +76,7 @@ class HistoryItem(object):
     def __str__(self):
         return "HistoryItem with reference state name %s (time: %s)" % (self.state_reference.name, self.timestamp)
 
-    def to_dict(self):
+    def to_dict(self, pickled=True):
         record = dict()
 
         # here always the correct path is desired
@@ -112,7 +113,7 @@ class HistoryItem(object):
         semantic_data_dict = {}
         for k, v in target_state.semantic_data.items():
             try:
-                semantic_data_dict[k] = pickle.dumps(v)
+                semantic_data_dict[k] = pickle.dumps(v) if pickled else json.dumps(v)
             except Exception as e:
                 semantic_data_dict['!' + k] = (str(e), str(v))
         record['semantic_data'] = semantic_data_dict
@@ -140,8 +141,8 @@ class StateMachineStartItem(HistoryItem):
     def __str__(self):
         return "StateMachineStartItem with name %s (time: %s)" % (self.sm_dict['root_state_storage_id'], self.timestamp)
 
-    def to_dict(self):
-        record = HistoryItem.to_dict(self)
+    def to_dict(self, pickled=True):
+        record = HistoryItem.to_dict(self, pickled=pickled)
         record.update(self.sm_dict)
         record['call_type'] = 'EXECUTE'
         record['state_name'] = 'StateMachineStartItem'
@@ -174,12 +175,12 @@ class ScopedDataItem(HistoryItem):
         self.scoped_data = {} if state_for_scoped_data is None else copy.deepcopy(state_for_scoped_data._scoped_data)
         self.child_state_input_output_data = copy.deepcopy(child_state_input_output_data)
 
-    def to_dict(self):
-        record = HistoryItem.to_dict(self)
+    def to_dict(self, pickled=True):
+        record = HistoryItem.to_dict(self, pickled=pickled)
         scoped_data_dict = {}
         for k, v in self.scoped_data.items():
             try:
-                scoped_data_dict[v.name] = pickle.dumps(v.value)
+                scoped_data_dict[v.name] = pickle.dumps(v.value) if pickled else json.dumps(v.value)
             except Exception as e:
                 scoped_data_dict['!' + v.name] = (str(e), str(v.value))
         record['scoped_data'] = scoped_data_dict
@@ -187,7 +188,7 @@ class ScopedDataItem(HistoryItem):
         child_state_input_output_dict = {}
         for k, v in self.child_state_input_output_data.items():
             try:
-                child_state_input_output_dict[k] = pickle.dumps(v)
+                child_state_input_output_dict[k] = pickle.dumps(v) if pickled else json.dumps(v)
             except Exception as e:
                 child_state_input_output_dict['!' + k] = (str(e), str(v))
         record['input_output_data'] = child_state_input_output_dict
@@ -208,8 +209,8 @@ class CallItem(ScopedDataItem):
     def __str__(self):
         return "CallItem %s" % (ScopedDataItem.__str__(self))
 
-    def to_dict(self):
-        record = ScopedDataItem.to_dict(self)
+    def to_dict(self, pickled=True):
+        record = ScopedDataItem.to_dict(self, pickled=pickled)
         return record
 
 
@@ -223,8 +224,8 @@ class ReturnItem(ScopedDataItem):
     def __str__(self):
         return "ReturnItem %s" % (ScopedDataItem.__str__(self))
 
-    def to_dict(self):
-        record = ScopedDataItem.to_dict(self)
+    def to_dict(self, pickled=True):
+        record = ScopedDataItem.to_dict(self, pickled=pickled)
         if self.outcome is not None:
             record['outcome_name'] = self.outcome.to_dict()['name']
             record['outcome_id'] = self.outcome.to_dict()['outcome_id']
@@ -251,8 +252,8 @@ class ConcurrencyItem(HistoryItem):
     def __str__(self):
         return "ConcurrencyItem %s" % (HistoryItem.__str__(self))
 
-    def to_dict(self):
-        record = HistoryItem.to_dict(self)
+    def to_dict(self, pickled=True):
+        record = HistoryItem.to_dict(self, pickled=pickled)
         record['call_type'] = 'CONTAINER'
         return record
 

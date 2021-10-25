@@ -5,13 +5,14 @@ from queue import Queue
 from rafcon.core.config import global_config
 from rafcon.core.execution.consumers.file_system_consumer import FileSystemConsumer
 
+from rafcon.utils import plugins
 from rafcon.utils import log
 logger = log.get_logger(__name__)
 
-FILE_SYSTEM_CONSUMER_NAME = "file_system_consumer"
-
 
 class ExecutionHistoryConsumerManager(object):
+
+    FILE_SYSTEM_CONSUMER_NAME = "file_system_consumer"
 
     def __init__(self, root_state_name):
         self.consumers = dict()
@@ -21,8 +22,9 @@ class ExecutionHistoryConsumerManager(object):
         self.interrupt = False
         self._file_system_consumer_exists = False
         if global_config.get_config_value("FILE_SYSTEM_EXECUTION_HISTORY_ENABLE", False):
-            self.register_consumer(FILE_SYSTEM_CONSUMER_NAME, FileSystemConsumer(root_state_name))
+            self.register_consumer(self.FILE_SYSTEM_CONSUMER_NAME, FileSystemConsumer(root_state_name))
             self._file_system_consumer_exists = True
+        plugins.run_hook("register_execution_history_consumer", self)
         # Only have one thread here that will call the notify function of each consumer
         # The advantage it that the consumer authors don't have to care about threading
         # and don't have to care about when an item is popped from the queue
@@ -34,8 +36,8 @@ class ExecutionHistoryConsumerManager(object):
         return self._file_system_consumer_exists
 
     def get_file_system_consumer_file_name(self):
-        if FILE_SYSTEM_CONSUMER_NAME in self.consumers.keys():
-            return self.consumers[FILE_SYSTEM_CONSUMER_NAME].filename
+        if self.FILE_SYSTEM_CONSUMER_NAME in self.consumers.keys():
+            return self.consumers[self.FILE_SYSTEM_CONSUMER_NAME].filename
 
     def stop_consumers(self):
         self.stop_worker_thread()
