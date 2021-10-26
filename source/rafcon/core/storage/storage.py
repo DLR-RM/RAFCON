@@ -353,6 +353,27 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     dirty_states = []
     state_machine.root_state = load_state_recursively(parent=state_machine, state_path=root_state_path,
                                                       dirty_states=dirty_states)
+    reconnect_data_flow(state_machine)
+    if state_machine.root_state is None:
+        return  # a corresponding exception has been handled with a proper error log in load_state_recursively
+    if len(dirty_states) > 0:
+        state_machine.marked_dirty = True
+    else:
+        state_machine.marked_dirty = False
+
+    hierarchy_level = 0
+    number_of_states, hierarchy_level = state_machine.root_state.get_states_statistics(hierarchy_level)
+    logger.debug("Loaded state machine ({1}) has {0} states. (Max hierarchy level {2})".format(
+        number_of_states, base_path, hierarchy_level))
+    logger.debug("Loaded state machine ({1}) has {0} transitions.".format(
+        state_machine.root_state.get_number_of_transitions(), base_path))
+    logger.debug("Loaded state machine ({1}) has {0} data flows.".format(
+        state_machine.root_state.get_number_of_data_flows(), base_path))
+
+    return state_machine
+
+
+def reconnect_data_flow(state_machine):
     queue = [state_machine.root_state]
     while len(queue) > 0:
         state = queue.pop(0)
@@ -387,23 +408,6 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
                                                                                      state)
         elif hasattr(state, 'states'):
             queue.extend(state.states.values())
-    if state_machine.root_state is None:
-        return  # a corresponding exception has been handled with a proper error log in load_state_recursively
-    if len(dirty_states) > 0:
-        state_machine.marked_dirty = True
-    else:
-        state_machine.marked_dirty = False
-
-    hierarchy_level = 0
-    number_of_states, hierarchy_level = state_machine.root_state.get_states_statistics(hierarchy_level)
-    logger.debug("Loaded state machine ({1}) has {0} states. (Max hierarchy level {2})".format(
-        number_of_states, base_path, hierarchy_level))
-    logger.debug("Loaded state machine ({1}) has {0} transitions.".format(
-        state_machine.root_state.get_number_of_transitions(), base_path))
-    logger.debug("Loaded state machine ({1}) has {0} data flows.".format(
-        state_machine.root_state.get_number_of_data_flows(), base_path))
-
-    return state_machine
 
 
 def load_state_from_path(state_path):
@@ -413,6 +417,14 @@ def load_state_from_path(state_path):
     :return: the loaded state
     """
     return load_state_recursively(parent=None, state_path=state_path)
+
+
+def get_core_data_path(state_path):
+    return os.path.join(state_path, FILE_NAME_CORE_DATA)
+
+
+def get_meta_data_path(state_path):
+    return os.path.join(state_path, FILE_NAME_META_DATA)
 
 
 def load_state_recursively(parent, state_path=None, dirty_states=[]):
@@ -430,7 +442,8 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.singleton import library_manager
 
-    path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA)
+    path_core_data = get_core_data_path(state_path)
+    path_meta_data = get_meta_data_path(state_path)
 
     logger.debug("Load state recursively: {0}".format(str(state_path)))
 
@@ -445,7 +458,6 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(e))
         state_info = storage_utils.load_objects_from_json(path_core_data, as_dict=True)
-        path_meta_data = os.path.join(state_path, FILE_NAME_META_DATA)
         missing_library_meta_data = None
         if os.path.exists(path_meta_data):
             missing_library_meta_data = Vividict(storage_utils.load_objects_from_json(path_meta_data))
