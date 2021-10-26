@@ -78,6 +78,10 @@ class ContainerState(State):
         self._transitions_cv = Condition()
         self._child_execution = False
         self._start_state_modified = False
+        """
+        Dummy state machine is created only in one place and it is a ContrainerState.
+        So, it is always a ContrainerState by design.
+        """
         self._is_dummy = is_dummy
         """
         In the case of a dummy state machine, we must use the same meta_data as the missing library was using.
