@@ -147,6 +147,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('save_state_as', 'activate', self.on_save_selected_state_as_activate)
         self.connect_button_to_function('undo', 'activate', self.on_undo_activate)
         self.connect_button_to_function('redo', 'activate', self.on_redo_activate)
+        self.connect_button_to_function('search', 'activate', self.on_search_activate)
         self.connect_button_to_function('grid', 'activate', self.on_grid_toggled)
 
         self.connect_button_to_function('data_flow_mode', 'toggled', self.on_data_flow_mode_toggled)
@@ -369,6 +370,8 @@ class MenuBarController(ExtendedController):
 
         self.add_callback_to_shortcut_manager('fullscreen', self.on_toggle_full_screen_mode)
 
+        self.add_callback_to_shortcut_manager('search', self.on_search_activate)
+
     def call_action_callback(self, callback_name, *args, **kwargs):
         """Wrapper for action callbacks
 
@@ -587,6 +590,11 @@ class MenuBarController(ExtendedController):
 
     def on_redo_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action("redo", None, None)
+
+    def on_search_activate(self, widget, data=None, cursor_position=None):
+        show_search_bar = self.main_window_view["show_search_bar"]
+        show_search_bar.set_active(not show_search_bar.get_active())
+        return True
 
     def on_grid_toggled(self, widget, data=None):
         pass

@@ -232,12 +232,12 @@ class MainWindowController(ExtendedController):
         global_runtime_config.store_widget_properties(widget, name)
 
     def update_search_bar_visibility(self, widget, event):
-        toggle = widget.get_active()
-        if toggle:
-            self.view['state_machine_search'].grab_focus()
+        state_machine_search = self.view['state_machine_search']
+        state_machine_search.set_visible(widget.get_active())
+        if widget.get_active():
+            state_machine_search.grab_focus()
         else:
-            self.view['state_machine_search'].set_text('')
-        self.view['state_machine_search'].set_visible(toggle)
+            state_machine_search.set_text('')
 
     def register_view(self, view):
         super(MainWindowController, self).register_view(view)
