@@ -35,11 +35,14 @@ from rafcon.utils.filesystem import read_file, write_file
 from rafcon.utils import storage_utils
 from rafcon.utils import log
 from rafcon.utils.timer import measure_time
+from rafcon.utils.vividict import Vividict
 
 from rafcon.core.custom_exceptions import LibraryNotFoundException
 from rafcon.core.constants import DEFAULT_SCRIPT_PATH
 from rafcon.core.config import global_config
 from rafcon.core.state_machine import StateMachine
+from rafcon.core.state_elements.logical_port import Outcome
+from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 
 logger = log.get_logger(__name__)
 
@@ -350,6 +353,7 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     dirty_states = []
     state_machine.root_state = load_state_recursively(parent=state_machine, state_path=root_state_path,
                                                       dirty_states=dirty_states)
+    reconnect_data_flow(state_machine)
     if state_machine.root_state is None:
         return  # a corresponding exception has been handled with a proper error log in load_state_recursively
     if len(dirty_states) > 0:
@@ -369,6 +373,43 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     return state_machine
 
 
+def reconnect_data_flow(state_machine):
+    queue = [state_machine.root_state]
+    while len(queue) > 0:
+        state = queue.pop(0)
+        if hasattr(state, 'is_dummy') and state.is_dummy:
+            same_level_states = [state.parent]
+            for same_level_state in state.parent.states.values():
+                if same_level_state.state_id != state.state_id:
+                    same_level_states.append(same_level_state)
+            for same_level_state in same_level_states:
+                if hasattr(same_level_state, 'data_flows'):
+                    for data_flow in same_level_state.data_flows.values():
+                        data_type = int
+                        if data_flow.from_state == state.state_id and data_flow.from_key not in state.output_data_ports:
+                            if data_flow.to_key in same_level_state.input_data_ports:
+                                data_type = same_level_state.input_data_ports[data_flow.to_key].data_type
+                            elif data_flow.to_key in same_level_state.output_data_ports:
+                                data_type = same_level_state.output_data_ports[data_flow.to_key].data_type
+                            state.output_data_ports[data_flow.from_key] = OutputDataPort('output_' + str(len(state.output_data_ports)),
+                                                                                         data_type,
+                                                                                         None,
+                                                                                         data_flow.from_key,
+                                                                                         state)
+                        elif data_flow.to_state == state.state_id and data_flow.to_key not in state.input_data_ports:
+                            if data_flow.from_key in same_level_state.input_data_ports:
+                                data_type = same_level_state.input_data_ports[data_flow.from_key].data_type
+                            elif data_flow.from_key in same_level_state.output_data_ports:
+                                data_type = same_level_state.output_data_ports[data_flow.from_key].data_type
+                            state.input_data_ports[data_flow.to_key] = InputDataPort('input_' + str(len(state.input_data_ports)),
+                                                                                     data_type,
+                                                                                     None,
+                                                                                     data_flow.to_key,
+                                                                                     state)
+        elif hasattr(state, 'states'):
+            queue.extend(state.states.values())
+
+
 def load_state_from_path(state_path):
     """Loads a state from a given path
 
@@ -376,6 +417,14 @@ def load_state_from_path(state_path):
     :return: the loaded state
     """
     return load_state_recursively(parent=None, state_path=state_path)
+
+
+def get_core_data_path(state_path):
+    return os.path.join(state_path, FILE_NAME_CORE_DATA)
+
+
+def get_meta_data_path(state_path):
+    return os.path.join(state_path, FILE_NAME_META_DATA)
 
 
 def load_state_recursively(parent, state_path=None, dirty_states=[]):
@@ -393,13 +442,10 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.singleton import library_manager
 
-    path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA)
+    path_core_data = get_core_data_path(state_path)
+    path_meta_data = get_meta_data_path(state_path)
 
     logger.debug("Load state recursively: {0}".format(str(state_path)))
-
-    # TODO: Should be removed with next minor release
-    if not os.path.exists(path_core_data):
-        path_core_data = os.path.join(state_path, FILE_NAME_CORE_DATA_OLD)
 
     try:
         state_info = load_data_file(path_core_data)
@@ -412,8 +458,24 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         logger.error("Library could not be loaded: {0}\n"
                      "Skipping library and continuing loading the state machine".format(e))
         state_info = storage_utils.load_objects_from_json(path_core_data, as_dict=True)
+        missing_library_meta_data = None
+        if os.path.exists(path_meta_data):
+            missing_library_meta_data = Vividict(storage_utils.load_objects_from_json(path_meta_data))
         state_id = state_info["state_id"]
-        dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME, state_id=state_id)
+        outcomes = {outcome['outcome_id']: Outcome(outcome['outcome_id'], outcome['name']) for outcome in state_info["outcomes"].values()}
+        dummy_state = HierarchyState(LIBRARY_NOT_FOUND_DUMMY_STATE_NAME,
+                                     state_id=state_id,
+                                     outcomes=outcomes,
+                                     is_dummy=True,
+                                     missing_library_meta_data=missing_library_meta_data)
+        library_name = state_info['library_name']
+        path_parts = os.path.join(state_info['library_path'], library_name).split(os.sep)
+        dummy_state.description = 'The Missing Library Path: %s\nThe Missing Library Name: %s\n\n' % (state_info['library_path'], library_name)
+        from rafcon.core.singleton import library_manager
+        if path_parts[0] in library_manager.library_root_paths:
+            dummy_state.description += 'The Missing Library OS Path: %s' % os.path.join(library_manager.library_root_paths[path_parts[0]], *path_parts[1:])
+        else:
+            dummy_state.description += 'The missing library was located in the missing library root "%s"' % path_parts[0]
         # set parent of dummy state
         if isinstance(parent, ContainerState):
             parent.add_state(dummy_state, storage_load=True)
@@ -463,28 +525,21 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
             child_state = load_state_recursively(state, child_state_path, dirty_states)
             if not child_state:
                 return None
-            if child_state.name is LIBRARY_NOT_FOUND_DUMMY_STATE_NAME:
-                one_of_my_child_states_not_found = True
 
-    if one_of_my_child_states_not_found:
-        # omit adding transitions and data flows in this case
-        pass
-    else:
-        # Now we can add transitions and data flows, as all child states were added
-        if isinstance(state_info, tuple):
-            safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
-            if safe_init:
-                # this will trigger all validity checks the state machine
-                state.transitions = transitions
-                state.data_flows = data_flows
-            else:
-                state._transitions = transitions
-                state._data_flows = data_flows
-            for _, transition in state.transitions.items():
-                transition._parent = ref(state)
+    # Now we can add transitions and data flows, as all child states were added
+    if isinstance(state_info, tuple):
+        safe_init = global_config.get_config_value("LOAD_SM_WITH_CHECKS", True)
+        if safe_init:
+            # this will trigger all validity checks the state machine
+            state.transitions = transitions
+        else:
+            state._transitions = transitions
             state._data_flows = data_flows
-            for _, data_flow in state.data_flows.items():
-                data_flow._parent = ref(state)
+        for _, transition in state.transitions.items():
+            transition._parent = ref(state)
+        state._data_flows = data_flows
+        for _, data_flow in state.data_flows.items():
+            data_flow._parent = ref(state)
 
     state.file_system_path = state_path
 

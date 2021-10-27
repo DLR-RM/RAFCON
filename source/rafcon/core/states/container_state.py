@@ -66,7 +66,7 @@ class ContainerState(State):
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None,
-                 scoped_variables=None, safe_init=True):
+                 scoped_variables=None, missing_library_meta_data=None, is_dummy=False, safe_init=True):
 
         self._states = OrderedDict()
         self._transitions = {}
@@ -78,6 +78,17 @@ class ContainerState(State):
         self._transitions_cv = Condition()
         self._child_execution = False
         self._start_state_modified = False
+        """
+        Dummy state machine is created only in one place and it is a ContrainerState.
+        So, it is always a ContrainerState by design.
+        """
+        self._is_dummy = is_dummy
+        """
+        In the case of a dummy state machine, we must use the same meta_data as the missing library was using.
+        Hence, we must add an additional field for this case as it is not possible to handle it in a
+        container state model when a library does not exist anymore.
+        """
+        self._missing_library_meta_data = missing_library_meta_data
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, safe_init=safe_init)
 
@@ -2438,3 +2449,27 @@ class ContainerState(State):
             return True
         else:
             return False
+
+    @property
+    def is_dummy(self):
+        """Property for the _is_dummy field
+        """
+
+        return self._is_dummy
+
+    @is_dummy.setter
+    @lock_state_machine
+    def is_dummy(self, is_dummy):
+        self._is_dummy = is_dummy
+
+    @property
+    def missing_library_meta_data(self):
+        """Property for the _missing_library_meta_data field
+        """
+
+        return self._missing_library_meta_data
+
+    @missing_library_meta_data.setter
+    @lock_state_machine
+    def missing_library_meta_data(self, missing_library_meta_data):
+        self._missing_library_meta_data = missing_library_meta_data

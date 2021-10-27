@@ -479,23 +479,9 @@ class AbstractStateModel(MetaModel, Hashable):
             self.meta = Vividict({})
             return False
         path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA)
-
-        # TODO: Should be removed with next minor release
-        if not os.path.exists(path_meta_data):
-            logger.debug("Because meta data was not found in {0} use backup option {1}"
-                         "".format(path_meta_data, os.path.join(path, storage.FILE_NAME_META_DATA_OLD)))
-            path_meta_data = os.path.join(path, storage.FILE_NAME_META_DATA_OLD)
-            # TODO use the following logger message to debug meta data load process and to avoid maybe repetitive loads
-            # if not os.path.exists(path_meta_data):
-            #     logger.info("path not found {0}".format(path_meta_data))
-
         try:
-            # print("try to load meta data from {0} for state {1}".format(path_meta_data, self.state))
             tmp_meta = storage.load_data_file(path_meta_data)
         except ValueError as e:
-            # if no element which is newly generated log a warning
-            # if os.path.exists(os.path.dirname(path)):
-            #     logger.debug("Because '{1}' meta data of {0} was not loaded properly.".format(self, e))
             if not path.startswith(constants.RAFCON_TEMP_PATH_STORAGE) and not os.path.exists(os.path.dirname(path)):
                 logger.debug("Because '{1}' meta data of {0} was not loaded properly.".format(self, e))
             tmp_meta = {}
