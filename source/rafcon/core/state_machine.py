@@ -288,8 +288,8 @@ class StateMachine(Observable, JSONObject, Hashable):
     def get_last_execution_log_filename(self):
         if len(self._execution_histories) > 0:
             for i in range(len(self._execution_histories) - 1, -1, -1):
-                if self._execution_histories[i].execution_history_storage is not None:
-                    return self._execution_histories[i].execution_history_storage.filename
+                if self._execution_histories[i].consumer_manager.get_file_system_consumer_file_name() is not None:
+                    return self._execution_histories[i].consumer_manager.get_file_system_consumer_file_name()
             return None
         else:
             return None
