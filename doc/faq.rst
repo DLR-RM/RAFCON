@@ -308,7 +308,7 @@ done if the type of the string matters.
 .. _faq_event_based:
 
 Why is RAFCON not event-based?
-"""""""""""""""""""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""
 
 **tl; dr**: RAFCON was created to enable the development of goal-driven behavior, in contrast to reactive behavior
 (for which many frameworks rely on events).
