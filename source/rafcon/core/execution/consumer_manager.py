@@ -100,5 +100,5 @@ class ExecutionHistoryConsumerManager(object):
 
         :param consumer: an instance of the consumer
         """
-        consumer.unregister()
         consumer.stop()
+        consumer.unregister()
