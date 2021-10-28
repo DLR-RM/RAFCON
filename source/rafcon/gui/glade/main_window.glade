@@ -576,6 +576,18 @@
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="show_arrow">False</property>
+                                     <child>
+                                      <object class="GtkToolButton" id="button_run_this_state_shortcut">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">run_this_state</property>
+                                        <property name="use_underline">True</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="homogeneous">True</property>
+                                      </packing>
+                                    </child>
                                     <child>
                                       <object class="GtkToolButton" id="button_start_from_shortcut">
                                         <property name="visible">True</property>
