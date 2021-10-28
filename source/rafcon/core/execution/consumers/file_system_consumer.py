@@ -13,7 +13,7 @@ logger = log.get_logger(__name__)
 
 
 class FileSystemConsumer(AbstractExecutionHistoryConsumer):
-    """A class that consumes an execution history event and writes it onto the file system.
+    """ A class that consumes an execution history event and writes it onto the file system.
     """
     def __init__(self, root_state_name):
         super(FileSystemConsumer, self).__init__()
@@ -21,6 +21,8 @@ class FileSystemConsumer(AbstractExecutionHistoryConsumer):
         self.store_lock = Lock()
 
     def register(self):
+        """ Open the shelve file
+        """
         try:
             # 'c' for read/write/create
             # protocol 2 cause of in some cases smaller file size
@@ -31,9 +33,13 @@ class FileSystemConsumer(AbstractExecutionHistoryConsumer):
             logger.exception('Exception:')
 
     def consume(self, execution_history_item):
+        """ Write to the store variable corresponding to a shelve file
+        """
         self._store_item(execution_history_item.history_item_id, execution_history_item.to_dict())
 
     def unregister(self):
+        """ Flush & close the shelve file
+        """
         set_read_and_writable_for_all = global_config.get_config_value("EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL",
                                                                        False)
         self._flush()
@@ -41,6 +47,10 @@ class FileSystemConsumer(AbstractExecutionHistoryConsumer):
 
     @staticmethod
     def _get_storage_path_on_file_system(root_state_name):
+        """ Get the shelve file of a specific state machine
+
+        :param root_state_name: the root name
+        """
         base_dir = global_config.get_config_value("EXECUTION_LOG_PATH", "%RAFCON_TEMP_PATH_BASE/execution_logs")
         if base_dir.startswith('%RAFCON_TEMP_PATH_BASE'):
             base_dir = base_dir.replace('%RAFCON_TEMP_PATH_BASE', RAFCON_TEMP_PATH_BASE)
@@ -52,6 +62,8 @@ class FileSystemConsumer(AbstractExecutionHistoryConsumer):
         return shelve_name
 
     def _store_item(self, key, value):
+        """ Flush & close the shelve file
+        """
         with self.store_lock:
             try:
                 self.store[native_str(key)] = value
@@ -59,6 +71,8 @@ class FileSystemConsumer(AbstractExecutionHistoryConsumer):
                 logger.exception('Exception:')
 
     def _flush(self):
+        """ Flush the shelve file
+        """
         with self.store_lock:
             try:
                 self.store.close()
@@ -71,6 +85,8 @@ class FileSystemConsumer(AbstractExecutionHistoryConsumer):
                     logger.exception('Exception:')
 
     def _close(self, make_read_and_writable_for_all=False):
+        """ Close the shelve file
+        """
         with self.store_lock:
             try:
                 self.store.close()
@@ -85,6 +101,8 @@ class FileSystemConsumer(AbstractExecutionHistoryConsumer):
                 logger.exception('Exception:')
 
     def __del__(self):
+        """ Close the shelve file
+        """
         with self.store_lock:
             self.destroyed = True
             try:
