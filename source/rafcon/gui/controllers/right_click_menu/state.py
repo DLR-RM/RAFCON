@@ -227,7 +227,7 @@ class StateMachineRightClickMenu(object):
                                                    accel_group=accel_group))
         execution_sub_menu.append(create_menu_item("run this state", constants.BUTTON_RUN_SELECTED_STATE,
                                                    self.on_run_selected_state_activate,
-                                                   accel_code=shortcuts_dict['run_selected'][0],
+                                                   accel_code=shortcuts_dict['start_selected'][0],
                                                    accel_group=accel_group))
 
     def insert_copy_cut_paste_in_menu(self, menu, shortcuts_dict, accel_group, no_paste=False):
@@ -340,6 +340,9 @@ class StateMachineRightClickMenu(object):
 
     def on_run_to_selected_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('run_to_selected', None, None)
+
+    def on_run_selected_state_activate(self, widget, data=None):
+        self.shortcut_manager.trigger_action('run_selected', None, None)
 
     @staticmethod
     def on_save_as_activate(widget, data=None, path=None, save_as_function=None):
