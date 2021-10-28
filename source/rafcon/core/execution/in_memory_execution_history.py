@@ -46,6 +46,8 @@ class InMemoryExecutionHistory(BaseExecutionHistory, Observable, Iterable, Sized
         logger.debug("InMemoryExecutionHistory has been created")
 
     def destroy(self):
+        """Destroy the consumer and reset all variables
+        """
         logger.verbose("Destroy execution history!")
         super(InMemoryExecutionHistory, self).destroy()
         if len(self._history_items) > 0:
@@ -58,6 +60,8 @@ class InMemoryExecutionHistory(BaseExecutionHistory, Observable, Iterable, Sized
         self.initial_prev = None
 
     def shutdown(self):
+        """Stop all consumers including consumer plugins
+        """
         self.consumer_manager.stop_consumers()
 
     def __iter__(self):
@@ -81,6 +85,13 @@ class InMemoryExecutionHistory(BaseExecutionHistory, Observable, Iterable, Sized
             return None
 
     def _push_item(self, current_item):
+        """Push history item to the queue
+
+        :param current_item: the history item
+
+        :return: History item added
+        :rtype: rafcon.core.execution.execution_history_items.HistoryItem
+        """
         try:
             self._history_items.append(current_item)
         except AttributeError:
@@ -91,6 +102,10 @@ class InMemoryExecutionHistory(BaseExecutionHistory, Observable, Iterable, Sized
         return current_item
 
     def _link_history_item(self, current_item):
+        """Link the history item to the previous one
+
+        :param current_item: the history item
+        """
         last_history_item = self.get_last_history_item()
         if last_history_item is None:
             current_item.prev = self.initial_prev
@@ -155,6 +170,14 @@ class InMemoryExecutionHistory(BaseExecutionHistory, Observable, Iterable, Sized
 
     @Observable.observed
     def push_state_machine_start_history_item(self, state_machine, run_id):
+        """Adds a new state-machine-start-history-item to the history item list
+
+        A state machine start history item stores information about the point in time where a state machine
+        started to run
+
+        :param state_machine: the state machine that started
+        :param run_id: the run id
+        """
         return_item = super(InMemoryExecutionHistory, self).push_state_machine_start_history_item(
             state_machine, run_id, feed_item_to_consumers=False)
         self._history_items.append(return_item)
