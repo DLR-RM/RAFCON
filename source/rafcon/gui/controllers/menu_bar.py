@@ -354,7 +354,7 @@ class MenuBarController(ExtendedController):
                                                                              "on_start_from_selected_state_activate"))
         self.add_callback_to_shortcut_manager('run_to_selected', partial(self.call_action_callback,
                                                                          "on_run_to_selected_state_activate"))
-        self.add_callback_to_shortcut_manager('run_to_selected', partial(self.call_action_callback,
+        self.add_callback_to_shortcut_manager('run_selected', partial(self.call_action_callback,
                                                                          "on_run_selected_state_activate"))
 
         self.add_callback_to_shortcut_manager('stop', partial(self.call_action_callback, "on_stop_activate"))
@@ -676,7 +676,7 @@ class MenuBarController(ExtendedController):
             self.state_machine_execution_engine.start(self.model.selected_state_machine_id,
                                                       selection.get_selected_state().state.get_path())
 
-    def on_start_selected_state_activate(self, widget, data=None):
+    def on_run_selected_state_activate(self, widget, data=None):
         logger.debug("Run selected state ...")
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) is not 1:
