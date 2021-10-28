@@ -84,7 +84,10 @@ class ExecutionHistoryConsumerManager(object):
         """
         while not self.interrupt:
             with self.condition:
-                self.condition.wait_for(lambda: not self.execution_history_item_queue.empty() or self.interrupt)
+                # Python 2.7 does not support wait_for unfortunately, so let's do it manually in a while loop
+                # self.condition.wait_for(lambda: not self.execution_history_item_queue.empty() or self.interrupt)
+                while self.execution_history_item_queue.empty() and not self.interrupt:
+                    self.condition.wait()
                 while not self.execution_history_item_queue.empty():
                     next_execution_history_event = self.execution_history_item_queue.get(block=False)
                     self._notifyConsumers(next_execution_history_event)
@@ -101,4 +104,5 @@ class ExecutionHistoryConsumerManager(object):
         :param consumer: an instance of the consumer
         """
         consumer.stop()
+        # Unregister the consumer after stopping the thread to avoid e.g., writing on the closed resources
         consumer.unregister()
