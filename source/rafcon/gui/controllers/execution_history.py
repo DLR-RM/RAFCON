@@ -33,10 +33,10 @@ from threading import RLock
 import rafcon
 
 from rafcon.core.state_machine_manager import StateMachineManager
-from rafcon.core.execution.execution_history import ConcurrencyItem, CallItem, ScopedDataItem, HistoryItem
+from rafcon.core.execution.execution_history_items import HistoryItem, StateMachineStartItem, ScopedDataItem, CallItem, \
+    ConcurrencyItem, CallType
 from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
-from rafcon.core.execution.execution_history import CallType, StateMachineStartItem
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
@@ -124,7 +124,8 @@ class ExecutionHistoryTreeController(ExtendedController):
                            "The external execution history viewer can only open finished executions.")
             return
 
-        if execution_history.execution_history_storage and execution_history.execution_history_storage.filename:
+        if execution_history.consumer_manager.file_system_consumer_exists and \
+                execution_history.consumer_manager.get_file_system_consumer_file_name():
             from rafcon.gui.utils.shell_execution import execute_command_in_process
             gui_path = path.dirname(path.dirname(path.realpath(__file__)))
             source_path = path.dirname(path.dirname(gui_path))
@@ -135,12 +136,13 @@ class ExecutionHistoryTreeController(ExtendedController):
                 python_version = "python2"
             else:
                 python_version = "python3"
-            cmd = "{python_version} {path} {filename} {run_id}" \
+            cmd = "{python_version} {path} '{filename}' '{run_id}'" \
                   "".format(python_version=python_version, path=viewer_path,
-                            filename=execution_history.execution_history_storage.filename, run_id=run_id)
+                            filename=execution_history.consumer_manager.get_file_system_consumer_file_name(),
+                            run_id=run_id)
             execute_command_in_process(cmd, shell=True, cwd=source_path, logger=logger)
         else:
-            logger.info("Set EXECUTION_LOG_ENABLE to True in your config in order to "
+            logger.info("Set FILE_SYSTEM_EXECUTION_HISTORY_ENABLE to True in your config in order to "
                         "activate execution file logging and to use the external execution history viewer.")
 
     def append_string_to_menu(self, popup_menu, menu_item_string):
