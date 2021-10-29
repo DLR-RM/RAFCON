@@ -1042,21 +1042,24 @@ class ContainerState(State):
         act_output_data_port_by_name = {op.name: op for op in state.output_data_ports.values()}
 
         for t in related_transitions['external']['self']:
-            new_t_id = self.add_transition(state_id, t.from_outcome, state_id, t.to_outcome, t.transition_id)
-            re_create_io_going_t_ids.append(new_t_id)
-            assert new_t_id == t.transition_id
-
-        for t in related_transitions['external']['ingoing']:
-            new_t_id = self.add_transition(t.from_state, t.from_outcome, state_id, t.to_outcome, t.transition_id)
-            re_create_io_going_t_ids.append(new_t_id)
-            assert new_t_id == t.transition_id
-
-        for t in related_transitions['external']['outgoing']:
-            from_outcome = act_outcome_ids_by_name.get(old_outcome_names[t.from_outcome], None)
-            if from_outcome is not None:
-                new_t_id = self.add_transition(state_id, from_outcome, t.to_state, t.to_outcome, t.transition_id)
+            if t.transition_id not in self._transitions:
+                new_t_id = self.add_transition(state_id, t.from_outcome, state_id, t.to_outcome, t.transition_id)
                 re_create_io_going_t_ids.append(new_t_id)
                 assert new_t_id == t.transition_id
+
+        for t in related_transitions['external']['ingoing']:
+            if t.transition_id not in self._transitions:
+                new_t_id = self.add_transition(t.from_state, t.from_outcome, state_id, t.to_outcome, t.transition_id)
+                re_create_io_going_t_ids.append(new_t_id)
+                assert new_t_id == t.transition_id
+
+        for t in related_transitions['external']['outgoing']:
+            if t.transition_id not in self._transitions:
+                from_outcome = act_outcome_ids_by_name.get(old_outcome_names[t.from_outcome], None)
+                if from_outcome is not None:
+                    new_t_id = self.add_transition(state_id, from_outcome, t.to_state, t.to_outcome, t.transition_id)
+                    re_create_io_going_t_ids.append(new_t_id)
+                    assert new_t_id == t.transition_id
 
         for old_ip in old_input_data_ports.values():
             ip = act_input_data_port_by_name.get(old_input_data_ports[old_ip.data_port_id].name, None)
