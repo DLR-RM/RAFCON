@@ -136,7 +136,7 @@ class ExecutionHistoryTreeController(ExtendedController):
                 python_version = "python2"
             else:
                 python_version = "python3"
-            cmd = "{python_version} {path} {filename} {run_id}" \
+            cmd = "{python_version} {path} '{filename}' '{run_id}'" \
                   "".format(python_version=python_version, path=viewer_path,
                             filename=execution_history.consumer_manager.get_file_system_consumer_file_name(),
                             run_id=run_id)
