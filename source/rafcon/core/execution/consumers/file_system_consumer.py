@@ -1,5 +1,5 @@
 import os
-import time
+import datetime
 import shelve
 import subprocess
 from threading import Lock
@@ -17,6 +17,7 @@ class FileSystemConsumer(AbstractExecutionHistoryConsumer):
     """
     def __init__(self, root_state_name):
         super(FileSystemConsumer, self).__init__()
+        self.destroyed = False
         self.filename = self._get_storage_path_on_file_system(root_state_name)
         self.store_lock = Lock()
 
@@ -57,7 +58,7 @@ class FileSystemConsumer(AbstractExecutionHistoryConsumer):
         if not os.path.exists(base_dir):
             os.makedirs(base_dir)
         shelve_name = os.path.join(base_dir, '%s_rafcon_execution_log_%s.shelve' %
-                                   (time.strftime('%Y-%m-%d-%H:%M:%S', time.localtime()),
+                                   (str(datetime.datetime.now()),
                                     root_state_name.replace(' ', '-')))
         return shelve_name
 
