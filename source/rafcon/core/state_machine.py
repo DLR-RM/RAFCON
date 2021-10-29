@@ -145,7 +145,18 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     def join(self):
         """Wait for root state to finish execution"""
+        from rafcon.core.states.concurrency_state import ConcurrencyState
         self._root_state.join()
+        if not global_config.get_config_value("IN_MEMORY_EXECUTION_HISTORY_ENABLE", False):
+            queue = [self.root_state]
+            while len(queue) > 0:
+                state = queue.pop(0)
+                if isinstance(state, ConcurrencyState):
+                    if state.concurrency_history_item is not None:
+                        state.concurrency_history_item.destroy()
+                        state.concurrency_history_item = None
+                elif hasattr(state, 'states'):
+                    queue.extend(state.states.values())
         if len(self.execution_histories) > 0:
             self.execution_histories[-1].shutdown()
         from rafcon.core.states.state import StateExecutionStatus

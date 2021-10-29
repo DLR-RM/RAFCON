@@ -181,6 +181,5 @@ class ConcurrencyState(ContainerState):
 
         if self.preempted:
             final_outcome = Outcome(-2, "preempted")
-        self.concurrency_history_item = None
         return self.finalize(final_outcome)
 
