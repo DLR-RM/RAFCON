@@ -150,6 +150,7 @@ def test_execution_log_without_memory(caplog):
     finally:
         testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=0)
 
+
 def test_execution_log_without_file_system(caplog):
     try:
         testing_utils.initialize_environment_core(
