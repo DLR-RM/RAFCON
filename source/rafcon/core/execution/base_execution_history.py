@@ -7,6 +7,11 @@ logger = log.get_logger(__name__)
 
 
 class BaseExecutionHistory(object):
+    """A class for the history of a state machine execution
+
+        :ivar initial_prev: optional link to a previous element for the first element pushed into this history of
+                            type :class:`rafcon.core.execution.execution_history.HistoryItem`
+    """
 
     def __init__(self, initial_prev=None, root_state_name="", consumer_manager=None):
         if not consumer_manager:
