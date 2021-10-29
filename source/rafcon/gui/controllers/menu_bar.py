@@ -682,8 +682,9 @@ class MenuBarController(ExtendedController):
         if len(selection.states) is not 1:
             logger.error("Exactly one state must be selected!")
         else:
-            self.state_machine_execution_engine.start(self.model.selected_state_machine_id,
-                                                      selection.get_selected_state().state.get_path())
+            self.state_machine_execution_engine.start(self.model.selected_state_machine_id)
+            # self.state_machine_execution_engine.start(self.model.selected_state_machine_id,
+            #                                          selection.get_selected_state().state.get_path())
 
     def on_pause_activate(self, widget, data=None):
         self.state_machine_execution_engine.pause()
@@ -715,15 +716,6 @@ class MenuBarController(ExtendedController):
         else:
             self.state_machine_execution_engine.run_to_selected_state(selection.get_selected_state().state.get_path(),
                                                                       self.model.selected_state_machine_id)
-    def on_run_selected_state_activate(self, widget, data=None):
-        logger.debug("Run selected state ...")
-
-        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
-        if len(selection.states) is not 1:
-            logger.error("Exactly one state must be selected!")
-        else:
-            self.state_machine_execution_engine.run_selected_state(selection.get_selected_state().state.get_path(),
-                                                                   self.model.selected_state_machine_id)
 
     ######################################################
     # menu bar functionality - Help
