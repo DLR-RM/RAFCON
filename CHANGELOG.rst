@@ -17,6 +17,15 @@ Next Release
 
 - Miscellaneous:
 
+0.15.0
+"""""""
+
+- Features:
+    - Libraries can now be renamed and relocated. This includes single libraries, library folders and library root keys
+    - Ctrl+F can be used to search for states
+    - Missing libraries are supported better. In case a library cannot be found, the transitions and data-flows are preserved and added to the dummy-state, which is inserted instead of the library. Furthermore, the dummy-state has the same position and size as the old library state.
+    - New execution-history structure: Define specific consumers for in-memory-execution-history and file-system execution history. Furthermore, another hook was defined such that RAFCON plugins can be used to define further consumers. Watch out: the config values for controlling the execution history changed
+
 
 0.14.11
 """""""
