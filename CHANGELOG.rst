@@ -56,7 +56,6 @@ Next Release
 
 - Bug Fixes:
     - Fix py2 support
-    - Make rafcon installation robust against local PYTHONPATH settings + python packages in ~/.local
 
 
 0.14.7
