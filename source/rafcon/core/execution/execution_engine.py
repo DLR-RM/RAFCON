@@ -311,7 +311,6 @@ class ExecutionEngine(Observable):
         """
         if self.state_machine_manager.get_active_state_machine() is not None:
             self.state_machine_manager.get_active_state_machine().root_state.recursively_resume_states()
-
         if not self.finished_or_stopped():
             logger.debug("Resume execution engine and run to selected state!")
             self.run_to_states = []
