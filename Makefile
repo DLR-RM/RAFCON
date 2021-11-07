@@ -11,16 +11,15 @@ build:
 docs: build
 	echo "$(dirname "$1")"
 	pip3 install virtualenv || return -1
-	if [ ! -d venv ]; then\
-		python3 -m virtualenv venv --system-site-packages || return -1;\
-	fi
+	python3 -m virtualenv venv --system-site-packages || return -1
 	# Don't use the source command since not all shells support it.
-	. venv/bin/activate || return -1
-	pip3 install -r requirements-py3.txt || return -1
-	sphinx-build -b html doc build/docs/html
+	. venv/bin/activate;\
+	pip3 install -r requirements-py3.txt;\
+	sphinx-build -v -b html doc build/docs/html
 
 clean:
 	rm -rf build
+	rm -rf venv
 
 help:
 	@echo "Available Targets:"
