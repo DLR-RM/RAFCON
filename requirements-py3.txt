@@ -20,3 +20,5 @@ wrapt==1.10.11
 yaml_configuration~=0.1
 pytest-runner
 libsass >= 0.15.0
+docutils==0.17.1
+

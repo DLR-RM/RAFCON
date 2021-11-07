@@ -354,6 +354,7 @@ Now try to answer the following questions, that would be raised during runtime:
 3. What is the context (hierarchy level, possible predecessors, possible successors) of each of those state?
 4. Since when do I listen to event_x? Until which state will I listen to event_x?
 5. I receive an event that I cannot process know. I defer it to a later point in time (*event deferral*).
+
   * How long are events valid (*event caching*)?
   * Another event with the same type arrives meanwhile. Should I keep the old event (*event expiration*)?
   * Another event, which is more important arrives. Should I react to the new event and preempt the current event handling (*event priorization*)?
@@ -482,6 +483,7 @@ that.
 Open a new terminal, run the following command and restart RAFCON.
 
 .. code:: bash
+
     $ fdir="$HOME/.local/share/fonts" && mkdir -p $fdir && find "$(dirname $(which rafcon))/../share/fonts" -type f -name "*.otf" -exec cp -t $fdir {} + && unset fdir
 
 This will copy the RAFCON font files from the install location to your local user, so the RAFCON GUI can load them.
