@@ -14,8 +14,7 @@ Core Configuration
 
 .. _core_config_example:
 
-Example
-"""""""
+Example:
 
 A typical config file looks like this:
 
@@ -47,8 +46,7 @@ A typical config file looks like this:
 
 .. _core_config_docs:
 
-Documentation
-"""""""""""""
+Documentation:
 
 In the following, all possible parameters are described, together with
 their default value:
@@ -303,8 +301,7 @@ A typical config file looks like this:
 
 .. _gui_config_docs:
 
-Documentation
-"""""""""""""
+Documentation:
 
 TYPE
   | Type: String-constant
@@ -622,8 +619,7 @@ package, please check the `official documentation <https://docs.python.org/2/lib
 
 .. _logging_config_example:
 
-Example
-"""""""
+Example:
 
 To not destroy the behavior of RAFCON, the default configuration should be used as basis for your extensions. The
 following example shows how to add another logging handler, writing all messages to a file:
@@ -631,18 +627,13 @@ following example shows how to add another logging handler, writing all messages
 .. code:: json
 
     {
-        ...
-
         "loggers": {
-            ...
             "rafcon": {
-                ...
                 "handlers": ["stdout", "stderr", "loggingView", "file"]
             }
         },
 
         "handlers": {
-            ...
             "file": {
                 "class": "logging.handlers.RotatingFileHandler",
                 "formatter": "default",
@@ -651,8 +642,6 @@ following example shows how to add another logging handler, writing all messages
                 "backupCount": 3
             }
         },
-
-        ...
     }
 
 
@@ -669,8 +658,7 @@ by launching the ``start.py`` script with argument "-nc".
 
 .. _monitoring_plugin_example:
 
-Example
-"""""""
+Example:
 
 The default ``network_config.file`` looks like:
 
@@ -692,8 +680,7 @@ The default ``network_config.file`` looks like:
 
 .. _monitoring_plugin_docs:
 
-Documentation
-"""""""""""""
+Documentation:
 
 TYPE
   | Type: string
