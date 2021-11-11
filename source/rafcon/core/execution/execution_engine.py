@@ -311,7 +311,7 @@ class ExecutionEngine(Observable):
         """
         """Set the execution mode to stepping mode. Transitions are only triggered if a new step is triggered
         """
-        logger.debug("Activate step mode")
+        logger.debug("Run selected state")
 
         if state_machine_id is not None:
             self.state_machine_manager.active_state_machine_id = state_machine_id
