@@ -306,24 +306,34 @@ class ExecutionEngine(Observable):
             self.run_to_states.append(path)
             self._run_active_state_machine()
 
-    def run_selected_state(self, path, state_machine_id=None):
+    def run_selected_state(self, start_state_path=None, state_machine_id=None):
         """Execute the selected state machine.
         """
-        if self.state_machine_manager.get_active_state_machine() is not None:
-            self.state_machine_manager.get_active_state_machine().root_state.recursively_resume_states()
-        if not self.finished_or_stopped():
-            logger.debug("Resume execution engine and run to selected state!")
-            self.run_to_states = []
-            self.run_to_states.append(path)
-            self.set_execution_mode(StateMachineExecutionStatus.RUN_TO_SELECTED_STATE)
-        else:
-            logger.debug("Start execution engine and run to selected state!")
-            if state_machine_id is not None:
-                self.state_machine_manager.active_state_machine_id = state_machine_id
-            self.set_execution_mode(StateMachineExecutionStatus.RUN_TO_SELECTED_STATE)
-            self.run_to_states = []
-            self.run_to_states.append(path)
+        """Set the execution mode to stepping mode. Transitions are only triggered if a new step is triggered
+        """
+        logger.debug("Activate step mode")
+
+        if state_machine_id is not None:
+            self.state_machine_manager.active_state_machine_id = state_machine_id
+
+        self.run_to_states = []
+        if self.finished_or_stopped():
+            self.set_execution_mode(StateMachineExecutionStatus.STEP_MODE)
+            self.start_state_paths = []
+
+            if start_state_path:
+                path_list = start_state_path.split("/")
+                cur_path = ""
+                for path in path_list:
+                    if cur_path == "":
+                        cur_path = path
+                    else:
+                        cur_path = cur_path + "/" + path
+                    self.start_state_paths.append(cur_path)
             self._run_active_state_machine()
+            self.step_over()
+        else:
+            self.set_execution_mode(StateMachineExecutionStatus.STEP_MODE)
 
     def _wait_while_in_pause_or_in_step_mode(self):
         """ Waits as long as the execution_mode is in paused or step_mode
