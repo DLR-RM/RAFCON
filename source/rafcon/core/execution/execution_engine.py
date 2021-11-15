@@ -330,10 +330,13 @@ class ExecutionEngine(Observable):
                     else:
                         cur_path = cur_path + "/" + path
                     self.start_state_paths.append(cur_path)
-            self._run_active_state_machine()
+            start_step_mode_thread = threading.Thread(target=self._run_active_state_machine)
+            start_step_mode_thread.join()
             self.step_over()
+
         else:
-            self.set_execution_mode(StateMachineExecutionStatus.STEP_MODE)
+            self.stop()
+            self.run_selected_state(start_state_path, state_machine_id)
 
     def _wait_while_in_pause_or_in_step_mode(self):
         """ Waits as long as the execution_mode is in paused or step_mode
