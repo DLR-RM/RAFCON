@@ -330,8 +330,7 @@ class ExecutionEngine(Observable):
                     else:
                         cur_path = cur_path + "/" + path
                     self.start_state_paths.append(cur_path)
-            start_step_mode_thread = threading.Thread(target=self._run_active_state_machine)
-            start_step_mode_thread.join()
+            self._run_active_state_machine()
             self.step_over()
 
         else:
