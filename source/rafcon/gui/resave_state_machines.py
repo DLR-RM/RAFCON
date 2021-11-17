@@ -12,8 +12,6 @@
 
 #!/usr/bin/python
 
-from future import standard_library
-standard_library.install_aliases()
 import os
 from os.path import join, expanduser
 import threading

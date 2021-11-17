@@ -17,9 +17,6 @@
    :synopsis: A module holds the controller to edit the state source script text.
 
 """
-
-from future import standard_library
-standard_library.install_aliases()
 import os
 from gi.repository import Gtk
 import contextlib

@@ -11,8 +11,6 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from future import standard_library
-standard_library.install_aliases()
 from builtins import str
 import os
 import time

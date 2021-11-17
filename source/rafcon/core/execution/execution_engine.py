@@ -18,8 +18,6 @@
    :synopsis: A module that cares for the execution of the state machine
 
 """
-from future import standard_library
-standard_library.install_aliases()
 import copy
 import threading
 import time

@@ -20,9 +20,6 @@
    :synopsis: A module to represent an abstract state in the state machine
 
 """
-
-from future import standard_library
-standard_library.install_aliases()
 from future.utils import string_types
 import queue
 import copy

@@ -19,9 +19,6 @@
    :synopsis: A module to start arbitrary state machines without the GUI and several configurations options
 
 """
-
-from future import standard_library
-standard_library.install_aliases()
 import os
 import argparse
 from os.path import realpath, dirname, join, exists

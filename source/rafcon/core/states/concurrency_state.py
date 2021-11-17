@@ -15,8 +15,6 @@
    :synopsis: A module to represent a concurrency state for the state machine
 
 """
-from future import standard_library
-standard_library.install_aliases()
 import queue
 
 from gtkmvc3.observable import Observable
