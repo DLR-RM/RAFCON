@@ -125,6 +125,7 @@ class Vividict(dict, YAMLObject, JSONObject):
                 return np_val
             return np_val.item()  # Get the gloat/int etc value
 
+        for key, value in vividict.items():
             # Convert numpy values to native Python values
             value = np_to_native(value)
 
