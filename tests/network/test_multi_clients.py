@@ -7,8 +7,6 @@
 
 
 """
-from future import standard_library
-standard_library.install_aliases()
 from multiprocessing import Process, Queue
 
 import multiprocessing
