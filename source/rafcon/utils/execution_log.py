@@ -10,7 +10,6 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 # Sebastian Riedel <sebastian.riedel@dlr.de>
 
-from future.utils import native_str
 from builtins import range
 from builtins import str
 import shelve
@@ -46,7 +45,7 @@ def log_to_raw_structure(execution_history_items):
             start_item = v
         else:
             # connect the item to its predecessor
-            prev_item_id = native_str(v['prev_history_item_id'])
+            prev_item_id = v['prev_history_item_id']
 
             if prev_item_id in execution_history_items:
                 ## should always be the case except if shelve is broken/missing data

@@ -16,7 +16,6 @@
 
 """
 
-from future.utils import native_str
 from builtins import str
 from yaml import YAMLObject
 from jsonconversion.jsonobject import JSONObject
@@ -126,12 +125,6 @@ class Vividict(dict, YAMLObject, JSONObject):
                 return np_val
             return np_val.item()  # Get the gloat/int etc value
 
-        for key, value in vividict.items():
-            if native_strings:  # e.g. converts newstr to str
-                if isinstance(key, str):
-                    key = native_str(key)
-                if isinstance(value, str):
-                    value = native_str(value)
             # Convert numpy values to native Python values
             value = np_to_native(value)
 
