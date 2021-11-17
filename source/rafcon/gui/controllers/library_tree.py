@@ -23,7 +23,6 @@
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Gdk
-from future.utils import string_types
 from builtins import str
 import os
 from functools import partial
@@ -251,7 +250,7 @@ class LibraryTreeController(ExtendedController):
                 return "[source]:\n{0}".format(tool_tip_with_only_sm_file_system_path_in)
 
         _library_key = self.convert_if_human_readable(library_key)
-        tool_tip = library_item if isinstance(library_item, string_types) else ''
+        tool_tip = library_item if isinstance(library_item, str) else ''
 
         if not tool_tip and parent is None:
             library_root_path = tool_tip = self.model.library_manager._library_root_paths.get(library_key, '')
@@ -338,7 +337,7 @@ class LibraryTreeController(ExtendedController):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         (model, row) = self.view.get_selection().get_selected()
         physical_library_path = model[row][self.ITEM_STORAGE_ID]
-        assert isinstance(physical_library_path, string_types)
+        assert isinstance(physical_library_path, str)
 
         logger.debug("Opening library as state-machine from path '{0}'".format(physical_library_path))
         state_machine = gui_helper_state_machine.open_state_machine(physical_library_path)
@@ -507,7 +506,7 @@ class LibraryTreeController(ExtendedController):
         if isinstance(library_item, dict):  # sub-tree
             os_path = model[row][self.OS_PATH_STORAGE_ID]
             return os_path, None, None, tree_item_key  # relevant elements of sub-tree
-        assert isinstance(library_item, string_types)
+        assert isinstance(library_item, str)
         library_os_path = library_item
 
         library_name = library_os_path.split(os.path.sep)[-1]

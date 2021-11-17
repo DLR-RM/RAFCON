@@ -13,7 +13,6 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from future.utils import string_types
 from builtins import str
 from weakref import ref
 from gi.repository.Pango import SCALE, FontDescription, WrapMode
@@ -935,7 +934,7 @@ class NameView(Element):
 
     @name.setter
     def name(self, name):
-        assert isinstance(name, string_types)
+        assert isinstance(name, str)
         self._name = name
 
     @property

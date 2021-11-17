@@ -16,7 +16,6 @@
 
 """
 
-from future.utils import string_types
 from builtins import str
 import os
 import importlib
@@ -76,7 +75,7 @@ class Script(Observable, yaml.YAMLObject):
 
     @script.setter
     def script(self, script_text):
-        if not isinstance(script_text, string_types):
+        if not isinstance(script_text, str):
             raise ValueError("The script text needs to be a string")
         self._script = script_text
 
@@ -178,7 +177,7 @@ class Script(Observable, yaml.YAMLObject):
 
     @filename.setter
     def filename(self, value):
-        if value is not None and not isinstance(value, string_types):
+        if value is not None and not isinstance(value, str):
             raise TypeError("The filename of a script has to be a string or None to use the default value.")
         self._filename = value
 
@@ -191,7 +190,7 @@ class Script(Observable, yaml.YAMLObject):
 
     @path.setter
     def path(self, value):
-        if not isinstance(value, string_types):
+        if not isinstance(value, str):
             raise TypeError("The path of a script has to be a string or None to use the default value.")
         self._path = value
         self._load_script()

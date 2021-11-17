@@ -17,7 +17,6 @@
 """
 
 from weakref import ref
-from future.utils import string_types
 from builtins import str
 import os
 import re
@@ -511,7 +510,7 @@ def limit_text_max_length(text, max_length, separator='_'):
     :return: the shortened input string
     """
     if max_length is not None:
-        if isinstance(text, string_types) and len(text) > max_length:
+        if isinstance(text, str) and len(text) > max_length:
             max_length = int(max_length)
             half_length = float(max_length - 1) / 2
             return text[:int(math.ceil(half_length))] + separator + text[-int(math.floor(half_length)):]

@@ -12,8 +12,6 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from future.utils import string_types
-
 from copy import deepcopy
 
 from gtkmvc3.model_mt import ModelMT
@@ -260,7 +258,7 @@ class ContainerStateModel(StateModel):
             # TODO this if cause is not working if keys are used for arguments
             # if len(info.args) < 2:
             #     print("XXXX", info)
-            if not isinstance(info.args[1], (string_types, dict)) and info.args[1] is not None:
+            if not isinstance(info.args[1], (str, dict)) and info.args[1] is not None:
                 model_class = get_state_model_class_for_state(info.args[1])
             model_key = "state_id"
         return model_list, data_list, model_name, model_class, model_key

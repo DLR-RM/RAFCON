@@ -12,7 +12,6 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
-from future.utils import string_types
 import copy
 import os
 from functools import partial
@@ -312,7 +311,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         :param str new_key_str: The new value of the target cell
         :return:
         """
-        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, string_types) else path
+        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, str) else path
         if self.tree_store[tree_store_path][self.KEY_STORAGE_ID] == new_key_str:
             return
 
@@ -337,7 +336,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         :param str new_value_str: The new value of the target cell
         :return:
         """
-        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, string_types) else path
+        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, str) else path
         if self.tree_store[tree_store_path][self.VALUE_STORAGE_ID] == new_value_str:
             return
 

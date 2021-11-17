@@ -18,7 +18,6 @@
 
 """
 from weakref import ref
-from future.utils import string_types
 from enum import Enum
 from gtkmvc3.observable import Observable
 
@@ -87,7 +86,7 @@ class DataPort(StateElement):
         self._name = name
         if data_type is not None:
             self._data_type = data_type
-        if isinstance(default_value, string_types):
+        if isinstance(default_value, str):
             self._default_value = type_helpers.convert_string_value_to_type_value(default_value, data_type)
         else:
             self._default_value = default_value
@@ -157,7 +156,7 @@ class DataPort(StateElement):
     @lock_state_machine
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError("Name must be a string")
 
         if len(name) < 1:
@@ -253,7 +252,7 @@ class DataPort(StateElement):
 
         if default_value is not None:
             # If the default value is passed as string, we have to convert it to the data type
-            if isinstance(default_value, string_types):
+            if isinstance(default_value, str):
                 if len(default_value) > 1 and default_value[0] == '$':
                     return default_value
                 if default_value == "None":

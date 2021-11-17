@@ -17,7 +17,6 @@
 
 """
 from weakref import ref
-from future.utils import string_types
 from gtkmvc3 import Observable
 
 from rafcon.core.state_elements.state_element import StateElement
@@ -188,7 +187,7 @@ class Outcome(LogicalPort):
     @lock_state_machine
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError("name must be a string")
 
         if len(name) < 1:

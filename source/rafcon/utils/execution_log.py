@@ -10,7 +10,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 # Sebastian Riedel <sebastian.riedel@dlr.de>
 
-from future.utils import string_types, native_str
+from future.utils import native_str
 from builtins import range
 from builtins import str
 import shelve
@@ -273,7 +273,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             def unpickle_data(data_dict):
                 r = dict()
                 # support backward compatibility
-                if isinstance(data_dict, string_types):  # formerly data dict was a json string
+                if isinstance(data_dict, str):  # formerly data dict was a json string
                     r = json.loads(data_dict)
                 else:
                     for k, v in data_dict.items():

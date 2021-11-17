@@ -1,12 +1,11 @@
 import time
 import pykeyboard
-from future.utils import string_types
 
 keyboard = pykeyboard.PyKeyboard()
 
 
 def press_key(characters, duration=0.05):
-    assert all([isinstance(character, (int, string_types)) for character in characters])
+    assert all([isinstance(character, (int, str)) for character in characters])
     assert isinstance(duration, (int, float))
     for character in characters:
         print("press_key: ", character)

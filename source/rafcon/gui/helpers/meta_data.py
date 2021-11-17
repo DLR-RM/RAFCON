@@ -10,7 +10,6 @@
 # Rico Belder <rico.belder@dlr.de>
 # Christoph Suerig <christoph.suerig@dlr.de
 
-from future.utils import string_types
 from builtins import range
 from builtins import str
 from copy import deepcopy
@@ -743,7 +742,7 @@ def meta_data_reference_check(meta):
         for key in set(v1_keys + v2_keys):
             if key not in not_to_check:
                 if not hasattr(v1[key], 'keys'):
-                    if isinstance(v1[key], string_types):
+                    if isinstance(v1[key], str):
                         d['value'].update({key: v1[key]})
                     else:
                         if id(v1[key]) == id(v2[key]):
