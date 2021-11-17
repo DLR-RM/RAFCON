@@ -1,4 +1,3 @@
-from __future__ import print_function
 from builtins import str
 import pytest
 from os.path import realpath, dirname, join

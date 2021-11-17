@@ -1,4 +1,3 @@
-from __future__ import print_function
 from tests.core.test_i18n import use_locale, create_mo_files
 from tests import utils as testing_utils
 

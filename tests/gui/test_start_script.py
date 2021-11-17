@@ -1,4 +1,3 @@
-from __future__ import print_function
 import pytest
 from os.path import dirname, join
 from rafcon.utils import constants

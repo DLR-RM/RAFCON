@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from os.path import join
 
 from rafcon.utils import log

@@ -1,4 +1,3 @@
-from __future__ import print_function
 # State "Sing"
 from builtins import str
 def execute(self, inputs, outputs, gvm):
@@ -14,7 +13,7 @@ def execute(self, inputs, outputs, gvm):
     self.logger.info("Take one down and pass it around, " + str(bottles) + " bottles of beer on the wall.")
  
     return 0
-    
+
 def backward_execute(self, inputs, outputs, gvm):
     print("Backward execution")
     return execute(self, inputs, outputs, gvm)

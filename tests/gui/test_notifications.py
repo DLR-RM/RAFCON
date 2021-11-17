@@ -16,8 +16,6 @@ E.g. a change of DataFlow has to be observed by the DataFlowModel, the parent St
 all recursive parent-StateModels of this State as well as to the may Observable list of DataFlowModel's in which the
 DataFlow's DataFlowModel is in.
 """
-from __future__ import print_function
-
 from gtkmvc3.observer import Observer
 from builtins import str
 

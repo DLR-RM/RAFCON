@@ -1,4 +1,3 @@
-from __future__ import print_function
 from past.builtins import map
 from builtins import str
 import os

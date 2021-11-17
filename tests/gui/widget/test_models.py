@@ -1,4 +1,3 @@
-from __future__ import print_function
 from gtkmvc3.observer import Observer
 from builtins import str
 

@@ -1,6 +1,3 @@
-from __future__ import print_function
-
-
 def execute(self, inputs, outputs, gvm):
     print("Handling execution abortion ... ")
     
