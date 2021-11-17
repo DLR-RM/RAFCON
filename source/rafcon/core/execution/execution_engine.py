@@ -317,10 +317,9 @@ class ExecutionEngine(Observable):
             self.state_machine_manager.active_state_machine_id = state_machine_id
 
         self.run_to_states = []
+        # self.run_to_states.append(start_state_path)
         if self.finished_or_stopped():
-            self.set_execution_mode(StateMachineExecutionStatus.STEP_MODE)
             self.start_state_paths = []
-
             if start_state_path:
                 path_list = start_state_path.split("/")
                 cur_path = ""
@@ -330,18 +329,19 @@ class ExecutionEngine(Observable):
                     else:
                         cur_path = cur_path + "/" + path
                     self.start_state_paths.append(cur_path)
+
+            self.set_execution_mode(StateMachineExecutionStatus.RUN_SELECTED_STATE)
             self._run_active_state_machine()
-            self.step_over()
 
         else:
-            self.stop()
-            self.run_selected_state(start_state_path, state_machine_id)
+            self.set_execution_mode(StateMachineExecutionStatus.RUN_SELECTED_STATE)
 
     def _wait_while_in_pause_or_in_step_mode(self):
         """ Waits as long as the execution_mode is in paused or step_mode
         """
         while (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
-                or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
+                or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE) \
+                or (self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE):
             with self._status.execution_condition_variable:
                 self.synchronization_counter += 1
                 logger.verbose("Increase synchronization_counter: " + str(self.synchronization_counter))
@@ -435,6 +435,16 @@ class ExecutionEngine(Observable):
         elif self._status.execution_mode is StateMachineExecutionStatus.FINISHED:
             # this must never happen during execution of the execution engine
             raise Exception
+
+        elif self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE:
+            woke_up_from_pause_or_step_mode = True
+            next_child_state_to_execute = None
+            self._wait_if_required(container_state, next_child_state_to_execute, woke_up_from_pause_or_step_mode)
+            if not self.new_execution_command_handled:
+                self.run_to_states.append(container_state.get_path())
+            else:
+                pass
+            # self._wait_while_in_pause_or_in_step_mode()
 
         else:  # all other step modes
             logger.verbose("before wait")
@@ -550,9 +560,6 @@ class ExecutionEngine(Observable):
 
         state_machine = self.state_machine_manager.get_active_state_machine()
         recompile_execution_state_scripts(state_machine.root_state)
-
-
-
 
     @Observable.observed
     def set_execution_mode(self, execution_mode, notify=True):
