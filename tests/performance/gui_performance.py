@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 # local
 from rafcon.utils.timer import measure_time
 from tests import utils as testing_utils
