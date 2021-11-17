@@ -67,6 +67,7 @@ class ExecutionEngine(Observable):
         self.state_counter = 0
         self.state_counter_lock = Lock()
         self.new_execution_command_handled = True
+        self.run_selected_done = False
 
     @Observable.observed
     def pause(self):
@@ -312,7 +313,7 @@ class ExecutionEngine(Observable):
         """Set the execution mode to stepping mode. Transitions are only triggered if a new step is triggered
         """
         logger.debug("Run selected state")
-
+        self.run_selected_done = False
         if state_machine_id is not None:
             self.state_machine_manager.active_state_machine_id = state_machine_id
 
@@ -437,14 +438,11 @@ class ExecutionEngine(Observable):
             raise Exception
 
         elif self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE:
-            woke_up_from_pause_or_step_mode = True
-            next_child_state_to_execute = None
-            self._wait_if_required(container_state, next_child_state_to_execute, woke_up_from_pause_or_step_mode)
-            if not self.new_execution_command_handled:
+            if not self.run_selected_done:
                 self.run_to_states.append(container_state.get_path())
+                self.run_selected_done = True
             else:
-                pass
-            # self._wait_while_in_pause_or_in_step_mode()
+                self._wait_while_in_pause_or_in_step_mode()
 
         else:  # all other step modes
             logger.verbose("before wait")
