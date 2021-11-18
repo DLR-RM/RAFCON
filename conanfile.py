@@ -44,14 +44,6 @@ class RafconConan(ConanFile):
     settings = 'os', 'compiler', 'build_type', 'arch'
     exports_sources = "VERSION"
 
-    @property
-    def python_folder(self):
-        return "python3.6" if self.options.python3 else "python2.7"
-
-    @property
-    def python_exec(self):
-        return "python3" if self.options.python3 else "python2"
-
     def build(self):
         envd = dict(os.environ)
         # Check if a virtual environment is active or a PYTHONPATH is set
@@ -64,7 +56,7 @@ class RafconConan(ConanFile):
         # print("envd: {}".format(str(envd)))
         # print("Package folder: {}".format(str(self.package_folder)))
 
-        subprocess.run([self.python_exec, 'setup.py', 'sdist', 'bdist_wheel'], env=envd)
+        subprocess.run(["python3", 'setup.py', 'sdist', 'bdist_wheel'], env=envd)
 
         print("Installing rafcon for {}".format(str(self.python_exec)))
 
@@ -87,7 +79,7 @@ class RafconConan(ConanFile):
         ], env=envd, check=True)
 
     def package_info(self):
-        site_packages = os.path.join(self.package_folder, "lib", self.python_folder, "site-packages")
+        site_packages = os.path.join(self.package_folder, "lib", "python3.6", "site-packages")
         self.env_info.PYTHONPATH.append(site_packages)
         self.env_info.XDG_DATA_HOME = os.path.join(self.package_folder, "share")
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
