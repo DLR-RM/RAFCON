@@ -42,7 +42,7 @@ class AbstractExecutionHistoryConsumer(object):
         """
         while not self._stop:
             with self._condition:
-                self.condition.wait_for(lambda: not self.execution_history_item_queue.empty() or self.interrupt)
+                self._condition.wait_for(lambda: not self._queue.empty() or self._stop)
                 while not self._queue.empty():
                     item = self._queue.get(block=False)
                     self.consume(item)
