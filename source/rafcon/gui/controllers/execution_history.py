@@ -133,12 +133,8 @@ class ExecutionHistoryTreeController(ExtendedController):
             viewer_path = path.join(gui_path, "execution_log_viewer.py")
             # TODO run in fully separate process but from here to use the option for selection synchronization via dict
             import sys
-            if sys.version_info[0] == 2:
-                python_version = "python2"
-            else:
-                python_version = "python3"
             cmd = "{python_version} {path} '{filename}' '{run_id}'" \
-                  "".format(python_version=python_version, path=viewer_path,
+                  "".format(python_version="python3", path=viewer_path,
                             filename=execution_history.consumer_manager.get_file_system_consumer_file_name(),
                             run_id=run_id)
             execute_command_in_process(cmd, shell=True, cwd=source_path, logger=logger)

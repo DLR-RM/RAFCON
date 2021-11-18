@@ -18,10 +18,7 @@
 from builtins import str
 from enum import Enum
 import sys
-if sys.version_info[0] == 2:
-    from threading import _Condition as Condition
-else:
-    from threading import Condition
+from threading import Condition
 
 from gtkmvc3.observable import Observable
 from rafcon.utils import log
