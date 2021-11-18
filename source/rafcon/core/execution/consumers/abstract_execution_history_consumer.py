@@ -42,10 +42,7 @@ class AbstractExecutionHistoryConsumer(object):
         """
         while not self._stop:
             with self._condition:
-                # Python 2.7 does not support wait_for unfortunately, so let's do it manually in a while loop
-                # self._condition.wait_for(lambda: not self._queue.empty() or self._stop)
-                while self._queue.empty() and not self._stop:
-                    self._condition.wait()
+                self.condition.wait_for(lambda: not self.execution_history_item_queue.empty() or self.interrupt)
                 while not self._queue.empty():
                     item = self._queue.get(block=False)
                     self.consume(item)
