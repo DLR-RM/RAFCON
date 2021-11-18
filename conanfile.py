@@ -34,11 +34,9 @@ class RafconConan(ConanFile):
     default_channel = "stable"
 
     options = {
-        "python3": [True, False],
     }
 
     default_options = {
-        "python3": True,
     }
 
     settings = 'os', 'compiler', 'build_type', 'arch'
@@ -60,12 +58,7 @@ class RafconConan(ConanFile):
 
         print("Installing rafcon for {}".format(str(self.python_exec)))
 
-        if self.options.python3:
-            rafcon_target = './dist/rafcon-{}.tar.gz'.format(self.version)
-        else:
-            # using pip2 to install the tar.gz does not work unfortunately
-            # error: 'egg_base' must be a directory name (got `/tmp/pip-modern-metadata-S8oLCh`)
-            rafcon_target = './dist/rafcon-{}-py2.py3-none-any.whl'.format(self.version)
+        rafcon_target = './dist/rafcon-{}.tar.gz'.format(self.version)
 
         # print("Installing pip first")
         # subprocess.run(['python2.7', '-m', 'pip', 'install', '--user', '--upgrade', '--force', 'pip'], env=envd)
