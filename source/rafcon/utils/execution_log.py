@@ -334,7 +334,7 @@ def log_to_DataFrame(execution_history_items, data_in_columns=[], data_out_colum
 
     # remove columns which are not generic over all states (basically the
     # data flow stuff)
-    df_keys = list(list(gitems.values())[0].keys())
+    df_keys = list(next(iter(gitems.values())).keys())
     df_keys.remove('data_ins')
     df_keys.remove('data_outs')
     df_keys.remove('scoped_data_ins')

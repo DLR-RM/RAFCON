@@ -439,7 +439,7 @@ class StateMachinesEditorController(ExtendedController):
         self.last_focused_state_machine_ids = copy_of_last_opened_state_machines
 
         # Open tab with next state machine
-        sm_keys = list(self.model.state_machine_manager.state_machines.keys())
+        sm_keys = self.model.state_machine_manager.state_machines.keys()
 
         if len(sm_keys) > 0:
             sm_id = -1
@@ -447,7 +447,7 @@ class StateMachinesEditorController(ExtendedController):
                 if len(self.last_focused_state_machine_ids) > 0:
                     sm_id = self.last_focused_state_machine_ids.pop()
                 else:
-                    sm_id = self.model.state_machine_manager.state_machines[sm_keys[0]].state_machine_id
+                    sm_id = self.model.state_machine_manager.state_machines[next(iter(sm_keys))].state_machine_id
 
             self.model.selected_state_machine_id = sm_id
         else:

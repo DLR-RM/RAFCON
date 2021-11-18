@@ -60,7 +60,7 @@ class StateMachineManagerModel(ModelMT):
 
         self._selected_state_machine_id = None
         if len(self.state_machines) > 0:
-            self.selected_state_machine_id = list(self.state_machines.keys())[0]
+            self.selected_state_machine_id = next(iter(self.state_machines.keys()))
 
         if isinstance(meta, Vividict):
             self.meta = meta

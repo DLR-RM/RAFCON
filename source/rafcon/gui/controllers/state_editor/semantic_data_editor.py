@@ -156,7 +156,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
 
         # generate key
         target_dict = self.model.state.get_semantic_data(target_dict_path_as_list)
-        new_key_string = generate_semantic_data_key(list(target_dict.keys()))
+        new_key_string = generate_semantic_data_key(target_dict.keys())
         self.model.state.add_semantic_data(target_dict_path_as_list, value, new_key_string)
 
         self.reload_tree_store_data()
@@ -323,7 +323,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
             target_dict = self.model.state.semantic_data
             for element in dict_path[0:-1]:
                 target_dict = target_dict[element]
-            new_key_str = generate_semantic_data_key(list(target_dict.keys()))
+            new_key_str = generate_semantic_data_key(target_dict.keys())
 
         new_dict_path = self.model.state.add_semantic_data(dict_path[0:-1], old_value, key=new_key_str)
         self._changed_id_to = {':'.join(dict_path): new_dict_path}  # use hashable key (workaround for tree view ctrl)

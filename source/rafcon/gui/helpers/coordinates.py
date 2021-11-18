@@ -25,7 +25,7 @@ def main_window2graphical_editor(main_window_coordinates):
     from rafcon.gui.singleton import main_window_controller
     main_window = main_window_controller.view.get_top_widget()
     sm_controllers = main_window_controller.state_machines_editor_ctrl
-    sm_notebook_page = list(sm_controllers.tabs.items())[0][1]['page']
+    sm_notebook_page = next(iter(sm_controllers.tabs.items()))[1]['page']
     return main_window.translate_coordinates(sm_notebook_page, main_window_coordinates[0], main_window_coordinates[1])
 
 
@@ -41,7 +41,7 @@ def graphical_editor2main_window(ge_coordinates):
     from rafcon.gui.singleton import main_window_controller
     main_window = main_window_controller.view.get_top_widget()
     sm_controllers = main_window_controller.state_machines_editor_ctrl
-    sm_notebook_page = list(sm_controllers.tabs.items())[0][1]['page']
+    sm_notebook_page = next(iter(sm_controllers.tabs.items()))[1]['page']
     return sm_notebook_page.translate_coordinates(main_window, ge_coordinates[0], ge_coordinates[1])
 
 

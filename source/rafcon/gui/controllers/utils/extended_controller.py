@@ -158,7 +158,7 @@ class ExtendedController(Controller):
         assert isinstance(shortcut_manager, ShortcutManager)
         self.__shortcut_manager = shortcut_manager
 
-        for controller in list(self.__child_controllers.values()):
+        for controller in self.__child_controllers.values():
             if controller not in self.__action_registered_controllers:
                 try:
                     controller.register_actions(shortcut_manager)
@@ -167,7 +167,7 @@ class ExtendedController(Controller):
                 self.__action_registered_controllers.append(controller)
 
     def unregister_actions(self, shortcut_manager):
-        for controller in list(self.__child_controllers.values()):
+        for controller in self.__child_controllers.values():
             controller.unregister_actions(shortcut_manager)
         shortcut_manager.remove_callbacks_for_controller(self)
 

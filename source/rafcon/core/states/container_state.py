@@ -197,7 +197,7 @@ class ContainerState(State):
         if not isinstance(other, self.__class__):
             return False
         try:
-            diff_states = [self.states[state_id] == state for state_id, state in list(other.states.items())]
+            diff_states = [self.states[state_id] == state for state_id, state in other.states.items()]
             diff_states.append(len(self.states) == len(other.states))
         except KeyError:
             return False
@@ -424,21 +424,21 @@ class ContainerState(State):
             # logger.info("PRIOR IN OUT {0}, {1}".format(prior_port_key, prior_locate_key))
             minor_port_key = 'from' if prior_port_key == 'to' else 'to'
             minor_locate_key = 'external' if prior_locate_key == 'internal' else 'internal'
-            for port_key in list(going_data_linkage_for_port[prior_port_key].keys()):
+            for port_key in going_data_linkage_for_port[prior_port_key].keys():
                 port_dfs = going_data_linkage_for_port[prior_port_key][port_key]
                 # print(prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key]))
                 if len(port_dfs[prior_locate_key]) > 1:
                     for df in port_dfs[prior_locate_key]:
                         # print("remove: ", df.data_flow_id, prior_locate_key, minor_port_key)
                         reduce_dfs(going_data_linkage_for_port[minor_port_key], df.data_flow_id)
-            for port_key in list(going_data_linkage_for_port[minor_port_key].keys()):
+            for port_key in going_data_linkage_for_port[minor_port_key].keys():
                 port_dfs = going_data_linkage_for_port[minor_port_key][port_key]
                 # print(minor_port_key, ": check: ", port_key, " length: ", len(port_dfs[minor_locate_key]))
                 if len(port_dfs[minor_locate_key]) > 1:
                     for df in port_dfs[minor_locate_key]:
                         # print("remove: ", df.data_flow_id, minor_locate_key, prior_port_key)
                         reduce_dfs(going_data_linkage_for_port[prior_port_key], df.data_flow_id)
-            for port_key in list(going_data_linkage_for_port[prior_port_key].keys()):
+            for port_key in going_data_linkage_for_port[prior_port_key].keys():
                 port_dfs = going_data_linkage_for_port[prior_port_key][port_key]
                 # print(prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key]))
                 if len(port_dfs[prior_locate_key]) == 1:
@@ -550,7 +550,7 @@ class ContainerState(State):
                            "".format('\n'.join([str(destination) for destination in ingoing_logical_destinations.items()[1:]])))
         ingoing_transitions = None
         if len(ingoing_logical_destinations) > 0:
-            ingoing_transitions = list(ingoing_logical_destinations.items())[0][1]
+            ingoing_transitions = next(iter(ingoing_logical_destinations.items()))[1]
         # transitions from outgoing transitions
         transitions_outgoing = {t.transition_id: t for t in related_transitions['outgoing']}
         outgoing_logical_destinations = find_logical_destinations_of_transitions(related_transitions['outgoing'])
@@ -567,7 +567,7 @@ class ContainerState(State):
         outcomes_outgoing_transitions = {}
         new_outcome_ids = {}
         state_outcomes_by_name = {oc.name: oc_id for oc_id, oc in s.outcomes.items()}
-        for goal, transitions in list(outgoing_logical_destinations.items()):
+        for goal, transitions in outgoing_logical_destinations.items():
             t = transitions[0]
             name = s.states[t.from_state].outcomes[t.from_outcome].name
             # print((t.to_state, t.to_outcome))
@@ -576,7 +576,7 @@ class ContainerState(State):
                 # logger.info("old outcome {}".format((t.to_state, t.to_outcome)))
                 name = outcomes_outgoing_transitions[goal]
             else:
-                name = create_name(name, list(new_outcome_ids.keys()))
+                name = create_name(name, new_outcome_ids.keys())
                 outcomes_outgoing_transitions[goal] = name
             # print(outcomes_outgoing_transitions, "\n", new_outcome_ids)
             if name not in new_outcome_ids:
@@ -700,7 +700,7 @@ class ContainerState(State):
                         outgoing_data_linkage_for_port[(df.to_state, df.to_key)]['external'].append(ext_df)
         # hold states and scoped variables to rebuild
         child_states = [state.remove_state(s_id, recursive=False, destroy=False) for s_id in list(state.states.keys())]
-        child_scoped_variables = [sv for sv_id, sv in list(state.scoped_variables.items())]
+        child_scoped_variables = list(state.scoped_variables.values())
 
         # remove state that should be ungrouped
         old_state = self.remove_state(state_id, recursive=False, destroy=False)
@@ -717,7 +717,7 @@ class ContainerState(State):
             old_state_id = child_state.state_id
             # needed to change state id here because not handled in add state and to avoid old state ids
             new_id = None
-            if child_state.state_id in list(self.states.keys()):
+            if child_state.state_id in self.states.keys():
                 new_id = state_id_generator(used_state_ids=list(self.states.keys()) + old_state_ids + [self.state_id])
                 child_state.change_state_id(new_id)
             new_state_id = self.add_state(child_state)
@@ -1017,7 +1017,7 @@ class ContainerState(State):
 
         [related_transitions, related_data_flows] = self.get_connections_for_state(state_id)
 
-        readjust_parent_of_ports = True if state.state_id != list(state.outcomes.items())[0][1].parent.state_id else False
+        readjust_parent_of_ports = True if state.state_id != next(iter(state.outcomes.items()))[1].parent.state_id else False
 
         old_outcome_names = {oc_id: oc.name for oc_id, oc in self.states[state_id].outcomes.items()}
         old_input_data_ports = copy(self.states[state_id].input_data_ports)
@@ -1620,7 +1620,7 @@ class ContainerState(State):
         :param state: The state to which the input_data was passed (should be self in most cases)
         """
         for dict_key, value in dictionary.items():
-            for input_data_port_key, data_port in list(self.input_data_ports.items()):
+            for input_data_port_key, data_port in self.input_data_ports.items():
                 if dict_key == data_port.name:
                     self.scoped_data[str(input_data_port_key) + self.state_id] = \
                         ScopedData(data_port.name, value, type(value), self.state_id, ScopedVariable, parent=self)
@@ -1641,7 +1641,7 @@ class ContainerState(State):
         :param state: The state that finished execution and provide the dictionary
         """
         for output_name, value in dictionary.items():
-            for output_data_port_key, data_port in list(state.output_data_ports.items()):
+            for output_data_port_key, data_port in state.output_data_ports.items():
                 if output_name == data_port.name:
                     if not isinstance(value, data_port.data_type):
                         if (not ((type(value) is float or type(value) is int) and

@@ -326,7 +326,7 @@ class ContainerStateModel(StateModel):
                     notify_logger_method("Should only happen in ungroup - new model {0}".format(new_sv_m))
 
         if 'transitions' in source_models_dict:
-            for t_id, old_t_m in list(source_models_dict['transitions'].items()):
+            for t_id, old_t_m in source_models_dict['transitions'].items():
                 new_t_m = self.get_transition_m(t_id)
                 if new_t_m is None:
                     raise RuntimeError("transition model to set meta data could not be found"

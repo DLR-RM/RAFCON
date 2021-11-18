@@ -268,11 +268,11 @@ def get_boundaries_of_elements_in_dict(models_dict, clearance=0.):
     right = 0.
     bottom = 0.
     if 'states' in models_dict and models_dict['states']:
-        left = list(models_dict['states'].items())[0][1].get_meta_data_editor()['rel_pos'][0]
-        top = list(models_dict['states'].items())[0][1].get_meta_data_editor()['rel_pos'][1]
+        left = next(iter(models_dict['states'].items()))[1].get_meta_data_editor()['rel_pos'][0]
+        top = next(iter(models_dict['states'].items()))[1].get_meta_data_editor()['rel_pos'][1]
     elif 'scoped_variables' in models_dict and models_dict['scoped_variables']:
-        left = list(models_dict['scoped_variables'].items())[0][1].get_meta_data_editor()['inner_rel_pos'][0]
-        top = list(models_dict['scoped_variables'].items())[0][1].get_meta_data_editor()['inner_rel_pos'][1]
+        left = next(iter(models_dict['scoped_variables'].items()))[1].get_meta_data_editor()['inner_rel_pos'][0]
+        top = next(iter(models_dict['scoped_variables'].items()))[1].get_meta_data_editor()['inner_rel_pos'][1]
     else:
         all_ports = list(models_dict['input_data_ports'].values()) + list(models_dict['output_data_ports'].values()) + \
                     list(models_dict['scoped_variables'].values()) + list(models_dict['outcomes'].values())

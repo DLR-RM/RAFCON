@@ -137,7 +137,7 @@ class StateTransitionsListController(LinkageListController):
         free_outcomes = None
 
         if self.view_dict['transitions_internal'] and self.combo['free_from_outcomes_dict']:
-            from_state_id = list(self.combo['free_from_outcomes_dict'].keys())[0]
+            from_state_id = next(iter(self.combo['free_from_outcomes_dict'].keys()))
             free_outcomes = self.combo['free_from_outcomes_dict'][from_state_id]
             responsible_parent = self.model.state
         elif self.view_dict['transitions_external'] and self.combo['free_ext_from_outcomes_dict'] and \
@@ -152,11 +152,11 @@ class StateTransitionsListController(LinkageListController):
 
         from_outcome = None if free_outcomes[0] is None else free_outcomes[0].outcome_id
         to_state_id = responsible_parent.state_id
-        to_outcomes = list(responsible_parent.outcomes.values())
+        to_outcomes = responsible_parent.outcomes.values()
         if len(to_outcomes) == 0:
             logger.warning("No more options to add a transition")
             return
-        to_outcome = to_outcomes[0].outcome_id
+        to_outcome = next(iter(to_outcomes)).outcome_id
         # print("NEW TRANSITION IS: ", from_state_id, from_outcome, to_state_id, to_outcome)
 
         try:

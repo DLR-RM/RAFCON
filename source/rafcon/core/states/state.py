@@ -1267,7 +1267,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         # check that all old_outcomes are no more referencing self as there parent
         for old_outcome in old_outcomes.values():
-            if old_outcome not in iter(list(self._outcomes.values())) and old_outcome.parent is self:
+            if old_outcome not in self._outcomes.values() and old_outcome.parent is self:
                 old_outcome.parent = None
 
     @property

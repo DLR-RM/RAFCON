@@ -251,7 +251,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         state_id = super(BarrierConcurrencyState, self).add_state(state)
         if not storage_load and not self.__init_running and not state.state_id == UNIQUE_DECIDER_STATE_ID:
             # the transitions must only be created for the initial add_state call and not during each load procedure
-            for o_id, o in list(state.outcomes.items()):
+            for o_id, o in state.outcomes.items():
                 if not o_id == -1 and not o_id == -2:
                     self.add_transition(state.state_id, o_id, self.states[UNIQUE_DECIDER_STATE_ID].state_id, None)
         return state_id
@@ -266,8 +266,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         :raises exceptions.TypeError: if the states parameter is not of type dict
         """
         # First safely remove all existing states (recursively!), as they will be replaced
-        state_ids = list(self.states.keys())
-        for state_id in state_ids:
+        for state_id in list(self.states.keys()):
             # Do not remove decider state, if teh new list of states doesn't contain an alternative one
             if state_id == UNIQUE_DECIDER_STATE_ID and UNIQUE_DECIDER_STATE_ID not in states:
                 continue
