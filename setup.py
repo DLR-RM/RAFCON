@@ -12,7 +12,6 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-# from __future__ import print_function
 from setuptools import setup, find_packages, Command
 import distutils.log
 import sys
@@ -62,8 +61,8 @@ readme_file_path = os.path.join(".", "README.rst")
 with open(readme_file_path, "r") as f:
     long_description = f.read()
 
-global_requirements = ['pylint>=1.6,<2', 'psutil', 'jsonconversion~=0.2.12', 'yaml_configuration~=0.1',
-                       'python-gtkmvc3-dlr~=1.0.0', 'gaphas~=1.0.0', 'future>=0.16,<0.18.0']
+global_requirements = ['pylint==2.11.1', 'psutil==5.8.0', 'jsonconversion==0.2.13', 'yaml_configuration==0.2.5',
+                       'python_gtkmvc3_dlr==1.0.1', 'gaphas==2.1.2']
 test_requirements = ['pytest>=3.5,<5', 'pytest-timeout<2', 'pytest-mock>=1.9.0,<3', 'pytest-faulthandler~=1.6.0',
                      'graphviz==0.16', 'pyuserinput', 'pandas~=1.1.5', 'numpy~=1.19.5']
 setup_requirements = ['pytest-runner', 'libsass >= 0.15.0']
