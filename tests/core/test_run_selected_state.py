@@ -23,8 +23,7 @@ def test_run_this_state(caplog):
     # Set state machine as active state machine
     rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     # Run selected state machine
-    state_machine_execution_engine.run_selected_state("BTWFZQ/EPQSTG",
-                                                                            state_machine.state_machine_id)
+    state_machine_execution_engine.run_selected_state("BTWFZQ/EPQSTG", state_machine.state_machine_id)
     # Stop execution engine
     state_machine_execution_engine.stop()
     # assert variable state
