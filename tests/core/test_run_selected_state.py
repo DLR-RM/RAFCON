@@ -1,5 +1,4 @@
 import os
-import time
 
 # core elements
 from rafcon.core.storage import storage
@@ -9,7 +8,6 @@ from rafcon.utils import log
 
 # test environment elements
 from tests import utils as testing_utils
-from tests.utils import wait_for_execution_engine_sync_counter
 
 logger = log.get_logger(__name__)
 
@@ -25,10 +23,10 @@ def test_run_this_state(caplog):
     # Set state machine as active state machine
     rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     # Run selected state machine
-    rafcon.core.singleton.state_machine_execution_engine.run_selected_state("BTWFZQ/EPQSTG",
+    state_machine_execution_engine.run_selected_state("BTWFZQ/EPQSTG",
                                                                             state_machine.state_machine_id)
     # Stop execution engine
-    rafcon.core.singleton.state_machine_execution_engine.stop()
+    state_machine_execution_engine.stop()
     # assert variable state
     try:
         assert rafcon.core.singleton.global_variable_manager.get_variable("test_value") == 2
