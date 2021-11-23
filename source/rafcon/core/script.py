@@ -16,7 +16,6 @@
 
 """
 
-from builtins import str
 import os
 import importlib
 import yaml

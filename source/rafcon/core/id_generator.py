@@ -17,8 +17,6 @@
 
 """
 
-from builtins import str
-from builtins import range
 import string
 import random
 import uuid

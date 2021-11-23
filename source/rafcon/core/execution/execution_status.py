@@ -15,7 +15,6 @@
    :synopsis: A module to represent the state machine status
 
 """
-from builtins import str
 from enum import Enum
 import sys
 from threading import Condition

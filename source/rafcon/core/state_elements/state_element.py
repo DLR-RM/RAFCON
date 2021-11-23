@@ -17,7 +17,6 @@
 
 """
 
-from builtins import str
 from weakref import ref
 from yaml import YAMLObject
 from gtkmvc3.observable import Observable

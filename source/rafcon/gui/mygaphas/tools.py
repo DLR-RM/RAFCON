@@ -16,8 +16,6 @@
 
 from gi.repository import Gtk
 from gi.repository import Gdk
-from builtins import filter
-from builtins import next
 from enum import Enum
 from gaphas.aspect import HandleFinder, InMotion
 from gaphas.item import NW, Item

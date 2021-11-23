@@ -19,7 +19,6 @@
 """
 
 from gtkmvc3.controller import Controller
-from past.builtins import map
 
 from rafcon.gui.shortcut_manager import ShortcutManager
 from rafcon.utils import log
@@ -241,7 +240,8 @@ class ExtendedController(Controller):
 
         The method uses the set of registered models to relieve them.
         """
-        map(self.relieve_model, list(self.__registered_models))
+        for registered_model in list(self.__registered_models):
+            self.relieve_model(registered_model)
         self.__registered_models.clear()
 
     def get_root_window(self):

@@ -1,4 +1,3 @@
-from builtins import object
 import rafcon.core.singleton
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.states.library_state import LibraryState

@@ -13,7 +13,6 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from builtins import str, object
 from functools import partial
 
 from rafcon.gui.config import global_gui_config

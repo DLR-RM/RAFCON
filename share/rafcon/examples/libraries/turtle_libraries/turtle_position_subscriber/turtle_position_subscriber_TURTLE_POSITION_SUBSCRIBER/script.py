@@ -1,4 +1,3 @@
-from builtins import str
 import rospy
 from turtlesim.msg import *
 

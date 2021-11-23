@@ -19,7 +19,6 @@
 
 """
 
-from past.builtins import str
 from builtins import str
 from pydoc import locate, ErrorDuringImport
 from inspect import isclass

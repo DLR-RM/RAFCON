@@ -1,4 +1,3 @@
-from builtins import range
 import time
 
 def execute(self, inputs, outputs, gvm):

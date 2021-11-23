@@ -1,10 +1,7 @@
-from past.builtins import map
-from builtins import str
 import os
 import gc
 import time
 import shutil
-import gtkmvc3
 from functools import partial
 import pytest
 
@@ -397,27 +394,27 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
     if target_objects:
         generate_graphs(target_objects)
         return
-        for index_target_object, target_object in enumerate(target_objects):
-            print()
-            print()
-            print("# Referrers of #{0} {1}:".format(index_target_object + 1, searched_type), target_object)
-
-            # TODO the referrer prints should avoid to print the local variables list (by checking element keys)
-            # TODO the referrer prints should avoid to print the list generated in this script (by inherit)
-            target_object_referrers = gc.get_referrers(target_object)
-            list_referrers = [referrer for referrer in target_object_referrers if hasattr(referrer, '__iter__')]
-
-            print("## simple referrers", len(target_object_referrers))
-            map(print_referrer, [referrer for referrer in target_object_referrers if referrer not in list_referrers])
-
-            print("## list referrers")
-            gc.collect()
-
-            for referrer in list_referrers:
-                print_referrer(referrer)
-                second_instance_list_referrers = gc.get_referrers(referrer)
-                print("### referrers of list referrer", len(second_instance_list_referrers))
-                map(print_referrer, second_instance_list_referrers)
+        # for index_target_object, target_object in enumerate(target_objects):
+        #     print()
+        #     print()
+        #     print("# Referrers of #{0} {1}:".format(index_target_object + 1, searched_type), target_object)
+        #
+        #     # TODO the referrer prints should avoid to print the local variables list (by checking element keys)
+        #     # TODO the referrer prints should avoid to print the list generated in this script (by inherit)
+        #     target_object_referrers = gc.get_referrers(target_object)
+        #     list_referrers = [referrer for referrer in target_object_referrers if hasattr(referrer, '__iter__')]
+        #
+        #     print("## simple referrers", len(target_object_referrers))
+        #     map(print_referrer, [referrer for referrer in target_object_referrers if referrer not in list_referrers])
+        #
+        #     print("## list referrers")
+        #     gc.collect()
+        #
+        #     for referrer in list_referrers:
+        #         print_referrer(referrer)
+        #         second_instance_list_referrers = gc.get_referrers(referrer)
+        #         print("### referrers of list referrer", len(second_instance_list_referrers))
+        #         map(print_referrer, second_instance_list_referrers)
     # else:
     #     generate_graphs(found_objects)
 

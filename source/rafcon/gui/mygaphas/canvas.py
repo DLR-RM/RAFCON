@@ -12,9 +12,6 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import object
-from builtins import next
-from past.builtins import map
 import gaphas.canvas
 from gaphas.item import Item
 
@@ -220,7 +217,7 @@ class ItemProjection(object):
                                                                     self._item_target).transform_point(x, y)
         return self._px, self._py
 
-    pos = property(lambda self: list(map(gaphas.projections.VariableProjection,
+    pos = property(lambda self: list(map(gaphas.canvas.VariableProjection,
                                     self._point, self._get_value(),
                                     (self._on_change_x, self._on_change_y))))
 

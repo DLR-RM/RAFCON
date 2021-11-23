@@ -16,8 +16,6 @@
 
 """
 
-from builtins import str
-
 from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.states.concurrency_state import ConcurrencyState
 from rafcon.core.states.state import StateExecutionStatus

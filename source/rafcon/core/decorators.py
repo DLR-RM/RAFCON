@@ -16,9 +16,7 @@
 
 """
 
-from builtins import filter
 import functools
-import itertools
 
 
 def wraps_safely(obj, attr_names=functools.WRAPPER_ASSIGNMENTS):

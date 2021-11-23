@@ -1,5 +1,5 @@
 astroid==2.8.5
-gaphas==2.1.2
+gaphas==2.0.1
 graphviz==0.18.2
 jsonconversion==0.2.13
 matplotlib==2.1.1

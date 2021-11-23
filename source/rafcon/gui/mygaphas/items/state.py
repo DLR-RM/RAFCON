@@ -641,15 +641,14 @@ class StateView(Element):
 
     def remove_income(self):
         income_v = self._income
-        if income_v is not None:
-            del self._map_handles_port_v[income_v.handle]
-            self._income = None
-            self._ports.remove(income_v.port)
-            self._handles.remove(income_v.handle)
+        del self._map_handles_port_v[income_v.handle]
+        self._income = None
+        self._ports.remove(income_v.port)
+        self._handles.remove(income_v.handle)
 
-            self.canvas.remove_port(income_v)
-            if income_v in self.port_constraints:
-                self.canvas.solver.remove_constraint(self.port_constraints.pop(income_v))
+        self.canvas.remove_port(income_v)
+        if income_v in self.port_constraints:
+            self.canvas.solver.remove_constraint(self.port_constraints.pop(income_v))
 
     def add_outcome(self, outcome_m):
         outcome_v = OutcomeView(outcome_m, self)

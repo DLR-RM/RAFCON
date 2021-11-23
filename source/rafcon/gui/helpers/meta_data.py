@@ -10,8 +10,6 @@
 # Rico Belder <rico.belder@dlr.de>
 # Christoph Suerig <christoph.suerig@dlr.de
 
-from builtins import range
-from builtins import str
 from copy import deepcopy
 
 import json
