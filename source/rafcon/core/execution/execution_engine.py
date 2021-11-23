@@ -68,6 +68,7 @@ class ExecutionEngine(Observable):
         self.state_counter_lock = Lock()
         self.new_execution_command_handled = True
         self.run_selected_done = False
+        self.run_selected_hierarchy_length = None
 
     @Observable.observed
     def pause(self):
@@ -310,15 +311,13 @@ class ExecutionEngine(Observable):
     def run_selected_state(self, start_state_path=None, state_machine_id=None):
         """Execute the selected state machine.
         """
-        """Set the execution mode to stepping mode. Transitions are only triggered if a new step is triggered
-        """
+        from rafcon.core.states.library_state import LibraryState
         logger.debug("Run selected state")
         self.run_selected_done = False
         if state_machine_id is not None:
             self.state_machine_manager.active_state_machine_id = state_machine_id
 
         self.run_to_states = []
-        # self.run_to_states.append(start_state_path)
         if self.finished_or_stopped():
             self.start_state_paths = []
             if start_state_path:
@@ -330,6 +329,8 @@ class ExecutionEngine(Observable):
                     else:
                         cur_path = cur_path + "/" + path
                     self.start_state_paths.append(cur_path)
+
+            self.run_selected_hierarchy_length = len(self.start_state_paths) - 1
 
             self.set_execution_mode(StateMachineExecutionStatus.RUN_SELECTED_STATE)
             self._run_active_state_machine()
@@ -440,7 +441,9 @@ class ExecutionEngine(Observable):
         elif self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE:
             if not self.run_selected_done:
                 self.run_to_states.append(container_state.get_path())
-                self.run_selected_done = True
+                self.run_selected_hierarchy_length = self.run_selected_hierarchy_length - 1 - self.library_number
+                if self.run_selected_hierarchy_length == 0:
+                    self.run_selected_done = True
             else:
                 self._wait_while_in_pause_or_in_step_mode()
 
