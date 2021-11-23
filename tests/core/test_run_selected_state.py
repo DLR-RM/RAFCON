@@ -27,13 +27,13 @@ def test_run_this_state(caplog):
     # Run selected state machine
     rafcon.core.singleton.state_machine_execution_engine.run_selected_state("BTWFZQ/EPQSTG",
                                                                             state_machine.state_machine_id)
+    # Stop execution engine
+    rafcon.core.singleton.state_machine_execution_engine.stop()
     # assert variable state
     try:
         assert rafcon.core.singleton.global_variable_manager.get_variable("test_value") == 2
     # Shutdown testing environment
     finally:
-        # Stop execution engine
-        rafcon.core.singleton.state_machine_execution_engine.stop()
         testing_utils.shutdown_environment_only_core(caplog=caplog)
 
 
