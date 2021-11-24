@@ -16,7 +16,6 @@
 
 """
 
-from builtins import str
 from yaml import YAMLObject
 from jsonconversion.jsonobject import JSONObject
 

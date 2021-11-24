@@ -23,7 +23,6 @@
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Gdk
-from builtins import str
 import os
 from functools import partial
 

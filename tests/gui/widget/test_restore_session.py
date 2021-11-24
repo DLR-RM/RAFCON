@@ -1,5 +1,4 @@
 from copy import deepcopy
-from builtins import range
 from os.path import join, exists
 
 # general tool elements

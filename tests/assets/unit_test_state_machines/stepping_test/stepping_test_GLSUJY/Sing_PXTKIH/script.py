@@ -1,5 +1,5 @@
-from builtins import str
 import time
+
 
 def execute(self, inputs, outputs, gvm):
     bottles = inputs['bottles']

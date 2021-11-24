@@ -10,7 +10,6 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import zip
 from math import atan2, pi, floor
 
 from gaphas.item import Line, NW, SE

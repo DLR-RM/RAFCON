@@ -13,7 +13,6 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gtkmvc3.model_mt import ModelMT
-from builtins import range
 
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.data_port import DataPortModel

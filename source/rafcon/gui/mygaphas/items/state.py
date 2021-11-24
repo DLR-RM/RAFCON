@@ -13,7 +13,6 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import str
 from weakref import ref
 from gi.repository.Pango import SCALE, FontDescription, WrapMode
 from gi.repository import PangoCairo

@@ -1,4 +1,3 @@
-from builtins import str
 import os
 from os.path import join
 import copy

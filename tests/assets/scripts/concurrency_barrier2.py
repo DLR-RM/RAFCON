@@ -1,5 +1,5 @@
-from builtins import range
 import time
+
 
 def execute(self, inputs, outputs, gvm):
     print("concurrence_barrier2: Hello world")

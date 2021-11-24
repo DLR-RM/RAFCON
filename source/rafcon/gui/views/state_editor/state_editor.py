@@ -14,7 +14,6 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gtkmvc3.view import View
-from builtins import range
 
 from rafcon.gui import glade
 import rafcon.gui.helpers.label as gui_helper_label

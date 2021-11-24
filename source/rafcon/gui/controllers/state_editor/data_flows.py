@@ -21,7 +21,6 @@
 
 from gi.repository import GObject
 from gi.repository import Gtk
-from builtins import str
 
 from rafcon.core.state_elements.scope import ScopedVariable
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort

@@ -22,7 +22,6 @@
 
 from gi.repository import GObject
 from gi.repository import Gtk
-from builtins import str
 
 from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController

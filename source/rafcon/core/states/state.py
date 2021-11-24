@@ -21,10 +21,8 @@
 
 """
 import queue
-import copy
 import os
 import threading
-from builtins import staticmethod
 from weakref import ref
 import copy
 

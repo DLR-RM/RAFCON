@@ -15,8 +15,6 @@
 
 """
 
-
-from builtins import range
 from math import sqrt, pi
 
 

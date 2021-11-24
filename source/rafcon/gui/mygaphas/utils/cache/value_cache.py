@@ -9,8 +9,6 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import object
-from builtins import str
 from decimal import Context, Decimal
 from hashlib import sha256
 from rafcon.utils.hashable import Hashable

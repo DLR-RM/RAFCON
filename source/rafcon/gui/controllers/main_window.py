@@ -21,7 +21,6 @@
 
 """
 
-from builtins import str
 import os
 import logging
 from gi.repository import Gtk

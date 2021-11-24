@@ -1,5 +1,3 @@
-from builtins import str
-import pytest
 from os.path import realpath, dirname, join
 import rafcon
 import os

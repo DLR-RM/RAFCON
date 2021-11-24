@@ -20,7 +20,6 @@
 
 """
 from weakref import ref
-from builtins import str
 from copy import copy, deepcopy
 from threading import Condition
 from collections import OrderedDict

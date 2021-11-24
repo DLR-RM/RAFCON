@@ -17,7 +17,7 @@
    :synopsis: A module to represent a hierarchy state for the state machine
 
 """
-from builtins import str
+
 import copy
 
 from rafcon.utils import log

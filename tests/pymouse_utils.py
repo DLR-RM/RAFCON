@@ -1,6 +1,5 @@
 """The module uses the module pymouse of pypi package PyMouse or the equivalent element of the package PyUserInput."""
-from builtins import range
-import os
+
 import time
 from math import *
 import numpy as np

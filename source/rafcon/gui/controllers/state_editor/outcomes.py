@@ -22,7 +22,6 @@
 
 from gi.repository import GObject
 from gi.repository import Gtk
-from builtins import str
 
 from rafcon.gui.helpers.meta_data import insert_self_transition_meta_data
 from rafcon.core.state_elements.logical_port import Outcome

@@ -19,7 +19,6 @@
 
 """
 
-from builtins import str
 from pydoc import locate, ErrorDuringImport
 from inspect import isclass
 import sys

@@ -22,7 +22,6 @@
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Gdk
-from builtins import range
 from functools import partial
 
 from rafcon.core.states.state import State

@@ -8,7 +8,6 @@
 # Contributors:
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import object
 import os
 
 from rafcon.gui.utils.shell_execution import execute_command_with_path_in_process

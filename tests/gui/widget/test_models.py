@@ -1,5 +1,4 @@
 from gtkmvc3.observer import Observer
-from builtins import str
 
 import pytest
 from tests import utils as testing_utils

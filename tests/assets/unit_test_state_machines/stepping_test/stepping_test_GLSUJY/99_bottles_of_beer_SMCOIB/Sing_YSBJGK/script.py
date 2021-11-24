@@ -1,7 +1,4 @@
-from builtins import str
-import time 
-    
-def execute(self, inputs, outputs, gvm):  
+def execute(self, inputs, outputs, gvm):
  
     bottles = inputs['bottles']
     if bottles is None:

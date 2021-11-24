@@ -21,7 +21,6 @@
 
 """
 
-from builtins import str
 import os
 from gi.repository import GLib
 from gi.repository import Gtk

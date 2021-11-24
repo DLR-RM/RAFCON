@@ -17,7 +17,6 @@ all recursive parent-StateModels of this State as well as to the may Observable 
 DataFlow's DataFlowModel is in.
 """
 from gtkmvc3.observer import Observer
-from builtins import str
 
 from tests import utils as testing_utils
 import pytest

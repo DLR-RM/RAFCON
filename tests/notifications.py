@@ -1,5 +1,3 @@
-from builtins import hex
-from builtins import str
 from os.path import join
 from collections import OrderedDict
 

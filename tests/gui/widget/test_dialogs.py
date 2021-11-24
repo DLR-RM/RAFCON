@@ -1,4 +1,3 @@
-from builtins import str
 import threading
 
 from rafcon.utils import log

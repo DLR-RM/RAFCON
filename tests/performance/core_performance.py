@@ -1,6 +1,4 @@
 # core elements
-from builtins import range
-from builtins import str
 import rafcon.core.singleton
 from rafcon.core.states.execution_state import ExecutionState
 from rafcon.core.states.hierarchy_state import HierarchyState

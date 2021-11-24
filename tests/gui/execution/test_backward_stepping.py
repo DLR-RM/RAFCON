@@ -1,6 +1,5 @@
 import pytest
 
-from builtins import range
 import os
 import time
 

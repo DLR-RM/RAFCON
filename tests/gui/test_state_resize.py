@@ -1,5 +1,3 @@
-from builtins import range
-from builtins import zip
 import os
 import time
 import pytest

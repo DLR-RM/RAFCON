@@ -22,7 +22,6 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
-from builtins import str
 
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.state_elements.scope import ScopedVariable

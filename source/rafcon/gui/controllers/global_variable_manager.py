@@ -22,7 +22,6 @@
 
 """
 
-from builtins import str
 from gi.repository import Gtk
 from gi.repository import GObject
 

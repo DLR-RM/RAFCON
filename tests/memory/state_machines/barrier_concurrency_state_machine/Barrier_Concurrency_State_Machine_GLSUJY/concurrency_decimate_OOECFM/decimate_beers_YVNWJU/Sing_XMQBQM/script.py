@@ -1,8 +1,5 @@
 # State "Sing"
-from builtins import str
 def execute(self, inputs, outputs, gvm):
-    import time   
- 
     bottles = inputs['number']
     bottle_type = inputs['type']
     if bottles is None:

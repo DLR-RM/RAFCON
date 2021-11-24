@@ -20,7 +20,6 @@
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GObject
-from builtins import str
 import yaml_configuration.config
 from os.path import dirname
 

@@ -22,9 +22,6 @@
 
 """
 
-from builtins import range
-from builtins import next
-from builtins import str
 from os import path
 from gi.repository import Gtk
 from gi.repository import Gdk

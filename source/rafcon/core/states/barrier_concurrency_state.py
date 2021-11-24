@@ -19,8 +19,6 @@
 
 """
 
-from builtins import str
-
 from gtkmvc3.observable import Observable
 
 from rafcon.core.custom_exceptions import RecoveryModeException

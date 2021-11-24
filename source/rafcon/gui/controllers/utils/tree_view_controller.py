@@ -14,8 +14,6 @@
 from gi.repository import GLib
 from gi.repository import Gtk
 from gi.repository import Gdk
-from builtins import range
-from builtins import str
 
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController

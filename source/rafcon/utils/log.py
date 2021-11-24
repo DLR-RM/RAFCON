@@ -17,7 +17,7 @@
    :synopsis: A module caring about the logging capability of RAFCON
 
 """
-from builtins import object
+
 import os
 import logging
 import logging.config

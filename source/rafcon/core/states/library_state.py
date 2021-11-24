@@ -17,7 +17,7 @@
    :synopsis: A module to represent a library state in the state machine
 
 """
-from builtins import str
+
 from weakref import ref
 from copy import copy, deepcopy
 

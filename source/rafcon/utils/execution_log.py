@@ -10,9 +10,6 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 # Sebastian Riedel <sebastian.riedel@dlr.de>
 
-from builtins import range
-from builtins import str
-import shelve
 import json
 import pickle
 

@@ -11,7 +11,6 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import str
 from copy import deepcopy
 
 from gtkmvc3.observable import Observable
