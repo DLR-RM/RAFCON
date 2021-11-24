@@ -332,11 +332,13 @@ class LibraryManager(Observable):
 
     def _get_library_root_key_for_os_path(self, path):
         """Return library root key if path is within library root paths"""
+        is_link = os.path.islink(path)
         path = os.path.realpath(path)
         library_root_key = None
         for library_root_key, library_root_path in self._library_root_paths.items():
             rel_path = os.path.relpath(path, library_root_path)
-            if rel_path.startswith('..'):
+            # We should allow the physical address of a symlink to be outside a library root key
+            if rel_path.startswith('..') and not is_link:
                 library_root_key = None
                 continue
             else:
