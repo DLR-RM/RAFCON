@@ -36,7 +36,7 @@ class ExtendedGtkView(GtkView, Observer):
         self.value_cache = ValueCache()
         self.observe_model(self._selection)
         self.observe_model(state_machine_m.root_state)
-        self._bounding_box_painter = BoundingBoxPainter(self)
+        self._bounding_box_painter = BoundingBoxPainter(view=self)
         self._graphical_editor = ref(graphical_editor_v)
 
     def prepare_destruction(self):

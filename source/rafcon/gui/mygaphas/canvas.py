@@ -217,7 +217,7 @@ class ItemProjection(object):
                                                                     self._item_target).transform_point(x, y)
         return self._px, self._py
 
-    pos = property(lambda self: list(map(gaphas.canvas.VariableProjection,
+    pos = property(lambda self: list(map(gaphas.projections.VariableProjection,
                                     self._point, self._get_value(),
                                     (self._on_change_x, self._on_change_y))))
 
