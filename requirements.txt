@@ -15,7 +15,6 @@ pykeyboard==0.1.2
 pylint==2.11.1
 pymouse==1.0
 PyOpenGL==3.1.5
-pytest==3.3.2
 python_gtkmvc3_dlr==1.0.1
 PyYAML==6.0
 rst2pdf==0.98
