@@ -311,30 +311,29 @@ class ExecutionEngine(Observable):
     def run_selected_state(self, start_state_path=None, state_machine_id=None):
         """Execute the selected state machine.
         """
-        from rafcon.core.states.library_state import LibraryState
         logger.debug("Run selected state")
-        self.run_selected_done = False
         if state_machine_id is not None:
             self.state_machine_manager.active_state_machine_id = state_machine_id
 
         self.run_to_states = []
+        # set appropriate start states
+        self.start_state_paths = []
+        if start_state_path:
+            path_list = start_state_path.split("/")
+            cur_path = ""
+            for path in path_list:
+                if cur_path == "":
+                    cur_path = path
+                else:
+                    cur_path = cur_path + "/" + path
+                self.start_state_paths.append(cur_path)
+
+        # set target states when execution should stop
+        self.run_to_states.append(start_state_path)
+
         if self.finished_or_stopped():
-            self.start_state_paths = []
-            if start_state_path:
-                path_list = start_state_path.split("/")
-                cur_path = ""
-                for path in path_list:
-                    if cur_path == "":
-                        cur_path = path
-                    else:
-                        cur_path = cur_path + "/" + path
-                    self.start_state_paths.append(cur_path)
-
-            self.run_selected_hierarchy_length = len(self.start_state_paths) - 1
-
             self.set_execution_mode(StateMachineExecutionStatus.RUN_SELECTED_STATE)
             self._run_active_state_machine()
-
         else:
             self.set_execution_mode(StateMachineExecutionStatus.RUN_SELECTED_STATE)
 
@@ -342,8 +341,8 @@ class ExecutionEngine(Observable):
         """ Waits as long as the execution_mode is in paused or step_mode
         """
         while (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
-                or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE) \
-                or (self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE):
+                or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
+                # or (self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE):
             with self._status.execution_condition_variable:
                 self.synchronization_counter += 1
                 logger.verbose("Increase synchronization_counter: " + str(self.synchronization_counter))
@@ -377,10 +376,23 @@ class ExecutionEngine(Observable):
             elif state_path == next_child_state_path:
                 # this is the case that execution has reached a specific state explicitly marked via
                 # run_to_selected_state() (case c) )
-                # if this is the case run_to_selected_state() is finished and the execution
-                # has to wait for new execution commands
-                wait = True
-                self.run_to_states.remove(state_path)
+                if self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE:
+                    # we now reached the state that we wanted to execute using the "run-selected-state" feature
+                    # now we just add one FORWARD_OVER step
+                    self._status.execution_mode = StateMachineExecutionStatus.FORWARD_OVER
+                    self.run_to_states.remove(state_path)
+                    # add the container state to self.run_to_states
+                    # this means that the execution will stop once it reaches the container state again
+                    # this will be the case after the selected-state finished and execution is passed
+                    # to the the parent of the selected state, which equals "container_state"
+                    self.run_to_states.append(container_state.get_path())
+                    wait = False
+                    break
+                else:
+                    # if this is the case run_to_selected_state() is finished and the execution
+                    # has to wait for new execution commands
+                    wait = True
+                    self.run_to_states.remove(state_path)
                 break
             # don't wait if its just a normal step
             else:
@@ -438,14 +450,15 @@ class ExecutionEngine(Observable):
             # this must never happen during execution of the execution engine
             raise Exception
 
-        elif self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE:
-            if not self.run_selected_done:
-                self.run_to_states.append(container_state.get_path())
-                self.run_selected_hierarchy_length = self.run_selected_hierarchy_length - 1 - self.library_number
-                if self.run_selected_hierarchy_length == 0:
-                    self.run_selected_done = True
-            else:
-                self._wait_while_in_pause_or_in_step_mode()
+        # elif self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE:
+        #     pass
+            # if not self.run_selected_done:
+            #     self.run_to_states.append(container_state.get_path())
+            #     self.run_selected_hierarchy_length = self.run_selected_hierarchy_length - 1 - self.library_number
+            #     if self.run_selected_hierarchy_length == 0:
+            #         self.run_selected_done = True
+            # else:
+            #     self._wait_while_in_pause_or_in_step_mode()
 
         else:  # all other step modes
             logger.verbose("before wait")
