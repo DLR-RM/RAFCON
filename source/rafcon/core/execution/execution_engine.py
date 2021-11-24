@@ -342,7 +342,6 @@ class ExecutionEngine(Observable):
         """
         while (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
                 or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
-                # or (self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE):
             with self._status.execution_condition_variable:
                 self.synchronization_counter += 1
                 logger.verbose("Increase synchronization_counter: " + str(self.synchronization_counter))
@@ -449,16 +448,6 @@ class ExecutionEngine(Observable):
         elif self._status.execution_mode is StateMachineExecutionStatus.FINISHED:
             # this must never happen during execution of the execution engine
             raise Exception
-
-        # elif self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE:
-        #     pass
-            # if not self.run_selected_done:
-            #     self.run_to_states.append(container_state.get_path())
-            #     self.run_selected_hierarchy_length = self.run_selected_hierarchy_length - 1 - self.library_number
-            #     if self.run_selected_hierarchy_length == 0:
-            #         self.run_selected_done = True
-            # else:
-            #     self._wait_while_in_pause_or_in_step_mode()
 
         else:  # all other step modes
             logger.verbose("before wait")
