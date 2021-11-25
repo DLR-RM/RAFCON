@@ -41,7 +41,7 @@ def test_load_data_ports_not_existing(caplog):
     try:
         assert rafcon.core.singleton.global_variable_manager.get_variable("x") == 1
     finally:
-        testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=0, expected_errors=0)
+        testing_utils.shutdown_environment_only_core(caplog=caplog, expected_warnings=2, expected_errors=0)
 
     logger.info("State machine execution finished!")
 
