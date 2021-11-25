@@ -993,7 +993,7 @@ def test_simple_execution_model_and_core_destruct_with_gui(gui):
                 (gtkmvc3.controller.Controller, True),
                 # (searched_class, False),
                 ]
-    run_setup_gui_destruct(gui, elements, searched_class, run_simple_execution_controller_construction)
+    run_setup_gui_destruct(gui, elements, searched_class, run_simple_execution_controller_construction, expected_warnings=4)
 
 
 @pytest.mark.timeout(120)
