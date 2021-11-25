@@ -68,7 +68,7 @@ with open(requirements_path, "r") as f:
 global_requirements = all_requirements
 test_requirements = ['pytest-timeout<2', 'pytest-mock>=1.9.0,<3', 'pytest-faulthandler~=1.6.0',
                      'graphviz==0.18.2', 'pyuserinput']
-setup_requirements = ['pytest-runner', 'libsass >= 0.15.0']
+setup_requirements = ['pytest-runner', 'libsass==0.20.0']
 
 test_requirements += global_requirements
 
