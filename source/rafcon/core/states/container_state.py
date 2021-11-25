@@ -1643,7 +1643,10 @@ class ContainerState(State):
         for output_name, value in dictionary.items():
             for output_data_port_key, data_port in list(state.output_data_ports.items()):
                 if output_name == data_port.name:
-                    if not isinstance(value, data_port.data_type):
+                    if value is None:
+                        logger.warning("The value of output port is 'None'. It has replaced with the default value.".
+                                       format(output_name, data_port.data_type, type(value)))
+                    elif not isinstance(value, data_port.data_type):
                         if (not ((type(value) is float or type(value) is int) and
                                      (data_port.data_type is float or data_port.data_type is int)) and
                                 not (isinstance(value, type(None)))):
