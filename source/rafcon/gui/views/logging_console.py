@@ -21,6 +21,8 @@ from gi.repository import GLib
 
 from rafcon.gui.config import global_gui_config
 from rafcon.utils import log
+from rafcon.utils.threading import ReaderWriterLock
+
 logger = log.get_logger(__name__)
 
 
@@ -34,7 +36,8 @@ class LoggingConsoleView(View):
         self.text_view = Gtk.TextView()
         self.text_view.set_property('editable', False)
 
-        self.filtered_buffer = self.create_text_buffer()
+        self._filtered_buffer = self.create_text_buffer()
+        self._filtered_buffer_lock = ReaderWriterLock()
 
         self.text_view.set_buffer(self.filtered_buffer)
 
@@ -89,11 +92,11 @@ class LoggingConsoleView(View):
 
     def print_to_text_view(self, text, text_buf, use_tag=None):
         time, source, message = self.split_text(text)
-        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), time + " ", "tertiary_text", "default")
-        text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), source + ": ", "text", "default")
+        self.insert_with_tags_by_name(text_buf.get_end_iter(), time + " ", "tertiary_text", "default")
+        self.insert_with_tags_by_name(text_buf.get_end_iter(), source + ": ", "text", "default")
         if use_tag:
             if self.text_view.get_buffer().get_tag_table().lookup(use_tag) is not None:
-                text_buf.insert_with_tags_by_name(text_buf.get_end_iter(), message + "\n", use_tag, "default")
+                self.insert_with_tags_by_name(text_buf.get_end_iter(), message + "\n", use_tag, "default")
             else:
                 text_buf.insert(text_buf.get_end_iter(), message + "\n")
         else:
@@ -261,3 +264,17 @@ class LoggingConsoleView(View):
                 text_of_line = next_relative_lines[0][1]
                 done = self.set_cursor_on_line_with_string(text_of_line, self._stored_line_offset)
             return done
+
+    def insert_with_tags_by_name(self, iter, text, *tags):
+        with self._filtered_buffer_lock.writer_lock:
+            self.filtered_buffer.insert_with_tags_by_name(iter, text, *tags)
+
+    @property
+    def filtered_buffer(self):
+        with self._filtered_buffer_lock.reader_lock:
+            return self._filtered_buffer
+
+    @filtered_buffer.setter
+    def filtered_buffer(self, buffer):
+        with self._filtered_buffer_lock.writer_lock:
+            self._filtered_buffer = buffer
