@@ -21,7 +21,7 @@ from gi.repository import GLib
 
 from rafcon.gui.config import global_gui_config
 from rafcon.utils import log
-from rafcon.utils.threading import ReaderWriterLock
+from rafcon.utils.threads import ReaderWriterLock
 
 logger = log.get_logger(__name__)
 
