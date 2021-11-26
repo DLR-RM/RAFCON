@@ -14,10 +14,10 @@ from threading import Timer
 from gtkmvc3.view import View
 
 from gi.repository import Gtk
+from gi.repository import GLib
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.helpers import label
-from rafcon.utils.gui_functions import call_gui_callback
 
 
 class NotificationBarView(View):
@@ -51,7 +51,7 @@ class NotificationBarView(View):
         self.notification_bar.set_reveal_child(False)
 
     def show_notification(self, message, log_level):
-        call_gui_callback(self._show_notification, message, log_level)
+        GLib.idle_add(self._show_notification, message, log_level, priority=GLib.PRIORITY_LOW)
 
     def _show_notification(self, message, log_level):
         self._set_corresponding_message_type(log_level)
