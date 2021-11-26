@@ -17,6 +17,12 @@ Next Release
 
 - Miscellaneous:
 
+0.15.1
+"""""""
+
+- Bug Fixes:
+    - Call 'show_notification' via 'idle_add'
+
 0.15.0
 """""""
 
