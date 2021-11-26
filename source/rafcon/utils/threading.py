@@ -29,7 +29,8 @@ class ReaderWriterLock:
 
         def __enter__(self):
             self._condition.acquire()
-            self._condition.wait_for(lambda: self._reader_lock.readers == 0)
+            while self._reader_lock.readers > 0:
+                self._condition.wait()
 
         def __exit__(self, exc_type, exc_value, traceback):
             self._condition.release()
