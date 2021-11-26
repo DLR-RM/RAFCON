@@ -17,6 +17,7 @@ from gi.repository import Gtk
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.helpers import label
+from rafcon.utils.gui_functions import call_gui_callback
 
 
 class NotificationBarView(View):
@@ -50,6 +51,9 @@ class NotificationBarView(View):
         self.notification_bar.set_reveal_child(False)
 
     def show_notification(self, message, log_level):
+        call_gui_callback(self._show_notification, message, log_level)
+
+    def _show_notification(self, message, log_level):
         self._set_corresponding_message_type(log_level)
         self._message_label.set_label(message)
         duration = gui_config.get_config_value("NOTIFICATIONS_DURATION", 3.)
