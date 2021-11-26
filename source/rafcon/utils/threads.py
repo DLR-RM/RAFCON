@@ -52,7 +52,6 @@ class ReaderWriterLock:
 
     def __init__(self):
         self._condition = Condition()
-        self._readers = 0
         self._reader_lock = self.ReaderLock(self._condition)
         self._writer_lock = self.WriterLock(self._condition, self._reader_lock)
 
