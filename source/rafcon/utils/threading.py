@@ -1,4 +1,9 @@
-from threading import Condition
+import sys
+
+if sys.version_info[0] == 2:
+    from threading import _Condition as Condition
+else:
+    from threading import Condition
 
 
 class ReaderWriterLock:
