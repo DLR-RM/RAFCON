@@ -219,4 +219,4 @@ class SourceEditorController(EditorController, AbstractExternalEditor):
 
     @staticmethod
     def format_error_string(message):
-        return "Line {}: {} ({})".format(message["line"], message["message"], message["symbol"]), message["line"]
+        return "Line {}: {} ({})".format(message.line, message.msg, message.symbol), message.line
