@@ -67,10 +67,10 @@ class LoggingConsoleView(View):
         self._stored_relative_lines = None
 
     def clean_buffer(self):
-        self.text_view.set_buffer(self.filtered_buffer)
-
-        start, end = self.filtered_buffer.get_bounds()
-        self.filtered_buffer.delete(start, end)
+        with self._filtered_buffer_lock.writer_lock:
+            self.text_view.set_buffer(self.filtered_buffer)
+            start, end = self.filtered_buffer.get_bounds()
+            self.filtered_buffer.delete(start, end)
 
     def print_message(self, message, log_level):
         with self._lock:

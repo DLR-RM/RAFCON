@@ -39,8 +39,8 @@ class ReaderWriterLock:
 
     class WriterLock:
         def __init__(self, condition, reader_lock):
-            self._reader_lock = reader_lock
             self._condition = condition
+            self._reader_lock = reader_lock
 
         def __enter__(self):
             self._condition.acquire()
