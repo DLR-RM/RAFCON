@@ -10,6 +10,9 @@
 
 import sys
 
+from threading import Lock
+from dataclasses import dataclass
+
 if sys.version_info[0] == 2:
     from threading import _Condition as Condition
 else:
@@ -17,43 +20,60 @@ else:
 
 
 class ReaderWriterLock:
+    """
+    This class is an attempt at the readers-writer solution. The resource can only be read by several threads or
+    written by a single thread at the time. The writers have priority over the readers to avoid writing starvation.
+
+    Never use the locks recursively as a deadlock can simply happen in that case.
+    """
+
+    @dataclass
+    class Counter:
+        readers: int = 0
+        writers: int = 0
 
     class ReaderLock:
-        def __init__(self, condition):
-            self._readers = 0
+        def __init__(self, condition, counter, resource):
             self._condition = condition
+            self._counter = counter
+            self._resource = resource
 
         def __enter__(self):
             with self._condition:
-                self._readers += 1
+                while self._counter.writers > 0:
+                    self._condition.wait()
+                self._counter.readers += 1
+            return self._resource
 
         def __exit__(self, exc_type, exc_value, traceback):
             with self._condition:
-                self._readers -= 1
-                if self._readers == 0:
+                self._counter.readers -= 1
+                if self._counter.readers == 0:
                     self._condition.notifyAll()
 
-        @property
-        def readers(self):
-            return self._readers
-
     class WriterLock:
-        def __init__(self, condition, reader_lock):
+        def __init__(self, condition, counter, resource):
             self._condition = condition
-            self._reader_lock = reader_lock
+            self._counter = counter
+            self._resource = resource
 
         def __enter__(self):
             self._condition.acquire()
-            while self._reader_lock.readers > 0:
+            self._counter.writers += 1
+            while self._counter.readers > 0:
                 self._condition.wait()
+            return self._resource
 
         def __exit__(self, exc_type, exc_value, traceback):
+            self._counter.writers -= 1
+            self._condition.notifyAll()
             self._condition.release()
 
-    def __init__(self):
-        self._condition = Condition()
-        self._reader_lock = self.ReaderLock(self._condition)
-        self._writer_lock = self.WriterLock(self._condition, self._reader_lock)
+    def __init__(self, resource):
+        self._condition = Condition(Lock())
+        self._counter = self.Counter()
+        self._reader_lock = self.ReaderLock(self._condition, self._counter, resource)
+        self._writer_lock = self.WriterLock(self._condition, self._counter, resource)
 
     @property
     def reader_lock(self):
