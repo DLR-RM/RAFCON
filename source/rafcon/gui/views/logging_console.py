@@ -92,15 +92,15 @@ class LoggingConsoleView(View):
 
     def print_to_text_view(self, text, text_buf, use_tag=None):
         time, source, message = self.split_text(text)
-        self.insert_with_tags_by_name(text_buf.get_end_iter(), time + " ", "tertiary_text", "default")
-        self.insert_with_tags_by_name(text_buf.get_end_iter(), source + ": ", "text", "default")
+        self.insert_with_tags_by_name(time + " ", "tertiary_text", "default")
+        self.insert_with_tags_by_name(source + ": ", "text", "default")
         if use_tag:
             if self.text_view.get_buffer().get_tag_table().lookup(use_tag) is not None:
-                self.insert_with_tags_by_name(text_buf.get_end_iter(), message + "\n", use_tag, "default")
+                self.insert_with_tags_by_name(message + "\n", use_tag, "default")
             else:
-                self.insert(text_buf.get_end_iter(), message + "\n")
+                self.insert(message + "\n")
         else:
-            self.insert(text_buf.get_end_iter(), message + "\n")
+            self.insert( message + "\n")
 
         if not self.quit_flag and self._enables['CONSOLE_FOLLOW_LOGGING']:
             self.scroll_to_cursor_onscreen()
@@ -265,13 +265,13 @@ class LoggingConsoleView(View):
                 done = self.set_cursor_on_line_with_string(text_of_line, self._stored_line_offset)
             return done
 
-    def insert(self, iter, text, length=-1):
+    def insert(self, text, length=-1):
         with self._filtered_buffer_lock.writer_lock as filtered_buffer:
-            filtered_buffer.insert(iter, text, length)
+            filtered_buffer.insert(filtered_buffer.get_end_iter(), text, length)
 
-    def insert_with_tags_by_name(self, iter, text, *tags):
+    def insert_with_tags_by_name(self, text, *tags):
         with self._filtered_buffer_lock.writer_lock as filtered_buffer:
-            filtered_buffer.insert_with_tags_by_name(iter, text, *tags)
+            filtered_buffer.insert_with_tags_by_name(filtered_buffer.get_end_iter(), text, *tags)
 
     @property
     def filtered_buffer(self):
