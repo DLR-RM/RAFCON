@@ -11,7 +11,6 @@
 import sys
 
 from threading import Lock
-from dataclasses import dataclass
 
 if sys.version_info[0] == 2:
     from threading import _Condition as Condition
@@ -27,10 +26,9 @@ class ReaderWriterLock:
     Never use the locks recursively as a deadlock can simply happen in that case.
     """
 
-    @dataclass
     class Counter:
-        readers: int = 0
-        writers: int = 0
+        readers = 0
+        writers = 0
 
     class ReaderLock:
         def __init__(self, condition, counter, resource):
