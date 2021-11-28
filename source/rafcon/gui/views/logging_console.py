@@ -31,15 +31,13 @@ class LoggingConsoleView(View):
     def __init__(self):
         View.__init__(self)
 
-        self._lock = threading.Lock()
-
         self.text_view = Gtk.TextView()
         self.text_view.set_property('editable', False)
 
         self._filtered_buffer = self.create_text_buffer()
         self._filtered_buffer_lock = ReaderWriterLock(self._filtered_buffer)
 
-        self.text_view.set_buffer(self.filtered_buffer)
+        self.text_view.set_buffer(self._filtered_buffer)
 
         self.text_view.set_border_window_size(Gtk.TextWindowType.LEFT, 10)
         self.text_view.set_border_window_size(Gtk.TextWindowType.RIGHT, 10)
@@ -73,21 +71,21 @@ class LoggingConsoleView(View):
             filtered_buffer.delete(start, end)
 
     def print_message(self, message, log_level):
-        with self._lock:
+        with self._filtered_buffer_lock.reader_lock as filtered_buffer:
             if log_level <= log.logging.VERBOSE and self._enables.get('VERBOSE', False):
-                GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "debug",
+                GLib.idle_add(self.print_to_text_view, message, filtered_buffer, "debug",
                               priority=GLib.PRIORITY_LOW)
             if log.logging.VERBOSE < log_level <= log.logging.DEBUG and self._enables.get('DEBUG', True):
-                GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "debug",
+                GLib.idle_add(self.print_to_text_view, message, filtered_buffer, "debug",
                               priority=self.logging_priority)
             elif log.logging.DEBUG < log_level <= log.logging.INFO and self._enables.get('INFO', True):
-                GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "info",
+                GLib.idle_add(self.print_to_text_view, message, filtered_buffer, "info",
                               priority=self.logging_priority)
             elif log.logging.INFO < log_level <= log.logging.WARNING and self._enables.get('WARNING', True):
-                GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "warning",
+                GLib.idle_add(self.print_to_text_view, message, filtered_buffer, "warning",
                               priority=self.logging_priority)
             elif log.logging.WARNING < log_level and self._enables.get('ERROR', True):
-                GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "error",
+                GLib.idle_add(self.print_to_text_view, message, filtered_buffer, "error",
                               priority=self.logging_priority)
 
     def print_to_text_view(self, text, text_buf, use_tag=None):
