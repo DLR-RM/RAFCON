@@ -17,11 +17,19 @@ Next Release
 
 - Miscellaneous:
 
+0.15.2
+"""""""
+
+- Bug Fixes:
+    - Make operations on the logging console thread-safe
+    - Define a new GUI config called 'MAX_LOGGING_BUFFER_LINES' that determines the maximum lines of the logging buffer. If the number of lines exceeds the config value, the old value will be deleted automatically via clipping.
+
 0.15.1
 """""""
 
 - Bug Fixes:
     - Call 'show_notification' via 'idle_add'
+
 
 0.15.0
 """""""
