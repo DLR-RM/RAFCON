@@ -546,10 +546,9 @@ def wait_for_execution_engine_sync_counter(target_value, logger, timeout=5):
 
 
 def focus_graphical_editor_in_page(page):
-    from rafcon.gui.views.graphical_editor import GraphicalEditor as OpenGLEditor
     from rafcon.gui.mygaphas.view import ExtendedGtkView as GaphasEditor
     graphical_controller = page.get_children()[0]
-    if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
+    if not isinstance(graphical_controller, GaphasEditor):
         graphical_controller = graphical_controller.get_children()[0]
     graphical_controller.grab_focus()
 

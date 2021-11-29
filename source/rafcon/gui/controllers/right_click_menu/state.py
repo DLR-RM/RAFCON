@@ -422,36 +422,6 @@ class StateMachineTreeRightClickMenuController(StateMachineRightClickMenuControl
         return True
 
 
-class StateRightClickMenuControllerOpenGLEditor(StateMachineRightClickMenuController):
-
-    def register_view(self, view):
-        ExtendedController.register_view(self, view)
-        from rafcon.gui.views.graphical_editor import GraphicalEditorView
-        assert isinstance(view, GraphicalEditorView)
-        view.editor.connect('button_press_event', self.mouse_click)
-
-    def activate_menu(self, event, menu):
-        # logger.info("activate_menu by " + self.__class__.__name__)
-        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
-        if len(selection.states) > 0 or len(selection.scoped_variables) > 0:
-            menu.popup(None, None, None, None, event.get_button()[1], event.time)
-            return True
-        else:
-            return False
-
-    def on_copy_activate(self, widget, data=None):
-        # logger.info("trigger opengl copy")
-        self.shortcut_manager.trigger_action("copy", None, None)
-
-    def on_paste_activate(self, widget, data=None):
-        # logger.info("trigger opengl paste")
-        self.shortcut_manager.trigger_action("paste", None, None)
-
-    def on_cut_activate(self, widget, data=None):
-        # logger.info("trigger opengl cut")
-        self.shortcut_manager.trigger_action("cut", None, None)
-
-
 class StateRightClickMenuGaphas(StateMachineRightClickMenu):
     """ A class for handling the right click menu inside gaphas
 
