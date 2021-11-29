@@ -69,24 +69,30 @@ class LoggingConsoleView(View):
 
     def _insert(self, text, length=-1):
         """
-        Insert a new row into the buffer.
+        Insert a new row into the logging buffer.
         """
         with self._filtered_buffer_lock.writer_lock as filtered_buffer:
             filtered_buffer.insert(filtered_buffer.get_end_iter(), text, length)
 
     def _insert_with_tags_by_name(self, text, *tags):
         """
-        Insert a new row into the buffer alongside of the tags.
+        Insert a new row into the logging buffer alongside of the tags.
         """
         with self._filtered_buffer_lock.writer_lock as filtered_buffer:
             filtered_buffer.insert_with_tags_by_name(filtered_buffer.get_end_iter(), text, *tags)
 
     def clean_buffer(self):
+        """
+        Delete all contents of the logging buffer.
+        """
         with self._filtered_buffer_lock.writer_lock as filtered_buffer:
             start, end = filtered_buffer.get_bounds()
             filtered_buffer.delete(start, end)
 
     def clip_buffer(self):
+        """
+        Clip the logging buffer (if required) to avoid exceeding the maximum logging buffer lines.
+        """
         with self._filtered_buffer_lock.writer_lock as filtered_buffer:
             buffer_lines = filtered_buffer.get_line_count()
             if buffer_lines > self.max_logging_buffer_lines:
@@ -94,6 +100,9 @@ class LoggingConsoleView(View):
                                        filtered_buffer.get_iter_at_line(buffer_lines - self.max_logging_buffer_lines))
 
     def print_message(self, message, log_level):
+        """
+        Add the logging requests to the event queue.
+        """
         with self._lock:
             if log_level <= log.logging.VERBOSE and self._enables.get('VERBOSE', False):
                 GLib.idle_add(self.print_to_text_view, message, self.filtered_buffer, "debug",
@@ -112,6 +121,9 @@ class LoggingConsoleView(View):
                               priority=self.logging_priority)
 
     def print_to_text_view(self, text, text_buf, use_tag=None):
+        """
+        Add the new rows to the logging buffer.
+        """
         self.clip_buffer()
         time, source, message = self.split_text(text)
         self._insert_with_tags_by_name(time + " ", "tertiary_text", "default")
