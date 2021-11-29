@@ -60,6 +60,7 @@ class LoggingConsoleView(View):
         self.quit_flag = False
 
         self.logging_priority = global_gui_config.get_config_value("LOGGING_CONSOLE_GTK_PRIORITY", GLib.PRIORITY_LOW)
+        self.max_logging_buffer_lines = global_gui_config.get_config_value('MAX_LOGGING_BUFFER_LINES', 5000)
 
         self._stored_line_number = None
         self._stored_line_offset = None
@@ -68,9 +69,15 @@ class LoggingConsoleView(View):
 
     def clean_buffer(self):
         with self._filtered_buffer_lock.writer_lock as filtered_buffer:
-            self.text_view.set_buffer(filtered_buffer)
             start, end = filtered_buffer.get_bounds()
             filtered_buffer.delete(start, end)
+
+    def clip_buffer(self):
+        with self._filtered_buffer_lock.writer_lock as filtered_buffer:
+            buffer_lines = filtered_buffer.get_line_count()
+            if buffer_lines > self.max_logging_buffer_lines:
+                filtered_buffer.delete(filtered_buffer.get_start_iter(),
+                                       filtered_buffer.get_iter_at_line(buffer_lines - self.max_logging_buffer_lines))
 
     def print_message(self, message, log_level):
         with self._lock:
@@ -91,6 +98,7 @@ class LoggingConsoleView(View):
                               priority=self.logging_priority)
 
     def print_to_text_view(self, text, text_buf, use_tag=None):
+        self.clip_buffer()
         time, source, message = self.split_text(text)
         self.insert_with_tags_by_name(time + " ", "tertiary_text", "default")
         self.insert_with_tags_by_name(source + ": ", "text", "default")
