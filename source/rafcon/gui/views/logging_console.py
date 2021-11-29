@@ -103,7 +103,7 @@ class LoggingConsoleView(View):
         self.insert_with_tags_by_name(time + " ", "tertiary_text", "default")
         self.insert_with_tags_by_name(source + ": ", "text", "default")
         if use_tag:
-            if self.text_view.get_buffer().get_tag_table().lookup(use_tag) is not None:
+            if self.filtered_buffer.get_tag_table().lookup(use_tag) is not None:
                 self.insert_with_tags_by_name(message + "\n", use_tag, "default")
             else:
                 self.insert(message + "\n")
@@ -163,11 +163,10 @@ class LoggingConsoleView(View):
         adj.set_value(adj.get_upper() - adj.get_page_size())
 
     def scroll_to_cursor_onscreen(self):
-        self.text_view.scroll_mark_onscreen(self.text_view.get_buffer().get_insert())
+        self.text_view.scroll_mark_onscreen(self.filtered_buffer.get_insert())
 
     def get_cursor_position(self):
-        text_buffer = self.text_view.get_buffer()
-        p_iter = text_buffer.get_iter_at_offset(text_buffer.props.cursor_position)
+        p_iter = self.filtered_buffer.get_iter_at_offset(self.filtered_buffer.props.cursor_position)
         return p_iter.get_line(), p_iter.get_line_offset()
 
     def set_cursor_position(self, line_number, line_offset):
@@ -193,16 +192,20 @@ class LoggingConsoleView(View):
         return text_buffer.get_line_count()
 
     def get_text_of_line(self, line_number_or_iter):
-        text_buffer = self.text_view.get_buffer()
-        if isinstance(line_number_or_iter, Gtk.TextIter):
-            line_iter = line_number_or_iter
-            line_end_iter = text_buffer.get_iter_at_line(line_iter.get_line())
-        else:
-            line_number = line_number_or_iter
-            line_iter = text_buffer.get_iter_at_line(line_number)
-            line_end_iter = text_buffer.get_iter_at_line(line_number)
-        line_end_iter.forward_to_line_end()
-        text = text_buffer.get_text(line_iter, line_end_iter, True)
+        """
+        We are not going to modify 'filtered_buffer' here in any shape or form.
+        But we need an exclusive lock here to insure the iters are still valid.
+        """
+        with self._filtered_buffer_lock.writer_lock as filtered_buffer:
+            if isinstance(line_number_or_iter, Gtk.TextIter):
+                line_iter = line_number_or_iter
+                line_end_iter = filtered_buffer.get_iter_at_line(line_iter.get_line())
+            else:
+                line_number = line_number_or_iter
+                line_iter = filtered_buffer.get_iter_at_line(line_number)
+                line_end_iter = filtered_buffer.get_iter_at_line(line_number)
+            line_end_iter.forward_to_line_end()
+            text = filtered_buffer.get_text(line_iter, line_end_iter, True)
         return text
 
     def set_cursor_on_line_with_string(self, s, line_offset=0):
