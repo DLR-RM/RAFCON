@@ -24,6 +24,7 @@ Next Release
 - Features:
     - Add search bar for lookup through state machine libraries
     - Add find usage for finding the usages of state machine libraries
+    - Run this state
  
 - Bug Fixes:
     - Fix handling of library interface change
