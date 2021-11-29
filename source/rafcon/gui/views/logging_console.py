@@ -67,6 +67,20 @@ class LoggingConsoleView(View):
         self._stored_text_of_line = None
         self._stored_relative_lines = None
 
+    def _insert(self, text, length=-1):
+        """
+        Insert a new row into the buffer.
+        """
+        with self._filtered_buffer_lock.writer_lock as filtered_buffer:
+            filtered_buffer.insert(filtered_buffer.get_end_iter(), text, length)
+
+    def _insert_with_tags_by_name(self, text, *tags):
+        """
+        Insert a new row into the buffer alongside of the tags.
+        """
+        with self._filtered_buffer_lock.writer_lock as filtered_buffer:
+            filtered_buffer.insert_with_tags_by_name(filtered_buffer.get_end_iter(), text, *tags)
+
     def clean_buffer(self):
         with self._filtered_buffer_lock.writer_lock as filtered_buffer:
             start, end = filtered_buffer.get_bounds()
@@ -100,15 +114,15 @@ class LoggingConsoleView(View):
     def print_to_text_view(self, text, text_buf, use_tag=None):
         self.clip_buffer()
         time, source, message = self.split_text(text)
-        self.insert_with_tags_by_name(time + " ", "tertiary_text", "default")
-        self.insert_with_tags_by_name(source + ": ", "text", "default")
+        self._insert_with_tags_by_name(time + " ", "tertiary_text", "default")
+        self._insert_with_tags_by_name(source + ": ", "text", "default")
         if use_tag:
             if self.filtered_buffer.get_tag_table().lookup(use_tag) is not None:
-                self.insert_with_tags_by_name(message + "\n", use_tag, "default")
+                self._insert_with_tags_by_name(message + "\n", use_tag, "default")
             else:
-                self.insert(message + "\n")
+                self._insert(message + "\n")
         else:
-            self.insert( message + "\n")
+            self._insert( message + "\n")
 
         if not self.quit_flag and self._enables['CONSOLE_FOLLOW_LOGGING']:
             self.scroll_to_cursor_onscreen()
@@ -275,14 +289,6 @@ class LoggingConsoleView(View):
                 text_of_line = next_relative_lines[0][1]
                 done = self.set_cursor_on_line_with_string(text_of_line, self._stored_line_offset)
             return done
-
-    def insert(self, text, length=-1):
-        with self._filtered_buffer_lock.writer_lock as filtered_buffer:
-            filtered_buffer.insert(filtered_buffer.get_end_iter(), text, length)
-
-    def insert_with_tags_by_name(self, text, *tags):
-        with self._filtered_buffer_lock.writer_lock as filtered_buffer:
-            filtered_buffer.insert_with_tags_by_name(filtered_buffer.get_end_iter(), text, *tags)
 
     @property
     def filtered_buffer(self):

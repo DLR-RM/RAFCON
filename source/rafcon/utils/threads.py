@@ -10,8 +10,6 @@
 
 import sys
 
-from threading import Lock
-
 if sys.version_info[0] == 2:
     from threading import _Condition as Condition
 else:
@@ -20,10 +18,8 @@ else:
 
 class ReaderWriterLock:
     """
-    This class is an attempt at the readers-writer solution. The resource can only be read by several threads or
+    This class is an implementation of the readers-writer solution. The resource can only be read by several threads or
     written by a single thread at the time. The writers have priority over the readers to avoid writing starvation.
-
-    Never use the locks recursively as a deadlock can simply happen in that case.
     """
 
     class Counter:
@@ -68,7 +64,7 @@ class ReaderWriterLock:
             self._condition.release()
 
     def __init__(self, resource):
-        self._condition = Condition(Lock())
+        self._condition = Condition()
         self._counter = self.Counter()
         self._reader_lock = self.ReaderLock(self._condition, self._counter, resource)
         self._writer_lock = self.WriterLock(self._condition, self._counter, resource)
