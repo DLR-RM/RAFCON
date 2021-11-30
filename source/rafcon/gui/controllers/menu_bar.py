@@ -160,6 +160,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('start', 'activate', self.on_start_activate)
         self.connect_button_to_function('start_from_selected', 'activate', self.on_start_from_selected_state_activate)
         self.connect_button_to_function('run_to_selected', 'activate', self.on_run_to_selected_state_activate)
+        self.connect_button_to_function('run_selected', 'activate', self.on_run_selected_state_activate)
         self.connect_button_to_function('pause', 'activate', self.on_pause_activate)
         self.connect_button_to_function('stop', 'activate', self.on_stop_activate)
         self.connect_button_to_function('step_mode', 'activate', self.on_step_mode_activate)
@@ -353,6 +354,8 @@ class MenuBarController(ExtendedController):
                                                                              "on_start_from_selected_state_activate"))
         self.add_callback_to_shortcut_manager('run_to_selected', partial(self.call_action_callback,
                                                                          "on_run_to_selected_state_activate"))
+        self.add_callback_to_shortcut_manager('run_selected', partial(self.call_action_callback,
+                                                                         "on_run_selected_state_activate"))
 
         self.add_callback_to_shortcut_manager('stop', partial(self.call_action_callback, "on_stop_activate"))
         self.add_callback_to_shortcut_manager('pause', partial(self.call_action_callback, "on_pause_activate"))
@@ -672,6 +675,15 @@ class MenuBarController(ExtendedController):
         else:
             self.state_machine_execution_engine.start(self.model.selected_state_machine_id,
                                                       selection.get_selected_state().state.get_path())
+
+    def on_run_selected_state_activate(self, widget, data=None):
+        logger.debug("Run selected state ...")
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
+        if len(selection.states) is not 1:
+            logger.error("Exactly one state must be selected!")
+        else:
+            self.state_machine_execution_engine.run_selected_state(selection.get_selected_state().state.get_path(),
+                                                                   self.model.selected_state_machine_id)
 
     def on_pause_activate(self, widget, data=None):
         self.state_machine_execution_engine.pause()

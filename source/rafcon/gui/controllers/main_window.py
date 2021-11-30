@@ -274,6 +274,8 @@ class MainWindowController(ExtendedController):
         self.connect_button_to_function('button_start_shortcut', "toggled", self.on_button_start_shortcut_toggled)
         self.connect_button_to_function('button_stop_shortcut', "clicked", self.on_button_stop_shortcut_clicked)
         self.connect_button_to_function('button_pause_shortcut', "toggled", self.on_button_pause_shortcut_toggled)
+        self.connect_button_to_function('button_run_this_state_shortcut', "clicked",
+                                        self.on_button_start_this_state_shortcut_clicked)
         self.connect_button_to_function('button_start_from_shortcut', "clicked",
                                         self.on_button_start_from_shortcut_clicked)
         self.connect_button_to_function('button_run_to_shortcut', "clicked",
@@ -598,6 +600,9 @@ class MainWindowController(ExtendedController):
     def on_button_pause_shortcut_toggled(self, widget, event=None):
         if self.view['button_pause_shortcut'].get_active():
             self.get_controller('menu_bar_controller').on_pause_activate(None)
+
+    def on_button_start_this_state_shortcut_clicked(self, widget, event=None):
+        self.get_controller('menu_bar_controller').on_run_selected_state_activate(None)
 
     def on_button_start_from_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_start_from_selected_state_activate(None)
