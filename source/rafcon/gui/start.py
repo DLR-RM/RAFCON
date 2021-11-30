@@ -189,6 +189,11 @@ def setup_argument_parser():
                         help=_("path to the configuration file gui_config.yaml. "
                                "Use 'None' to prevent the generation of a config file and use the default "
                                "configuration. Default: {0}").format(default_config_path))
+    parser.add_argument('-r', '--runtime_config', action='store', type=config_path, metavar='path', dest='runtime_config_path',
+                        default=default_config_path, nargs='?', const=default_config_path,
+                        help=_("path to the configuration file runtime_config.yaml. "
+                               "Use 'None' to prevent the generation of a config file and use the default "
+                               "configuration. Default: {0}").format(default_config_path))
     parser.add_argument('-ss', '--start_state_machine', dest='start_state_machine_flag', action='store_true',
                         help=_("a flag to specify if the first state machine of -o should be started after opening"))
     parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path', default=None, nargs='?',
@@ -357,7 +362,7 @@ def main():
     user_input = parser.parse_args()
 
     splash_screen.set_text("Loading configurations...")
-    setup_mvc_configuration(user_input.config_path, user_input.gui_config_path, user_input.gui_config_path)
+    setup_mvc_configuration(user_input.config_path, user_input.gui_config_path, user_input.runtime_config_path)
 
     # create lock file -> keep behavior for hole instance
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
