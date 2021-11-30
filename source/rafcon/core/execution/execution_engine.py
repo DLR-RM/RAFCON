@@ -365,12 +365,22 @@ class ExecutionEngine(Observable):
             if next_child_state_to_execute:
                 next_child_state_path = next_child_state_to_execute.get_path()
             if state_path == container_state.get_path():
-                # the execution did a whole step_over inside hierarchy state "state" (case a) )
-                # or a whole step_out into the hierarchy state "state" (case b) )
-                # thus we delete its state path from self.run_to_states
-                # and wait for another step (of maybe different kind)
-                wait = True
-                self.run_to_states.remove(state_path)
+                if self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE:
+                    # This is the very special case of having selected a direct hierarchy-child-state
+                    # of a concurrency state as the state for the "run-selected-state" operation
+                    # this basically means that we want to run the whole concurreny state
+                    self._status.execution_mode = StateMachineExecutionStatus.FORWARD_OUT
+                    self.run_to_states.remove(state_path)
+                    # the new target state, when the execution should pause, is the parent of the concurrency state
+                    self.run_to_states.append(container_state.parent.parent.get_path())
+                    wait = False
+                else:
+                    # the execution did a whole step_over inside hierarchy state "state" (case a) )
+                    # or a whole step_out into the hierarchy state "state" (case b) )
+                    # thus we delete its state path from self.run_to_states
+                    # and wait for another step (of maybe different kind)
+                    wait = True
+                    self.run_to_states.remove(state_path)
                 break
             elif state_path == next_child_state_path:
                 # this is the case that execution has reached a specific state explicitly marked via
