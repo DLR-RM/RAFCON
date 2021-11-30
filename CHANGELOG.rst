@@ -12,6 +12,7 @@ Next Release
 """"""""""""
 
 - Features:
+    - Run this state
 
 - Bug Fixes:
 
@@ -46,7 +47,6 @@ Next Release
 
 - Features:
     - Add find usage for finding the usages of state machine libraries
-    - Run this state
  
 - Bug Fixes:
     - Fix handling of library interface change
