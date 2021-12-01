@@ -24,60 +24,60 @@ class ReaderWriterLock:
     written by a single thread at the time. The writers have priority over the readers to avoid writing starvation.
     """
 
-    class Counter:
+    class State:
         readers = 0
         pending_writers = 0
         is_writing = False
 
     class ReaderLock:
-        def __init__(self, lock, reader_condition, writer_condition, counter, resource):
+        def __init__(self, lock, reader_condition, writer_condition, state, resource):
             self._lock = lock
             self._reader_condition = reader_condition
             self._writer_condition = writer_condition
-            self._counter = counter
+            self._state = state
             self._resource = resource
 
         def __enter__(self):
             with self._lock:
-                while self._counter.is_writing or self._counter.pending_writers > 0:
+                while self._state.is_writing or self._state.pending_writers > 0:
                     self._reader_condition.wait()
-                self._counter.readers += 1
+                self._state.readers += 1
             return self._resource
 
         def __exit__(self, exc_type, exc_value, traceback):
             with self._lock:
-                self._counter.readers -= 1
-                ReaderWriterLock.notify(self._counter, self._reader_condition, self._writer_condition)
+                self._state.readers -= 1
+                ReaderWriterLock.notify(self._state, self._reader_condition, self._writer_condition)
 
     class WriterLock:
-        def __init__(self, lock, reader_condition, writer_condition, counter, resource):
+        def __init__(self, lock, reader_condition, writer_condition, state, resource):
             self._lock = lock
             self._reader_condition = reader_condition
             self._writer_condition = writer_condition
-            self._counter = counter
+            self._state = state
             self._resource = resource
 
         def __enter__(self):
             with self._lock:
-                while self._counter.readers > 0 or self._counter.is_writing:
-                    self._counter.pending_writers += 1
+                while self._state.readers > 0 or self._state.is_writing:
+                    self._state.pending_writers += 1
                     self._writer_condition.wait()
                     self._counter.pending_writers -= 1
-                self._counter.is_writing = True
+                self._state.is_writing = True
             return self._resource
 
         def __exit__(self, exc_type, exc_value, traceback):
             with self._lock:
-                self._counter.is_writing = False
-                ReaderWriterLock.notify(self._counter, self._reader_condition, self._writer_condition)
+                self._state.is_writing = False
+                ReaderWriterLock.notify(self._state, self._reader_condition, self._writer_condition)
 
     def __init__(self, resource):
         self._lock = RLock()
         self._reader_condition = Condition(self._lock)
         self._writer_condition = Condition(self._lock)
-        self._counter = self.Counter()
-        self._reader_lock = self.ReaderLock(self._lock, self._reader_condition, self._writer_condition, self._counter, resource)
-        self._writer_lock = self.WriterLock(self._lock, self._reader_condition, self._writer_condition, self._counter, resource)
+        self._state = self.State()
+        self._reader_lock = self.ReaderLock(self._lock, self._reader_condition, self._writer_condition, self._state, resource)
+        self._writer_lock = self.WriterLock(self._lock, self._reader_condition, self._writer_condition, self._state, resource)
 
     @property
     def reader_lock(self):
@@ -88,8 +88,8 @@ class ReaderWriterLock:
         return self._writer_lock
 
     @staticmethod
-    def notify(counter, reader_condition, writer_condition):
-        if counter.pending_writers > 0 and counter.readers == 0:
+    def notify(state, reader_condition, writer_condition):
+        if state.pending_writers > 0 and state.readers == 0:
             writer_condition.notify()
-        elif counter.pending_writers == 0:
-            reader_condition.notifyAll()
+        elif state.pending_writers == 0:
+            reader_condition.notify_all()
