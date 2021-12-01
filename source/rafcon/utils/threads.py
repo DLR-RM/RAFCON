@@ -63,8 +63,8 @@ class ReaderWriterLock:
                     self._state.pending_writers += 1
                     condition.wait()
                     self._state.pending_writers -= 1
-                self._state.writer = True
                 self._state.writer_conditions.pop(0)
+                self._state.writer = True
             return self._resource
 
         def __exit__(self, exc_type, exc_value, traceback):
