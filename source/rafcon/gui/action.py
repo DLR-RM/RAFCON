@@ -683,7 +683,8 @@ class Action(ModelMT, AbstractAction):
             for df_id, df in stored_state.data_flows.items():
                 state.add_data_flow(df.from_state, df.from_key, df.to_state, df.to_key, df.data_flow_id)
 
-    def add_core_object_to_state(self, state, core_obj):
+    @staticmethod
+    def add_core_object_to_state(state, core_obj):
         if isinstance(core_obj, State):
             state.add_state(core_obj)
         elif isinstance(core_obj, Transition):
@@ -1029,9 +1030,8 @@ class RemoveObjectAction(Action):
         return state, state_image_of_state
 
     def store_related_elements(self, linkage_dict):
-
         state = self.state_machine.get_state_by_path(self.instance_path)
-        if isinstance(state, HierarchyState):
+        if isinstance(state, (HierarchyState, BarrierConcurrencyState)):
             for t in state.transitions.values():
                 t_dict = {'from_state': t.from_state, 'from_outcome': t.from_outcome,
                           'to_state': t.to_state, 'to_outcome': t.to_outcome, 'transition_id': t.transition_id}
