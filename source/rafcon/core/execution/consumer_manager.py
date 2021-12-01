@@ -22,6 +22,7 @@ class ExecutionHistoryConsumerManager(object):
         self.execution_history_item_queue = Queue()
         self.condition = threading.Condition()
         self.interrupt = False
+        self._consumers_exist = False
         self._file_system_consumer_exists = False
         if global_config.get_config_value("FILE_SYSTEM_EXECUTION_HISTORY_ENABLE", False):
             self.register_consumer(self.FILE_SYSTEM_CONSUMER_NAME, FileSystemConsumer(root_state_name))
@@ -32,6 +33,14 @@ class ExecutionHistoryConsumerManager(object):
         # and don't have to care about when an item is popped from the queue
         self.worker_thread = threading.Thread(target=self._feed_consumers)
         self.worker_thread.start()
+
+    @property
+    def consumers_exist(self):
+        return self._consumers_exist
+
+    @consumers_exist.setter
+    def consumers_exist(self, value):
+        self._consumers_exist = value
 
     @property
     def file_system_consumer_exists(self):
@@ -66,6 +75,7 @@ class ExecutionHistoryConsumerManager(object):
         :param consumer_name: the consumer name
         :param consumer: an instance of the consumer
         """
+        self.consumers_exist = True
         self.consumers[consumer_name] = consumer
         consumer.register()
 
