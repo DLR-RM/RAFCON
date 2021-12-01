@@ -25,59 +25,56 @@ class ReaderWriterLock:
     """
 
     class State:
-        readers = 0
-        pending_writers = 0
-        is_writing = False
+        def __init__(self):
+            self.readers = 0
+            self.pending_writers = 0
+            self.is_writing = False
+            self.lock = RLock()
+            self.reader_condition = Condition(self.lock)
+            self.writer_conditions = []
 
     class ReaderLock:
-        def __init__(self, lock, reader_condition, writer_condition, state, resource):
-            self._lock = lock
-            self._reader_condition = reader_condition
-            self._writer_condition = writer_condition
+        def __init__(self, state, resource):
             self._state = state
             self._resource = resource
 
         def __enter__(self):
-            with self._lock:
+            with self._state.lock:
                 while self._state.is_writing or self._state.pending_writers > 0:
-                    self._reader_condition.wait()
+                    self._state.reader_condition.wait()
                 self._state.readers += 1
             return self._resource
 
         def __exit__(self, exc_type, exc_value, traceback):
-            with self._lock:
+            with self._state.lock:
                 self._state.readers -= 1
-                ReaderWriterLock.notify(self._state, self._reader_condition, self._writer_condition)
+                ReaderWriterLock.notify(self._state)
 
     class WriterLock:
-        def __init__(self, lock, reader_condition, writer_condition, state, resource):
-            self._lock = lock
-            self._reader_condition = reader_condition
-            self._writer_condition = writer_condition
+        def __init__(self, state, resource):
             self._state = state
             self._resource = resource
 
         def __enter__(self):
-            with self._lock:
+            with self._state.lock:
+                condition = Condition(self._state.lock)
+                self._state.writer_conditions.append(condition)
                 while self._state.readers > 0 or self._state.is_writing:
                     self._state.pending_writers += 1
-                    self._writer_condition.wait()
-                    self._counter.pending_writers -= 1
+                    condition.wait()
+                    self._state.pending_writers -= 1
                 self._state.is_writing = True
             return self._resource
 
         def __exit__(self, exc_type, exc_value, traceback):
-            with self._lock:
+            with self._state.lock:
                 self._state.is_writing = False
-                ReaderWriterLock.notify(self._state, self._reader_condition, self._writer_condition)
+                ReaderWriterLock.notify(self._state)
 
     def __init__(self, resource):
-        self._lock = RLock()
-        self._reader_condition = Condition(self._lock)
-        self._writer_condition = Condition(self._lock)
         self._state = self.State()
-        self._reader_lock = self.ReaderLock(self._lock, self._reader_condition, self._writer_condition, self._state, resource)
-        self._writer_lock = self.WriterLock(self._lock, self._reader_condition, self._writer_condition, self._state, resource)
+        self._reader_lock = self.ReaderLock(self._state, resource)
+        self._writer_lock = self.WriterLock(self._state, resource)
 
     @property
     def reader_lock(self):
@@ -88,8 +85,9 @@ class ReaderWriterLock:
         return self._writer_lock
 
     @staticmethod
-    def notify(state, reader_condition, writer_condition):
+    def notify(state):
         if state.pending_writers > 0 and state.readers == 0:
-            writer_condition.notify()
+            condition = state.writer_conditions.pop(0)
+            condition.notify()
         elif state.pending_writers == 0:
-            reader_condition.notify_all()
+            state.reader_condition.notify_all()
