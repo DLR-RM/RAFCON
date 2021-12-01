@@ -54,10 +54,10 @@ class ReaderWriterLock:
 
         def __enter__(self):
             with self._condition:
-                self._counter.pending_writers += 1
                 while self._counter.readers > 0 or self._counter.is_writing:
+                    self._counter.pending_writers += 1
                     self._condition.wait()
-                self._counter.pending_writers -= 1
+                    self._counter.pending_writers -= 1
                 self._counter.is_writing = True
             return self._resource
 
