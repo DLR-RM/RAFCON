@@ -20,18 +20,18 @@ else:
 
 class ReaderWriterLock:
     """
-    This class is an implementation of the readers-writer solution. The resource can only be read by several threads or
+    This class is an implementation of the readers-writer lock solution. The resource can be read by several threads or
     written by a single thread at the time. The writers have priority over the readers to avoid writing starvation.
     """
 
     class State:
         def __init__(self):
-            self.readers = 0
-            self.pending_writers = 0
-            self.is_writing = False
             self.lock = RLock()
             self.reader_condition = Condition(self.lock)
             self.writer_conditions = []
+            self.readers = 0
+            self.pending_writers = 0
+            self.is_writing = False
 
     class ReaderLock:
         def __init__(self, state, resource):
