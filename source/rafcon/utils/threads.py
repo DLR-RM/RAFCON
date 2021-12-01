@@ -53,18 +53,18 @@ class ReaderWriterLock:
             self._resource = resource
 
         def __enter__(self):
-            self._condition.acquire()
-            self._counter.pending_writers += 1
-            while self._counter.readers > 0 or self._counter.is_writing:
-                self._condition.wait()
-            self._counter.pending_writers -= 1
-            self._counter.is_writing = True
+            with self._condition:
+                self._counter.pending_writers += 1
+                while self._counter.readers > 0 or self._counter.is_writing:
+                    self._condition.wait()
+                self._counter.pending_writers -= 1
+                self._counter.is_writing = True
             return self._resource
 
         def __exit__(self, exc_type, exc_value, traceback):
-            self._counter.is_writing = False
-            self._condition.notifyAll()
-            self._condition.release()
+            with self._condition:
+                self._counter.is_writing = False
+                self._condition.notifyAll()
 
     def __init__(self, resource):
         self._condition = Condition()
