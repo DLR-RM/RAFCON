@@ -30,8 +30,8 @@ class ReaderWriterLock:
             self.reader_condition = Condition(self.lock)
             self.writer_conditions = []
             self.readers = 0
+            self.writer = False
             self.pending_writers = 0
-            self.is_writing = False
 
     class ReaderLock:
         def __init__(self, state, resource):
@@ -40,7 +40,7 @@ class ReaderWriterLock:
 
         def __enter__(self):
             with self._state.lock:
-                while self._state.is_writing or self._state.pending_writers > 0:
+                while self._state.writer or self._state.pending_writers > 0:
                     self._state.reader_condition.wait()
                 self._state.readers += 1
             return self._resource
@@ -59,16 +59,17 @@ class ReaderWriterLock:
             with self._state.lock:
                 condition = Condition(self._state.lock)
                 self._state.writer_conditions.append(condition)
-                while self._state.readers > 0 or self._state.is_writing:
+                while self._state.readers > 0 or self._state.writer:
                     self._state.pending_writers += 1
                     condition.wait()
                     self._state.pending_writers -= 1
-                self._state.is_writing = True
+                self._state.writer = True
+                self._state.writer_conditions.pop(0)
             return self._resource
 
         def __exit__(self, exc_type, exc_value, traceback):
             with self._state.lock:
-                self._state.is_writing = False
+                self._state.writer = False
                 ReaderWriterLock.notify(self._state)
 
     def __init__(self, resource):
@@ -87,7 +88,6 @@ class ReaderWriterLock:
     @staticmethod
     def notify(state):
         if state.pending_writers > 0 and state.readers == 0:
-            condition = state.writer_conditions.pop(0)
-            condition.notify()
+            state.writer_conditions[0].notify()
         elif state.pending_writers == 0:
             state.reader_condition.notify_all()
