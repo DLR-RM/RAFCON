@@ -348,7 +348,6 @@ def memory_profiling(args):
     while not args['stop']:
         snapshot = tracemalloc.take_snapshot()
         time.sleep(memory_profiling_interval)
-
         with open(os.path.join(memory_profiling_path, 'memory_profiling.log'), 'a') as file:
             file.write('[ Top 10 Differences ]' + '\n')
             for result in tracemalloc.take_snapshot().compare_to(snapshot, 'lineno')[:10]:
