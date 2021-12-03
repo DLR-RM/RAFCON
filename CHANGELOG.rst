@@ -22,6 +22,12 @@ Next Release
 """""""
 
 - Bug Fixes:
+    - Fix bug in LoggingView, which freezes RAFCON
+
+0.15.2
+"""""""
+
+- Bug Fixes:
     - Make operations on the logging console thread-safe
     - Define a new GUI config called 'MAX_LOGGING_BUFFER_LINES' that determines the maximum lines of the logging buffer. If the number of lines exceeds the config value, the old value will be deleted automatically via clipping.
 
