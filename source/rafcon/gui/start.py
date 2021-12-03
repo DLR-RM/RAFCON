@@ -344,7 +344,7 @@ def register_signal_handlers(callback):
 
 def memory_profiling(args):
     memory_profiling_path = args['memory_profiling_path']
-    memory_profiling_interval = args['memory_profiling_interval']
+    memory_profiling_interval = int(args['memory_profiling_interval'])
     while not args['stop']:
         snapshot = tracemalloc.take_snapshot()
         time.sleep(memory_profiling_interval)
