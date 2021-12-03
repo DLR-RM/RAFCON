@@ -25,7 +25,8 @@ import logging
 import threading
 import signal
 import time
-import tracemalloc
+if sys.version_info >= (3, ):
+    import tracemalloc
 from yaml_configuration.config import config_path
 
 # gui
@@ -386,7 +387,7 @@ def main():
     parser = setup_argument_parser()
     user_input = parser.parse_args()
 
-    if user_input.memory_profiling:
+    if user_input.memory_profiling and sys.version_info >= (3, ):
         tracemalloc.start()
         memory_profiling_args = {
             'memory_profiling_path': user_input.memory_profiling_path,
@@ -450,7 +451,7 @@ def main():
     logger.info(_("Exiting ..."))
     logging.shutdown()
 
-    if user_input.memory_profiling:
+    if user_input.memory_profiling and sys.version_info >= (3, ):
         memory_profiling_args['stop'] = True
         memory_profiling_thread.join()
 
