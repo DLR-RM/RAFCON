@@ -113,6 +113,13 @@ def get_default_config_path():
     return None
 
 
+def get_default_log_path():
+    home_path = expanduser('~')
+    if home_path:
+        return join(home_path, ".log", "rafcon")
+    return None
+
+
 def separate_folder_path_and_file_name(path):
     if os.path.isdir(path):
         return path, None
