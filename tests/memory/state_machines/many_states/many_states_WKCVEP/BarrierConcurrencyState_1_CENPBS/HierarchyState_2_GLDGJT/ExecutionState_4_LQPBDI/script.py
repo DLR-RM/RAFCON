@@ -15,5 +15,5 @@ def execute(self, inputs, outputs, gvm):
     outputs["output_3"] = 'small data!'
     outputs["output_4"] = False
     
-    self.preemptive_wait(2)
+    self.preemptive_wait(0.01)
     return "success"
