@@ -24,7 +24,6 @@ import sys
 import logging
 import threading
 import signal
-import time
 if sys.version_info >= (3, ):
     import tracemalloc
 from yaml_configuration.config import config_path
@@ -50,7 +49,7 @@ from rafcon.gui.utils import wait_for_gui
 import rafcon.utils.filesystem as filesystem
 from rafcon.utils import plugins, installation
 from rafcon.utils.i18n import setup_l10n
-from rafcon.utils import resources, log
+from rafcon.utils import resources, log, profiling
 
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -346,24 +345,6 @@ def register_signal_handlers(callback):
         GLib.idle_add(install_glib_handler, signal_code, priority=GLib.PRIORITY_HIGH)
 
 
-def memory_profiling(args):
-    memory_profiling_path = args['memory_profiling_path']
-    memory_profiling_interval = int(args['memory_profiling_interval'])
-    memory_profiling_print = args['memory_profiling_print']
-    while not args['stop']:
-        snapshot = tracemalloc.take_snapshot()
-        time.sleep(memory_profiling_interval)
-        with open(os.path.join(memory_profiling_path, 'memory_profiling.log'), 'a') as file:
-            file.write('[ Top 10 Differences ]\n')
-            if memory_profiling_print:
-                print('[ Top 10 Differences ]\n')
-            for result in tracemalloc.take_snapshot().compare_to(snapshot, 'lineno')[:10]:
-                file.write(str(result) + '\n')
-                if memory_profiling_print:
-                    print(result)
-            file.write('\n\n\n')
-
-
 def main():
 
     # check if all env variables are set
@@ -403,7 +384,7 @@ def main():
             'memory_profiling_print': user_input.memory_profiling_print,
             'stop': False,
         }
-        memory_profiling_thread = threading.Thread(target=memory_profiling, args=(memory_profiling_args,))
+        memory_profiling_thread = threading.Thread(target=profiling.memory_profiling, args=(memory_profiling_args,))
         memory_profiling_thread.start()
 
     splash_screen.set_text("Loading configurations...")

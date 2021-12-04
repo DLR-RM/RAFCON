@@ -32,7 +32,9 @@ import threading
 import sys
 import logging
 
-import rafcon
+if sys.version_info >= (3, ):
+    import tracemalloc
+
 from yaml_configuration.config import config_path
 import rafcon.utils.filesystem as filesystem
 
@@ -41,9 +43,7 @@ import rafcon.core.singleton as core_singletons
 from rafcon.core.storage import storage
 from rafcon.core.states.state import StateExecutionStatus
 
-from rafcon.utils import plugins
-from rafcon.utils import resources
-from rafcon.utils import log
+from rafcon.utils import plugins, resources, log, profiling
 
 logger = log.get_logger("rafcon.start.core")
 
@@ -114,7 +114,10 @@ def setup_argument_parser():
     :return: The parser object
     """
     default_config_path = filesystem.get_default_config_path()
+    default_log_path = filesystem.get_default_log_path()
+
     filesystem.create_path(default_config_path)
+    filesystem.create_path(default_log_path)
 
     parser = core_singletons.argument_parser
     parser.add_argument(
@@ -149,6 +152,15 @@ def setup_argument_parser():
         help="path within a state machine to the state that should be launched. The state path "
         "consists of state ids (e.g. QPOXGD/YVWJKZ whereof QPOXGD is the root state and YVWJKZ "
         "it's child state to start from).")
+    parser.add_argument('-mp', '--memory-profiling', dest='memory_profiling', action='store_true',
+                        help=_("a flag to specify if the gui should enable memory profiling"))
+    parser.add_argument('-mpp', '--memory-profiling-path', action='store', type=config_path, metavar='path', dest='memory_profiling_path',
+                        default=default_log_path, nargs='?', const=default_log_path,
+                        help=_("path to the memory profiling log memoy_profiling.log").format(default_log_path))
+    parser.add_argument('-mpi', '--memory-profiling-interval', dest='memory_profiling_interval', action='store', default=10,
+                        help=_("The interval between snapshots creaton for memory profiling in seconds"))
+    parser.add_argument('-mppr', '--memory-profiling-print', dest='memory_profiling_print', action='store_true',
+                        help=_("a flag to specify if the memory profiling results should be printed"))
     return parser
 
 
@@ -289,6 +301,17 @@ def main(optional_args=None):
         logger.error("You have to specify a valid state machine path")
         exit(-1)
 
+    if user_input.memory_profiling and sys.version_info >= (3, ):
+        tracemalloc.start()
+        memory_profiling_args = {
+            'memory_profiling_path': user_input.memory_profiling_path,
+            'memory_profiling_interval': user_input.memory_profiling_interval,
+            'memory_profiling_print': user_input.memory_profiling_print,
+            'stop': False,
+        }
+        memory_profiling_thread = threading.Thread(target=profiling.memory_profiling, args=(memory_profiling_args,))
+        memory_profiling_thread.start()
+
     setup_configuration(user_input.config_path)
 
     post_setup_plugins(user_input)
@@ -318,6 +341,9 @@ def main(optional_args=None):
     plugins.run_hook("post_destruction")
     logging.shutdown()
 
+    if user_input.memory_profiling and sys.version_info >= (3, ):
+        memory_profiling_args['stop'] = True
+        memory_profiling_thread.join()
 
 if __name__ == '__main__':
     main()
