@@ -8,5 +8,5 @@ def execute(self, inputs, outputs, gvm):
     outputs["output_3"] = inputs["input_3"]
     outputs["output_4"] = inputs["input_4"]
     
-    self.preemptive_wait(2)
+    self.preemptive_wait(0.01)
     return "success"
