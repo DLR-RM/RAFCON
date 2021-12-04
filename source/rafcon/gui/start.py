@@ -215,6 +215,9 @@ def setup_argument_parser():
                         help=_("path to the memory profiling log memoy_profiling.log").format(default_log_path))
     parser.add_argument('-mpi', '--memory-profiling-interval', dest='memory_profiling_interval', action='store', default=10,
                         help=_("The interval between snapshots creaton for memory profiling in seconds"))
+    parser.add_argument('-mppr', '--memory-profiling-print', dest='memory_profiling_print', action='store_true',
+                        help=_("a flag to specify if the memory profiling results should be printed"))
+
     return parser
 
 
@@ -346,13 +349,18 @@ def register_signal_handlers(callback):
 def memory_profiling(args):
     memory_profiling_path = args['memory_profiling_path']
     memory_profiling_interval = int(args['memory_profiling_interval'])
+    memory_profiling_print = args['memory_profiling_print']
     while not args['stop']:
         snapshot = tracemalloc.take_snapshot()
         time.sleep(memory_profiling_interval)
         with open(os.path.join(memory_profiling_path, 'memory_profiling.log'), 'a') as file:
-            file.write('[ Top 10 Differences ]' + '\n')
+            file.write('[ Top 10 Differences ]\n')
+            if memory_profiling_print:
+                print('[ Top 10 Differences ]\n')
             for result in tracemalloc.take_snapshot().compare_to(snapshot, 'lineno')[:10]:
                 file.write(str(result) + '\n')
+                if memory_profiling_print:
+                    print(result)
             file.write('\n\n\n')
 
 
@@ -392,6 +400,7 @@ def main():
         memory_profiling_args = {
             'memory_profiling_path': user_input.memory_profiling_path,
             'memory_profiling_interval': user_input.memory_profiling_interval,
+            'memory_profiling_print': user_input.memory_profiling_print,
             'stop': False,
         }
         memory_profiling_thread = threading.Thread(target=memory_profiling, args=(memory_profiling_args,))
