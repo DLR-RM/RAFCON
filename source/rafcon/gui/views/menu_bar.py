@@ -72,6 +72,7 @@ class MenuBarView(View):
         'start':                constants.BUTTON_START,
         'start_from_selected':  constants.BUTTON_START_FROM_SELECTED_STATE,
         'run_selected':         constants.BUTTON_RUN_SELECTED_STATE,
+        'only_run_selected':    constants.BUTTON_ONLY_RUN_SELECTED_STATE,
         'pause':                constants.BUTTON_PAUSE,
         'stop':                 constants.BUTTON_STOP,
         'step_mode':            constants.BUTTON_STEPM,

@@ -375,6 +375,14 @@
               </object>
             </child>
             <child>
+              <object class="GtkMenuItem" id="only_run_selected">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label">Run selected state</property>
+                <property name="use_underline">True</property>
+              </object>
+            </child>
+            <child>
               <object class="GtkMenuItem" id="pause">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>

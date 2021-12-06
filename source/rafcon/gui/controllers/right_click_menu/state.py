@@ -227,6 +227,10 @@ class StateMachineRightClickMenu(object):
                                                    self.on_run_selected_state_activate,
                                                    accel_code=shortcuts_dict['run_selected'][0],
                                                    accel_group=accel_group))
+        execution_sub_menu.append(create_menu_item("only run this state", constants.BUTTON_ONLY_RUN_SELECTED_STATE,
+                                                   self.on_run_selected_state_activate,
+                                                   accel_code=shortcuts_dict['only_run_selected'][0],
+                                                   accel_group=accel_group))
 
     def insert_copy_cut_paste_in_menu(self, menu, shortcuts_dict, accel_group, no_paste=False):
         menu.append(create_menu_item("Copy selection", constants.BUTTON_COPY, self.on_copy_activate,
@@ -338,6 +342,9 @@ class StateMachineRightClickMenu(object):
 
     def on_run_selected_state_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action('run_selected', None, None)
+
+    def on_run_only_selected_state_activate(self, widget, data=None):
+        self.shortcut_manager.trigger_action('only_run_selected', None, None)
 
     @staticmethod
     def on_save_as_activate(widget, data=None, path=None, save_as_function=None):
