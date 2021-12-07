@@ -195,6 +195,8 @@ class MainWindowView(View):
         button_pause_shortcut.set_tooltip_text('Pause')
         button_run_this_state_shortcut = self['button_run_this_state_shortcut']
         button_run_this_state_shortcut.set_tooltip_text('Run Selected State')
+        button_run_only_this_state_shortcut = self['button_run_only_this_state_shortcut']
+        button_run_only_this_state_shortcut.set_tooltip_text('Only run Selected State')
         button_start_from_shortcut = self['button_start_from_shortcut']
         button_start_from_shortcut.set_tooltip_text('Run From Selected State')
         button_run_to_shortcut = self['button_run_to_shortcut']
@@ -214,7 +216,7 @@ class MainWindowView(View):
         button_stop_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STOP))
         button_pause_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_PAUSE))
         button_run_this_state_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_RUN_SELECTED_STATE))
-        button_run_this_state_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_ONLY_RUN_SELECTED_STATE))
+        button_run_only_this_state_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_ONLY_RUN_SELECTED_STATE))
         button_start_from_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_START_FROM_SELECTED_STATE))
         button_run_to_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_RUN_TO_SELECTED_STATE))
         button_step_mode_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STEPM))

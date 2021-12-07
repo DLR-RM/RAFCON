@@ -275,7 +275,7 @@ class MainWindowController(ExtendedController):
         self.connect_button_to_function('button_pause_shortcut', "toggled", self.on_button_pause_shortcut_toggled)
         self.connect_button_to_function('button_run_this_state_shortcut', "clicked",
                                         self.on_button_start_this_state_shortcut_clicked)
-        self.connect_button_to_function('button_run_this_state_shortcut', "clicked",
+        self.connect_button_to_function('button_run_only_this_state_shortcut', "clicked",
                                         self.on_button_start_only_this_state_shortcut_clicked)
         self.connect_button_to_function('button_start_from_shortcut', "clicked",
                                         self.on_button_start_from_shortcut_clicked)
