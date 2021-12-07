@@ -228,7 +228,7 @@ class StateMachineRightClickMenu(object):
                                                    accel_code=shortcuts_dict['run_selected'][0],
                                                    accel_group=accel_group))
         execution_sub_menu.append(create_menu_item("only run this state", constants.BUTTON_ONLY_RUN_SELECTED_STATE,
-                                                   self.on_run_selected_state_activate,
+                                                   self.on_run_only_selected_state_activate,
                                                    accel_code=shortcuts_dict['only_run_selected'][0],
                                                    accel_group=accel_group))
 

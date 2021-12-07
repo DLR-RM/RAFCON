@@ -65,8 +65,6 @@ class ExecutionEngine(Observable):
         self.state_counter = 0
         self.state_counter_lock = Lock()
         self.new_execution_command_handled = True
-        self.run_selected_done = False
-        self.run_selected_hierarchy_length = None
 
     @Observable.observed
     def pause(self):
@@ -337,7 +335,7 @@ class ExecutionEngine(Observable):
 
     def run_only_selected_state(self, start_state_path=None, state_machine_id=None):
         self.run_selected_state(start_state_path, state_machine_id)
-        self.stop()
+        # self.stop
 
     def _wait_while_in_pause_or_in_step_mode(self):
         """ Waits as long as the execution_mode is in paused or step_mode
