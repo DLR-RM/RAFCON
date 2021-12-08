@@ -334,8 +334,10 @@ class ExecutionEngine(Observable):
             self.set_execution_mode(StateMachineExecutionStatus.RUN_SELECTED_STATE)
 
     def run_only_selected_state(self, start_state_path=None, state_machine_id=None):
-        self.run_selected_state(start_state_path, state_machine_id)
-        # self.stop
+        selected_state_machine = self.state_machine_manager.state_machines[state_machine_id]
+        selected_state_machine_path = selected_state_machine.file_system_path
+        self.execute_state_machine_from_path(state_machine=selected_state_machine, path=selected_state_machine_path,
+                                             start_state_path=start_state_path, wait_for_execution_finished=True)
 
     def _wait_while_in_pause_or_in_step_mode(self):
         """ Waits as long as the execution_mode is in paused or step_mode
