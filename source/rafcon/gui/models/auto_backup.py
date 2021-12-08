@@ -148,7 +148,6 @@ def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=No
             if last_save_file_system_path is None:
                 del sm_m.auto_backup.meta['last_saved']
             else:
-                sm_m.auto_backup.meta['last_saved']['time'] = auto_backup_meta['last_saved']['time']
                 sm_m.auto_backup.meta['last_saved']['file_system_path'] = sm_m.state_machine.file_system_path
 
     # set dirty flag -> TODO think about to make it more reliable still not fully sure that the flag is right
@@ -395,7 +394,6 @@ class AutoBackupModel(ModelMT):
 
     def update_last_backup_meta_data(self):
         """Update the auto backup meta data with internal recovery information"""
-        self.meta['last_backup']['time'] = get_time_string_for_float(self.last_backup_time)
         self.meta['last_backup']['file_system_path'] = self._tmp_storage_path
         self.meta['last_backup']['marked_dirty'] = self.state_machine_model.state_machine.marked_dirty
 

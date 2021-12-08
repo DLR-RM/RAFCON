@@ -103,9 +103,7 @@ def restore_session_from_runtime_config():
         # pick folder name dependent on time, and backup meta data existence
         # problem is that the backup time is maybe not the best choice
         if 'last_backup' in backup_meta_dict:
-            last_backup_time = storage_utils.get_float_time_for_string(backup_meta_dict['last_backup']['time'])
             if 'last_saved' in backup_meta_dict:
-                last_save_time = storage_utils.get_float_time_for_string(backup_meta_dict['last_saved']['time'])
                 backup_marked_dirty = backup_meta_dict['last_backup']['marked_dirty']
                 if last_backup_time > last_save_time and backup_marked_dirty:
                     from_backup_path = backup_meta_dict['last_backup']['file_system_path']
