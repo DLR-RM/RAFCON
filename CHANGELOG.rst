@@ -18,6 +18,12 @@ Next Release
 
 - Miscellaneous:
 
+0.15.3
+"""""""
+
+- Bug Fixes:
+    - Fix bug in LoggingView, which freezes RAFCON
+
 0.15.2
 """""""
 

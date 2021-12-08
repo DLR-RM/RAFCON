@@ -89,7 +89,7 @@ class BaseExecutionHistory(object):
         if isinstance(state_for_scoped_data, LibraryState):
             state_for_scoped_data = state_for_scoped_data.state_copy
         history_item = CallItem(state, call_type, state_for_scoped_data, input_data, state.run_id)
-        if link_and_feed_item_to_consumers:
+        if link_and_feed_item_to_consumers and self.consumer_manager.consumers_exist:
             self._link_item(history_item)
             self.feed_consumers(history_item)
         return history_item
@@ -112,7 +112,7 @@ class BaseExecutionHistory(object):
             state_for_scoped_data = state_for_scoped_data.state_copy
         history_item = ReturnItem(state, call_type, state_for_scoped_data, output_data,
                                   state.run_id)
-        if link_and_feed_item_to_consumers:
+        if link_and_feed_item_to_consumers and self.consumer_manager.consumers_exist:
             self._link_item(history_item)
             self.feed_consumers(history_item)
         return history_item
@@ -129,7 +129,7 @@ class BaseExecutionHistory(object):
         :param link_and_feed_item_to_consumers: if the history item should be feed to all other consumers
         """
         history_item = ConcurrencyItem(state, number_concurrent_threads, state.run_id, self.consumer_manager)
-        if link_and_feed_item_to_consumers:
+        if link_and_feed_item_to_consumers and self.consumer_manager.consumers_exist:
             self._link_item(history_item)
             self.feed_consumers(history_item)
         return history_item
@@ -145,7 +145,7 @@ class BaseExecutionHistory(object):
         :param feed_item_to_consumers: if the history item should be feed to all other consumers
         """
         history_item = StateMachineStartItem(state_machine, run_id)
-        if feed_item_to_consumers:
+        if feed_item_to_consumers and self.consumer_manager.consumers_exist:
             self._link_item(history_item)
             self.feed_consumers(history_item)
         return history_item
