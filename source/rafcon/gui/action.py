@@ -850,7 +850,7 @@ class AddObjectAction(Action):
                                                                              storage_path=state_image.state_path)
         list_name = self.action_type.replace('add_', '') + 's'
         core_obj = getattr(state_image_of_state, list_name)[self.added_object_identifier._id]
-        self.add_core_object_to_state(state, core_obj)
+        Action.add_core_object_to_state(state, core_obj)
 
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.compare_models(previous_model, actual_state_model)
@@ -978,7 +978,7 @@ class RemoveObjectAction(Action):
         core_obj = getattr(state_image_of_state, list_name)[self.removed_object_identifier._id]
 
         if self.action_type not in ['remove_transition', 'remove_data_flow']:
-            self.add_core_object_to_state(state, core_obj)
+            Action.add_core_object_to_state(state, core_obj)
 
         self.adjust_linkage()
 
