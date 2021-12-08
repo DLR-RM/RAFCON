@@ -29,6 +29,8 @@ import threading
 import sys
 import logging
 
+import rafcon
+
 if sys.version_info >= (3, ):
     import tracemalloc
 
