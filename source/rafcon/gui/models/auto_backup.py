@@ -311,7 +311,6 @@ class AutoBackupModel(ModelMT):
         if state_machine_model.state_machine.file_system_path is not None:
             # logger.info("store meta data of {0} to {1}".format(self, meta_data_path))
             # data used for restore tabs -> (having the information to load state machines without loading them)
-            self.meta['last_saved']['time'] = state_machine_model.state_machine.last_update
             self.meta['last_saved']['file_system_path'] = state_machine_model.state_machine.file_system_path
 
         logger.debug("The auto-backup for state-machine {2} is {0} and set to '{1}'"
@@ -404,7 +403,6 @@ class AutoBackupModel(ModelMT):
         """Update the auto backup meta data with information of the state machine origin"""
         # TODO finally maybe remove this when all backup features are integrated into one backup-structure
         # data also used e.g. to backup tabs
-        self.meta['last_saved']['time'] = self.state_machine_model.state_machine.last_update
         self.meta['last_saved']['file_system_path'] = self.state_machine_model.state_machine.file_system_path
 
     @ModelMT.observe("state_machine", after=True)

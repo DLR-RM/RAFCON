@@ -62,7 +62,7 @@ class StateMachine(Observable, JSONObject, Hashable):
     _marked_dirty = True
     _file_system_path = None
 
-    def __init__(self, root_state=None, version=None, creation_time=None, last_update=None, state_machine_id=None):
+    def __init__(self, root_state=None, version=None, creation_time=None, state_machine_id=None):
         Observable.__init__(self)
 
         self._modification_lock = RLock()
@@ -83,23 +83,13 @@ class StateMachine(Observable, JSONObject, Hashable):
         else:
             self.creation_time = get_current_time_string()
 
-        # this case happens if old state machines are loaded which do not have statemachine.json yet
-        if isinstance(last_update, datetime):
-            # see https://stackoverflow.com/questions/8022161/python-converting-from-datetime-datetime-to-time-time
-            last_update = time.mktime(last_update.timetuple()) + last_update.microsecond / 1E6
-
-        if last_update:
-            self.last_update = last_update
-        else:
-            self.last_update = get_current_time_string()
-
         self._execution_histories = []
 
         # specifies if this state machine supports saving states with state_name + state_id
         self._supports_saving_state_names = True
 
     def __copy__(self):
-        sm = self.__class__(copy(self._root_state), self.version, self.creation_time, self.last_update)
+        sm = self.__class__(copy(self._root_state), self.version, self.creation_time)
         sm._marked_dirty = self._marked_dirty
         return sm
 
@@ -110,8 +100,7 @@ class StateMachine(Observable, JSONObject, Hashable):
     def from_dict(cls, dictionary, state_machine_id=None):
         state_machine_version = dictionary['version'] if 'version' in dictionary else dictionary['state_machine_version']
         creation_time = dictionary['creation_time']
-        last_update = dictionary['last_update']
-        return cls(None, state_machine_version, creation_time, last_update, state_machine_id)
+        return cls(None, state_machine_version, creation_time, state_machine_id)
 
     def to_dict(self):
         return self.state_machine_to_dict(self)
@@ -127,7 +116,6 @@ class StateMachine(Observable, JSONObject, Hashable):
             'state_machine_version': state_machine.version,
             'used_rafcon_version': rafcon.__version__,
             'creation_time': state_machine.creation_time,
-            'last_update': state_machine.last_update,
         }
         return dict_representation
 

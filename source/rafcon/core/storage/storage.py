@@ -172,16 +172,12 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
         if not os.path.exists(base_path):
             os.makedirs(base_path)
 
-        old_update_time = state_machine.last_update
-        state_machine.last_update = storage_utils.get_current_time_string()
         state_machine_dict = state_machine.to_dict()
         storage_utils.write_dict_to_json(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE))
 
         # set the file_system_path of the state machine
         if not as_copy:
             state_machine.file_system_path = copy.copy(base_path)
-        else:
-            state_machine.last_update = old_update_time
 
         # add root state recursively
         remove_obsolete_folders([root_state], base_path)

@@ -120,7 +120,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                 ## add base properties will throw if not existing
                 for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
                           'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
-                          'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
+                          'used_rafcon_version', 'creation_time', 'os_environment']:
                     try:
                         execution_item[l] = item[l]
                     except KeyError:
@@ -146,7 +146,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             ## add base properties will throw if not existing
             for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
                       'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
-                      'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
+                      'used_rafcon_version', 'creation_time', 'os_environment']:
                 try:
                     execution_item[l] = item[l]
                 except KeyError:
