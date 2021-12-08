@@ -18,6 +18,7 @@ Next Release
 - Bug Fixes:
 
 - Miscellaneous:
+    - Remove last update field to improve versioning control
 
 0.15.4
 """""""
