@@ -136,7 +136,7 @@ label {
   &:disabled {
     color: $insensitive_fg_color;
 
-    selection { @extend %selected_items:disabled; }
+    selection { @extend %selected_items, :disabled; }
   }
 }
 
@@ -590,9 +590,9 @@ button {
 // More inline toolbar buttons
 toolbar.inline-toolbar toolbutton {
   & > button.flat { @extend %linked_middle; }
-  &:first-child > button.flat { @extend %linked:first-child; }
-  &:last-child > button.flat { @extend %linked:last-child; }
-  &:only-child > button.flat { @extend %linked:only-child; }
+  &:first-child > button.flat { @extend %linked, :first-child; }
+  &:last-child > button.flat { @extend %linked, :last-child; }
+  &:only-child > button.flat { @extend %linked, :only-child; }
 }
 
 // Some crazy linking stuff
@@ -788,7 +788,7 @@ modelbutton.flat arrow {
 
 button:link, button:visited {
   @extend %undecorated_button;
-  @extend *:link;
+  @extend *, :link;
 
   &:hover, &:active, &:checked {
     @extend %undecorated_button;
@@ -889,7 +889,11 @@ combobox {
     }
   }
 
-  &:drop(active) button.combo { @extend button:drop(active); }
+  &:drop(active) button.combo {
+    color: $drop_target_color;
+    border-color: $drop_target_color;
+    box-shadow: none;
+  }
 
   .linked:not(.vertical) > & > box > button.combo {
     // the combobox is a composite widget so the way we do button linking doesn't
@@ -898,14 +902,14 @@ combobox {
     &:dir(rtl) { @extend %linked_middle; } // specificity bump
   }
 
-  .linked:not(.vertical) > &:first-child > box > button.combo { @extend %linked:first-child; }
-  .linked:not(.vertical) > &:last-child > box > button.combo { @extend %linked:last-child; }
-  .linked:not(.vertical) > &:only-child > box > button.combo { @extend %linked:only-child; }
+  .linked:not(.vertical) > &:first-child > box > button.combo { @extend %linked, :first-child; }
+  .linked:not(.vertical) > &:last-child > box > button.combo { @extend %linked, :last-child; }
+  .linked:not(.vertical) > &:only-child > box > button.combo { @extend %linked, :only-child; }
 
   .linked.vertical > & > box > button.combo { @extend %linked_vertical_middle; }
-  .linked.vertical > &:first-child > box > button.combo { @extend %linked_vertical:first-child; }
-  .linked.vertical > &:last-child > box > button.combo { @extend %linked_vertical:last-child; }
-  .linked.vertical > &:only-child > box > button.combo { @extend %linked_vertical:only-child; }
+  .linked.vertical > &:first-child > box > button.combo { @extend %linked_vertical, :first-child; }
+  .linked.vertical > &:last-child > box > button.combo { @extend %linked_vertical, :last-child; }
+  .linked.vertical > &:only-child > box > button.combo { @extend %linked_vertical, :only-child; }
 }
 
 //
@@ -1050,7 +1054,9 @@ headerbar,
       color: transparentize($selection_mode_fg, 0.4);
     }
 
-    .subtitle:link { @extend *:link:selected;  }
+    .subtitle:link {
+      color: mix($selected_fg_color, $selected_bg_color, 80%);
+    }
 
     .selection-menu {
       box-shadow: none;
@@ -1225,12 +1231,15 @@ headerbar {
       background-color: transparentize($selection_mode_fg, 1);
     }
     &:hover { @extend %normal_selected_button; }
-    &:active, &:checked { @extend %selected-button:active; }
+    &:active, &:checked { @extend %selected-button, :active; }
 
     &:disabled {
-      @extend %selected-button.flat:disabled;
-
-      &:checked, &:active { @extend %selected-button:disabled:checked; }
+      &, label { color: transparentize($selected_fg_color, 0.6); }
+      &:checked, &:active {
+        color: $selected_bg_color;
+        background-color: transparentize($selected_fg_color, 0.5);
+        border-color: transparentize($selected_fg_color, 0.6);
+      }
     }
   }
 
@@ -1730,7 +1739,7 @@ popover.background {
   .csd &, & { border: 1px solid darken($borders_color, 5%); }
 
   & separator { background-color: $_popover_bg; }
-  label.separator { @extend label.separator; } // Noice
+  label.separator { @extend label, .separator; } // Noice
 
   > list,
   > .view,
@@ -2722,7 +2731,7 @@ placessidebar {
       margin-top: 2px;
       margin-bottom: 2px;
       padding: 0;
-      @extend button.flat;
+      @extend button, .flat;
       border-radius: 100%;
       -gtk-outline-radius: 100%;
 
