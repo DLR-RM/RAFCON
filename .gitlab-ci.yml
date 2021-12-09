@@ -41,6 +41,10 @@ pages:
     BUILD_DIR: build
     CONAN_OPTIONS: ""
     MAKE_CMD_DOCS: "make docs"
+  only:
+    - master
+    - develop
+    - tags
   except:
     variables:
       - $AR_CI_DOCS_DISABLE == "true"
