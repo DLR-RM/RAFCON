@@ -65,6 +65,7 @@ class ExecutionEngine(Observable):
         self.state_counter = 0
         self.state_counter_lock = Lock()
         self.new_execution_command_handled = True
+        self.run_only_selected_state_flag = False
 
     @Observable.observed
     def pause(self):
@@ -334,20 +335,22 @@ class ExecutionEngine(Observable):
             self.set_execution_mode(StateMachineExecutionStatus.RUN_SELECTED_STATE)
 
     def run_only_selected_state(self, start_state_path=None, state_machine_id=None):
-        selected_state_machine = self.state_machine_manager.state_machines[state_machine_id]
-        selected_state_machine_path = selected_state_machine.file_system_path
-        self.execute_state_machine_from_path(state_machine=selected_state_machine, path=selected_state_machine_path,
-                                             start_state_path=start_state_path, wait_for_execution_finished=True)
+        self.run_only_selected_state_flag = True
+        self.run_selected_state(start_state_path, state_machine_id)
 
     def _wait_while_in_pause_or_in_step_mode(self):
         """ Waits as long as the execution_mode is in paused or step_mode
         """
         while (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
                 or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
-            with self._status.execution_condition_variable:
-                self.synchronization_counter += 1
-                logger.verbose("Increase synchronization_counter: " + str(self.synchronization_counter))
-                self._status.execution_condition_variable.wait()
+            if not self.run_only_selected_state_flag:
+                with self._status.execution_condition_variable:
+                    self.synchronization_counter += 1
+                    logger.verbose("Increase synchronization_counter: " + str(self.synchronization_counter))
+                    self._status.execution_condition_variable.wait()
+
+            if self.run_only_selected_state_flag:
+                self.stop()
 
     def _wait_if_required(self, container_state, next_child_state_to_execute, woke_up_from_pause_or_step_mode):
         """ Calls a blocking wait for the calling thread, depending on the execution mode.
