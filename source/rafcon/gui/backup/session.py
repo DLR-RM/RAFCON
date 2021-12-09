@@ -105,7 +105,7 @@ def restore_session_from_runtime_config():
         if 'last_backup' in backup_meta_dict:
             if 'last_saved' in backup_meta_dict:
                 backup_marked_dirty = backup_meta_dict['last_backup']['marked_dirty']
-                if last_backup_time > last_save_time and backup_marked_dirty:
+                if backup_marked_dirty:
                     from_backup_path = backup_meta_dict['last_backup']['file_system_path']
             else:
                 from_backup_path = backup_meta_dict['last_backup']['file_system_path']
