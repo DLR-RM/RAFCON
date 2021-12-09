@@ -49,7 +49,6 @@ class BaseExecutionHistory(object):
         """
         return self.last_history_item
 
-    # TODO: delete the function from INEH? as it is redundant?
     def _link_item(self, current_item):
         """ Link the history item to the previous one
 
