@@ -1,0 +1,1 @@
+{"state_machine_index": "dummy_data", "data": [6399.9951171875], "uncollected": 0}

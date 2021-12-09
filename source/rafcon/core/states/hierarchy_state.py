@@ -24,10 +24,9 @@ from rafcon.utils import log
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.state_elements.logical_port import Outcome
 import rafcon.core.singleton as singleton
-from rafcon.core.execution.execution_history import CallItem, ReturnItem
+from rafcon.core.execution.execution_history_items import CallItem, ReturnItem, CallType
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.states.state import StateExecutionStatus
-from rafcon.core.execution.execution_history import CallType
 
 logger = log.get_logger(__name__)
 
@@ -43,10 +42,11 @@ class HierarchyState(ContainerState):
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None, states=None, transitions=None, data_flows=None, start_state_id=None,
-                 scoped_variables=None, safe_init=True):
+                 scoped_variables=None, missing_library_meta_data=None, is_dummy=False, safe_init=True):
 
         ContainerState.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, states,
-                                transitions, data_flows, start_state_id, scoped_variables, safe_init=safe_init)
+                                transitions, data_flows, start_state_id, scoped_variables, missing_library_meta_data,
+                                is_dummy, safe_init=safe_init)
         self.handling_execution_mode = False
 
         self.child_state = None
@@ -73,6 +73,7 @@ class HierarchyState(ContainerState):
 
         self.state_execution_status = StateExecutionStatus.WAIT_FOR_NEXT_STATE
         if self.backward_execution:
+            # in backward execution case there always has an execution_history to exist
             last_history_item = self.execution_history.pop_last_item()
             assert isinstance(last_history_item, ReturnItem)
             self.scoped_data = last_history_item.scoped_data
@@ -110,7 +111,7 @@ class HierarchyState(ContainerState):
 
                 # print("hs2", self.name)
 
-                self.backward_execution = False
+                self.backward_execution = False  # TODO: why is this line needed?
                 if self.preempted:
                     if self.last_transition and self.last_transition.from_outcome == -2:
                         logger.debug("Execute preemption handling for '{0}'".format(self.child_state))

@@ -12,10 +12,10 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from __future__ import print_function
+# from __future__ import print_function
 from setuptools import setup, find_packages, Command
 import distutils.log
-
+import sys
 import os
 
 distutils.log.set_verbosity(distutils.log.INFO)
@@ -62,11 +62,23 @@ readme_file_path = os.path.join(".", "README.rst")
 with open(readme_file_path, "r") as f:
     long_description = f.read()
 
-global_requirements = ['pylint>=1.6,<2', 'psutil', 'jsonconversion~=0.2.12', 'yaml_configuration~=0.1',
-                       'python-gtkmvc3-dlr~=1.0.0', 'gaphas~=1.0.0', 'future>=0.16,<0.18.0']
 
-test_requirements = ['pytest>=3.5,<5', 'pytest-timeout', 'pytest-mock', 'pytest-faulthandler~=1.6.0',
-                     'graphviz', 'pyuserinput']
+if sys.version_info[0] < 3:  # python2
+    global_requirements = ['pylint>=1.6,<2', 'psutil', 'jsonconversion~=0.2.12', 'yaml_configuration~=0.1',
+                           'pyyaml~=5.3.0',
+                           'python-gtkmvc3-dlr~=1.0.0', 'gaphas~=1.0.0', 'future>=0.16,<0.18.0']
+    test_requirements = ['pytest>=3.5,<5', 'pytest-timeout<2', 'pytest-mock>=1.9.0,<3', 'pytest-faulthandler~=1.6.0',
+                         'importlib-metadata~=2.0.0', 'zipp~=1.0.0', 'pyparsing~=2.4.0', 'mock~=3.0.0',
+                         'isort~=4.3.0',
+                         'graphviz==0.16', 'pyuserinput', 'pandas', 'numpy']
+    setup_requirements = ['pytest-runner==4.5.1', 'libsass >= 0.15.0', 'six~=1.11.0']
+else:  # python3
+    global_requirements = ['pylint>=1.6,<2', 'psutil', 'jsonconversion~=0.2.12', 'yaml_configuration~=0.1',
+                           'python-gtkmvc3-dlr~=1.0.0', 'gaphas~=1.0.0', 'future>=0.16,<0.18.0']
+    test_requirements = ['pytest>=3.5,<5', 'pytest-timeout<2', 'pytest-mock>=1.9.0,<3', 'pytest-faulthandler~=1.6.0',
+                         'graphviz==0.16', 'pyuserinput', 'pandas~=1.1.5', 'numpy~=1.19.5']
+    setup_requirements = ['pytest-runner', 'libsass >= 0.15.0']
+
 test_requirements += global_requirements
 
 
@@ -115,7 +127,7 @@ setup(
 
     data_files=get_data_files(),
 
-    setup_requires=['pytest-runner', 'libsass >= 0.15.0'],
+    setup_requires=setup_requirements,
     tests_require=test_requirements,
     install_requires=global_requirements,
 

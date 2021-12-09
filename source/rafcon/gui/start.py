@@ -24,6 +24,8 @@ import sys
 import logging
 import threading
 import signal
+if sys.version_info >= (3, ):
+    import tracemalloc
 from yaml_configuration.config import config_path
 
 # gui
@@ -48,7 +50,7 @@ from rafcon.gui.utils import wait_for_gui
 import rafcon.utils.filesystem as filesystem
 from rafcon.utils import plugins, installation
 from rafcon.utils.i18n import setup_l10n
-from rafcon.utils import resources, log
+from rafcon.utils import resources, log, profiling
 
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -173,7 +175,10 @@ def setup_argument_parser():
     :return: The parser object
     """
     default_config_path = filesystem.get_default_config_path()
+    default_log_path = filesystem.get_default_log_path()
+
     filesystem.create_path(default_config_path)
+    filesystem.create_path(default_log_path)
 
     parser = core_singletons.argument_parser
     parser.add_argument('-n', '--new', action='store_true', help=_("whether to create a new state-machine"))
@@ -196,14 +201,29 @@ def setup_argument_parser():
                         help=_("path to the configuration file design_config.yaml. "
                                "Use 'None' to prevent the generation of a config file and use the default "
                                "configuration. Default: {0}").format(default_config_path))
+    parser.add_argument('-r', '--runtime_config', action='store', type=config_path, metavar='path', dest='runtime_config_path',
+                        default=default_config_path, nargs='?', const=default_config_path,
+                        help=_("path to the configuration file runtime_config.yaml. "
+                               "Use 'None' to prevent the generation of a config file and use the default "
+                               "configuration. Default: {0}").format(default_config_path))
     parser.add_argument('-ss', '--start_state_machine', dest='start_state_machine_flag', action='store_true',
                         help=_("a flag to specify if the first state machine of -o should be started after opening"))
     parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path', default=None, nargs='?',
                         help=_("path within a state machine to the state that should be launched which consists of "
                                "state ids e.g. QPOXGD/YVWJKZ where QPOXGD is the root state and YVWJKZ its child states"
-                               " to start from."))
+                               " to start from"))
     parser.add_argument('-q', '--quit', dest='quit_flag', action='store_true',
                         help=_("a flag to specify if the gui should quit after launching a state machine"))
+    parser.add_argument('-mp', '--memory-profiling', dest='memory_profiling', action='store_true',
+                        help=_("a flag to specify if the gui should enable memory profiling"))
+    parser.add_argument('-mpp', '--memory-profiling-path', action='store', type=config_path, metavar='path', dest='memory_profiling_path',
+                        default=default_log_path, nargs='?', const=default_log_path,
+                        help=_("path to the memory profiling log memoy_profiling.log").format(default_log_path))
+    parser.add_argument('-mpi', '--memory-profiling-interval', dest='memory_profiling_interval', action='store', default=10,
+                        help=_("The interval between snapshots creaton for memory profiling in seconds"))
+    parser.add_argument('-mppr', '--memory-profiling-print', dest='memory_profiling_print', action='store_true',
+                        help=_("a flag to specify if the memory profiling results should be printed"))
+
     return parser
 
 
@@ -380,6 +400,18 @@ def main():
 
     parser = setup_argument_parser()
     user_input = parser.parse_args()
+
+    if user_input.memory_profiling and sys.version_info >= (3, ):
+        tracemalloc.start()
+        memory_profiling_args = {
+            'memory_profiling_path': user_input.memory_profiling_path,
+            'memory_profiling_interval': user_input.memory_profiling_interval,
+            'memory_profiling_print': user_input.memory_profiling_print,
+            'stop': False,
+        }
+        memory_profiling_thread = threading.Thread(target=profiling.memory_profiling, args=(memory_profiling_args,))
+        memory_profiling_thread.start()
+
     setup_mvc_configuration(user_input.config_path, user_input.gui_config_path,
                             user_input.gui_config_path, user_input.design_config_path)
 
@@ -448,6 +480,10 @@ def main():
 
     logger.info(_("Exiting ..."))
     logging.shutdown()
+
+    if user_input.memory_profiling and sys.version_info >= (3, ):
+        memory_profiling_args['stop'] = True
+        memory_profiling_thread.join()
 
 
 if __name__ == '__main__':

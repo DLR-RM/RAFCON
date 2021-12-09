@@ -14,7 +14,6 @@
 # Michael Vilzmann <michael.vilzmann@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
-
 """
 .. module: a module to enable state machine execution from the command line
    :synopsis: A module to start arbitrary state machines without the GUI and several configurations options
@@ -34,6 +33,10 @@ import sys
 import logging
 
 import rafcon
+
+if sys.version_info >= (3, ):
+    import tracemalloc
+
 from yaml_configuration.config import config_path
 import rafcon.utils.filesystem as filesystem
 
@@ -42,9 +45,7 @@ import rafcon.core.singleton as core_singletons
 from rafcon.core.storage import storage
 from rafcon.core.states.state import StateExecutionStatus
 
-from rafcon.utils import plugins
-from rafcon.utils import resources
-from rafcon.utils import log
+from rafcon.utils import plugins, resources, log, profiling
 
 logger = log.get_logger("rafcon.start.core")
 
@@ -78,11 +79,12 @@ def setup_environment():
         if rafcon_library_path:
             os.environ['RAFCON_LIB_PATH'] = rafcon_library_path
         else:
-            logger.warning("Could not find root directory of RAFCON libraries. Please specify manually using the "
-                           "env var RAFCON_LIB_PATH")
+            logger.warning(
+                "Could not find root directory of RAFCON libraries. Please specify manually using the "
+                "env var RAFCON_LIB_PATH")
 
     # Install dummy _ builtin function in case i18.setup_l10n() is not called
-    if sys.version_info >= (3,):
+    if sys.version_info >= (3, ):
         import builtins as builtins23
     else:
         import __builtin__ as builtins23
@@ -104,8 +106,8 @@ def parse_state_machine_path(path):
         sm_root_file = join(path, storage.STATEMACHINE_FILE_OLD)
         if exists(sm_root_file):
             return path
-        raise argparse.ArgumentTypeError("Failed to open {0}: {1} not found in path".format(path,
-                                                                                            storage.STATEMACHINE_FILE))
+        raise argparse.ArgumentTypeError("Failed to open {0}: {1} not found in path".format(
+            path, storage.STATEMACHINE_FILE))
 
 
 def setup_argument_parser():
@@ -114,21 +116,53 @@ def setup_argument_parser():
     :return: The parser object
     """
     default_config_path = filesystem.get_default_config_path()
+    default_log_path = filesystem.get_default_log_path()
+
     filesystem.create_path(default_config_path)
+    filesystem.create_path(default_log_path)
 
     parser = core_singletons.argument_parser
-    parser.add_argument('-o', '--open', type=parse_state_machine_path, dest='state_machine_path', metavar='path',
-                        nargs='+', help="specify directories of state-machines that shall be opened. The path must "
-                                        "contain a statemachine.json file")
-    parser.add_argument('-c', '--config', type=config_path, metavar='path', dest='config_path',
-                        default=default_config_path, nargs='?', const=default_config_path,
-                        help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "
-                             "a config file and use the default configuration. Default: {0}".format(default_config_path))
+    parser.add_argument(
+        '-o',
+        '--open',
+        type=parse_state_machine_path,
+        dest='state_machine_path',
+        metavar='path',
+        nargs='+',
+        help="specify directories of state-machines that shall be opened. The path must "
+        "contain a statemachine.json file")
+    parser.add_argument(
+        '-c',
+        '--config',
+        type=config_path,
+        metavar='path',
+        dest='config_path',
+        default=default_config_path,
+        nargs='?',
+        const=default_config_path,
+        help="path to the configuration file config.yaml. Use 'None' to prevent the generation of "
+        "a config file and use the default configuration. Default: {0}".format(
+            default_config_path))
     parser.add_argument('-r', '--remote', action='store_true', help="remote control mode")
-    parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path', default=None, nargs='?',
-                        help="path within a state machine to the state that should be launched. The state path "
-                             "consists of state ids (e.g. QPOXGD/YVWJKZ whereof QPOXGD is the root state and YVWJKZ "
-                             "it's child state to start from).")
+    parser.add_argument(
+        '-s',
+        '--start_state_path',
+        metavar='path',
+        dest='start_state_path',
+        default=None,
+        nargs='?',
+        help="path within a state machine to the state that should be launched. The state path "
+        "consists of state ids (e.g. QPOXGD/YVWJKZ whereof QPOXGD is the root state and YVWJKZ "
+        "it's child state to start from).")
+    parser.add_argument('-mp', '--memory-profiling', dest='memory_profiling', action='store_true',
+                        help=_("a flag to specify if the gui should enable memory profiling"))
+    parser.add_argument('-mpp', '--memory-profiling-path', action='store', type=config_path, metavar='path', dest='memory_profiling_path',
+                        default=default_log_path, nargs='?', const=default_log_path,
+                        help=_("path to the memory profiling log memoy_profiling.log").format(default_log_path))
+    parser.add_argument('-mpi', '--memory-profiling-interval', dest='memory_profiling_interval', action='store', default=10,
+                        help=_("The interval between snapshots creaton for memory profiling in seconds"))
+    parser.add_argument('-mppr', '--memory-profiling-print', dest='memory_profiling_print', action='store_true',
+                        help=_("a flag to specify if the memory profiling results should be printed"))
     return parser
 
 
@@ -160,10 +194,14 @@ def open_state_machine(state_machine_path):
 
 
 def start_state_machine(sm, start_state_path=None):
-    core_singletons.state_machine_execution_engine.start(sm.state_machine_id, start_state_path=start_state_path)
+    core_singletons.state_machine_execution_engine.start(
+        sm.state_machine_id, start_state_path=start_state_path)
 
     if reactor_required():
-        sm_thread = threading.Thread(target=stop_reactor_on_state_machine_finish, args=[sm, ])
+        sm_thread = threading.Thread(
+            target=stop_reactor_on_state_machine_finish, args=[
+                sm,
+            ])
         sm_thread.start()
 
 
@@ -177,7 +215,7 @@ def wait_for_state_machine_finished(state_machine):
 
     from rafcon.core.states.execution_state import ExecutionState
     if not isinstance(state_machine.root_state, ExecutionState):
-        while len(state_machine.execution_histories[0]) < 1:
+        while not state_machine.root_state.final_outcome:
             time.sleep(0.1)
     else:
         time.sleep(0.5)
@@ -212,7 +250,7 @@ def reactor_required():
     return False
 
 
-def signal_handler(signal, frame):
+def signal_handler(signal, frame=None):
     global _user_abort
 
     state_machine_execution_engine = core_singletons.state_machine_execution_engine
@@ -244,7 +282,8 @@ def register_signal_handlers(callback):
         signal.signal(signal_code, callback)
 
 
-def main():
+def main(optional_args=None):
+
     register_signal_handlers(signal_handler)
 
     logger.info("initialize RAFCON ... ")
@@ -255,10 +294,25 @@ def main():
 
     logger.info("parse arguments ... ")
     parser = setup_argument_parser()
-    user_input = parser.parse_args()
+
+    if optional_args:
+        user_input = parser.parse_args(optional_args)
+    else:
+        user_input = parser.parse_args()
     if not user_input.state_machine_path:
         logger.error("You have to specify a valid state machine path")
         exit(-1)
+
+    if user_input.memory_profiling and sys.version_info >= (3, ):
+        tracemalloc.start()
+        memory_profiling_args = {
+            'memory_profiling_path': user_input.memory_profiling_path,
+            'memory_profiling_interval': user_input.memory_profiling_interval,
+            'memory_profiling_print': user_input.memory_profiling_print,
+            'stop': False,
+        }
+        memory_profiling_thread = threading.Thread(target=profiling.memory_profiling, args=(memory_profiling_args,))
+        memory_profiling_thread.start()
 
     setup_configuration(user_input.config_path)
 
@@ -289,6 +343,9 @@ def main():
     plugins.run_hook("post_destruction")
     logging.shutdown()
 
+    if user_input.memory_profiling and sys.version_info >= (3, ):
+        memory_profiling_args['stop'] = True
+        memory_profiling_thread.join()
 
 if __name__ == '__main__':
     main()

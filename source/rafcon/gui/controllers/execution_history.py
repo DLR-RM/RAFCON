@@ -18,6 +18,7 @@
 .. module:: execution_history
    :synopsis: A module holding a controller for the ExecutionHistoryView holding information about the
      execution history in a execution tree
+   :noindex:
 
 """
 
@@ -33,10 +34,10 @@ from threading import RLock
 import rafcon
 
 from rafcon.core.state_machine_manager import StateMachineManager
-from rafcon.core.execution.execution_history import ConcurrencyItem, CallItem, ScopedDataItem, HistoryItem
+from rafcon.core.execution.execution_history_items import HistoryItem, StateMachineStartItem, ScopedDataItem, CallItem, \
+    ConcurrencyItem, CallType
 from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
-from rafcon.core.execution.execution_history import CallType, StateMachineStartItem
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
@@ -95,6 +96,10 @@ class ExecutionHistoryTreeController(ExtendedController):
 
     def open_selected_history_separately(self, widget, event=None):
         model, row = self.history_tree.get_selection().get_selected()
+        if not row:
+            logger.info("Now execution run is selected. "
+                        "Please select an execution run that should be opened externally")
+            return
         item_path = self.history_tree_store.get_path(row)
         selected_history_item = model[row][self.HISTORY_ITEM_STORAGE_ID]
 
@@ -120,19 +125,26 @@ class ExecutionHistoryTreeController(ExtendedController):
                            "The external execution history viewer can only open finished executions.")
             return
 
-        if execution_history.execution_history_storage and execution_history.execution_history_storage.filename:
+        if execution_history.consumer_manager.file_system_consumer_exists and \
+                execution_history.consumer_manager.get_file_system_consumer_file_name():
             from rafcon.gui.utils.shell_execution import execute_command_in_process
             gui_path = path.dirname(path.dirname(path.realpath(__file__)))
             source_path = path.dirname(path.dirname(gui_path))
             viewer_path = path.join(gui_path, "execution_log_viewer.py")
             # TODO run in fully separate process but from here to use the option for selection synchronization via dict
-            cmd = "{path} {filename} {run_id}" \
-                  "".format(path=viewer_path, filename=execution_history.execution_history_storage.filename,
+            import sys
+            if sys.version_info[0] == 2:
+                python_version = "python2"
+            else:
+                python_version = "python3"
+            cmd = "{python_version} {path} '{filename}' '{run_id}'" \
+                  "".format(python_version=python_version, path=viewer_path,
+                            filename=execution_history.consumer_manager.get_file_system_consumer_file_name(),
                             run_id=run_id)
             execute_command_in_process(cmd, shell=True, cwd=source_path, logger=logger)
         else:
-            logger.info("Set EXECUTION_LOG_ENABLE to True in your config to activate execution file logging and to use "
-                        "the external execution history viewer.")
+            logger.info("Set FILE_SYSTEM_EXECUTION_HISTORY_ENABLE to True in your config in order to "
+                        "activate execution file logging and to use the external execution history viewer.")
 
     def append_string_to_menu(self, popup_menu, menu_item_string):
         final_string = menu_item_string

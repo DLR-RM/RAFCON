@@ -45,7 +45,12 @@ EXAMPLES_PATH = join(TESTS_PATH, '..', 'share', 'rafcon', 'examples')
 TEST_ASSETS_PATH = join(TESTS_PATH, 'assets')
 TEST_SCRIPT_PATH = join(TESTS_PATH, 'assets', 'scripts')
 TUTORIAL_PATH = join(TESTS_PATH, "..", "share", 'rafcon', "examples", "tutorials")
+ROS_PATH = join(TESTS_PATH, "..", "share", 'rafcon', "examples", "libraries", "ros_libraries")
+TURTLE_PATH = join(TESTS_PATH, "..", "share", 'rafcon', "examples", "libraries", "turtle_libraries")
+TEST_STATE_MACHINES_PATH = join(TESTS_PATH, "assets", "unit_test_state_machines")
+DEEP_LIBRARIES_PATH = join(TESTS_PATH, "assets", "unit_test_state_machines", 'deep_libraries')
 RAFCON_SHARED_LIBRARY_PATH = environ.get("RAFCON_LIB_PATH", join(RAFCON_ROOT_PATH, 'share', 'rafcon', 'libraries'))
+GENERIC_PATH = join(RAFCON_SHARED_LIBRARY_PATH, 'generic')
 print("LIBRARY_SM_PATH", LIBRARY_SM_PATH)
 print("RAFCON_SHARED_LIBRARY_PATH", RAFCON_SHARED_LIBRARY_PATH)
 
@@ -547,3 +552,12 @@ def focus_graphical_editor_in_page(page):
     if not isinstance(graphical_controller, (OpenGLEditor, GaphasEditor)):
         graphical_controller = graphical_controller.get_children()[0]
     graphical_controller.grab_focus()
+
+
+def check_if_locale_exists(locale):
+    import subprocess
+    output = subprocess.check_output(["locale", "-a"])
+    if locale.encode() in output:
+        return True
+    else:
+        return False

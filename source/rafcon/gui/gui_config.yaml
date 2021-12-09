@@ -55,7 +55,7 @@ RESTORE_UNDOCKED_SIDEBARS: True
 
 FULLSCREEN_SHOW_TOOLBAR: True
 
-NOTIFICATIONS_MINIMUM_LOG_LEVEL: 30
+NOTIFICATIONS_MINIMUM_LOG_LEVEL: 50
 NOTIFICATIONS_DURATION: 3
 
 STATE_SELECTION_INSIDE_LIBRARY_STATE_ENABLED: True
@@ -132,6 +132,7 @@ SHORTCUTS:
     show_data_values: <Control>L
     start: F5
     start_from_selected: <Control>R
+    run_selected: <Shift>R
     step: F4
     step_mode: F6
     stop: F8
@@ -143,3 +144,7 @@ SHORTCUTS:
     - <Control>Up
     - <Control><Shift>Up
     fullscreen: F11
+    search: <Control>F
+
+SHOW_DIALOGS_DURING_RENAMING: false
+MAX_LOGGING_BUFFER_LINES: 5000

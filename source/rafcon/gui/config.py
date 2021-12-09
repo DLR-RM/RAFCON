@@ -99,8 +99,8 @@ class GuiConfig(ObservableConfig):
             from gi.repository import Gtk
             settings = Gtk.Settings.get_default()
             if settings:
-                settings.set_property("gtk-enable-animations", True)
                 settings.set_property("gtk-theme-name", theme_name)
+                settings.set_property("gtk-enable-animations", True)
                 settings.set_property("gtk-application-prefer-dark-theme", dark_theme)
 
             Gtk.Window.set_default_icon_name("rafcon" if dark_theme else "rafcon-light")

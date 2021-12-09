@@ -187,7 +187,7 @@ def remove_log_files(elements):
     files = []
     for element_name in elements:
         files.append(os.path.join(RAFCON_TEMP_PATH_BASE, "{0}_{1}".format(element_name, GENERATION_LOG_FILE_APPENDIX)))
-    print("REMOVE: \n{}".format('\n'.join([log_file_path for log_file_path in files])))
+    print("REMOVE: \n{}".format('\n'.join(list(files))))
     for log_file_path in files:
         if os.path.exists(log_file_path):
             os.remove(log_file_path)
@@ -993,7 +993,7 @@ def test_simple_execution_model_and_core_destruct_with_gui(gui):
                 (gtkmvc3.controller.Controller, True),
                 # (searched_class, False),
                 ]
-    run_setup_gui_destruct(gui, elements, searched_class, run_simple_execution_controller_construction)
+    run_setup_gui_destruct(gui, elements, searched_class, run_simple_execution_controller_construction, expected_warnings=4)
 
 
 @pytest.mark.timeout(120)
@@ -1216,7 +1216,7 @@ def test_complex_model_and_core_destruct_with_gui(gui):
                 (gtkmvc3.controller.Controller, True),
                 (searched_class, False),
                 ]
-    run_setup_gui_destruct(gui, elements, searched_class, run_complex_controller_construction)
+    run_setup_gui_destruct(gui, elements, searched_class, run_complex_controller_construction, expected_warnings=4)
 
 
 def run_setup_gui_destruct(gui, elements, searched_class, func,

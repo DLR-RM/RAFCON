@@ -82,7 +82,7 @@ class ShortcutManager(object):
         :return: True is the parameters are valid and the callback is registered, False else
         :rtype: bool
         """
-        if hasattr(callback, '__call__'):  # Is the callback really a function?
+        if callable(callback):  # Is the callback really a function?
             if action not in self.__action_to_callbacks:
                 self.__action_to_callbacks[action] = []
             self.__action_to_callbacks[action].append(callback)
@@ -180,4 +180,3 @@ class ShortcutManager(object):
         # this deletes the shortcuts form the global gui config, which is unnecessary!
         # self.__action_to_shortcuts.clear()
         self.__action_to_shortcuts = None
-

@@ -1,4 +1,0 @@
-== Unit-Tests ==
-This directory contains all code for testing the software with pytest
-
-Simply run the test suite with "py.test" in this or the parent directory. The -v option gives you more details, e.g. also showing passed tests.
