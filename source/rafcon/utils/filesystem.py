@@ -19,8 +19,10 @@
 import os
 import tarfile
 import stat
-import shutil
-from os.path import realpath, dirname, join, expanduser
+
+from os.path import join, expanduser
+from rafcon.core.config import global_config
+
 import shutil, errno
 
 
@@ -111,6 +113,14 @@ def get_default_config_path():
     if home_path:
         return join(home_path, ".config", "rafcon")
     return None
+
+
+def get_default_log_path():
+    default_path = None
+    home_path = expanduser('~')
+    if home_path:
+        default_path = join(home_path, ".log", "rafcon")
+    return global_config.get_config_value("DEFAULT_LOG_PATH", default_path)
 
 
 def separate_folder_path_and_file_name(path):
