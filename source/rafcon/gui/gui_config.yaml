@@ -132,8 +132,8 @@ SHORTCUTS:
     show_data_values: <Control>L
     start: F5
     start_from_selected: <Control>R
-    run_selected: <Shift>S
-    only_run_selected: <Shift>R
+    run_selected: <Control><Shift>I
+    only_run_selected: <Control><Shift>K
     step: F4
     step_mode: F6
     stop: F8
