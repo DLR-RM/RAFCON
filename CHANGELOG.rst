@@ -18,11 +18,19 @@ Next Release
 
 - Miscellaneous:
 
+0.15.4
+"""""""
+
+- Bug Fixes:
+    - Support custom design
+
+
 0.15.3
 """""""
 
 - Bug Fixes:
     - Fix bug in LoggingView, which freezes RAFCON
+
 
 0.15.2
 """""""
@@ -30,6 +38,7 @@ Next Release
 - Bug Fixes:
     - Make operations on the logging console thread-safe
     - Define a new GUI config called 'MAX_LOGGING_BUFFER_LINES' that determines the maximum lines of the logging buffer. If the number of lines exceeds the config value, the old value will be deleted automatically via clipping.
+
 
 0.15.1
 """""""
@@ -56,6 +65,7 @@ Next Release
  
 - Bug Fixes:
     - Fix handling of library interface change
+
 
 0.14.10
 """""""
