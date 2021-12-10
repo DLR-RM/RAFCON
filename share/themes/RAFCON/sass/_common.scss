@@ -1,3 +1,9 @@
+// There were a few places that "extend" significantly increasing the size file of the CSS files, or freezing the compilers.
+// This behavior was similar in both libsass and dart sass compilers, but libsass was behaving quite randomly despite dart sass that looks stable and deterministic.
+// We tried to find what is the issue on the Internet, there were a few pages pointing out to "extend" but it was not clear why is it happening.
+// We were suspected of the cycles that might happen between the components. So, with try and error, we found those "extend" that cause the issue.
+// So, We replaced them with the properties directly and the issue got solved.
+
 @function gtkalpha($c,$a) {
   @return unquote("alpha(#{$c},#{$a})");
 }
