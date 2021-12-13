@@ -135,7 +135,7 @@ class MemoryTestHelper:
         outfile.close()
 
     @pytest.mark.skipif(sys.version_info < (3, 4), reason="requires python3.4 or higher")
-    def run(self, leak_threshold=1024, save_to_json=False):
+    def run(self, leak_threshold=1024, running_leak_threshold=4096, save_to_json=False, assert_during_execution=False):
         """
         Run memory test by opening the test state machine, initializing tracemalloc, starting state machine and taking
         snapshots at each one, then filtering snapshots, checking for uncollectable objects in memory and saving
@@ -159,6 +159,7 @@ class MemoryTestHelper:
         # Initialize Tracemalloc
         tracemalloc.start()
 
+        pre_run_snapshot_size = self._get_total_size(self._filter_snapshot(tracemalloc.take_snapshot()))
         # Run Test
         for i in range(self.number_iterations):
             print("\n\n\n\n\n\n\n\n\n\n------------------------------\n")
@@ -167,6 +168,9 @@ class MemoryTestHelper:
             self._run_iteration(sm)
             current_snapshot = self._filter_snapshot(tracemalloc.take_snapshot())
             self.total_memory.append(self._get_total_size(current_snapshot))
+            if assert_during_execution and len(self.total_memory) > 1:
+                total_leak = max(self.total_memory[-1] - pre_run_snapshot_size, 0)
+                assert total_leak < running_leak_threshold
 
             print(self._display_top(current_snapshot), "\n")
 
