@@ -5,7 +5,6 @@ import time
 import pytest
 import sys
 import os
-import weakref
 from os.path import join
 
 # IMPORTANT: Do not import any rafcon specific modules at the top of a test file
@@ -171,15 +170,17 @@ class MemoryTestHelper:
             print("\n\n\n\n\n\n\n\n\n\n------------------------------\n")
             print("Iteration number: ", i, "\n")
             print("------------------------------\n")
-            memory_assertion_thread_stop = [False]
-            memory_assertion_thread = threading.Thread(target=memory_assertion,
-                                                       args=(memory_assertion_thread_stop,
-                                                             self._get_total_size(self._filter_snapshot(tracemalloc.take_snapshot())),
-                                                             running_leak_threshold))
-            memory_assertion_thread.start()
+            if assert_during_execution:
+                memory_assertion_thread_stop = [False]
+                memory_assertion_thread = threading.Thread(target=memory_assertion,
+                                                           args=(memory_assertion_thread_stop,
+                                                                 self._get_total_size(self._filter_snapshot(tracemalloc.take_snapshot())),
+                                                                 running_leak_threshold))
+                memory_assertion_thread.start()
             self._run_iteration(sm)
-            memory_assertion_thread_stop[0] = True
-            memory_assertion_thread.join()
+            if assert_during_execution:
+                memory_assertion_thread_stop[0] = True
+                memory_assertion_thread.join()
             current_snapshot = self._filter_snapshot(tracemalloc.take_snapshot())
             self.total_memory.append(self._get_total_size(current_snapshot))
             print(self._display_top(current_snapshot), "\n")
