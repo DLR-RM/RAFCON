@@ -7,7 +7,7 @@ class AbstractExecutionHistoryConsumer(object):
     """
     def __init__(self):
         self._queue = Queue()
-        self._thread = Thread(target=self.worker)
+        self._thread = Thread(target=self._consume_queue_items)
         self._condition = Condition()
         self._stop = False
         self._thread.start()
@@ -37,7 +37,7 @@ class AbstractExecutionHistoryConsumer(object):
             self._queue.put(execution_history_item, block=False)
             self._condition.notify()
 
-    def worker(self):
+    def _consume_queue_items(self):
         """ Consume the available execution history item until the thread stops
         """
         while not self._stop:

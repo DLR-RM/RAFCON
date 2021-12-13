@@ -49,7 +49,7 @@ class BaseExecutionHistory(object):
         """
         return self.last_history_item
 
-    def _link_item(self, current_item):
+    def _append_item(self, current_item):
         """ Link the history item to the previous one
 
         :param current_item: the history item
@@ -61,6 +61,11 @@ class BaseExecutionHistory(object):
             current_item.prev = last_history_item
             last_history_item.next = current_item
         self.last_history_item = current_item
+
+    def _check_link_feed(self, link_and_feed_item_to_consumers, history_item):
+        if link_and_feed_item_to_consumers:
+            self._append_item(history_item)
+            self.feed_consumers(history_item)
 
     def feed_consumers(self, execution_history_item):
         """ Add execution history item to the dedicated queue of all consumers
@@ -88,9 +93,7 @@ class BaseExecutionHistory(object):
         if isinstance(state_for_scoped_data, LibraryState):
             state_for_scoped_data = state_for_scoped_data.state_copy
         history_item = CallItem(state, call_type, state_for_scoped_data, input_data, state.run_id)
-        if link_and_feed_item_to_consumers:
-            self._link_item(history_item)
-            self.feed_consumers(history_item)
+        self._check_link_feed(link_and_feed_item_to_consumers, history_item)
         return history_item
 
     def push_return_history_item(self, state, call_type, state_for_scoped_data, output_data=None,
@@ -111,9 +114,7 @@ class BaseExecutionHistory(object):
             state_for_scoped_data = state_for_scoped_data.state_copy
         history_item = ReturnItem(state, call_type, state_for_scoped_data, output_data,
                                   state.run_id)
-        if link_and_feed_item_to_consumers:
-            self._link_item(history_item)
-            self.feed_consumers(history_item)
+        self._check_link_feed(link_and_feed_item_to_consumers, history_item)
         return history_item
 
     def push_concurrency_history_item(self, state, number_concurrent_threads, link_and_feed_item_to_consumers=True):
@@ -128,9 +129,7 @@ class BaseExecutionHistory(object):
         :param link_and_feed_item_to_consumers: if the history item should be feed to all other consumers
         """
         history_item = ConcurrencyItem(state, number_concurrent_threads, state.run_id, self.consumer_manager)
-        if link_and_feed_item_to_consumers:
-            self._link_item(history_item)
-            self.feed_consumers(history_item)
+        self._check_link_feed(link_and_feed_item_to_consumers, history_item)
         return history_item
 
     def push_state_machine_start_history_item(self, state_machine, run_id, feed_item_to_consumers=True):
@@ -144,8 +143,5 @@ class BaseExecutionHistory(object):
         :param feed_item_to_consumers: if the history item should be feed to all other consumers
         """
         history_item = StateMachineStartItem(state_machine, run_id)
-        if feed_item_to_consumers:
-            self._link_item(history_item)
-            self.feed_consumers(history_item)
+        self._check_link_feed(feed_item_to_consumers, history_item)
         return history_item
-
