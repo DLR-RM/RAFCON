@@ -18,9 +18,7 @@
 """
 
 import os
-from os.path import split
-from future.utils import string_types
-from pkg_resources import resource_string, resource_filename
+from pkg_resources import resource_string
 from gtkmvc3.observable import Observable
 
 from yaml_configuration.config import DefaultConfig, ConfigError
@@ -80,7 +78,7 @@ class ObservableConfig(DefaultConfig, Observable):
         """
         return_value = DefaultConfig.get_config_value(self, key, default)
         if self.is_config_loaded_from_file():
-            if isinstance(return_value, string_types) and (RELATIVE_PATH_KEYWORD in return_value):
+            if isinstance(return_value, str) and (RELATIVE_PATH_KEYWORD in return_value):
                 return_value = return_value.replace(RELATIVE_PATH_KEYWORD+"{", self.path + os.path.sep)
                 return_value = return_value.replace("}", "")
         return return_value
