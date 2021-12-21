@@ -1,5 +1,6 @@
 # Python Lib Imports
 import json
+import threading
 import time
 import pytest
 import sys
@@ -135,7 +136,7 @@ class MemoryTestHelper:
         outfile.close()
 
     @pytest.mark.skipif(sys.version_info < (3, 4), reason="requires python3.4 or higher")
-    def run(self, leak_threshold=1024, save_to_json=False):
+    def run(self, leak_threshold=1024, running_leak_threshold=4096, save_to_json=False, assert_during_execution=False):
         """
         Run memory test by opening the test state machine, initializing tracemalloc, starting state machine and taking
         snapshots at each one, then filtering snapshots, checking for uncollectable objects in memory and saving
@@ -159,15 +160,29 @@ class MemoryTestHelper:
         # Initialize Tracemalloc
         tracemalloc.start()
 
+        def memory_assertion(stop, pre_run_snapshot_size, threshold):
+            while not stop[0]:
+                assert max(self._get_total_size(self._filter_snapshot(tracemalloc.take_snapshot())) - pre_run_snapshot_size, 0) < threshold
+                time.sleep(0.1)
+
         # Run Test
         for i in range(self.number_iterations):
             print("\n\n\n\n\n\n\n\n\n\n------------------------------\n")
             print("Iteration number: ", i, "\n")
             print("------------------------------\n")
+            if assert_during_execution:
+                memory_assertion_thread_stop = [False]
+                memory_assertion_thread = threading.Thread(target=memory_assertion,
+                                                           args=(memory_assertion_thread_stop,
+                                                                 self._get_total_size(self._filter_snapshot(tracemalloc.take_snapshot())),
+                                                                 running_leak_threshold))
+                memory_assertion_thread.start()
             self._run_iteration(sm)
+            if assert_during_execution:
+                memory_assertion_thread_stop[0] = True
+                memory_assertion_thread.join()
             current_snapshot = self._filter_snapshot(tracemalloc.take_snapshot())
             self.total_memory.append(self._get_total_size(current_snapshot))
-
             print(self._display_top(current_snapshot), "\n")
 
             # Get gc stats and update uncollectable object count

@@ -13,6 +13,7 @@ Next Release
 
 - Features:
     - Run this state
+    - Add new memory profiling test to assert the memory leak during running sequential & concurrency state machines
 
 - Bug Fixes:
 
