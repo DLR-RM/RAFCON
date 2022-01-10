@@ -422,7 +422,7 @@ class MenuBarController(ExtendedController):
         return gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
 
     @staticmethod
-    def on_open_library_state_separately_activate(widget, data=None):
+    def on_open_library_state_separately_activate(widget, data=None, cursor_position=None):
         gui_helper_state_machine.open_library_state_separately()
 
     def on_save_activate(self, widget, data=None, delete_old_state_machine=False):

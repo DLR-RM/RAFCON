@@ -362,7 +362,7 @@ class StateMachineRightClickMenu(object):
             gui_singletons.global_runtime_config.set_config_value('LAST_PATH_OPEN_SAVE', old_last_path_open)
 
     @staticmethod
-    def on_open_library_state_separately_activate(widget, data=None):
+    def on_open_library_state_separately_activate(widget, data=None, cursor_position=None):
         gui_helper_state_machine.open_library_state_separately()
 
     def on_substitute_state_activate(self, widget, data=None):
