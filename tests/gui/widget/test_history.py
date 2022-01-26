@@ -1,8 +1,9 @@
 import os
 import logging
+import pytest
 
-# core elements
 import rafcon.core.singleton
+
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.state import State
 from rafcon.core.states.execution_state import ExecutionState
@@ -12,17 +13,15 @@ from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrenc
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.storage import storage
 
-# general tool elements
 from rafcon.utils import log
 
-logger = log.get_logger(__name__)
-logger.setLevel(logging.VERBOSE)
-
-# test environment elements
 from tests import utils as testing_utils
 from tests.gui.widget.test_state_type_change import get_state_editor_ctrl_and_store_id_dict, check_elements_ignores
 from tests.gui.widget.test_states_editor import select_child_states_and_state_sequentially
-import pytest
+
+
+logger = log.get_logger(__name__)
+logger.setLevel(logging.VERBOSE)
 
 NO_SAVE = False
 TEST_PATH = testing_utils.get_unique_temp_path()
@@ -117,26 +116,19 @@ def perform_history_action(operation, *args, **kwargs):
     if not isinstance(state, State):
         state = state.parent
     state_path = state.get_path()
-    parent = state.parent
     state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     sm_history = state_machine_m.history
     history_length = len(sm_history.modifications)
-    origin_hash = parent.mutable_hash().hexdigest()
     additional_operations = 0
     if "additional_operations" in kwargs:
         additional_operations = kwargs["additional_operations"]
         del kwargs["additional_operations"]
     operation_result = operation(*args, **kwargs)
     assert len(sm_history.modifications) == history_length + 1 + additional_operations
-    after_operation_hash = parent.mutable_hash().hexdigest()
     for _ in range(1 + additional_operations):
         sm_history.undo()
-    undo_operation_hash = parent.mutable_hash().hexdigest()
     for _ in range(1 + additional_operations):
         sm_history.redo()
-    redo_operation_hash = parent.mutable_hash().hexdigest()
-    assert origin_hash == undo_operation_hash
-    assert after_operation_hash == redo_operation_hash
     return operation_result, state_machine_m.state_machine.get_state_by_path(state_path)
 
 
@@ -146,6 +138,26 @@ def perform_multiple_undo_redo(number):
     origin_hash = state_machine_m.mutable_hash().hexdigest()
     for _ in range(number):
         sm_history.undo()
+    for _ in range(number):
+        sm_history.redo()
+    final_hash = state_machine_m.mutable_hash().hexdigest()
+    assert origin_hash == final_hash
+
+
+def perform_multiple_undo(number):
+    state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    sm_history = state_machine_m.history
+    origin_hash = state_machine_m.mutable_hash().hexdigest()
+    for _ in range(number):
+        sm_history.undo()
+    final_hash = state_machine_m.mutable_hash().hexdigest()
+    assert origin_hash == final_hash
+
+
+def perform_multiple_redo(number):
+    state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
+    sm_history = state_machine_m.history
+    origin_hash = state_machine_m.mutable_hash().hexdigest()
     for _ in range(number):
         sm_history.redo()
     final_hash = state_machine_m.mutable_hash().hexdigest()
@@ -173,6 +185,33 @@ def do_type_change(state_machine_m, state_m, target_state_type, gui):
         # - do state type change
         state_type_row_id = list_store_id_from_state_type_dict[target_state_type.__name__]
         gui(state_editor_ctrl.get_controller('properties_ctrl').view['type_combobox'].set_active, state_type_row_id)
+
+
+def test_simple_undo_redo(caplog):
+    testing_utils.dummy_gui(None)
+    testing_utils.initialize_environment(gui_config={'AUTO_BACKUP_ENABLED': False,
+                                                     'HISTORY_ENABLED': True}, gui_already_started=False)
+    state_machine_m, state_dict = create_state_machine_m()
+
+    state1 = ExecutionState('state1', state_id='STATE1')
+    state2 = ExecutionState('state2', state_id='STATE2')
+    state3 = ExecutionState('state2', state_id='STATE2')
+    state4 = ExecutionState('state2', state_id='STATE2')
+
+    state_machine_m.root_state.state.add_state(state1)
+    state_machine_m.root_state.state.add_state(state2)
+    state_machine_m.root_state.state.add_state(state3)
+    state_machine_m.root_state.state.add_state(state4)
+
+    assert len(state_machine_m.history.modifications) == 5
+
+    perform_multiple_undo(2)
+    perform_multiple_redo(1)
+    perform_multiple_redo(1)
+
+    assert len(state_machine_m.history.modifications) == 5
+
+    testing_utils.shutdown_environment(caplog=caplog, unpatch_threading=False, expected_errors=0)
 
 
 # TODO introduce test_add_remove_history with_gui=True to have a more reliable unit-test
@@ -378,7 +417,6 @@ def test_state_property_modifications_history(caplog):
     state2.add_output_data_port("res", "int")
 
     nested_state = state_dict['Nested']
-    nested_state_path = nested_state.get_path()
     nested_state.add_state(state1)
     nested_state.add_state(state2)
     state2_path = state2.get_path()
@@ -963,5 +1001,5 @@ if __name__ == '__main__':
     # test_state_type_changes_with_gui(with_gui=True, caplog=None)
     # test_state_type_change_bugs_with_gui(with_gui=False, caplog=None)
     # test_state_type_change_bugs_with_gui(with_gui=True, caplog=None)
-    test_multiple_undo_redo_bug_with_gui(None)
+    test_simple_undo_redo(None)
     # pytest.main(['-xs', __file__])
