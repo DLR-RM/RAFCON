@@ -33,7 +33,8 @@ from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.execution.execution_history_items import CallType
 from rafcon.core.config import global_config
 
-from rafcon.utils import log
+from rafcon.utils import log, plugins
+
 logger = log.get_logger(__name__)
 
 
@@ -105,10 +106,11 @@ class ExecutionState(State):
         return state
 
     def _execute(self, execute_inputs, execute_outputs, backward_execution=False):
-        """Calls the custom execute function of the script.py of the state
+        """Calls the custom execute function of the script.py of the state"""
 
-        """
+        plugins.run_hook('pre_script')
         outcome_item = self._script.execute(self, execute_inputs, execute_outputs, backward_execution)
+        plugins.run_hook('post_script')
 
         # in the case of backward execution the outcome is not relevant
         if backward_execution:
