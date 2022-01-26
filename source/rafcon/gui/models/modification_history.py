@@ -153,44 +153,46 @@ class ModificationsHistoryModel(ModelMT):
         :param target_history_id: the id of the list element which is to recover
         :return:
         """
+        GLib.idle_add(self._reset_to_history_id, target_history_id)
+
+    def undo(self):
+        GLib.idle_add(self._undo)
+
+    def redo(self):
+        GLib.idle_add(self._redo)
+
+    def _reset_to_history_id(self, target_history_id):
         with self.state_machine_model.storage_lock:
             self.busy = True
             self.modifications.go_to_history_element(target_history_id)
             self.busy = False
-
             self._re_initiate_observation()
             self.update_internal_tmp_storage()
             self.change_count += 1
 
-    def undo(self):
-        with self.state_machine_model.storage_lock:
-            GLib.idle_add(self._undo)
-
-    def redo(self):
-        with self.state_machine_model.storage_lock:
-            GLib.idle_add(self._redo)
-
     def _undo(self):
-        action = self.modifications.current_history_element.action
-        self.busy = True
-        self.modifications.undo()
-        self.busy = False
-        if isinstance(action, StateMachineAction):
-            self._re_initiate_observation()
-        self.update_internal_tmp_storage()
-        self.change_count += 1
+        with self.state_machine_model.storage_lock:
+            action = self.modifications.current_history_element.action
+            self.busy = True
+            self.modifications.undo()
+            self.busy = False
+            if isinstance(action, StateMachineAction):
+                self._re_initiate_observation()
+            self.update_internal_tmp_storage()
+            self.change_count += 1
 
     def _redo(self):
-        action = None
-        if self.modifications.get_next_element():
-            action = self.modifications.get_next_element().action
-        self.busy = True
-        self.modifications.redo()
-        self.busy = False
-        if isinstance(action, StateMachineAction):
-            self._re_initiate_observation()
-        self.update_internal_tmp_storage()
-        self.change_count += 1
+        with self.state_machine_model.storage_lock:
+            action = None
+            if self.modifications.get_next_element():
+                action = self.modifications.get_next_element().action
+            self.busy = True
+            self.modifications.redo()
+            self.busy = False
+            if isinstance(action, StateMachineAction):
+                self._re_initiate_observation()
+            self.update_internal_tmp_storage()
+            self.change_count += 1
 
     def _interrupt_active_action(self, info=None):
         logger.info("Active Action {} is interrupted and removed.".format(info['prop_name']))
