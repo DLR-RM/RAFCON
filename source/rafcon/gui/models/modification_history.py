@@ -25,6 +25,8 @@ Hereby the branching of the edit process is stored and should be accessible, too
 
 import copy
 
+from gi.repository import GLib
+
 from gtkmvc3.model_mt import ModelMT
 from gtkmvc3.observable import Observable
 
@@ -162,27 +164,33 @@ class ModificationsHistoryModel(ModelMT):
 
     def undo(self):
         with self.state_machine_model.storage_lock:
-            action = self.modifications.current_history_element.action
-            self.busy = True
-            self.modifications.undo()
-            self.busy = False
-            if isinstance(action, StateMachineAction):
-                self._re_initiate_observation()
-            self.update_internal_tmp_storage()
-            self.change_count += 1
+            GLib.idle_add(self._undo)
 
     def redo(self):
         with self.state_machine_model.storage_lock:
-            action = None
-            if self.modifications.get_next_element():
-                action = self.modifications.get_next_element().action
-            self.busy = True
-            self.modifications.redo()
-            self.busy = False
-            if isinstance(action, StateMachineAction):
-                self._re_initiate_observation()
-            self.update_internal_tmp_storage()
-            self.change_count += 1
+            GLib.idle_add(self._redo)
+
+    def _undo(self):
+        action = self.modifications.current_history_element.action
+        self.busy = True
+        self.modifications.undo()
+        self.busy = False
+        if isinstance(action, StateMachineAction):
+            self._re_initiate_observation()
+        self.update_internal_tmp_storage()
+        self.change_count += 1
+
+    def _redo(self):
+        action = None
+        if self.modifications.get_next_element():
+            action = self.modifications.get_next_element().action
+        self.busy = True
+        self.modifications.redo()
+        self.busy = False
+        if isinstance(action, StateMachineAction):
+            self._re_initiate_observation()
+        self.update_internal_tmp_storage()
+        self.change_count += 1
 
     def _interrupt_active_action(self, info=None):
         logger.info("Active Action {} is interrupted and removed.".format(info['prop_name']))
