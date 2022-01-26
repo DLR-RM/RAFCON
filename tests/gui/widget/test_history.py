@@ -116,6 +116,7 @@ def perform_history_action(operation, *args, **kwargs):
     if not isinstance(state, State):
         state = state.parent
     state_path = state.get_path()
+    parent = state.parent
     state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     sm_history = state_machine_m.history
     history_length = len(sm_history.modifications)
@@ -125,10 +126,15 @@ def perform_history_action(operation, *args, **kwargs):
         del kwargs["additional_operations"]
     operation_result = operation(*args, **kwargs)
     assert len(sm_history.modifications) == history_length + 1 + additional_operations
+    after_operation_hash = parent.mutable_hash().hexdigest()
     for _ in range(1 + additional_operations):
         sm_history.undo()
+    undo_operation_hash = parent.mutable_hash().hexdigest()
     for _ in range(1 + additional_operations):
         sm_history.redo()
+    redo_operation_hash = parent.mutable_hash().hexdigest()
+    assert parent.mutable_hash().hexdigest() == undo_operation_hash
+    assert after_operation_hash == redo_operation_hash
     return operation_result, state_machine_m.state_machine.get_state_by_path(state_path)
 
 
@@ -1001,5 +1007,5 @@ if __name__ == '__main__':
     # test_state_type_changes_with_gui(with_gui=True, caplog=None)
     # test_state_type_change_bugs_with_gui(with_gui=False, caplog=None)
     # test_state_type_change_bugs_with_gui(with_gui=True, caplog=None)
-    test_simple_undo_redo(None)
+    test_add_remove_history(None)
     # pytest.main(['-xs', __file__])
