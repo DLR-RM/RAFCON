@@ -175,8 +175,6 @@ class StatesEditorController(ExtendedController):
         :param dict info: Information e.g. about the changed config key
         """
         config_key = info['args'][1]
-        # config_value = info['args'][2]
-
         if config_key == "SOURCE_EDITOR_STYLE":
             self.reload_style()
 
@@ -199,12 +197,6 @@ class StatesEditorController(ExtendedController):
             if page_info['state_m'] is state_m:
                 return page_info['page'], state_identifier
         return None, None
-
-    def get_state_tab_name(self, state_m):
-        state_machine_id = state_m.state.get_state_machine().state_machine_id
-        state_name = state_m.state.name
-        tab_name = "{0}|{1}".format(state_machine_id, state_name)
-        return tab_name
 
     def get_current_state_m(self):
         """Returns the state model of the currently open tab"""
@@ -479,19 +471,6 @@ class StatesEditorController(ExtendedController):
         This is disabled for now, as the might be irritating for the user
         """
         pass
-        # page = notebook.get_nth_page(page_num)
-        # # find state of selected tab
-        # for tab_info in list(self.tabs.values()):
-        #     if tab_info['page'] is page:
-        #         state_m = tab_info['state_m']
-        #         sm_id = state_m.state.get_state_machine().state_machine_id
-        #         selected_state_m = self.current_state_machine_m.selection.get_selected_state()
-        #
-        #         # If the state of the selected tab is not in the selection, set it there
-        #         if selected_state_m is not state_m and sm_id in self.model.state_machine_manager.state_machines:
-        #             self.model.selected_state_machine_id = sm_id
-        #             self.current_state_machine_m.selection.set(state_m)
-        #         return
 
     def activate_state_tab(self, state_m):
         """Opens the tab for the specified state model

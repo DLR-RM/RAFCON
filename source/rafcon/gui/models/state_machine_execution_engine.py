@@ -24,7 +24,6 @@ class StateMachineExecutionEngineModel(ModelMT):
 
     execution_engine = None
 
-    __sm_execution_engine_counter = 0
     __observables__ = ("execution_engine", )
 
     def __init__(self, execution_engine, meta=None):

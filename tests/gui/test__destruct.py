@@ -137,7 +137,6 @@ def get_log_elements(elements, with_prints=False, print_method=None):
         with_prints = False
         element_del_file = []
 
-        # if element_name == 'state':
         for elem in element_gen_file:
             mem_id = elem.split(" ")
 
@@ -323,16 +322,6 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
     for object_class, check_it in elements:
         name = param_dict.get(object_class, None)[LOG_FILE_NAME_ID] if param_dict.get(object_class, None) else None
         found_objects_of_kind = [o for o in gc.get_objects() if isinstance(o, object_class) and o not in ignored_objects]
-        # # DEBUGGING work around used as exception -> stays in for possible reuse or will be cleaned up later ######
-        # excepted_class_name = 'MainWindowController'
-        # if any([o.__class__.__name__ == excepted_class_name for o in found_objects_of_kind]) and check_it:
-        #     mw_ctrl_list = [o for o in found_objects_of_kind if o.__class__.__name__ == excepted_class_name]
-        #     ignored_mw_ctrl_list = [o for o in ignored_objects if o.__class__.__name__ == excepted_class_name]
-        #     found_objects_of_kind = [o for o in found_objects_of_kind if not o.__class__.__name__ == excepted_class_name]
-        #     print "ignored main window controller ids", [id(o) for o in ignored_mw_ctrl_list]
-        #     print "still existing main window controller ids", [id(o) for o in mw_ctrl_list]
-        #     generate_graphs(mw_ctrl_list + ignored_objects)
-        # # DEBUGGING work around end ###############################################################################
         found_objects += found_objects_of_kind
 
         if not len(found_objects_of_kind) == 0:
@@ -394,29 +383,6 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
     if target_objects:
         generate_graphs(target_objects)
         return
-        # for index_target_object, target_object in enumerate(target_objects):
-        #     print()
-        #     print()
-        #     print("# Referrers of #{0} {1}:".format(index_target_object + 1, searched_type), target_object)
-        #
-        #     # TODO the referrer prints should avoid to print the local variables list (by checking element keys)
-        #     # TODO the referrer prints should avoid to print the list generated in this script (by inherit)
-        #     target_object_referrers = gc.get_referrers(target_object)
-        #     list_referrers = [referrer for referrer in target_object_referrers if hasattr(referrer, '__iter__')]
-        #
-        #     print("## simple referrers", len(target_object_referrers))
-        #     map(print_referrer, [referrer for referrer in target_object_referrers if referrer not in list_referrers])
-        #
-        #     print("## list referrers")
-        #     gc.collect()
-        #
-        #     for referrer in list_referrers:
-        #         print_referrer(referrer)
-        #         second_instance_list_referrers = gc.get_referrers(referrer)
-        #         print("### referrers of list referrer", len(second_instance_list_referrers))
-        #         map(print_referrer, second_instance_list_referrers)
-    # else:
-    #     generate_graphs(found_objects)
 
     if unpatch:
         run_un_patching(elements)
@@ -522,12 +488,8 @@ def run_simple_execution_controller_construction(gui):
 
 
 def run_complex_controller_construction(gui):
-
     gui(create_models)
 
-    # for a start load one of the type change tests to generate a lot of controllers which also close the GUI
-    # from tests.gui.widget.test_states_editor import create_models, MainWindowView, \
-    #     MainWindowController, trigger_state_type_change_tests, gtk, threading
     from tests.gui.widget.test_states_editor import trigger_state_type_change_tests
     trigger_state_type_change_tests(gui)
 

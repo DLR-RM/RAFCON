@@ -53,8 +53,6 @@ from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED
 
 logger = log.get_logger(__name__)
 
-HISTORY_DEBUG_LOG_FILE = RAFCON_TEMP_PATH_BASE + '../test_file.txt'
-
 
 class ModificationsHistoryModel(ModelMT):
     state_machine_model = None
@@ -68,7 +66,6 @@ class ModificationsHistoryModel(ModelMT):
 
         assert isinstance(state_machine_model, StateMachineModel)
         self.state_machine_model = state_machine_model
-        self.__state_machine_id = state_machine_model.state_machine.state_machine_id
         self._tmp_meta_storage = None
         self.tmp_meta_storage = self.get_root_state_element_meta()
 
@@ -312,17 +309,14 @@ class ModificationsHistoryModel(ModelMT):
 
             if overview.get_affected_model().parent:
                 if not isinstance(overview.get_affected_model().parent.state, State):
-                    level_status = 'State'
                     self.active_action = Action(parent_path=overview.get_affected_core_element().get_path(),
                                                 state_machine_model=self.state_machine_model,
                                                 overview=overview)
                 elif not isinstance(overview.get_affected_model().parent.state.parent, State):  # is root_state
-                    level_status = 'ParentState'
                     self.active_action = Action(parent_path=overview.get_affected_core_element().parent.get_path(),
                                                 state_machine_model=self.state_machine_model,
                                                 overview=overview)
                 else:
-                    level_status = 'ParentParentState'
                     self.active_action = Action(parent_path=overview.get_affected_core_element().parent.parent.get_path(),
                                                 state_machine_model=self.state_machine_model,
                                                 overview=overview)
@@ -655,7 +649,6 @@ class HistoryTreeElement(object):
 
     @prev_id.setter
     def prev_id(self, prev_id):
-        # logger.info("new_prev_id is: {0}".format(prev_id))
         assert isinstance(prev_id, int)
         self.__prev_id = prev_id
 

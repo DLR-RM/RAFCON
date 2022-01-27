@@ -72,8 +72,6 @@ class DataPort(StateElement):
         else:
             DataPort._unsafe_init(self, name, data_type, default_value, parent)
 
-        # logger.debug("DataPort with name %s initialized" % self.name)
-
     def _safe_init(self, name, data_type, default_value, parent):
         self.name = name
         if data_type is not None:
@@ -95,8 +93,6 @@ class DataPort(StateElement):
 
     def __str__(self):
         return "DataPort '{0}' [{1}] ({3} {2})".format(self.name, self.data_port_id, self.data_type, self.default_value)
-
-    yaml_tag = u'!DataPort'
 
     def __copy__(self):
         return self.__class__(self._name, self._data_type, self._default_value, self._data_port_id, None,
@@ -277,10 +273,8 @@ class DataPort(StateElement):
 
 
 class InputDataPort(DataPort):
-
-    yaml_tag = u'!InputDataPort'
+    pass
 
 
 class OutputDataPort(DataPort):
-
-    yaml_tag = u'!OutputDataPort'
+    pass

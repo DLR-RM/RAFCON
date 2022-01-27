@@ -61,8 +61,6 @@ class ScopedVariable(DataPort):
     :ivar rafcon.core.states.container_state.ContainerState StateElement.parent: reference to the parent state
     """
 
-    yaml_tag = u'!ScopedVariable'
-
     def __init__(self, name=None, data_type=None, default_value=None, scoped_variable_id=None, parent=None,
                  safe_init=True):
 
@@ -135,8 +133,6 @@ class ScopedData(StateElement):
             ScopedData._safe_init(self, name, value, value_type, from_state, data_port_type, parent)
         else:
             ScopedData._unsafe_init(self, name, value, value_type, from_state, data_port_type, parent)
-
-        # logger.debug("DataPort with name %s initialized" % self.name)
 
     def _safe_init(self, name, value, value_type, from_state, data_port_type, parent):
         # from state is used for name self._primary_key
@@ -228,13 +224,7 @@ class ScopedData(StateElement):
             raise TypeError("Result must by of type '{0}'. Given: '{1}' with type '{2}'".format(
                 self.value_type, value, type(value)
             ))
-        # if value is not None and str(type(value).__name__) != self._value_type:
-        #     print("types", value, str(type(value).__name__), self._value_type)
-        #     #check for classes
-        #     if not isinstance(value, getattr(sys.modules[__name__], self._value_type)):
-        #         raise TypeError("result must be of type %s" % str(self._value_type))
         self._timestamp = generate_time_stamp()
-        # print("new scope data update {0}: {1} t:{2}".format(self.name+self.from_state, self._value, self._timestamp))
         self._value = value
 
     @property

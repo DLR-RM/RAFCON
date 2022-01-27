@@ -22,9 +22,6 @@ def main():
 
     model = []  # use a not None model to avoid AssertionError in register_adapters methods
     log_tree_ctrl = SingleWidgetWindowController(model, single_view, ExecutionLogTreeController, args.file, args.run_id)
-
-    # log_tree_ctrl = SingleWidgetWindowController(None, single_view, ExecutionLogTreeController, file, run_id)
-
     Gtk.main()
 
 

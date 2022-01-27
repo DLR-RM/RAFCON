@@ -98,11 +98,6 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
     :rtype: tuple
     """
 
-    # for debugging purposes
-    # execution_history_items_dict = dict()
-    # for k, v in execution_history_items.items():
-    #     execution_history_items_dict[k] = v
-
     start_item, previous, next_, concurrent, grouped = log_to_raw_structure(execution_history_items)
 
     start_item = None
@@ -170,11 +165,6 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
              gitems[0]['state_type'] == 'LibraryState' or \
              'Concurrency' in gitems[0]['state_type']:
 
-            # for item in gitems:
-            #     if item["description"] is not None:
-            #         print(item["item_type"], item["call_type"], item["state_type"], item["state_name"])
-            #     print(item["description"])
-
             # select call and return items for this state
             try:
                 call_item = gitems[[gitems[i]['item_type'] == 'CallItem' and \
@@ -188,7 +178,6 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                         for i in range(len(gitems))].index(True)]
                 except ValueError:
                     logger.warning('Could not find a CallItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
-                    ## create dummy returnitem with the properties referenced later in this code
                     call_item = dict(description=None,
                                      history_item_id=None,
                                      path_by_name=None,
@@ -212,7 +201,6 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                           for i in range(len(gitems))].index(True)]
                 except ValueError:
                     logger.warning('Could not find a ReturnItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
-                    ## create dummy returnitem with the properties referenced later in this code
                     return_item = dict(history_item_id=None,
                                        outcome_name=None,
                                        outcome_id=None,
@@ -306,7 +294,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
 def log_to_DataFrame(execution_history_items, data_in_columns=[], data_out_columns=[], scoped_in_columns=[],
                      scoped_out_columns=[], semantic_data_columns=[], throw_on_pickle_error=True):
     """
-    Returns all collapsed items in a table-like structure (pandas.DataFrame) with one row per executed 
+    Returns all collapsed items in a table-like structure (pandas.DataFrame) with one row per executed
     state and a set of properties resp. columns (e.g. state_name, outcome, run_id) for this state.
     The data flow (data_in/out, scoped_data_in/out, semantic_data) is omitted from this table
     representation by default, as the different states have different data in-/out-port, scoped_data-

@@ -161,7 +161,7 @@ class MainWindowView(View):
         # HeaderBar with MenuBar
         ##################################################
 
-        self.menu_bar = MenuBarView(self)
+        self.menu_bar = MenuBarView()
         self.menu_bar.show()
 
         self['headerbar'].pack_start(self.menu_bar.get_top_widget())
@@ -224,17 +224,6 @@ class MainWindowView(View):
         button_step_over_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STEP_OVER))
         button_step_out_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STEP_OUT))
         button_step_backward_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_BACKW))
-
-        # --------------------------------------------------------------------------
-
-        # Gtk TODO: find replacement for methods set_tab_hborder and set_tab_vborder
-        # self['upper_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        # self['upper_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
-        # if global_gui_config.get_config_value("USE_ICONS_AS_TAB_LABELS", True):
-        #     self['lower_notebook'].set_tab_hborder(int(constants.TAB_BORDER_WIDTH * 2 / 1.4))
-        # else:
-        #     self['lower_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        # self['lower_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
 
         self.left_bar_window = UndockedWindowView('left_bar_window')
         self.right_bar_window = UndockedWindowView('right_bar_window')

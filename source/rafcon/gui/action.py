@@ -63,10 +63,10 @@ core_object_list = [Transition, DataFlow, Outcome, InputDataPort, OutputDataPort
                     DeciderState]
 
 DEBUG_META_REFERENCES = False
-HISTORY_DEBUG_LOG_FILE = RAFCON_TEMP_PATH_BASE + '/test_file.txt'
 
 StateImage = namedtuple('StateImage', ['core_data', 'meta_data', 'state_path', 'semantic_data', 'file_system_path', 'script_text', 'children'])
 StateImage.__new__.__defaults__ = (None, None, None, None, None, None, None)  # Make all optional
+
 
 def create_state_image(state_m):
     """ Generates a tuple that holds the state as yaml-strings and its meta data in a dictionary.
@@ -135,12 +135,9 @@ def create_state_from_image(state_image):
             state.script_text = state_image.script_text
         except:
             pass  # Tolerate script compilation errors
-    # print("------------- ", state)
     for child_state_id, child_state_tuple in state_image.children.items():
         child_state = create_state_from_image(child_state_tuple)
-        # do_storage_test(child_state)
 
-        # print("++++ new cild", child_state  # child_state_tuple, child_state)
         if not child_state.state_id == UNIQUE_DECIDER_STATE_ID:
             try:
                 state.add_state(child_state)
@@ -154,8 +151,6 @@ def create_state_from_image(state_image):
                 for state_id, child_state in state.states.items():
                     logger.verbose(child_state.get_path())
                     print_states(child_state)
-                    # print("got from tuple:")
-                    # print_states(state)
 
     # Child states were added, now we can add transitions and data flows
     if isinstance(state_info, tuple):
@@ -469,7 +464,6 @@ class MetaDataAction(AbstractAction):
 
         meta_str = json.dumps(overview.get_affected_model().meta, cls=JSONObjectEncoder,
                               indent=4, check_circular=False, sort_keys=True)
-        # print(meta_str)
         self.meta = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
 
     def get_state_image(self):
@@ -529,9 +523,6 @@ class Action(ModelMT, AbstractAction):
     def get_state_changed(self):
         if not self.state_machine.get_state_by_path(self.parent_path) or \
                 not self.state_machine.get_state_by_path(self.parent_path).parent:
-            # if self.state_machine.get_state_by_path(self.parent_path).parent is None:
-            #     logger.info("state is root_state -> take root_state for undo")
-            # else:
             if self.state_machine.get_state_by_path(self.parent_path).parent is not None:
                 logger.warning("State machine could not get state by path -> take root_state for undo")
             state = self.state_machine.root_state
@@ -566,7 +557,6 @@ class Action(ModelMT, AbstractAction):
 
     def update_state_from_image(self, state, state_image):
         assert state.get_path() == state_image.state_path
-        # print(self.parent_path, self.parent_path.split('/'), len(self.parent_path.split('/')))
         path_of_state = state.get_path()
         state_from_image = create_state_from_image(state_image)
 

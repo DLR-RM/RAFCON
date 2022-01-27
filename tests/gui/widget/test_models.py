@@ -60,15 +60,8 @@ class StateNotificationLogObserver(NotificationLogObserver):
     @Observer.observe("data_flows", before=True)
     @Observer.observe("is_start", before=True)
     def notification_before(self, model, prop_name, info):
-        # print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-        #       (prop_name, info.instance, info.method_name, info.result)
-        #if info.method_name in self.method_list:
         if prop_name in self.log['before']:
             self.log['before'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
-            # if self.with_print:
-            #     print "++++++++ log BEFORE instance '%s' and property '%s' in state %s" % \
-            #           (info.instance, prop_name, self.observed_model.state.name)
-            #     print "observer: ", self
         else:
             if self.with_print:
                 print("!!!! NOT a prop_name '%s' to be observed in BEFORE %s %s" % (prop_name, model, info))
@@ -90,10 +83,6 @@ class StateNotificationLogObserver(NotificationLogObserver):
     def notification_after(self, model, prop_name, info):
         if prop_name in self.log['after']:
             self.log['after'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
-            # if self.with_print:
-            #     print "++++++++ log AFTER instance '%s' and property '%s' in state %s" % \
-            #           (info.instance, prop_name, self.observed_model.state.name)
-            #     print "observer: ", self
         else:
             if self.with_print:
                 print("!!!! NOT a prop_name '%s' to be observed in AFTER %s %s" % (prop_name, model, info))
@@ -207,11 +196,7 @@ def create_models(*args, **kargs):
     sm = StateMachine(ctr_state)
 
     import rafcon.gui.models.state_machine
-    # for sm_in in rafcon.core.singleton.state_machine_manager.state_machines.values():
-    #     rafcon.core.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
     sm_m = rafcon.gui.models.state_machine.StateMachineModel(sm)
-
-    # sm_m.history.fake = True
 
     return ctr_state, sm_m, state_dict
 

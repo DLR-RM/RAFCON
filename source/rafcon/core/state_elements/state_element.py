@@ -43,8 +43,6 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
     """
     _parent = None
 
-    yaml_tag = u'!StateElement'
-
     def __init__(self, parent=None, safe_init=True):
         Observable.__init__(self)
 
@@ -170,18 +168,6 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
     @staticmethod
     def state_element_to_dict(state_element):
         raise NotImplementedError()
-
-    @classmethod
-    def to_yaml(cls, dumper, state_element):
-        dict_representation = cls.state_element_to_dict(state_element)
-        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node, deep=True)
-        state_element = cls.from_dict(dict_representation)
-        return state_element
 
     @lock_state_machine
     def _change_property_with_validity_check(self, property_name, value):

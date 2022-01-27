@@ -27,9 +27,6 @@ class Vividict(dict, YAMLObject, JSONObject):
     key do not have to exist beforehand.
     """
 
-    #: Unique tag used for conversion to and from YAML objects
-    yaml_tag = u'!Vividict'
-
     def __init__(self, dictionary=None):
         super(Vividict, self).__init__()
         if dictionary:
@@ -134,19 +131,3 @@ class Vividict(dict, YAMLObject, JSONObject):
             dictionary[key] = value
 
         return dictionary
-
-    @classmethod
-    def to_yaml(cls, dumper, vividict):
-        """Implementation for the abstract method of the base class YAMLObject
-        """
-        dictionary = cls.vividict_to_dict(vividict, native_strings=True)
-        node = dumper.represent_mapping(cls.yaml_tag, dictionary)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        """Implementation for the abstract method of the base class YAMLObject
-        """
-        dict_representation = loader.construct_mapping(node, deep=True)
-        vividict = cls.from_dict(dict_representation)
-        return vividict

@@ -49,7 +49,6 @@ class MyCanvas(gaphas.canvas.Canvas):
         from rafcon.gui.mygaphas.items.state import StateView
         from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView
         if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
-            # print("add view", item)
             self._add_view_maps(item)
         super(MyCanvas, self).add(item, parent, index)
 
@@ -57,7 +56,6 @@ class MyCanvas(gaphas.canvas.Canvas):
         from rafcon.gui.mygaphas.items.state import StateView
         from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, DataFlowView
         if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
-            # print("remove", item)
             self._remove_view_maps(item)
 
         # Gtk TODO: fix destruct of gaphas
@@ -77,7 +75,6 @@ class MyCanvas(gaphas.canvas.Canvas):
             self._remove_view_maps(port_v)
 
     def exchange_model(self, old_model, new_model):
-        # print("exchange model", old_model, new_model)
         view = self._core_view_map[old_model.core_element]
         del self._core_view_map[old_model.core_element]
         del self._model_view_map[old_model]
@@ -116,31 +113,6 @@ class MyCanvas(gaphas.canvas.Canvas):
         :return: The view for the given core element or None if not found
         """
         return self._core_view_map.get(core_element)
-
-    def get_view_for_id(self, view_class, element_id, parent_item=None):
-        """Searches and returns the View for the given id and type
-
-        :param view_class: The view type to search for
-        :param element_id: The id of element of the searched view
-        :param gaphas.item.Item parent_item: Restrict the search to this parent item
-        :return: The view for the given id or None if not found
-        """
-        from rafcon.gui.mygaphas.items.state import StateView
-        from rafcon.gui.mygaphas.items.connection import DataFlowView, TransitionView
-        if parent_item is None:
-            items = self.get_all_items()
-        else:
-            items = self.get_children(parent_item)
-        for item in items:
-            if view_class is StateView and isinstance(item, StateView) and item.model.state.state_id == element_id:
-                return item
-            if view_class is TransitionView and isinstance(item, TransitionView) and \
-                    item.model.transition.transition_id == element_id:
-                return item
-            if view_class is DataFlowView and isinstance(item, DataFlowView) and \
-                    item.model.data_flow.data_flow_id == element_id:
-                return item
-        return None
 
     def wait_for_update(self, trigger_update=False):
         """Update canvas and handle all events in the gtk queue

@@ -112,7 +112,6 @@ class StateMachineRightClickMenu(object):
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         selected_state_m = selection.get_selected_state()
         all_m_list = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_all()
-        # logger.info("Element in selection: " + str(selected_state_m) + " : " + str([elem for elem in all_m_list]))
         if any([isinstance(elem, (AbstractStateModel, ScopedVariableModel)) for elem in all_m_list]) and \
                 all([isinstance(elem, (AbstractStateModel, ScopedVariableModel, TransitionModel, DataFlowModel))
                      for elem in all_m_list]) and \
@@ -314,17 +313,14 @@ class StateMachineRightClickMenu(object):
         self.shortcut_manager.trigger_action('add_scoped_variable', None, None)
 
     def on_copy_activate(self, widget, data=None):
-        # logger.info("trigger default copy")
         active_sm_m = self.state_machine_manager_model.get_selected_state_machine_model()
         global_clipboard.copy(active_sm_m.selection)
 
     def on_paste_activate(self, widget, data=None):
-        # logger.info("trigger default paste")
         active_sm_m = self.state_machine_manager_model.get_selected_state_machine_model()
         global_clipboard.paste(active_sm_m.selection.get_selected_state())
 
     def on_cut_activate(self, widget, data=None):
-        # logger.info("trigger default cut")
         active_sm_m = self.state_machine_manager_model.get_selected_state_machine_model()
         global_clipboard.cut(active_sm_m.selection)
 
@@ -381,8 +377,6 @@ class StateMachineRightClickMenu(object):
 
     def mouse_click(self, widget, event=None):
         from rafcon.gui.models.library_state import LibraryStateModel
-        # logger.info("Single right click -> selection is \n{0}"
-        #             "".format(gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection.get_all()))
         if event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 3:
             selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
             if len(selection) == 1 and len(selection.states) == 1 and \
@@ -394,7 +388,6 @@ class StateMachineRightClickMenu(object):
             return self.activate_menu(event, menu)
 
     def activate_menu(self, event, menu):
-        # logger.info("activate_menu by " + self.__class__.__name__)
         menu.popup(None, None, None, None, event.get_button()[1], event.time)
         return True
 
@@ -416,7 +409,6 @@ class StateMachineTreeRightClickMenuController(StateMachineRightClickMenuControl
         view.connect('button_press_event', self.mouse_click)
 
     def activate_menu(self, event, menu):
-        # logger.info("activate_menu by " + self.__class__.__name__)
         pthinfo = self.view.get_path_at_pos(int(event.x), int(event.y))
 
         if pthinfo is not None:
@@ -434,7 +426,6 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
     """
 
     def activate_menu(self, event, menu):
-        # logger.info("activate_menu by " + self.__class__.__name__)
         selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
         if len(selection.states) > 0 or len(selection.scoped_variables) > 0:
             from rafcon.gui.helpers.coordinates import screen2main_window
@@ -447,13 +438,10 @@ class StateRightClickMenuGaphas(StateMachineRightClickMenu):
             return False
 
     def on_copy_activate(self, widget, data=None):
-        # logger.info("trigger gaphas copy")
         self.shortcut_manager.trigger_action("copy", None, None)
 
     def on_paste_activate(self, widget, data=None):
-        # logger.info("trigger gaphas paste")
         self.shortcut_manager.trigger_action("paste", None, None, cursor_position=self.menu_position)
 
     def on_cut_activate(self, widget, data=None):
-        # logger.info("trigger gaphas cut")
         self.shortcut_manager.trigger_action("cut", None, None)

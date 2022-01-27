@@ -183,7 +183,6 @@ class LibraryTreeController(ExtendedController):
         self.update()
 
     def store_expansion_state(self):
-        # print("\n\n store of state machine {0} \n\n".format(self.__my_selected_sm_id))
         try:
             act_expansion_library = {}
             for library_path, library_row_iter in self.library_row_iter_dict_by_library_path.items():
@@ -197,7 +196,6 @@ class LibraryTreeController(ExtendedController):
 
     def redo_expansion_state(self):
         if self.__expansion_state:
-            # print("\n\n redo of state machine {0} \n\n".format(self.__my_selected_sm_id))
             try:
                 for library_path, library_row_expanded in self.__expansion_state.items():
                     library_row_iter = self.library_row_iter_dict_by_library_path[library_path]
@@ -205,10 +203,8 @@ class LibraryTreeController(ExtendedController):
                         library_row_path = self.tree_store.get_path(library_row_iter)
                         if library_row_expanded:
                             self.view.expand_to_path(library_row_path)
-                            # print(library_path)
             except (TypeError, KeyError):
                 pass
-                # logger.warning("expansion state of library tree could not be re-done")
 
     def update(self):
         self.store_expansion_state()
@@ -309,16 +305,6 @@ class LibraryTreeController(ExtendedController):
     def select_library_tree_element_of_library_state_model(self, state_m):
         lib_tree_path = os.path.join(state_m.state.library_path, state_m.state.library_name)
         self.select_library_tree_element_of_lib_tree_path(lib_tree_path)
-
-    def select_open_state_machine_of_selected_library_element(self):
-        """Select respective state machine of selected library in state machine manager if already open """
-        (model, row_path) = self.view.get_selection().get_selected()
-        if row_path:
-            physical_library_path = model[row_path][self.ITEM_STORAGE_ID]
-            smm = gui_singletons.state_machine_manager_model.state_machine_manager
-            sm = smm.get_open_state_machine_of_file_system_path(physical_library_path)
-            if sm:
-                gui_singletons.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
 
     def open_button_clicked(self, widget):
         try:

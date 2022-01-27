@@ -125,7 +125,6 @@ class ContainerStateModel(StateModel):
         Recursively un-registers all observers and removes references to child models. Extends the destroy method of
         the base class by child elements of a container state.
         """
-        # logger.verbose("Prepare destruction container state ...")
         if recursive:
             for scoped_variable in self.scoped_variables:
                 scoped_variable.prepare_destruction()
@@ -176,8 +175,6 @@ class ContainerStateModel(StateModel):
         :param info: Information about the change (e.g. the name of the changing function)
         """
         overview = NotificationOverview(info)
-        # if info.method_name == 'change_state_type':  # Handled in method 'change_state_type'
-        #     return
 
         # If this model has been changed (and not one of its child states), then we have to update all child models
         # This must be done before notifying anybody else, because other may relay on the updated models
@@ -255,9 +252,6 @@ class ContainerStateModel(StateModel):
             model_name = "state"
             # Defer state type from class type (Execution, Hierarchy, ...)
             model_class = None
-            # TODO this if cause is not working if keys are used for arguments
-            # if len(info.args) < 2:
-            #     print("XXXX", info)
             if not isinstance(info.args[1], (str, dict)) and info.args[1] is not None:
                 model_class = get_state_model_class_for_state(info.args[1])
             model_key = "state_id"

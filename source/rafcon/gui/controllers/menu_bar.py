@@ -22,12 +22,11 @@
 """
 
 import os
-from gi.repository import GLib
+
 from gi.repository import Gtk
 from gi.repository import Gdk
 from functools import partial
 
-import rafcon.core.singleton as core_singletons
 from rafcon.core.singleton import state_machine_manager, library_manager
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
@@ -42,14 +41,13 @@ from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.preferences_window import PreferencesWindowView
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.views.utils.about_dialog import AboutDialogView
-import rafcon.gui.backup.session as backup_session
+from rafcon.utils import log
 
+import rafcon.gui.backup.session as backup_session
 import rafcon.gui.helpers.label as gui_helper_label
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 import rafcon.gui.helpers.utility as gui_helper_utility
 
-from rafcon.utils import plugins
-from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
@@ -73,8 +71,6 @@ class MenuBarController(ExtendedController):
         self.observe_model(gui_singletons.core_config_model)
         self.observe_model(gui_singletons.gui_config_model)
         self.observe_model(gui_singletons.runtime_config_model)
-
-        self._destroyed = False
         self.handler_ids = {}
         self.registered_shortcut_callbacks = {}
         self.registered_view = False
@@ -398,17 +394,6 @@ class MenuBarController(ExtendedController):
             self.registered_shortcut_callbacks[action] = []
         self.registered_shortcut_callbacks[action].append(callback)
         self.shortcut_manager.add_callback_for_action(action, callback)
-
-    def remove_all_callbacks(self):
-        """
-        Remove all callbacks registered to the shortcut manager
-        :return:
-        """
-        for action in self.registered_shortcut_callbacks.keys():
-            for callback in self.registered_shortcut_callbacks[action]:
-                self.shortcut_manager.remove_callback_for_action(action, callback)
-        # delete all registered shortcut callbacks
-        self.registered_shortcut_callbacks = {}
 
     ######################################################
     # menu bar functionality - File

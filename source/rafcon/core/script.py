@@ -49,8 +49,6 @@ class Script(Observable, yaml.YAMLObject):
 
     """
 
-    yaml_tag = u'!Script'
-
     _script = None
 
     def __init__(self, path=None, filename=None, parent=None):
@@ -139,18 +137,6 @@ class Script(Observable, yaml.YAMLObject):
         except Exception as e:
             self.compiled_module = None
             raise
-
-    @classmethod
-    def to_yaml(cls, dumper, data):
-        #TODO:implement
-        dict_representation = {}
-        node = dumper.represent_mapping(u'!Script', dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        #TODO:implement
-        return None
 
     @property
     def parent(self):

@@ -179,12 +179,6 @@ class ContainerState(State):
         else:
             return state, dictionary['transitions'], dictionary['data_flows']
 
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node, deep=True)
-        state, transitions, data_flows = cls.from_dict(dict_representation)
-        return state, transitions, data_flows
-
     def __str__(self):
         return "{0} [{1} child states]".format(super(ContainerState, self).__str__(), len(self.states))
 
@@ -192,7 +186,6 @@ class ContainerState(State):
         return id(self)
 
     def __eq__(self, other):
-        # logger.info("compare method \n\t\t\t{0} \n\t\t\t{1}".format(self, other))
         if not isinstance(other, self.__class__):
             return False
         try:
@@ -420,29 +413,22 @@ class ContainerState(State):
                     del port_data_linkages[port_key]
 
         def do_prior_in_out_going(going_data_linkage_for_port, prior_port_key, prior_locate_key):
-            # logger.info("PRIOR IN OUT {0}, {1}".format(prior_port_key, prior_locate_key))
             minor_port_key = 'from' if prior_port_key == 'to' else 'to'
             minor_locate_key = 'external' if prior_locate_key == 'internal' else 'internal'
             for port_key in going_data_linkage_for_port[prior_port_key].keys():
                 port_dfs = going_data_linkage_for_port[prior_port_key][port_key]
-                # print(prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key]))
                 if len(port_dfs[prior_locate_key]) > 1:
                     for df in port_dfs[prior_locate_key]:
-                        # print("remove: ", df.data_flow_id, prior_locate_key, minor_port_key)
                         reduce_dfs(going_data_linkage_for_port[minor_port_key], df.data_flow_id)
             for port_key in going_data_linkage_for_port[minor_port_key].keys():
                 port_dfs = going_data_linkage_for_port[minor_port_key][port_key]
-                # print(minor_port_key, ": check: ", port_key, " length: ", len(port_dfs[minor_locate_key]))
                 if len(port_dfs[minor_locate_key]) > 1:
                     for df in port_dfs[minor_locate_key]:
-                        # print("remove: ", df.data_flow_id, minor_locate_key, prior_port_key)
                         reduce_dfs(going_data_linkage_for_port[prior_port_key], df.data_flow_id)
             for port_key in going_data_linkage_for_port[prior_port_key].keys():
                 port_dfs = going_data_linkage_for_port[prior_port_key][port_key]
-                # print(prior_port_key, ": check: ", port_key, " length: ", len(port_dfs[prior_locate_key]))
                 if len(port_dfs[prior_locate_key]) == 1:
                     for df in port_dfs[prior_locate_key]:
-                        # print("remove: ", df.data_flow_id, prior_locate_key, minor_port_key)
                         reduce_dfs(going_data_linkage_for_port[minor_port_key], df.data_flow_id)
 
         def create_data_port_args(going_data_linkage_for_port):
@@ -466,41 +452,19 @@ class ContainerState(State):
         for df in related_data_flows['ingoing']:
             assign_ingoing_outgoing(df, ingoing_data_linkage_for_port)
 
-        # logger.info("GROUP DATA INGOING BEFORE")
-        # print_df_from_and_to(ingoing_data_linkage_for_port)
-
         # prior to-linkage-merge for ingoing over from-linkage-merge -> less internal ingoing data flows
         do_prior_in_out_going(ingoing_data_linkage_for_port, prior_port_key='to', prior_locate_key='external')
-
-        # logger.info("GROUPED INGOING DATA AFTER")
-        # print_df_from_and_to(ingoing_data_linkage_for_port)
-
         # get name and args for ports
         create_data_port_args(ingoing_data_linkage_for_port)
-        # logger.info("GROUPED INGOING DATA PORTS")
-        # print_df_from_and_to(ingoing_data_linkage_for_port)
-
         ################## IDENTIFY/PRE-PROCESS OUTGOING DATA FLOWS ###################
         # outgoing data linkage to rebuild -> overview of all with duplicates
         outgoing_data_linkage_for_port = {'from': {}, 'to': {}}
         for df in related_data_flows['outgoing']:
             assign_ingoing_outgoing(df, outgoing_data_linkage_for_port, ingoing=False)
-
-        # logger.info("GROUP DATA OUTGOING BEFORE")
-        # print_df_from_and_to(outgoing_data_linkage_for_port)
-
         # prior from-linkage-merge for outgoing over to-linkage-merge -> less outgoing data flows
         do_prior_in_out_going(outgoing_data_linkage_for_port, prior_port_key='from', prior_locate_key='external')
-
-        # logger.info("GROUPED OUTGOING DATA AFTER")
-        # print_df_from_and_to(outgoing_data_linkage_for_port)
-
         # get name and args for ports
         create_data_port_args(outgoing_data_linkage_for_port)
-        # logger.info("GROUPED OUTGOING DATA PORTS")
-        # print_df_from_and_to(outgoing_data_linkage_for_port)
-
-        ############################# CREATE NEW STATE #############################
         # all internal transitions
         transitions_internal = {t.transition_id: self.remove_transition(t.transition_id, destroy=False)
                                 for t in related_transitions['enclosed']}
@@ -569,26 +533,17 @@ class ContainerState(State):
         for goal, transitions in outgoing_logical_destinations.items():
             t = transitions[0]
             name = s.states[t.from_state].outcomes[t.from_outcome].name
-            # print((t.to_state, t.to_outcome))
-            # print(outcomes_outgoing_transitions)
             if goal in outcomes_outgoing_transitions:
-                # logger.info("old outcome {}".format((t.to_state, t.to_outcome)))
                 name = outcomes_outgoing_transitions[goal]
             else:
                 name = create_name(name, new_outcome_ids.keys())
                 outcomes_outgoing_transitions[goal] = name
-            # print(outcomes_outgoing_transitions, "\n", new_outcome_ids)
             if name not in new_outcome_ids:
                 if name in state_outcomes_by_name:
                     new_outcome_ids[name] = state_outcomes_by_name[name]
-                    # logger.info("old outcome_id {0}\n{1}".format(state_outcomes_by_name[name], new_outcome_ids))
                 else:
                     new_outcome_ids[name] = s.add_outcome(name=name)
-                    # logger.info("new outcome_id {0}\n{1}".format(new_outcome_ids[name], new_outcome_ids))
-            # else:
-            #     logger.info("name {0} in {1} -> {2}".format(name, new_outcome_ids, outcomes_outgoing_transitions))
 
-        ################## DO OUTGOING TRANSITIONS ###################
         # external outgoing transitions
         # print("external transitions to create", outcomes_outgoing_transitions)
         for goal, name in outcomes_outgoing_transitions.items():
@@ -799,8 +754,6 @@ class ContainerState(State):
         :raises exceptions.AttributeError: if state.state_id already exist
         """
         assert isinstance(state, State)
-        # logger.info("add state {}".format(state))
-
         # handle the case that the child state id is the same as the container state id or future sibling state id
         while state.state_id == self.state_id or state.state_id in self.states:
             state.change_state_id()
@@ -1144,7 +1097,6 @@ class ContainerState(State):
         return new_state
 
     @lock_state_machine
-    # @Observable.observed
     def set_start_state(self, state):
         """Sets the start state of a container state
 
@@ -2350,7 +2302,6 @@ class ContainerState(State):
 
     @start_state_id.setter
     @lock_state_machine
-    # @Observable.observed
     def start_state_id(self, start_state_id, to_outcome=None):
         """Set the start state of the container state
 
@@ -2438,7 +2389,6 @@ class ContainerState(State):
 
     @scoped_data.setter
     @lock_state_machine
-    # @Observable.observed
     def scoped_data(self, scoped_data):
         if not isinstance(scoped_data, dict):
             raise TypeError("scoped_results must be of type dict")

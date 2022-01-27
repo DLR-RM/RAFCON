@@ -57,8 +57,6 @@ class LibraryState(State):
                                             this is not needed e.g. in the case of a copy
     """
 
-    yaml_tag = u'!LibraryState'
-
     _library_path = None
     _library_name = None
     _version = None

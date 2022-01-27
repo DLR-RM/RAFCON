@@ -43,8 +43,6 @@ class ExecutionState(State):
 
     This kind of state does not have any child states.
     """
-
-    yaml_tag = u'!ExecutionState'
     
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None, path=None, filename=None, check_path=True, safe_init=True):

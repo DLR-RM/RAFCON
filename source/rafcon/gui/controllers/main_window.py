@@ -467,10 +467,8 @@ class MainWindowController(ExtendedController):
 
         :param controller The controller which request to be focused.
         """
-        # TODO think about to may substitute Controller- by View-objects it is may the better design
         if controller not in self.get_child_controllers():
             return
-        # logger.info("focus controller {0}".format(controller))
         if not self.modification_history_was_focused and isinstance(controller, ModificationHistoryTreeController) and \
                 self.view is not None:
             self.view.bring_tab_to_the_top('history')

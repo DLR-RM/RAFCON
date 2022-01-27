@@ -30,8 +30,6 @@ class PreemptiveConcurrencyState(ConcurrencyState):
 
     """
 
-    yaml_tag = u'!PreemptiveConcurrencyState'
-
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None, states=None, transitions=None, data_flows=None, start_state_id=None,
                  scoped_variables=None, safe_init=True):

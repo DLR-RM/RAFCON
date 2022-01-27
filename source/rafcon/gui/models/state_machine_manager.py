@@ -78,7 +78,6 @@ class StateMachineManagerModel(ModelMT):
         return self.state_machine_manager
 
     @ModelMT.observe("state_machine_manager", after=True)
-    # @measure_time
     def model_changed(self, model, prop_name, info):
         if isinstance(info['result'], Exception):
             from rafcon.gui.utils.notification_overview import NotificationOverview

@@ -166,10 +166,6 @@ def server_interaction_worker(queue_dict, execution_engine, state_machine_id):
     assert gvm.get_variable("sing_counter") == 0
     assert gvm.get_variable("decimate_counter") == 0
 
-    # TODO: reconnect is not properly implemented
-    # for address in server.network_manager_model.connected_ip_port:
-    #     global_monitoring_manager.reconnect(address)
-
     queue_element = queue_dict[CLIENT_TO_SERVER].get()
     assert queue_element == "enabled_again"
     print("server received: ", queue_element)

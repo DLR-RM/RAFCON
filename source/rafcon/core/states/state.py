@@ -245,18 +245,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         }
         return dict_representation
 
-    @classmethod
-    def to_yaml(cls, dumper, state):
-        dict_representation = cls.state_to_dict(state)
-        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node, deep=True)
-        state = cls.from_dict(dict_representation)
-        return state
-
     @classproperty
     @classmethod
     def state_element_attrs(cls):
@@ -1277,7 +1265,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @input_data.setter
     @lock_state_machine
-    #@Observable.observed
     def input_data(self, input_data):
         if not isinstance(input_data, dict):
             raise TypeError("input_data must be of type dict")
@@ -1292,7 +1279,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @output_data.setter
     @lock_state_machine
-    #@Observable.observed
     def output_data(self, output_data):
         if not isinstance(output_data, dict):
             raise TypeError("output_data must be of type dict")
@@ -1373,7 +1359,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @concurrency_queue.setter
     @lock_state_machine
-    #@Observable.observed
     def concurrency_queue(self, concurrency_queue):
         if not isinstance(concurrency_queue, queue.Queue):
             if not concurrency_queue is None:
@@ -1392,7 +1377,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @final_outcome.setter
     @lock_state_machine
-    #@Observable.observed
     def final_outcome(self, final_outcome):
         if not isinstance(final_outcome, Outcome):
             raise TypeError("final_outcome must be of type Outcome")

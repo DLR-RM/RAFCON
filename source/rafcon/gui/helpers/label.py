@@ -70,10 +70,6 @@ def get_label_of_menu_item_box(menu_item):
     return menu_item.get_child().get_children()[-1].get_text()
 
 
-def set_label_of_menu_item_box(menu_item, new_label_text):
-    return menu_item.get_child().get_children()[-1].set_text(new_label_text)
-
-
 def set_icon_and_text_box_of_menu_item(menu_item, uni_code):
     menu_item_child = menu_item.get_child()
     # per default MenuItems created through the glade file have a AccelLabel as child

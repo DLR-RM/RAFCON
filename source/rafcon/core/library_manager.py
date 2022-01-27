@@ -384,15 +384,10 @@ class LibraryManager(Observable):
         :return:
         """
 
-        # originally libraries were called like this; DO NOT DELETE; interesting for performance tests
-        # state_machine = storage.load_state_machine_from_path(lib_os_path)
-        # return state_machine.version, state_machine.root_state
-
         # TODO observe changes on file system and update data
         if lib_os_path in self._loaded_libraries:
             # this list can also be taken to open library state machines TODO -> implement it -> because faster
             state_machine = self._loaded_libraries[lib_os_path]
-            # logger.info("Take copy of {0}".format(lib_os_path))
             # as long as the a library state root state is never edited so the state first has to be copied here
             state_copy = copy.deepcopy(state_machine.root_state)
             return state_machine.version, state_copy

@@ -335,16 +335,6 @@ class StateOutcomesListController(ListViewController):
     def outcomes_changed(self, model, prop_name, info):
         self.update(initiator=str(info))
 
-    # TODO Find out why the observation of the destruction_signal cause threading problems
-    # @ExtendedController.observe("destruction_signal", signal=True)
-    # def get_destruction_signal(self, model, prop_name, info):
-    #     """ Relieve models if the parent state model is destroyed"""
-    #     # this is necessary because the controller use data of its parent model and would try to adapt to
-    #     # transition changes before the self.model is destroyed, too
-    #     if not self.model.state.is_root_state and self.model.parent is model:
-    #         # as long as a relieve of models before the after will cause threading issues the controller is suspended
-    #         self.__suspended = True
-
 
 class StateOutcomesEditorController(ExtendedController):
 

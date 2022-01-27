@@ -219,11 +219,6 @@ def save_folder(query, default_name=None):
     return path
 
 
-# overwrite the save_folder_func of the interface: thus the user input is now retrieved from a dialog box and not
-# from raw input any more
-core_interface.save_folder_func = save_folder
-
-
 def show_notice(query):
     from gi.repository import Gtk
     from rafcon.gui.helpers.label import set_button_children_size_request

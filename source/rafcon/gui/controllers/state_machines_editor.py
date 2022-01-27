@@ -141,16 +141,6 @@ class StateMachinesEditorController(ExtendedController):
         # Call register_action of parent in order to register actions for child controllers
         super(StateMachinesEditorController, self).register_actions(shortcut_manager)
 
-    def close_state_machine(self, widget, page_number, event=None):
-        """Triggered when the close button in the tab is clicked
-        """
-        page = widget.get_nth_page(page_number)
-        for tab_info in self.tabs.values():
-            if tab_info['page'] is page:
-                state_machine_m = tab_info['state_machine_m']
-                self.on_close_clicked(event, state_machine_m, None, force=False)
-                return
-
     def on_close_shortcut(self, *args, **kwargs):
         """Close selected state machine (triggered by shortcut)"""
         state_machine_m = self.model.get_selected_state_machine_model()
@@ -251,8 +241,6 @@ class StateMachinesEditorController(ExtendedController):
         for p in range(number_of_pages):
             page = self.view["notebook"].get_nth_page(p)
             label = self.view["notebook"].get_tab_label(page).get_child().get_children()[0]
-
-            # old_label_colors[p] = label.get_style().fg[Gtk.StateType.NORMAL]
             old_label_colors[p] = label.get_style_context().get_color(Gtk.StateType.NORMAL)
 
         if not self.view.notebook.get_current_page() == page_id:
@@ -262,10 +250,6 @@ class StateMachinesEditorController(ExtendedController):
         for p in range(number_of_pages):
             page = self.view["notebook"].get_nth_page(p)
             label = self.view["notebook"].get_tab_label(page).get_child().get_children()[0]
-            # Gtk TODO
-            style = label.get_style_context()
-            # label.modify_fg(Gtk.StateType.ACTIVE, old_label_colors[p])
-            # label.modify_fg(Gtk.StateType.INSENSITIVE, old_label_colors[p])
 
     def set_active_state_machine(self, state_machine_id):
         page_num = self.get_page_num(state_machine_id)

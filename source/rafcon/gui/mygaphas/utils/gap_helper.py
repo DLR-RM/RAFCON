@@ -59,32 +59,6 @@ def calc_rel_pos_to_parent(canvas, item, handle):
         return item.canvas.get_matrix_i2c(item).transform_point(*item.handles()[NW].pos)
 
 
-def assert_exactly_one_true(bool_list):
-    """This method asserts that only one value of the provided list is True.
-
-    :param bool_list: List of booleans to check
-    :return: True if only one value is True, False otherwise
-    """
-    assert isinstance(bool_list, list)
-    counter = 0
-    for item in bool_list:
-        if item:
-            counter += 1
-    return counter == 1
-
-
-def get_state_id_for_port(port):
-    """This method returns the state ID of the state containing the given port
-
-    :param port: Port to check for containing state ID
-    :return: State ID of state containing port
-    """
-    parent = port.parent
-    from rafcon.gui.mygaphas.items.state import StateView
-    if isinstance(parent, StateView):
-        return parent.model.state.state_id
-
-
 def get_port_for_handle(handle, state):
     """Looks for and returns the PortView to the given handle in the provided state
 

@@ -74,8 +74,6 @@ def test_execution_modes(gui):
     sm_m = gui_singleton.state_machine_manager_model.state_machines[sm_id]
 
     def wait_for_sync_counter_change_and_wait_for_gui(current_sync_counter):
-        # if current_sync_counter is None:
-        #     current_sync_counter = state_machine_execution_engine.synchronization_counter
         assert current_sync_counter is not None
         print("##### before {0} #####".format(current_sync_counter))
         while current_sync_counter == state_machine_execution_engine.synchronization_counter:

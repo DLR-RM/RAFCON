@@ -140,7 +140,6 @@ def clean_path(base_path):
     path_elements = base_path.split(os.path.sep)
     reduced_path_elements = [clean_path_element(elem, max_length=255) for elem in path_elements]
     if not all(path_elements[i] == elem for i, elem in enumerate(reduced_path_elements)):
-        # logger.info("State machine storage path is reduced")
         base_path = os.path.sep.join(reduced_path_elements)
     return base_path
 
@@ -308,19 +307,10 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
                                        "version of RAFCON ({0}) than the one you are using ({1}).".format(
                                         state_machine_dict['used_rafcon_version'], rafcon.__version__)
         note_about_possible_incompatibility = "The state machine will be loaded with no guarantee of success."
-
-        if active_rafcon_version[0] > previously_used_rafcon_version[0]:
-            # this is the default case
-            # for a list of breaking changes please see: doc/breaking_changes.rst
-            # logger.warning(rafcon_newer_than_sm_version)
-            # logger.warning(note_about_possible_incompatibility)
-            pass
         if active_rafcon_version[0] == previously_used_rafcon_version[0]:
             if active_rafcon_version[1] > previously_used_rafcon_version[1]:
                 # this is the default case
                 # for a list of breaking changes please see: doc/breaking_changes.rst
-                # logger.info(rafcon_newer_than_sm_version)
-                # logger.info(note_about_possible_incompatibility)
                 pass
             elif active_rafcon_version[1] == previously_used_rafcon_version[1]:
                 # Major and minor version of RAFCON and the state machine match

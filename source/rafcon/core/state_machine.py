@@ -162,7 +162,6 @@ class StateMachine(Observable, JSONObject, Hashable):
         finally:
             self.release_modification_lock()
 
-    # @Observable.observed
     def acquire_modification_lock(self, blocking=True):
         """Acquires the modification lock of the state machine
 
@@ -174,7 +173,6 @@ class StateMachine(Observable, JSONObject, Hashable):
         """
         return self._modification_lock.acquire(blocking)
 
-    # @Observable.observed
     def release_modification_lock(self):
         """Releases the acquired state machine modification lock.
         """
@@ -230,7 +228,6 @@ class StateMachine(Observable, JSONObject, Hashable):
 
         new_state = create_new_state_from_state_with_type(state, new_state_class)
         assert new_state.state_id == state_id
-        # logger.info("ASSIGN NEW STATE")
         self.root_state = new_state  # Also sets the parent of root_state to self
 
         return new_state
@@ -244,7 +241,6 @@ class StateMachine(Observable, JSONObject, Hashable):
     @marked_dirty.setter
     @Observable.observed
     def marked_dirty(self, marked_dirty):
-        # print("sm-core: marked dirty changed from ", self._marked_dirty, " to ", marked_dirty)
         if not isinstance(marked_dirty, bool):
             raise AttributeError("marked_dirty has to be of type bool")
         self.old_marked_dirty = self._marked_dirty

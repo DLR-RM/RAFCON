@@ -39,8 +39,6 @@ class DataFlow(StateElement):
     :ivar rafcon.core.states.container_state.ContainerState StateElement.parent: reference to the parent state
     """
 
-    yaml_tag = u'!DataFlow'
-
     _data_flow_id = None
     _from_state = None
     _from_key = None
@@ -173,7 +171,6 @@ class DataFlow(StateElement):
 
     @from_state.setter
     @lock_state_machine
-    # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
         if not isinstance(from_state, str):
             raise ValueError("from_state must be a string")
@@ -228,7 +225,6 @@ class DataFlow(StateElement):
 
     @to_state.setter
     @lock_state_machine
-    # @Observable.observed  # should not be observed to stay consistent
     def to_state(self, to_state):
         if not isinstance(to_state, str):
             raise ValueError("to_state must be a string")

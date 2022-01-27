@@ -44,8 +44,6 @@ class Income(LogicalPort):
     :ivar rafcon.core.states.state.State StateElement.parent: reference to the parent state
     """
 
-    yaml_tag = u'!Outcome'
-
     def __init__(self, parent=None, safe_init=True):
         super(Income, self).__init__(safe_init=safe_init)
 
@@ -90,10 +88,6 @@ class Income(LogicalPort):
     def state_element_to_dict(state_element):
         return {}
 
-    @classmethod
-    def from_yaml(cls, loader, node):
-        return Income()
-
 
 class Outcome(LogicalPort):
     """A class for representing an outcome of a state
@@ -105,8 +99,6 @@ class Outcome(LogicalPort):
     :ivar str Outcome.name: the human readable name of the outcome
     :ivar rafcon.core.states.state.State StateElement.parent: reference to the parent state
     """
-
-    yaml_tag = u'!Outcome'
 
     _outcome_id = None
     _name = None
@@ -165,14 +157,6 @@ class Outcome(LogicalPort):
             'name': state_element.name
         }
 
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node)
-        outcome_id = dict_representation['outcome_id']
-        name = dict_representation['name']
-        return Outcome(outcome_id, name)
-
-# Properties for all class field that must be observed by the gtkmvc3
     @property
     def outcome_id(self):
         """ Returns the outcome_id """

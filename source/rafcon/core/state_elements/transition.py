@@ -44,8 +44,6 @@ class Transition(StateElement):
     :ivar rafcon.core.states.container_state.ContainerState StateElement.parent: reference to the parent state
     """
 
-    yaml_tag = u'!Transition'
-
     _transition_id = None
     _from_state = None
     _from_outcome = None
@@ -184,7 +182,6 @@ class Transition(StateElement):
 
     @from_state.setter
     @lock_state_machine
-    # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
         if from_state is not None and not isinstance(from_state, str):
             raise ValueError("from_state must be a string")

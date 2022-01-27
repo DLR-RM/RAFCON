@@ -66,8 +66,6 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
                                     view["semantic_data_tree_view"], tree_store, logger)
         AbstractExternalEditor.__init__(self)
 
-        self.semantic_data_counter = 0
-
     def register_view(self, view):
         """Called when the View was registered
 
@@ -141,7 +139,6 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         :param bool new_dict: A flag to indicate if the new value is of type dict
         :return:
         """
-        self.semantic_data_counter += 1
         treeiter, path = self.get_selected_object()
 
         value = dict() if new_dict else "New Value"

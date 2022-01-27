@@ -30,7 +30,6 @@ class SemanticDataEditorView(View):
     IS_DICT_STORAGE_ID = 2
     KEY_COLUMN_ID = 0
     VALUE_COLUMN_ID = 1
-    IS_DICT_COLUMN_ID = 2
 
     def __init__(self):
         super(SemanticDataEditorView, self).__init__()

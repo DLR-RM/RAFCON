@@ -475,8 +475,6 @@ def patch_gtkmvc3_model_mt():
                 print("Both threads are former gui threads! Current thread {}, Observer thread {}".format(
                     _threading.currentThread(), self._ModelMT__observer_threads[observer]))
                 return Model.__notify_observer__(self, observer, method, *args, **kwargs)
-                # GLib.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
-                # return
             else:
                 print("{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \
                       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,

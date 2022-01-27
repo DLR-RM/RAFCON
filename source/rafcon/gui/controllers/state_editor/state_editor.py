@@ -125,7 +125,6 @@ class StateEditorController(ExtendedController):
 
         # Container states do not have a source editor and library states does not show there source code
         # Thus, for those states we do not have to add the source controller and can hide the source code tab
-        # logger.info("init state: {0}".format(model))
         lib_with_and_ES_as_root = isinstance(self.model, LibraryStateModel) and \
                                   not isinstance(self.model.state_copy, ContainerStateModel)
         if not isinstance(self.model, ContainerStateModel) and not isinstance(self.model, LibraryStateModel) or \

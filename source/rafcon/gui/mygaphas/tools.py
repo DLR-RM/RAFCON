@@ -14,11 +14,9 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gi.repository import Gtk
 from gi.repository import Gdk
-from enum import Enum
-from gaphas.aspect import HandleFinder, InMotion
-from gaphas.item import NW, Item
+from gaphas.aspect import HandleFinder
+from gaphas.item import NW
 import gaphas.tool
 
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGaphas
@@ -35,8 +33,6 @@ from rafcon.utils.decorators import avoid_parallel_execution
 from rafcon.gui.config import global_gui_config
 
 logger = log.get_logger(__name__)
-
-PortMoved = Enum('PORT', 'FROM TO')
 
 
 class ToolChain(gaphas.tool.ToolChain):
@@ -118,22 +114,6 @@ class MoveItemTool(gaphas.tool.ItemTool):
         self._item = None
         self._move_name_v = False
         self._old_selection = None
-
-    def movable_items(self):
-        """Filter selection
-
-        Filter items of selection that cannot be moved (i.e. are not instances of `Item`) and return the rest.
-        """
-        view = self.view
-
-        if self._move_name_v:
-            yield InMotion(self._item, view)
-        else:
-            selected_items = set(view.selected_items)
-            for item in selected_items:
-                if not isinstance(item, Item):
-                    continue
-                yield InMotion(item, view)
 
     def on_button_press(self, event):
         """Select items
