@@ -120,6 +120,7 @@ def perform_history_action(operation, *args, **kwargs):
     state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     sm_history = state_machine_m.history
     history_length = len(sm_history.modifications)
+    origin_hash = parent.mutable_hash().hexdigest()
     additional_operations = 0
     if "additional_operations" in kwargs:
         additional_operations = kwargs["additional_operations"]
@@ -128,12 +129,12 @@ def perform_history_action(operation, *args, **kwargs):
     assert len(sm_history.modifications) == history_length + 1 + additional_operations
     after_operation_hash = parent.mutable_hash().hexdigest()
     for _ in range(1 + additional_operations):
-        sm_history.undo()
+        sm_history.synchronized_undo()
     undo_operation_hash = parent.mutable_hash().hexdigest()
     for _ in range(1 + additional_operations):
-        sm_history.redo()
+        sm_history.synchronized_redo()
     redo_operation_hash = parent.mutable_hash().hexdigest()
-    assert parent.mutable_hash().hexdigest() == undo_operation_hash
+    assert origin_hash == undo_operation_hash
     assert after_operation_hash == redo_operation_hash
     return operation_result, state_machine_m.state_machine.get_state_by_path(state_path)
 
@@ -153,21 +154,15 @@ def perform_multiple_undo_redo(number):
 def perform_multiple_undo(number):
     state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     sm_history = state_machine_m.history
-    origin_hash = state_machine_m.mutable_hash().hexdigest()
     for _ in range(number):
         sm_history.undo()
-    final_hash = state_machine_m.mutable_hash().hexdigest()
-    assert origin_hash == final_hash
 
 
 def perform_multiple_redo(number):
     state_machine_m = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model()
     sm_history = state_machine_m.history
-    origin_hash = state_machine_m.mutable_hash().hexdigest()
     for _ in range(number):
         sm_history.redo()
-    final_hash = state_machine_m.mutable_hash().hexdigest()
-    assert origin_hash == final_hash
 
 
 def get_state_by_name(state_name, state_path_dict):

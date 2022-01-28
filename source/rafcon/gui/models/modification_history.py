@@ -153,15 +153,15 @@ class ModificationsHistoryModel(ModelMT):
         :param target_history_id: the id of the list element which is to recover
         :return:
         """
-        GLib.idle_add(self._reset_to_history_id, target_history_id)
+        GLib.idle_add(self.synchronized_reset_to_history_id, target_history_id)
 
     def undo(self):
-        GLib.idle_add(self._undo)
+        GLib.idle_add(self.synchronized_undo)
 
     def redo(self):
-        GLib.idle_add(self._redo)
+        GLib.idle_add(self.synchronized_redo)
 
-    def _reset_to_history_id(self, target_history_id):
+    def synchronized_reset_to_history_id(self, target_history_id):
         with self.state_machine_model.storage_lock:
             self.busy = True
             self.modifications.go_to_history_element(target_history_id)
@@ -170,7 +170,7 @@ class ModificationsHistoryModel(ModelMT):
             self.update_internal_tmp_storage()
             self.change_count += 1
 
-    def _undo(self):
+    def synchronized_undo(self):
         with self.state_machine_model.storage_lock:
             action = self.modifications.current_history_element.action
             self.busy = True
@@ -181,7 +181,7 @@ class ModificationsHistoryModel(ModelMT):
             self.update_internal_tmp_storage()
             self.change_count += 1
 
-    def _redo(self):
+    def synchronized_redo(self):
         with self.state_machine_model.storage_lock:
             action = None
             if self.modifications.get_next_element():
