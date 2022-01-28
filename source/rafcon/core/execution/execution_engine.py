@@ -343,14 +343,10 @@ class ExecutionEngine(Observable):
         """
         while (self._status.execution_mode is StateMachineExecutionStatus.PAUSED) \
                 or (self._status.execution_mode is StateMachineExecutionStatus.STEP_MODE):
-            if not self.run_only_selected_state_flag:
-                with self._status.execution_condition_variable:
-                    self.synchronization_counter += 1
-                    logger.verbose("Increase synchronization_counter: " + str(self.synchronization_counter))
-                    self._status.execution_condition_variable.wait()
-
-            if self.run_only_selected_state_flag:
-                self.stop()
+            with self._status.execution_condition_variable:
+                self.synchronization_counter += 1
+                logger.verbose("Increase synchronization_counter: " + str(self.synchronization_counter))
+                self._status.execution_condition_variable.wait()
 
     def _wait_if_required(self, container_state, next_child_state_to_execute, woke_up_from_pause_or_step_mode):
         """ Calls a blocking wait for the calling thread, depending on the execution mode.
@@ -419,7 +415,11 @@ class ExecutionEngine(Observable):
             with self._status.execution_condition_variable:
                 self.synchronization_counter += 1
                 logger.verbose("Increase synchronization_counter: " + str(self.synchronization_counter))
+                if self.run_only_selected_state_flag:
+                    stop_thread = threading.Thread(target=self.stop)
+                    stop_thread.start()
                 self._status.execution_condition_variable.wait()
+
             # if the status was set to PAUSED or STEP_MODE don't wake up!
             self._wait_while_in_pause_or_in_step_mode()
             # container_state was notified => thus, a new user command was issued, which has to be handled!
