@@ -50,3 +50,19 @@ def post_init(setup_config):
 
     # Example 4: gtkmvc3 meta signal observer
     gtkmvc_template_observer.MetaSignalModificationObserver()
+
+
+def pre_script():
+    """
+    The function can be called before running script.py
+    """
+
+    logger.info("Run pre-script hook of {} plugin.".format(__file__.split(os.path.sep)[-2]))
+
+
+def post_script():
+    """
+    The function can be called after running script.py
+    """
+
+    logger.info("Run post-script hook of {} plugin.".format(__file__.split(os.path.sep)[-2]))
