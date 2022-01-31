@@ -159,6 +159,9 @@ class ExecutionEngine(Observable):
             self.state_machine_manager.get_active_state_machine().root_state.recursively_preempt_states()
         self.__set_execution_mode_to_stopped()
 
+        # Reset only run this state flag
+        self.run_only_selected_state_flag = False
+
         # Notifies states waiting in step mode or those that are paused about execution stop
         with self._status.execution_condition_variable:
             self._status.execution_condition_variable.notify_all()

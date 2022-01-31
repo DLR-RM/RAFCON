@@ -196,7 +196,7 @@ class MainWindowView(View):
         button_run_this_state_shortcut = self['button_run_this_state_shortcut']
         button_run_this_state_shortcut.set_tooltip_text('Run Selected State')
         button_run_only_this_state_shortcut = self['button_run_only_this_state_shortcut']
-        button_run_only_this_state_shortcut.set_tooltip_text('Only run Selected State')
+        button_run_only_this_state_shortcut.set_tooltip_text('Only Run Selected State')
         button_start_from_shortcut = self['button_start_from_shortcut']
         button_start_from_shortcut.set_tooltip_text('Run From Selected State')
         button_run_to_shortcut = self['button_run_to_shortcut']
