@@ -1,11 +1,15 @@
 from collections import Counter
 
 from rafcon.design_patterns.mvc.model import Model
+from rafcon.design_patterns.mvc.view import View
+from rafcon.design_patterns.mvc.controller import Controller
 from rafcon.design_patterns.observer.observer import Observer
 from rafcon.design_patterns.observer.observable import Observable, Signal
 
 
 def test_1():
+    from gi.repository import Gtk
+
     feedbacks = {}
 
     class TestObservable(Observable):
@@ -23,15 +27,32 @@ def test_1():
         c = set()
         d = TestObservable()
         e = Signal()
+        passed = False
 
         __observables__ = ('a', 'b', 'c', 'd', 'e')
 
         def __init__(self):
             super().__init__()
 
-    class TestObserver(Observer):
-        def __init__(self, model):
-            super().__init__(model)
+    class TestController(Controller):
+        def __init__(self, model, view):
+            super().__init__(model, view)
+
+        def start(self):
+            self.model.a = 12
+            self.model.a += 1
+            self.model.b.append('g')
+            self.model.b.remove('g')
+            self.model.c.add(1)
+            self.model.c.add(2)
+            self.model.c.add(3)
+            self.model.c.add(4)
+            self.model.d.change()
+            self.model.d.change2()
+            self.model.d.change2()
+            self.model.e.emit()
+            self.model.e.emit()
+            self.view['button'].connect('clicked', self.clicked)
 
         @Observer.observe('a', assign=True)
         @Observer.observe('b', before=True, after=True)
@@ -50,22 +71,16 @@ def test_1():
             elif 'signal' in info:
                 feedbacks[attribute].append('signal')
 
-    test_model = TestModel()
-    TestObserver(test_model)
+        def clicked(self, _):
+            self.model.passed = True
 
-    test_model.a = 12
-    test_model.a += 1
-    test_model.b.append('g')
-    test_model.b.remove('g')
-    test_model.c.add(1)
-    test_model.c.add(2)
-    test_model.c.add(3)
-    test_model.c.add(4)
-    test_model.d.change()
-    test_model.d.change2()
-    test_model.d.change2()
-    test_model.e.emit()
-    test_model.e.emit()
+    class TestView(View):
+        def __init__(self):
+            super().__init__()
+            self['button'] = Gtk.Button()
+
+    test_controller = TestController(TestModel(), TestView())
+    test_controller.start()
 
     a_feedback = Counter(feedbacks['a'])
     b_feedback = Counter(feedbacks['b'])
@@ -85,3 +100,9 @@ def test_1():
     assert d_feedback['before'] == 3
     assert d_feedback['after'] == 3
     assert e_feedback['signal'] == 2
+
+    assert not test_controller.model.passed
+
+    test_controller.view['button'].emit('clicked')
+
+    assert test_controller.model.passed

@@ -19,6 +19,11 @@ class Model(Observer):
 
 @ObservableModel.add(ObservableModel)
 class ModelMT(Model):
+    """
+    Thread safe Model class of the MVC pattern. It holds the references to the data. The data can be either in the
+    memory, database, etc.
+    """
+
     def __init__(self):
         Model.__init__(self)
         self._threads = {}
@@ -41,6 +46,10 @@ class ModelMT(Model):
         del self._threads[observer]
 
     def notify_observer(self, observer, method, *args, **kwargs):
+        """
+        Notifies an observer
+        """
+
         if self._threads[observer] == threading.currentThread():
             return Model.notify_observer(self, observer, method, *args, **kwargs)
         GLib.idle_add(self._idle_notify_observer, method, args, kwargs)

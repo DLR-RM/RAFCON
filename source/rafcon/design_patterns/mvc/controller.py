@@ -21,4 +21,8 @@ class Controller(Observer):
         self.register_view(self.view)
 
     def register_view(self, view):
+        """
+        Registers a specific view (must be overwritten)
+        """
+
         pass

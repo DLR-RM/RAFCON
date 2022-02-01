@@ -6,6 +6,10 @@ from rafcon.design_patterns.observer.wrappers import WrapperBase
 
 
 class NotifyInfo(dict):
+    """
+    The NotifyInfo class holds the information of a specific notification.
+    """
+
     def __init__(self, flag, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
         for flag_ in ['assign', 'before', 'after', 'signal']:
@@ -17,8 +21,17 @@ class NotifyInfo(dict):
 
 
 class Observer:
+    """
+    The observer class can observe the observable attributes and functions (or methods) and calls the defined callbacks
+    when the observables change.
+    """
+
     @classmethod
     def observe(cls, *args, **kwargs):
+        """
+        Observes the observable
+        """
+
         def decorator(function):
             setattr(function, OBSERVABLES, getattr(function, OBSERVABLES, list()) + [(args[0], kwargs)])
             return function
@@ -52,18 +65,26 @@ class Observer:
     def observable_to_methods(self, value):
         self._observable_to_methods = value
 
-    def observe_model(self, model):
-        return model.register_observer(self)
-
-    def relieve_model(self, model):
-        return model.unregister_observer(self)
-
     def get_observables(self):
         """
-        Returns the list of all observable attributes
+        Returns the observables
         """
 
         return getattr(self, OBSERVABLES, set())
+
+    def observe_model(self, model):
+        """
+        Observes a model
+        """
+
+        return model.register_observer(self)
+
+    def relieve_model(self, model):
+        """
+        Relieves a model
+        """
+
+        return model.unregister_observer(self)
 
     def register_observer(self, observer):
         """

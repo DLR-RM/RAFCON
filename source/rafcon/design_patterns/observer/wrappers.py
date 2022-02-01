@@ -1,4 +1,8 @@
 class WrapperBase:
+    """
+    The WrapperBase class has the basic functionalities to make an attribute observable.
+    """
+
     def __init__(self):
         self._models = set()
         self._observers = {}
@@ -8,15 +12,31 @@ class WrapperBase:
         return self._models
 
     def add_model(self, model, observable):
+        """
+        Adds a model
+        """
+
         self._models.add((model, observable))
 
     def remove_model(self, model, observable):
+        """
+        Removes a model
+        """
+
         self._models.remove((model, observable))
 
     def add_observer(self, instance, observable, notify_before_function=None, notify_after_function=None):
+        """
+        Adds an observer
+        """
+
         self._observers[(instance, observable)] = (notify_before_function, notify_after_function)
 
     def notify_before(self, instance, name, args, kwargs):
+        """
+        Notifies before the attribute changes
+        """
+
         for (observer, observable), (before_function, after_function) in self._observers.items():
             if observable == name and before_function:
                 before_function(instance, args)
@@ -24,6 +44,10 @@ class WrapperBase:
             model.notify_before(observable, instance, name, args, kwargs)
 
     def notify_after(self, instance, name, value, args, kwargs):
+        """
+        Notifies after the attribute changes
+        """
+
         for (observer, prop_name), (before_function, after_function) in self._observers.items():
             if prop_name == name and after_function:
                 after_function(instance, value, args)
@@ -32,10 +56,9 @@ class WrapperBase:
 
 
 class Wrapper(WrapperBase):
-    def __init__(self, obj, methods):
-        super().__init__()
-        self._obj = obj
-        self.__class__ = type(self.__class__.__name__, (self.__class__,), {method: Wrapper._wrapper(method) for method in methods})
+    """
+    The Wrapper class can make an attribute observable.
+    """
 
     @staticmethod
     def _wrapper(name):
@@ -46,11 +69,20 @@ class Wrapper(WrapperBase):
             return value
         return wrapper
 
+    def __init__(self, obj, methods):
+        super().__init__()
+        self._obj = obj
+        self.__class__ = type(self.__class__.__name__, (self.__class__,), {method: Wrapper._wrapper(method) for method in methods})
+
     def __getattr__(self, name):
         return getattr(self._obj, name)
 
 
 class IterableWrapper(Wrapper):
+    """
+    The IterableWrapper class can make an iterable type attribute observable.
+    """
+
     def __init__(self, obj, methods):
         Wrapper.__init__(self, obj, methods)
         for method in 'eq ge gt iter le len lt ne'.split():
@@ -74,20 +106,36 @@ class IterableWrapper(Wrapper):
 
 
 class TupleWrapper(Wrapper):
+    """
+    The TupleWrapper class can make a tuple attribute observable.
+    """
+
     def __init__(self, obj, methods):
         Wrapper.__init__(self, obj, methods)
 
 
 class ListWrapper(IterableWrapper):
+    """
+    The ListWrapper class can make a list attribute observable.
+    """
+
     def __init__(self, obj):
         IterableWrapper.__init__(self, obj, ('append', 'extend', 'insert', 'pop', 'remove', 'reverse', 'sort'))
 
 
 class SetWrapper(IterableWrapper):
+    """
+    The SetWrapper class can make a set attribute observable.
+    """
+
     def __init__(self, obj):
         IterableWrapper.__init__(self, obj, ('add', 'clear', 'discard', 'pop', 'remove'))
 
 
 class DictWrapper(IterableWrapper):
+    """
+    The SetWrapper class can make a dict attribute observable.
+    """
+
     def __init__(self, obj):
         IterableWrapper.__init__(self, obj, ('clear', 'pop', 'popitem', 'setdefault', 'update'))

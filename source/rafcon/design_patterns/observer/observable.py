@@ -8,31 +8,32 @@ SET_OBSERVABLE_NAME_TEMPLATE = 'set_observable_%s'
 
 
 class ObservableModel(type):
-    def __init__(cls, _, bases, info):
-        observables = set()
-        for observable in set(cls.__dict__.get(OBSERVABLES, set())):
-            observable_name = OBSERVABLE_NAME_TEMPLATE % observable
-            get_observable_name = GET_OBSERVABLE_NAME_TEMPLATE % observable
-            set_observable_name = SET_OBSERVABLE_NAME_TEMPLATE % observable
-            setattr(cls, observable_name, ObservableModel.create_value(observable_name, info[observable]))
-            setattr(cls, get_observable_name, ObservableModel.get_getter(observable))
-            setattr(cls, set_observable_name, ObservableModel.get_setter(observable))
-            setattr(cls, observable, property(getattr(cls, get_observable_name), getattr(cls, set_observable_name)))
-            observables.add(observable)
-        for base in bases:
-            observables |= getattr(base, OBSERVABLES, set())
-        setattr(cls, OBSERVABLES, observables)
+    """
+    The Observable Model metaclass that every observable class must use it in order to be known as an observable class.
+    """
 
     @staticmethod
-    def get_getter(observable):
+    def add(observable_model):
+        """
+        Adds the Observable Model metaclass to a class
+        """
+
+        def wrapper(cls):
+            info = cls.__dict__.copy()
+            info.pop('__dict__', None)
+            return observable_model(cls.__name__, cls.__bases__, info)
+        return wrapper
+
+    @staticmethod
+    def _get_getter(observable):
         return lambda self: getattr(self, OBSERVABLE_NAME_TEMPLATE % observable)
 
     @staticmethod
-    def get_setter(observable):
+    def _get_setter(observable):
         def wrapper(self, value):
             observable_name = OBSERVABLE_NAME_TEMPLATE % observable
             old_value = getattr(self, observable_name)
-            new_value = ObservableModel.create_value(observable, value, self)
+            new_value = ObservableModel._create_value(observable, value, self)
             setattr(self, observable_name, new_value)
             if type(old_value) != type(new_value) or (isinstance(old_value, WrapperBase) and old_value != new_value):
                 self._reset_notifications(observable, old_value)
@@ -40,7 +41,7 @@ class ObservableModel(type):
         return wrapper
 
     @staticmethod
-    def create_value(observable_name, value, model=None):
+    def _create_value(observable_name, value, model=None):
         result = None
         if isinstance(value, tuple):
             result = TupleWrapper(value[1], value[2])
@@ -56,21 +57,33 @@ class ObservableModel(type):
             return result
         return value
 
-    @staticmethod
-    def add(observable_model):
-        def wrapper(cls):
-            info = cls.__dict__.copy()
-            info.pop('__dict__', None)
-            return observable_model(cls.__name__, cls.__bases__, info)
-        return wrapper
+    def __init__(cls, _, bases, info):
+        observables = set()
+        for observable in set(cls.__dict__.get(OBSERVABLES, set())):
+            observable_name = OBSERVABLE_NAME_TEMPLATE % observable
+            get_observable_name = GET_OBSERVABLE_NAME_TEMPLATE % observable
+            set_observable_name = SET_OBSERVABLE_NAME_TEMPLATE % observable
+            setattr(cls, observable_name, ObservableModel._create_value(observable_name, info[observable]))
+            setattr(cls, get_observable_name, ObservableModel._get_getter(observable))
+            setattr(cls, set_observable_name, ObservableModel._get_setter(observable))
+            setattr(cls, observable, property(getattr(cls, get_observable_name), getattr(cls, set_observable_name)))
+            observables.add(observable)
+        for base in bases:
+            observables |= getattr(base, OBSERVABLES, set())
+        setattr(cls, OBSERVABLES, observables)
 
 
 class Observable(WrapperBase):
-    def __init__(self):
-        super().__init__()
+    """
+    The Observable class allows a functions or a method to be observable.
+    """
 
     @staticmethod
     def observed(function):
+        """
+        Tags a function or a method to be observable
+        """
+
         def wrapper(*args, **kwargs):
             self = args[0]
             try:
@@ -83,11 +96,22 @@ class Observable(WrapperBase):
             return result
         return wrapper
 
+    def __init__(self):
+        super().__init__()
+
 
 class Signal(Observable):
+    """
+    The Signal class
+    """
+
     def __init__(self):
         super().__init__()
 
     def emit(self, args=None):
+        """
+        Emits the signal
+        """
+
         for model, name in self.models:
             model.notify_signal(name, args)
