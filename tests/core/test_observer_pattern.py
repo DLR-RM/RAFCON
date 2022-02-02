@@ -1,7 +1,9 @@
-from rafcon.design_patterns.observer.observer import Observer
-from rafcon.design_patterns.observer.observable import Observable, ObservableModel
-from tests import utils as testing_utils
 import pytest
+
+from rafcon.design_patterns.observer.observer import Observer
+from rafcon.design_patterns.observer.observable import Observable, ObservableMetaclass
+
+from tests import utils as testing_utils
 
 
 class ObservableTest(Observable):
@@ -53,7 +55,7 @@ class ObserverTest(object):
         self.test_value3 = return_value + 10
 
 
-@ObservableModel.add(ObservableModel)
+@ObservableMetaclass.add(ObservableMetaclass)
 class TestModel(Observer):
     a = 0
     passed = False

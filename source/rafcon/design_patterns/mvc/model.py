@@ -2,14 +2,14 @@ import threading
 
 from gi.repository import GLib
 
-from rafcon.design_patterns.observer.observable import ObservableModel
+from rafcon.design_patterns.observer.observable import ObservableMetaclass
 from rafcon.design_patterns.observer.observer import Observer
 
 
-@ObservableModel.add(ObservableModel)
+@ObservableMetaclass.add(ObservableMetaclass)
 class Model(Observer):
     """
-    Model class of the MVC pattern. It holds the references to the data. The data can be either in the memory, database,
+    Model class of the MVC pattern. It holds the references to the data. The data can be in the memory, database,
     etc.
     """
 
@@ -17,11 +17,11 @@ class Model(Observer):
         Observer.__init__(self)
 
 
-@ObservableModel.add(ObservableModel)
+@ObservableMetaclass.add(ObservableMetaclass)
 class ModelMT(Model):
     """
-    Thread safe Model class of the MVC pattern. It holds the references to the data. The data can be either in the
-    memory, database, etc.
+    Model class of the MVC pattern. It holds the references to the data. The data can be in the
+    memory, database, etc. This class is thread safe and notifies the observers asynchronously via 'idle_add'.
     """
 
     def __init__(self):

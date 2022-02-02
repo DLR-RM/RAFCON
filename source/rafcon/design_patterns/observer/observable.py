@@ -7,7 +7,7 @@ GET_OBSERVABLE_NAME_TEMPLATE = 'get_observable_%s'
 SET_OBSERVABLE_NAME_TEMPLATE = 'set_observable_%s'
 
 
-class ObservableModel(type):
+class ObservableMetaclass(type):
     """
     The Observable Model metaclass that every observable class must use it in order to be known as an observable class.
     """
@@ -33,7 +33,7 @@ class ObservableModel(type):
         def wrapper(self, value):
             observable_name = OBSERVABLE_NAME_TEMPLATE % observable
             old_value = getattr(self, observable_name)
-            new_value = ObservableModel._create_value(observable, value, self)
+            new_value = ObservableMetaclass._create_value(observable, value, self)
             setattr(self, observable_name, new_value)
             if type(old_value) != type(new_value) or (isinstance(old_value, WrapperBase) and old_value != new_value):
                 self._reset_notifications(observable, old_value)
@@ -63,9 +63,9 @@ class ObservableModel(type):
             observable_name = OBSERVABLE_NAME_TEMPLATE % observable
             get_observable_name = GET_OBSERVABLE_NAME_TEMPLATE % observable
             set_observable_name = SET_OBSERVABLE_NAME_TEMPLATE % observable
-            setattr(cls, observable_name, ObservableModel._create_value(observable_name, info[observable]))
-            setattr(cls, get_observable_name, ObservableModel._get_getter(observable))
-            setattr(cls, set_observable_name, ObservableModel._get_setter(observable))
+            setattr(cls, observable_name, ObservableMetaclass._create_value(observable_name, info[observable]))
+            setattr(cls, get_observable_name, ObservableMetaclass._get_getter(observable))
+            setattr(cls, set_observable_name, ObservableMetaclass._get_setter(observable))
             setattr(cls, observable, property(getattr(cls, get_observable_name), getattr(cls, set_observable_name)))
             observables.add(observable)
         for base in bases:
