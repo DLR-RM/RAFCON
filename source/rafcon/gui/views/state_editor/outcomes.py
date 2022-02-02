@@ -23,7 +23,7 @@ from rafcon.gui.utils import constants
 
 class StateOutcomesTreeView(TreeView):
     def __init__(self):
-        super().__init__(builder=glade.get_glade_path('outcome_list_widget.glade'), parent='tree_view')
+        super().__init__(builder_filename=glade.get_glade_path('outcome_list_widget.glade'), parent='tree_view')
 
 
 class StateOutcomesEditorView(View):

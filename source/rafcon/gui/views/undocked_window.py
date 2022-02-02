@@ -22,7 +22,7 @@ from rafcon.gui.helpers import label
 
 class UndockedWindowView(View):
     def __init__(self, title):
-        super().__init__(builder=glade.get_glade_path('undocked_window.glade'), parent='undock_window')
+        super().__init__(builder_filename=glade.get_glade_path('undocked_window.glade'), parent='undock_window')
         toolbar = Gtk.Toolbar()
         toolbar.props.show_arrow = False
         fullscreen_icon = label.create_button_label(constants.BUTTON_EXP)

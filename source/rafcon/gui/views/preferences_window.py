@@ -16,4 +16,4 @@ from rafcon.gui import glade
 
 class PreferencesWindowView(View):
     def __init__(self):
-        super().__init__(builder=glade.get_glade_path('preferences_window.glade'), parent='preferences_window')
+        super().__init__(builder_filename=glade.get_glade_path('preferences_window.glade'), parent='preferences_window')

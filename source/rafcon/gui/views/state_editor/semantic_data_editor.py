@@ -30,7 +30,7 @@ class SemanticDataEditorView(View):
     VALUE_COLUMN_ID = 1
 
     def __init__(self):
-        super().__init__(builder=glade.get_glade_path('semantic_data_editor.glade'), parent='semantic_data_vbox')
+        super().__init__(builder_filename=glade.get_glade_path('semantic_data_editor.glade'), parent='semantic_data_vbox')
         self.scrollbar_widget = self['semantic_data_scroller']
         self['delete_entry'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['new_dict_entry'].set_border_width(constants.BUTTON_BORDER_WIDTH)

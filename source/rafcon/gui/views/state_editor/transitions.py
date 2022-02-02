@@ -22,13 +22,13 @@ from rafcon.gui.utils import constants
 
 class StateTransitionsListView(TreeView):
     def __init__(self):
-        super().__init__(builder=glade.get_glade_path('transition_list_widget.glade'), parent='tree_view')
+        super().__init__(builder_filename=glade.get_glade_path('transition_list_widget.glade'), parent='tree_view')
         self.tree_view = self['tree_view']
 
 
 class StateTransitionsEditorView(View):
     def __init__(self):
-        super().__init__(builder=glade.get_glade_path('state_transitions_widget.glade'), parent='vbox2')
+        super().__init__(builder_filename=glade.get_glade_path('state_transitions_widget.glade'), parent='vbox2')
         self.transitions_listView = StateTransitionsListView()
         self['transitions_scroller'].add(self.transitions_listView.get_parent_widget())
         self.transitions_listView.scrollbar_widget = self['transitions_scroller']

@@ -43,7 +43,7 @@ class StateEditorView(View):
     }
 
     def __init__(self):
-        super().__init__(builder=glade.get_glade_path('state_editor_ld_widget_tab.glade'), parent='main_frame_vbox')
+        super().__init__(builder_filename=glade.get_glade_path('state_editor_ld_widget_tab.glade'), parent='main_frame_vbox')
 
         self.page_dict = {}
         self.notebook_names = ['main_notebook_1', 'main_notebook_2']

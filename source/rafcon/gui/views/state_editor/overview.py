@@ -19,5 +19,5 @@ from rafcon.gui.utils import constants
 
 class StateOverviewView(View):
     def __init__(self):
-        super().__init__(builder=glade.get_glade_path('state_overview_widget.glade'), parent='properties_widget')
+        super().__init__(builder_filename=glade.get_glade_path('state_overview_widget.glade'), parent='properties_widget')
         self['properties_widget'].set_border_width(constants.PADDING_LEFT)

@@ -41,7 +41,7 @@ from rafcon.gui.views.undocked_window import UndockedWindowView
 
 class MainWindowView(View):
     def __init__(self):
-        super().__init__(builder=glade.get_glade_path('main_window.glade'), parent='main_window')
+        super().__init__(builder_filename=glade.get_glade_path('main_window.glade'), parent='main_window')
 
         if os.getenv("RAFCON_START_MINIMIZED", False):
             self.get_parent_widget().iconify()

@@ -16,8 +16,8 @@ from rafcon.design_patterns.mvc.view import View
 
 
 class TreeView(View):
-    def __init__(self, builder=None, parent=None):
-        super().__init__(builder, parent)
+    def __init__(self, builder_filename=None, parent=None):
+        super().__init__(builder_filename, parent)
         self.scrollbar_widget = None
 
         for column in self.get_parent_widget().get_columns():

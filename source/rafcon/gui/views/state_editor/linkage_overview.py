@@ -21,12 +21,12 @@ import weakref
 
 class LinkageOverviewDataView(TreeView):
     def __init__(self):
-        super().__init__(builder=glade.get_glade_path('linkage_overview_data.glade'), parent='tree_view')
+        super().__init__(builder_filename=glade.get_glade_path('linkage_overview_data.glade'), parent='tree_view')
 
 
 class LinkageOverviewLogicView(TreeView):
     def __init__(self):
-        super().__init__(builder=glade.get_glade_path('linkage_overview_logic.glade'), parent='tree_view')
+        super().__init__(builder_filename=glade.get_glade_path('linkage_overview_logic.glade'), parent='tree_view')
         self._treeView = weakref.ref(self)
 
     @property
@@ -36,7 +36,7 @@ class LinkageOverviewLogicView(TreeView):
 
 class LinkageOverviewView(View):
     def __init__(self):
-        super().__init__(builder=glade.get_glade_path('linkage_overview_one.glade'), parent='linkage_container')
+        super().__init__(builder_filename=glade.get_glade_path('linkage_overview_one.glade'), parent='linkage_container')
         self.inputs_view = LinkageOverviewDataView()
         self.outputs_view = LinkageOverviewDataView()
         self.scope_view = LinkageOverviewDataView()

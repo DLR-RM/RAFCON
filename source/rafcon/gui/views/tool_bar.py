@@ -22,7 +22,7 @@ from rafcon.gui.utils import constants
 
 class ToolBarView(View):
     def __init__(self):
-        super().__init__(builder=glade.get_glade_path('tool_bar.glade'), parent='toolbar')
+        super().__init__(builder_filename=glade.get_glade_path('tool_bar.glade'), parent='toolbar')
 
         button_new = self['button_new']
         button_new.set_label_widget(create_label_widget_with_icon(constants.BUTTON_NEW, _("New state machine")))

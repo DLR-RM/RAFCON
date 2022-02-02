@@ -19,7 +19,7 @@ from rafcon.gui.helpers import label
 
 class GlobalVariableEditorView(View):
     def __init__(self):
-        super().__init__(builder=glade.get_glade_path('global_variable_editor_widget.glade'), parent='global_variable_vbox')
+        super().__init__(builder_filename=glade.get_glade_path('global_variable_editor_widget.glade'), parent='global_variable_vbox')
         self['new_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['delete_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['lock_global_variable_button'].set_border_width(constants.BUTTON_BORDER_WIDTH)
