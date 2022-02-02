@@ -37,10 +37,9 @@ from rafcon.core.state_elements.data_port import DataPort, InputDataPort, Output
 from rafcon.core.state_elements.logical_port import Income, Outcome
 from rafcon.core.state_elements.scope import ScopedData
 from rafcon.core.storage import storage
-from rafcon.core.config import global_config
 from rafcon.utils import classproperty
 from rafcon.utils import log
-from rafcon.utils import multi_event
+from rafcon.utils import multi_event, plugins
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
@@ -281,7 +280,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         if self.thread:
             self.thread.join()
-            self.thread = None
+            plugins.run_hook('state_thread_joined', self.thread)
         else:
             logger.debug("Cannot join {0}, as the state hasn't been started, yet or is already finished!".format(self))
 
