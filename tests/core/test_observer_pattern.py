@@ -1,4 +1,3 @@
-from rafcon.design_patterns.mvc.model import Model
 from rafcon.design_patterns.observer.observer import Observer
 from rafcon.design_patterns.observer.observable import Observable, ObservableModel
 from tests import utils as testing_utils
@@ -54,28 +53,8 @@ class ObserverTest(object):
         self.test_value3 = return_value + 10
 
 
-class TestModel(Model):
-    a = 0
-    passed = False
-
-    __observables__ = ('a',)
-
-    def __init__(self):
-        super().__init__()
-
-
-class TestObserver(Observer):
-    def __init__(self, model):
-        super().__init__(model)
-        self.model = model
-
-    @Observer.observe('a', assign=True)
-    def b_on_changed(self, _, attribute, info):
-        self.model.passed = True
-
-
 @ObservableModel.add(ObservableModel)
-class TestModel2(Observer):
+class TestModel(Observer):
     a = 0
     passed = False
 
@@ -85,7 +64,7 @@ class TestModel2(Observer):
         Observer.__init__(self)
 
 
-class TestObserver2(Observer):
+class TestObserver(Observer):
     def __init__(self, model):
         super().__init__(model)
         self.model = model
@@ -106,8 +85,8 @@ def test_observer(caplog):
     assert observer_test.test_value2 == 4
     assert observer_test.test_value3 == 30
 
-    test_model = TestModel2()
-    TestObserver2(test_model)
+    test_model = TestModel()
+    TestObserver(test_model)
 
     test_model.a += 1
 
