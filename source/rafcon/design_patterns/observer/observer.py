@@ -32,13 +32,14 @@ class Observer:
         Observes the observable
         """
 
-        def decorator(function):
+        def wrapper(function):
             setattr(function, OBSERVABLES, getattr(function, OBSERVABLES, list()) + [(args[0], kwargs)])
             return function
-        return decorator
+        return wrapper
 
     def __init__(self, model=None):
         self._observable_to_methods = {}
+        # Iterates over all observe callbacks and add them to 'observable_to_methods'
         for cls in inspect.getmro(type(self)):
             for name, method in cls.__dict__.items():
                 if inspect.isfunction(method) and hasattr(method, OBSERVABLES):
@@ -107,6 +108,13 @@ class Observer:
         for observable in self.get_observables():
             self._remove_notification(observer, observable)
         self._observers.remove(observer)
+
+    def notify_observer(self, observer, method, *args, **kwargs):
+        """
+        Notifies an observer
+        """
+
+        return method(*args, **kwargs)
 
     def notify_assign(self, observable, old_value, new_value):
         """
@@ -202,6 +210,3 @@ class Observer:
         for observer in self._observers:
             self._remove_notification(observer, observable)
             self._add_notification(observer, observable)
-
-    def notify_observer(self, observer, method, *args, **kwargs):
-        return method(*args, **kwargs)

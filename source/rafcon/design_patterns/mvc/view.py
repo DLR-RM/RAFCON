@@ -7,13 +7,14 @@ class View:
     the custom callbacks.
     """
 
-    def __init__(self, builder=None, parent=None):
+    def __init__(self, builder_filename=None, parent=None):
         self._widgets = {}
-        self._builder = builder
+        # 'Gtk.Builder' takes 'builder_filename' as the argument and creates all the widgets automatically
+        self._builder = builder_filename
         self._parent = parent
-        if builder is not None:
+        if builder_filename is not None:
             self._builder = Gtk.Builder()
-            self._builder.add_from_file(builder)
+            self._builder.add_from_file(builder_filename)
             for widget in self._builder.get_objects():
                 if isinstance(widget, Gtk.Buildable):
                     self._widgets[Gtk.Buildable.get_name(widget)] = widget

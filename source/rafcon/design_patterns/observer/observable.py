@@ -59,6 +59,7 @@ class ObservableMetaclass(type):
 
     def __init__(cls, _, bases, info):
         observables = set()
+        # Iterates over all observables and creates getter and setter for them
         for observable in set(cls.__dict__.get(OBSERVABLES, set())):
             observable_name = OBSERVABLE_NAME_TEMPLATE % observable
             get_observable_name = GET_OBSERVABLE_NAME_TEMPLATE % observable
