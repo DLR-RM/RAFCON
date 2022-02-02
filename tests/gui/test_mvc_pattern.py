@@ -7,7 +7,7 @@ from rafcon.design_patterns.observer.observer import Observer
 from rafcon.design_patterns.observer.observable import Observable, Signal
 
 
-def test_1():
+def test_mvc_pattern():
     from gi.repository import Gtk
 
     feedbacks = {}

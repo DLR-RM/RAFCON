@@ -3,7 +3,7 @@ from gi.repository import Gtk
 
 class View:
     """
-    View class of the MVC pattern. It holds the widgets and allows the users to connect the signals of the widgets to
+    The View class of the MVC pattern. It holds the widgets and allows the users to connect the signals of the widgets to
     the custom callbacks.
     """
 

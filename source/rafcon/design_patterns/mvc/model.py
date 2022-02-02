@@ -9,7 +9,7 @@ from rafcon.design_patterns.observer.observer import Observer
 @ObservableMetaclass.add(ObservableMetaclass)
 class Model(Observer):
     """
-    Model class of the MVC pattern. It holds the references to the data. The data can be in the memory, database,
+    The Model class of the MVC pattern. It holds the references to the data. The data can be in the memory, database,
     etc.
     """
 
@@ -20,7 +20,7 @@ class Model(Observer):
 @ObservableMetaclass.add(ObservableMetaclass)
 class ModelMT(Model):
     """
-    Model class of the MVC pattern. It holds the references to the data. The data can be in the
+    The Model class of the MVC pattern. It holds the references to the data. The data can be in the
     memory, database, etc. This class is thread safe and notifies the observers asynchronously via 'idle_add'.
     """
 

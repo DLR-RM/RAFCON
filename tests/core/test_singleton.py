@@ -9,9 +9,9 @@ class TestSingleton:
         pass
 
 
-def test_1():
+def test_singleton():
     with pytest.raises(TypeError):
         TestSingleton()
-    test_singleton = TestSingleton.instance()
-    test_singleton2 = TestSingleton.instance()
-    assert test_singleton == test_singleton2
+    test_singleton_instance = TestSingleton.instance()
+    test_singleton_instance2 = TestSingleton.instance()
+    assert test_singleton_instance is test_singleton_instance2

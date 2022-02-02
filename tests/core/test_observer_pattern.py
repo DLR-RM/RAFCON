@@ -2,6 +2,7 @@ import pytest
 
 from rafcon.design_patterns.observer.observer import Observer
 from rafcon.design_patterns.observer.observable import Observable, ObservableMetaclass
+from rafcon.design_patterns.observer.wrappers import ListWrapper, SetWrapper, DictWrapper
 
 from tests import utils as testing_utils
 
@@ -95,6 +96,51 @@ def test_observer(caplog):
     assert test_model.passed
 
     testing_utils.assert_logger_warnings_and_errors(caplog)
+
+
+def test_wrapper():
+    list_feedbacks = []
+    list_instance = []
+    list_wrapper = ListWrapper(list_instance)
+    list_wrapper.notify_before = lambda instance, name, args, kwargs: list_feedbacks.append(name)
+    list_wrapper.notify_after = lambda instance, name, value, args, kwargs: list_feedbacks.append(name)
+
+    list_wrapper.append(12)
+    list_wrapper.append(1)
+    list_wrapper.extend([12])
+    list_wrapper.clear()
+
+    assert list_feedbacks.count('append') == 4
+    assert list_feedbacks.count('extend') == 2
+    assert list_feedbacks.count('clear') == 2
+
+    set_feedbacks = []
+    set_instance = set()
+    set_wrapper = SetWrapper(set_instance)
+    set_wrapper.notify_before = lambda instance, name, args, kwargs: set_feedbacks.append(name)
+    set_wrapper.notify_after = lambda instance, name, value, args, kwargs: set_feedbacks.append(name)
+
+    set_wrapper.add(5)
+    set_wrapper.add(1)
+    set_wrapper.add(3)
+    set_wrapper.remove(1)
+    set_wrapper.clear()
+
+    assert set_feedbacks.count('add') == 6
+    assert set_feedbacks.count('remove') == 2
+    assert set_feedbacks.count('clear') == 2
+
+    dict_feedbacks = []
+    dict_instance = {}
+    dict_wrapper = DictWrapper(dict_instance)
+    dict_wrapper.notify_before = lambda instance, name, args, kwargs: dict_feedbacks.append(name)
+    dict_wrapper.notify_after = lambda instance, name, value, args, kwargs: dict_feedbacks.append(name)
+
+    dict_wrapper.clear()
+    dict_wrapper['test_key'] = 'test_value'
+
+    assert dict_feedbacks.count('clear') == 2
+    assert dict_feedbacks.count('__setitem__') == 2
 
 
 if __name__ == '__main__':

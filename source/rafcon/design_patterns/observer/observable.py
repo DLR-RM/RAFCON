@@ -1,4 +1,4 @@
-from rafcon.design_patterns.observer.wrappers import WrapperBase, TupleWrapper, ListWrapper, SetWrapper, DictWrapper
+from rafcon.design_patterns.observer.wrappers import WrapperBase, ListWrapper, SetWrapper, DictWrapper
 
 
 OBSERVABLES = '__observables__'
@@ -9,13 +9,13 @@ SET_OBSERVABLE_NAME_TEMPLATE = 'set_observable_%s'
 
 class ObservableMetaclass(type):
     """
-    The Observable Model metaclass that every observable class must use it in order to be known as an observable class.
+    The Observable Metaclass class that every observable class must use it in order to be known as an observable class.
     """
 
     @staticmethod
     def add(observable_model):
         """
-        Adds the Observable Model metaclass to a class
+        Adds the Observable Metaclass to a class
         """
 
         def wrapper(cls):
@@ -43,9 +43,7 @@ class ObservableMetaclass(type):
     @staticmethod
     def _create_value(observable_name, value, model=None):
         result = None
-        if isinstance(value, tuple):
-            result = TupleWrapper(value[1], value[2])
-        elif isinstance(value, list):
+        if isinstance(value, list):
             result = ListWrapper(value)
         elif isinstance(value, set):
             result = SetWrapper(value)

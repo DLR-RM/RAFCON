@@ -22,7 +22,7 @@ class NotifyInfo(dict):
 
 class Observer:
     """
-    The observer class can observe the observable attributes and functions (or methods) and calls the defined callbacks
+    The Observer class can observe the observable attributes and functions (or methods) and calls the defined callbacks
     when the observables change.
     """
 

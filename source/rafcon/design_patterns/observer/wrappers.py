@@ -84,7 +84,7 @@ class IterableWrapper(Wrapper):
     """
 
     def __init__(self, obj, methods):
-        Wrapper.__init__(self, obj, methods)
+        super().__init__(obj, methods)
         for method in 'eq ge gt iter le len lt ne'.split():
             method = '__%s__' % method
             setattr(self.__class__, method, getattr(self._obj, method))
@@ -105,22 +105,13 @@ class IterableWrapper(Wrapper):
         return result
 
 
-class TupleWrapper(Wrapper):
-    """
-    The TupleWrapper class can make a tuple attribute observable.
-    """
-
-    def __init__(self, obj, methods):
-        Wrapper.__init__(self, obj, methods)
-
-
 class ListWrapper(IterableWrapper):
     """
     The ListWrapper class can make a list attribute observable.
     """
 
     def __init__(self, obj):
-        IterableWrapper.__init__(self, obj, ('append', 'extend', 'insert', 'pop', 'remove', 'reverse', 'sort'))
+        super().__init__(obj, ('append', 'clear', 'extend', 'insert', 'pop', 'remove', 'reverse', 'sort'))
 
 
 class SetWrapper(IterableWrapper):
@@ -129,7 +120,7 @@ class SetWrapper(IterableWrapper):
     """
 
     def __init__(self, obj):
-        IterableWrapper.__init__(self, obj, ('add', 'clear', 'discard', 'pop', 'remove'))
+        super().__init__(obj, ('add', 'clear', 'discard', 'pop', 'remove'))
 
 
 class DictWrapper(IterableWrapper):
@@ -138,4 +129,4 @@ class DictWrapper(IterableWrapper):
     """
 
     def __init__(self, obj):
-        IterableWrapper.__init__(self, obj, ('clear', 'pop', 'popitem', 'setdefault', 'update'))
+        super().__init__(obj, ('clear', 'pop', 'popitem', 'setdefault', 'update'))

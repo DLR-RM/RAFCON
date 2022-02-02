@@ -7,7 +7,7 @@ from rafcon.design_patterns.observer.observer import Observer
 
 class Controller(Observer):
     """
-    Controller class of the MVC pattern. It holds the logic and makes the connection between the model and the view.
+    The Controller class of the MVC pattern. It holds the logic and makes the connection between the model and the view.
     """
 
     def __init__(self, model, view):
