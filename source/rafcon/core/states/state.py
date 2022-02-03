@@ -267,8 +267,13 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.execution_history = execution_history
         if generate_run_id:
             self._run_id = run_id_generator()
+
+        def run_wrapper():
+            self.run()
+            plugins.run_hook('state_thread_joined')
+
         self.backward_execution = copy.copy(backward_execution)
-        self.thread = threading.Thread(target=self.run)
+        self.thread = threading.Thread(target=run_wrapper)
         self.thread.start()
 
     def generate_run_id(self):
@@ -280,7 +285,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         if self.thread:
             self.thread.join()
-            plugins.run_hook('state_thread_joined', self.thread)
         else:
             logger.debug("Cannot join {0}, as the state hasn't been started, yet or is already finished!".format(self))
 
