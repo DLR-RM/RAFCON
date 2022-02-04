@@ -56,7 +56,7 @@ class RafconConan(ConanFile):
 
         subprocess.run(["python3", 'setup.py', 'sdist', 'bdist_wheel'], env=envd)
 
-        print("Installing rafcon for {}".format(str(self.python_exec)))
+        print("Installing rafcon for python3")
 
         rafcon_target = './dist/rafcon-{}.tar.gz'.format(self.version)
 
@@ -68,7 +68,7 @@ class RafconConan(ConanFile):
         # this is also true for the packages introduced by our local conan environment in /opt/conan/lib/python3.6/
         # https://stackoverflow.com/questions/51913361/difference-between-pip-install-options-ignore-installed-and-force-reinstall
         subprocess.run([
-            self.python_exec, '-m', 'pip', 'install', '--user', '--ignore-installed', rafcon_target
+            'python3', '-m', 'pip', 'install', '--user', '--ignore-installed', rafcon_target
         ], env=envd, check=True)
 
     def package_info(self):

@@ -269,8 +269,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self._run_id = run_id_generator()
 
         def run_wrapper():
-            self.run()
-            plugins.run_hook('state_thread_joined')
+            try:
+                self.run()
+            finally:
+                plugins.run_hook('state_thread_joined')
 
         self.backward_execution = copy.copy(backward_execution)
         self.thread = threading.Thread(target=run_wrapper)
