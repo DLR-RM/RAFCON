@@ -264,7 +264,6 @@ def extract_child_models_of_state(state_m, new_state_class):
         if prop_name == 'income':
             return [state_m.income]
         wrapper = getattr(state_m, prop_name)
-        # ._obj is needed as gaphas wraps observable lists and dicts into a gaphas.support.ObsWrapper
         list_or_dict = wrapper._obj
         if isinstance(list_or_dict, list):
             return list_or_dict[:]  # copy list
@@ -389,13 +388,10 @@ def change_state_type(state_m, target_class):
 
         if new_state_m:
             new_state_m.parent = parent_state_m
-            # Access states dict without causing a notifications. The dict is wrapped in a ObsMapWrapper object.
             parent_state_m.states[state_id] = new_state_m
             parent_state_m.update_child_is_start()
 
-    # Destroy all states and state elements (core and models) that are no longer required
     old_state.destroy(recursive=False)
-    # Temporarily re-register to prevent KeyError: prepare_destruction calls unregister_observer
     old_state_m.register_observer(old_state_m)
     old_state_m.prepare_destruction(recursive=False)
     for state_element_m in obsolete_state_element_models:
@@ -432,7 +428,6 @@ def prepare_state_m_for_insert_as(state_m_to_insert, previous_state_size):
                 if state_element_key == "income":
                     continue
                 state_element_list = getattr(state_m_to_insert, state_element_key)
-                # Some models are hold in a gtkmvc3.support.wrappers.ObsListWrapper, not a list
                 if hasattr(state_element_list, 'keys'):
                     state_element_list = state_element_list.values()
                 models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}

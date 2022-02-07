@@ -51,7 +51,7 @@ class ExecutionTickerController(ExtendedController):
         self.current_observed_sm_m = None
         self._view_initialized = True
 
-    def _idle_register_view(self, view):
+    def _idle_init(self):
         pass  # work around to avoid traceback because of view=None
 
     def register_view(self, view):

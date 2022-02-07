@@ -1,4 +1,6 @@
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.mvc.model import Model
+from rafcon.design_patterns.observer.observer import Observer
+from rafcon.design_patterns.observer.observable import Observable
 from tests import utils as testing_utils
 import pytest
 
@@ -52,20 +54,46 @@ class ObserverTest(object):
         self.test_value3 = return_value + 10
 
 
-def test_slim_observer(caplog):
-    testing_utils.dummy_gui(None)
-    test_observer = ObserverTest()
-    test_observer.test_observable.first_var = 20.0
-    assert test_observer.test_value == 20
+class TestModel(Model):
+    a = 0
+    passed = False
 
-    test_observer.test_observable.complex_method(1, 3, "Hello world")
-    assert test_observer.test_observable.observable_test_var == 4
-    assert test_observer.test_value2 == 4
-    assert test_observer.test_value3 == 30
+    __observables__ = ('a',)
+
+    def __init__(self):
+        super().__init__()
+
+
+class TestObserver(Observer):
+    def __init__(self, model):
+        super().__init__(model)
+        self.model = model
+
+    @Observer.observe('a', assign=True)
+    def b_on_changed(self, _, attribute, info):
+        self.model.passed = True
+
+
+def test_observer(caplog):
+    testing_utils.dummy_gui(None)
+    observer_test = ObserverTest()
+    observer_test.test_observable.first_var = 20.0
+    assert observer_test.test_value == 20
+
+    observer_test.test_observable.complex_method(1, 3, "Hello world")
+    assert observer_test.test_observable.observable_test_var == 4
+    assert observer_test.test_value2 == 4
+    assert observer_test.test_value3 == 30
+
+    test_model = TestModel()
+    TestObserver(test_model)
+
+    test_model.a += 1
+
+    assert test_model.passed
 
     testing_utils.assert_logger_warnings_and_errors(caplog)
 
 
 if __name__ == '__main__':
-    # test_slim_observer(None)
     pytest.main(['-s', __file__])

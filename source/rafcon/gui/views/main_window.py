@@ -19,7 +19,7 @@
 import os
 from gi.repository import Pango
 
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui import glade
@@ -40,14 +40,11 @@ from rafcon.gui.views.undocked_window import UndockedWindowView
 
 
 class MainWindowView(View):
-    builder = glade.get_glade_path("main_window.glade")
-    top = 'main_window'
-
     def __init__(self):
-        View.__init__(self)
+        super().__init__(builder=glade.get_glade_path('main_window.glade'), parent='main_window')
 
         if os.getenv("RAFCON_START_MINIMIZED", False):
-            self.get_top_widget().iconify()
+            self.get_parent_widget().iconify()
 
         # Add gui components by removing their corresponding placeholders defined in the glade file first and then
         # adding the widgets.
@@ -84,7 +81,7 @@ class MainWindowView(View):
         ######################################################
         self.state_icons = StateIconView()
         self.state_icons.show()
-        self["state_icons_box"].pack_start(self.state_icons.get_top_widget(), True, True, 0)
+        self["state_icons_box"].pack_start(self.state_icons.get_parent_widget(), True, True, 0)
 
         ######################################################
         # State Machine Tree
@@ -98,21 +95,21 @@ class MainWindowView(View):
         ######################################################
         self.global_var_editor = GlobalVariableEditorView()
         self.global_var_editor.show()
-        self['global_variables_eventbox'].add(self.global_var_editor.get_top_widget())
+        self['global_variables_eventbox'].add(self.global_var_editor.get_parent_widget())
 
         ######################################################
         # State Machine History
         ######################################################
         self.state_machine_history = ModificationHistoryView()
         self.state_machine_history.show()
-        self['history_alignment'].add(self.state_machine_history.get_top_widget())
+        self['history_alignment'].add(self.state_machine_history.get_parent_widget())
 
         ######################################################
         # State Machine Execution History
         ######################################################
         self.execution_history = ExecutionHistoryView()
         self.execution_history.show()
-        self['execution_history_alignment'].add(self.execution_history.get_top_widget())
+        self['execution_history_alignment'].add(self.execution_history.get_parent_widget())
 
         ######################################################
         # rotate all tab labels by 90 degrees and make detachable
@@ -127,30 +124,30 @@ class MainWindowView(View):
         ######################################################
         self.state_machines_editor = StateMachinesEditorView()
         self.state_machines_editor.show()
-        self['central_vbox'].pack_start(self.state_machines_editor.get_top_widget(), True, True, 0)
-        self['central_vbox'].reorder_child(self.state_machines_editor.get_top_widget(), 1)
+        self['central_vbox'].pack_start(self.state_machines_editor.get_parent_widget(), True, True, 0)
+        self['central_vbox'].reorder_child(self.state_machines_editor.get_parent_widget(), 1)
 
         ######################################################
         # Notification Bar
         ######################################################
         self.notification_bar = NotificationBarView()
         self.notification_bar.show()
-        self['central_vbox'].pack_start(self.notification_bar.get_top_widget(), False, True, 0)
-        self['central_vbox'].reorder_child(self.notification_bar.get_top_widget(), 2)
+        self['central_vbox'].pack_start(self.notification_bar.get_parent_widget(), False, True, 0)
+        self['central_vbox'].reorder_child(self.notification_bar.get_parent_widget(), 2)
 
         ######################################################
         # States-editor
         ######################################################
         self.states_editor = StatesEditorView()
-        self['state_editor_eventbox'].add(self.states_editor.get_top_widget())
+        self['state_editor_eventbox'].add(self.states_editor.get_parent_widget())
         self.states_editor.show()
 
         ######################################################
         # Debug Console
         ######################################################
         self.debug_console_view = DebugConsoleView()
-        self['debug_console_viewport'].add(self.debug_console_view.get_top_widget())
-        self.debug_console_view.get_top_widget().show()
+        self['debug_console_viewport'].add(self.debug_console_view.get_parent_widget())
+        self.debug_console_view.get_parent_widget().show()
         # map hide and undock buttons within and debug widget to be usable from main window view with generic naming
         self['undock_console_button'] = self.debug_console_view['undock_console_button']
         self['console_hide_button'] = self.debug_console_view['console_hide_button']
@@ -164,14 +161,14 @@ class MainWindowView(View):
         self.menu_bar = MenuBarView()
         self.menu_bar.show()
 
-        self['headerbar'].pack_start(self.menu_bar.get_top_widget())
+        self['headerbar'].pack_start(self.menu_bar.get_parent_widget())
         self['headerbar'].show()
 
         self.tool_bar = ToolBarView()
         self.tool_bar.show()
         self['top_level_vbox'].remove(self['tool_bar_placeholder'])
-        self['top_level_vbox'].pack_start(self.tool_bar.get_top_widget(), expand=False, fill=True, padding=0)
-        self['top_level_vbox'].reorder_child(self.tool_bar.get_top_widget(), 0)
+        self['top_level_vbox'].pack_start(self.tool_bar.get_parent_widget(), expand=False, fill=True, padding=0)
+        self['top_level_vbox'].reorder_child(self.tool_bar.get_parent_widget(), 0)
 
         ################################################
         # Hide Buttons

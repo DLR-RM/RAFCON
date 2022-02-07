@@ -321,7 +321,7 @@ def run_gui_thread(gui_config=None, runtime_config=None):
 
     initialize_environment_gui(gui_config, runtime_config)
     main_window_view = MainWindowView()
-    main_window_view.get_top_widget().set_gravity(Gdk.Gravity.STATIC)
+    main_window_view.get_parent_widget().set_gravity(Gdk.Gravity.STATIC)
     MainWindowController(rafcon.gui.singleton.state_machine_manager_model, main_window_view)
 
     print("run_gui thread: ", currentThread(), currentThread().ident, "gui.singleton thread ident:", \
@@ -403,14 +403,13 @@ def patch_gtkmvc3_model_mt():
     import rafcon.gui
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
-    import gtkmvc3
-    from gtkmvc3.model_mt import Model, _threading, GLib
+    from rafcon.design_patterns.mvc.model import Model, GLib
     from rafcon.core.states.state import run_id_generator, threading
     from rafcon.core.execution.execution_engine import StateMachineExecutionStatus, logger
 
-    original_ModelMT_notify_observer = gtkmvc3.model_mt.ModelMT.__notify_observer__
+    original_ModelMT_notify_observer = rafcon.design_patterns.mvc.model.ModelMT.notify_observer
     original_state_start = rafcon.core.states.state.State.start
-    original_run_state_machine = rafcon.core.execution.execution_engine.ExecutionEngine._run_active_state_machine
+    original_run_state_machine = rafcon.core.execution.execution_engine.ExecutionEngine._cls._run_active_state_machine
     print(original_ModelMT_notify_observer, original_run_state_machine, original_state_start)
     state_threads = []
 
@@ -451,42 +450,34 @@ def patch_gtkmvc3_model_mt():
         from tests.notifications import feed_debugging_graph
         feed_debugging_graph(self, observer, method, *args, **kwargs)
 
-        if observer not in self._ModelMT__observer_threads:
+        if observer not in self._threads:
             logger.error("ASSERT WILL COME observer not in observable threads observer: {0} observable: {1}"
-                         "-> known threads are {2}".format(observer, self, self._ModelMT__observer_threads))
-        assert observer in self._ModelMT__observer_threads
-        if _threading.currentThread() == self._ModelMT__observer_threads[observer]:
-            # standard call => single threaded
-            # print "{0} -> {1}: single threading '{2}' in call_thread {3} object_generation_thread {3} \n{4}" \
-            #       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
-            #                 self._ModelMT__observer_threads[observer], (args, kwargs))
-            return Model.__notify_observer__(self, observer, method, *args, **kwargs)
+                         "-> known threads are {2}".format(observer, self, self._threads))
+        assert observer in self._threads
+        if threading.currentThread() == self._threads[observer]:
+            return Model.notify_observer(self, observer, method, *args, **kwargs)
         else:
             # multi-threading call
-            if _threading.currentThread() in state_threads or _threading.currentThread() in auto_backup_threads:
-                # print "Notification from state thread", _threading.currentThread()
-                GLib.idle_add(self._ModelMT__idle_callback, observer, method, args, kwargs)
+            if threading.currentThread() in state_threads or threading.currentThread() in auto_backup_threads:
+                GLib.idle_add(self._idle_notify_observer, method, args, kwargs)
                 return
-            elif is_gui_thread(_threading.currentThread()) \
-                    and is_gui_thread(self._ModelMT__observer_threads[observer]):
+            elif is_gui_thread(threading.currentThread()) \
+                    and is_gui_thread(self._threads[observer]):
                 # As long as the gtk module keeps constant the gtk main thread will always have the same thread id!
                 # But, if the module is patched as in "test_interface.py" the gtk thread will get another thread id!
                 # Thus, if both threads are in used_gui_threads then we simply allow this case!
                 print("Both threads are former gui threads! Current thread {}, Observer thread {}".format(
-                    _threading.currentThread(), self._ModelMT__observer_threads[observer]))
-                return Model.__notify_observer__(self, observer, method, *args, **kwargs)
+                    threading.currentThread(), self._threads[observer]))
+                return Model.notify_observer(self, observer, method, *args, **kwargs)
             else:
                 print("{0} -> {1}: multi threading '{2}' in call_thread {3} object_generation_thread {4} \n{5}" \
                       "".format(self.__class__.__name__, observer.__class__.__name__, method.__name__,
-                                _threading.currentThread(), self._ModelMT__observer_threads[observer], (args, kwargs)))
-
-                # print "state threads", state_threads
-                # print "used_gui_threads", used_gui_threads
+                                threading.currentThread(), self._threads[observer], (args, kwargs)))
                 raise RuntimeError("This test should not have multi-threading constellations.")
 
-    gtkmvc3.model_mt.ModelMT.__notify_observer__ = __patched__notify_observer__
+    rafcon.design_patterns.mvc.model.ModelMT.notify_observer = __patched__notify_observer__
     rafcon.core.states.state.State.start = state_start
-    rafcon.core.execution.execution_engine.ExecutionEngine._run_active_state_machine = _patched_run_active_state_machine
+    rafcon.core.execution.execution_engine.ExecutionEngine._cls._run_active_state_machine = _patched_run_active_state_machine
 
 
 def unpatch_gtkmvc3_model_mt():
@@ -495,10 +486,9 @@ def unpatch_gtkmvc3_model_mt():
 
     import rafcon.core.states.state
     import rafcon.core.execution.execution_engine
-    import gtkmvc3
     if any([e is None for e in (original_ModelMT_notify_observer, original_state_start, original_run_state_machine)]):
         raise EnvironmentError("All methods to un-patch have to be set not None.")
-    gtkmvc3.model_mt.ModelMT.__notify_observer__ = original_ModelMT_notify_observer
+    rafcon.design_patterns.mvc.model.ModelMT.notify_observer = original_ModelMT_notify_observer
     rafcon.core.states.state.State.start = original_state_start
     rafcon.core.execution.execution_engine.ExecutionEngine._run_state_machine = original_run_state_machine
     original_ModelMT_notify_observer = original_state_start = original_run_state_machine = None

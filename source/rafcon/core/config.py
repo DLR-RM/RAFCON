@@ -19,7 +19,7 @@
 
 import os
 from pkg_resources import resource_string
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from yaml_configuration.config import DefaultConfig, ConfigError
 

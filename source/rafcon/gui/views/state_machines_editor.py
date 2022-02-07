@@ -12,18 +12,15 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
 
 class StateMachinesEditorView(View):
-
     def __init__(self):
-        View.__init__(self)
+        super().__init__(parent='notebook')
         self.notebook = Gtk.Notebook()
         self.notebook.set_scrollable(True)
         self.notebook.set_name("state_machines_notebook")
         self.notebook.get_style_context().add_class("secondary")
         self.notebook.show()
-
         self['notebook'] = self.notebook
-        self.top = 'notebook'

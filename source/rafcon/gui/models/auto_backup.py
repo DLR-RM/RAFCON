@@ -16,7 +16,7 @@ import time
 import threading
 
 from gi.repository import Gtk
-from gtkmvc3.model_mt import ModelMT
+from rafcon.design_patterns.mvc.model import ModelMT
 
 from rafcon.core.storage import storage
 import rafcon.core.singleton as core_singletons
@@ -246,7 +246,7 @@ def check_for_crashed_rafcon_instances():
                                            callback=on_message_dialog_response_signal, callback_args=[restorable_sm],
                                            table_header=table_header, table_data=table_data, toggled_callback=on_toggled,
                                            message_type=Gtk.MessageType.QUESTION,
-                                           parent=gui_singletons.main_window_controller.view.get_top_widget(),
+                                           parent=gui_singletons.main_window_controller.view.get_parent_widget(),
                                            width=800, standalone=False)
         dialog.activate()
 

@@ -19,7 +19,7 @@
 
 from weakref import ref
 from yaml import YAMLObject
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 from jsonconversion.jsonobject import JSONObject
 
 from rafcon.core.custom_exceptions import RecoveryModeException

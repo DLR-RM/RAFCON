@@ -21,7 +21,7 @@
 from weakref import ref
 from copy import copy, deepcopy
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.singleton import library_manager
 from rafcon.core.states.state import State, PATH_SEPARATOR
@@ -29,7 +29,6 @@ from rafcon.core.decorators import lock_state_machine
 from rafcon.core.config import global_config
 from rafcon.utils import log
 from rafcon.utils import type_helpers
-from rafcon.utils.hashable import Hashable
 
 logger = log.get_logger(__name__)
 

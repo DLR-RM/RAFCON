@@ -18,7 +18,7 @@
 
 """
 
-from gtkmvc3.controller import Controller
+from rafcon.design_patterns.mvc.controller import Controller
 
 from rafcon.gui.shortcut_manager import ShortcutManager
 from rafcon.utils import log
@@ -30,7 +30,7 @@ class ExtendedController(Controller):
     def __init__(self, model, view, spurious=False):
         self.__registered_models = set()
         self._view_initialized = False
-        super(ExtendedController, self).__init__(model, view, spurious=spurious)
+        super().__init__(model, view, spurious=spurious)
         self.__action_registered_controllers = []
         self.__child_controllers = dict()
         self.__shortcut_manager = None

@@ -19,7 +19,7 @@
 import os
 import importlib
 import yaml
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.config import global_config
 from rafcon.core.id_generator import generate_script_id

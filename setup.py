@@ -111,7 +111,7 @@ setup(
         'rafcon': ['pylintrc', 'logging.conf', 'locale/*', 'locale/*/LC_MESSAGES/*'],
         # Include core and GUI config plush splashscreens
         'rafcon.core': ['config.yaml'],
-        'rafcon.gui': ['gui_config.yaml', 'assets/splashscreens/*'],
+        'rafcon.gui': ['gui_config.yaml', 'design_config.yaml', 'assets/splashscreens/*'],
         # Include all glade files
         'rafcon.gui.glade': ['*.glade']
     },

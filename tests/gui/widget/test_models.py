@@ -1,4 +1,4 @@
-from gtkmvc3.observer import Observer
+from rafcon.design_patterns.observer.observer import Observer
 
 import pytest
 from tests import utils as testing_utils
@@ -121,7 +121,6 @@ class StateNotificationLogObserver(NotificationLogObserver):
                 set_dict(info, elem)
             else:
                 print(info)
-                from rafcon.gui.utils.notification_overview import NotificationOverview
                 print('NotificationLogger ---> assert !!! Type of notification not known')#\n{0}'.format(NotificationOverview(info))
                 assert True
             return elem
@@ -132,7 +131,6 @@ class StateNotificationLogObserver(NotificationLogObserver):
 
 
 def create_models(*args, **kargs):
-    import rafcon.core.singleton
     from rafcon.core.states.execution_state import ExecutionState
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.state_machine import StateMachine

@@ -10,7 +10,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 
-from gtkmvc3.observer import NTInfo
+from rafcon.design_patterns.observer.observer import NotifyInfo
 
 from rafcon.utils import constants
 from rafcon.gui.models.signals import MetaSignalMsg, ActionSignalMsg
@@ -22,7 +22,7 @@ class NotificationOverview(object):
 
     def __init__(self, info=None):
         if info is None:
-            info = NTInfo('before', **self.empty_info)
+            info = NotifyInfo('before', **self.empty_info)
         self.info = info
         self.origin = self.extract_origin(info)
         self._type = self.extract_type(info)
@@ -33,7 +33,7 @@ class NotificationOverview(object):
 
     @staticmethod
     def extract_type(info):
-        possible_types = NTInfo._NTInfo__ONE_REQUESTED
+        possible_types = ['assign', 'before', 'after', 'signal']
         for type_ in possible_types:
             if type_ in info and info[type_]:
                 return type_
@@ -56,8 +56,7 @@ class NotificationOverview(object):
                 info_origin = message.notification.info
 
         notification_type = NotificationOverview.extract_type(info_origin)
-        info_origin = NTInfo(notification_type, **info_origin)
-        return info_origin
+        return NotifyInfo(notification_type, **info_origin)
 
     @property
     def type(self):

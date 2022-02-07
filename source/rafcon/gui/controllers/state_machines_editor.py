@@ -113,7 +113,7 @@ class StateMachinesEditorController(ExtendedController):
     def __init__(self, state_machine_manager_model, view):
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         assert isinstance(view, StateMachinesEditorView)
-        ExtendedController.__init__(self, state_machine_manager_model, view, spurious=True)
+        ExtendedController.__init__(self, state_machine_manager_model, view)
 
         self.tabs = {}
         self.last_focused_state_machine_ids = collections.deque(maxlen=10)

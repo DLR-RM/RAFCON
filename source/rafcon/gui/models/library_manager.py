@@ -10,14 +10,16 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc3.model_mt import ModelMT
+from rafcon.design_patterns.singleton import Singleton
+from rafcon.design_patterns.mvc.model import ModelMT
 from rafcon.utils.vividict import Vividict
 from rafcon.core.library_manager import LibraryManager
-
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
+@Singleton
 class LibraryManagerModel(ModelMT):
     """This model class manages a library manager
 

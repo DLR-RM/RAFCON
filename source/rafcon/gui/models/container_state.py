@@ -14,7 +14,7 @@
 
 from copy import deepcopy
 
-from gtkmvc3.model_mt import ModelMT
+from rafcon.design_patterns.mvc.model import ModelMT
 
 from rafcon.core.states.container_state import ContainerState
 from rafcon.gui.models.abstract_state import AbstractStateModel
@@ -167,8 +167,8 @@ class ContainerStateModel(StateModel):
         i.e. this state model) about the change by calling this method with the information about the change. This
         method recognizes that the model is of type StateModel and therefore triggers a notify on the list of state
         models.
-        "_notify_method_before" is used as trigger method when the changing function is entered and
-        "_notify_method_after" is used when the changing function returns. This changing function in the example
+        "notify_before" is used as trigger method when the changing function is entered and
+        "notify_after" is used when the changing function returns. This changing function in the example
         would be the setter of the property name.
         :param model: The model that was changed
         :param prop_name: The property that was changed

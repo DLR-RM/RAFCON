@@ -312,7 +312,7 @@ class StatesEditorController(ExtendedController):
                 # observe changed to set the mark dirty flag
                 handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
                                                                                 state_m)
-                self.view.get_top_widget().connect('draw', state_editor_view.source_view.on_draw)
+                self.view.get_parent_widget().connect('draw', state_editor_view.source_view.on_draw)
             else:
                 handler_id = None
             source_code_view_is_dirty = False
@@ -321,10 +321,10 @@ class StatesEditorController(ExtendedController):
                                                               self.on_toggle_sticky_clicked, state_m)
         set_tab_label_texts(inner_label, state_m, source_code_view_is_dirty)
 
-        state_editor_view.get_top_widget().title_label = inner_label
-        state_editor_view.get_top_widget().sticky_button = sticky_button
+        state_editor_view.get_parent_widget().title_label = inner_label
+        state_editor_view.get_parent_widget().sticky_button = sticky_button
 
-        page_content = state_editor_view.get_top_widget()
+        page_content = state_editor_view.get_parent_widget()
         page_id = self.view.notebook.prepend_page(page_content, tab)
         page = self.view.notebook.get_nth_page(page_id)
         self.view.notebook.set_tab_reorderable(page, True)

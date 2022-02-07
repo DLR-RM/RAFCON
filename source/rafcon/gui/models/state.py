@@ -12,7 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc3.model_mt import ModelMT
+from rafcon.design_patterns.mvc.model import ModelMT
 
 from rafcon.gui.models.abstract_state import AbstractStateModel
 from rafcon.gui.models.data_port import DataPortModel
@@ -58,8 +58,8 @@ class StateModel(AbstractStateModel):
         i.e. the state model) about the change by calling this method with the information about the change. This
         method recognizes that the method "modify_input_data_port" caused the change and therefore triggers a notify
         on the list if input data port models.
-        "_notify_method_before" is used as trigger method when the changing function is entered and
-        "_notify_method_after" is used when the changing function returns. This changing function in the example
+        "notify_before" is used as trigger method when the changing function is entered and
+        "notify_after" is used when the changing function returns. This changing function in the example
         would be "modify_input_data_port".
 
         :param model: The model that was changed
@@ -77,9 +77,9 @@ class StateModel(AbstractStateModel):
 
         if not (cause is None or cause is "income_change" or changed_list is None):
             if overview.operation_started():
-                changed_list._notify_method_before(self.state, cause, (self.state,), info)
+                changed_list.notify_before(self.state, cause, (self.state,), info)
             else:
-                changed_list._notify_method_after(self.state, cause, None, (self.state,), info)
+                changed_list.notify_after(self.state, cause, None, (self.state,), info)
 
         # Notifies parent state
         super(StateModel, self).model_changed(model, prop_name, info)

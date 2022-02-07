@@ -11,7 +11,7 @@
 
 from gi.repository import Gtk
 from rafcon.gui import glade
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 import rafcon.gui.helpers.label as gui_helper_label
 
 from rafcon.gui.utils import constants
@@ -23,8 +23,6 @@ class SemanticDataEditorView(View):
 
     """
 
-    builder = glade.get_glade_path("semantic_data_editor.glade")
-    top = 'semantic_data_vbox'
     KEY_STORAGE_ID = 0
     VALUE_STORAGE_ID = 1
     IS_DICT_STORAGE_ID = 2
@@ -32,7 +30,7 @@ class SemanticDataEditorView(View):
     VALUE_COLUMN_ID = 1
 
     def __init__(self):
-        super(SemanticDataEditorView, self).__init__()
+        super().__init__(builder=glade.get_glade_path('semantic_data_editor.glade'), parent='semantic_data_vbox')
         self.scrollbar_widget = self['semantic_data_scroller']
         self['delete_entry'].set_border_width(constants.BUTTON_BORDER_WIDTH)
         self['new_dict_entry'].set_border_width(constants.BUTTON_BORDER_WIDTH)

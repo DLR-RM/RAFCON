@@ -14,10 +14,8 @@
 
 """
 
-from os.path import split
-from pkg_resources import resource_string, resource_filename
-from gtkmvc3.observable import Observable
-from yaml_configuration.config import DefaultConfig, ConfigError
+from pkg_resources import resource_string
+from yaml_configuration.config import ConfigError
 from rafcon.core.config import ObservableConfig
 from rafcon.utils import log
 logger = log.get_logger(__name__)

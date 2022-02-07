@@ -114,7 +114,7 @@ def convert(config_path, source_path, target_path=None, gui_config_path=None):
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
 
     if not os.getenv("RAFCON_START_MINIMIZED", False):
-        main_window = main_window_view.get_top_widget()
+        main_window = main_window_view.get_parent_widget()
         size = global_runtime_config.get_config_value("WINDOW_SIZE", None)
         position = global_runtime_config.get_config_value("WINDOW_POS", None)
         if size:

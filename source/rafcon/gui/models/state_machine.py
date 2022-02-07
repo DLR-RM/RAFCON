@@ -18,9 +18,9 @@ import os
 import threading
 from copy import copy, deepcopy
 
-from gtkmvc3.model_mt import ModelMT
-from gtkmvc3.observable import Signal
-from gtkmvc3.observer import Observer
+from rafcon.design_patterns.mvc.model import ModelMT
+from rafcon.design_patterns.observer.observable import Signal
+from rafcon.design_patterns.observer.observer import Observer
 
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.container_state import ContainerState
@@ -33,7 +33,7 @@ from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.utils.notification_overview import NotificationOverview
 import rafcon.gui.utils.constants
-from rafcon.utils import log, constants
+from rafcon.utils import log
 from rafcon.utils import storage_utils
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
@@ -328,9 +328,9 @@ class StateMachineModel(MetaModel, Hashable):
         cause = 'root_state_change'
         try:
             if 'before' in info:
-                self.state_machine._notify_method_before(self.state_machine, cause, (self.state_machine, ), info)
+                self.state_machine.notify_before(self.state_machine, cause, (self.state_machine, ), info)
             elif 'after' in info:
-                self.state_machine._notify_method_after(self.state_machine, cause, None, (self.state_machine, ), info)
+                self.state_machine.notify_after(self.state_machine, cause, None, (self.state_machine, ), info)
         except AssertionError as e:
             # This fixes an AssertionError raised by GTKMVC. It can probably occur, when a controller unregisters
             # itself from a model, while the notification chain still propagates upwards.

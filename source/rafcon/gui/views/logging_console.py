@@ -14,7 +14,7 @@
 
 from future.utils import string_types
 
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 from gi.repository import Gtk
 from gi.repository import GLib
 
@@ -28,7 +28,7 @@ logger = log.get_logger(__name__)
 class LoggingConsoleView(View):
 
     def __init__(self):
-        View.__init__(self)
+        super().__init__(parent='scrollable')
 
         self.text_view = Gtk.TextView()
         self.text_view.set_property('editable', False)
@@ -53,7 +53,6 @@ class LoggingConsoleView(View):
         self.text_view.show()
 
         self['scrollable'] = scrollable
-        self.top = 'scrollable'
         self.quit_flag = False
 
         self.logging_priority = global_gui_config.get_config_value("LOGGING_CONSOLE_GTK_PRIORITY", GLib.PRIORITY_LOW)

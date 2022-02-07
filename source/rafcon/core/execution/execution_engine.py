@@ -20,12 +20,11 @@
 """
 import copy
 import threading
-import time
 import queue
-from threading import Lock, RLock
-import sys
+from threading import Lock
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.singleton import Singleton
+from rafcon.design_patterns.observer.observable import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.config import global_config
@@ -35,6 +34,7 @@ from rafcon.utils import plugins
 logger = log.get_logger(__name__)
 
 
+@Singleton
 class ExecutionEngine(Observable):
     """A class that cares for the execution of the state machine
 

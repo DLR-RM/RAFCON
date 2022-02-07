@@ -13,9 +13,9 @@
 import os.path
 from copy import copy, deepcopy
 from weakref import ref
-from gtkmvc3.model_mt import ModelMT
-from gtkmvc3.observable import Signal
-import gtkmvc3.support.wrappers as wrappers
+from rafcon.design_patterns.mvc.model import ModelMT
+from rafcon.design_patterns.observer.observable import Signal
+import rafcon.design_patterns.observer.wrappers as wrappers
 
 from rafcon.gui.models.signals import MetaSignalMsg, Notification
 from rafcon.gui.models.meta import MetaModel
@@ -126,15 +126,13 @@ class AbstractStateModel(MetaModel, Hashable):
         if self.meta != other.meta:
             return False
         for attr in self.state.state_element_attrs:
-            # some state element attributes are wrapped in a wrappers.ObsWrapperBase class, some of which are held in
-            # lists or dicts. Those need to be compared element-wise.
             my_attr = getattr(self, attr)
             other_attr = getattr(other, attr)
-            if isinstance(my_attr, wrappers.ObsSeqWrapper):
-                if isinstance(my_attr, wrappers.ObsListWrapper):  # elements are stored in a list
+            if isinstance(my_attr, wrappers.IterableWrapper):
+                if isinstance(my_attr, wrappers.ListWrapper):
                     elements = my_attr
                     other_elements = other_attr
-                elif isinstance(my_attr, wrappers.ObsMapWrapper):  # elements are stored in a dict
+                elif isinstance(my_attr, wrappers.DictWrapper):
                     elements = my_attr.items()
                     other_elements = other_attr.items()
                 else:

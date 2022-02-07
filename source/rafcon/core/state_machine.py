@@ -25,9 +25,8 @@
 from contextlib import contextmanager
 from copy import copy
 from threading import RLock
-from datetime import datetime
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 from jsonconversion.jsonobject import JSONObject
 
 import rafcon
@@ -36,7 +35,6 @@ from rafcon.core.id_generator import generate_state_machine_id, run_id_generator
 from rafcon.utils import log
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.storage_utils import get_current_time_string
-import time
 
 from rafcon.core.config import global_config
 

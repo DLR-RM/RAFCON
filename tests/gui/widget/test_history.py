@@ -935,7 +935,7 @@ def _test_multiple_undo_redo_bug_with_gui(gui):
     main_window_controller = rafcon.gui.singleton.main_window_controller
     sm_id = sm_m.state_machine.state_machine_id
     state_machines_editor_ctrl = main_window_controller.state_machines_editor_ctrl
-    gui(state_machines_editor_ctrl.get_controller(sm_id).view.get_top_widget().grab_focus)
+    gui(state_machines_editor_ctrl.get_controller(sm_id).view.get_parent_widget().grab_focus)
     gui(state_machines_editor_ctrl.get_controller(sm_id).view.editor.grab_focus)
     def trigger_action_repeated(action_name, number):
         for _ in range(number):

@@ -22,7 +22,8 @@ import shutil
 import copy
 import warnings
 from collections import OrderedDict
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.singleton import Singleton
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core import interface
 from rafcon.core.storage import storage
@@ -33,6 +34,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
+@Singleton
 class LibraryManager(Observable):
     """This class manages all libraries
 

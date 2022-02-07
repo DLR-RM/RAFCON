@@ -127,7 +127,7 @@ class MyCanvas(gaphas.canvas.Canvas):
         from threading import Event
         event = Event()
 
-        # Handle all events from gaphas, but not from gtkmvc3
+        # Handle all events from gaphas, but not from rafcon.design_patterns.observer
         # Make use of the priority, which is higher for gaphas then for gtkmvc3
         def priority_handled(event):
             event.set()

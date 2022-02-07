@@ -19,7 +19,8 @@
 
 """
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.singleton import Singleton
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.state_machine import StateMachine
 
@@ -27,6 +28,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
+@Singleton
 class StateMachineManager(Observable):
     """A class to organize all main components of a state machine
 
@@ -111,7 +113,6 @@ class StateMachineManager(Observable):
 
         :param state_machine_id: the id of the state machine to be removed
         """
-        import rafcon.core.singleton as core_singletons
         removed_state_machine = None
         if state_machine_id in self._state_machines:
             logger.debug("Remove state machine with id {0}".format(state_machine_id))

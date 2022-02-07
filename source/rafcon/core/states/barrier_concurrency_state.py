@@ -19,7 +19,7 @@
 
 """
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.custom_exceptions import RecoveryModeException
 from rafcon.core.state_elements.logical_port import Outcome

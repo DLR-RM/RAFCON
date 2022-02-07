@@ -155,11 +155,11 @@ def test_window_positions(gui):
         gui(window.disconnect, hide_handler_id)
 
     print("=> test left_bar_window")
-    test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR")
+    test_bar(main_window_controller.view.left_bar_window.get_parent_widget(), "LEFT_BAR")
     print("=> test right_bar_window")
-    test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
+    test_bar(main_window_controller.view.right_bar_window.get_parent_widget(), "RIGHT_BAR")
     print("=> test console_window")
-    test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
+    test_bar(main_window_controller.view.console_window.get_parent_widget(), "CONSOLE")
     gui(wait_for_gui)
 
 
@@ -220,7 +220,7 @@ def test_pane_positions(gui):
     # Info: un- and redocking the left bar will change the right bar position;
     # thus, the equality check has to be done directly after un- and redocking the right bar
     print("=> test right_bar_window")
-    test_bar(main_window_controller.view.right_bar_window.get_top_widget(), "RIGHT_BAR")
+    test_bar(main_window_controller.view.right_bar_window.get_parent_widget(), "RIGHT_BAR")
     gui(wait_for_gui)
     config_id = 'RIGHT_BAR_DOCKED_POS'
     pane_id = constants.PANE_ID['RIGHT_BAR_DOCKED_POS']
@@ -228,7 +228,7 @@ def test_pane_positions(gui):
     assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 10)
 
     print("=> test console_window")
-    test_bar(main_window_controller.view.console_window.get_top_widget(), "CONSOLE")
+    test_bar(main_window_controller.view.console_window.get_parent_widget(), "CONSOLE")
     gui(wait_for_gui)
     config_id = 'CONSOLE_DOCKED_POS'
     pane_id = constants.PANE_ID['CONSOLE_DOCKED_POS']
@@ -236,7 +236,7 @@ def test_pane_positions(gui):
     assert_pos_equality(main_window_controller.view[pane_id].get_position(), stored_pane_positions[config_id], 10)
 
     print("=> test left_bar_window")
-    test_bar(main_window_controller.view.left_bar_window.get_top_widget(), "LEFT_BAR")
+    test_bar(main_window_controller.view.left_bar_window.get_parent_widget(), "LEFT_BAR")
     gui(wait_for_gui)
     config_id = 'LEFT_BAR_DOCKED_POS'
     pane_id = constants.PANE_ID['LEFT_BAR_DOCKED_POS']

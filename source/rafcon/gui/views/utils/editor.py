@@ -13,7 +13,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.config import global_gui_config
@@ -32,7 +32,7 @@ except ImportError:
 class EditorView(View):
 
     def __init__(self, name='SOURCE EDITOR', language='idl', editor_style="SOURCE_EDITOR_STYLE", run_with_spacer=False):
-        View.__init__(self)
+        super().__init__(parent='editor_frame')
 
         self.run_with_spacer = run_with_spacer
 
@@ -100,7 +100,6 @@ class EditorView(View):
             vbox.pack_start(editor_frame, expand=True, fill=True, padding=0)
 
         self['editor_frame'] = vbox
-        self.top = 'editor_frame'
 
     def new_buffer(self):
         style_scheme_manager = GtkSource.StyleSchemeManager()

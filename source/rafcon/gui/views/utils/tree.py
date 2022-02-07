@@ -12,18 +12,15 @@
 from gi.repository import Gtk
 from gi.repository import Pango
 
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
 
 class TreeView(View):
-    builder = None
-    top = None
-
-    def __init__(self):
-        super(TreeView, self).__init__()
+    def __init__(self, builder=None, parent=None):
+        super().__init__(builder, parent)
         self.scrollbar_widget = None
 
-        for column in self.get_top_widget().get_columns():
+        for column in self.get_parent_widget().get_columns():
             self.make_column_title_elllipsable(column)
 
     @staticmethod

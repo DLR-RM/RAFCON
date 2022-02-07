@@ -13,7 +13,7 @@
 
 from contextlib import contextmanager
 from weakref import ref
-from gtkmvc3.observer import Observer
+from rafcon.design_patterns.observer.observer import Observer
 
 from gaphas.view import GtkView
 from gaphas.item import Element
@@ -42,13 +42,7 @@ class ExtendedGtkView(GtkView, Observer):
         """Get rid of circular references"""
         self.relieve_model(self._selection)
         self._selection = None
-        # clear observer class attributes, also see ExtendenController.destroy()
-        self._Observer__PROP_TO_METHS.clear()
-        self._Observer__METH_TO_PROPS.clear()
-        self._Observer__PAT_TO_METHS.clear()
-        self._Observer__METH_TO_PAT.clear()
-        self._Observer__PAT_METH_TO_KWARGS.clear()
-
+        self.observable_to_methods.clear()
 
     @property
     def graphical_editor(self):

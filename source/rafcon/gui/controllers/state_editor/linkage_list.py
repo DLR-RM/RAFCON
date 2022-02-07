@@ -143,7 +143,6 @@ class LinkageListController(ListViewController):
                 self.relieve_model(model)
             self.register_models_to_observe()
 
-        # TODO think about to remove this -> this a work around for the recreate state-editor assert __observer_threads
         if msg.action in ['change_state_type', 'change_root_state_type'] and not msg.after:
             self.relieve_all_models()
 

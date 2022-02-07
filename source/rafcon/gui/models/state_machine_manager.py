@@ -13,19 +13,17 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 import os
 
-from gtkmvc3.model_mt import ModelMT
-
+from rafcon.design_patterns.singleton import Singleton
+from rafcon.design_patterns.mvc.model import ModelMT
 from rafcon.core.state_machine_manager import StateMachineManager
-
 from rafcon.gui.models.state_machine import StateMachineModel
-
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
-from rafcon.utils.timer import measure_time
 
 logger = log.get_logger(__name__)
 
 
+@Singleton
 class StateMachineManagerModel(ModelMT):
     """This model class manages a StateMachineManager
 

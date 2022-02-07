@@ -16,10 +16,9 @@
 
 """
 from enum import Enum
-import sys
 from threading import Condition
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

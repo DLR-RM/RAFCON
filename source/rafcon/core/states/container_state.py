@@ -24,7 +24,7 @@ from copy import copy, deepcopy
 from threading import Condition
 from collections import OrderedDict
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.custom_exceptions import RecoveryModeException
 from rafcon.core.decorators import lock_state_machine
@@ -34,7 +34,7 @@ from rafcon.core.singleton import state_machine_execution_engine
 from rafcon.core.state_elements.data_flow import DataFlow
 from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.state_elements.scope import ScopedData, ScopedVariable
-from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
+from rafcon.core.state_elements.data_port import OutputDataPort
 from rafcon.core.state_elements.state_element import StateElement
 from rafcon.core.state_elements.transition import Transition
 from rafcon.core.states.library_state import LibraryState

@@ -13,8 +13,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc3.model_mt import ModelMT
-from gtkmvc3.observable import Signal
+from rafcon.design_patterns.mvc.model import ModelMT
+from rafcon.design_patterns.observer.observable import Signal
 
 from rafcon.core.states.state import State
 from rafcon.core.state_elements.logical_port import Income, Outcome

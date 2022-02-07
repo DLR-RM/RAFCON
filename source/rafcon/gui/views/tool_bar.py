@@ -13,7 +13,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.helpers.label import create_label_widget_with_icon
@@ -21,11 +21,8 @@ from rafcon.gui.utils import constants
 
 
 class ToolBarView(View):
-    builder = glade.get_glade_path("tool_bar.glade")
-    top = 'toolbar'
-
     def __init__(self):
-        View.__init__(self)
+        super().__init__(builder=glade.get_glade_path('tool_bar.glade'), parent='toolbar')
 
         button_new = self['button_new']
         button_new.set_label_widget(create_label_widget_with_icon(constants.BUTTON_NEW, _("New state machine")))
@@ -54,4 +51,3 @@ class ToolBarView(View):
             create_label_widget_with_icon(
                 constants.BUTTON_BAKE, _("Bake State Machine"),
                 "Saves the currently selected state machine and all library folders it refers to"))
-        # self.get_top_widget().set_border_width(constants.BORDER_WIDTH)

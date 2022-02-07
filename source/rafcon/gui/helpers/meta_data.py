@@ -409,7 +409,6 @@ def scale_library_content(library_state_m, gaphas_editor=True):
         if state_element_key == "income":
             continue
         state_element_list = getattr(library_state_m.state_copy, state_element_key)
-        # Some models are hold in a gtkmvc3.support.wrappers.ObsListWrapper, not a list
         if hasattr(state_element_list, 'keys'):
             state_element_list = state_element_list.values()
         models_dict[state_element_key] = {elem.core_element.core_element_id: elem for elem in state_element_list}

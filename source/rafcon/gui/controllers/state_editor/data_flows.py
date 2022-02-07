@@ -80,7 +80,7 @@ class StateDataFlowsListController(LinkageListController):
         self.data_flow_dict = {'internal': {},
                                'external': {}}
         self.debug_log = False
-        super(StateDataFlowsListController, self).__init__(model, view, view.get_top_widget(), list_store, logger)
+        super(StateDataFlowsListController, self).__init__(model, view, view.get_parent_widget(), list_store, logger)
 
     def destroy(self):
         self.view['from_state_col'].set_cell_data_func(self.view['from_state_combo'], None)
