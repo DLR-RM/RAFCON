@@ -27,11 +27,6 @@ def test_run_this_state(caplog):
     # rafcon.core.singleton.state_machine_manager.active_state_machine_id = state_machine.state_machine_id
     # Run only selected state machine
     state_machine_execution_engine.run_only_selected_state("BSSKWR/YEKRMH/TZILCN", sm.state_machine_id)
-    timeout = time.time()
-    while not sm.get_state_by_path("BSSKWR/YEKRMH/TZILCN").state_execution_status is StateExecutionStatus.STOPPED:
-        time.sleep(.05)
-        if time.time()-timeout > 2:
-            raise RuntimeError("execution_state TZILCN didn't run --> timeout")
     rafcon.core.singleton.global_variable_manager.set_variable("test_value_concurrency", 2)
     # Test running a state inside a concurrency state
     state_machine_execution_engine.run_only_selected_state("BSSKWR/IQURCQ/LLRMSU/VYGYRO", sm.state_machine_id)
