@@ -146,6 +146,14 @@ class StateMachineManager(Observable):
         else:
             return None
 
+    def get_state_machine(self, state_machine_id):
+        """Return a reference to the state machine with the given id if it exists
+        """
+        if state_machine_id in self._state_machines.keys():
+            return self._state_machines[state_machine_id]
+        else:
+            return None
+
     def get_open_state_machine_of_file_system_path(self, file_system_path):
         """Return a reference to the state machine with respective path if open
         """
