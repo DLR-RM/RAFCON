@@ -51,11 +51,18 @@ def get_repository_share_path():
 
     If started from repository, the path to the share folder within the repository is returned, otherwise, `None`.
     """
+    # If Rafcon is installed by setup.py, the share directory is 1 level down, otherwise, 2 levels down
     try:
         import rafcon
+        # Search for the "share" directory 2 levels down
+        # Source Code Example: rafcon/share
+        # rafcon/../../share
         share_path = join(dirname(dirname(dirname(abspath(rafcon.__file__)))), "share")
         if os.path.isdir(share_path):
             return share_path
+        # If not found, search for the "share" directory 1 level down
+        # Pip Example: ~/.local/lib/python3.6/site-packages/rafcon-1.0.0-py3.6.egg/share
+        # rafcon/../share
         share_path = join(dirname(dirname(abspath(rafcon.__file__))), "share")
         if os.path.isdir(share_path):
             return share_path
