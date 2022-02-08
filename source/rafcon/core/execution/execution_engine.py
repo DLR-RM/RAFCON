@@ -328,8 +328,17 @@ class ExecutionEngine(Observable):
                     cur_path = cur_path + "/" + path
                 self.start_state_paths.append(cur_path)
 
+        target_state_machine = self.state_machine_manager.state_machines[state_machine_id]
+        target_state = target_state_machine.get_state_by_path(start_state_path)
+        
+        # in the case a direct child state of a concurrency state is selected:
+        # => run the whole concurrency state
+        from rafcon.core.states.concurrency_state import ConcurrencyState
+        if isinstance(target_state.parent, ConcurrencyState):
+            target_state = target_state.parent
+
         # set target states when execution should stop
-        self.run_to_states.append(start_state_path)
+        self.run_to_states.append(target_state.get_path())
 
         if self.finished_or_stopped():
             self.set_execution_mode(StateMachineExecutionStatus.RUN_SELECTED_STATE)
@@ -363,28 +372,19 @@ class ExecutionEngine(Observable):
         #    a) a step_over
         #    b) a step_out
         #    c) a run_until
+        #    c) a run-selected-state
         for state_path in copy.deepcopy(self.run_to_states):
             next_child_state_path = None
             # can be None in case of no transition given
             if next_child_state_to_execute:
                 next_child_state_path = next_child_state_to_execute.get_path()
             if state_path == container_state.get_path():
-                if self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE:
-                    # This is the very special case of having selected a direct hierarchy-child-state
-                    # of a concurrency state as the state for the "run-selected-state" operation
-                    # this basically means that we want to run the whole concurreny state
-                    self._status.execution_mode = StateMachineExecutionStatus.FORWARD_OUT
-                    self.run_to_states.remove(state_path)
-                    # the new target state, when the execution should pause, is the parent of the concurrency state
-                    self.run_to_states.append(container_state.parent.parent.get_path())
-                    wait = False
-                else:
-                    # the execution did a whole step_over inside hierarchy state "state" (case a) )
-                    # or a whole step_out into the hierarchy state "state" (case b) )
-                    # thus we delete its state path from self.run_to_states
-                    # and wait for another step (of maybe different kind)
-                    wait = True
-                    self.run_to_states.remove(state_path)
+                # the execution did a whole step_over inside hierarchy state "state" (case a) )
+                # or a whole step_out into the hierarchy state "state" (case b) )
+                # thus we delete its state path from self.run_to_states
+                # and wait for another step (of maybe different kind)
+                wait = True
+                self.run_to_states.remove(state_path)
                 break
             elif state_path == next_child_state_path:
                 # this is the case that execution has reached a specific state explicitly marked via
