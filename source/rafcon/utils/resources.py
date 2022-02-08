@@ -56,6 +56,9 @@ def get_repository_share_path():
         share_path = join(dirname(dirname(dirname(abspath(rafcon.__file__)))), "share")
         if os.path.isdir(share_path):
             return share_path
+        share_path = join(dirname(dirname(abspath(rafcon.__file__))), "share")
+        if os.path.isdir(share_path):
+            return share_path
         return None
     except ImportError:
         return None
