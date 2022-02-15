@@ -26,12 +26,11 @@ def test_only_run_this_state(caplog):
     # Run only selected state machine
     rafcon.core.singleton.global_variable_manager.set_variable("test_value", 0)
     state_machine_execution_engine.run_only_selected_state("BSSKWR/YEKRMH/TZILCN", sm.state_machine_id)
+    time.sleep(2)
     # Test running a state inside a concurrency state
     rafcon.core.singleton.global_variable_manager.set_variable("test_value_concurrency", 2)
     state_machine_execution_engine.run_only_selected_state("BSSKWR/IQURCQ/LLRMSU/VYGYRO", sm.state_machine_id)
-
-    test_value = rafcon.core.singleton.global_variable_manager.get_variable("test_value")
-    test_value_concurrency = rafcon.core.singleton.global_variable_manager.get_variable("test_value_concurrency")
+    time.sleep(2)
 
     # assert variable state
     try:
