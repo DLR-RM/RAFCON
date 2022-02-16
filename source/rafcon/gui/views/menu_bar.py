@@ -24,9 +24,6 @@ from rafcon.gui.utils import constants
 
 
 class MenuBarView(View):
-    builder = glade.get_glade_path("menu_bar.glade")
-    top = 'menubar'
-
     buttons = {
         # -----------------------------------------------
         # File
@@ -85,12 +82,12 @@ class MenuBarView(View):
         # Help
         # -----------------------------------------------
         'about':                constants.BUTTON_ABOUT
-        }
+    }
 
     sub_menus = ['submenu_file', 'submenu_edit', 'submenu_view', 'submenu_execution', 'submenu_help']
 
     def __init__(self):
-        View.__init__(self)
+        super().__init__(builder_filename=glade.get_glade_path('menu_bar.glade'), parent='menubar')
 
         self.insert_accelerators = {'new': Gtk.accelerator_parse('<control>N'),
                                     'open': Gtk.accelerator_parse('<control>O'),

@@ -28,7 +28,6 @@ from functools import partial
 
 from rafcon.core.states.library_state import LibraryState
 from rafcon.core.storage import storage
-from rafcon.core.custom_exceptions import LibraryNotFoundException
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -38,6 +37,7 @@ from rafcon.gui.helpers.text_formatting import format_folder_name_human_readable
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.utils import constants
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONInputDialog
+from rafcon.gui.interface import open_folder
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -57,14 +57,17 @@ class LibraryTreeController(ExtendedController):
         assert isinstance(view, Gtk.TreeView)
         ExtendedController.__init__(self, model, view)
         self.tree_store = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_PYOBJECT, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING)
+        self.filter = self.tree_store.filter_new()
+        self.filter_value = ''
+        self.find_usages = find_usages
 
         if find_usages:
-            self.library_usages_filter = self.tree_store.filter_new()
-            self.library_usages_filter.set_visible_func(self._library_usages_filter)
-            self.library_usages_value = ''
-            view.set_model(self.library_usages_filter)
+            self.filter.set_visible_func(self._library_usages_filter)
+            self.usages = None
         else:
-            view.set_model(self.tree_store)
+            self.filter.set_visible_func(self._search_filter)
+
+        view.set_model(self.filter)
         view.set_tooltip_column(3)
 
         # Gtk TODO: solve via Gtk.TargetList? https://python-gtk-3-tutorial.readthedocs.io/en/latest/drag_and_drop.html
@@ -94,9 +97,11 @@ class LibraryTreeController(ExtendedController):
             menu.append(create_menu_item("Open and run", constants.BUTTON_START, self.open_run_button_clicked))
             menu.append(Gtk.SeparatorMenuItem())
             menu.append(create_menu_item("Rename library", constants.BUTTON_RENAME,
-                                         self.menu_item_rename_libraries_clicked))
+                                         self.menu_item_rename_libraries_or_root_clicked))
             menu.append(create_menu_item("Remove library", constants.BUTTON_DEL,
                                          self.menu_item_remove_libraries_or_root_clicked))
+            menu.append(create_menu_item("Relocate library", constants.BUTTON_RELOCATE,
+                                         self.menu_item_relocate_libraries_or_root_clicked))
 
             sub_menu_item, sub_menu = append_sub_menu_to_parent_menu("Substitute as library", menu,
                                                                      constants.BUTTON_REFR)
@@ -121,11 +126,17 @@ class LibraryTreeController(ExtendedController):
             menu.append(create_menu_item("Add library root", constants.BUTTON_NEW,
                                          self.menu_item_add_library_root_clicked))
             if kind == 'library root':
+                menu.append(create_menu_item("Rename library root", constants.BUTTON_RENAME,
+                                             self.menu_item_rename_libraries_or_root_clicked))
                 menu.append(create_menu_item("Remove library root", constants.BUTTON_DEL,
                                              self.menu_item_remove_libraries_or_root_clicked))
+                menu.append(create_menu_item("Relocate library root", constants.BUTTON_RELOCATE,
+                                             self.menu_item_relocate_libraries_or_root_clicked))
         elif kind == 'libraries':
             menu.append(create_menu_item("Remove libraries", constants.BUTTON_DEL,
                                          self.menu_item_remove_libraries_or_root_clicked))
+            menu.append(create_menu_item("Relocate libraries", constants.BUTTON_RELOCATE,
+                                         self.menu_item_relocate_libraries_or_root_clicked))
 
         return menu
 
@@ -143,12 +154,17 @@ class LibraryTreeController(ExtendedController):
                 return False
             self.open_button_clicked(None)
 
-            state_machine_model = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
-            selected_states = []
-            for state in state_machine_model.root_state.states.values():
-                if hasattr(state.state, 'lib_os_path') and state.state.lib_os_path == self.library_usages_value:
-                    selected_states.append(state)
-            state_machine_model.selection.set(selected_states)
+            if self.find_usages:
+                state_machine_model = gui_singletons.state_machine_manager_model.get_selected_state_machine_model()
+                selected_states = []
+                queue = [state_machine_model.root_state]
+                while len(queue) > 0:
+                    state = queue.pop(0)
+                    if hasattr(state.state, 'lib_os_path') and state.state.library_path == self.filter_value[0] and state.state.library_name == self.filter_value[1]:
+                        selected_states.append(state)
+                    elif hasattr(state, 'states'):
+                        queue.extend(state.states.values())
+                state_machine_model.selection.set(selected_states)
 
             return True
 
@@ -299,7 +315,10 @@ class LibraryTreeController(ExtendedController):
         if state_row_path is not None:
             self.view.expand_to_path(state_row_path)
         self.view.scroll_to_cell(state_row_path, None)
-        self.view.get_selection().select_iter(library_state_row_iter)
+        # Important: do not use select_iter() here!
+        # The iters of the view (whose model is the TreeModelFilter) won't match
+        # the iters stored in library_row_iter_dict_by_library_path as those directly point to the TreeModel
+        self.view.get_selection().select_path(state_row_path)
         self.view.grab_focus()
 
     def select_library_tree_element_of_library_state_model(self, state_m):
@@ -357,9 +376,10 @@ class LibraryTreeController(ExtendedController):
         global_config.save_configuration()
         self.model.library_manager.refresh_libraries()
 
-    def menu_item_rename_libraries_clicked(self, menu_item):
+    def menu_item_rename_libraries_or_root_clicked(self, menu_item):
         """Rename library after request second confirmation"""
 
+        import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         menu_item_text = self.get_menu_item_text(menu_item)
         logger.info("Rename item '{0}' pressed.".format(menu_item_text))
         model, path = self.view.get_selection().get_selected()
@@ -367,11 +387,15 @@ class LibraryTreeController(ExtendedController):
             tree_m_row = self.filter[path]
             library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
             library_file_system_path = library_os_path
-            button_texts = [menu_item_text, "Cancel"]
-            partial_message = "This folder will be renamed on the hard drive! Do you really want to do that?"
+            if "root" in menu_item_text:
+                button_texts = [menu_item_text + "from tree and config", "Cancel"]
+                partial_message = "This will remove the library root from your configuration (config.yaml)."
+            else:
+                button_texts = [menu_item_text, "Cancel"]
+                partial_message = "This folder will be renamed on the hard drive! Do you really want to do that?"
             message_string = "You have chosen to {2} with " \
                              "\n\nlibrary tree path:   {0}" \
-                             "\n\nphysical path:        {1}\n\n\n"\
+                             "\n\nphysical path:        {1}\n\n\n" \
                              "{3}" \
                              "".format(os.path.join(self.convert_if_human_readable(tree_m_row[self.LIB_PATH_STORAGE_ID]), item_key),
                                        library_file_system_path,
@@ -383,24 +407,17 @@ class LibraryTreeController(ExtendedController):
                                        message_type=Gtk.MessageType.QUESTION,
                                        parent=self.get_root_window(),
                                        width=min(width, 1400))
-            dialog.set_entry_text(library_name)
+            dialog.set_entry_text(item_key)
             response_id = dialog.run()
-            new_library_name = dialog.get_entry_text()
+            new_name = dialog.get_entry_text()
             dialog.destroy()
             parent_library_os_path = os.path.abspath(os.path.join(library_os_path, os.pardir))
-            new_library_os_path = os.path.join(parent_library_os_path, new_library_name)
+            new_library_os_path = os.path.join(parent_library_os_path, new_name)
             if response_id == 1:
-                if not new_library_name:
-                    logger.error("The given library name is invalid")
-                    return False
-                elif library_path in self.model.library_manager.libraries:
-                    for state_machine_os_path in self.model.library_manager.libraries[library_path].values():
-                        if state_machine_os_path == new_library_os_path:
-                            logger.error("The library '{0}' already exists".format(new_library_name))
-                            return False
-                # del self.library_row_iter_dict_by_library_path[os.path.join(library_path, library_name)]
-                import rafcon.gui.helpers.state_machine as gui_helper_state_machine
-                gui_helper_state_machine.rename_state_machine(library_os_path, new_library_os_path, new_library_name)
+                if "root" in menu_item_text:
+                    gui_helper_state_machine.rename_library_root(tree_m_row[self.LIB_KEY_STORAGE_ID], new_name, logger)
+                else:
+                    gui_helper_state_machine.rename_library(library_os_path, new_library_os_path, library_path, library_name, new_name, logger)
             return True
         return False
 
@@ -413,7 +430,7 @@ class LibraryTreeController(ExtendedController):
         model, path = self.view.get_selection().get_selected()
         if path:
             # Second confirmation to delete library
-            tree_m_row = self.tree_store[path]
+            tree_m_row = self.filter[path]
             library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
             # assert isinstance(tree_m_row[self.ITEM_STORAGE_ID], str)
             library_file_system_path = library_os_path
@@ -427,7 +444,7 @@ class LibraryTreeController(ExtendedController):
 
             message_string = "You have chosen to {2} with " \
                              "\n\nlibrary tree path:   {0}" \
-                             "\n\nphysical path:        {1}\n\n\n"\
+                             "\n\nphysical path:        {1}\n\n\n" \
                              "{3}" \
                              "".format(os.path.join(self.convert_if_human_readable(tree_m_row[self.LIB_PATH_STORAGE_ID]),
                                                     item_key),
@@ -466,10 +483,37 @@ class LibraryTreeController(ExtendedController):
             return True
         return False
 
-    def menu_item_find_usages_clicked(self, widget):
+    def menu_item_relocate_libraries_or_root_clicked(self, menu_item):
+        """Relocate library after request second confirmation"""
+
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+        menu_item_text = self.get_menu_item_text(menu_item)
+        model, path = self.view.get_selection().get_selected()
+        if path:
+            tree_m_row = self.filter[path]
+            library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
+            new_directory = open_folder('Select the new directory')
+            if new_directory:
+                if 'root' in menu_item_text:
+                    gui_helper_state_machine.relocate_library_root(tree_m_row[self.LIB_KEY_STORAGE_ID], new_directory, logger)
+                elif 'libraries' in menu_item_text:
+                    gui_helper_state_machine.relocate_libraries(library_os_path.replace('[source]:\n', ''), item_key, new_directory, logger)
+                else:
+                    gui_helper_state_machine.relocate_library(library_os_path, library_path, library_name, new_directory, logger)
+            return True
+        return False
+
+    def menu_item_find_usages_clicked(self, widget):
         library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
-        gui_helper_state_machine.find_usages(library_os_path)
+        library_usages_controller = gui_singletons.main_window_controller.get_controller('library_usages_controller')
+        library_usages_controller.filter_value = [library_path, library_name]
+        usages = []
+        for root in library_usages_controller.model.library_manager.library_root_paths.values():
+            usages.extend(storage.find_library_dependencies_via_grep(root, library_usages_controller.filter_value[0], library_usages_controller.filter_value[1]))
+        library_usages_controller.usages = usages
+        library_usages_controller.filter.refilter()
+        library_usages_controller.view.expand_all()
+        gui_singletons.main_window_controller.upper_notebook.set_current_page(3)
 
     def substitute_as_library_clicked(self, widget, keep_name=True):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
@@ -514,24 +558,30 @@ class LibraryTreeController(ExtendedController):
         library_name = library_os_path.split(os.path.sep)[-1]
         return LibraryState(library_path, library_name, "0.1", format_folder_name_human_readable(library_name))
 
-    def _is_library_used(self, library_path, state_machine_path):
-        self.model.library_manager.show_dialog = False
-        try:
-            state_machine = storage.load_state_machine_from_path(state_machine_path)
-            if state_machine is not None and hasattr(state_machine.root_state, 'states'):
-                for library in state_machine.root_state.states.values():
-                    if hasattr(library, 'lib_os_path') and library.lib_os_path == library_path:
-                        return True
-        except LibraryNotFoundException:
-            return False
-        finally:
-            self.model.library_manager.show_dialog = True
+    def _search_filter(self, model, iter, data):
+        if not self.filter_value or self.filter_value in model.get_value(iter, self.ID_STORAGE_ID).lower():
+            return True
+        else:
+            parent_iter = model.iter_parent(iter)
+            while parent_iter is not None:
+                if self.filter_value in model.get_value(parent_iter, self.ID_STORAGE_ID).lower():
+                    return True
+                parent_iter = model.iter_parent(parent_iter)
+            queue = [iter]
+            while len(queue) > 0:
+                node_iter = queue.pop(0)
+                if model.iter_has_child(node_iter):
+                    for i in range(model.iter_n_children(node_iter)):
+                        queue.append(model.iter_nth_child(node_iter, i))
+                if self.filter_value in model.get_value(node_iter, self.ID_STORAGE_ID).lower():
+                    self.view.expand_all()
+                    return True
         return False
 
     def _library_usages_filter(self, model, iter, data):
-        if self.library_usages_value and self.library_usages_value != model.get_value(iter, self.ITEM_STORAGE_ID):
+        if self.filter_value:
             if not model.iter_has_child(iter):
-                return self._is_library_used(self.library_usages_value, model.get_value(iter, self.ITEM_STORAGE_ID))
+                return model.get_value(iter, self.ITEM_STORAGE_ID) in self.usages
             else:
                 queue = [iter]
                 while len(queue) > 0:
@@ -540,7 +590,6 @@ class LibraryTreeController(ExtendedController):
                         for i in range(model.iter_n_children(node_iter)):
                             queue.append(model.iter_nth_child(node_iter, i))
                     else:
-                        node = model.get_value(node_iter, self.ITEM_STORAGE_ID)
-                        if self.library_usages_value != node and self._is_library_used(self.library_usages_value, node):
+                        if model.get_value(node_iter, self.ITEM_STORAGE_ID) in self.usages:
                             return True
         return False

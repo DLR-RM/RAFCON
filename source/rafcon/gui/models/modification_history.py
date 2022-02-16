@@ -27,8 +27,8 @@ import copy
 
 from gi.repository import GLib
 
-from gtkmvc3.model_mt import ModelMT
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.mvc.model import ModelMT
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.gui.action import ActionDummy, Action, StateMachineAction, StateAction, DataPortAction, \
     ScopedVariableAction, OutcomeAction, TransitionAction, DataFlowAction, AddObjectAction, RemoveObjectAction, \
@@ -252,7 +252,7 @@ class ModificationsHistoryModel(ModelMT):
                     assert cause in ["remove_transition", "remove_data_flow", "remove_income", "remove_outcome",
                                      "remove_input_data_port", "remove_output_data_port", "remove_scoped_variable",
                                      "remove_state"]
-                    if ("transition" in cause or "data_flow" in cause or "scoped_variable" in cause or "state" in cause) or\
+                    if ("transition" in cause or "data_flow" in cause or "scoped_variable" in cause or "state" in cause) or \
                             (("data_port" in cause or "outcome" in cause or "income" in cause) and not isinstance(overview.get_affected_model().state.parent, State)):
                         self.active_action = RemoveObjectAction(parent_path=overview.get_affected_core_element().get_path(),
                                                                 state_machine_model=self.state_machine_model,

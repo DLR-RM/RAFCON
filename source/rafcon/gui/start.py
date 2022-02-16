@@ -30,6 +30,7 @@ from yaml_configuration.config import config_path
 # gui
 import rafcon
 from rafcon.gui.config import global_gui_config
+from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils.splash_screen import SplashScreen
@@ -90,6 +91,8 @@ def setup_installation():
     force_check_installation = os.environ.get("RAFCON_CHECK_INSTALLATION", False) == "True"
     prevent_restart = os.environ.get("RAFCON_CHECK_INSTALLATION", True) == "False"
 
+    # TODO: design: install locally_required + fonts
+
     if not force_check_installation and data_files_version_up_to_date():
         return
 
@@ -99,7 +102,6 @@ def setup_installation():
     installation.install_fonts(restart=(not prevent_restart))
 
     update_data_files_version()
-
 
 
 def setup_gtkmvc3_logger():
@@ -193,6 +195,11 @@ def setup_argument_parser():
                         help=_("path to the configuration file gui_config.yaml. "
                                "Use 'None' to prevent the generation of a config file and use the default "
                                "configuration. Default: {0}").format(default_config_path))
+    parser.add_argument('-d', '--design_config', action='store', type=config_path, metavar='path',
+                        dest='design_config_path', default=None, nargs='?', const=default_config_path,
+                        help=_("path to the configuration file design_config.yaml. "
+                               "Use 'None' to prevent the generation of a config file and use the default "
+                               "configuration. Default: {0}").format(default_config_path))
     parser.add_argument('-r', '--runtime_config', action='store', type=config_path, metavar='path', dest='runtime_config_path',
                         default=default_config_path, nargs='?', const=default_config_path,
                         help=_("path to the configuration file runtime_config.yaml. "
@@ -219,8 +226,30 @@ def setup_argument_parser():
     return parser
 
 
-def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_path):
+def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_path, design_config):
+    """ Loads all configurations from disk
+
+    :param core_config_path: the path to the core configuration file
+    :param gui_config_path:  the path to the gui configuration file
+    :param runtime_config_path:  the path to the runtime configuration file
+    :param design_config:  the path to the design configuration file
+    :return:
+    """
     setup_configuration(core_config_path)
+    # the design config has to be loaded before loading the gui config as it is used by the gui config
+    if design_config:
+        design_config_path, design_config_file = filesystem.separate_folder_path_and_file_name(design_config)
+        global_design_config.load(design_config_file, design_config_path)
+        # the constant has to be overwritten here,
+        # as the singleton was already loaded that hus the wrong INTERFACE_FONT was chosen
+        from rafcon.gui.utils import constants
+        constants.INTERFACE_FONT = global_design_config.get_config_value("PRIMARY_FONT")
+    else:
+        # no design config file specified => check environment variable
+        if os.environ.get('RAFCON_CUSTOM_DESIGN'):
+            design_config = os.environ.get('RAFCON_CUSTOM_DESIGN')
+            design_config_path, design_config_file = filesystem.separate_folder_path_and_file_name(design_config)
+            global_design_config.load(design_config_file, design_config_path)
     gui_config_path, gui_config_file = filesystem.separate_folder_path_and_file_name(gui_config_path)
     global_gui_config.load(gui_config_file, gui_config_path)
     runtime_config_path, runtime_config_file = filesystem.separate_folder_path_and_file_name(runtime_config_path)
@@ -344,6 +373,19 @@ def register_signal_handlers(callback):
         GLib.idle_add(install_glib_handler, signal_code, priority=GLib.PRIORITY_HIGH)
 
 
+def create_splash_screen():
+    if is_custom_design_enabled:
+        splash_screen_width = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_WIDTH")
+        splash_screen_height = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_HEIGHT")
+    else:
+        splash_screen_width = 530
+        splash_screen_height = 350
+    splash_screen = SplashScreen(contains_image=True, width=splash_screen_width, height=splash_screen_height)
+    splash_screen.rotate_image(random_=True)
+    splash_screen.set_text(_("Starting RAFCON..."))
+    return splash_screen
+
+
 def main():
 
     # check if all env variables are set
@@ -354,29 +396,6 @@ def main():
     register_signal_handlers(signal_handler)
 
     setup_l10n(logger)
-
-    if is_custom_design_enabled:
-        splash_screen_width = global_design_config.get_config_value("SPLASHSCREEN_RESOLUTION_WIDTH")
-        splash_screen_height = global_design_config.get_config_value("SPLASHSCREEN_RESOLUTION_HEIGHT")
-    else:
-        splash_screen_width = 530
-        splash_screen_height = 350
-    splash_screen = SplashScreen(contains_image=True, width=splash_screen_width, height=splash_screen_height)
-    splash_screen.rotate_image(random_=True)
-    splash_screen.set_text(_("Starting RAFCON..."))
-    while Gtk.events_pending():
-        Gtk.main_iteration()
-
-    setup_installation()
-
-    splash_screen.set_text("Setting up logger...")
-    setup_gtkmvc3_logger()
-
-    splash_screen.set_text("Initializing plugins...")
-    pre_setup_plugins()
-
-    splash_screen.set_text("Setting up environment...")
-    setup_mvc_environment()
 
     parser = setup_argument_parser()
     user_input = parser.parse_args()
@@ -392,8 +411,24 @@ def main():
         memory_profiling_thread = threading.Thread(target=profiling.memory_profiling, args=(memory_profiling_args,))
         memory_profiling_thread.start()
 
-    splash_screen.set_text("Loading configurations...")
-    setup_mvc_configuration(user_input.config_path, user_input.gui_config_path, user_input.runtime_config_path)
+    setup_mvc_environment()
+    setup_mvc_configuration(user_input.config_path, user_input.gui_config_path,
+                            user_input.gui_config_path, user_input.design_config_path)
+
+    splash_screen = create_splash_screen()
+    while Gtk.events_pending():
+        Gtk.main_iteration()
+
+    splash_screen.set_text("Install missing resources ...")
+    setup_installation()
+
+    splash_screen.set_text("Setting up logger...")
+    setup_gtkmvc3_logger()
+
+    splash_screen.set_text("Initializing plugins...")
+    pre_setup_plugins()
+
+    splash_screen.set_text("Setting up environment...")
 
     # create lock file -> keep behavior for hole instance
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
@@ -404,7 +439,6 @@ def main():
     # loading the state state machine
     splash_screen.set_text("Loading GUI...")
     setup_gui()
-
     wait_for_gui()
 
     post_setup_plugins(user_input)

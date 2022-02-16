@@ -19,16 +19,15 @@ from rafcon.gui.utils import constants
 
 
 class DebugConsoleView(View):
-    builder = glade.get_glade_path("debug_console.glade")
-    top = 'console_container'
-
     def __init__(self):
-        View.__init__(self)
-
+        super().__init__(builder_filename=glade.get_glade_path('debug_console.glade'), parent='console_container')
         self._lock = threading.Lock()
+        ######################################################
+        # Logging text view
+        ######################################################
         self.logging_console_view = LoggingConsoleView()
-        self['console'].pack_start(self.logging_console_view.get_top_widget(), True, True, 0)
-        self.logging_console_view.get_top_widget().show()
+        self['console'].pack_start(self.logging_console_view.get_parent_widget(), True, True, 0)
+        self.logging_console_view.get_parent_widget().show()
         self['button_follow_logging'].set_active(global_gui_config.get_config_value('CONSOLE_FOLLOW_LOGGING', True))
         self['button_show_verbose'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_VERBOSE', True))
         self['button_show_debug'].set_active(global_gui_config.get_config_value('LOGGING_SHOW_DEBUG', True))

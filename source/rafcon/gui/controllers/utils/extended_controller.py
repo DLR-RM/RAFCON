@@ -27,10 +27,10 @@ logger = log.get_logger(__name__)
 
 
 class ExtendedController(Controller):
-    def __init__(self, model, view, spurious=False):
+    def __init__(self, model, view):
         self.__registered_models = set()
         self._view_initialized = False
-        super().__init__(model, view, spurious=spurious)
+        super().__init__(model, view)
         self.__action_registered_controllers = []
         self.__child_controllers = dict()
         self.__shortcut_manager = None
@@ -189,14 +189,9 @@ class ExtendedController(Controller):
         if self.parent:
             self.__parent = None
         if self._view_initialized:
-            self.view.get_top_widget().destroy()
+            self.view.get_parent_widget().destroy()
             self.view = None
-            self._Observer__PROP_TO_METHS.clear()  # prop name --> set of observing methods
-            self._Observer__METH_TO_PROPS.clear()  # method --> set of observed properties
-            self._Observer__PAT_TO_METHS.clear() # like __PROP_TO_METHS but only for pattern names (to optimize search)
-            self._Observer__METH_TO_PAT.clear()  # method --> pattern
-            self._Observer__PAT_METH_TO_KWARGS.clear()  # (pattern, method) --> info
-            self.observe = None
+            self.observable_to_methods.clear()
         else:
             logger.warning("The controller {0} seems to be destroyed before the view was fully initialized. {1} "
                            "Check if you maybe do not call {2} or there exist most likely threading problems."
@@ -234,4 +229,4 @@ class ExtendedController(Controller):
     def get_root_window(self):
         if self.__parent:
             return self.__parent.get_root_window()
-        return self.view.get_top_widget()
+        return self.view.get_parent_widget()
