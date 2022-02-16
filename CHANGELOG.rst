@@ -5,24 +5,12 @@ Information about :ref:`RAFCON` changes in each release will be published here. 
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/develop>`__.
 
 
-Patch releases 0.14.\*
-----------------------
-
-Next Release
-""""""""""""
-
-- Features:
-    - Run this state
-
-- Bug Fixes:
-
-- Miscellaneous:
-
 0.15.3
 """""""
 
 - Bug Fixes:
     - Fix bug in LoggingView, which freezes RAFCON
+
 
 0.15.2
 """""""
@@ -30,6 +18,7 @@ Next Release
 - Bug Fixes:
     - Make operations on the logging console thread-safe
     - Define a new GUI config called 'MAX_LOGGING_BUFFER_LINES' that determines the maximum lines of the logging buffer. If the number of lines exceeds the config value, the old value will be deleted automatically via clipping.
+
 
 0.15.1
 """""""
@@ -52,10 +41,12 @@ Next Release
 """""""
 
 - Features:
+    - Add search bar for lookup through state machine libraries
     - Add find usage for finding the usages of state machine libraries
- 
+
 - Bug Fixes:
     - Fix handling of library interface change
+
 
 0.14.10
 """""""
@@ -263,7 +254,7 @@ Patch releases 0.13.\*
   - optimize setup_requires in setup.py (faster installation)
   - mark unreliable tests as unstable
   - define timeouts for all tests
-  
+
 - Bug Fixes:
 
   - :issue_ghe:`689` rafcon cannot run without numpy
@@ -279,7 +270,7 @@ Patch releases 0.13.\*
   - add ExecutionTicker to see activity of state machine with high hierarchy depth
 
 - Improvements:
-  
+
   - changing states (adding or removing) during step mode works now
 
 - Bug Fixes:
@@ -323,7 +314,7 @@ Patch releases 0.13.\*
 
 - Changes:
 
-  - Release correct style files 
+  - Release correct style files
 
 
 0.13.2
@@ -489,21 +480,21 @@ Patch releases 0.12.\*
 """""""
 
 - Features:
-    
+
   - maintenance release
 
 0.12.19
 """""""
 
 - Bug Fixes:
-    
+
   - fix setup.py, sdist now working on pypi
 
 0.12.18
 """""""
 
 - Features:
-    
+
   - new shortcut open library state separately as state machine by default on 'Shift+Ctrl+Space' (shortcut works for multiple states, too)
 
 - Improvements:
@@ -647,7 +638,7 @@ Patch releases 0.12.\*
   - copy/paste for semantic data elements
   - new config value SHOW_PATH_NAMES_IN_EXECUTION_HISTORY
   - make library path in state editor overview selectable
-    
+
 - Bug Fixes:
 
   - :issue_ghe:`503` scoped variable looks weird
@@ -960,7 +951,7 @@ Patch releases 0.10.\*
 """"""
 
 - Bug Fixes:
-  
+
   - make execution logs compatible with execution log viewer again
 
 
@@ -968,13 +959,13 @@ Patch releases 0.10.\*
 """"""
 
 - Improvements:
-  
+
   - complex actions(copy & paste, resize) are properly handled in gaphas and in the modification history
   - :issue_ghe:`342` drag and drop now drops the state at the mouse position
 
 - Bug Fixes:
-  
-  - show library content for OpenGL works again  
+
+  - show library content for OpenGL works again
   - add as template works again
   - :issue_ghe:`343` Text field does not follow cursor
 
@@ -985,7 +976,7 @@ Patch releases 0.9.\*
 """""
 
 - Improvements:
-  
+
   - execution history can be logged and is configurable via the config.yaml
 
 0.9.7
@@ -1057,7 +1048,7 @@ Patch releases 0.9.\*
 """""
 
 - Bug Fix
-  - fix bad storage format in combination with wrong jsonconversion version   
+  - fix bad storage format in combination with wrong jsonconversion version
 
 0.9.0
 """""
@@ -1098,7 +1089,7 @@ Patch releases 0.9.\*
   - :issue_ghe:`251`: Handles are added when hovering over a transition handle
   - :issue_ghe:`259`: Do not hard code version in about dialog
   - :issue_ghe:`260`: Meta data is loaded several times
-  
+
 
 Patch releases 0.8.\*
 ---------------------
@@ -1126,7 +1117,7 @@ Patch releases 0.8.\*
 
 0.8.1
 """""
-  
+
 - Features:
 
   - renaming of module paths: core instead of state machine; gui instead of mvc

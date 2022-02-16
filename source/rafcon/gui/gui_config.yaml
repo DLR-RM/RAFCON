@@ -29,7 +29,7 @@ SHOW_NAMES_ON_DATA_FLOWS: True
 SHOW_CONTENT_LIBRARY_NAME_TRANSPARENCY: 0.5
 ROTATE_NAMES_ON_CONNECTIONS: False
 
-HISTORY_ENABLED: True 
+HISTORY_ENABLED: True
 
 KEEP_ONLY_STICKY_STATES_OPEN: True
 
@@ -75,9 +75,9 @@ SHORTCUTS:
     abort: Escape
     add: <Control>A
     add_execution_state: <Control><Alt>E
-    add_hierarchy_state: 
-    - <Control><Alt>H
-    - <Control><Shift>A
+    add_hierarchy_state:
+        - <Control><Alt>H
+        - <Control><Shift>A
     add_preemptive_state: <Control><Alt>C
     add_barrier_state: <Control><Alt>B
     add_output: <Control><Alt>U
@@ -92,20 +92,20 @@ SHORTCUTS:
     data_flow_mode: <Control><Shift>D
     delete: Delete
     down:
-    - <Control>Down
-    - <Control><Shift>Down
+        - <Control>Down
+        - <Control><Shift>Down
     fit: <Control>space
     group: <Control>G
     info: <Control>I
     is_start_state:
-    - <Control>E
-    - <Control><Shift>X
+        - <Control>E
+        - <Control><Shift>X
     transition_from_closest_sibling_state: <Control><Shift>C
     transition_to_closest_sibling_state: <Control><Shift>V
     transition_to_parent_state: <Control><Shift>B
     left:
-    - <Control>Left
-    - <Control><Shift>Left
+        - <Control>Left
+        - <Control><Shift>Left
     new: <Control>N
     open: <Control>O
     open_external_editor: <Control><Shift>Q
@@ -114,13 +114,13 @@ SHORTCUTS:
     pause: F7
     quit: <Control>Q
     redo:
-    - <Control>Y
-    - <Control><Shift>Z
+        - <Control>Y
+        - <Control><Shift>Z
     reload: <Shift>F5
     rename: F2
     right:
-    - <Control>Right
-    - <Control><Shift>Right
+        - <Control>Right
+        - <Control><Shift>Right
     run_to_selected: <Control><Shift>R
     save: <Control>S
     save_as: <Control><Shift>S
@@ -138,10 +138,13 @@ SHORTCUTS:
     stop: F8
     undo: <Control>Z
     ungroup:
-    - <Control><Shift>G
-    - <Control>U
+        - <Control><Shift>G
+        - <Control>U
     up:
-    - <Control>Up
-    - <Control><Shift>Up
+        - <Control>Up
+        - <Control><Shift>Up
     fullscreen: F11
     search: <Control>F
+
+SHOW_DIALOGS_DURING_RENAMING: false
+MAX_LOGGING_BUFFER_LINES: 5000
