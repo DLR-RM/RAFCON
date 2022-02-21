@@ -657,6 +657,10 @@ class MainWindowController(ExtendedController):
             self.view["collapse_tree_button"].show()
         else:
             self.view["collapse_tree_button"].hide()
+        if upper_notebook_title == 'LIBRARIES':
+            self.view["show_search_bar"].show()
+        else:
+            self.view["show_search_bar"].hide()
 
     def on_collapse_button_clicked(self, button):
         upper_page_num = self.view['upper_notebook'].get_current_page()

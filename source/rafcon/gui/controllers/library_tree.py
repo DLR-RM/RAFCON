@@ -121,7 +121,7 @@ class LibraryTreeController(ExtendedController):
             sub_menu.append(create_menu_item("Take name from Library", constants.BUTTON_EXCHANGE,
                                              partial(self.substitute_as_template_clicked, keep_name=False)))
 
-            menu.append(create_menu_item("Find Usages", constants.ICON_FIND_USAGES,
+            menu.append(create_menu_item("Find usages in libraries", constants.ICON_FIND_USAGES,
                                          self.menu_item_find_usages_clicked))
 
         elif kind in ['library root', 'library tree']:
