@@ -383,29 +383,34 @@ def reconnect_data_flow(state_machine):
                 if same_level_state.state_id != state.state_id:
                     same_level_states.append(same_level_state)
             for same_level_state in same_level_states:
-                if hasattr(same_level_state, 'data_flows'):
-                    for data_flow in same_level_state.data_flows.values():
-                        data_type = int
-                        if data_flow.from_state == state.state_id and data_flow.from_key not in state.output_data_ports:
-                            if data_flow.to_key in same_level_state.input_data_ports:
-                                data_type = same_level_state.input_data_ports[data_flow.to_key].data_type
-                            elif data_flow.to_key in same_level_state.output_data_ports:
-                                data_type = same_level_state.output_data_ports[data_flow.to_key].data_type
-                            state.output_data_ports[data_flow.from_key] = OutputDataPort('output_' + str(len(state.output_data_ports)),
-                                                                                         data_type,
-                                                                                         None,
-                                                                                         data_flow.from_key,
-                                                                                         state)
-                        elif data_flow.to_state == state.state_id and data_flow.to_key not in state.input_data_ports:
-                            if data_flow.from_key in same_level_state.input_data_ports:
-                                data_type = same_level_state.input_data_ports[data_flow.from_key].data_type
-                            elif data_flow.from_key in same_level_state.output_data_ports:
-                                data_type = same_level_state.output_data_ports[data_flow.from_key].data_type
-                            state.input_data_ports[data_flow.to_key] = InputDataPort('input_' + str(len(state.input_data_ports)),
+                for data_flow in state.parent.data_flows.values():
+                    data_type = int
+                    if data_flow.from_state == state.state_id and data_flow.to_state == same_level_state.state_id:
+                        default_value = None
+                        if data_flow.to_key in same_level_state.input_data_ports:
+                            data_type = same_level_state.input_data_ports[data_flow.to_key].data_type
+                            default_value = same_level_state.input_data_ports[data_flow.to_key].default_value
+                        elif data_flow.to_key in same_level_state.output_data_ports:
+                            data_type = same_level_state.output_data_ports[data_flow.to_key].data_type
+                            default_value = same_level_state.output_data_ports[data_flow.to_key].default_value
+                        state.output_data_ports[data_flow.from_key] = OutputDataPort('output_' + str(len(state.output_data_ports)),
                                                                                      data_type,
-                                                                                     None,
-                                                                                     data_flow.to_key,
+                                                                                     default_value,
+                                                                                     data_flow.from_key,
                                                                                      state)
+                    elif data_flow.from_state == same_level_state.state_id and data_flow.to_state == state.state_id:
+                        default_value = None
+                        if data_flow.from_key in same_level_state.input_data_ports:
+                            data_type = same_level_state.input_data_ports[data_flow.from_key].data_type
+                            default_value = same_level_state.input_data_ports[data_flow.from_key].default_value
+                        elif data_flow.from_key in same_level_state.output_data_ports:
+                            data_type = same_level_state.output_data_ports[data_flow.from_key].data_type
+                            default_value = same_level_state.output_data_ports[data_flow.from_key].default_value
+                        state.input_data_ports[data_flow.to_key] = InputDataPort('input_' + str(len(state.input_data_ports)),
+                                                                                 data_type,
+                                                                                 default_value,
+                                                                                 data_flow.to_key,
+                                                                                 state)
         elif hasattr(state, 'states'):
             queue.extend(state.states.values())
 
