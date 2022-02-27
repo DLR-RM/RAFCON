@@ -393,6 +393,9 @@ def reconnect_data_flow(state_machine):
                         elif data_flow.to_key in same_level_state.output_data_ports:
                             data_type = same_level_state.output_data_ports[data_flow.to_key].data_type
                             default_value = same_level_state.output_data_ports[data_flow.to_key].default_value
+                        elif data_flow.to_key in same_level_state.scoped_variables:
+                            data_type = same_level_state.scoped_variables[data_flow.to_key].data_type
+                            default_value = same_level_state.scoped_variables[data_flow.to_key].default_value
                         state.output_data_ports[data_flow.from_key] = OutputDataPort('output_' + str(len(state.output_data_ports)),
                                                                                      data_type,
                                                                                      default_value,
@@ -406,6 +409,9 @@ def reconnect_data_flow(state_machine):
                         elif data_flow.from_key in same_level_state.output_data_ports:
                             data_type = same_level_state.output_data_ports[data_flow.from_key].data_type
                             default_value = same_level_state.output_data_ports[data_flow.from_key].default_value
+                        elif data_flow.from_key in same_level_state.scoped_variables:
+                            data_type = same_level_state.scoped_variables[data_flow.from_key].data_type
+                            default_value = same_level_state.scoped_variables[data_flow.from_key].default_value
                         state.input_data_ports[data_flow.to_key] = InputDataPort('input_' + str(len(state.input_data_ports)),
                                                                                  data_type,
                                                                                  default_value,
