@@ -385,8 +385,8 @@ def reconnect_data_flow(state_machine):
             for same_level_state in same_level_states:
                 for data_flow in state.parent.data_flows.values():
                     data_type = int
+                    default_value = None
                     if data_flow.from_state == state.state_id and data_flow.to_state == same_level_state.state_id:
-                        default_value = None
                         if data_flow.to_key in same_level_state.input_data_ports:
                             data_type = same_level_state.input_data_ports[data_flow.to_key].data_type
                             default_value = same_level_state.input_data_ports[data_flow.to_key].default_value
@@ -396,13 +396,14 @@ def reconnect_data_flow(state_machine):
                         elif data_flow.to_key in same_level_state.scoped_variables:
                             data_type = same_level_state.scoped_variables[data_flow.to_key].data_type
                             default_value = same_level_state.scoped_variables[data_flow.to_key].default_value
+                        else:
+                            logger.warning("The data flow type could not be found. It is set to 'int'.")
                         state.output_data_ports[data_flow.from_key] = OutputDataPort('output_' + str(len(state.output_data_ports)),
                                                                                      data_type,
                                                                                      default_value,
                                                                                      data_flow.from_key,
                                                                                      state)
                     elif data_flow.from_state == same_level_state.state_id and data_flow.to_state == state.state_id:
-                        default_value = None
                         if data_flow.from_key in same_level_state.input_data_ports:
                             data_type = same_level_state.input_data_ports[data_flow.from_key].data_type
                             default_value = same_level_state.input_data_ports[data_flow.from_key].default_value
@@ -412,6 +413,8 @@ def reconnect_data_flow(state_machine):
                         elif data_flow.from_key in same_level_state.scoped_variables:
                             data_type = same_level_state.scoped_variables[data_flow.from_key].data_type
                             default_value = same_level_state.scoped_variables[data_flow.from_key].default_value
+                        else:
+                            logger.warning("The data flow type could not be found. It is set to 'int'.")
                         state.input_data_ports[data_flow.to_key] = InputDataPort('input_' + str(len(state.input_data_ports)),
                                                                                  data_type,
                                                                                  default_value,
