@@ -51,6 +51,7 @@ test py2-tests:
   tags:
     - Agile_GUI_Docker
   script:
+    - pip2 install setuptools-scm==5.0.2
     - pip2 install --user --force "pytest>=3.5,<5"
     - pip2 install pytest-runner==5.2  # this is py2 compatible, ver 5.3 is not
     - xvfb-run -as "-screen 0 1920x1200x24" python2 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
@@ -61,6 +62,7 @@ test py3-tests:
   tags:
     - Agile_GUI_Docker
   script:
+    - pip3 install setuptools-scm==5.0.2
     - pip3 install tox
     - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e py36
   coverage: /^TOTAL.+?(\d+\%)$/
