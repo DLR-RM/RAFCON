@@ -5,6 +5,14 @@ Information about :ref:`RAFCON` changes in each release will be published here. 
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/develop>`__.
 
 
+0.15.4
+""""""
+
+- Features:
+    - last version with python2 support which is still supported by Agile Robots
+    - passes testing pipeline for both python2 and python3 inside the CI pipeline of AR
+
+
 0.15.3
 """""""
 
