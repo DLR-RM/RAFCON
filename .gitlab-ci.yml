@@ -51,7 +51,7 @@ test py2-tests:
   tags:
     - Agile_GUI_Docker
   script:
-    - pip2 install --user --force more-itertools setuptools setuptools-scm "pytest>=3.5,<5"
+    - pip2 install --user --force "pytest>=3.5,<5" lazy-object-proxy==1.5.0 PyYAML==5.1 yaml-configuration==0.2.5
     - pip2 install pytest-runner==5.2  # this is py2 compatible, ver 5.3 is not
     - xvfb-run -as "-screen 0 1920x1200x24" python2 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
 
