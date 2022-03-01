@@ -1,0 +1,481 @@
+{
+    "__jsonqualname__": "rafcon.core.states.hierarchy_state.HierarchyState", 
+    "data_flows": {
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 1, 
+            "from_key": 9, 
+            "from_state": "LQPBDI", 
+            "to_key": 2, 
+            "to_state": "UUATPB"
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 2, 
+            "from_key": 8, 
+            "from_state": "LQPBDI", 
+            "to_key": 0, 
+            "to_state": "UUATPB"
+        }, 
+        "3": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 3, 
+            "from_key": 7, 
+            "from_state": "LQPBDI", 
+            "to_key": 4, 
+            "to_state": "UUATPB"
+        }, 
+        "4": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 4, 
+            "from_key": 6, 
+            "from_state": "LQPBDI", 
+            "to_key": 1, 
+            "to_state": "UUATPB"
+        }, 
+        "5": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 5, 
+            "from_key": 5, 
+            "from_state": "LQPBDI", 
+            "to_key": 3, 
+            "to_state": "UUATPB"
+        }, 
+        "6": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 6, 
+            "from_key": 5, 
+            "from_state": "UUATPB", 
+            "to_key": 3, 
+            "to_state": "AEWNZP"
+        }, 
+        "7": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 7, 
+            "from_key": 6, 
+            "from_state": "UUATPB", 
+            "to_key": 1, 
+            "to_state": "AEWNZP"
+        }, 
+        "8": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 8, 
+            "from_key": 7, 
+            "from_state": "UUATPB", 
+            "to_key": 4, 
+            "to_state": "AEWNZP"
+        }, 
+        "9": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 9, 
+            "from_key": 8, 
+            "from_state": "UUATPB", 
+            "to_key": 0, 
+            "to_state": "AEWNZP"
+        }, 
+        "10": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 10, 
+            "from_key": 9, 
+            "from_state": "UUATPB", 
+            "to_key": 2, 
+            "to_state": "AEWNZP"
+        }, 
+        "11": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 11, 
+            "from_key": 9, 
+            "from_state": "TKXHCR", 
+            "to_key": 2, 
+            "to_state": "LPMCPA"
+        }, 
+        "12": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 12, 
+            "from_key": 8, 
+            "from_state": "TKXHCR", 
+            "to_key": 0, 
+            "to_state": "LPMCPA"
+        }, 
+        "13": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 13, 
+            "from_key": 7, 
+            "from_state": "TKXHCR", 
+            "to_key": 4, 
+            "to_state": "LPMCPA"
+        }, 
+        "14": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 14, 
+            "from_key": 6, 
+            "from_state": "TKXHCR", 
+            "to_key": 1, 
+            "to_state": "LPMCPA"
+        }, 
+        "15": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 15, 
+            "from_key": 5, 
+            "from_state": "TKXHCR", 
+            "to_key": 3, 
+            "to_state": "LPMCPA"
+        }, 
+        "16": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 16, 
+            "from_key": 9, 
+            "from_state": "LPMCPA", 
+            "to_key": 2, 
+            "to_state": "OLGREX"
+        }, 
+        "17": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 17, 
+            "from_key": 8, 
+            "from_state": "LPMCPA", 
+            "to_key": 0, 
+            "to_state": "OLGREX"
+        }, 
+        "18": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 18, 
+            "from_key": 7, 
+            "from_state": "LPMCPA", 
+            "to_key": 4, 
+            "to_state": "OLGREX"
+        }, 
+        "19": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 19, 
+            "from_key": 6, 
+            "from_state": "LPMCPA", 
+            "to_key": 1, 
+            "to_state": "OLGREX"
+        }, 
+        "20": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 20, 
+            "from_key": 5, 
+            "from_state": "LPMCPA", 
+            "to_key": 3, 
+            "to_state": "OLGREX"
+        }, 
+        "21": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 21, 
+            "from_key": 9, 
+            "from_state": "VRCPQU", 
+            "to_key": 2, 
+            "to_state": "NHSNWF"
+        }, 
+        "22": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 22, 
+            "from_key": 8, 
+            "from_state": "VRCPQU", 
+            "to_key": 0, 
+            "to_state": "NHSNWF"
+        }, 
+        "23": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 23, 
+            "from_key": 7, 
+            "from_state": "VRCPQU", 
+            "to_key": 4, 
+            "to_state": "NHSNWF"
+        }, 
+        "24": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 24, 
+            "from_key": 6, 
+            "from_state": "VRCPQU", 
+            "to_key": 1, 
+            "to_state": "NHSNWF"
+        }, 
+        "25": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 25, 
+            "from_key": 5, 
+            "from_state": "VRCPQU", 
+            "to_key": 3, 
+            "to_state": "NHSNWF"
+        }, 
+        "26": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 26, 
+            "from_key": 5, 
+            "from_state": "NHSNWF", 
+            "to_key": 3, 
+            "to_state": "FBLTSH"
+        }, 
+        "28": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 28, 
+            "from_key": 7, 
+            "from_state": "NHSNWF", 
+            "to_key": 4, 
+            "to_state": "FBLTSH"
+        }, 
+        "29": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 29, 
+            "from_key": 8, 
+            "from_state": "NHSNWF", 
+            "to_key": 0, 
+            "to_state": "FBLTSH"
+        }, 
+        "30": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 30, 
+            "from_key": 9, 
+            "from_state": "NHSNWF", 
+            "to_key": 2, 
+            "to_state": "FBLTSH"
+        }, 
+        "31": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 31, 
+            "from_key": 6, 
+            "from_state": "NHSNWF", 
+            "to_key": 1, 
+            "to_state": "FBLTSH"
+        }, 
+        "32": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 32, 
+            "from_key": 9, 
+            "from_state": "AEWNZP", 
+            "to_key": 2, 
+            "to_state": "TKXHCR"
+        }, 
+        "33": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 33, 
+            "from_key": 8, 
+            "from_state": "AEWNZP", 
+            "to_key": 0, 
+            "to_state": "TKXHCR"
+        }, 
+        "34": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 34, 
+            "from_key": 7, 
+            "from_state": "AEWNZP", 
+            "to_key": 4, 
+            "to_state": "TKXHCR"
+        }, 
+        "36": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 36, 
+            "from_key": 6, 
+            "from_state": "AEWNZP", 
+            "to_key": 1, 
+            "to_state": "TKXHCR"
+        }, 
+        "37": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 37, 
+            "from_key": 5, 
+            "from_state": "AEWNZP", 
+            "to_key": 3, 
+            "to_state": "TKXHCR"
+        }, 
+        "40": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 40, 
+            "from_key": 7, 
+            "from_state": "OLGREX", 
+            "to_key": 4, 
+            "to_state": "VRCPQU"
+        }, 
+        "43": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 43, 
+            "from_key": 9, 
+            "from_state": "OLGREX", 
+            "to_key": 2, 
+            "to_state": "VRCPQU"
+        }, 
+        "44": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 44, 
+            "from_key": 5, 
+            "from_state": "OLGREX", 
+            "to_key": 3, 
+            "to_state": "VRCPQU"
+        }, 
+        "45": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 45, 
+            "from_key": 6, 
+            "from_state": "OLGREX", 
+            "to_key": 1, 
+            "to_state": "VRCPQU"
+        }, 
+        "46": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 46, 
+            "from_key": 8, 
+            "from_state": "OLGREX", 
+            "to_key": 0, 
+            "to_state": "VRCPQU"
+        }, 
+        "47": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 47, 
+            "from_key": 7, 
+            "from_state": "FBLTSH", 
+            "to_key": 4, 
+            "to_state": "BENROW"
+        }, 
+        "48": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 48, 
+            "from_key": 5, 
+            "from_state": "FBLTSH", 
+            "to_key": 3, 
+            "to_state": "BENROW"
+        }, 
+        "49": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 49, 
+            "from_key": 9, 
+            "from_state": "FBLTSH", 
+            "to_key": 2, 
+            "to_state": "BENROW"
+        }, 
+        "50": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 50, 
+            "from_key": 6, 
+            "from_state": "FBLTSH", 
+            "to_key": 1, 
+            "to_state": "BENROW"
+        }, 
+        "51": {
+            "__jsonqualname__": "rafcon.core.state_elements.data_flow.DataFlow", 
+            "data_flow_id": 51, 
+            "from_key": 8, 
+            "from_state": "FBLTSH", 
+            "to_key": 0, 
+            "to_state": "BENROW"
+        }
+    }, 
+    "description": null, 
+    "income": {
+        "__jsonqualname__": "rafcon.core.state_elements.logical_port.Income"
+    }, 
+    "input_data_ports": {}, 
+    "name": "HierarchyState 2", 
+    "outcomes": {
+        "-2": {
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
+            "name": "preempted", 
+            "outcome_id": -2
+        }, 
+        "-1": {
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
+            "name": "aborted", 
+            "outcome_id": -1
+        }, 
+        "0": {
+            "__jsonqualname__": "rafcon.core.state_elements.logical_port.Outcome", 
+            "name": "success", 
+            "outcome_id": 0
+        }
+    }, 
+    "output_data_ports": {}, 
+    "scoped_variables": {}, 
+    "state_id": "FUSDLT", 
+    "transitions": {
+        "1": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": null, 
+            "from_state": null, 
+            "to_outcome": null, 
+            "to_state": "LQPBDI", 
+            "transition_id": 1
+        }, 
+        "2": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "LQPBDI", 
+            "to_outcome": null, 
+            "to_state": "UUATPB", 
+            "transition_id": 2
+        }, 
+        "3": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "UUATPB", 
+            "to_outcome": null, 
+            "to_state": "AEWNZP", 
+            "transition_id": 3
+        }, 
+        "4": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "AEWNZP", 
+            "to_outcome": null, 
+            "to_state": "TKXHCR", 
+            "transition_id": 4
+        }, 
+        "5": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "TKXHCR", 
+            "to_outcome": null, 
+            "to_state": "LPMCPA", 
+            "transition_id": 5
+        }, 
+        "6": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "LPMCPA", 
+            "to_outcome": null, 
+            "to_state": "OLGREX", 
+            "transition_id": 6
+        }, 
+        "7": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "OLGREX", 
+            "to_outcome": null, 
+            "to_state": "VRCPQU", 
+            "transition_id": 7
+        }, 
+        "8": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "VRCPQU", 
+            "to_outcome": null, 
+            "to_state": "NHSNWF", 
+            "transition_id": 8
+        }, 
+        "9": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "NHSNWF", 
+            "to_outcome": null, 
+            "to_state": "FBLTSH", 
+            "transition_id": 9
+        }, 
+        "10": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "FBLTSH", 
+            "to_outcome": null, 
+            "to_state": "BENROW", 
+            "transition_id": 10
+        }, 
+        "11": {
+            "__jsonqualname__": "rafcon.core.state_elements.transition.Transition", 
+            "from_outcome": 0, 
+            "from_state": "BENROW", 
+            "to_outcome": 0, 
+            "to_state": "FUSDLT", 
+            "transition_id": 11
+        }
+    }
+}

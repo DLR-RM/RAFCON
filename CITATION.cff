@@ -3,7 +3,7 @@
 cff-version: "1.0.3"
 message: "If you use this software, please cite it using these metadata."
 title: RAFCON
-version: 0.14
+version: 0.15
 date-released: 2019-07-29
 license: EPL-1.0
 doi: "10.5281/zenodo.1493058"

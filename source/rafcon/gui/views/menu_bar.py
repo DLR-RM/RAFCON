@@ -71,6 +71,7 @@ class MenuBarView(View):
         # -----------------------------------------------
         'start':                constants.BUTTON_START,
         'start_from_selected':  constants.BUTTON_START_FROM_SELECTED_STATE,
+        'run_selected':         constants.BUTTON_RUN_SELECTED_STATE,
         'pause':                constants.BUTTON_PAUSE,
         'stop':                 constants.BUTTON_STOP,
         'step_mode':            constants.BUTTON_STEPM,
@@ -94,7 +95,8 @@ class MenuBarView(View):
         self.insert_accelerators = {'new': Gtk.accelerator_parse('<control>N'),
                                     'open': Gtk.accelerator_parse('<control>O'),
                                     'save': Gtk.accelerator_parse('<control>S'),
-                                    # 'save_as': Gtk.accelerator_parse('<shift><control>S'),  # no default accelerator insert
+                                    # 'save_as': Gtk.accelerator_parse('<shift><control>S'),
+                                    # no default accelerator insert
                                     'quit': Gtk.accelerator_parse('<control>Q'),
                                     'cut': Gtk.accelerator_parse('<control>X'),
                                     'copy': Gtk.accelerator_parse('<control>C'),

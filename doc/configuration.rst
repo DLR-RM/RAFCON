@@ -14,8 +14,7 @@ Core Configuration
 
 .. _core_config_example:
 
-Example
-"""""""
+Example:
 
 A typical config file looks like this:
 
@@ -31,21 +30,23 @@ A typical config file looks like this:
         "intermediate_level": "${RAFCON_LIB_PATH}/../examples/functionality_examples"
     }
     LIBRARY_RECOVERY_MODE: False
+    LOAD_SM_WITH_CHECKS: True
 
     STORAGE_PATH_WITH_STATE_NAME: True
     MAX_LENGTH_FOR_STATE_NAME_IN_STORAGE_PATH: None
     NO_PROGRAMMATIC_CHANGE_OF_LIBRARY_STATES_PERFORMED: False
 
-    EXECUTION_LOG_ENABLE: False
+    IN_MEMORY_EXECUTION_HISTORY_ENABLE: True
+    FILE_SYSTEM_EXECUTION_HISTORY_ENABLE: True
     EXECUTION_LOG_PATH: "%RAFCON_TEMP_PATH_BASE/execution_logs"
     EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL: False
 
     SCRIPT_RECOMPILATION_ON_STATE_EXECUTION: True
+    SCRIPT_COMPILE_ON_FILESYSTEM_LOAD: True
 
 .. _core_config_docs:
 
-Documentation
-"""""""""""""
+Documentation:
 
 In the following, all possible parameters are described, together with
 their default value:
@@ -70,8 +71,17 @@ LIBRARY\_PATHS
 LIBRARY\_RECOVERY\_MODE
   | Type: boolean
   | Default: ``False``
-  | If this flag is activated, state machine with consistency erros concerning their data ports can be loaded.
-    Erros are just printed out as warnings. This can be used to fix erroneous state machines.
+  | If this flag is activated, state machine with consistency errors concerning their data ports can be loaded.
+    Instead of raising exceptions only errors are printed. Invalid transitions and data-flows will just be removed.
+    This mode can be used to fix erroneous state machines.
+    Intermediate and expert users can also keep this setting enabled all the time.
+
+LOAD\_SM\_WITH\_CHECKS
+  | Type: boolean
+  | Default: ``True``
+  | If this flag is activated, every state is checked for consistency before loaded.
+    If set to false all consistency checks will be skipped. This leads to much faster loading times.
+    However, if there are consistency errors RAFCON tries to open the state machines and will fail.
 
 STORAGE\_PATH\_WITH\_STATE\_NAME
   | Type: boolean
@@ -90,6 +100,11 @@ NO\_PROGRAMMATIC\_CHANGE\_OF\_LIBRARY\_STATES\_PERFORMED
   | Type: boolean
   | Default: ``False``
   | Set this to True if you can make sure that the interface of library states is not programmatically changed anywhere inside your state machines. This will speed up loading of libraries.
+
+EXECUTION\_HISTORY\_ENABLE
+  | Type: boolean
+  | Default: ``True``
+  | Enables execution history. The execution history is required for backward execution and execution logging to the file system.
 
 EXECUTION\_LOG\_ENABLE
   | Type: boolean
@@ -114,7 +129,12 @@ SCRIPT\_RECOMPILATION\_ON\_STATE\_EXECUTION:
     recommended to set the value to ``False``, causing a recompilation only when the execution of a state machine is
     newly started, which is a bit faster and allows to share data between consecutive state executions.
 
-
+SCRIPT\_COMPILE\_ON\_FILESYSTEM\_LOAD:
+  | Type: boolean
+  | Default: ``True``
+  | If True, the script of an ``ExecutionState`` will be recompiled each time the state is loaded from file-system.
+    For faster loading times the setting can be changed to false.
+    Then, however, it might be the case that during runtime, script compilation error occur.
   
 GUI Configuration
 -----------------
@@ -281,8 +301,7 @@ A typical config file looks like this:
 
 .. _gui_config_docs:
 
-Documentation
-"""""""""""""
+Documentation:
 
 TYPE
   | Type: String-constant
@@ -600,8 +619,7 @@ package, please check the `official documentation <https://docs.python.org/2/lib
 
 .. _logging_config_example:
 
-Example
-"""""""
+Example:
 
 To not destroy the behavior of RAFCON, the default configuration should be used as basis for your extensions. The
 following example shows how to add another logging handler, writing all messages to a file:
@@ -609,18 +627,13 @@ following example shows how to add another logging handler, writing all messages
 .. code:: json
 
     {
-        ...
-
         "loggers": {
-            ...
             "rafcon": {
-                ...
                 "handlers": ["stdout", "stderr", "loggingView", "file"]
             }
         },
 
         "handlers": {
-            ...
             "file": {
                 "class": "logging.handlers.RotatingFileHandler",
                 "formatter": "default",
@@ -629,8 +642,6 @@ following example shows how to add another logging handler, writing all messages
                 "backupCount": 3
             }
         },
-
-        ...
     }
 
 
@@ -647,8 +658,7 @@ by launching the ``start.py`` script with argument "-nc".
 
 .. _monitoring_plugin_example:
 
-Example
-"""""""
+Example:
 
 The default ``network_config.file`` looks like:
 
@@ -670,8 +680,7 @@ The default ``network_config.file`` looks like:
 
 .. _monitoring_plugin_docs:
 
-Documentation
-"""""""""""""
+Documentation:
 
 TYPE
   | Type: string

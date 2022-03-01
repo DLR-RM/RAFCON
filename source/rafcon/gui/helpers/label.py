@@ -174,7 +174,7 @@ def get_widget_title(tab_label_text):
     title = ''
     title_list = tab_label_text.split('_')
     for word in title_list:
-        title += word.upper() + ' '
+        title += word.upper()
     title.strip()
     return title
 

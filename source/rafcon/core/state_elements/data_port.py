@@ -58,6 +58,8 @@ class DataPort(StateElement):
             raise NotImplementedError
         super(DataPort, self).__init__(safe_init=safe_init)
         self._no_type_error_exceptions = True if init_without_default_value_type_exceptions else False
+        if global_config.get_config_value("LIBRARY_RECOVERY_MODE") is True:
+            self._no_type_error_exceptions = True
         self._was_forced_type = force_type
         if data_port_id is None:
             self._data_port_id = generate_data_port_id([])
@@ -65,8 +67,6 @@ class DataPort(StateElement):
                         "add_data_port* functions of the State/ContainerState class should be used!")
         else:
             self._data_port_id = data_port_id
-
-        self._no_type_error_exceptions = False
 
         if safe_init:
             DataPort._safe_init(self, name, data_type, default_value, parent)
@@ -266,7 +266,7 @@ class DataPort(StateElement):
             else:
                 if not isinstance(default_value, self.data_type):
                     if self._no_type_error_exceptions:
-                        logger.warning("Handed default value '{0}' is of type '{1}' but data port data type is {2} {3}."
+                        logger.error("Handed default value '{0}' is of type '{1}' but data port data type is {2} {3}."
                                        "".format(default_value, type(default_value), data_type, self))
                     else:
                         raise TypeError("Handed default value '{0}' is of type '{1}' but data port data type is {2}"

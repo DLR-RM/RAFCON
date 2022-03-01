@@ -33,16 +33,14 @@ from gtkmvc3.observable import Observable
 from jsonconversion.jsonobject import JSONObject
 
 import rafcon
-from rafcon.core.execution.execution_history import ExecutionHistory, ExecutionHistoryStorage
+from rafcon.core.execution.execution_history_factory import ExecutionHistoryFactory
 from rafcon.core.id_generator import generate_state_machine_id, run_id_generator
 from rafcon.utils import log
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.storage_utils import get_current_time_string
 import time
 
-from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.core.config import global_config
-import os
 
 logger = log.get_logger(__name__)
 
@@ -142,18 +140,25 @@ class StateMachine(Observable, JSONObject, Hashable):
         self._root_state.input_data = self._root_state.get_default_input_values_for_state(self._root_state)
         self._root_state.output_data = self._root_state.create_output_dictionary_for_state(self._root_state)
         new_execution_history = self._add_new_execution_history()
-        if new_execution_history is not None:
-            new_execution_history.push_state_machine_start_history_item(self, run_id_generator())
+        new_execution_history.push_state_machine_start_history_item(self, run_id_generator())
         self._root_state.start(new_execution_history)
 
     def join(self):
         """Wait for root state to finish execution"""
+        from rafcon.core.states.concurrency_state import ConcurrencyState
         self._root_state.join()
-        # execution finished, close execution history log file (if present)
-        if len(self._execution_histories) > 0:
-            if self._execution_histories[-1].execution_history_storage is not None:
-                set_read_and_writable_for_all = global_config.get_config_value("EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL", False)
-                self._execution_histories[-1].execution_history_storage.close(set_read_and_writable_for_all)
+        if not global_config.get_config_value("IN_MEMORY_EXECUTION_HISTORY_ENABLE", False):
+            queue = [self.root_state]
+            while len(queue) > 0:
+                state = queue.pop(0)
+                if isinstance(state, ConcurrencyState):
+                    if state.concurrency_history_item is not None:
+                        state.concurrency_history_item.destroy()
+                        state.concurrency_history_item = None
+                elif hasattr(state, 'states'):
+                    queue.extend(state.states.values())
+        if len(self.execution_histories) > 0:
+            self.execution_histories[-1].shutdown()
         from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
@@ -226,24 +231,7 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     @Observable.observed
     def _add_new_execution_history(self):
-
-        if not global_config.get_config_value("EXECUTION_HISTORY_ENABLE", True):
-            logger.debug("Execution history logging has been disabled")
-            return None
-
-        new_execution_history = ExecutionHistory()
-
-        if global_config.get_config_value("EXECUTION_LOG_ENABLE", False):
-            base_dir = global_config.get_config_value("EXECUTION_LOG_PATH", "%RAFCON_TEMP_PATH_BASE/execution_logs")
-            if base_dir.startswith('%RAFCON_TEMP_PATH_BASE'):
-                base_dir = base_dir.replace('%RAFCON_TEMP_PATH_BASE', RAFCON_TEMP_PATH_BASE)
-            if not os.path.exists(base_dir):
-                os.makedirs(base_dir)
-            shelve_name = os.path.join(base_dir, '%s_rafcon_execution_log_%s.shelve' %
-                                       (time.strftime('%Y-%m-%d-%H:%M:%S', time.localtime()),
-                                        self.root_state.name.replace(' ', '-')))
-            execution_history_store = ExecutionHistoryStorage(shelve_name)
-            new_execution_history.set_execution_history_storage(execution_history_store)
+        new_execution_history = ExecutionHistoryFactory.get_execution_history(root_state_name=self.root_state.name)
         self._execution_histories.append(new_execution_history)
         return new_execution_history
 
@@ -311,8 +299,8 @@ class StateMachine(Observable, JSONObject, Hashable):
     def get_last_execution_log_filename(self):
         if len(self._execution_histories) > 0:
             for i in range(len(self._execution_histories) - 1, -1, -1):
-                if self._execution_histories[i].execution_history_storage is not None:
-                    return self._execution_histories[i].execution_history_storage.filename
+                if self._execution_histories[i].consumer_manager.get_file_system_consumer_file_name() is not None:
+                    return self._execution_histories[i].consumer_manager.get_file_system_consumer_file_name()
             return None
         else:
             return None

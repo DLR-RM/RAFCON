@@ -31,7 +31,7 @@ from rafcon.core.decorators import lock_state_machine
 from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.script import Script
 from rafcon.core.states.state import StateExecutionStatus
-from rafcon.core.execution.execution_history import CallType
+from rafcon.core.execution.execution_history_items import CallType
 from rafcon.core.config import global_config
 
 from rafcon.utils import log

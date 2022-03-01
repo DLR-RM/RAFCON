@@ -16,6 +16,7 @@
 """
 .. module:: modification_history
    :synopsis: A module that holds the controller to list and access the modification-history.
+   :noindex:
 
 """
 

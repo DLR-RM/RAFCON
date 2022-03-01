@@ -63,6 +63,8 @@ class MainWindowView(View):
         self['undock_right_bar_button'].set_tooltip_text("Undock right side bar widget")
         self['collapse_tree_button'].set_image(gui_helper_label.create_button_label(constants.ICON_TREE_FOLD))
         self['collapse_tree_button'].set_tooltip_text("Collapse tree of widget")
+        self['show_search_bar'].set_image(gui_helper_label.create_button_label(constants.BUTTON_SHOW_SEARCH_BAR))
+        self['show_search_bar'].set_tooltip_text("Show state machine search bar")
 
         ######################################################
         # Library Tree
@@ -70,6 +72,13 @@ class MainWindowView(View):
         self.library_tree = LibraryTreeView()
         self.library_tree.show()
         self['libraries_scrolledwindow'].add(self.library_tree)
+
+        ######################################################
+        # Library Usages Tree
+        ######################################################
+        self.library_usages_tree = LibraryTreeView()
+        self.library_usages_tree.show()
+        self['library_usages_scrolledwindow'].add(self.library_usages_tree)
 
         ######################################################
         # State Icons
@@ -188,6 +197,8 @@ class MainWindowView(View):
         button_stop_shortcut.set_tooltip_text('Stop')
         button_pause_shortcut = self['button_pause_shortcut']
         button_pause_shortcut.set_tooltip_text('Pause')
+        button_run_this_state_shortcut = self['button_run_this_state_shortcut']
+        button_run_this_state_shortcut.set_tooltip_text('Run Selected State')
         button_start_from_shortcut = self['button_start_from_shortcut']
         button_start_from_shortcut.set_tooltip_text('Run From Selected State')
         button_run_to_shortcut = self['button_run_to_shortcut']
@@ -206,6 +217,7 @@ class MainWindowView(View):
         button_start_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_START))
         button_stop_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STOP))
         button_pause_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_PAUSE))
+        button_run_this_state_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_RUN_SELECTED_STATE))
         button_start_from_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_START_FROM_SELECTED_STATE))
         button_run_to_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_RUN_TO_SELECTED_STATE))
         button_step_mode_shortcut.set_label_widget(gui_helper_label.create_button_label(constants.BUTTON_STEPM))
@@ -237,8 +249,9 @@ class MainWindowView(View):
         :param notebook: GTK Notebook container, whose tab labels are to be rotated and made detachable
         """
         icons = {'Libraries': constants.SIGN_LIB, 'States Tree': constants.ICON_TREE,
-                 'Global Variables': constants.ICON_GLOB, 'Modification History': constants.ICON_HIST,
-                 'Execution History': constants.ICON_EHIST, 'network': constants.ICON_NET}
+                 'Global Variables': constants.ICON_GLOB, 'Library Usages': constants.ICON_FIND_USAGES,
+                 'Modification History': constants.ICON_HIST, 'Execution History': constants.ICON_EHIST,
+                 'network': constants.ICON_NET}
         for notebook in self.left_bar_notebooks:
             for i in range(notebook.get_n_pages()):
                 child = notebook.get_nth_page(i)

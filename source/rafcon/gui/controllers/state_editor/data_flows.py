@@ -549,7 +549,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                                  from_key_port.name
 
             to_key_port = to_state.get_data_port_by_id(data_flow.to_key)
-            # to_key_label = ''
+            to_key_label = ''
             if to_key_port is not None:
                 to_key_label = PORT_TYPE_TAG.get(type(to_key_port), 'None') + '.' + \
                                (to_key_port.data_type.__name__ or 'None') + '.' + \

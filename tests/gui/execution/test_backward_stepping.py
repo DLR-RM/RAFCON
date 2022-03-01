@@ -209,7 +209,10 @@ def test_backward_stepping_barrier_state(gui):
         elif sd.name == "whiskey_number":
             assert sd.value == 20
 
+    gui.expected_warnings = 3
     gui(menubar_ctrl.on_stop_activate, None)
+
+
 
 
 if __name__ == '__main__':

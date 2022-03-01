@@ -335,6 +335,9 @@ class StateMachinesEditorController(ExtendedController):
                                          callback=self.on_close_clicked,
                                          callback_args=[state_machine_m, None])
             menu.append(menu_item)
+        menu_item = create_menu_item("Close All State Machines", constants.BUTTON_CLOSE,
+                                     callback=self.on_close_all_clicked)
+        menu.append(menu_item)
 
         menu.show_all()
         menu.popup(None, None, None, None, event.get_button()[1], event.time)
@@ -413,6 +416,9 @@ class StateMachinesEditorController(ExtendedController):
             remove_state_machine_m()
             return True
 
+    def on_close_all_clicked(self, event):
+        self.close_all_pages(force=False)
+
     def remove_state_machine_tab(self, state_machine_m):
         """
 
@@ -447,11 +453,11 @@ class StateMachinesEditorController(ExtendedController):
         else:
             self.model.selected_state_machine_id = None
 
-    def close_all_pages(self):
+    def close_all_pages(self, force=True):
         """Closes all tabs of the state machines editor."""
         state_machine_m_list = [tab['state_machine_m'] for tab in self.tabs.values()]
         for state_machine_m in state_machine_m_list:
-            self.on_close_clicked(None, state_machine_m, None, force=True)
+            self.on_close_clicked(None, state_machine_m, None, force)
 
     def refresh_state_machines(self, state_machine_ids):
         """ Refresh list af state machine tabs

@@ -66,7 +66,7 @@ class ContainerState(State):
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None,
                  states=None, transitions=None, data_flows=None, start_state_id=None,
-                 scoped_variables=None, safe_init=True):
+                 scoped_variables=None, missing_library_meta_data=None, is_dummy=False, safe_init=True):
 
         self._states = OrderedDict()
         self._transitions = {}
@@ -78,6 +78,17 @@ class ContainerState(State):
         self._transitions_cv = Condition()
         self._child_execution = False
         self._start_state_modified = False
+        """
+        Dummy state machine is created only in one place and it is a ContrainerState.
+        So, it is always a ContrainerState by design.
+        """
+        self._is_dummy = is_dummy
+        """
+        In the case of a dummy state machine, we must use the same meta_data as the missing library was using.
+        Hence, we must add an additional field for this case as it is not possible to handle it in a
+        container state model when a library does not exist anymore.
+        """
+        self._missing_library_meta_data = missing_library_meta_data
 
         State.__init__(self, name, state_id, input_data_ports, output_data_ports, income, outcomes, safe_init=safe_init)
 
@@ -1031,21 +1042,24 @@ class ContainerState(State):
         act_output_data_port_by_name = {op.name: op for op in state.output_data_ports.values()}
 
         for t in related_transitions['external']['self']:
-            new_t_id = self.add_transition(state_id, t.from_outcome, state_id, t.to_outcome, t.transition_id)
-            re_create_io_going_t_ids.append(new_t_id)
-            assert new_t_id == t.transition_id
-
-        for t in related_transitions['external']['ingoing']:
-            new_t_id = self.add_transition(t.from_state, t.from_outcome, state_id, t.to_outcome, t.transition_id)
-            re_create_io_going_t_ids.append(new_t_id)
-            assert new_t_id == t.transition_id
-
-        for t in related_transitions['external']['outgoing']:
-            from_outcome = act_outcome_ids_by_name.get(old_outcome_names[t.from_outcome], None)
-            if from_outcome is not None:
-                new_t_id = self.add_transition(state_id, from_outcome, t.to_state, t.to_outcome, t.transition_id)
+            if t.transition_id not in self._transitions:
+                new_t_id = self.add_transition(state_id, t.from_outcome, state_id, t.to_outcome, t.transition_id)
                 re_create_io_going_t_ids.append(new_t_id)
                 assert new_t_id == t.transition_id
+
+        for t in related_transitions['external']['ingoing']:
+            if t.transition_id not in self._transitions:
+                new_t_id = self.add_transition(t.from_state, t.from_outcome, state_id, t.to_outcome, t.transition_id)
+                re_create_io_going_t_ids.append(new_t_id)
+                assert new_t_id == t.transition_id
+
+        for t in related_transitions['external']['outgoing']:
+            if t.transition_id not in self._transitions:
+                from_outcome = act_outcome_ids_by_name.get(old_outcome_names[t.from_outcome], None)
+                if from_outcome is not None:
+                    new_t_id = self.add_transition(state_id, from_outcome, t.to_state, t.to_outcome, t.transition_id)
+                    re_create_io_going_t_ids.append(new_t_id)
+                    assert new_t_id == t.transition_id
 
         for old_ip in old_input_data_ports.values():
             ip = act_input_data_port_by_name.get(old_input_data_ports[old_ip.data_port_id].name, None)
@@ -1635,6 +1649,10 @@ class ContainerState(State):
                                 not (isinstance(value, type(None)))):
                             logger.error("The data type of output port {0} should be of type {1}, but is of type {2}".
                                          format(output_name, data_port.data_type, type(value)))
+                        elif value is None:
+                            logger.warning(
+                                "The value of output port is 'None'. It has replaced with the default value.".
+                                format(output_name, data_port.data_type, type(value)))
                     self.scoped_data[str(output_data_port_key) + state.state_id] = \
                         ScopedData(data_port.name, value, type(value), state.state_id, OutputDataPort, parent=self)
 
@@ -2239,7 +2257,8 @@ class ContainerState(State):
                 transition.parent = self
             except (ValueError, RecoveryModeException) as e:
                 if type(e) is RecoveryModeException:
-                    logger.exception("Recovery error:")
+                    logger.exception("Recovery error: " + str(e))
+                    logger.error("The transition is going to be deleted!")
                     if e.do_delete_item:
                         transition_ids_to_delete.append(transition.transition_id)
                 else:
@@ -2296,7 +2315,8 @@ class ContainerState(State):
                 data_flow.parent = self
             except (ValueError, RecoveryModeException) as e:
                 if type(e) is RecoveryModeException:
-                    logger.error("Recovery error:")
+                    logger.error("Recovery error: " + str(e))
+                    logger.error("The data-flow is going to be deleted!")
                     if e.do_delete_item:
                         data_flow_ids_to_delete.append(data_flow.data_flow_id)
                 else:
@@ -2436,3 +2456,27 @@ class ContainerState(State):
             return True
         else:
             return False
+
+    @property
+    def is_dummy(self):
+        """Property for the _is_dummy field
+        """
+
+        return self._is_dummy
+
+    @is_dummy.setter
+    @lock_state_machine
+    def is_dummy(self, is_dummy):
+        self._is_dummy = is_dummy
+
+    @property
+    def missing_library_meta_data(self):
+        """Property for the _missing_library_meta_data field
+        """
+
+        return self._missing_library_meta_data
+
+    @missing_library_meta_data.setter
+    @lock_state_machine
+    def missing_library_meta_data(self, missing_library_meta_data):
+        self._missing_library_meta_data = missing_library_meta_data
