@@ -87,6 +87,8 @@ class MainWindowController(ExtendedController):
         # shortcut manager
         self.shortcut_manager = ShortcutManager(view['main_window'])
 
+        self.upper_notebook = view['upper_notebook']
+
         ######################################################
         # debug console
         ######################################################
@@ -100,6 +102,13 @@ class MainWindowController(ExtendedController):
         self.library_manager_model = gui_singletons.library_manager_model
         library_controller = LibraryTreeController(self.library_manager_model, view.library_tree)
         self.add_controller('library_controller', library_controller)
+
+        ######################################################
+        # library usages tree
+        ######################################################
+        library_usages_controller = LibraryTreeController(self.library_manager_model, view.library_usages_tree, True)
+        self.add_controller('library_usages_controller', library_usages_controller)
+
 
         ######################################################
         # state icons
@@ -222,6 +231,14 @@ class MainWindowController(ExtendedController):
     def update_widget_runtime_config(widget, event, name):
         global_runtime_config.store_widget_properties(widget, name)
 
+    def update_search_bar_visibility(self, widget, event):
+        state_machine_search = self.view['state_machine_search']
+        state_machine_search.set_visible(widget.get_active())
+        if widget.get_active():
+            state_machine_search.grab_focus()
+        else:
+            state_machine_search.set_text('')
+
     def register_view(self, view):
         super(MainWindowController, self).register_view(view)
         self.register_actions(self.shortcut_manager)
@@ -257,6 +274,8 @@ class MainWindowController(ExtendedController):
         self.connect_button_to_function('button_start_shortcut', "toggled", self.on_button_start_shortcut_toggled)
         self.connect_button_to_function('button_stop_shortcut', "clicked", self.on_button_stop_shortcut_clicked)
         self.connect_button_to_function('button_pause_shortcut', "toggled", self.on_button_pause_shortcut_toggled)
+        self.connect_button_to_function('button_run_this_state_shortcut', "clicked",
+                                        self.on_button_start_this_state_shortcut_clicked)
         self.connect_button_to_function('button_start_from_shortcut', "clicked",
                                         self.on_button_start_from_shortcut_clicked)
         self.connect_button_to_function('button_run_to_shortcut', "clicked",
@@ -277,6 +296,9 @@ class MainWindowController(ExtendedController):
                                         "clicked",
                                         self.on_button_step_backward_shortcut_clicked)
 
+        view['state_machine_search'].connect("search_changed", self.state_machine_search_changed)
+
+
         view['upper_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['upper_notebook_title'],
                                        view.left_bar_window, 'upper')
         view['lower_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['lower_notebook_title'],
@@ -291,6 +313,7 @@ class MainWindowController(ExtendedController):
         view['top_level_h_pane'].connect("button-release-event", self.update_widget_runtime_config, "LEFT_BAR_DOCKED")
         view['right_h_pane'].connect("button-release-event", self.update_widget_runtime_config, "RIGHT_BAR_DOCKED")
         view['central_v_pane'].connect("button-release-event", self.update_widget_runtime_config, "CONSOLE_DOCKED")
+        view['show_search_bar'].connect("toggled", self.update_search_bar_visibility, "TOGGLED")
 
         # hide not usable buttons
         self.view['step_buttons'].hide()
@@ -578,6 +601,9 @@ class MainWindowController(ExtendedController):
         if self.view['button_pause_shortcut'].get_active():
             self.get_controller('menu_bar_controller').on_pause_activate(None)
 
+    def on_button_start_this_state_shortcut_clicked(self, widget, event=None):
+        self.get_controller('menu_bar_controller').on_run_selected_state_activate(None)
+
     def on_button_start_from_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_start_from_selected_state_activate(None)
 
@@ -599,6 +625,12 @@ class MainWindowController(ExtendedController):
 
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_backward_step_activate(None)
+
+    def state_machine_search_changed(self, search):
+        library_controller = self.get_controller('library_controller')
+        library_controller.view.collapse_all()
+        library_controller.filter_value = search.get_text().lower()
+        library_controller.filter.refilter()
 
     def on_notebook_tab_switch(self, notebook, page, page_num, title_label, window, notebook_identifier):
         """Triggered whenever a left-bar notebook tab is changed.
@@ -625,6 +657,10 @@ class MainWindowController(ExtendedController):
             self.view["collapse_tree_button"].show()
         else:
             self.view["collapse_tree_button"].hide()
+        if upper_notebook_title == 'LIBRARIES':
+            self.view["show_search_bar"].show()
+        else:
+            self.view["show_search_bar"].hide()
 
     def on_collapse_button_clicked(self, button):
         upper_page_num = self.view['upper_notebook'].get_current_page()

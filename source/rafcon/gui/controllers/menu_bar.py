@@ -147,6 +147,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('save_state_as', 'activate', self.on_save_selected_state_as_activate)
         self.connect_button_to_function('undo', 'activate', self.on_undo_activate)
         self.connect_button_to_function('redo', 'activate', self.on_redo_activate)
+        self.connect_button_to_function('search', 'activate', self.on_search_activate)
         self.connect_button_to_function('grid', 'activate', self.on_grid_toggled)
 
         self.connect_button_to_function('data_flow_mode', 'toggled', self.on_data_flow_mode_toggled)
@@ -159,6 +160,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('start', 'activate', self.on_start_activate)
         self.connect_button_to_function('start_from_selected', 'activate', self.on_start_from_selected_state_activate)
         self.connect_button_to_function('run_to_selected', 'activate', self.on_run_to_selected_state_activate)
+        self.connect_button_to_function('run_selected', 'activate', self.on_run_selected_state_activate)
         self.connect_button_to_function('pause', 'activate', self.on_pause_activate)
         self.connect_button_to_function('stop', 'activate', self.on_stop_activate)
         self.connect_button_to_function('step_mode', 'activate', self.on_step_mode_activate)
@@ -352,6 +354,8 @@ class MenuBarController(ExtendedController):
                                                                              "on_start_from_selected_state_activate"))
         self.add_callback_to_shortcut_manager('run_to_selected', partial(self.call_action_callback,
                                                                          "on_run_to_selected_state_activate"))
+        self.add_callback_to_shortcut_manager('run_selected', partial(self.call_action_callback,
+                                                                         "on_run_selected_state_activate"))
 
         self.add_callback_to_shortcut_manager('stop', partial(self.call_action_callback, "on_stop_activate"))
         self.add_callback_to_shortcut_manager('pause', partial(self.call_action_callback, "on_pause_activate"))
@@ -368,6 +372,8 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('show_aborted_preempted', self.show_aborted_preempted)
 
         self.add_callback_to_shortcut_manager('fullscreen', self.on_toggle_full_screen_mode)
+
+        self.add_callback_to_shortcut_manager('search', self.on_search_activate)
 
     def call_action_callback(self, callback_name, *args, **kwargs):
         """Wrapper for action callbacks
@@ -588,6 +594,11 @@ class MenuBarController(ExtendedController):
     def on_redo_activate(self, widget, data=None):
         self.shortcut_manager.trigger_action("redo", None, None)
 
+    def on_search_activate(self, widget, data=None, cursor_position=None):
+        show_search_bar = self.main_window_view["show_search_bar"]
+        show_search_bar.set_active(not show_search_bar.get_active())
+        return True
+
     def on_grid_toggled(self, widget, data=None):
         pass
 
@@ -664,6 +675,15 @@ class MenuBarController(ExtendedController):
         else:
             self.state_machine_execution_engine.start(self.model.selected_state_machine_id,
                                                       selection.get_selected_state().state.get_path())
+
+    def on_run_selected_state_activate(self, widget, data=None):
+        logger.debug("Run selected state ...")
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
+        if len(selection.states) is not 1:
+            logger.error("Exactly one state must be selected!")
+        else:
+            self.state_machine_execution_engine.run_selected_state(selection.get_selected_state().state.get_path(),
+                                                                   self.model.selected_state_machine_id)
 
     def on_pause_activate(self, widget, data=None):
         self.state_machine_execution_engine.pause()
