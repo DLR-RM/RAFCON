@@ -17,7 +17,7 @@
 """
 
 import os
-import importlib
+import imp
 import yaml
 from rafcon.design_patterns.observer.observable import Observable
 
@@ -126,17 +126,20 @@ class Script(Observable, yaml.YAMLObject):
         :raises exceptions.IOError: if the compilation of the script module failed
         """
         try:
+            imp.acquire_lock()
+
             code = compile(self.script, '%s (%s)' % (self.filename, self._script_id), 'exec')
             # load module
             module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
-            module_spec = importlib.machinery.ModuleSpec(module_name, None)
-            tmp_module = importlib.util.module_from_spec(module_spec)
+            tmp_module = imp.new_module(module_name)
             exec(code, tmp_module.__dict__)
             # return the module
             self.compiled_module = tmp_module
         except Exception as e:
             self.compiled_module = None
             raise
+        finally:
+            imp.release_lock()
 
     @property
     def parent(self):

@@ -31,8 +31,9 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 0.15.4
 """""""
 
-- Bug Fixes:
-    - Support custom design
+- Features:
+    - last version with python2 support which is still supported by Agile Robots
+    - passes testing pipeline for both python2 and python3 inside the CI pipeline of AR
 
 
 0.15.3

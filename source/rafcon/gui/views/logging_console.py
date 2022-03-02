@@ -55,6 +55,7 @@ class LoggingConsoleView(View):
         self.text_view.show()
 
         self['scrollable'] = scrollable
+        self.top = 'scrollable'
         self.quit_flag = False
 
         self.logging_priority = global_gui_config.get_config_value("LOGGING_CONSOLE_GTK_PRIORITY", GLib.PRIORITY_LOW)

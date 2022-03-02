@@ -468,10 +468,10 @@ def relocate_library(library_os_path, library_path, library_name, new_directory,
     affected_libraries = []
     new_library_path = os.path.basename(os.path.normpath(new_directory))
     new_root_required = True
-    for library_root_path in library_manager.library_root_paths.values():
+    for library_root, library_root_path in library_manager.library_root_paths.items():
         if library_root_path == new_directory or new_directory.startswith(os.path.join(library_root_path, '')):
             new_root_required = False
-            new_library_path = os.path.join(os.path.basename(os.path.normpath(library_root_path)), new_directory[len(library_root_path) + 1:]).strip('/')
+            new_library_path = os.path.join(library_root, new_directory[len(library_root_path) + 1:]).strip('/')
             break
     library_dependencies = find_library_dependencies(library_os_path,
                                                      library_path=library_path,
