@@ -1,4 +1,3 @@
-from __future__ import print_function
 # state machine
 from rafcon.core.states.state import State
 from rafcon.core.decorators import global_lock_counter, lock_state_machine
@@ -44,7 +43,7 @@ def test_state_machine_manager(caplog):
     state1 = ExecutionState("s1")
     state_machine.root_state = state1
 
-    manager = StateMachineManager([state_machine])
+    manager = StateMachineManager.instance([state_machine])
 
     sm_id = manager.get_sm_id_for_root_state_id(state1.state_id)
 

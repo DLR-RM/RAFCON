@@ -11,7 +11,7 @@
 
 """ Module collects methods and function to be integrated into a respective class if that is of advantage, in future.
 """
-from builtins import range
+
 import os
 import time
 
@@ -103,16 +103,13 @@ def restore_session_from_runtime_config():
         # pick folder name dependent on time, and backup meta data existence
         # problem is that the backup time is maybe not the best choice
         if 'last_backup' in backup_meta_dict:
-            last_backup_time = storage_utils.get_float_time_for_string(backup_meta_dict['last_backup']['time'])
             if 'last_saved' in backup_meta_dict:
-                last_save_time = storage_utils.get_float_time_for_string(backup_meta_dict['last_saved']['time'])
                 backup_marked_dirty = backup_meta_dict['last_backup']['marked_dirty']
-                if last_backup_time > last_save_time and backup_marked_dirty:
+                if backup_marked_dirty:
                     from_backup_path = backup_meta_dict['last_backup']['file_system_path']
             else:
                 from_backup_path = backup_meta_dict['last_backup']['file_system_path']
         elif 'last_saved' in backup_meta_dict:
-            # print("### open last saved", sm_meta_dict['last_saved']['file_system_path'])
             pass
         else:
             logger.error("A tab was stored into session storage dictionary {0} without any recovery path"
@@ -139,7 +136,6 @@ def restore_session_from_runtime_config():
                 logger.warning("The tab can not be open. The backup of tab {0} from common path {1} was not "
                                "possible.".format(idx, path))
                 continue
-            # logger.info("backup from last saved", path, sm_meta_dict)
             state_machine = storage.load_state_machine_from_path(path)
             state_machine_manager_model.state_machine_manager.add_state_machine(state_machine)
             wait_for_gui()

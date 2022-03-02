@@ -1,4 +1,3 @@
-from __future__ import print_function
 from os.path import join
 import rafcon.core.start as start
 from rafcon.core.singleton import state_machine_manager

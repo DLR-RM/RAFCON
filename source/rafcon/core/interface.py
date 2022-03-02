@@ -90,8 +90,6 @@ def save_folder_cmd_line(query, default_name=None, default_path=None):
         return None
     return user_input
 
-save_folder_func = save_folder_cmd_line
-
 
 def show_notice(notice):
     """Shows a notice on the console that has to be acknowledged

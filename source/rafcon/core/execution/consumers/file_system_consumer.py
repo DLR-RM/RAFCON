@@ -3,7 +3,6 @@ import datetime
 import shelve
 import subprocess
 from threading import Lock
-from future.utils import native_str
 
 from rafcon.core.config import global_config
 from rafcon.core.execution.consumers.abstract_execution_history_consumer import AbstractExecutionHistoryConsumer
@@ -67,7 +66,7 @@ class FileSystemConsumer(AbstractExecutionHistoryConsumer):
         """
         with self.store_lock:
             try:
-                self.store[native_str(key)] = value
+                self.store[key] = value
             except Exception:
                 logger.exception('Exception:')
 

@@ -28,6 +28,7 @@ from rafcon.core.config import ObservableConfig
 from rafcon.utils.resources import get_data_file_path
 from rafcon.utils import storage_utils
 from rafcon.utils import log
+from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
 
 logger = log.get_logger(__name__)
 
@@ -57,8 +58,9 @@ class GuiConfig(ObservableConfig):
             raise ConfigError("Type should be GUI_CONFIG for GUI configuration. "
                               "Please add \"TYPE: GUI_CONFIG\" to your gui_config.yaml file.")
         self.path_to_tool = os.path.dirname(os.path.realpath(__file__))
-        self.configure_gtk()
-        self.configure_colors()
+        if not is_custom_design_enabled():
+            self.configure_gtk()
+            self.configure_colors()
 
     def load(self, config_file=None, path=None):
         if config_file is None:
@@ -68,13 +70,20 @@ class GuiConfig(ObservableConfig):
         self.configure_gtk()
         self.configure_colors()
 
-    def get_theme_path(self):
+    def _get_theme_path(self):
         return get_data_file_path("themes", "RAFCON")
 
+    def _get_custom_theme_path(self):
+        return os.path.join(global_design_config.get_config_value("THEMES_FOLDER"),
+                            global_design_config.get_config_value("THEME_NAME"))
+
     def configure_gtk(self):
-        theme_path = self.get_theme_path()
+        theme_path = self._get_theme_path()
         if not theme_path:
             raise ValueError("GTK theme 'RAFCON' does not exist")
+
+        if is_custom_design_enabled():
+            theme_path = self._get_custom_theme_path()
 
         theme_name = "RAFCON"
         dark_theme = self.get_config_value('THEME_DARK_VARIANT', True)
@@ -111,10 +120,14 @@ class GuiConfig(ObservableConfig):
         dark_theme = self.get_config_value('THEME_DARK_VARIANT', True)
         css_filename = "gtk-dark.css" if dark_theme else "gtk.css"
         # Get colors from GTKrc file
-        theme_path = self.get_theme_path()
+        theme_path = self._get_theme_path()
+
+        if is_custom_design_enabled():
+            theme_path = self._get_custom_theme_path()
+
         css_file_path = os.path.join(theme_path, "gtk-3.0", css_filename)
         if not os.path.isfile(css_file_path):
-            raise ValueError("GTK theme does not exist")
+            raise ValueError("GTK theme does not exist: {}".format(str(css_file_path)))
 
         with open(css_file_path) as f:
             lines = f.readlines()
@@ -162,13 +175,6 @@ class GuiConfig(ObservableConfig):
                 continue
             self.gtk_colors[color_name] = color
             self.colors[color_name] = color_code
-
-    @staticmethod
-    def get_assets_path(folder=None, filename=None, for_theme=True):
-        theme = "share/themes/RAFCON/" if for_theme else ""
-        folder = folder + "/" if folder else ""
-        filename = filename if filename else ""
-        return "assets/{theme}{folder}{filename}".format(theme=theme, folder=folder, filename=filename)
 
 
 global_gui_config = GuiConfig(logger)

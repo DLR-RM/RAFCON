@@ -1,6 +1,3 @@
-from __future__ import print_function
-
-
 def execute(self, inputs, outputs, gvm):
     self.logger.debug("Executing decider state.")
     print("Data passed to the decider state: ")

@@ -16,7 +16,6 @@
    Additional this module holds methods that employing the state machine manager. Maybe this changes in future.
 """
 
-from builtins import str
 import copy
 import time
 import os
@@ -51,14 +50,6 @@ from rafcon.utils import log, storage_utils
 import rafcon.gui.utils
 
 logger = log.get_logger(__name__)
-
-# TODO think about to generate a state machine manager helper to separate this functions from this module
-
-
-def is_element_none_with_error_message(method_name, element_dict):
-    missing_elements = [element_name for element_name, element in element_dict.items() if element is None]
-    if missing_elements:
-        logger.error("The following elements are missing to perform {0}: {1}".format(missing_elements))
 
 
 def new_state_machine(*args):
@@ -521,7 +512,6 @@ def save_state_machine(delete_old_state_machine=False, recent_opened_notificatio
         return False
 
     previous_path = state_machine_m.state_machine.file_system_path
-    previous_marked_dirty = state_machine_m.state_machine.marked_dirty
     all_tabs = list(states_editor_ctrl.tabs.values())
     all_tabs.extend(states_editor_ctrl.closed_tabs.values())
     dirty_source_editor_ctrls = [tab_dict['controller'].get_controller('source_ctrl') for tab_dict in all_tabs if

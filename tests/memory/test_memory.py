@@ -30,4 +30,9 @@ def test_memory(test_iterations=25):
     # Create test objects and run tests
     for k in range(len(machines_to_be_tested)):
         tests.append(MemoryTestHelper(machines_to_be_tested[k], test_iterations))
-        results = tests[k].run()
+        results = tests[k].run(assert_during_execution=True)
+
+
+if __name__ == '__main__':
+    test_memory()
+

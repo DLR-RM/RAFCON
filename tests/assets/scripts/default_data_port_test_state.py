@@ -1,4 +1,3 @@
-from __future__ import print_function
 def execute(self, inputs, outputs, gvm):
     print("Executing default data port test state ...")
     print(inputs)

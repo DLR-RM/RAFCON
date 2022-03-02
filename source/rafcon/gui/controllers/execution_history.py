@@ -22,9 +22,6 @@
 
 """
 
-from builtins import range
-from builtins import next
-from builtins import str
 from os import path
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -133,12 +130,8 @@ class ExecutionHistoryTreeController(ExtendedController):
             viewer_path = path.join(gui_path, "execution_log_viewer.py")
             # TODO run in fully separate process but from here to use the option for selection synchronization via dict
             import sys
-            if sys.version_info[0] == 2:
-                python_version = "python2"
-            else:
-                python_version = "python3"
             cmd = "{python_version} {path} '{filename}' '{run_id}'" \
-                  "".format(python_version=python_version, path=viewer_path,
+                  "".format(python_version="python3", path=viewer_path,
                             filename=execution_history.consumer_manager.get_file_system_consumer_file_name(),
                             run_id=run_id)
             execute_command_in_process(cmd, shell=True, cwd=source_path, logger=logger)
@@ -166,7 +159,6 @@ class ExecutionHistoryTreeController(ExtendedController):
             if row is not None:
                 histroy_item_path = self.history_tree_store.get_path(row)
                 histroy_item_iter = self.history_tree_store.get_iter(histroy_item_path)
-                # logger.info(history_item.state_reference)
                 # TODO generalize double-click folding and unfolding -> also used in states tree of state machine
                 if histroy_item_path is not None and self.history_tree_store.iter_n_children(histroy_item_iter):
                     if self.history_tree.row_expanded(histroy_item_path):
@@ -253,12 +245,6 @@ class ExecutionHistoryTreeController(ExtendedController):
                 popup_menu.popup(None, None, None, None, event.get_button()[1], time)
 
             return True
-
-    # TODO: implement! To do this efficiently a mechanism is needed that does not regenerate the whole tree view
-    # TODO: the appropriate state machine would have to be observed as well
-    # @ExtendedController.observe("execution_history_container", after=True)
-    # def model_changed(self, model, prop_name, info):
-    #     #self.update()
 
     def get_history_item_for_tree_iter(self, child_tree_iter):
         """Hands history item for tree iter and compensate if tree item is a dummy item
@@ -435,7 +421,6 @@ class ExecutionHistoryTreeController(ExtendedController):
         if not history_item.state_reference:
             logger.error("This must never happen! Current history_item is {}".format(history_item))
             return None
-        content = None
 
         if global_gui_config.get_config_value("SHOW_PATH_NAMES_IN_EXECUTION_HISTORY", False):
             content = (history_item.state_reference.name + " - " +

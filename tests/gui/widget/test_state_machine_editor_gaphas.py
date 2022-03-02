@@ -1,6 +1,4 @@
-from __future__ import print_function
 # general tool elements
-from builtins import str
 from os.path import join
 
 import pytest

@@ -22,12 +22,13 @@ The HistoryChanges-Class provides the functionalities to organize and access all
 Hereby the branching of the edit process is stored and should be accessible, too.
 
 """
-from builtins import object
-from builtins import str
+
 import copy
 
-from gtkmvc3.model_mt import ModelMT
-from gtkmvc3.observable import Observable
+from gi.repository import GLib
+
+from rafcon.design_patterns.mvc.model import ModelMT
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.gui.action import ActionDummy, Action, StateMachineAction, StateAction, DataPortAction, \
     ScopedVariableAction, OutcomeAction, TransitionAction, DataFlowAction, AddObjectAction, RemoveObjectAction, \
@@ -52,8 +53,6 @@ from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE, BY_EXECUTION_TRIGGERED
 
 logger = log.get_logger(__name__)
 
-HISTORY_DEBUG_LOG_FILE = RAFCON_TEMP_PATH_BASE + '../test_file.txt'
-
 
 class ModificationsHistoryModel(ModelMT):
     state_machine_model = None
@@ -67,7 +66,6 @@ class ModificationsHistoryModel(ModelMT):
 
         assert isinstance(state_machine_model, StateMachineModel)
         self.state_machine_model = state_machine_model
-        self.__state_machine_id = state_machine_model.state_machine.state_machine_id
         self._tmp_meta_storage = None
         self.tmp_meta_storage = self.get_root_state_element_meta()
 
@@ -156,12 +154,17 @@ class ModificationsHistoryModel(ModelMT):
             self.busy = True
             self.modifications.go_to_history_element(target_history_id)
             self.busy = False
-
             self._re_initiate_observation()
             self.update_internal_tmp_storage()
             self.change_count += 1
 
     def undo(self):
+        GLib.idle_add(self.synchronized_undo)
+
+    def redo(self):
+        GLib.idle_add(self.synchronized_redo)
+
+    def synchronized_undo(self):
         with self.state_machine_model.storage_lock:
             action = self.modifications.current_history_element.action
             self.busy = True
@@ -172,7 +175,7 @@ class ModificationsHistoryModel(ModelMT):
             self.update_internal_tmp_storage()
             self.change_count += 1
 
-    def redo(self):
+    def synchronized_redo(self):
         with self.state_machine_model.storage_lock:
             action = None
             if self.modifications.get_next_element():
@@ -249,7 +252,7 @@ class ModificationsHistoryModel(ModelMT):
                     assert cause in ["remove_transition", "remove_data_flow", "remove_income", "remove_outcome",
                                      "remove_input_data_port", "remove_output_data_port", "remove_scoped_variable",
                                      "remove_state"]
-                    if ("transition" in cause or "data_flow" in cause or "scoped_variable" in cause or "state" in cause) or\
+                    if ("transition" in cause or "data_flow" in cause or "scoped_variable" in cause or "state" in cause) or \
                             (("data_port" in cause or "outcome" in cause or "income" in cause) and not isinstance(overview.get_affected_model().state.parent, State)):
                         self.active_action = RemoveObjectAction(parent_path=overview.get_affected_core_element().get_path(),
                                                                 state_machine_model=self.state_machine_model,
@@ -306,17 +309,14 @@ class ModificationsHistoryModel(ModelMT):
 
             if overview.get_affected_model().parent:
                 if not isinstance(overview.get_affected_model().parent.state, State):
-                    level_status = 'State'
                     self.active_action = Action(parent_path=overview.get_affected_core_element().get_path(),
                                                 state_machine_model=self.state_machine_model,
                                                 overview=overview)
                 elif not isinstance(overview.get_affected_model().parent.state.parent, State):  # is root_state
-                    level_status = 'ParentState'
                     self.active_action = Action(parent_path=overview.get_affected_core_element().parent.get_path(),
                                                 state_machine_model=self.state_machine_model,
                                                 overview=overview)
                 else:
-                    level_status = 'ParentParentState'
                     self.active_action = Action(parent_path=overview.get_affected_core_element().parent.parent.get_path(),
                                                 state_machine_model=self.state_machine_model,
                                                 overview=overview)
@@ -649,7 +649,6 @@ class HistoryTreeElement(object):
 
     @prev_id.setter
     def prev_id(self, prev_id):
-        # logger.info("new_prev_id is: {0}".format(prev_id))
         assert isinstance(prev_id, int)
         self.__prev_id = prev_id
 

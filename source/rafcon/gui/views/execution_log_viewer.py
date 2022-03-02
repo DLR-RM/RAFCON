@@ -1,16 +1,10 @@
-# Copyright
-
-# example basictreeview.py
-
 from gi.repository import Gtk
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
 
 class ExecutionLogTreeView(View):
-
     def __init__(self):
-
-        View.__init__(self)
+        super().__init__(parent='execution_log_paned')
         # Create a new window
         # self.get_window() = Gtk.Window(Gtk.WindowType.TOPLEVEL)
 
@@ -72,5 +66,3 @@ class ExecutionLogTreeView(View):
 
         self['execution_log_paned'] = self.paned
         self['execution_log_tree_view'] = self.tree_view
-
-        self.top = 'execution_log_tree_view'

@@ -17,12 +17,11 @@
    :synopsis: A module to represent a library state in the state machine
 
 """
-from future.utils import string_types
-from builtins import str
+
 from weakref import ref
 from copy import copy, deepcopy
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.singleton import library_manager
 from rafcon.core.states.state import State, PATH_SEPARATOR
@@ -30,7 +29,6 @@ from rafcon.core.decorators import lock_state_machine
 from rafcon.core.config import global_config
 from rafcon.utils import log
 from rafcon.utils import type_helpers
-from rafcon.utils.hashable import Hashable
 
 logger = log.get_logger(__name__)
 
@@ -57,8 +55,6 @@ class LibraryState(State):
     :ivar skip_runtime_data_initialization: flag to indicate if the runtime-data data structures have to be initialized,
                                             this is not needed e.g. in the case of a copy
     """
-
-    yaml_tag = u'!LibraryState'
 
     _library_path = None
     _library_name = None
@@ -161,7 +157,7 @@ class LibraryState(State):
                 self.input_data_port_runtime_values[data_port_id] = data_port.default_value
                 self.use_runtime_value_input_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
-            elif isinstance(self.input_data_port_runtime_values[data_port_id], string_types):
+            elif isinstance(self.input_data_port_runtime_values[data_port_id], str):
                 try:
                     self.input_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
                         self.input_data_port_runtime_values[data_port_id], data_port.data_type)
@@ -189,7 +185,7 @@ class LibraryState(State):
                 self.output_data_port_runtime_values[data_port_id] = data_port.default_value
                 self.use_runtime_value_output_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
-            elif isinstance(self.output_data_port_runtime_values[data_port_id], string_types):
+            elif isinstance(self.output_data_port_runtime_values[data_port_id], str):
                 try:
                     self.output_data_port_runtime_values[data_port_id] = \
                         type_helpers.convert_string_value_to_type_value(
@@ -466,7 +462,7 @@ class LibraryState(State):
     @lock_state_machine
     @Observable.observed
     def library_path(self, library_path):
-        if not isinstance(library_path, string_types):
+        if not isinstance(library_path, str):
             raise TypeError("library_path must be a string")
 
         self._library_path = library_path
@@ -482,7 +478,7 @@ class LibraryState(State):
     @lock_state_machine
     @Observable.observed
     def library_name(self, library_name):
-        if not isinstance(library_name, string_types):
+        if not isinstance(library_name, str):
             raise TypeError("library_name must be a string")
 
         self._library_name = library_name
@@ -498,7 +494,7 @@ class LibraryState(State):
     @lock_state_machine
     @Observable.observed
     def version(self, version):
-        if version is not None and not isinstance(version, (string_types, int, float)):
+        if version is not None and not isinstance(version, (str, int, float)):
             raise TypeError("version must be a string, got: {}, {}".format(type(version), version))
 
         self._version = str(version)

@@ -12,16 +12,14 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from gi.repository import GObject
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 from rafcon.gui.utils import constants
 from rafcon.gui.helpers import label
 
 
 class ExecutionHistoryTreeView(View, Gtk.TreeView):
-
     def __init__(self):
-        View.__init__(self)
+        View.__init__(self, parent='history_treeview')
         Gtk.TreeView.__init__(self)
         self.set_name("history_tree")
 
@@ -30,13 +28,11 @@ class ExecutionHistoryTreeView(View, Gtk.TreeView):
         self.append_column(tvcolumn)
 
         self['history_treeview'] = self
-        self.top = 'history_treeview'
 
 
 class ExecutionHistoryView(View, Gtk.ScrolledWindow):
-
     def __init__(self):
-        View.__init__(self)
+        View.__init__(self, parent='history_vbox')
         Gtk.ScrolledWindow.__init__(self)
 
         history_tree = ExecutionHistoryTreeView()
@@ -70,4 +66,3 @@ class ExecutionHistoryView(View, Gtk.ScrolledWindow):
         self['reload_button'] = reload_button
         self['clean_button'] = clean_button
         self['open_separately_button'] = open_separately_button
-        self.top = 'history_vbox'

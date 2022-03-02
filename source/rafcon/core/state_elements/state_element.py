@@ -17,11 +17,9 @@
 
 """
 
-from future.utils import string_types
-from builtins import str
 from weakref import ref
 from yaml import YAMLObject
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 from jsonconversion.jsonobject import JSONObject
 
 from rafcon.core.custom_exceptions import RecoveryModeException
@@ -44,8 +42,6 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
     :ivar rafcon.core.states.state.State StateElement.parent: Parent state of the state element
     """
     _parent = None
-
-    yaml_tag = u'!StateElement'
 
     def __init__(self, parent=None, safe_init=True):
         Observable.__init__(self)
@@ -173,18 +169,6 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
     def state_element_to_dict(state_element):
         raise NotImplementedError()
 
-    @classmethod
-    def to_yaml(cls, dumper, state_element):
-        dict_representation = cls.state_element_to_dict(state_element)
-        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node, deep=True)
-        state_element = cls.from_dict(dict_representation)
-        return state_element
-
     @lock_state_machine
     def _change_property_with_validity_check(self, property_name, value):
         """Helper method to change a property and reset it if the validity check fails
@@ -193,7 +177,7 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
         :param value: The new desired value for this property
         :raises exceptions.ValueError: if a property could not be changed
         """
-        assert isinstance(property_name, string_types)
+        assert isinstance(property_name, str)
         old_value = getattr(self, property_name)
         setattr(self, property_name, value)
 

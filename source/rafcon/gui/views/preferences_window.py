@@ -10,14 +10,10 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 from rafcon.gui import glade
 
 
 class PreferencesWindowView(View):
-    builder = glade.get_glade_path("preferences_window.glade")
-    top = 'preferences_window'
-
     def __init__(self):
-        View.__init__(self)
-
+        super().__init__(builder_filename=glade.get_glade_path('preferences_window.glade'), parent='preferences_window')

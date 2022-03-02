@@ -15,7 +15,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.config import global_gui_config
@@ -24,9 +24,6 @@ from rafcon.gui.utils import constants
 
 
 class MenuBarView(View):
-    builder = glade.get_glade_path("menu_bar.glade")
-    top = 'menubar'
-
     buttons = {
         # -----------------------------------------------
         # File
@@ -72,6 +69,7 @@ class MenuBarView(View):
         'start':                constants.BUTTON_START,
         'start_from_selected':  constants.BUTTON_START_FROM_SELECTED_STATE,
         'run_selected':         constants.BUTTON_RUN_SELECTED_STATE,
+        'only_run_selected':    constants.BUTTON_ONLY_RUN_SELECTED_STATE,
         'pause':                constants.BUTTON_PAUSE,
         'stop':                 constants.BUTTON_STOP,
         'step_mode':            constants.BUTTON_STEPM,
@@ -84,32 +82,23 @@ class MenuBarView(View):
         # Help
         # -----------------------------------------------
         'about':                constants.BUTTON_ABOUT
-        }
+    }
 
     sub_menus = ['submenu_file', 'submenu_edit', 'submenu_view', 'submenu_execution', 'submenu_help']
 
-    def __init__(self, top_window):
-        View.__init__(self)
+    def __init__(self):
+        super().__init__(builder_filename=glade.get_glade_path('menu_bar.glade'), parent='menubar')
 
-        self.win = top_window['main_window']
         self.insert_accelerators = {'new': Gtk.accelerator_parse('<control>N'),
                                     'open': Gtk.accelerator_parse('<control>O'),
                                     'save': Gtk.accelerator_parse('<control>S'),
-                                    # 'save_as': Gtk.accelerator_parse('<shift><control>S'),
-                                    # no default accelerator insert
                                     'quit': Gtk.accelerator_parse('<control>Q'),
                                     'cut': Gtk.accelerator_parse('<control>X'),
                                     'copy': Gtk.accelerator_parse('<control>C'),
                                     'paste': Gtk.accelerator_parse('<control>V'),
-                                    # 'delete': Gtk.accelerator_parse('Delete'),  # no default accelerator insert
-                                    # 'undo': Gtk.accelerator_parse('<control>Z'),  # no default accelerator insert
-                                    # 'redo': Gtk.accelerator_parse('<control>Y'),  # no default accelerator insert
                                     }
         self.sub_menu_open_recently = Gtk.Menu()
         self['open_recent'].set_submenu(self.sub_menu_open_recently)
-
-        # Gtk TODO: Unfortunately does not help against not showing Accel Keys
-        # self.win.add_accel_group(self['accelgroup1'])
 
         for menu_item_name in self.buttons:
             # set icon
@@ -120,7 +109,6 @@ class MenuBarView(View):
                 if shortcuts:
                     main_shortcut = shortcuts[0] if isinstance(shortcuts, list) else shortcuts
                     self.set_menu_item_accelerator(menu_item_name, main_shortcut)
-
         for sub_menu_name in self.sub_menus:
             sub_menu = self[sub_menu_name]
             sub_menu.set_reserve_toggle_size(False)
@@ -141,7 +129,6 @@ class MenuBarView(View):
             if menu_item_name in self.insert_accelerators:
                 key, mod = self.insert_accelerators[menu_item_name]
                 menu_item.remove_accelerator(self['accelgroup1'], key, mod)
-
         key, mod = Gtk.accelerator_parse(accel_code)
         menu_item.add_accelerator("activate", self['accelgroup1'], key, mod, Gtk.AccelFlags.VISIBLE)
         self.insert_accelerators[menu_item_name] = (key, mod)

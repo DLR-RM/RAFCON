@@ -1,4 +1,3 @@
-from builtins import str
 try:
     import exceptions
 except ImportError:

@@ -11,7 +11,6 @@
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import zip
 from weakref import ref
 
 from gaphas.geometry import distance_point_point

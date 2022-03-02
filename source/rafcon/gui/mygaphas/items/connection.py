@@ -35,12 +35,6 @@ class ConnectionView(PerpLine):
         elif handle is self.to_handle():
             self.reset_to_port()
 
-    def remove_connection_from_port(self, port):
-        if self._from_port and port is self._from_port:
-            self._from_port.remove_connected_handle(self._from_handle)
-        elif self._to_port and port is self._to_port:
-            self._to_port.remove_connected_handle(self._to_handle)
-
     def remove_connection_from_ports(self):
         if self._from_port:
             self._from_port.remove_connected_handle(self._from_handle)

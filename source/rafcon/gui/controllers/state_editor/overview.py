@@ -22,7 +22,6 @@ from gi.repository import GLib
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GObject
-from builtins import str
 
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState, DeciderState
 from rafcon.core.states.execution_state import ExecutionState
@@ -34,7 +33,6 @@ import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.models import AbstractStateModel, LibraryStateModel
 from rafcon.gui.views.state_editor.overview import StateOverviewView
-from rafcon.gui.utils import constants
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)

@@ -13,19 +13,17 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 import os
 
-from gtkmvc3.model_mt import ModelMT
-
+from rafcon.design_patterns.singleton import Singleton
+from rafcon.design_patterns.mvc.model import ModelMT
 from rafcon.core.state_machine_manager import StateMachineManager
-
 from rafcon.gui.models.state_machine import StateMachineModel
-
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
-from rafcon.utils.timer import measure_time
 
 logger = log.get_logger(__name__)
 
 
+@Singleton
 class StateMachineManagerModel(ModelMT):
     """This model class manages a StateMachineManager
 
@@ -60,7 +58,7 @@ class StateMachineManagerModel(ModelMT):
 
         self._selected_state_machine_id = None
         if len(self.state_machines) > 0:
-            self.selected_state_machine_id = list(self.state_machines.keys())[0]
+            self.selected_state_machine_id = next(iter(self.state_machines.keys()))
 
         if isinstance(meta, Vividict):
             self.meta = meta
@@ -78,7 +76,6 @@ class StateMachineManagerModel(ModelMT):
         return self.state_machine_manager
 
     @ModelMT.observe("state_machine_manager", after=True)
-    # @measure_time
     def model_changed(self, model, prop_name, info):
         if isinstance(info['result'], Exception):
             from rafcon.gui.utils.notification_overview import NotificationOverview

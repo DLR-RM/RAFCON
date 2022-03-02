@@ -31,7 +31,7 @@ class SingleWidgetWindowController(ExtendedController):
         """
         ExtendedController.__init__(self, model, view)
         self.shortcut_manager = None
-        self.add_controller('widget_ctrl', ctrl_class(model, view.get_top_widget(), *args, **kwargs))
+        self.add_controller('widget_ctrl', ctrl_class(model, view.get_parent_widget(), *args, **kwargs))
 
     def register_view(self, view):
         """Called when the View was registered
@@ -43,9 +43,7 @@ class SingleWidgetWindowController(ExtendedController):
         self.register_actions(self.shortcut_manager)
 
         view['main_window'].connect('destroy', Gtk.main_quit)
-        # view.get_top_widget().connect('destroy', Gtk.main_quit)
 
-    pass  # class end
 
 # Example
 # from rafcon.gui.controllers.utils.single_widget_window import SingleWidgetWindowController
