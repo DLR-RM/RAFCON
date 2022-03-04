@@ -197,7 +197,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         try:
             self.select_entry(self.tree_store[path][self.ID_STORAGE_ID])
         except IndexError:
-            if len(self.tree_store):
+            if self.tree_store:
                 if len(path) > 1:
                     possible_before_path = tuple(list(path[:-1]) + [path[-1] - 1])
                     if possible_before_path[-1] > -1:

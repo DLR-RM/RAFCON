@@ -48,7 +48,7 @@ class StateMachineManager(Observable):
                 self.add_state_machine(state_machine)
 
     def delete_all_state_machines(self):
-        sm_ids = [sm_id for sm_id in self.state_machines]
+        sm_ids = list(self.state_machines)
         for sm_id in sm_ids:
             if not (sm_id == self.active_state_machine_id):
                 self.remove_state_machine(sm_id)
@@ -124,6 +124,19 @@ class StateMachineManager(Observable):
         # destroy execution history
         removed_state_machine.destroy_execution_histories()
         return removed_state_machine
+
+    def remove_state_machine_by_path(self, state_machine_path):
+        """ Remove an open state machine by path
+
+        :param str state_machine_path: the state machine path
+        """
+
+        state_machine_ids = []
+        for state_machine_id, state_machine in self._state_machines.items():
+            if state_machine.file_system_path == state_machine_path:
+                state_machine_ids.append(state_machine_id)
+        for state_machine_id in state_machine_ids:
+            self.remove_state_machine(state_machine_id)
 
     def get_active_state_machine(self):
         """Return a reference to the active state-machine

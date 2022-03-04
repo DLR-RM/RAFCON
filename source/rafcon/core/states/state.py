@@ -352,7 +352,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         :return: The last state in the execution history
         """
-        return self.execution_history.get_last_history_item().prev.state_reference
+        previous_state = self.execution_history.get_last_history_item().prev.state_reference
+        if not previous_state:
+            logger.warning(
+                "The In-Memory-Execution-History is disabled. "
+                "Thus, then previously executed state cannot be retrieved.")
+        return previous_state
 
     # ---------------------------------------------------------------------------------------------
     # ------------------------------- input/output data handling ----------------------------------

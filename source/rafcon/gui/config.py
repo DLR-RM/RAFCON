@@ -90,8 +90,8 @@ class GuiConfig(ObservableConfig):
             from gi.repository import Gtk
             settings = Gtk.Settings.get_default()
             if settings:
-                settings.set_property("gtk-enable-animations", True)
                 settings.set_property("gtk-theme-name", theme_name)
+                settings.set_property("gtk-enable-animations", True)
                 settings.set_property("gtk-application-prefer-dark-theme", dark_theme)
 
             Gtk.Window.set_default_icon_name("rafcon" if dark_theme else "rafcon-light")
@@ -122,6 +122,8 @@ class GuiConfig(ObservableConfig):
         for line in lines:
             match = re.match("\s*@define-color (\w*) (#[\w]{3,6})", line)
             if match:
+                # css colors are mapped to capital-case color names
+                # these colors can then be used in the colors definition file for the gaphas colors (e.g., colors.json)
                 color_name = match.group(1).upper()
                 color_code = match.group(2)
                 self.colors[color_name] = color_code

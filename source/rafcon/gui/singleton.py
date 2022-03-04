@@ -14,6 +14,7 @@
 """
 .. module:: singleton
    :synopsis: A module to hold all singletons of the GTK GUI
+   :noindex:
 
 """
 import threading

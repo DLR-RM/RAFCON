@@ -218,3 +218,27 @@ left-hand side of the GUI. There you can also create new variables.
 However, variables are not stored when saving state-machines. If you
 want to have variables loaded with the state-machine, you have to create
 those variables in an initial execution state.
+
+
+Execution History
+-----------------
+
+The general idea of the execution history is shown in the following figure:
+
+.. figure:: _static/execution_history.png
+   :alt: Screenshot of RAFCON with an example state machine
+   :width: 100 %
+   :align: center
+
+During execution, a start and an end event is created for each state.
+Subsequently, the events are forwarded via the ExecutionHistory
+(in case the IN_MEMORY_EXECUTION_HISTORY_ENABLE is enabled, the InMemoryExecutionHistory is used)
+to the ConsumerManager. The ConsumerManager distributes the events to different Consumers.
+RAFCON ships with a default Consumer called the FileSystemConsumer.
+If FILE_SYSTEM_EXECUTION_HISTORY_ENABLE is enabled the FileSystemConsumer will write all history on disk into a shelve file.
+The execution_log_viewer.py can then be used to analyze the execution history logs after untime.
+
+It is straightforward to create other consumers (e.g. for logging the execution-history via a middleware).
+Therefore, a plugin can be created that just works similar to the FileSystemConsumer.
+For writing a plugin, only the "pre_init" and the "register_execution_history_consumer" hook has to be created.
+The latter one has to care about that the consumer is registered at the ExecutionHistoryConsumerManager.

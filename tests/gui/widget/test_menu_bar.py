@@ -100,7 +100,7 @@ def paste(gui, state_machine_model, state_m, main_window_controller, menu_bar_ct
     testing_utils.wait_for_gui()
 
 
-@pytest.mark.timeout(30)
+@pytest.mark.timeout(60)
 @pytest.mark.unstable35
 @pytest.mark.unstable37
 @pytest.mark.parametrize('gui', [{"libraries": {

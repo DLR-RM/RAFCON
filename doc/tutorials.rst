@@ -187,7 +187,7 @@ The following code blocks include code lines to generate the correct environment
 in an e.g. Ubuntu setup, where the environment is statically specified
 in the ~/.bashrc these environment generating commands can be omitted:
 
-.. code:: python
+.. code:: bash
 
     rmpm_do env ros.indigo.desktop > /tmp/desktop.env
     source /tmp/desktop.env
@@ -452,7 +452,7 @@ and the client:
 If everything went fine, we should see below output in the debug console
 of the client:
 
-.. code:: python
+.. code::
 
     11:23:40 INFO - monitoring.client: Connect to server ('127.0.0.1', 9999)!
     11:23:40 INFO - monitoring.client: self.connector <monitoring.client.MonitoringClient on 59055>

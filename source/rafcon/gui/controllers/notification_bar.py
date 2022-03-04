@@ -8,6 +8,8 @@
 # Contributors:
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 
+import time
+
 from gi.repository import Gtk
 
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -21,6 +23,7 @@ class NotificationBarController(ExtendedController):
     def __init__(self, model, view):
         super(NotificationBarController, self).__init__(model, view)
         log_helpers.LoggingViewHandler.add_logging_view(self.__class__.__name__, self)
+        self.last_notification_timestamp = None
 
     def register_view(self, view):
         super(NotificationBarController, self).register_view(view)
@@ -39,7 +42,10 @@ class NotificationBarController(ExtendedController):
         if not self._handle_log_level(log_level):
             return
         message_text = ": ".join(message.split(": ")[2:])  # remove time, log level and source
-        self.view.show_notification(message_text, log_level)
+        now = time.time() * 1000
+        if self.last_notification_timestamp is None or self.last_notification_timestamp + 100 < now:
+            self.view.show_notification(message_text, log_level)
+        self.last_notification_timestamp = now
 
     def _handle_log_level(self, log_level):
         minimum_low_level = self.model.config.get_config_value("NOTIFICATIONS_MINIMUM_LOG_LEVEL", 30)

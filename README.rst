@@ -2,12 +2,12 @@
 RAFCON
 ======
 
-.. figure:: https://raw.githubusercontent.com/DLR-RM/RAFCON/master/documents/assets/Screenshot_Drill_Skill.png
+.. figure:: documents/assets/Screenshot_Drill_Skill_Scaled.png
    :figwidth: 100%
    :width: 800px
    :align: left
    :alt: Screenshot showing RAFCON with a big state machine
-   :target: documents/assets/Screenshot_Drill_Skill.png?raw=true
+   :target: documents/assets/Screenshot_Drill_Skill_Scaled.png?raw=true
 
 * Documentation: Hosted on `Read the Docs <http://rafcon.readthedocs.io/en/latest/>`_
 * Homepage: `DLR-RM.github.io/RAFCON/ <https://dlr-rm.github.io/RAFCON/>`_
