@@ -109,6 +109,7 @@ def test_add_data_flow_to_nested_states():
     import rafcon.gui.helpers.state_machine as gui_helper_state_machine
     from rafcon.gui.models.container_state import ContainerStateModel
     from rafcon.gui.mygaphas.utils.gap_helper import add_data_flow_to_state
+    from rafcon.gui.singleton import state_machine_manager
 
     state_machine_path = os.path.join(testing_utils.TEST_ASSETS_PATH, 'unit_test_state_machines', 'nested_states_data_flow')
 
@@ -147,6 +148,8 @@ def test_add_data_flow_to_nested_states():
             assert len(test_state.output_data_ports) == 0
         assert len(test_state.data_flows) == 1
         test_state = next(iter(test_state.states.values()))
+
+    state_machine_manager.delete_all_state_machines()
 
 
 if __name__ == '__main__':
