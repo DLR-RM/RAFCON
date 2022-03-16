@@ -4,6 +4,10 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/develop>`__.
 
+Future Release
+"""""""
+- Features:
+    - Set the default directory of the dialog during saving a state machine in accordance with the chosen library in the library tree
 
 1.0.0
 """""""
