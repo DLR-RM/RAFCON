@@ -91,7 +91,7 @@ def save_folder_cmd_line(query, default_name=None, default_path=None):
     return user_input
 
 
-def show_notice(notice):
+def show_notice(notice, custom_buttons=None):
     """Shows a notice on the console that has to be acknowledged
 
     :param str notice: Notice to show to the user
