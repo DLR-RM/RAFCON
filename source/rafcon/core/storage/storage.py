@@ -35,7 +35,7 @@ from rafcon.utils import log
 from rafcon.utils.timer import measure_time
 from rafcon.utils.vividict import Vividict
 
-from rafcon.core.custom_exceptions import LibraryNotFoundException
+from rafcon.core.custom_exceptions import LibraryNotFoundException, LibraryNotFoundSkipException
 from rafcon.core.constants import DEFAULT_SCRIPT_PATH
 from rafcon.core.config import global_config
 from rafcon.core.state_machine import StateMachine
@@ -59,6 +59,9 @@ ID_NAME_DELIMITER = "_"
 
 REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION = {'/': '', r'\0': '', '<': '', '>': '', ':': '_',
                                             '\\': '', '|': '_', '?': '', '*': '_'}
+
+open_bunch_of_state_machines = False
+skip_all_broken_libraries = False
 
 # clean the DEFAULT_SCRIPT_PATH folder at each program start
 if os.path.exists(DEFAULT_SCRIPT_PATH):
@@ -466,6 +469,10 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         else:
             dummy_state.parent = parent
         return dummy_state
+    except LibraryNotFoundSkipException as e:
+        global skip_all_broken_libraries
+        skip_all_broken_libraries = e.skip_all_broken_libraries
+        return None
 
     # Transitions and data flows are not added when loading a state, as also states are not added.
     # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the

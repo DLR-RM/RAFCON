@@ -92,6 +92,8 @@ def restore_session_from_runtime_config():
         logger.info("No session found for recovery")
         return
 
+    storage.open_bunch_of_state_machines = True
+
     # load and restore state machines like they were opened before
     open_sm = []
     for idx, tab_meta_dict in enumerate(open_tabs):
@@ -137,6 +139,8 @@ def restore_session_from_runtime_config():
                                "possible.".format(idx, path))
                 continue
             state_machine = storage.load_state_machine_from_path(path)
+            if state_machine is None:
+                continue
             state_machine_manager_model.state_machine_manager.add_state_machine(state_machine)
             wait_for_gui()
             state_machine_m = state_machine_manager_model.state_machines[state_machine.state_machine_id]
@@ -150,6 +154,9 @@ def restore_session_from_runtime_config():
     global_runtime_config.extend_recently_opened_by_current_open_state_machines()
 
     wait_for_gui()
+
+    storage.open_bunch_of_state_machines = False
+    storage.skip_all_broken_libraries = False
 
     # restore all state machine selections separate to avoid states-editor and state editor creation problems
     for idx, tab_meta_dict in enumerate(open_tabs):

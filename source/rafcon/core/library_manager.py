@@ -27,11 +27,14 @@ from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core import interface
 from rafcon.core.storage import storage
-from rafcon.core.custom_exceptions import LibraryNotFoundException
+from rafcon.core.custom_exceptions import LibraryNotFoundException, LibraryNotFoundSkipException
 import rafcon.core.config as config
 
 from rafcon.utils import log
 logger = log.get_logger(__name__)
+
+SKIP = 10
+SKIP_ALL = 11
 
 
 @Singleton
@@ -271,7 +274,6 @@ class LibraryManager(Observable):
 
         library_os_path = self._get_library_os_path_from_library_dict_tree(library_path, library_name)
         while library_os_path is None:  # until the library is found or the user aborts
-
             regularly_found = False
             new_library_os_path = None
             if allow_user_interaction and self.show_dialog:
@@ -281,9 +283,15 @@ class LibraryManager(Observable):
                          "If your library_path is correct and the library was moved, please " \
                          "select the new root/library_os_path folder of the library which should be situated within a "\
                          "loaded library_root_path. If not, please abort.".format(library_name, library_path)
-                interface.show_notice_func(notice)
-                new_library_os_path = interface.open_folder_func("Select root folder for library name '{0}'"
-                                                                 "".format(original_path_and_name))
+                custom_buttons = (('Skip', SKIP), ('Skip All', SKIP_ALL)) if storage.open_bunch_of_state_machines else None
+                response = SKIP if storage.skip_all_broken_libraries else interface.show_notice_func(notice, custom_buttons)
+                if response == SKIP:
+                    raise LibraryNotFoundSkipException("Library '{0}' not found in sub-folder {1}".format(library_name, library_path), False)
+                elif response == SKIP_ALL:
+                    raise LibraryNotFoundSkipException("Library '{0}' not found in sub-folder {1}".format(library_name, library_path), True)
+                else:
+                    new_library_os_path = interface.open_folder_func("Select root folder for library name '{0}'"
+                                                                     "".format(original_path_and_name))
             if new_library_os_path is None:
                 # User clicked cancel => cancel library search
                 # If the library root path is existent (e.g. "generic") and only the specific library state is not (
