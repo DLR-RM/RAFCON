@@ -4,6 +4,10 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/develop>`__.
 
+Future Release
+"""""""
+- Features:
+    - Add skip & skip all buttons in the dialog of the broken libraries during loading a broken session
 
 1.0.0
 """""""
