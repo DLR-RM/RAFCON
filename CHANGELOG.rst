@@ -4,6 +4,10 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/develop>`__.
 
+Future Release
+"""""""
+- Features:
+    - Create the data flows & data ports automatically in the nested states
 
 1.0.0
 """""""

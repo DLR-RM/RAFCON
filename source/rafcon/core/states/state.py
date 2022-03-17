@@ -509,11 +509,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
 
-    def get_io_data_port_id_from_name_and_type(self, name, data_port_type):
+    def get_io_data_port_id_from_name_and_type(self, name, data_port_type, throw_exception=True):
         """Returns the data_port_id of a data_port with a certain name and data port type
 
         :param name: the name of the target data_port
         :param data_port_type: the data port type of the target data port
+        :param throw_exception: throw an exception when the data port does not exist
         :return: the data port specified by the name and the type
         :raises exceptions.AttributeError: if the specified data port does not exist in the input or output data ports
         """
@@ -521,7 +522,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             for ip_id, output_port in self.input_data_ports.items():
                 if output_port.name == name:
                     return ip_id
-            raise AttributeError("Name '{0}' is not in input_data_ports".format(name))
+            if throw_exception:
+                raise AttributeError("Name '{0}' is not in input_data_ports".format(name))
+            else:
+                return False
         elif data_port_type is OutputDataPort:
             for op_id, output_port in self.output_data_ports.items():
                 if output_port.name == name:
@@ -529,7 +533,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             # 'error' is an automatically generated output port in case of errors and exception and doesn't have an id
             if name == "error":
                 return
-            raise AttributeError("Name '{0}' is not in output_data_ports".format(name))
+            if throw_exception:
+                raise AttributeError("Name '{0}' is not in output_data_ports".format(name))
+            else:
+                return False
+        if throw_exception is False:
+            return True
 
     def get_data_port_by_id(self, data_port_id):
         """Search for the given data port id in the data ports of the state
