@@ -1,4 +1,7 @@
+import os
 import pytest
+
+from tests import utils as testing_utils
 
 
 def test_add_data_flow_to_state(mocker):
@@ -102,3 +105,52 @@ def test_add_data_flow_to_state(mocker):
         add_data_flow_to_state(eo1_m, fi1_m)
 
 
+def test_add_data_flow_to_nested_states():
+    import rafcon.gui.helpers.state_machine as gui_helper_state_machine
+    from rafcon.gui.models.container_state import ContainerStateModel
+    from rafcon.gui.mygaphas.utils.gap_helper import add_data_flow_to_state
+    from rafcon.gui.singleton import state_machine_manager
+
+    state_machine_path = os.path.join(testing_utils.TEST_ASSETS_PATH, 'unit_test_state_machines', 'nested_states_data_flow')
+
+    state_machine = gui_helper_state_machine.open_state_machine(path=state_machine_path, recent_opened_notification=True)
+    root_state_model = ContainerStateModel(state_machine.root_state)
+
+    # Add the data flows from the root state to the descendant state
+
+    from_data_port_model = root_state_model.get_input_data_port_m(0)
+    descendant_state = root_state_model.state
+    while len(descendant_state.states) > 0:
+        descendant_state = next(iter(descendant_state.states.values()))
+    descendant_state = ContainerStateModel(descendant_state)
+    to_data_port_model = descendant_state.get_input_data_port_m(0)
+
+    test_state = root_state_model.state
+    while len(test_state.states) > 0:
+        if test_state.is_root_state:
+            assert len(test_state.input_data_ports) == 1
+            assert len(test_state.output_data_ports) == 1
+        else:
+            assert len(test_state.input_data_ports) == 0
+            assert len(test_state.output_data_ports) == 0
+        assert len(test_state.data_flows) == 0
+        test_state = next(iter(test_state.states.values()))
+
+    add_data_flow_to_state(from_data_port_model, to_data_port_model)
+
+    test_state = root_state_model.state
+    while len(test_state.states) > 0:
+        if test_state.is_root_state:
+            assert len(test_state.input_data_ports) == 1
+            assert len(test_state.output_data_ports) == 1
+        else:
+            assert len(test_state.input_data_ports) == 1
+            assert len(test_state.output_data_ports) == 0
+        assert len(test_state.data_flows) == 1
+        test_state = next(iter(test_state.states.values()))
+
+    state_machine_manager.delete_all_state_machines()
+
+
+if __name__ == '__main__':
+    test_add_data_flow_to_nested_states()
