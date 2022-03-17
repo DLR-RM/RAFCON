@@ -525,10 +525,11 @@ class LibraryTreeController(ExtendedController):
         gui_helper_state_machine.substitute_selected_state(self._get_selected_library_state(), as_template=True,
                                                            keep_name=keep_name)
 
-
     def extract_library_properties_from_selected_row(self):
         """ Extracts properties library_os_path, library_path, library_name and tree_item_key from tree store row """
         (model, row) = self.view.get_selection().get_selected()
+        if row is None:
+            return None, None, None, None
         tree_item_key = model[row][self.ID_STORAGE_ID]
         library_item = model[row][self.ITEM_STORAGE_ID]
         library_path = model[row][self.LIB_PATH_STORAGE_ID]
