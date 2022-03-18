@@ -12,6 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from rafcon.core.state_machine import StateMachine
 from rafcon.gui.mygaphas.items.connection import ConnectionView
 from rafcon.utils import log
 from rafcon.utils.dict_operations import check_if_dict_contains_object_reference_in_values
@@ -123,7 +124,7 @@ def add_data_flow_to_state(from_port_m, to_port_m):
     """
     from rafcon.gui.models.data_port import DataPortModel
     from rafcon.gui.models.scoped_variable import ScopedVariableModel
-    from rafcon.core.state_elements.data_port import OutputDataPort
+    from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
     from rafcon.gui.models.container_state import ContainerStateModel
 
     from_state_m = from_port_m.parent
@@ -141,6 +142,18 @@ def add_data_flow_to_state(from_port_m, to_port_m):
             from_port_m), type(to_port_m)))
         return False
 
+    descendant_states = []
+
+    def is_descendant(parent, descendant):
+        node = descendant
+        while node is not None and isinstance(node, StateMachine) is False:
+            descendant_states.append(node)
+            if parent.state_id == node.state_id:
+                return True
+            node = node.parent
+        descendant_states.clear()
+        return False
+
     # from parent to child
     if isinstance(from_state_m, ContainerStateModel) and \
             check_if_dict_contains_object_reference_in_values(to_state_m.state, from_state_m.state.states):
@@ -152,17 +165,40 @@ def add_data_flow_to_state(from_port_m, to_port_m):
     # from parent to parent (input/scope to output/scope
     elif isinstance(from_state_m, ContainerStateModel) and from_state_m.state is to_state_m.state \
             and not isinstance(from_port_m.core_element, OutputDataPort):
-        responsible_parent_m = from_state_m  # == to_state_m
+        responsible_parent_m = from_state_m
     # child state to child state
     elif not from_state_m.state.is_root_state and not to_state_m.state.is_root_state \
             and from_state_m.parent.state.state_id and to_state_m.parent.state.state_id:
         responsible_parent_m = from_state_m.parent
+    # from parent to descendant
+    elif isinstance(from_state_m, ContainerStateModel) and is_descendant(from_state_m.state, to_state_m.state):
+        responsible_parent_m = descendant_states
+    # from descendant to parent
+    elif isinstance(to_state_m, ContainerStateModel) and is_descendant(to_state_m.state, from_state_m.state):
+        responsible_parent_m = descendant_states
     else:
         raise ValueError("Trying to connect data ports that cannot be connected: {} with {}".format(from_port_m,
                                                                                                     to_port_m))
 
     try:
-        responsible_parent_m.state.add_data_flow(from_state_id, from_port_id, to_state_id, to_port_id)
+        if isinstance(responsible_parent_m, list):
+            previous_data_port_id = from_port_id
+            for i in range(len(responsible_parent_m) - 2, -1, -1):
+                current_data_port_id = responsible_parent_m[i].get_io_data_port_id_from_name_and_type(to_port_m.core_element.name, type(to_port_m.core_element), throw_exception=False)
+                if i == 0:
+                    current_data_port_id = to_port_id
+                elif current_data_port_id is False:
+                    if isinstance(to_port_m.core_element, InputDataPort):
+                        current_data_port_id = responsible_parent_m[i].add_input_data_port(to_port_m.core_element.name, to_port_m.core_element.data_type, to_port_m.core_element.default_value)
+                    elif isinstance(to_port_m.core_element, OutputDataPort):
+                        current_data_port_id = responsible_parent_m[i].add_output_data_port(to_port_m.core_element.name, to_port_m.core_element.data_type, to_port_m.core_element.default_value)
+                if isinstance(to_port_m.core_element, InputDataPort):
+                    responsible_parent_m[i + 1].add_data_flow(responsible_parent_m[i + 1].state_id, previous_data_port_id, responsible_parent_m[i].state_id, current_data_port_id)
+                else:
+                    responsible_parent_m[i + 1].add_data_flow(responsible_parent_m[i].state_id, current_data_port_id, responsible_parent_m[i + 1].state_id, previous_data_port_id)
+                previous_data_port_id = current_data_port_id
+        else:
+            responsible_parent_m.state.add_data_flow(from_state_id, from_port_id, to_state_id, to_port_id)
         return True
     except (ValueError, AttributeError, TypeError) as e:
         logger.error("Data flow couldn't be added: {0}".format(e))

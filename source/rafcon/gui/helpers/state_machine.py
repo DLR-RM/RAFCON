@@ -576,6 +576,8 @@ def save_state_machine_as(path=None, recent_opened_notification=False, as_copy=F
     :rtype bool:
     """
 
+    library_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('library_controller')
+
     state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
     selected_state_machine_model = state_machine_manager_model.get_selected_state_machine_model()
     if selected_state_machine_model is None:
@@ -587,9 +589,13 @@ def save_state_machine_as(path=None, recent_opened_notification=False, as_copy=F
             logger.error("No function defined for creating a folder")
             return False
         folder_name = selected_state_machine_model.state_machine.root_state.name
+        library_os_path, _, _, _ = library_ctrl.extract_library_properties_from_selected_row()
+        if library_os_path is not None and library_os_path.startswith('[source]:\n'):
+            library_os_path = library_os_path.rsplit('\n', 1)[1]
         path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
                                             "The default folder name is the name of the root state.",
-                                            format_default_folder_name(folder_name))
+                                            format_default_folder_name(folder_name),
+                                            current_folder=library_os_path)
         if path is None:
             logger.warning("No valid path specified")
             return False

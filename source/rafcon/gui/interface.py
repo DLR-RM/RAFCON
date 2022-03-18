@@ -93,7 +93,7 @@ def open_folder(query, default_path=None):
 core_interface.open_folder_func = open_folder
 
 
-def create_folder(query, default_name=None, default_path=None):
+def create_folder(query, default_name=None, default_path=None, current_folder=None):
     """Shows a user dialog for folder creation
     
     A dialog is opened with the prompt `query`. The current path is set to the last path that was opened/created. The 
@@ -101,7 +101,8 @@ def create_folder(query, default_name=None, default_path=None):
     
     :param str query: Prompt asking the user for a specific folder
     :param str default_name: Default name of the folder to be created 
-    :param str default_path: Path in which the folder is created if the user doesn't specify a path 
+    :param str default_path: Path in which the folder is created if the user doesn't specify a path
+    :param str current_folder: Current folder that the FileChooserDialog points to in the beginning
     :return: Path created by the user or `default_path`/`default_name` if no path was specified or None if none of the
       paths is valid
     :rtype: str
@@ -130,6 +131,8 @@ def create_folder(query, default_name=None, default_path=None):
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_parent_widget())
     dialog.set_current_folder(last_path)
+    if current_folder:
+        dialog.set_current_folder(current_folder)
     if default_name:
         dialog.set_current_name(default_name)
     dialog.set_show_hidden(False)
