@@ -60,9 +60,6 @@ ID_NAME_DELIMITER = "_"
 REPLACED_CHARACTERS_FOR_NO_OS_LIMITATION = {'/': '', r'\0': '', '<': '', '>': '', ':': '_',
                                             '\\': '', '|': '_', '?': '', '*': '_'}
 
-open_bunch_of_state_machines = False
-skip_all_broken_libraries = False
-
 # clean the DEFAULT_SCRIPT_PATH folder at each program start
 if os.path.exists(DEFAULT_SCRIPT_PATH):
     files = glob.glob(os.path.join(DEFAULT_SCRIPT_PATH, "*"))
@@ -469,9 +466,7 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         else:
             dummy_state.parent = parent
         return dummy_state
-    except LibraryNotFoundSkipException as e:
-        global skip_all_broken_libraries
-        skip_all_broken_libraries = e.skip_all_broken_libraries
+    except LibraryNotFoundSkipException:
         return None
 
     # Transitions and data flows are not added when loading a state, as also states are not added.

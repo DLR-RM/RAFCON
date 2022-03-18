@@ -68,6 +68,9 @@ class LibraryManager(Observable):
         self._loaded_libraries = {}
         self._libraries_instances = {}
 
+        self._open_group_of_state_machines = False
+        self._skip_all_broken_libraries = False
+
         self._show_dialog = True
 
     @property
@@ -77,6 +80,22 @@ class LibraryManager(Observable):
     @show_dialog.setter
     def show_dialog(self, value):
         self._show_dialog = value
+
+    @property
+    def open_group_of_state_machines(self):
+        return self._open_group_of_state_machines
+
+    @open_group_of_state_machines.setter
+    def open_group_of_state_machines(self, value):
+        self._open_group_of_state_machines = value
+
+    @property
+    def skip_all_broken_libraries(self):
+        return self._skip_all_broken_libraries
+
+    @skip_all_broken_libraries.setter
+    def skip_all_broken_libraries(self, value):
+        self._skip_all_broken_libraries = value
 
     def prepare_destruction(self):
         self.clean_loaded_libraries()
@@ -283,12 +302,13 @@ class LibraryManager(Observable):
                          "If your library_path is correct and the library was moved, please " \
                          "select the new root/library_os_path folder of the library which should be situated within a "\
                          "loaded library_root_path. If not, please abort.".format(library_name, library_path)
-                custom_buttons = (('Skip', SKIP), ('Skip All', SKIP_ALL)) if storage.open_bunch_of_state_machines else None
-                response = SKIP if storage.skip_all_broken_libraries else interface.show_notice_func(notice, custom_buttons)
+                custom_buttons = (('Skip', SKIP), ('Skip All', SKIP_ALL)) if self.open_group_of_state_machines else None
+                response = SKIP if self.skip_all_broken_libraries else interface.show_notice_func(notice, custom_buttons)
                 if response == SKIP:
-                    raise LibraryNotFoundSkipException("Library '{0}' not found in sub-folder {1}".format(library_name, library_path), False)
+                    raise LibraryNotFoundSkipException("Library '{0}' not found in sub-folder {1}".format(library_name, library_path))
                 elif response == SKIP_ALL:
-                    raise LibraryNotFoundSkipException("Library '{0}' not found in sub-folder {1}".format(library_name, library_path), True)
+                    self.skip_all_broken_libraries = True
+                    raise LibraryNotFoundSkipException("Library '{0}' not found in sub-folder {1}".format(library_name, library_path))
                 else:
                     new_library_os_path = interface.open_folder_func("Select root folder for library name '{0}'"
                                                                      "".format(original_path_and_name))

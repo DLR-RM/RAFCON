@@ -30,18 +30,15 @@ class LibraryNotFoundException(Exception):
 
 class LibraryNotFoundSkipException(Exception):
 
-    def __init__(self, message, skip_all_broken_libraries=False):
+    def __init__(self, message):
         """ A custom exception for the case when a library is not found and user decided to skip loading the broken state machine
 
         :param message: the error message for the exception
-        :param skip_all_broken_libraries: skip all broken libraries
         :return:
         """
 
         # Call the base class constructor with the parameters it needs
         super(LibraryNotFoundSkipException, self).__init__(message)
-
-        self.skip_all_broken_libraries = skip_all_broken_libraries
 
 
 class RecoveryModeException(ValueError):
