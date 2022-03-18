@@ -222,18 +222,27 @@ def save_folder(query, default_name=None):
     return path
 
 
-def show_notice(query):
+def show_notice(query, custom_buttons=None):
+    """Shows a message dialog
+
+    :param str query: The message text
+    :param list(tuple(str, int)) custom_buttons: The custom buttons
+    """
     from gi.repository import Gtk
     from rafcon.gui.helpers.label import set_button_children_size_request
     from rafcon.gui.singleton import main_window_controller
     from xml.sax.saxutils import escape
     dialog = Gtk.MessageDialog(flags=Gtk.DialogFlags.MODAL, type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK)
+    if custom_buttons is not None:
+        for text, id in custom_buttons:
+            dialog.add_button(text, id)
     if main_window_controller:
         dialog.set_transient_for(main_window_controller.view.get_parent_widget())
     dialog.set_markup(escape(query))
     set_button_children_size_request(dialog)
-    dialog.run()
+    response = dialog.run()
     dialog.destroy()
+    return response
 
 
 # overwrite the show_notice_func of the interface: thus the user input is now retrieved from a dialog box and not
