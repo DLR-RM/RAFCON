@@ -1041,8 +1041,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if name is not None:
             if PATH_SEPARATOR in name:
                 raise ValueError("Name must not include the \"" + PATH_SEPARATOR + "\" character")
-            # if ID_NAME_DELIMITER in name:
-            #     raise ValueError("Name must not include the \"" + ID_NAME_DELIMITER + "\" character")
             if not isinstance(name, str):
                 raise TypeError("Name must be a string")
             if len(name) < 1:

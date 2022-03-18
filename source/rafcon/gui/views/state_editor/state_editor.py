@@ -79,14 +79,6 @@ class StateEditorView(View):
         self['description_text_view'] = self.description_view.textview
         self['description_scroller'] = self.description_view.scrollable
 
-        # Gtk TODO
-        # self['main_notebook_1'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        # self['main_notebook_1'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
-        # self['main_notebook_2'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        # self['main_notebook_2'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
-        # self['ports_notebook'].set_tab_hborder(constants.TAB_BORDER_WIDTH * 2)
-        # self['ports_notebook'].set_tab_vborder(constants.TAB_BORDER_WIDTH * 3)
-
         self.page_dict["Source"] = self['main_notebook_1'].get_nth_page(0)
         self.page_dict["Logical Linkage"] = self['main_notebook_1'].get_nth_page(1)
         self.page_dict["Data Linkage"] = self['main_notebook_1'].get_nth_page(2)

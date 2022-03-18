@@ -476,7 +476,6 @@ class AutoBackupModel(ModelMT):
             if not self.only_fix_interval or self.marked_dirty:
                 thread = threading.Thread(target=self.perform_temp_storage)
                 thread.start()
-                # self.last_backup_time = current_time  # used as 'last-backup' time
             if self.only_fix_interval:
                 self.set_timed_thread(self.force_temp_storage_interval, self.check_for_auto_backup)
         else:

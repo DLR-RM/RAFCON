@@ -189,8 +189,6 @@ class StateMachine(Observable, JSONObject, Hashable):
     @root_state.setter
     @Observable.observed
     def root_state(self, root_state):
-        # if not isinstance(root_state, State):
-        #     raise AttributeError("root_state has to be of type State")
         if root_state is not None:
             from rafcon.core.states.state import State
             if not isinstance(root_state, State):

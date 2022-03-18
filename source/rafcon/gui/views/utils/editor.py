@@ -60,10 +60,6 @@ class EditorView(View):
                 self.textview.props.highlight_current_line = True
                 self.textview.props.smart_backspace = True
                 self.textview.props.smart_home_end = True
-                # Gtk TODO: what is this for?
-                # self.textview.set_mark_category_pixbuf('INSTRUCTION',
-                #                                        editor_frame.render_icon(Gtk.STOCK_GO_FORWARD,
-                #                                                                 Gtk.IconSize.MENU))
                 self.using_source_view = True
             else:
                 logger.debug("Chosen language '{}' is not supported initiate simple TextView.".format(language))

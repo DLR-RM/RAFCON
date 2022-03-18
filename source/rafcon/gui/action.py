@@ -249,9 +249,6 @@ def check_state_model_for_is_start_state(state_model):
 
 
 def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=None):
-    # meta_dict = {'state': state_model.meta, 'data_flows': {}, 'transitions': {}, 'outcomes': {},
-    #              'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}}
-
     def missing_meta_data_log_msg(state_model, elem, meta_dict, dict_key, existing_model_list):
         logger.verbose("Storage Dict seems to miss Meta-Data of {5} in State: {0} {1} for {5}:"
                        " {2}\nreal: {3}\nstorage: {4}".format(state_model.state.state_id,
@@ -394,7 +391,6 @@ class CoreObjectIdentifier(object):
                 self._id = core_obj_or_cls.outcome_id
                 self._list_name = self.type_related_list_name_dict[self._type]
             elif self._type == 'StateMachine':
-                # self.__sm_id = core_obj_cls.state_machine_id
                 pass
             elif self._type == 'GlobalVariableManager':
                 pass
@@ -482,12 +478,8 @@ class MetaDataAction(AbstractAction):
         if self.before_overview.get_signal_message().affects_children:
             insert_state_meta_data(meta_dict=self.before_state_image.meta_data, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", True))
-            # if state_m.state.is_root_state:
-            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
         else:
             insert_state_meta_data(meta_dict=self.before_state_image.meta_data, state_model=state_m)
-            # if state_m.state.is_root_state:
-            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
             state_m.meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
 
     def redo(self):
@@ -497,12 +489,8 @@ class MetaDataAction(AbstractAction):
         if self.before_overview.get_signal_message().affects_children:
             insert_state_meta_data(meta_dict=self.after_state_image.meta_data, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))
-            # if state_m.state.is_root_state:
-            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
         else:
             insert_state_meta_data(meta_dict=self.after_state_image.meta_data, state_model=state_m)
-            # if state_m.state.is_root_state:
-            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
 
 

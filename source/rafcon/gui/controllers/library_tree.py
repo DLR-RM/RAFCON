@@ -204,8 +204,6 @@ class LibraryTreeController(ExtendedController):
             for library_path, library_row_iter in self.library_row_iter_dict_by_library_path.items():
                 library_row_path = self.tree_store.get_path(library_row_iter)
                 act_expansion_library[library_path] = self.view.row_expanded(library_row_path)
-                # if act_expansion_library[library_path]:
-                #     print(library_path)
             self.__expansion_state = act_expansion_library
         except TypeError:
             logger.warning("expansion state of library could not be stored")

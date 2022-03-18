@@ -91,7 +91,6 @@ class Clipboard(Observable):
         assert isinstance(selection, Selection)
         self.__create_core_and_model_object_copies(selection, smart_selection_adaption)
 
-    # def cut(self, selection, smart_selection_adaption=True):
     def cut(self, selection, smart_selection_adaption=False):
         """Cuts all selected items and copy them to the clipboard using smart selection adaptation by default
 

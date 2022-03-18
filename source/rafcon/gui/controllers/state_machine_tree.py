@@ -447,7 +447,6 @@ class StateMachineTreeController(TreeViewController):
                 self.insert_and_update_recursively(state_row_iter, child_state_model, with_expand=False)
 
         # - check if TOO MUCH children are in
-        # if state_model.state.get_library_root_state() is not None or isinstance(state_model, LibraryStateModel):
         for n in reversed(range(self.tree_store.iter_n_children(state_row_iter))):
             child_iter = self.tree_store.iter_nth_child(state_row_iter, n)
             child_state_path = self.tree_store.get_value(child_iter, self.STATE_PATH_STORAGE_ID)
@@ -482,7 +481,6 @@ class StateMachineTreeController(TreeViewController):
             if self.tree_store.iter_n_children(child_iter):
                 self.remove_tree_children(child_iter)
             del self.state_row_iter_dict_by_state_path[self.tree_store.get_value(child_iter, self.STATE_PATH_STORAGE_ID)]
-            # self.tree_store.remove(child_iter)
 
     def get_state_machine_selection(self):
         """Getter state machine selection
