@@ -142,7 +142,7 @@ class PreferencesWindowController(ExtendedController):
         """
         self.check_for_preliminary_config()
 
-        method_name = info['method_name']  # __setitem__, __delitem__, clear, ...
+        method_name = info['method_name']
 
         if method_name in ['__setitem__', '__delitem__']:
             config_key = info['args'][0]

@@ -418,7 +418,7 @@ class LibraryManager(Observable):
         if lib_os_path in self._loaded_libraries:
             # this list can also be taken to open library state machines TODO -> implement it -> because faster
             state_machine = self._loaded_libraries[lib_os_path]
-            # as long as the a library state root state is never edited so the state first has to be copied here
+            # as long as the library state root state is never edited so the state first has to be copied here
             state_copy = copy.deepcopy(state_machine.root_state)
             return state_machine.version, state_copy
         else:

@@ -34,8 +34,6 @@ from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
-# TODO Comment
-
 
 class ModificationHistoryTreeController(ExtendedController):
     string_substitution_dict = {}  # will be used to substitute strings for better and shorter tree columns
@@ -359,12 +357,6 @@ class ModificationHistoryTreeController(ExtendedController):
 
     def new_change(self, model, method_name, instance, info, history_id, active, parent_tree_item, parameters,
                    tool_tip=None):
-        # Nr, Instance, Method, Details, model
-
-        # TODO may useful tooltip
-        trail_tip = "any modification-state of state machine can be reached by clicking on respective action"
-        branch_tip = "-> actions of old branches can be reached by clicking on respective action"
-
         # active-state based coloring
         foreground = self.get_color_active(active)
 

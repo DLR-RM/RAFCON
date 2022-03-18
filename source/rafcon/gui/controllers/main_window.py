@@ -415,7 +415,6 @@ class MainWindowController(ExtendedController):
         state machine.
         """
 
-        # TODO: find nice solution
         # this in only required if the GUI is terminated via Ctrl+C signal
         if not self.view:
             # this means that the main window is currently under destruction
@@ -733,19 +732,6 @@ class MainWindowController(ExtendedController):
         self.get_controller('states_editor_ctrl').prepare_destruction()  # avoid new state editor TODO tbd (deleted)
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
         rafcon.core.singleton.library_manager.prepare_destruction()
-
-        # gtkmvc installs a global glade custom handler that holds a reference to the last created View class,
-        # preventing it from being destructed. By installing a dummy callback handler, after all views have been
-        # created, the old handler is being removed and with it the reference, allowing all Views to be destructed.
-
-        # Gtk TODO: check if necessary and search for replacement
-        # try:
-        #     from gtk import glade
-        #     def dummy(*args, **kwargs):
-        #         pass
-        #     glade.set_custom_handler(dummy)
-        # except ImportError:
-        #     pass
 
         # Recursively destroys the main window
         self.destroy()

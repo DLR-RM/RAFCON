@@ -128,7 +128,6 @@ class ExecutionHistoryTreeController(ExtendedController):
             gui_path = path.dirname(path.dirname(path.realpath(__file__)))
             source_path = path.dirname(path.dirname(gui_path))
             viewer_path = path.join(gui_path, "execution_log_viewer.py")
-            # TODO run in fully separate process but from here to use the option for selection synchronization via dict
             import sys
             cmd = "{python_version} {path} '{filename}' '{run_id}'" \
                   "".format(python_version="python3", path=viewer_path,
@@ -154,7 +153,6 @@ class ExecutionHistoryTreeController(ExtendedController):
         element.
         """
         if event.type == Gdk.EventType._2BUTTON_PRESS and event.get_button()[1] == 1:
-
             (model, row) = self.history_tree.get_selection().get_selected()
             if row is not None:
                 histroy_item_path = self.history_tree_store.get_path(row)

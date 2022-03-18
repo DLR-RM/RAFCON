@@ -80,9 +80,6 @@ class SourceEditorView(EditorView):
             self.textview.connect("key-press-event", self.on_text_view_event)
 
     def on_draw(self, widget, event):
-        # Gtk TODO: Produces warnings and does not work properly
-        # Warnings should not be related to the flickering of the spacer_frame
-        # https://developer.gnome.org/gtk3/stable/ch26s02.html#id-1.6.3.4.11
         if self.run_with_spacer:
             right_bar_width_of_all = self.button_container_min_width + self.tab_width + self.line_numbers_width
             if right_bar_width_of_all > event.clip_extents()[2]:

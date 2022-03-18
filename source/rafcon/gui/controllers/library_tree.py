@@ -430,7 +430,6 @@ class LibraryTreeController(ExtendedController):
             # Second confirmation to delete library
             tree_m_row = self.filter[path]
             library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
-            # assert isinstance(tree_m_row[self.ITEM_STORAGE_ID], str)
             library_file_system_path = library_os_path
 
             if "root" in menu_item_text:

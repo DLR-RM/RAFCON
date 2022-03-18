@@ -173,10 +173,6 @@ class StateOverviewController(ExtendedController):
             self.view['entry_name'].set_text(self.model.state.name)
 
     def on_focus_out(self, entry, event):
-        # Originally we had to use idle_add to prevent core dumps:
-        # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
-        # GLib.idle_add(self.change_name, entry.get_text())
-        # Gtk TODO: use idle_add if problems occur
         self.change_name(entry.get_text())
 
     def change_name(self, new_name):

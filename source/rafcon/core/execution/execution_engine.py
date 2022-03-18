@@ -465,7 +465,6 @@ class ExecutionEngine(Observable):
         """
         with self.state_counter_lock:
             self.state_counter += 1
-            # logger.verbose("Increase state_counter!" + str(self.state_counter))
 
         woke_up_from_pause_or_step_mode = False
 

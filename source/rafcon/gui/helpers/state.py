@@ -56,7 +56,6 @@ def negative_check_for_model_in_expected_future_models(target_state_m, model, ms
         with_logger.warning("{0} -> still in is: {1} Please inform the developer how to reproduce this."
                             "".format(msg, model))
         if delete:
-            # TODO think about to destroy this models
             target_state_m.expected_future_models.remove(model)
         return False
     return True
@@ -81,7 +80,6 @@ def check_expected_future_model_list_is_empty(target_state_m, msg, delete=True, 
         with_logger.warning("{0} -> still in are: {1} Please inform the developer how to reproduce this."
                             "".format(msg, target_state_m.expected_future_models))
         if delete:
-            # TODO think about to destroy this models
             target_state_m.expected_future_models.clear()
         return False
     return True
@@ -187,8 +185,6 @@ def create_new_state_from_state_with_type(source_state, target_state_class):
         source_state.income = Income()
         source_state.outcomes = {}
         states = dict(source_state.states)
-        # TODO check why next line can not be performed
-        # source_state.states = {}
 
         new_state = target_state_class(name=source_state.name, state_id=source_state.state_id,
                                        input_data_ports=input_data_ports,
@@ -330,7 +326,6 @@ def change_state_type(state_m, target_class):
         affected_models.extend(state_elements)
         obsolete_state_element_models.extend(state_elements)
 
-    # TODO ??? maybe separate again into state machine function and state function in respective helper module
     if is_root_state:
         assert isinstance(state_machine_m, StateMachineModel)
         assert state_machine_m.root_state is old_state_m
