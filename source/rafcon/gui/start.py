@@ -17,17 +17,14 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 
-# default libraries
 import os
 import sys
 import logging
 import threading
 import signal
-if sys.version_info >= (3, ):
-    import tracemalloc
+import tracemalloc
 from yaml_configuration.config import config_path
 
-# gui
 import rafcon
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
@@ -36,7 +33,6 @@ from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils.splash_screen import SplashScreen
 import rafcon.gui.backup.session as backup_session
 
-# state machine
 from rafcon.core.start import parse_state_machine_path, setup_environment, reactor_required, \
     setup_configuration, post_setup_plugins
 from rafcon.core.state_machine import StateMachine
@@ -44,7 +40,6 @@ from rafcon.core.states.hierarchy_state import HierarchyState
 import rafcon.core.singleton as core_singletons
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 
-# utils
 from rafcon.gui.utils import wait_for_gui
 import rafcon.utils.filesystem as filesystem
 from rafcon.utils import plugins, installation
@@ -400,7 +395,7 @@ def main():
     parser = setup_argument_parser()
     user_input = parser.parse_args()
 
-    if user_input.memory_profiling and sys.version_info >= (3, ):
+    if user_input.memory_profiling:
         tracemalloc.start()
         memory_profiling_args = {
             'memory_profiling_path': user_input.memory_profiling_path,
@@ -480,7 +475,7 @@ def main():
     logger.info(_("Exiting ..."))
     logging.shutdown()
 
-    if user_input.memory_profiling and sys.version_info >= (3, ):
+    if user_input.memory_profiling:
         memory_profiling_args['stop'] = True
         memory_profiling_thread.join()
 
