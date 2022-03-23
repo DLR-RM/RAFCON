@@ -525,7 +525,7 @@ class MoveHandleTool(gaphas.tool.HandleTool):
                 if isinstance(item, NameView):
                     gap_helper.update_meta_data_for_name_view(graphical_editor, item, publish=True)
                 elif isinstance(item, ConnectionView):
-                    gap_helper.update_meta_data_for_transition_waypoints(graphical_editor, item, None)
+                    gap_helper.update_meta_data_for_connection_waypoints(graphical_editor, item, None)
                 else:  # StateView
                     if self.grabbed_handle in [port.handle for port in item.get_all_ports()]:
                         gap_helper.update_meta_data_for_port(graphical_editor, item, self.grabbed_handle)

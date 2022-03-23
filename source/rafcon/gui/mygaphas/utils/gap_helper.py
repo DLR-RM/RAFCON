@@ -287,24 +287,24 @@ def get_relative_positions_of_waypoints(transition_v):
     return rel_pos_list
 
 
-def update_meta_data_for_transition_waypoints(graphical_editor_view, transition_v, last_waypoint_list, publish=True):
-    """This method updates the relative position meta data of the transitions waypoints if they changed
+def update_meta_data_for_connection_waypoints(graphical_editor_view, connection_v, last_waypoint_list, publish=True):
+    """This method updates the relative position metadata of the connections waypoints if they changed
 
     :param graphical_editor_view: Graphical Editor the change occurred in
-    :param transition_v: Transition that changed
+    :param connection_v: Transition/Data Flow that changed
     :param last_waypoint_list: List of waypoints before change
     :param bool publish: Whether to publish the changes using the meta signal
     """
 
     from rafcon.gui.mygaphas.items.connection import TransitionView
-    assert isinstance(transition_v, TransitionView)
+    assert isinstance(connection_v, ConnectionView)
 
-    transition_m = transition_v.model
-    waypoint_list = get_relative_positions_of_waypoints(transition_v)
+    connection_m = connection_v.model
+    waypoint_list = get_relative_positions_of_waypoints(connection_v)
     if waypoint_list != last_waypoint_list:
-        transition_m.set_meta_data_editor('waypoints', waypoint_list)
+        connection_m.set_meta_data_editor('waypoints', waypoint_list)
         if publish:
-            graphical_editor_view.emit('meta_data_changed', transition_m, "waypoints", False)
+            graphical_editor_view.emit('meta_data_changed', connection_m, "waypoints", False)
 
 
 def update_meta_data_for_port(graphical_editor_view, item, handle):
@@ -369,7 +369,7 @@ def update_meta_data_for_state_view(graphical_editor_view, state_v, affects_chil
     if affects_children:
         update_meta_data_for_name_view(graphical_editor_view, state_v.name_view, publish=False)
         for transition_v in state_v.get_transitions():
-            update_meta_data_for_transition_waypoints(graphical_editor_view, transition_v, None, publish=False)
+            update_meta_data_for_connection_waypoints(graphical_editor_view, transition_v, None, publish=False)
         for child_state_v in state_v.child_state_views():
             update_meta_data_for_state_view(graphical_editor_view, child_state_v, True, publish=False)
 

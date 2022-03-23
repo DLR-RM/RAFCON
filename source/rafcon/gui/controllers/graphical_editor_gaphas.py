@@ -890,9 +890,7 @@ class GraphicalEditorController(ExtendedController):
                                                  hierarchy_level=parent_state_m.hierarchy_level + 1)
 
     @lock_state_machine
-    def _connect_transition_to_ports(self, transition_m, transition_v, parent_state_m, parent_state_v,
-                                     use_waypoints=True):
-
+    def _connect_transition_to_ports(self, transition_m, transition_v, parent_state_m, parent_state_v, use_waypoints=True):
         transition_meta = transition_m.get_meta_data_editor()
         # The state_copy (root_state_of_library) is not shown, therefore transitions to the state_copy are connected
         # to the LibraryState belonging to the state copy
@@ -900,14 +898,11 @@ class GraphicalEditorController(ExtendedController):
         connect_to_grandparent = False
         if parent_state_m.state.is_root_state_of_library:
             connect_to_grandparent = True
-
         try:
             if use_waypoints:
                 waypoint_list = transition_meta['waypoints']
-
                 for waypoint in waypoint_list:
                     transition_v.add_waypoint(waypoint)
-
             # Get id and references to the from and to state
             from_state_id = transition_m.transition.from_state
             if from_state_id is None:
@@ -920,22 +915,19 @@ class GraphicalEditorController(ExtendedController):
                 from_state_v = self.canvas.get_view_for_model(from_state_m)
                 from_outcome_id = transition_m.transition.from_outcome
                 from_state_v.connect_to_outcome(from_outcome_id, transition_v, transition_v.from_handle())
-
             to_state_id = transition_m.transition.to_state
-
             if to_state_id == parent_state_m.state.state_id:  # Transition goes back to parent
-                # Set the to coordinates to the outcome coordinates received earlier
+                # Set the coordinates to the outcome coordinates received earlier
                 to_outcome_id = transition_m.transition.to_outcome
                 if connect_to_grandparent:
                     grandparent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
                 else:
                     parent_state_v.connect_to_outcome(to_outcome_id, transition_v, transition_v.to_handle())
             else:
-                # Set the to coordinates to the center of the next state
+                # Set the coordinates to the center of the next state
                 to_state_m = parent_state_m.states[to_state_id]
                 to_state_v = self.canvas.get_view_for_model(to_state_m)
                 to_state_v.connect_to_income(transition_v, transition_v.to_handle())
-
         except AttributeError as e:
             logger.error("Cannot connect transition: {0}".format(e))
             try:
@@ -944,7 +936,12 @@ class GraphicalEditorController(ExtendedController):
                 pass
 
     @lock_state_machine
-    def _connect_data_flow_to_ports(self, data_flow_m, data_flow_v, parent_state_m):
+    def _connect_data_flow_to_ports(self, data_flow_m, data_flow_v, parent_state_m, use_waypoints=True):
+        data_flow_meta = data_flow_m.get_meta_data_editor()
+        if use_waypoints:
+            waypoint_list = data_flow_meta['waypoints']
+            for waypoint in waypoint_list:
+                data_flow_v.add_waypoint(waypoint)
         # Get id and references to the from and to state
         from_state_id = data_flow_m.data_flow.from_state
         from_state_m = parent_state_m if from_state_id == parent_state_m.state.state_id else parent_state_m.states[
@@ -954,33 +951,26 @@ class GraphicalEditorController(ExtendedController):
         if from_state_m.state.is_root_state_of_library:
             from_state_m = from_state_m.parent
         from_state_v = self.canvas.get_view_for_model(from_state_m)
-
         to_state_id = data_flow_m.data_flow.to_state
         to_state_m = parent_state_m if to_state_id == parent_state_m.state.state_id else parent_state_m.states[
             to_state_id]
         if to_state_m.state.is_root_state_of_library:  # see comment above
             to_state_m = to_state_m.parent
         to_state_v = self.canvas.get_view_for_model(to_state_m)
-
         from_key = data_flow_m.data_flow.from_key
         to_key = data_flow_m.data_flow.to_key
-
         from_port_m = from_state_m.get_data_port_m(from_key)
         to_port_m = to_state_m.get_data_port_m(to_key)
-
         if from_port_m is None:
-            # One case, for which there is no from_port_m is when the the from-port is a ScopedVariable of a
-            # LibraryState
+            # One case, for which there is no from_port_m is when the from-port is a ScopedVariable of a
             if not isinstance(from_state_m, LibraryStateModel):
-                logger.warning('Cannot find model of the from data port {0}, ({1})'.format(from_key,
-                                                                                        data_flow_m.data_flow))
+                logger.warning('Cannot find model of the from data port {0}, ({1})'.format(from_key, data_flow_m.data_flow))
             return
         if to_port_m is None:
-            # One case, for which there is no to_port_m is when the the to-port is a ScopedVariable of a LibraryState
+            # One case, for which there is no to_port_m is when the to-port is a ScopedVariable of a LibraryState
             if not isinstance(to_state_m, LibraryStateModel):
                 logger.warning('Cannot find model of the to data port {0}, ({1})'.format(to_key, data_flow_m.data_flow))
             return
-
         # For scoped variables, there is no inner and outer connector
         if isinstance(from_port_m, ScopedVariableModel):
             from_state_v.connect_to_scoped_variable_port(from_key, data_flow_v, data_flow_v.from_handle())
@@ -988,7 +978,6 @@ class GraphicalEditorController(ExtendedController):
             from_state_v.connect_to_input_port(from_key, data_flow_v, data_flow_v.from_handle())
         elif from_port_m in from_state_m.output_data_ports:
             from_state_v.connect_to_output_port(from_key, data_flow_v, data_flow_v.from_handle())
-
         if isinstance(to_port_m, ScopedVariableModel):
             to_state_v.connect_to_scoped_variable_port(to_key, data_flow_v, data_flow_v.to_handle())
         elif to_port_m in to_state_m.output_data_ports:

@@ -47,6 +47,11 @@ class ConnectionView(PerpLine):
         self.remove_connection_from_ports()
         super(ConnectionView, self).remove()
 
+    def apply_meta_data(self):
+        self.remove_all_waypoints()
+        for waypoint_pos in self.model.get_meta_data_editor()['waypoints']:
+            self.add_waypoint(waypoint_pos)
+
 
 class ConnectionPlaceholderView(ConnectionView):
     pass
@@ -94,14 +99,6 @@ class TransitionView(ConnectionView):
                                                             self.parent.transparency)
         self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], self.parent.transparency)
         super(TransitionView, self).draw(context)
-
-    def apply_meta_data(self):
-        # 1st remove all waypoints
-        self.remove_all_waypoints()
-
-        # 2nd recreate all waypoints from meta data
-        for waypoint_pos in self.model.get_meta_data_editor()['waypoints']:
-            self.add_waypoint(waypoint_pos)
 
 
 class DataFlowView(ConnectionView):

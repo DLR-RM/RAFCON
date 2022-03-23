@@ -372,7 +372,9 @@ class StateView(Element):
             for transition_m in self.model.transitions:
                 transition_v = self.canvas.get_view_for_model(transition_m)
                 transition_v.apply_meta_data()
-
+            for data_flow_m in self.model.data_flows:
+                data_flow_v = self.canvas.get_view_for_model(data_flow_m)
+                data_flow_v.apply_meta_data()
             if recursive:
                 for state_v in self.canvas.get_children(self):
                     if isinstance(state_v, StateView):
