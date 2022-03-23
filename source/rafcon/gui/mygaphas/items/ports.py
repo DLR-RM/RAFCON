@@ -16,7 +16,6 @@
 from weakref import ref
 from gi.repository.Pango import SCALE, FontDescription
 from gi.repository import PangoCairo
-# from cairo import Antialias
 
 from gaphas.state import observed
 from gaphas.connector import Handle
@@ -52,21 +51,15 @@ class PortView(object):
         self.side = side
         self._parent = ref(parent)
         self._view = None
-
         self.text_color = gui_config.gtk_colors['LABEL']
         self.fill_color = gui_config.gtk_colors['LABEL']
-
         self._incoming_handles = []
         self._outgoing_handles = []
         self._connected_connections = []
         self._tmp_incoming_connected = False
         self._tmp_outgoing_connected = False
-
         self._name = name
-
-
         self.label_print_inside = True
-
         self._port_image_cache = ImageCache()
         self._label_image_cache = ImageCache()
         self._last_label_size = self.port_side_size, self.port_side_size
@@ -362,10 +355,7 @@ class PortView(object):
                 # Copy image surface to current cairo context
                 upper_left_corner = (position[0] + relative_pos[0], position[1] + relative_pos[1])
                 self._label_image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
-
-                   # draw_all means, the bounding box of the state is calculated
-                   # As we are using drawing operation, not supported by Gaphas, we manually need to update the bounding box
-            else:  # context.draw_all:
+            else:
                 from gaphas.geometry import Rectangle
                 view = self.parent.canvas.get_first_view()
                 abs_pos = view.get_matrix_i2v(self.parent).transform_point(*label_pos)
@@ -774,7 +764,6 @@ class ScopedVariablePortView(PortView):
         cairo_context = c
         if isinstance(c, CairoBoundingBoxContext):
             cairo_context = c._cairo
-        # c.set_antialias(Antialias.GOOD)
 
         side_length = self.port_side_size
 

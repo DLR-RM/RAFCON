@@ -1259,9 +1259,6 @@ class OutcomeAction(StateElementAction):
 
 class StateAction(Action):
 
-    not_possible_method_names = ['input_data', 'output_data', 'concurrency_queue', 'state_id',  # any not observed
-                                 'final_outcome', 'preempted', 'active', 'is_root_state',  # any not observed
-                                 'scoped_data'].extend(BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS)
     possible_method_names = ['parent',  # will be ignored
                              'name', 'description', 'script', 'script_text',  # State
                              'outcomes', 'input_data_ports', 'output_data_ports',  # State
@@ -1391,13 +1388,3 @@ class StateAction(Action):
             setattr(s, property, copy.deepcopy(arguments[property]))
         else:
             assert False
-
-
-class Group(Action):
-    def __init__(self, *args, **kwargs):
-        Action.__init__(self, *args, **kwargs)
-
-
-class UnGroup(Action):
-    def __init__(self, *args, **kwargs):
-        Action.__init__(self, *args, **kwargs)

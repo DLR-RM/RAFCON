@@ -95,7 +95,7 @@ def move_dirty_lock_file(dirty_lock_file, sm_path):
         os.rename(dirty_lock_file, os.path.join(sm_path, dirty_lock_file.split(os.sep)[-1]))
 
 
-def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=None, with_gui_wait=False):
+def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=None):
 
     if full_path_dirty_lock is None:
         full_path_dirty_lock = find_dirty_lock_file_for_state_machine_path(sm_path)

@@ -14,7 +14,6 @@
 from math import pi
 
 from gi.repository.Pango import SCALE, FontDescription
-# from cairo import Antialias
 from gi.repository import PangoCairo
 
 from gaphas.painter import CairoBoundingBoxContext
@@ -262,7 +261,6 @@ def draw_label_path(context, width, height, arrow_height, distance_to_port, port
     :param float height: Height of the label
     :param float distance_to_port: Distance to the port related to the label
     :param float port_offset: Distance from the port center to its border
-    :param bool draw_connection_to_port: Whether to draw a line from the tip of the label to the port
     """
     c = context
     # The current point is the port position

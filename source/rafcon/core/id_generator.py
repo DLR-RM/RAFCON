@@ -22,7 +22,6 @@ import random
 import uuid
 
 STATE_ID_LENGTH = 6
-RUN_ID_LENGTH = 10
 experiment_id = ''+str(uuid.uuid1())
 
 state_name_counter = 0

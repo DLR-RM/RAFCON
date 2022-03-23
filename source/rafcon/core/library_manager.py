@@ -63,14 +63,9 @@ class LibraryManager(Observable):
         # a list to hold all library states that were skipped by the user during the replacement procedure
         self._skipped_states = []
         self._skipped_library_roots = []
-
-        # loaded libraries
         self._loaded_libraries = {}
-        self._libraries_instances = {}
-
         self._open_group_of_state_machines = False
         self._skip_all_broken_libraries = False
-
         self._show_dialog = True
 
     @property

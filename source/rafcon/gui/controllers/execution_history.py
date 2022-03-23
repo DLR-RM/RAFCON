@@ -56,7 +56,6 @@ class ExecutionHistoryTreeController(ExtendedController):
         tree.
     :param rafcon.core.state_machine_manager.StateMachineManager state_machine_manager:
     """
-    LABEL_NAME_STORAGE_ID = 0
     HISTORY_ITEM_STORAGE_ID = 1
     TOOL_TIP_STORAGE_ID = 2
     TOOL_TIP_TEXT = "Right click for more details\n" \

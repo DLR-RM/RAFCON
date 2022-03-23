@@ -271,8 +271,6 @@ class Clipboard(Observable):
         error_msg = "The model of the already existing state copy was not used."
         gui_helpers_state.negative_check_for_model_in_expected_future_models(target_state_m, orig_state_copy_m,
                                                                              msg=error_msg, with_logger=logger)
-
-        # new_state_copy_m.copy_meta_data_from_state_m(orig_state_copy_m)
         self.state_id_mapping_dict[old_state_id] = new_state_id
         return target_state_m.states[orig_state_copy.state_id]
 
@@ -498,10 +496,6 @@ class Clipboard(Observable):
         self.destroy_all_models_in_dict(self.model_copies)
         # copy all selected elements
         self.model_copies = deepcopy(selected_models_dict)
-
-        new_content_of_clipboard = ', '.join(["{0} {1}".format(
-            len(elements), (camel_case(element_name) if len(elements) > 1 else camel_case(singular_form(element_name)))
-        ) for element_name, elements in self.model_copies.items() if elements])
 
         return selected_models_dict, parent_m
 

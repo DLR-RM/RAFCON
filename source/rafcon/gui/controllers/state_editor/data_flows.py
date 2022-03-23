@@ -52,7 +52,6 @@ class StateDataFlowsListController(LinkageListController):
 
     ID_STORAGE_ID = 0
     FROM_STATE_STORAGE_ID = 1
-    FROM_KEY_STORAGE_ID = 2
     TO_STATE_STORAGE_ID = 3
     TO_KEY_STORAGE_ID = 4
     IS_EXTERNAL_STORAGE_ID = 5

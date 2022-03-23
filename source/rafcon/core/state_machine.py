@@ -54,8 +54,6 @@ class StateMachine(Observable, JSONObject, Hashable):
     state_machine_id = None
     version = None
 
-    old_marked_dirty = True
-
     _root_state = None
     _marked_dirty = True
     _file_system_path = None
@@ -239,7 +237,6 @@ class StateMachine(Observable, JSONObject, Hashable):
     def marked_dirty(self, marked_dirty):
         if not isinstance(marked_dirty, bool):
             raise AttributeError("marked_dirty has to be of type bool")
-        self.old_marked_dirty = self._marked_dirty
         self._marked_dirty = marked_dirty
 
     def get_state_by_path(self, path, as_check=False):

@@ -1189,52 +1189,6 @@ class ContainerState(State):
                                          (str(from_outcome), str(from_state_id)))
 
     @lock_state_machine
-    def create_transition(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id):
-        """ Creates a new transition.
-
-        Lookout: Check the parameters first before creating a new transition
-
-        :param from_state_id: The source state of the transition
-        :param from_outcome: The outcome of the source state to connect the transition to
-        :param to_state_id: The target state of the transition
-        :param to_outcome: The target outcome of a container state
-        :param transition_id: An optional transition id for the new transition
-        :raises exceptions.AttributeError: if the from or to state is incorrect
-        :return: the id of the new transition
-        """
-
-        # get correct states
-        if from_state_id is not None:
-            if from_state_id == self.state_id:
-                from_state = self
-            else:
-                from_state = self.states[from_state_id]
-
-        # finally add transition
-        if from_outcome is not None:
-            if from_outcome in from_state.outcomes:
-                if to_outcome is not None:
-                    if to_outcome in self.outcomes:  # if to_state is None then the to_outcome must be an outcome of self
-                        self.transitions[transition_id] = \
-                            Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id, self)
-                    else:
-                        raise AttributeError("to_state does not have outcome %s", to_outcome)
-                else:  # to outcome is None but to_state is not None, so the transition is valid
-                    self.transitions[transition_id] = \
-                        Transition(from_state_id, from_outcome, to_state_id, to_outcome, transition_id, self)
-            else:
-                raise AttributeError("from_state does not have outcome %s", from_state)
-        else:
-            self.transitions[transition_id] = \
-                Transition(None, None, to_state_id, to_outcome, transition_id, self)
-
-        # notify all states waiting for transition to be connected
-        with self._transitions_cv:
-            self._transitions_cv.notify_all()
-
-        return transition_id
-
-    @lock_state_machine
     @Observable.observed
     def add_transition(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id=None):
         """Adds a transition to the container state
@@ -1526,7 +1480,7 @@ class ContainerState(State):
             # for all input keys fetch the correct data_flow connection and read data into the result_dict
             actual_value = None
             actual_value_time = 0
-            for data_flow_key, data_flow in self.data_flows.items():
+            for data_flow in self.data_flows.values():
 
                 if data_flow.to_key == input_port_key:
                     if data_flow.to_state == state.state_id:
@@ -1562,7 +1516,7 @@ class ContainerState(State):
                     self.scoped_data[str(input_data_port_key) + self.state_id] = \
                         ScopedData(data_port.name, value, type(value), self.state_id, ScopedVariable, parent=self)
                     # forward the data to scoped variables
-                    for data_flow_key, data_flow in self.data_flows.items():
+                    for data_flow in self.data_flows.values():
                         if data_flow.from_key == input_data_port_key and data_flow.from_state == self.state_id:
                             if data_flow.to_state == self.state_id and data_flow.to_key in self.scoped_variables:
                                 current_scoped_variable = self.scoped_variables[data_flow.to_key]
@@ -1621,7 +1575,7 @@ class ContainerState(State):
                 if not key == "error":
                     logger.warning("Output variable %s was written during state execution, "
                                    "that has no data port connected to it.", str(key))
-            for data_flow_key, data_flow in self.data_flows.items():
+            for data_flow in self.data_flows.values():
                 if data_flow.from_key == output_data_port_key and data_flow.from_state == state.state_id:
                     if data_flow.to_state == self.state_id:  # is target of data flow own state id?
                         if data_flow.to_key in self.scoped_variables.keys():  # is target data port scoped?

@@ -31,7 +31,6 @@ class DesignConfig(ObservableConfig):
     """
 
     keys_requiring_restart = ()
-    keys_not_to_fill_up = {"LIBRARY_PATHS"}
 
     def __init__(self, logger_object=None):
         """Default constructor
