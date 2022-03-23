@@ -96,7 +96,7 @@ via:
 
 .. code-block:: bash
 
-   pip install --user "pycairo<2.0.0,>=1.10.0"
+   pip install --user "pycairo==1.19.1"
 
 If you are using Python 3.4, you will need a ``pip`` version <= 8. Run the following command, to downgrade ``pip``:
 

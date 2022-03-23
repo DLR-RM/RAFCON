@@ -105,6 +105,8 @@ def create_new_connection(from_port_m, to_port_m):
     elif isinstance(from_port_m, (DataPortModel, ScopedVariableModel)) and \
             isinstance(to_port_m, (DataPortModel, ScopedVariableModel)):
         return add_data_flow_to_state(from_port_m, to_port_m)
+    elif isinstance(from_port_m, (DataPortModel, ScopedVariableModel)) and not isinstance(to_port_m, (DataPortModel, ScopedVariableModel)):
+        return add_data_flow_to_state(from_port_m, to_port_m, add_data_port=True)
     # Both ports are not None
     elif from_port_m and to_port_m:
         logger.error("Connection of non-compatible ports: {0} and {1}".format(type(from_port_m), type(to_port_m)))
@@ -112,7 +114,7 @@ def create_new_connection(from_port_m, to_port_m):
     return False
 
 
-def add_data_flow_to_state(from_port_m, to_port_m):
+def add_data_flow_to_state(from_port_m, to_port_m, add_data_port=False):
     """Interface method between Gaphas and RAFCON core for adding data flows
 
     The method checks the types of the given ports and their relation. From this the necessary parameters for the
@@ -120,21 +122,24 @@ def add_data_flow_to_state(from_port_m, to_port_m):
 
     :param from_port_m: Port model from which the data flow starts
     :param to_port_m: Port model to which the data flow goes to
+    :param add_data_port: Boolean add the data port automatically
     :return: True if a data flow was added, False if an error occurred
     """
+    from rafcon.core.states.library_state import LibraryState
+    from rafcon.core.states.execution_state import ExecutionState
     from rafcon.gui.models.data_port import DataPortModel
     from rafcon.gui.models.scoped_variable import ScopedVariableModel
     from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
     from rafcon.gui.models.container_state import ContainerStateModel
 
     from_state_m = from_port_m.parent
-    to_state_m = to_port_m.parent
+    to_state_m = to_port_m if add_data_port else to_port_m.parent
 
     from_state_id = from_state_m.state.state_id
     to_state_id = to_state_m.state.state_id
 
     from_port_id = from_port_m.core_element.state_element_id
-    to_port_id = to_port_m.core_element.state_element_id
+    to_port_id = None if add_data_port else to_port_m.core_element.state_element_id
 
     if not isinstance(from_port_m, (DataPortModel, ScopedVariableModel)) or \
             not isinstance(from_port_m, (DataPortModel, ScopedVariableModel)):
@@ -154,6 +159,8 @@ def add_data_flow_to_state(from_port_m, to_port_m):
         descendant_states.clear()
         return False
 
+    data_port_type = isinstance(from_port_m.core_element, InputDataPort)  # True: InputDataPort, False: OutputDataPort
+
     # from parent to child
     if isinstance(from_state_m, ContainerStateModel) and \
             check_if_dict_contains_object_reference_in_values(to_state_m.state, from_state_m.state.states):
@@ -166,10 +173,12 @@ def add_data_flow_to_state(from_port_m, to_port_m):
     elif isinstance(from_state_m, ContainerStateModel) and from_state_m.state is to_state_m.state \
             and not isinstance(from_port_m.core_element, OutputDataPort):
         responsible_parent_m = from_state_m
+        data_port_type = not data_port_type
     # child state to child state
     elif not from_state_m.state.is_root_state and not to_state_m.state.is_root_state \
             and from_state_m.parent.state.state_id and to_state_m.parent.state.state_id:
         responsible_parent_m = from_state_m.parent
+        data_port_type = not data_port_type
     # from parent to descendant
     elif isinstance(from_state_m, ContainerStateModel) and is_descendant(from_state_m.state, to_state_m.state):
         responsible_parent_m = descendant_states
@@ -180,6 +189,19 @@ def add_data_flow_to_state(from_port_m, to_port_m):
         raise ValueError("Trying to connect data ports that cannot be connected: {} with {}".format(from_port_m,
                                                                                                     to_port_m))
 
+    if isinstance(from_port_m, ScopedVariableModel):
+        data_port_type = True
+
+    if add_data_port and (not isinstance(from_state_m.state, ExecutionState) or from_state_m.state.core_element_id != to_state_m.state.core_element_id):
+        try:
+            if isinstance(to_state_m.state, LibraryState):
+                logger.error("Data port couldn't be added automatically to: {0}".format(to_state_m.state.name))
+            elif data_port_type:
+                to_port_id = to_state_m.state.add_input_data_port(from_port_m.core_element.name, from_port_m.core_element.data_type, from_port_m.core_element.default_value)
+            else:
+                to_port_id = to_state_m.state.add_output_data_port(from_port_m.core_element.name, from_port_m.core_element.data_type, from_port_m.core_element.default_value)
+        except (ValueError, AttributeError, TypeError) as e:
+            to_port_id = to_state_m.state.get_io_data_port_id_from_name_and_type(from_port_m.core_element.name, InputDataPort if data_port_type else OutputDataPort)
     try:
         if isinstance(responsible_parent_m, list):
             previous_data_port_id = from_port_id
