@@ -1087,16 +1087,7 @@ def test_state_property_models_consistency(caplog):
     # script(self, script) Script
     state_dict['Nested2'].script = Script(parent=state_dict['Nested2'])
     state_dict['Nested2'].script = Script(parent=state_dict['Nested2'])
-
-    # description(self, description) str
     state_dict['Nested'].description = "awesome"
-
-    # # active(self, active) bool
-    # state_dict['Nested'].active = True
-
-    # # child_execution(self, child_execution) bool
-    # state_dict['Nested'].child_execution = True
-    # TODO introduce state.execution_status and so on
 
     ############################################
     # Properties of ContainerState #############

@@ -45,8 +45,6 @@ def test_state_machine_manager(caplog):
 
     manager = StateMachineManager.instance([state_machine])
 
-    sm_id = manager.get_sm_id_for_root_state_id(state1.state_id)
-
     sm_id = manager.get_sm_id_for_root_state_id('FakeId')
     assert (sm_id is None)
     assert_logger_warnings_and_errors(caplog)

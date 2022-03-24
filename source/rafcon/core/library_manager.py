@@ -195,7 +195,7 @@ class LibraryManager(Observable):
         :param target_dict: the target dictionary to store all loaded libraries to
         """
         for library_name in os.listdir(library_path):
-            library_folder_path, library_name = self.check_clean_path_of_library(library_path, library_name)
+            _, library_name = self.check_clean_path_of_library(library_path, library_name)
             full_library_path = os.path.join(library_path, library_name)
             if os.path.isdir(full_library_path) and library_name[0] != '.':
                 if os.path.exists(os.path.join(full_library_path, storage.STATEMACHINE_FILE)) \

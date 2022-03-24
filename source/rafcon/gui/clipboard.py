@@ -34,10 +34,6 @@ def singular_form(name):
     return name[:-1] if name.endswith("s") else name
 
 
-def camel_case(name):
-    return ''.join(x for x in name.replace("_", " ").title() if not x.isspace())
-
-
 class Clipboard(Observable):
     """A class to hold models and selection for later usage in cut/paste or copy/paste actions.
     In cut/paste action the selection stored is used while later paste. In a copy/paste actions
@@ -327,21 +323,6 @@ class Clipboard(Observable):
     def _insert_scoped_variable(self, target_state_m, orig_data_port_copy_m):
         return self._insert_data_port(target_state_m, target_state_m.state.add_scoped_variable,
                                       orig_data_port_copy_m, ScopedVariable, target_state_m.state.scoped_variables)
-
-    def reset_clipboard(self):
-        """ Resets the clipboard, so that old elements do not pollute the new selection that is copied into the
-            clipboard.
-
-        :return:
-        """
-        # reset selections
-        for state_element_attr in ContainerState.state_element_attrs:
-            self.model_copies[state_element_attr] = []
-
-        # reset parent state_id the copied elements are taken from
-        self.copy_parent_state_id = None
-
-        self.reset_clipboard_mapping_dicts()
 
     def reset_clipboard_mapping_dicts(self):
         """ Reset mapping dictionaries """

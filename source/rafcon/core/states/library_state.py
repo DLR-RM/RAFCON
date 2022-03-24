@@ -585,15 +585,6 @@ class LibraryState(State):
                 raise TypeError("use_runtime_value_output_data_ports must be of type dict")
             self._use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
 
-    @property
-    def child_execution(self):
-        """Property for the _child_execution field
-        """
-        if self.state_execution_status is StateExecutionStatus.EXECUTE_CHILDREN:
-            return True
-        else:
-            return False
-
     def get_storage_path(self, appendix=None):
         if appendix is None:
             return super(LibraryState, self).get_storage_path(appendix)

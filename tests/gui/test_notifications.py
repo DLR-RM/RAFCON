@@ -1656,7 +1656,6 @@ def test_state_property_modify_notification(caplog):
         state_m_observer.reset()
     forecast = 0
 
-    # state_execution_status(self, child_execution) enum
     state_dict['Nested2'].state_execution_status = StateExecutionStatus.INACTIVE
     forecast += 1
     check_states_notifications(states_observer_dict, sub_state_name='Nested2', forecast=forecast)

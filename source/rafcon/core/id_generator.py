@@ -33,7 +33,6 @@ run_id_counter = 0
 history_item_id_counter = 0
 semantic_data_id_counter = 0
 
-used_run_ids = []
 used_global_variable_ids = []
 
 

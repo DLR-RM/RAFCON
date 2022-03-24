@@ -79,7 +79,6 @@ class MenuBarController(ExtendedController):
         self.state_machine_execution_engine = sm_execution_engine
         self.full_screen_flag = False
         self.full_screen_window = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
-        self.main_position = None
         self.sm_notebook = self.main_window_view.state_machines_editor['notebook']
         self.full_screen_window.add_accel_group(self.shortcut_manager.accel_group)
         self.main_window_view.right_bar_window.get_parent_widget().add_accel_group(self.shortcut_manager.accel_group)

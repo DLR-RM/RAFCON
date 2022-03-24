@@ -36,8 +36,6 @@ logger = log.get_logger(__name__)
 
 
 class ModificationHistoryTreeController(ExtendedController):
-    string_substitution_dict = {}  # will be used to substitute strings for better and shorter tree columns
-
     def __init__(self, model, view):
         """Constructor
         :param model StateMachineModel should be exchangeable
@@ -57,14 +55,10 @@ class ModificationHistoryTreeController(ExtendedController):
             view['history_tree'].set_model(self.history_tree_store)
         view['history_tree'].set_tooltip_column(8)
 
-        # view.set_hover_expand(True)
-
         self.__my_selected_sm_id = None
         self._selected_sm_model = None
-
         self.doing_update = False
         self.no_cursor_observation = False
-        self.next_activity_focus_self = True
         self.on_toggle_mode_check_gaphas_view_is_meta_data_consistent = True
 
         self.register()

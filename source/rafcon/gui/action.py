@@ -619,9 +619,6 @@ class Action(ModelMT, AbstractAction):
                 assert dp_id in state.input_data_ports
 
             for dp_id, dp in stored_state.output_data_ports.items():
-                scoped_str = str([])
-                if isinstance(state, ContainerState):
-                    scoped_str = str(list(state.scoped_variables.keys()))
                 state.add_output_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
                 assert dp_id in state.output_data_ports
 
@@ -789,14 +786,7 @@ class AddObjectAction(Action):
 
     def __init__(self, parent_path, state_machine_model, overview):
         Action.__init__(self, parent_path, state_machine_model, overview)
-
-        self.changed_object = overview.get_affected_core_element()
-
-        self.parent_identifier = ''
         self.added_object_identifier = ''
-        self.added_object_args = ''
-
-        self.parent_identifier = self.parent_path
 
     def set_after(self, overview):
         Action.set_after(self, overview)
@@ -886,16 +876,7 @@ class RemoveObjectAction(Action):
         assert overview.get_affected_property() == 'state' and isinstance(overview.get_affected_core_element(), State)
 
         self.instance_path = overview.get_affected_core_element().get_path()
-        self.changed_object = self.changed_object = overview.get_affected_core_element()
-
-        self.parent_identifier = ''
         self.removed_object_identifier = ''
-        self.removed_object_args = ''
-
-        if "outcome" in overview.get_cause() or "data_port" in overview.get_cause():
-            pass
-        else:
-            self.parent_identifier = self.parent_path
         self.get_object_identifier()
         self.before_linkage = {'internal': {'transitions': [], 'data_flows': []},
                                'external': {'transitions': [], 'data_flows': []}}

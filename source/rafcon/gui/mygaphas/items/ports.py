@@ -130,10 +130,6 @@ class PortView(object):
         return self.handle.pos
 
     @property
-    def port_pos(self):
-        return self.port.point
-
-    @property
     def port_size(self):
         return self.port_side_size / 1.5, self.port_side_size
 

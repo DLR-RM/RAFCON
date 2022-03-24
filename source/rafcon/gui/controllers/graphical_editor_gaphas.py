@@ -379,7 +379,7 @@ class GraphicalEditorController(ExtendedController):
     def update_of_ongoing_complex_actions(self, model, prop_name, info):
         # only once at the end of an complex action the ongoing complex actions dictionary is empty
         if not model.ongoing_complex_actions:
-            action_name, action_dict = self.model.complex_action_observer.nested_action_already_in[-1]
+            _, action_dict = self.model.complex_action_observer.nested_action_already_in[-1]
             self.adapt_complex_action(action_dict['target'], action_dict['new'])
 
     @ExtendedController.observe("state_machine", after=True)

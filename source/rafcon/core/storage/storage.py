@@ -48,7 +48,6 @@ LIBRARY_NOT_FOUND_DUMMY_STATE_NAME = "LIBRARY NOT FOUND DUMMY STATE"
 
 #: File names for various purposes
 FILE_NAME_META_DATA = 'meta_data.json'
-FILE_NAME_META_DATA_OLD = 'gui_Gtk.json'
 FILE_NAME_CORE_DATA = 'core_data.json'
 FILE_NAME_CORE_DATA_OLD = 'meta.json'
 SCRIPT_FILE = 'script.py'
@@ -394,15 +393,6 @@ def reconnect_data_flow(state_machine):
             queue.extend(state.states.values())
 
 
-def load_state_from_path(state_path):
-    """Loads a state from a given path
-
-    :param state_path: The path of the state on the file system.
-    :return: the loaded state
-    """
-    return load_state_recursively(parent=None, state_path=state_path)
-
-
 def get_core_data_path(state_path):
     return os.path.join(state_path, FILE_NAME_CORE_DATA)
 
@@ -497,8 +487,6 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     except Exception as e:
         # semantic data file does not have to be there
         pass
-
-    one_of_my_child_states_not_found = False
 
     # load child states
     for p in os.listdir(state_path):

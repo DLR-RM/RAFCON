@@ -118,11 +118,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self._state_id = state_id
 
         self.state_execution_status = StateExecutionStatus.INACTIVE
-
-        self.edited_since_last_execution = False
         self.execution_history = None
         self.backward_execution = False
-
         self.marked_dirty = False
 
         if safe_init:
@@ -764,21 +761,20 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         # Check type of child and call appropriate validity test
         if isinstance(child, Income):
-            return self._check_income_validity(child)
+            return self._check_income_validity()
         if isinstance(child, Outcome):
             return self._check_outcome_validity(child)
         if isinstance(child, DataPort):
             return self._check_data_port_validity(child)
         if isinstance(child, ScopedData):
-            return self._check_scoped_data_validity(child)
+            return self._check_scoped_data_validity()
         return False, "Invalid state element for state of type {}".format(self.__class__.__name__)
 
-    def _check_income_validity(self, check_income):
+    def _check_income_validity(self):
         """Checks the validity of an income
 
         Currently, an income cannot be invalid
 
-        :param Income check_income: Income to check for validity
         :return: Validity of Income
         :rtype: bool
         """
@@ -902,7 +898,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                                                          type(self.output_data[data_port.name]).__name__,
                                                          self.output_data[data_port.name]))
 
-    def _check_scoped_data_validity(self, check_scoped_data):
+    def _check_scoped_data_validity(self):
         return True, "valid"  # no validity checks, yet
 
     # ---------------------------------------------------------------------------------------------

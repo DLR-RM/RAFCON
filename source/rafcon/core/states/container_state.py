@@ -72,14 +72,12 @@ class ContainerState(State):
         self._data_flows = {}
         self._scoped_variables = {}
         self._scoped_data = {}
-        self._current_state = None
         # condition variable to wait for not connected states
         self._transitions_cv = Condition()
-        self._child_execution = False
         self._start_state_modified = False
         """
-        Dummy state machine is created only in one place and it is a ContrainerState.
-        So, it is always a ContrainerState by design.
+        Dummy state machine is created only in one place and it is a ContainerState.
+        So, it is always a ContainerState by design.
         """
         self._is_dummy = is_dummy
         """
@@ -391,18 +389,6 @@ class ContainerState(State):
                 going_data_linkage_for_port['from'][(df.from_state, df.from_key)][internal].append(df)
             else:
                 going_data_linkage_for_port['from'][(df.from_state, df.from_key)] = {external: [df], internal: [df]}
-
-        def print_df_from_and_to(going_data_linkage_for_port):
-            logger.verbose('data linkage FROM: ')
-            for port, port_dfs in going_data_linkage_for_port['from'].items():
-                logger.verbose("\tport: {0} {1}".format(port, '' if 'args' not in port_dfs else port_dfs['args']))
-                logger.verbose("\t\texternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['external']]))
-                logger.verbose("\t\tinternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['internal']]))
-            logger.verbose('data linkage TO: ')
-            for port, port_dfs in going_data_linkage_for_port['to'].items():
-                logger.verbose("\tport: {0} {1}".format(port, '' if 'args' not in port_dfs else port_dfs['args']))
-                logger.verbose("\t\texternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['external']]))
-                logger.verbose("\t\tinternal: \n\t\t\t" + "\n\t\t\t".join([str(df) for df in port_dfs['internal']]))
 
         def reduce_dfs(port_data_linkages, df_id):
             for port_key in list(port_data_linkages.keys()):
@@ -1170,23 +1156,6 @@ class ContainerState(State):
             while transition_id in self._transitions.keys():
                 transition_id = generate_transition_id()
         return transition_id
-
-    def basic_transition_checks(self, from_state_id, from_outcome, to_state_id, to_outcome, transition_id):
-        pass
-
-    def check_if_outcome_already_connected(self, from_state_id, from_outcome):
-        """ check if outcome of from state is not already connected
-
-        :param from_state_id: The source state of the transition
-        :param from_outcome: The outcome of the source state to connect the transition to
-        :raises exceptions.AttributeError: if the outcome of the state with the state_id==from_state_id
-                                            is already connected
-        """
-        for trans_key, transition in self.transitions.items():
-            if transition.from_state == from_state_id:
-                if transition.from_outcome == from_outcome:
-                    raise AttributeError("Outcome %s of state %s is already connected" %
-                                         (str(from_outcome), str(from_state_id)))
 
     @lock_state_machine
     @Observable.observed
@@ -2335,15 +2304,6 @@ class ContainerState(State):
             if not isinstance(s, ScopedData):
                 raise TypeError("element of scoped_data must be of type ScopedData")
         self._scoped_data = scoped_data
-
-    @property
-    def child_execution(self):
-        """Property for the _child_execution field
-        """
-        if self.state_execution_status is StateExecutionStatus.EXECUTE_CHILDREN:
-            return True
-        else:
-            return False
 
     @property
     def is_dummy(self):
