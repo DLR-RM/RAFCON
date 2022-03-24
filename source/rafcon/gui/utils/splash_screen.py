@@ -69,9 +69,6 @@ class SplashScreen(Gtk.Window):
             return
         logger.info(text)
         self.label.set_text(text)
-        # include this to give more time to watch
-        # import time
-        # time.sleep(1)
         while Gtk.events_pending():
             Gtk.main_iteration_do(False)
         return

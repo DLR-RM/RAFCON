@@ -85,9 +85,6 @@ class ZoomTool(gaphas.tool.ZoomTool):
     def on_scroll(self, event):
         ctrl_key_pressed = bool(event.get_state()[1] & Gdk.ModifierType.CONTROL_MASK)
         if (self.zoom_with_control and ctrl_key_pressed) or (not self.zoom_with_control and not ctrl_key_pressed):
-            # Gtk TODO
-            # event.get_state() |= Gdk.ModifierType.CONTROL_MASK  # Set CONTROL_MASK
-            # return super(ZoomTool, self).on_scroll(event)
             view = self.view
             event_coords = event.get_coords()[1:]
             sx = view._matrix[0]

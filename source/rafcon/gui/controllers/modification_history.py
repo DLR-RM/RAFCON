@@ -34,12 +34,8 @@ from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
-# TODO Comment
-
 
 class ModificationHistoryTreeController(ExtendedController):
-    string_substitution_dict = {}  # will be used to substitute strings for better and shorter tree columns
-
     def __init__(self, model, view):
         """Constructor
         :param model StateMachineModel should be exchangeable
@@ -59,14 +55,10 @@ class ModificationHistoryTreeController(ExtendedController):
             view['history_tree'].set_model(self.history_tree_store)
         view['history_tree'].set_tooltip_column(8)
 
-        # view.set_hover_expand(True)
-
         self.__my_selected_sm_id = None
         self._selected_sm_model = None
-
         self.doing_update = False
         self.no_cursor_observation = False
-        self.next_activity_focus_self = True
         self.on_toggle_mode_check_gaphas_view_is_meta_data_consistent = True
 
         self.register()
@@ -359,12 +351,6 @@ class ModificationHistoryTreeController(ExtendedController):
 
     def new_change(self, model, method_name, instance, info, history_id, active, parent_tree_item, parameters,
                    tool_tip=None):
-        # Nr, Instance, Method, Details, model
-
-        # TODO may useful tooltip
-        trail_tip = "any modification-state of state machine can be reached by clicking on respective action"
-        branch_tip = "-> actions of old branches can be reached by clicking on respective action"
-
         # active-state based coloring
         foreground = self.get_color_active(active)
 

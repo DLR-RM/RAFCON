@@ -76,6 +76,7 @@ class TransitionView(ConnectionView):
         super(TransitionView, self).__init__(hierarchy_level)
         self._transition_m = None
         self.model = transition_m
+        self._line_color = None
 
     @property
     def model(self):
@@ -87,28 +88,21 @@ class TransitionView(ConnectionView):
         self._transition_m = ref(transition_model)
 
     def draw(self, context):
-        # Do not draw if the core element has already been destroyed
-        if not self.model.core_element:
-            return
-
-        if context.selected:
-            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE_SELECTED'],
-                                                            self.parent.transparency)
-        else:
-            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE'],
-                                                            self.parent.transparency)
-        self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], self.parent.transparency)
-        super(TransitionView, self).draw(context)
+        if self.model.core_element:
+            if context.selected:
+                self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE_SELECTED'], self.parent.transparency)
+            else:
+                self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE'], self.parent.transparency)
+            self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], self.parent.transparency)
+            super(TransitionView, self).draw(context)
 
 
 class DataFlowView(ConnectionView):
     def __init__(self, data_flow_m, hierarchy_level):
         super(DataFlowView, self).__init__(hierarchy_level)
-        assert isinstance(data_flow_m, DataFlowModel)
         self._data_flow_m = None
         self.model = data_flow_m
-
-        self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
+        self._line_color = None
         self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_PORT'])
 
     @property
@@ -125,14 +119,9 @@ class DataFlowView(ConnectionView):
         return global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
 
     def draw(self, context):
-        # Do not draw if the core element has already been destroyed
-        if not self.model.core_element:
-            return
-
-        if not self.show_connection:
-            return
-        if context.selected:
-            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE_SELECTED'])
-        else:
-            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
-        super(DataFlowView, self).draw(context)
+        if self.model.core_element and self.show_connection:
+            if context.selected:
+                self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE_SELECTED'])
+            else:
+                self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
+            super(DataFlowView, self).draw(context)

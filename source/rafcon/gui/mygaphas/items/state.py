@@ -16,7 +16,6 @@
 from weakref import ref
 from gi.repository.Pango import SCALE, FontDescription, WrapMode
 from gi.repository import PangoCairo
-# from cairo import Antialias
 from copy import copy
 import cairo
 
@@ -45,6 +44,7 @@ from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 # Fixed width of the Pango layout. The higher this value, the better is the accuracy, but the more memory is consumed
@@ -868,7 +868,6 @@ class StateView(Element):
         resize_state_v(self, old_size, new_size, paste)
 
 
-
 class NameView(Element):
 
     def __init__(self, name, size):
@@ -990,9 +989,6 @@ class NameView(Element):
                 # Copy image surface to current cairo context
                 self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
                 return
-
-
-            # c.set_antialias(Antialias.GOOD)
 
             cairo_context = c
             if isinstance(c, CairoBoundingBoxContext):

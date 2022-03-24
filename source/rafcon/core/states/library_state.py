@@ -98,7 +98,6 @@ class LibraryState(State):
             logger.info("Old library name '{0}' was located at {1}".format(library_name, library_path))
             logger.info("New library name '{0}' is located at {1}".format(new_library_name, new_library_path))
 
-        # key = load_library_root_state_timer.start()
         lib_version, state_copy = library_manager.get_library_state_copy_instance(self.lib_os_path)
         if not str(lib_version) == version and not str(lib_version) == "None":
             raise AttributeError("Library does not have the correct version!")
@@ -247,7 +246,6 @@ class LibraryState(State):
         """
         self.state_execution_status = StateExecutionStatus.ACTIVE
         logger.debug("Entering library state '{0}' with name '{1}'".format(self.library_name, self.name))
-        # self.state_copy.parent = self.parent
         self.state_copy._run_id = self._run_id
         self.state_copy.input_data = self.input_data
         self.state_copy.output_data = self.output_data
@@ -586,15 +584,6 @@ class LibraryState(State):
             if not isinstance(use_runtime_value_output_data_ports, dict):
                 raise TypeError("use_runtime_value_output_data_ports must be of type dict")
             self._use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
-
-    @property
-    def child_execution(self):
-        """Property for the _child_execution field
-        """
-        if self.state_execution_status is StateExecutionStatus.EXECUTE_CHILDREN:
-            return True
-        else:
-            return False
 
     def get_storage_path(self, appendix=None):
         if appendix is None:

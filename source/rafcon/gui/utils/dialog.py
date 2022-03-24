@@ -83,7 +83,6 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
 
     def show_grab_focus_and_run(self, standalone=False):
         # TODO check if show all can be removed full -> at the moment it interferes grab focus -> dialog is not focused
-        # self.show_all()
         # Only grab focus in the highest class, the inheriting classes should have the focus as well because they all
         # execute the init of this class
         self.grab_focus()

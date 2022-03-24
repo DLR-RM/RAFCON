@@ -22,7 +22,6 @@ from rafcon.gui.mygaphas.items.state import StateView
 from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
 
 
-
 class ExtendedGtkView(GtkView, Observer):
 
     hovered_handle = None

@@ -63,14 +63,9 @@ class LibraryManager(Observable):
         # a list to hold all library states that were skipped by the user during the replacement procedure
         self._skipped_states = []
         self._skipped_library_roots = []
-
-        # loaded libraries
         self._loaded_libraries = {}
-        self._libraries_instances = {}
-
         self._open_group_of_state_machines = False
         self._skip_all_broken_libraries = False
-
         self._show_dialog = True
 
     @property
@@ -200,7 +195,7 @@ class LibraryManager(Observable):
         :param target_dict: the target dictionary to store all loaded libraries to
         """
         for library_name in os.listdir(library_path):
-            library_folder_path, library_name = self.check_clean_path_of_library(library_path, library_name)
+            _, library_name = self.check_clean_path_of_library(library_path, library_name)
             full_library_path = os.path.join(library_path, library_name)
             if os.path.isdir(full_library_path) and library_name[0] != '.':
                 if os.path.exists(os.path.join(full_library_path, storage.STATEMACHINE_FILE)) \
@@ -418,7 +413,7 @@ class LibraryManager(Observable):
         if lib_os_path in self._loaded_libraries:
             # this list can also be taken to open library state machines TODO -> implement it -> because faster
             state_machine = self._loaded_libraries[lib_os_path]
-            # as long as the a library state root state is never edited so the state first has to be copied here
+            # as long as the library state root state is never edited so the state first has to be copied here
             state_copy = copy.deepcopy(state_machine.root_state)
             return state_machine.version, state_copy
         else:

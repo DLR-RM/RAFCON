@@ -53,26 +53,17 @@ class EditorView(View):
         try:
             self.language_manager = GtkSource.LanguageManager()
             if language in self.language_manager.get_language_ids():
-
                 self.textview = GtkSource.View.new_with_buffer(self.new_buffer())
                 self.textview.props.right_margin_position = 120
                 self.textview.props.show_right_margin = True
                 self.textview.props.highlight_current_line = True
                 self.textview.props.smart_backspace = True
                 self.textview.props.smart_home_end = True
-                # Gtk TODO: what is this for?
-                # self.textview.set_mark_category_pixbuf('INSTRUCTION',
-                #                                        editor_frame.render_icon(Gtk.STOCK_GO_FORWARD,
-                #                                                                 Gtk.IconSize.MENU))
-                self.using_source_view = True
             else:
                 logger.debug("Chosen language '{}' is not supported initiate simple TextView.".format(language))
                 self.textview = Gtk.TextView()
-                self.using_source_view = False
         except NameError:
             self.textview = Gtk.TextView()
-            self.using_source_view = False
-
         self.textview.props.left_margin = 5
         self.while_in_set_enabled = False
         self.register()

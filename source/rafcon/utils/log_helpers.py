@@ -68,8 +68,7 @@ class LoggingViewHandler(logging.Handler):
         """
         try:
             # Shorten the source name of the record (remove rafcon.)
-            if sys.version_info >= (2, 7):
-                record.__setattr__("name", record.name.replace("rafcon.", ""))
+            record.__setattr__("name", record.name.replace("rafcon.", ""))
             msg = self.format(record)
             fs = "%s"
             try:

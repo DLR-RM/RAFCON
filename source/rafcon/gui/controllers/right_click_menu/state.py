@@ -148,8 +148,7 @@ class StateMachineRightClickMenu(object):
 
         # save state as but not for root state, therefore the user should use save state machine as
         if len(selection.states) == 1 and not selected_state_m.state.is_root_state:
-            save_as_sub_menu_item, save_as_sub_menu = append_sub_menu_to_parent_menu("Save state as", menu,
-                                                                                     constants.BUTTON_SAVE)
+            _, save_as_sub_menu = append_sub_menu_to_parent_menu("Save state as", menu, constants.BUTTON_SAVE)
             callback_function = partial(self.on_save_as_activate,
                                         save_as_function=gui_helper_state_machine.save_selected_state_as)
             save_as_sub_menu.append(create_menu_item("State machine", constants.BUTTON_SAVE,
@@ -168,9 +167,7 @@ class StateMachineRightClickMenu(object):
                                                                  callback_function,
                                                                  accel_code=None, accel_group=accel_group))
         else:
-            save_as_sub_menu_item, save_as_sub_menu = append_sub_menu_to_parent_menu("Save state machine as", menu,
-                                                                                     constants.BUTTON_SAVE)
-
+            _, save_as_sub_menu = append_sub_menu_to_parent_menu("Save state machine as", menu, constants.BUTTON_SAVE)
             callback_function = partial(self.on_save_as_activate,
                                         save_as_function=gui_helper_state_machine.save_state_machine_as)
             save_as_sub_menu.append(create_menu_item("State machine", constants.BUTTON_SAVE,
@@ -281,12 +278,10 @@ class StateMachineRightClickMenu(object):
         if state_m is not None:
             gui_helper_state_machine.gui_helper_state.toggle_show_content_flag_of_library_state_model(state_m)
 
-
     def on_select_library_tree_element(widget, date=None, state_m=None):
         from rafcon.gui.singleton import main_window_controller
         library_tree_controller = main_window_controller.get_controller('library_controller')
         library_tree_controller.select_library_tree_element_of_library_state_model(state_m)
-        library_usages_tree_controller = main_window_controller.get_controller('library_usages_controller')
         library__usagestree_controller.select_library_tree_element_of_library_state_model(state_m)
 
     def on_toggle_is_start_state(self, widget, data=None):

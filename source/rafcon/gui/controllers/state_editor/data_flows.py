@@ -52,7 +52,6 @@ class StateDataFlowsListController(LinkageListController):
 
     ID_STORAGE_ID = 0
     FROM_STATE_STORAGE_ID = 1
-    FROM_KEY_STORAGE_ID = 2
     TO_STATE_STORAGE_ID = 3
     TO_KEY_STORAGE_ID = 4
     IS_EXTERNAL_STORAGE_ID = 5
@@ -202,7 +201,7 @@ class StateDataFlowsListController(LinkageListController):
             except (AttributeError, ValueError) as e:
                 logger.error("Data Flow couldn't be added: {0}".format(e))
                 return
-        elif self.view_dict['data_flows_external'] and possible_external_data_flows:  # self.free_to_port_external:
+        elif self.view_dict['data_flows_external'] and possible_external_data_flows:
             from_state_id = possible_external_data_flows[0][0]
             from_key = possible_external_data_flows[0][1]
             to_state_id = possible_external_data_flows[0][2]
@@ -494,7 +493,6 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                     from_state = take_from_dict(model.state.states, data_flow.from_state)
                     from_state_label = from_state.name + '.' + data_flow.from_state
                 else:
-                    # print(data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key)
                     logger.warning("DO break in ctrl/data_flow.py -1")
                     break
             # check if to Self_state
@@ -506,7 +504,6 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                     to_state = take_from_dict(model.state.states, data_flow.to_state)
                     to_state_label = to_state.name + '.' + data_flow.to_state
                 else:
-                    # print(data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key)
                     logger.warning("DO break in ctrl/data_flow.py 0")
                     break
 
@@ -546,10 +543,7 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
 
             from_keys_store = Gtk.ListStore(GObject.TYPE_STRING)
             if model.state.state_id == data_flow.from_state:
-                # print("input_ports", model.state.input_data_ports)
-                # print(type(model))
                 if isinstance(model, ContainerStateModel):
-                    # print("scoped_variables", model.state.scoped_variables)
                     combined_ports = {}
                     combined_ports.update(model.state.scoped_variables)
                     combined_ports.update(model.state.input_data_ports)
@@ -557,16 +551,12 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                 else:
                     get_key_combos(model.state.input_data_ports, from_keys_store, data_flow.from_key)
             else:
-                # print("output_ports", model.states[data_flow.from_state].state.output_data_ports)
                 get_key_combos(model.state.states[data_flow.from_state].output_data_ports,
                                from_keys_store, data_flow.from_key)
 
             to_keys_store = Gtk.ListStore(GObject.TYPE_STRING)
             if model.state.state_id == data_flow.to_state:
-                # print("output_ports", model.state.output_data_ports)
-                # print(type(model))
                 if isinstance(model, ContainerStateModel):
-                    # print("scoped_variables", model.state.scoped_variables)
                     combined_ports = {}
                     combined_ports.update(model.state.scoped_variables)
                     combined_ports.update(model.state.output_data_ports)
@@ -574,14 +564,12 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                 else:
                     get_key_combos(model.state.output_data_ports, to_keys_store, data_flow.to_key)
             else:
-                # print("input_ports", model.states[data_flow.to_state].state.input_data_ports)
                 get_key_combos(model.state.states[data_flow.to_state].input_data_ports
                                , to_keys_store, data_flow.to_key)
             tree_dict_combos['internal'][data_flow.data_flow_id] = {'from_state': from_states_store,
                                                                     'from_key': from_keys_store,
                                                                     'to_state': to_states_store,
                                                                     'to_key': to_keys_store}
-            # print("internal", data_flow_dict['internal'][data_flow.data_flow_id])
 
     if not model.state.is_root_state:
         for data_flow in model.parent.state.data_flows.values():  # model.parent.data_flow_list_store:
@@ -600,7 +588,6 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                         from_state = take_from_dict(model.parent.state.states, data_flow.from_state)
                         from_state_label = from_state.name + '.' + data_flow.from_state
                     else:
-                        # print("#", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key)
                         logger.warning("DO break in ctrl/data_flow.py 1")
                         break
 
@@ -617,7 +604,6 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                         to_state = take_from_dict(model.parent.state.states, data_flow.to_state)
                         to_state_label = to_state.name + '.' + data_flow.to_state
                     else:
-                        # print("##", data_flow.from_state, data_flow.from_key, data_flow.to_state, data_flow.to_key)
                         logger.warning("DO break in ctrl/data_flow.py 2")
                         break
             if model.state.state_id in [data_flow.from_state, data_flow.to_state]:
@@ -657,7 +643,6 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                 # only outports of self
                 from_keys_store = Gtk.ListStore(GObject.TYPE_STRING)
                 if model.parent.state.state_id == data_flow.from_state:
-                    # print("output_ports", model.parent.states[data_flow.from_state].state.output_data_ports)
                     combined_ports = {}
                     combined_ports.update(model.parent.state.input_data_ports)
                     combined_ports.update(model.parent.state.scoped_variables)
@@ -714,10 +699,6 @@ def update_data_flows(model, data_flow_dict, tree_dict_combos):
                                                                         'from_key': from_keys_store,
                                                                         'to_state': to_states_store,
                                                                         'to_key': to_keys_store}
-                # print("external", data_flow_dict['external'][data_flow.data_flow_id])
-
-    # print("ALL SCANNED: ", data_flow_dict['internal'].keys(), data_flow_dict['external'].keys(), \)
-    #     tree_dict_combos['internal'].keys(), tree_dict_combos['external'].keys()
     return free_to_port_internal, free_to_port_external, from_ports_internal, from_ports_external
 
 
@@ -759,9 +740,6 @@ def find_free_keys(model):
                                                                  port_keys]
                     nfree_to_ports[state_model.state.name] = [state_model.state.input_data_ports[i].name for i in
                                                               port_keys]
-
-    # print("\nFOUND FREE PORTS: \n", nfree_to_ports, "\n", free_to_ports, "\n",  from_ports)
-
     return free_to_ports, from_ports
 
 

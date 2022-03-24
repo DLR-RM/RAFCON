@@ -770,7 +770,6 @@ def replace_all_libraries_by_template(state_model):
 
 def save_all_libraries(target_path):
     for library_key, library_root_path in library_manager.library_root_paths.items():
-        # lib_target_path = os.path.join(target_path, os.path.split(library_root_path)[1])
         lib_target_path = os.path.join(target_path, library_key)
         copy_file_or_folder(library_root_path, lib_target_path)
 
@@ -1300,7 +1299,6 @@ def substitute_selected_state_and_use_choice_dialog():
         root_window = rafcon.gui.singleton.main_window_controller.get_root_window()
         x, y = root_window.get_position()
         _width, _height = root_window.get_size()
-        # print("x, y, width, height, bit_depth", x, y, width, height)
         pos = (x + _width/4, y + _height/6)
         StateSubstituteChooseLibraryDialog(rafcon.gui.singleton.library_manager_model, width=450, height=550, pos=pos,
                                            parent=root_window)
@@ -1317,7 +1315,6 @@ def substitute_selected_state(state, as_template=False, keep_name=False):
     :param bool as_template: The flag determines if a handed the state of type LibraryState is insert as template
     :return:
     """
-    # print("substitute_selected_state", state, as_template)
     assert isinstance(state, State)
     from rafcon.core.states.barrier_concurrency_state import DeciderState
     if isinstance(state, DeciderState):
@@ -1346,10 +1343,8 @@ def substitute_selected_library_state_with_template(keep_name=True):
     selection = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection
     selected_state_m = selection.get_selected_state()
     if len(selection.states) == 1 and isinstance(selected_state_m, LibraryStateModel):
-        # print("start substitute library state with template")
         # TODO optimize this to not generate one more library state and model
         lib_state = copy.deepcopy(selected_state_m.state)
-        # lib_state_m = copy.deepcopy(selected_states[0].state)
         substitute_selected_state(lib_state, as_template=True, keep_name=keep_name)
         # TODO think about to use as return value the inserted state
         return True

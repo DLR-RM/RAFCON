@@ -221,7 +221,6 @@ class ExecutionEngine(Observable):
         self.__set_execution_mode_to_finished()
         self.state_machine_manager.active_state_machine_id = None
         plugins.run_on_state_machine_execution_finished()
-        # self.__set_execution_mode_to_stopped()
         self.state_machine_running = False
 
     def backward_step(self):
@@ -466,7 +465,6 @@ class ExecutionEngine(Observable):
         """
         with self.state_counter_lock:
             self.state_counter += 1
-            # logger.verbose("Increase state_counter!" + str(self.state_counter))
 
         woke_up_from_pause_or_step_mode = False
 

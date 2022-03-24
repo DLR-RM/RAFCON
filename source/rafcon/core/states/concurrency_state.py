@@ -99,20 +99,20 @@ class ConcurrencyState(ContainerState):
                 state.concurrency_queue_id = index
 
                 state.generate_run_id()
-                target_excution_history = None
+                target_execution_history = None
                 if not self.backward_execution:
                     # In the case that execution logging is disabled there is no concurrency_history_item
                     if concurrency_history_item:
                         # care for the history items; this item is only for execution visualization
                         concurrency_history_item.execution_histories[index].push_call_history_item(
                             state, CallType.EXECUTE, self, state.input_data)
-                        target_excution_history = concurrency_history_item.execution_histories[index]
+                        target_execution_history = concurrency_history_item.execution_histories[index]
                 else:  # backward execution
                     last_history_item = concurrency_history_item.execution_histories[index].pop_last_item()
                     assert isinstance(last_history_item, ReturnItem)
-                    target_excution_history = concurrency_history_item.execution_histories[index]
+                    target_execution_history = concurrency_history_item.execution_histories[index]
 
-                state.start(target_excution_history, self.backward_execution, False)
+                state.start(target_execution_history, self.backward_execution, False)
 
         return concurrency_queue
 

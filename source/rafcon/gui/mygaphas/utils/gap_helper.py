@@ -295,7 +295,6 @@ def add_transition_to_state(from_port_m, to_port_m):
 def get_relative_positions_of_waypoints(transition_v):
     """This method takes the waypoints of a connection and returns all relative positions of these waypoints.
 
-    :param canvas: Canvas to check relative position in
     :param transition_v: Transition view to extract all relative waypoint positions
     :return: List with all relative positions of the given transition
     """
@@ -330,7 +329,7 @@ def update_meta_data_for_connection_waypoints(graphical_editor_view, connection_
 
 
 def update_meta_data_for_port(graphical_editor_view, item, handle):
-    """This method updates the meta data of the states ports if they changed.
+    """This method updates the metadata of the states ports if they changed.
 
     :param graphical_editor_view: Graphical Editor the change occurred in
     :param item: State the port was moved in
@@ -357,7 +356,7 @@ def update_meta_data_for_port(graphical_editor_view, item, handle):
 
 
 def update_meta_data_for_name_view(graphical_editor_view, name_v, publish=True):
-    """This method updates the meta data of a name view.
+    """This method updates the metadata of a name view.
 
     :param graphical_editor_view: Graphical Editor view the change occurred in
     :param name_v: The name view which has been changed/moved
@@ -376,16 +375,15 @@ def update_meta_data_for_name_view(graphical_editor_view, name_v, publish=True):
 
 
 def update_meta_data_for_state_view(graphical_editor_view, state_v, affects_children=False, publish=True):
-    """This method updates the meta data of a state view
+    """This method updates the metadata of a state view
 
     :param graphical_editor_view: Graphical Editor view the change occurred in
     :param state_v: The state view which has been changed/moved
     :param affects_children: Whether the children of the state view have been resized or not
-    :param publish: Whether to publish the changes of the meta data
+    :param publish: Whether to publish the changes of the metadata
     """
     from gaphas.item import NW
 
-    # Update all port meta data to match with new position and size of parent
     update_meta_data_for_port(graphical_editor_view, state_v, None)
 
     if affects_children:
