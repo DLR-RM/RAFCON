@@ -19,7 +19,7 @@ from rafcon.gui.utils import constants
 import gaphas.painter
 
 from rafcon.gui.mygaphas.aspect import PaintHovered, ItemPaintHovered
-from rafcon.gui.mygaphas.items.connection import ConnectionView, TransitionView
+from rafcon.gui.mygaphas.items.connection import ConnectionView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils.gap_draw_helper import get_col_rgba, get_side_length_of_resize_handle
 
@@ -124,7 +124,7 @@ class NameCornerHandlePainter(CornerHandlePainter):
     border_color = gui_config.gtk_colors['NAME_RESIZE_HANDLE_BORDER']
 
 
-@PaintHovered.when_type(TransitionView)
+@PaintHovered.when_type(ConnectionView)
 class LineSegmentPainter(ItemPaintHovered):
     """
     This painter draws pseudo-handles on gaphas.item.Line objects. Each
