@@ -11,6 +11,7 @@ Future Release
     - Set the default directory of the dialog during saving a state machine in accordance with the chosen library in the library tree
     - Create the data flows & data ports automatically in the nested states
     - Create the data port automatically when the other state does not have one during connecting the data flows
+    - Support waypoints for data flows
 
 
 1.0.0
