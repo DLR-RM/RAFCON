@@ -12,6 +12,7 @@ Future Release
     - Create the data flows & data ports automatically in the nested states
     - Create the data port automatically when the other state does not have one during connecting the data flows
     - Support waypoints for data flows
+    - Custom background color for states
 
 
 1.0.0

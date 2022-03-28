@@ -185,7 +185,12 @@ class StateMachineRightClickMenu(object):
                 save_as_library_sub_menu.append(create_menu_item(library_root_key, constants.SIGN_LIB,
                                                                  callback_function,
                                                                  accel_code=None, accel_group=accel_group))
-
+        menu.append(Gtk.SeparatorMenuItem())
+        callback_function = partial(self.on_change_background_color, state_model=selected_state_m)
+        menu.append(create_menu_item("Change Background Color",
+                                     constants.BUTTON_CHANGE_BACKGROUND_COLOR,
+                                     callback_function,
+                                     accel_group=accel_group))
         return menu
 
     def insert_show_library_content_in_menu(self, menu, shortcuts_dict, accel_group):
@@ -376,6 +381,10 @@ class StateMachineRightClickMenu(object):
         if len(selection) == 1 and len(selection.states) == 1:
             gui_helper_state_machine.change_state_type_with_error_handling_and_logger_messages(selection.get_selected_state(),
                                                                                                target_class)
+
+    @staticmethod
+    def on_change_background_color(widget, data=None, state_model=None):
+        gui_helper_state_machine.change_background_color(state_model)
 
     def mouse_click(self, widget, event=None):
         from rafcon.gui.models.library_state import LibraryStateModel

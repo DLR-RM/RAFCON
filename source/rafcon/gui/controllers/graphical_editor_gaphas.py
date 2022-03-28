@@ -774,6 +774,18 @@ class GraphicalEditorController(ExtendedController):
 
         size = state_meta['size']
 
+        # Use default values if no size information is stored
+        if not state_meta['custom_background_color']:
+            state_meta = state_m.set_meta_data_editor('custom_background_color', False)
+
+        custom_background_color = state_meta['custom_background_color']
+
+        # Use default values if no size information is stored
+        if not state_meta['background_color']:
+            state_meta = state_m.set_meta_data_editor('background_color', (0.0, 0.0, 0.0))
+
+        background_color = state_meta['background_color']
+
         # Use default values if no position information is stored
         if not gui_helper_meta_data.contains_geometric_info(state_meta['rel_pos']):
             state_meta = state_m.set_meta_data_editor('rel_pos', rel_pos)
@@ -784,7 +796,7 @@ class GraphicalEditorController(ExtendedController):
             if not state_m.meta_data_was_scaled:
                 gui_helper_meta_data.scale_library_ports_meta_data(state_m, gaphas_editor=True)
 
-        state_v = StateView(state_m, size, hierarchy_level)
+        state_v = StateView(state_m, size, custom_background_color, background_color, hierarchy_level)
 
         # Draw state above data flows and NameView but beneath transitions
         num_data_flows = len(state_m.state.parent.data_flows) if isinstance(state_m.parent, ContainerStateModel) else 0
@@ -1013,6 +1025,11 @@ class GraphicalEditorController(ExtendedController):
                 self.model.state_machine.state_machine_id:
             return False
         return True
+
+    def update_item(self, model):
+        view = self.canvas.get_view_for_model(model)
+        self.canvas.request_update(view, matrix=False)
+        self.canvas.wait_for_update()
 
     @lock_state_machine
     def _add_data_port_to_selected_state(self, *event, **kwargs):
