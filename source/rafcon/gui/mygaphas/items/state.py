@@ -68,6 +68,7 @@ class StateView(Element):
         self.height = size[1]
         self.custom_background_color = custom_background_color
         self.background_color = background_color
+        self.background_changed = False
 
         self._c_min_w = self._constraints[0]
         self._c_min_h = self._constraints[1]
@@ -354,6 +355,7 @@ class StateView(Element):
         self.width = state_meta['size'][0]
         self.height = state_meta['size'][1]
         self.custom_background_color = state_meta['custom_background_color']
+        self.background_changed = True
         self.background_color = state_meta['background_color']
         self.update_minimum_size_of_children()
 
@@ -416,7 +418,7 @@ class StateView(Element):
 
         upper_left_corner = (nw.x.value, nw.y.value)
         current_zoom = self.view.get_zoom_factor()
-        from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters)
+        from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters, clear=self.background_changed)
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
@@ -462,6 +464,7 @@ class StateView(Element):
                 c.set_source_rgba(*get_col_rgba(state_border_outline_color, self.transparency))
                 c.set_line_width(default_line_width)
                 c.stroke()
+                self.background_changed = False
 
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
