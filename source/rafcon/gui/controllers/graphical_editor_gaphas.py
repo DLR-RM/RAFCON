@@ -138,6 +138,7 @@ class GraphicalEditorController(ExtendedController):
         shortcut_manager.add_callback_for_action("cut", self._cut_selection)
 
         shortcut_manager.add_callback_for_action('show_data_flows', self.update_view)
+        shortcut_manager.add_callback_for_action('show_transitions', self.update_view)
         shortcut_manager.add_callback_for_action('show_data_values', self.update_view)
         shortcut_manager.add_callback_for_action('data_flow_mode', self.data_flow_mode)
         shortcut_manager.add_callback_for_action('show_aborted_preempted', self.update_view)
@@ -151,9 +152,8 @@ class GraphicalEditorController(ExtendedController):
         :param dict info: Information e.g. about the changed config key
         """
         config_key = info['args'][1]
-        # config_value = info['args'][2]
 
-        if config_key in ["ENABLE_CACHING", "SHOW_ABORTED_PREEMPTED", "SHOW_DATA_FLOWS",
+        if config_key in ["ENABLE_CACHING", "SHOW_ABORTED_PREEMPTED", "SHOW_DATA_FLOWS", "SHOW_TRANSITIONS",
                           "SHOW_DATA_FLOW_VALUE_LABELS", "SHOW_NAMES_ON_DATA_FLOWS", "ROTATE_NAMES_ON_CONNECTION"]:
             self.update_view()
 
