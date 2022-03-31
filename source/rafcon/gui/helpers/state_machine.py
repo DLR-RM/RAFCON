@@ -1397,7 +1397,8 @@ def ungroup_selected_state():
 
 
 def change_background_color(state_model):
-    dialog = Gtk.ColorSelectionDialog('Change Background Color')
+    from rafcon.gui.utils.dialog import get_root_window
+    dialog = Gtk.ColorSelectionDialog('Change Background Color', parent=get_root_window())
     default_button_response = -7
     dialog.add_button('Set to Default', default_button_response)
     response = dialog.run()
