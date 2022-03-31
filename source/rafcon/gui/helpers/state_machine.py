@@ -43,6 +43,7 @@ from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateModel, LibraryStateModel, TransitionModel, \
     DataFlowModel, DataPortModel, OutcomeModel, StateMachineModel
+from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.singleton import global_config, library_manager_model
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
 from rafcon.utils.filesystem import make_tarfile, copy_file_or_folder, create_path, make_file_executable
@@ -1393,6 +1394,32 @@ def ungroup_selected_state():
             return
         selection.remove(selected_state_m)
         return gui_helper_state.ungroup_state(selected_state_m)
+
+
+def change_background_color(state_model):
+    from rafcon.gui.utils.dialog import get_root_window
+    dialog = Gtk.ColorSelectionDialog('Change Background Color', parent=get_root_window())
+    default_button_response = -7
+    dialog.add_button('Set to Default', default_button_response)
+    response = dialog.run()
+    changed = False
+    if response == -5:
+        current_color = dialog.get_color_selection().get_current_color()
+        state_model.set_meta_data_editor('custom_background_color', True)
+        state_model.set_meta_data_editor('background_color', (current_color.red_float, current_color.green_float, current_color.blue_float))
+        changed = True
+    elif response == default_button_response:
+        state_model.set_meta_data_editor('custom_background_color', False)
+        changed = True
+    dialog.destroy()
+    if changed:
+        state_model.meta_signal.emit(MetaSignalMsg('change_background_color_action', 'all', True))
+        from rafcon.gui.singleton import main_window_controller
+        from rafcon.gui.singleton import state_machine_manager_model
+        state_machines_editor_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
+        graphical_editor_ctrl = state_machines_editor_ctrl.get_controller(state_machine_manager_model.selected_state_machine_id)
+        graphical_editor_ctrl.update_item(state_model)
+        graphical_editor_ctrl.view.editor.unselect_all()
 
 
 def get_root_state_file_path(sm_file_system_path):
