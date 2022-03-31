@@ -108,6 +108,9 @@ class MenuBarController(ExtendedController):
         show_data_flows = global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
         view["show_data_flows"].set_active(show_data_flows)
 
+        show_transitions = global_runtime_config.get_config_value("SHOW_TRANSITIONS", True)
+        view["show_transitions"].set_active(show_transitions)
+
         show_data_values = global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
         view["show_data_values"].set_active(show_data_values)
 
@@ -146,6 +149,7 @@ class MenuBarController(ExtendedController):
 
         self.connect_button_to_function('data_flow_mode', 'toggled', self.on_data_flow_mode_toggled)
         self.connect_button_to_function('show_data_flows', 'toggled', self.on_show_data_flows_toggled)
+        self.connect_button_to_function('show_transitions', 'toggled', self.on_show_transitions_toggled)
         self.connect_button_to_function('show_data_values', 'toggled', self.on_show_data_values_toggled)
         self.connect_button_to_function('show_aborted_preempted', 'toggled', self.on_show_aborted_preempted_toggled)
         self.connect_button_to_function('expert_view', 'activate', self.on_expert_view_activate)
@@ -364,6 +368,7 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('reload', partial(self.call_action_callback, "on_refresh_all_activate"))
 
         self.add_callback_to_shortcut_manager('show_data_flows', self.show_data_flows_toggled_shortcut)
+        self.add_callback_to_shortcut_manager('show_transitions', self.show_transitions_toggled_shortcut)
         self.add_callback_to_shortcut_manager('show_data_values', self.show_data_values_toggled_shortcut)
         self.add_callback_to_shortcut_manager('data_flow_mode', self.data_flow_mode_toggled_shortcut)
         self.add_callback_to_shortcut_manager('show_aborted_preempted', self.show_aborted_preempted)
@@ -603,6 +608,12 @@ class MenuBarController(ExtendedController):
         else:
             self.view["show_data_flows"].set_active(True)
 
+    def show_transitions_toggled_shortcut(self, *args, **kwargs):
+        if self.view["show_transitions"].get_active():
+            self.view["show_transitions"].set_active(False)
+        else:
+            self.view["show_transitions"].set_active(True)
+
     def show_data_values_toggled_shortcut(self, *args, **kwargs):
         if self.view["show_data_values"].get_active():
             self.view["show_data_values"].set_active(False)
@@ -628,6 +639,13 @@ class MenuBarController(ExtendedController):
             global_runtime_config.set_config_value("SHOW_DATA_FLOWS", True)
         else:
             global_runtime_config.set_config_value("SHOW_DATA_FLOWS", False)
+
+    @staticmethod
+    def on_show_transitions_toggled(widget, data=None):
+        if widget.get_active():
+            global_runtime_config.set_config_value("SHOW_TRANSITIONS", True)
+        else:
+            global_runtime_config.set_config_value("SHOW_TRANSITIONS", False)
 
     @staticmethod
     def on_show_data_values_toggled(widget, data=None):

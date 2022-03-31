@@ -87,8 +87,12 @@ class TransitionView(ConnectionView):
         assert isinstance(transition_model, TransitionModel)
         self._transition_m = ref(transition_model)
 
+    @property
+    def show_connection(self):
+        return global_runtime_config.get_config_value("SHOW_TRANSITIONS", True)
+
     def draw(self, context):
-        if self.model.core_element:
+        if self.model.core_element and self.show_connection:
             if context.selected:
                 self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE_SELECTED'], self.parent.transparency)
             else:
