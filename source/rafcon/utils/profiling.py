@@ -1,9 +1,7 @@
 import os
 import sys
 import time
-
-if sys.version_info >= (3, ):
-    import tracemalloc
+import tracemalloc
 
 
 def memory_profiling(args):
