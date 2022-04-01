@@ -14,13 +14,56 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gaphas.aspect import InMotion, HandleInMotion
-from gaphas.guide import GuidedItemInMotion, GuidedItemHandleInMotion, GuideMixin
+from gaphas.guide import GuidedItemInMotion, GuidedItemHandleInMotion, Guide, GuideMixin
 
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 
 
 class GuidedStateMixin(GuideMixin):
-    pass
+
+    MARGIN = 5
+
+    def get_excluded_items(self):
+        return set()
+
+    def find_vertical_guides(self, item_vedges, pdx, height, excluded_items):
+        # The root state cannot be aligned
+        if not self.item.parent:
+            return 0, ()
+
+        states_v = self._get_siblings_and_parent()
+        vedges = set()
+        for state_v in states_v:
+            g = Guide(state_v)
+            for x in g.vertical():
+                vedges.add(self.view.get_matrix_i2v(g.item).transform_point(x, 0)[0])
+        dx, edges_x = self.find_closest(item_vedges, vedges)
+
+        return dx, edges_x
+
+    def find_horizontal_guides(self, item_hedges, pdy, width, excluded_items):
+        # The root state cannot be aligned
+        if not self.item.parent:
+            return 0, ()
+
+        states_v = self._get_siblings_and_parent()
+        hedges = set()
+        for state_v in states_v:
+            g = Guide(state_v)
+            for y in g.horizontal():
+                hedges.add(self.view.get_matrix_i2v(g.item).transform_point(0, y)[1])
+
+        dy, edges_y = self.find_closest(item_hedges, hedges)
+        return dy, edges_y
+
+    def _get_siblings_and_parent(self):
+        states_v = []
+        parent_state_v = self.item.parent
+        states_v.append(parent_state_v)
+        for sibling in self.view.canvas.get_children(parent_state_v):
+            if isinstance(sibling, StateView) and sibling is not self.item:
+                states_v.append(sibling)
+        return states_v
 
 
 @InMotion.when_type(StateView)
@@ -58,7 +101,7 @@ class GuidedNameInMotion(GuidedItemInMotion):
 
 @HandleInMotion.when_type(StateView)
 class GuidedStateHandleInMotion(GuidedStateMixin, GuidedItemHandleInMotion):
-    
+
     def glue(self, pos, distance=None):
         distance = distance if distance else self.GLUE_DISTANCE
         super(GuidedStateHandleInMotion, self).glue(pos, distance)
