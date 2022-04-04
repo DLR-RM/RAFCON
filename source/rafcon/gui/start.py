@@ -29,7 +29,7 @@ from yaml_configuration.config import config_path
 # gui
 import rafcon
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
+from rafcon.gui.design_config import global_design_config
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils.splash_screen import SplashScreen
@@ -373,12 +373,8 @@ def register_signal_handlers(callback):
 
 
 def create_splash_screen():
-    if is_custom_design_enabled:
-        splash_screen_width = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_WIDTH")
-        splash_screen_height = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_HEIGHT")
-    else:
-        splash_screen_width = 530
-        splash_screen_height = 350
+    splash_screen_width = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_WIDTH", 530)
+    splash_screen_height = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_HEIGHT", 350)
     splash_screen = SplashScreen(contains_image=True, width=splash_screen_width, height=splash_screen_height)
     splash_screen.rotate_image(random_=True)
     splash_screen.set_text(_("Starting RAFCON..."))

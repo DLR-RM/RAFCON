@@ -56,9 +56,7 @@ class SplashScreen(Gtk.Window):
             self.label.set_yalign(0.5)
             main_vbox.pack_start(self.label, False, True, 10)
             main_vbox.set_spacing(0)
-            label_height = 40
-            if is_custom_design_enabled():
-                label_height = global_design_config.get_config_value("SPLASH_SCREEN_LABEL_HEIGHT")
+            label_height = global_design_config.get_config_value("SPLASH_SCREEN_LABEL_HEIGHT", 40)
             self.label.set_size_request(-1, label_height)
 
         if not os.getenv("RAFCON_START_MINIMIZED", False):
@@ -78,9 +76,7 @@ class SplashScreen(Gtk.Window):
 
     def load_image(self, image_path):
         if image_path:
-            horizontal_spacing = 50
-            if is_custom_design_enabled():
-                horizontal_spacing = global_design_config.get_config_value("SPLASH_SCREEN_HORIZONTAL_SPACING")
+            horizontal_spacing = global_design_config.get_config_value("SPLASH_SCREEN_HORIZONTAL_SPACING", 50)
             pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(image_path, self.get_size()[0] - horizontal_spacing,
                                                             self.get_size()[1] - horizontal_spacing)
             self.image.set_from_pixbuf(pixbuf)
