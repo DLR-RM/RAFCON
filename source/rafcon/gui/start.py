@@ -373,7 +373,7 @@ def register_signal_handlers(callback):
 
 
 def create_splash_screen():
-    if is_custom_design_enabled:
+    if is_custom_design_enabled():
         splash_screen_width = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_WIDTH")
         splash_screen_height = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_HEIGHT")
     else:
