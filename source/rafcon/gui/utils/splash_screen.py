@@ -46,9 +46,7 @@ class SplashScreen(Gtk.Window):
         if contains_image:
             main_vbox.pack_start(self.image, True, True, 0)
 
-        if is_custom_design_enabled() and not global_design_config.get_config_value("SPLASH_SCREEN_SHOW_TEXT", True):
-            pass
-        else:
+        if global_design_config.get_config_value("SPLASH_SCREEN_SHOW_TEXT", True):
             # add label to display text, the text can be changed by the text() method.
             # Align it in the middle of the gtk window
             self.label = Gtk.Label(label="")
@@ -63,13 +61,10 @@ class SplashScreen(Gtk.Window):
             self.show_all()
 
     def set_text(self, text):
-        if is_custom_design_enabled() and not global_design_config.get_config_value("SPLASH_SCREEN_SHOW_TEXT", True):
+        if not global_design_config.get_config_value("SPLASH_SCREEN_SHOW_TEXT", True):
             return
         logger.info(text)
         self.label.set_text(text)
-        # include this to give more time to watch
-        # import time
-        # time.sleep(1)
         while Gtk.events_pending():
             Gtk.main_iteration_do(False)
         return
