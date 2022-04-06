@@ -1,5 +1,5 @@
 astroid>=2.0.0,<3.0.0
-gaphas>=2.1.0,<=2.2.0
+gaphas>=2.1.0,<2.2.0
 jsonconversion>=0.2.2,<1.0.0
 pandas==1.1.5
 psutil>=5.0.0,<6.0.0
