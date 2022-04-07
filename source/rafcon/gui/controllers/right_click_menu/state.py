@@ -104,6 +104,8 @@ class StateMachineRightClickMenu(object):
         add_sub_menu.append(create_menu_item("Scoped Variable", constants.BUTTON_ADD, self.on_add_scoped_variable,
                                              accel_code=shortcuts_dict['add_scoped_variable'][0],
                                              accel_group=accel_group))
+        menu.append(create_menu_item("Delete", constants.BUTTON_DEL, self.on_delete,
+                                     accel_code=shortcuts_dict['delete'][0], accel_group=accel_group))
         menu.append(Gtk.SeparatorMenuItem())
 
         self.insert_copy_cut_paste_in_menu(menu, shortcuts_dict, accel_group)
@@ -315,6 +317,9 @@ class StateMachineRightClickMenu(object):
 
     def on_add_scoped_variable(self, widget=None, data=None):
         self.shortcut_manager.trigger_action('add_scoped_variable', None, None)
+
+    def on_delete(self, widget=None, data=None):
+        self.shortcut_manager.trigger_action('delete', None, None)
 
     def on_copy_activate(self, widget, data=None):
         active_sm_m = self.state_machine_manager_model.get_selected_state_machine_model()
