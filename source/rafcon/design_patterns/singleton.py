@@ -16,14 +16,6 @@ class Singleton:
             self._instance = self._cls(*args, **kwargs)
         return self._instance
 
-    def reset_and_instance(self, *args, **kwargs):
-        """
-        Resets and returns the single instantiation of the class
-        """
-
-        self._instance = self._cls(*args, **kwargs)
-        return self._instance
-
     def __call__(self):
         raise TypeError('The singleton must be accessed through instance()')
 
