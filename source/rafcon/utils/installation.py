@@ -55,8 +55,7 @@ def install_fonts(restart=False):
     font_names_to_be_installed = ["SourceSansPro", "FontAwesome5Free", "RAFCON"]
 
     custom_fonts = list()  # support a list in case we also support secondary or tertiary fonts
-    if is_custom_design_enabled():
-        custom_fonts.append(global_design_config.get_config_value("PRIMARY_FONT"))
+    custom_fonts.append(global_design_config.get_config_value("PRIMARY_FONT"))
     font_names_to_be_installed += custom_fonts
 
     user_otf_fonts_folder = join(resources.xdg_user_data_folder, "fonts")

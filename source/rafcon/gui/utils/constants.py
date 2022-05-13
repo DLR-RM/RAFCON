@@ -19,7 +19,7 @@ from collections import OrderedDict
 from gi.repository import Gdk
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
-from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
+from rafcon.gui.design_config import global_design_config
 
 
 def get_glade_path(glade_file):
