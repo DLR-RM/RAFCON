@@ -24,6 +24,8 @@ import logging
 import threading
 import signal
 import tracemalloc
+import pathlib
+
 from yaml_configuration.config import config_path
 
 # gui
@@ -195,7 +197,8 @@ def setup_argument_parser():
                                "Use 'None' to prevent the generation of a config file and use the default "
                                "configuration. Default: {0}").format(default_config_path))
     parser.add_argument('-d', '--design_config', action='store', type=config_path, metavar='path',
-                        dest='design_config_path', default=None, nargs='?', const=default_config_path,
+                        dest='design_config_path', default=str(pathlib.Path(__file__).parent.resolve()), nargs='?',
+                        const=default_config_path,
                         help=_("path to the configuration file design_config.yaml. "
                                "Use 'None' to prevent the generation of a config file and use the default "
                                "configuration. Default: {0}").format(default_config_path))

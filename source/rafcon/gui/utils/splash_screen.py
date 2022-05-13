@@ -82,15 +82,9 @@ class SplashScreen(Gtk.Window):
 
     def get_images(self):
         images = list()
-        if is_custom_design_enabled():
-            splash_screen_path = global_design_config.get_config_value("SPLASH_SCREEN_FOLDER")
-            for image_filename in os.listdir(splash_screen_path):
-                images.append(os.path.join(splash_screen_path, image_filename))
-        else:
-            for image_filename in resource_listdir(rafcon.gui.__name__, os.path.join("assets", "splashscreens")):
-                images.append(resource_filename(rafcon.gui.__name__, os.path.join(
-                    "assets", "splashscreens", image_filename)))
-
+        splash_screen_path = global_design_config.get_config_value("SPLASH_SCREEN_FOLDER")
+        for image_filename in os.listdir(splash_screen_path):
+            images.append(os.path.join(splash_screen_path, image_filename))
         return images
 
     def rotate_image(self, random_=True):
