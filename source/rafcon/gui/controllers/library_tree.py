@@ -204,8 +204,6 @@ class LibraryTreeController(ExtendedController):
             for library_path, library_row_iter in self.library_row_iter_dict_by_library_path.items():
                 library_row_path = self.tree_store.get_path(library_row_iter)
                 act_expansion_library[library_path] = self.view.row_expanded(library_row_path)
-                # if act_expansion_library[library_path]:
-                #     print(library_path)
             self.__expansion_state = act_expansion_library
         except TypeError:
             logger.warning("expansion state of library could not be stored")
@@ -432,7 +430,6 @@ class LibraryTreeController(ExtendedController):
             # Second confirmation to delete library
             tree_m_row = self.filter[path]
             library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
-            # assert isinstance(tree_m_row[self.ITEM_STORAGE_ID], str)
             library_file_system_path = library_os_path
 
             if "root" in menu_item_text:
@@ -525,10 +522,11 @@ class LibraryTreeController(ExtendedController):
         gui_helper_state_machine.substitute_selected_state(self._get_selected_library_state(), as_template=True,
                                                            keep_name=keep_name)
 
-
     def extract_library_properties_from_selected_row(self):
         """ Extracts properties library_os_path, library_path, library_name and tree_item_key from tree store row """
         (model, row) = self.view.get_selection().get_selected()
+        if row is None:
+            return None, None, None, None
         tree_item_key = model[row][self.ID_STORAGE_ID]
         library_item = model[row][self.ITEM_STORAGE_ID]
         library_path = model[row][self.LIB_PATH_STORAGE_ID]

@@ -15,10 +15,7 @@
 import os
 import re
 import yaml
-try:
-    from yaml import CFullLoader as FullLoader
-except ImportError:
-    from yaml import FullLoader
+
 from collections import defaultdict
 from pkg_resources import resource_filename, resource_string
 
@@ -57,7 +54,6 @@ class GuiConfig(ObservableConfig):
         if self.get_config_value("TYPE") != "GUI_CONFIG":
             raise ConfigError("Type should be GUI_CONFIG for GUI configuration. "
                               "Please add \"TYPE: GUI_CONFIG\" to your gui_config.yaml file.")
-        self.path_to_tool = os.path.dirname(os.path.realpath(__file__))
         if not is_custom_design_enabled():
             self.configure_gtk()
             self.configure_colors()

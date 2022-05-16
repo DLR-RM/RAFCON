@@ -47,9 +47,9 @@ class Observer:
                         if observable not in self._observable_to_methods:
                             self._observable_to_methods[observable] = []
                         self._observable_to_methods[observable].append((getattr(self, name), kwargs))
+        self._observers = []
         if model:
             self.observe_model(model)
-        self._observers = []
         self._notifications = {'assign': {}, 'before': {}, 'after': {}, 'signal': {}}
         self._assign_notifications = self._notifications['assign']
         self._before_notifications = self._notifications['before']

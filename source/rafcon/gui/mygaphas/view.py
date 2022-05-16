@@ -18,9 +18,8 @@ from rafcon.design_patterns.observer.observer import Observer
 from gaphas.view import GtkView
 from gaphas.item import Element
 
-from rafcon.gui.mygaphas.painter import BoundingBoxPainter
+from rafcon.gui.mygaphas.items.state import StateView
 from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
-
 
 
 class ExtendedGtkView(GtkView, Observer):
@@ -105,6 +104,15 @@ class ExtendedGtkView(GtkView, Observer):
                 glue_pos = i2v(*pg)
 
         return item, port, glue_pos
+
+    def get_state_at_point(self, vpos, distance=10):
+        vx, vy = vpos
+        rect = (vx - distance, vy - distance, distance * 2, distance * 2)
+        items = self.get_items_in_rectangle(rect, reverse=True)
+        for item in items:
+            if isinstance(item, StateView):
+                return item
+        return None
 
     def get_zoom_factor(self):
         """Returns the current zoom factor of the view

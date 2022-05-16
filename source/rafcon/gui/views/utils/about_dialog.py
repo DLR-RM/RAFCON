@@ -1,5 +1,3 @@
-# coding=utf-8
-
 # Copyright (C) 2015-2017 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
@@ -26,7 +24,6 @@ class AboutDialogView(Gtk.AboutDialog):
         self.set_version(rafcon.__version__)
         self.set_authors(("Rico Belder", "Sebastian Brunner", "Franz Steinmetz", "Michael Vilzmann", "Lukas Becker",
                           "Annika Wollschläger", "Benno Voggenreiter", "Matthias Büttner", "Mahmoud Akl"))
-        # TODO: set copyright/license
-        # self.set_copyright("Copyright: DLR")
-        # self.set_license("Copyright: DLR")
+        self.set_copyright("DLR")
+        self.set_license("Eclipse Public License 1.0")
         self.set_website("https://github.com/DLR-RM/RAFCON")

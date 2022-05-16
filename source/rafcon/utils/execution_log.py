@@ -121,8 +121,6 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                     except KeyError:
                         logger.warning("Key {} not in history start item".format(str(l)))
 
-                ## add extended properties (added in later rafcon versions),
-                ## will add default value if not existing instead
                 for l, default in [('semantic_data', {}),
                                      ('is_library', None),
                                      ('library_state_name', None),
@@ -147,8 +145,6 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                 except KeyError:
                     logger.warning("Key {} not in history start item".format(str(l)))
 
-            ## add extended properties (added in later rafcon versions),
-            ## will add default value if not existing instead
             for l, default in [('semantic_data', {}),
                                  ('is_library', None),
                                  ('library_state_name', None),

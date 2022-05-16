@@ -22,7 +22,6 @@ class LibraryTreeView(View, Gtk.TreeView):
         View.__init__(self, parent='library_tree_view')
         Gtk.TreeView.__init__(self)
         self.set_name('library_tree')
-        # self.set_grid_lines(Gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
 
         tvcolumn_name = Gtk.TreeViewColumn('Library Name')
         tvcolumn_name.set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)

@@ -16,7 +16,6 @@
 from weakref import ref
 from gi.repository.Pango import SCALE, FontDescription, WrapMode
 from gi.repository import PangoCairo
-# from cairo import Antialias
 from copy import copy
 import cairo
 
@@ -45,6 +44,7 @@ from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils import constants
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 # Fixed width of the Pango layout. The higher this value, the better is the accuracy, but the more memory is consumed
@@ -59,13 +59,16 @@ class StateView(Element):
 
     _map_handles_port_v = {}
 
-    def __init__(self, state_m, size, hierarchy_level):
+    def __init__(self, state_m, size, custom_background_color, background_color, hierarchy_level):
         super(StateView, self).__init__(size[0], size[1])
         assert isinstance(state_m, AbstractStateModel)
         # Reapply size, as Gaphas sets default minimum size to 1, which is too large for highly nested states
         self.min_width = self.min_height = 0
         self.width = size[0]
         self.height = size[1]
+        self.custom_background_color = custom_background_color
+        self.background_color = background_color
+        self.background_changed = False
 
         self._c_min_w = self._constraints[0]
         self._c_min_h = self._constraints[1]
@@ -351,6 +354,9 @@ class StateView(Element):
         self.position = state_meta['rel_pos']
         self.width = state_meta['size'][0]
         self.height = state_meta['size'][1]
+        self.custom_background_color = state_meta['custom_background_color']
+        self.background_changed = True
+        self.background_color = state_meta['background_color']
         self.update_minimum_size_of_children()
 
         def update_port_position(port_v, meta_data):
@@ -372,7 +378,9 @@ class StateView(Element):
             for transition_m in self.model.transitions:
                 transition_v = self.canvas.get_view_for_model(transition_m)
                 transition_v.apply_meta_data()
-
+            for data_flow_m in self.model.data_flows:
+                data_flow_v = self.canvas.get_view_for_model(data_flow_m)
+                data_flow_v.apply_meta_data()
             if recursive:
                 for state_v in self.canvas.get_children(self):
                     if isinstance(state_v, StateView):
@@ -410,7 +418,7 @@ class StateView(Element):
 
         upper_left_corner = (nw.x.value, nw.y.value)
         current_zoom = self.view.get_zoom_factor()
-        from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters)
+        from_cache, image, zoom = self._image_cache.get_cached_image(width, height, current_zoom, parameters, clear=self.background_changed)
 
         # The parameters for drawing haven't changed, thus we can just copy the content from the last rendering result
         if from_cache:
@@ -448,11 +456,15 @@ class StateView(Element):
             if not context.draw_all:
                 inner_nw, inner_se = self.get_state_drawing_area(self)
                 c.rectangle(inner_nw.x, inner_nw.y, inner_se.x - inner_nw.x, inner_se.y - inner_nw.y)
-                c.set_source_rgba(*get_col_rgba(state_background_color))
+                if self.custom_background_color:
+                    c.set_source_rgba(self.background_color[0], self.background_color[1], self.background_color[2], 0.5)
+                else:
+                    c.set_source_rgba(*get_col_rgba(state_background_color))
                 c.fill_preserve()
                 c.set_source_rgba(*get_col_rgba(state_border_outline_color, self.transparency))
                 c.set_line_width(default_line_width)
                 c.stroke()
+                self.background_changed = False
 
             # Copy image surface to current cairo context
             self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
@@ -866,7 +878,6 @@ class StateView(Element):
         resize_state_v(self, old_size, new_size, paste)
 
 
-
 class NameView(Element):
 
     def __init__(self, name, size):
@@ -988,9 +999,6 @@ class NameView(Element):
                 # Copy image surface to current cairo context
                 self._image_cache.copy_image_to_context(context.cairo, upper_left_corner, zoom=current_zoom)
                 return
-
-
-            # c.set_antialias(Antialias.GOOD)
 
             cairo_context = c
             if isinstance(c, CairoBoundingBoxContext):
