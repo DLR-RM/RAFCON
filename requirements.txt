@@ -3,7 +3,7 @@ gaphas==2.1.2
 jsonconversion==0.2.13
 matplotlib==2.1.1
 monitoring==0.9.12
-numpy==1.19.5
+numpy==1.21.0
 objgraph==3.5.0
 pandas==1.1.5
 profiling==0.1.3
