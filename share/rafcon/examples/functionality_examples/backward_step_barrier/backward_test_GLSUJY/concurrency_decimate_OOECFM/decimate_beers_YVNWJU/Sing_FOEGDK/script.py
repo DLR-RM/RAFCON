@@ -1,6 +1,4 @@
-from __future__ import print_function
 # State "Sing"
-from builtins import str
 def execute(self, inputs, outputs, gvm):
     import time   
  

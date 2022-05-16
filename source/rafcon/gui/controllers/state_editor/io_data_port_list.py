@@ -22,7 +22,6 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
-from builtins import str
 
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.states.library_state import LibraryState
@@ -94,7 +93,7 @@ class DataPortListController(ListViewController):
                                                tooltip="If set, the default value to the left will be used as default "\
                                                        "value. Otherwise, the original default value of the library")
             view['use_runtime_value_col'].set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)
-            view.get_top_widget().append_column(view['use_runtime_value_col'])
+            view.get_parent_widget().append_column(view['use_runtime_value_col'])
             view['use_runtime_value_col'].pack_start(view['use_runtime_value_toggle'], True)
             view['use_runtime_value_col'].add_attribute(view['use_runtime_value_toggle'], 'active',
                                                         self.USE_RUNTIME_VALUE_STORAGE_ID)
@@ -310,7 +309,7 @@ class InputPortListController(DataPortListController):
     CORE_ELEMENT_CLASS = InputDataPort
 
     def __init__(self, model, view):
-        super(DataPortListController, self).__init__(model, view, view.get_top_widget(), self._get_new_list_store(),
+        super(DataPortListController, self).__init__(model, view, view.get_parent_widget(), self._get_new_list_store(),
                                                      logger)
         self.state_data_port_dict = self.model.state.input_data_ports
         self.data_port_model_list = self.model.input_data_ports
@@ -381,7 +380,7 @@ class OutputPortListController(DataPortListController):
     CORE_ELEMENT_CLASS = OutputDataPort
 
     def __init__(self, model, view):
-        super(DataPortListController, self).__init__(model, view, view.get_top_widget(), self._get_new_list_store(),
+        super(DataPortListController, self).__init__(model, view, view.get_parent_widget(), self._get_new_list_store(),
                                                      logger)
         self.state_data_port_dict = self.model.state.output_data_ports
         self.data_port_model_list = self.model.output_data_ports

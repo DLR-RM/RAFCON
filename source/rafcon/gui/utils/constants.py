@@ -19,6 +19,7 @@ from collections import OrderedDict
 from gi.repository import Gdk
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
+from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
 
 
 def get_glade_path(glade_file):
@@ -28,6 +29,10 @@ def get_glade_path(glade_file):
 
 
 INTERFACE_FONT = "Source Sans Pro"
+if is_custom_design_enabled():
+    # this statement has no effect if the design_config is loaded after this module is imported the first time
+    INTERFACE_FONT = global_design_config.get_config_value("PRIMARY_FONT")
+
 ICON_FONT_FONTAWESOME = "FontAwesome5Free"
 ICON_FONT_RAFCON = "RAFCON"
 FONTS = [INTERFACE_FONT, ICON_FONT_FONTAWESOME, ICON_FONT_RAFCON]
@@ -125,6 +130,7 @@ BUTTON_REFR = "&#xf021;"
 BUTTON_BAKE = "&#xf187;"
 BUTTON_CLOSE = "&#xf00d;"
 BUTTON_QUIT = "&#xf057;"
+BUTTON_CHANGE_BACKGROUND_COLOR = "&#xf53f;"
 BUTTON_CUT = "&#xf0c4;"
 BUTTON_COPY = "&#xf0c5;"
 BUTTON_PASTE = "&#xf0ea;"
@@ -141,6 +147,7 @@ BUTTON_START = "&#xf04b;"
 BUTTON_START_FROM_SELECTED_STATE = "&#xf2f5;"
 BUTTON_RUN_TO_SELECTED_STATE = "&#xf2f6;"
 BUTTON_RUN_SELECTED_STATE = "&#xf192;"
+BUTTON_ONLY_RUN_SELECTED_STATE = "&#xf5d2;"
 BUTTON_PAUSE = "&#xf04c;"
 BUTTON_STOP = "&#xf04d;"
 BUTTON_STEPM = "&#xf54b;"

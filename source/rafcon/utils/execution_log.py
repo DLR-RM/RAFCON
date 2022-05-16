@@ -10,10 +10,6 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 # Sebastian Riedel <sebastian.riedel@dlr.de>
 
-from future.utils import string_types, native_str
-from builtins import range
-from builtins import str
-import shelve
 import json
 import pickle
 
@@ -46,7 +42,7 @@ def log_to_raw_structure(execution_history_items):
             start_item = v
         else:
             # connect the item to its predecessor
-            prev_item_id = native_str(v['prev_history_item_id'])
+            prev_item_id = v['prev_history_item_id']
 
             if prev_item_id in execution_history_items:
                 ## should always be the case except if shelve is broken/missing data
@@ -102,11 +98,6 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
     :rtype: tuple
     """
 
-    # for debugging purposes
-    # execution_history_items_dict = dict()
-    # for k, v in execution_history_items.items():
-    #     execution_history_items_dict[k] = v
-
     start_item, previous, next_, concurrent, grouped = log_to_raw_structure(execution_history_items)
 
     start_item = None
@@ -124,14 +115,12 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                 ## add base properties will throw if not existing
                 for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
                           'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
-                          'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
+                          'used_rafcon_version', 'creation_time', 'os_environment']:
                     try:
                         execution_item[l] = item[l]
                     except KeyError:
                         logger.warning("Key {} not in history start item".format(str(l)))
 
-                ## add extended properties (added in later rafcon versions),
-                ## will add default value if not existing instead
                 for l, default in [('semantic_data', {}),
                                      ('is_library', None),
                                      ('library_state_name', None),
@@ -150,14 +139,12 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             ## add base properties will throw if not existing
             for l in ['description', 'path_by_name', 'state_name', 'run_id', 'state_type',
                       'path', 'timestamp', 'root_state_storage_id', 'state_machine_version',
-                      'used_rafcon_version', 'creation_time', 'last_update', 'os_environment']:
+                      'used_rafcon_version', 'creation_time', 'os_environment']:
                 try:
                     execution_item[l] = item[l]
                 except KeyError:
                     logger.warning("Key {} not in history start item".format(str(l)))
 
-            ## add extended properties (added in later rafcon versions),
-            ## will add default value if not existing instead
             for l, default in [('semantic_data', {}),
                                  ('is_library', None),
                                  ('library_state_name', None),
@@ -174,11 +161,6 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
              gitems[0]['state_type'] == 'LibraryState' or \
              'Concurrency' in gitems[0]['state_type']:
 
-            # for item in gitems:
-            #     if item["description"] is not None:
-            #         print(item["item_type"], item["call_type"], item["state_type"], item["state_name"])
-            #     print(item["description"])
-
             # select call and return items for this state
             try:
                 call_item = gitems[[gitems[i]['item_type'] == 'CallItem' and \
@@ -192,7 +174,6 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                         for i in range(len(gitems))].index(True)]
                 except ValueError:
                     logger.warning('Could not find a CallItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
-                    ## create dummy returnitem with the properties referenced later in this code
                     call_item = dict(description=None,
                                      history_item_id=None,
                                      path_by_name=None,
@@ -216,7 +197,6 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                                           for i in range(len(gitems))].index(True)]
                 except ValueError:
                     logger.warning('Could not find a ReturnItem in run_id group %s\nThere will probably be log information missing on this execution branch!' % str(rid))
-                    ## create dummy returnitem with the properties referenced later in this code
                     return_item = dict(history_item_id=None,
                                        outcome_name=None,
                                        outcome_id=None,
@@ -273,7 +253,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
             def unpickle_data(data_dict):
                 r = dict()
                 # support backward compatibility
-                if isinstance(data_dict, string_types):  # formerly data dict was a json string
+                if isinstance(data_dict, str):  # formerly data dict was a json string
                     r = json.loads(data_dict)
                 else:
                     for k, v in data_dict.items():
@@ -310,7 +290,7 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
 def log_to_DataFrame(execution_history_items, data_in_columns=[], data_out_columns=[], scoped_in_columns=[],
                      scoped_out_columns=[], semantic_data_columns=[], throw_on_pickle_error=True):
     """
-    Returns all collapsed items in a table-like structure (pandas.DataFrame) with one row per executed 
+    Returns all collapsed items in a table-like structure (pandas.DataFrame) with one row per executed
     state and a set of properties resp. columns (e.g. state_name, outcome, run_id) for this state.
     The data flow (data_in/out, scoped_data_in/out, semantic_data) is omitted from this table
     representation by default, as the different states have different data in-/out-port, scoped_data-
@@ -335,7 +315,7 @@ def log_to_DataFrame(execution_history_items, data_in_columns=[], data_out_colum
 
     # remove columns which are not generic over all states (basically the
     # data flow stuff)
-    df_keys = list(list(gitems.values())[0].keys())
+    df_keys = list(next(iter(gitems.values())).keys())
     df_keys.remove('data_ins')
     df_keys.remove('data_outs')
     df_keys.remove('scoped_data_ins')

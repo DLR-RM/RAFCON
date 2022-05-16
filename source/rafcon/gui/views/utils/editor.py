@@ -13,10 +13,11 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
 import rafcon.gui.helpers.label as gui_helper_label
 from rafcon.gui.config import global_gui_config
+from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
 from rafcon.gui.utils import constants
 from rafcon.utils import log
 
@@ -31,7 +32,7 @@ except ImportError:
 class EditorView(View):
 
     def __init__(self, name='SOURCE EDITOR', language='idl', editor_style="SOURCE_EDITOR_STYLE", run_with_spacer=False):
-        View.__init__(self)
+        super().__init__(parent='editor_frame')
 
         self.run_with_spacer = run_with_spacer
 
@@ -52,26 +53,17 @@ class EditorView(View):
         try:
             self.language_manager = GtkSource.LanguageManager()
             if language in self.language_manager.get_language_ids():
-
                 self.textview = GtkSource.View.new_with_buffer(self.new_buffer())
                 self.textview.props.right_margin_position = 120
                 self.textview.props.show_right_margin = True
                 self.textview.props.highlight_current_line = True
                 self.textview.props.smart_backspace = True
                 self.textview.props.smart_home_end = True
-                # Gtk TODO: what is this for?
-                # self.textview.set_mark_category_pixbuf('INSTRUCTION',
-                #                                        editor_frame.render_icon(Gtk.STOCK_GO_FORWARD,
-                #                                                                 Gtk.IconSize.MENU))
-                self.using_source_view = True
             else:
                 logger.debug("Chosen language '{}' is not supported initiate simple TextView.".format(language))
                 self.textview = Gtk.TextView()
-                self.using_source_view = False
         except NameError:
             self.textview = Gtk.TextView()
-            self.using_source_view = False
-
         self.textview.props.left_margin = 5
         self.while_in_set_enabled = False
         self.register()
@@ -99,7 +91,6 @@ class EditorView(View):
             vbox.pack_start(editor_frame, expand=True, fill=True, padding=0)
 
         self['editor_frame'] = vbox
-        self.top = 'editor_frame'
 
     def new_buffer(self):
         style_scheme_manager = GtkSource.StyleSchemeManager()
@@ -113,6 +104,8 @@ class EditorView(View):
             dark_theme = global_gui_config.get_config_value('THEME_DARK_VARIANT', True)
             if dark_theme:
                 user_editor_style = "rafcon-dark"
+        if is_custom_design_enabled():
+            user_editor_style = global_design_config.get_config_value("SOURCE_VIEW_THEME")
         scheme = style_scheme_manager.get_scheme(user_editor_style)
         if scheme:
             self.style_scheme = scheme

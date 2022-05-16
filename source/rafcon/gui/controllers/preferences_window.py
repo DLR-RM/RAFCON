@@ -20,8 +20,6 @@
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GObject
-from future.utils import string_types
-from builtins import str
 import yaml_configuration.config
 from os.path import dirname
 
@@ -144,7 +142,7 @@ class PreferencesWindowController(ExtendedController):
         """
         self.check_for_preliminary_config()
 
-        method_name = info['method_name']  # __setitem__, __delitem__, clear, ...
+        method_name = info['method_name']
 
         if method_name in ['__setitem__', '__delitem__']:
             config_key = info['args'][0]
@@ -541,7 +539,7 @@ class PreferencesWindowController(ExtendedController):
         try:
             new_shortcuts = literal_eval(new_shortcuts)
             if not isinstance(new_shortcuts, list) and \
-               not all([isinstance(shortcut, string_types) for shortcut in new_shortcuts]):
+               not all([isinstance(shortcut, str) for shortcut in new_shortcuts]):
                 raise ValueError()
         except (ValueError, SyntaxError):
             logger.warning("Shortcuts must be a list of strings")

@@ -11,7 +11,7 @@
 
 """ Module collects methods and function to be integrated into a respective class if that is of advantage, in future.
 """
-from builtins import range
+
 import os
 import time
 
@@ -27,10 +27,9 @@ def store_session():
     The backup of never stored tabs (state machines) and not stored state machine changes will be triggered a last
     time to secure data lose.
     """
-    from rafcon.gui.singleton import state_machine_manager_model, global_runtime_config
+    from rafcon.gui.singleton import state_machine_manager_model, global_runtime_config, main_window_controller
     from rafcon.gui.models.auto_backup import AutoBackupModel
     from rafcon.gui.models import AbstractStateModel
-    from rafcon.gui.singleton import main_window_controller
     # check if there are dirty state machines -> use backup file structure maybe it is already stored
     for sm_m in state_machine_manager_model.state_machines.values():
         if sm_m.auto_backup:
@@ -83,6 +82,7 @@ def restore_session_from_runtime_config():
     # TODO add a dirty lock for a crashed rafcon instance also into backup session feature
     # TODO in case a dialog is needed to give the user control
     # TODO combine this and auto-backup in one structure/controller/observer
+    from rafcon.core.singleton import library_manager
     from rafcon.gui.singleton import state_machine_manager_model, global_runtime_config, global_gui_config
     from rafcon.gui.models.auto_backup import recover_state_machine_from_backup
     from rafcon.gui.singleton import main_window_controller
@@ -91,6 +91,8 @@ def restore_session_from_runtime_config():
     if open_tabs is None:
         logger.info("No session found for recovery")
         return
+
+    library_manager.open_group_of_state_machines = True
 
     # load and restore state machines like they were opened before
     open_sm = []
@@ -103,16 +105,13 @@ def restore_session_from_runtime_config():
         # pick folder name dependent on time, and backup meta data existence
         # problem is that the backup time is maybe not the best choice
         if 'last_backup' in backup_meta_dict:
-            last_backup_time = storage_utils.get_float_time_for_string(backup_meta_dict['last_backup']['time'])
             if 'last_saved' in backup_meta_dict:
-                last_save_time = storage_utils.get_float_time_for_string(backup_meta_dict['last_saved']['time'])
                 backup_marked_dirty = backup_meta_dict['last_backup']['marked_dirty']
-                if last_backup_time > last_save_time and backup_marked_dirty:
+                if backup_marked_dirty:
                     from_backup_path = backup_meta_dict['last_backup']['file_system_path']
             else:
                 from_backup_path = backup_meta_dict['last_backup']['file_system_path']
         elif 'last_saved' in backup_meta_dict:
-            # print("### open last saved", sm_meta_dict['last_saved']['file_system_path'])
             pass
         else:
             logger.error("A tab was stored into session storage dictionary {0} without any recovery path"
@@ -139,8 +138,9 @@ def restore_session_from_runtime_config():
                 logger.warning("The tab can not be open. The backup of tab {0} from common path {1} was not "
                                "possible.".format(idx, path))
                 continue
-            # logger.info("backup from last saved", path, sm_meta_dict)
             state_machine = storage.load_state_machine_from_path(path)
+            if state_machine is None:
+                continue
             state_machine_manager_model.state_machine_manager.add_state_machine(state_machine)
             wait_for_gui()
             state_machine_m = state_machine_manager_model.state_machines[state_machine.state_machine_id]
@@ -154,6 +154,9 @@ def restore_session_from_runtime_config():
     global_runtime_config.extend_recently_opened_by_current_open_state_machines()
 
     wait_for_gui()
+
+    library_manager.open_group_of_state_machines = False
+    library_manager.skip_all_broken_libraries = False
 
     # restore all state machine selections separate to avoid states-editor and state editor creation problems
     for idx, tab_meta_dict in enumerate(open_tabs):

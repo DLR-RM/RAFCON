@@ -13,16 +13,15 @@
 from gi.repository import Gtk
 from gi.repository import GObject
 
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
 
 class LibraryTreeView(View, Gtk.TreeView):
 
     def __init__(self):
-        View.__init__(self)
+        View.__init__(self, parent='library_tree_view')
         Gtk.TreeView.__init__(self)
         self.set_name('library_tree')
-        # self.set_grid_lines(Gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
 
         tvcolumn_name = Gtk.TreeViewColumn('Library Name')
         tvcolumn_name.set_property("sizing", Gtk.TreeViewColumnSizing.AUTOSIZE)
@@ -32,4 +31,3 @@ class LibraryTreeView(View, Gtk.TreeView):
         tvcolumn_name.add_attribute(cell_renderer_name, 'text', 0)
 
         self['library_tree_view'] = self
-        self.top = 'library_tree_view'

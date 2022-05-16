@@ -29,16 +29,16 @@ from rafcon.core.state_machine_manager import StateMachineManager
 thread_identifier = threading.currentThread().ident
 
 # This variable holds the global variable manager singleton
-global_variable_manager = GlobalVariableManager()
+global_variable_manager = GlobalVariableManager.instance()
 
 # This variable holds the library manager singleton
-library_manager = LibraryManager()
+library_manager = LibraryManager.instance()
 
 # This variable holds the global state machine manager object
-state_machine_manager = StateMachineManager()
+state_machine_manager = StateMachineManager.instance()
 
 # This variable holds the execution engine singleton
-state_machine_execution_engine = ExecutionEngine(state_machine_manager)
+state_machine_execution_engine = ExecutionEngine.instance(state_machine_manager)
 
 # signal that cause shut down
 shut_down_signal = None

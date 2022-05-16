@@ -8,14 +8,8 @@
 # Contributors:
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import sys
-
 from threading import RLock
-
-if sys.version_info[0] == 2:
-    from threading import _Condition as Condition
-else:
-    from threading import Condition
+from threading import Condition
 
 
 class ReaderWriterLock:

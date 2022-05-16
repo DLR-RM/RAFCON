@@ -11,17 +11,13 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.utils import constants
 
 
 class StateOverviewView(View):
-    builder = glade.get_glade_path("state_overview_widget.glade")
-    top = 'properties_widget'
-
     def __init__(self):
-        View.__init__(self)
-
+        super().__init__(builder_filename=glade.get_glade_path('state_overview_widget.glade'), parent='properties_widget')
         self['properties_widget'].set_border_width(constants.PADDING_LEFT)

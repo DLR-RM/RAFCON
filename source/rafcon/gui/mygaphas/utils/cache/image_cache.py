@@ -9,16 +9,10 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import object
 from cairo import ImageSurface, FORMAT_ARGB32, Context, Error
 from gi.repository import Gtk
 from gi.repository import Gdk
-# Gtk TODO
-# from Gtk.gdk import CairoContext
-
-
 from math import ceil, sqrt
-
 from rafcon.gui.config import global_gui_config
 
 

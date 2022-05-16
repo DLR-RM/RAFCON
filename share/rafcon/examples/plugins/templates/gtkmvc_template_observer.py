@@ -1,5 +1,5 @@
 import rafcon.gui.singleton
-from gtkmvc3.observer import Observer
+from rafcon.design_patterns.mvc_observer.observer import Observer
 from rafcon.gui.utils.notification_overview import NotificationOverview
 
 from rafcon.utils import log
@@ -16,7 +16,7 @@ class RootStateModificationObserver(Observer):
         self.state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
         # register self as observer of already existing StateMachineModels in state_machines list
-        for sm_id, sm_m in list(self.state_machine_manager_model.state_machines.items()):
+        for sm_id, sm_m in self.state_machine_manager_model.state_machines.items():
             self.observe_model(sm_m)
 
     @Observer.observe("state_machines", after=True)
@@ -68,7 +68,7 @@ class MetaSignalModificationObserver(Observer):
         self.state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
 
         # register self as observer of already existing StateMachineModels in state_machines list
-        for sm_id, sm_m in list(self.state_machine_manager_model.state_machines.items()):
+        for sm_id, sm_m in self.state_machine_manager_model.state_machines.items():
             self.observe_model(sm_m)
             self.observe_model(sm_m.root_state)
 

@@ -10,7 +10,6 @@
 
 # example basictreeview.py
 
-from builtins import str
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GObject
@@ -85,17 +84,14 @@ class ExecutionLogTreeController(ExtendedController):
 
         returns = []
         if key in self.next_:
-            # self.add_collapsed_key(parent, self.next_[key])
             returns.append((parent, self.next_[key]))
 
         if key in self.hierarchy:
-            # self.add_collapsed_key(piter, self.hierarchy[key])
             returns.append((parent_iter, self.hierarchy[key]))
 
         if key in self.concurrent:
             for i, next_key in enumerate(self.concurrent[key]):
                 child_iter = self.tree_store.append(parent_iter, [str(i), None])
-                # self.add_collapsed_key(child_iter, next_key)
                 returns.append((child_iter, next_key))
                 self.item_iter[key] = child_iter
 

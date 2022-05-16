@@ -1,6 +1,3 @@
-
-
-from builtins import str
 def execute(self, inputs, outputs, gvm):
     self.logger.info( "Handling hierarchy abortion ... ")
     

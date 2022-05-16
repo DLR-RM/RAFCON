@@ -14,13 +14,9 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gi.repository import Gtk
 from gi.repository import Gdk
-from builtins import filter
-from builtins import next
-from enum import Enum
-from gaphas.aspect import HandleFinder, InMotion
-from gaphas.item import NW, Item
+from gaphas.aspect import HandleFinder
+from gaphas.item import NW
 import gaphas.tool
 
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGaphas
@@ -37,8 +33,6 @@ from rafcon.utils.decorators import avoid_parallel_execution
 from rafcon.gui.config import global_gui_config
 
 logger = log.get_logger(__name__)
-
-PortMoved = Enum('PORT', 'FROM TO')
 
 
 class ToolChain(gaphas.tool.ToolChain):
@@ -91,9 +85,6 @@ class ZoomTool(gaphas.tool.ZoomTool):
     def on_scroll(self, event):
         ctrl_key_pressed = bool(event.get_state()[1] & Gdk.ModifierType.CONTROL_MASK)
         if (self.zoom_with_control and ctrl_key_pressed) or (not self.zoom_with_control and not ctrl_key_pressed):
-            # Gtk TODO
-            # event.get_state() |= Gdk.ModifierType.CONTROL_MASK  # Set CONTROL_MASK
-            # return super(ZoomTool, self).on_scroll(event)
             view = self.view
             event_coords = event.get_coords()[1:]
             sx = view._matrix[0]
@@ -120,22 +111,6 @@ class MoveItemTool(gaphas.tool.ItemTool):
         self._item = None
         self._move_name_v = False
         self._old_selection = None
-
-    def movable_items(self):
-        """Filter selection
-
-        Filter items of selection that cannot be moved (i.e. are not instances of `Item`) and return the rest.
-        """
-        view = self.view
-
-        if self._move_name_v:
-            yield InMotion(self._item, view)
-        else:
-            selected_items = set(view.selected_items)
-            for item in selected_items:
-                if not isinstance(item, Item):
-                    continue
-                yield InMotion(item, view)
 
     def on_button_press(self, event):
         """Select items
@@ -547,7 +522,7 @@ class MoveHandleTool(gaphas.tool.HandleTool):
                 if isinstance(item, NameView):
                     gap_helper.update_meta_data_for_name_view(graphical_editor, item, publish=True)
                 elif isinstance(item, ConnectionView):
-                    gap_helper.update_meta_data_for_transition_waypoints(graphical_editor, item, None)
+                    gap_helper.update_meta_data_for_connection_waypoints(graphical_editor, item, None)
                 else:  # StateView
                     if self.grabbed_handle in [port.handle for port in item.get_all_ports()]:
                         gap_helper.update_meta_data_for_port(graphical_editor, item, self.grabbed_handle)
@@ -627,11 +602,11 @@ class ConnectionTool(gaphas.tool.ConnectHandleTool):
                 return True
             return False
 
-        if sink_set_and_differs(old_sink, new_sink):
+        if sink_set_and_differs(old_sink, new_sink) and old_sink.port is not None:
             sink_port_v = old_sink.port.port_v
             self._disconnect_temporarily(sink_port_v, target=of_target)
 
-        if sink_set_and_differs(new_sink, old_sink):
+        if sink_set_and_differs(new_sink, old_sink) and new_sink.port is not None:
             sink_port_v = new_sink.port.port_v
             self._connect_temporarily(sink_port_v, target=of_target)
 
@@ -734,9 +709,12 @@ class ConnectionCreationTool(ConnectionTool):
             if self._current_sink:
                 if self.motion_handle:
                     self.motion_handle.stop_move()
-                sink_port_v = self._current_sink.port.port_v
-                self._disconnect_temporarily(sink_port_v, target=True)
-                gap_helper.create_new_connection(self._connection_v.from_port.model, sink_port_v.model)
+                sink_model = self._current_sink.item.model
+                if self._current_sink.port is not None:
+                    sink_port_v = self._current_sink.port.port_v
+                    sink_model = sink_port_v.model
+                    self._disconnect_temporarily(sink_port_v, target=True)
+                gap_helper.create_new_connection(self._connection_v.from_port.model, sink_model)
 
             # remove placeholder from canvas
             if self._connection_v:

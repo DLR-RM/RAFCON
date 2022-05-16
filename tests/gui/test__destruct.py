@@ -1,12 +1,7 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from past.builtins import map
-from builtins import str
 import os
 import gc
 import time
 import shutil
-import gtkmvc3
 from functools import partial
 import pytest
 
@@ -142,7 +137,6 @@ def get_log_elements(elements, with_prints=False, print_method=None):
         with_prints = False
         element_del_file = []
 
-        # if element_name == 'state':
         for elem in element_gen_file:
             mem_id = elem.split(" ")
 
@@ -328,16 +322,6 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
     for object_class, check_it in elements:
         name = param_dict.get(object_class, None)[LOG_FILE_NAME_ID] if param_dict.get(object_class, None) else None
         found_objects_of_kind = [o for o in gc.get_objects() if isinstance(o, object_class) and o not in ignored_objects]
-        # # DEBUGGING work around used as exception -> stays in for possible reuse or will be cleaned up later ######
-        # excepted_class_name = 'MainWindowController'
-        # if any([o.__class__.__name__ == excepted_class_name for o in found_objects_of_kind]) and check_it:
-        #     mw_ctrl_list = [o for o in found_objects_of_kind if o.__class__.__name__ == excepted_class_name]
-        #     ignored_mw_ctrl_list = [o for o in ignored_objects if o.__class__.__name__ == excepted_class_name]
-        #     found_objects_of_kind = [o for o in found_objects_of_kind if not o.__class__.__name__ == excepted_class_name]
-        #     print "ignored main window controller ids", [id(o) for o in ignored_mw_ctrl_list]
-        #     print "still existing main window controller ids", [id(o) for o in mw_ctrl_list]
-        #     generate_graphs(mw_ctrl_list + ignored_objects)
-        # # DEBUGGING work around end ###############################################################################
         found_objects += found_objects_of_kind
 
         if not len(found_objects_of_kind) == 0:
@@ -399,29 +383,6 @@ def check_existing_objects_of_kind(elements, print_method=None, ignored_objects=
     if target_objects:
         generate_graphs(target_objects)
         return
-        for index_target_object, target_object in enumerate(target_objects):
-            print()
-            print()
-            print("# Referrers of #{0} {1}:".format(index_target_object + 1, searched_type), target_object)
-
-            # TODO the referrer prints should avoid to print the local variables list (by checking element keys)
-            # TODO the referrer prints should avoid to print the list generated in this script (by inherit)
-            target_object_referrers = gc.get_referrers(target_object)
-            list_referrers = [referrer for referrer in target_object_referrers if hasattr(referrer, '__iter__')]
-
-            print("## simple referrers", len(target_object_referrers))
-            map(print_referrer, [referrer for referrer in target_object_referrers if referrer not in list_referrers])
-
-            print("## list referrers")
-            gc.collect()
-
-            for referrer in list_referrers:
-                print_referrer(referrer)
-                second_instance_list_referrers = gc.get_referrers(referrer)
-                print("### referrers of list referrer", len(second_instance_list_referrers))
-                map(print_referrer, second_instance_list_referrers)
-    # else:
-    #     generate_graphs(found_objects)
 
     if unpatch:
         run_un_patching(elements)
@@ -433,19 +394,12 @@ def run_model_construction():
     import rafcon.core.singleton
     import rafcon.gui.models.state
 
-    logger, sm_m, state_dict = create_models()
-    # root_state = sm_m.root_state
-
     c_state, state_dict = create_container_state()
     s_m = rafcon.gui.models.state.StateModel(c_state.states['STATE1'])
     rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
     s_m.prepare_destruction()
     testing_utils.wait_for_gui()
-    # s_m._reset_property_notification()
 
-    # del logger
-    # del sm_m
-    # del state_dict
     return s_m
 
 
@@ -527,12 +481,8 @@ def run_simple_execution_controller_construction(gui):
 
 
 def run_complex_controller_construction(gui):
-
     gui(create_models)
 
-    # for a start load one of the type change tests to generate a lot of controllers which also close the GUI
-    # from tests.gui.widget.test_states_editor import create_models, MainWindowView, \
-    #     MainWindowController, trigger_state_type_change_tests, gtk, threading
     from tests.gui.widget.test_states_editor import trigger_state_type_change_tests
     trigger_state_type_change_tests(gui)
 
@@ -644,7 +594,7 @@ def patch_ctrl_classes_with_log():
 
     check_log_files(CTRL_FILES)
 
-    def extended_controller_init(self, model, view, spurious=None):
+    def extended_controller_init(self, model, view):
         self.__gen_time_stamp = int(round(time.time() * 1000))
         self.__kind = 'extended_controller'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
@@ -652,10 +602,7 @@ def patch_ctrl_classes_with_log():
         with open(self.__gen_log_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
-        if spurious is None:
-            old_extended_controller_init(self, model, view)
-        else:
-            old_extended_controller_init(self, model, view, spurious)
+        old_extended_controller_init(self, model, view)
 
     rafcon.gui.controllers.utils.extended_controller.ExtendedController.__init__ = extended_controller_init
 
@@ -668,18 +615,18 @@ def un_patch_ctrl_classes_from_log():
 
 
 def patch_gtkmvc3_classes_with_log():
-    import gtkmvc3.view
-    import gtkmvc3.controller
-    import gtkmvc3.model_mt
+    import rafcon.design_patterns.mvc.view
+    import rafcon.design_patterns.mvc.controller
+    import rafcon.design_patterns.mvc.model
 
     global old_gtkmvc3_view_init, old_gtkmvc3_controller_init, old_gtkmvc3_model_mt_init
-    old_gtkmvc3_view_init = gtkmvc3.view.View.__init__
-    old_gtkmvc3_model_mt_init = gtkmvc3.model_mt.ModelMT.__init__
-    old_gtkmvc3_controller_init = gtkmvc3.controller.Controller.__init__
+    old_gtkmvc3_view_init = rafcon.design_patterns.mvc.view.View.__init__
+    old_gtkmvc3_model_mt_init = rafcon.design_patterns.mvc.model.ModelMT.__init__
+    old_gtkmvc3_controller_init = rafcon.design_patterns.mvc.controller.Controller.__init__
 
     check_log_files(GTKMVC_FILES)
 
-    def gtkmvc3_view_init(self, top=None, parent=None, builder=None):
+    def gtkmvc3_view_init(self):
         self.__gen_time_stamp = int(round(time.time() * 1000))
         self.__kind = 'gtkmvc3_view'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
@@ -687,9 +634,9 @@ def patch_gtkmvc3_classes_with_log():
         with open(self.__gen_log_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
-        old_gtkmvc3_view_init(self, top, parent, builder)
+        old_gtkmvc3_view_init(self)
 
-    def gtkmvc3_controller_init(self, model, view, spurious=False, auto_adapt=False):
+    def gtkmvc3_controller_init(self, model, view):
         self.__gen_time_stamp = int(round(time.time() * 1000))
         self.__kind = 'gtkmvc3_controller'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
@@ -697,32 +644,16 @@ def patch_gtkmvc3_classes_with_log():
         with open(self.__gen_log_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
-        old_gtkmvc3_controller_init(self, model, view, spurious, auto_adapt)
-
-    def gtkmvc3_model_mt_init(self):
-        self.__gen_time_stamp = int(round(time.time() * 1000))
-        self.__kind = 'gtkmvc3_model_mt'
-        self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
-                                                                                   GENERATION_LOG_FILE_APPENDIX))
-        with open(self.__gen_log_file, 'a+') as f:
-            f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
-                                                      self.__kind, self.__gen_time_stamp))
-        old_gtkmvc3_model_mt_init(self)
-
-    gtkmvc3.view.View.__init__ = gtkmvc3_view_init
-    # gtkmvc3.ModelMT.__init__ = gtkmvc3_model_mt_init
-    gtkmvc3.controller.Controller.__init__ = gtkmvc3_controller_init
+        old_gtkmvc3_controller_init(self, model, view)
 
 
 def un_patch_gtkmvc3_classes_from_log():
-    import gtkmvc3.view
-    import gtkmvc3.controller
-    import gtkmvc3.model_mt
+    import rafcon.design_patterns.mvc.view
+    import rafcon.design_patterns.mvc.controller
+    import rafcon.design_patterns.mvc.model
 
     global old_gtkmvc3_view_init, old_gtkmvc3_controller_init, old_gtkmvc3_model_mt_init
-    gtkmvc3.view.View.__init__ = old_gtkmvc3_view_init
-    # gtkmvc3.ModelMT.__init__ = old_gtkmvc3_model_mt_init
-    gtkmvc3.controller.Controller.__init__ = old_gtkmvc3_controller_init
+    rafcon.design_patterns.mvc.controller.Controller.__init__ = old_gtkmvc3_controller_init
     remove_log_files(GTKMVC_FILES)
 
 
@@ -752,7 +683,7 @@ def patch_gaphas_classes_with_log():
                                                       self.__kind, self.__gen_time_stamp))
         old_gaphas_extended_view_init(self, graphical_editor_v, state_machine_m, *args)
 
-    def gaphas_state_view_init(self, state_m, size, hierarchy_level):
+    def gaphas_state_view_init(self, state_m, size, custom_background_color, background_color, hierarchy_level):
         self.__gen_time_stamp = int(round(time.time() * 1000))
         self.__kind = 'gaphas_state_view'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
@@ -760,7 +691,7 @@ def patch_gaphas_classes_with_log():
         with open(self.__gen_log_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
-        old_gaphas_state_view_init(self, state_m, size, hierarchy_level)
+        old_gaphas_state_view_init(self, state_m, size, custom_background_color, background_color, hierarchy_level)
 
     def gaphas_port_view_init(self, in_port, name=None, parent=None, side=SnappedSide.RIGHT):
         self.__gen_time_stamp = int(round(time.time() * 1000))
@@ -821,9 +752,9 @@ def get_param_dict():
     import rafcon.gui.mygaphas.items.connection
     import rafcon.gui.mygaphas.items.state
     import rafcon.gui.mygaphas.view
-    import gtkmvc3.view
-    import gtkmvc3.controller
-    import gtkmvc3.model_mt
+    import rafcon.design_patterns.mvc.view
+    import rafcon.design_patterns.mvc.controller
+    import rafcon.design_patterns.mvc.model
 
     param_dict = {
                   rafcon.core.states.state.State:
@@ -836,11 +767,9 @@ def get_param_dict():
                       ('state_element_model', patch_model_classes_with_log, un_patch_model_classes_from_log),
                   rafcon.gui.controllers.utils.extended_controller.ExtendedController:
                       ('extended_controller', patch_ctrl_classes_with_log, un_patch_ctrl_classes_from_log),
-                  gtkmvc3.view.View:
+                  rafcon.design_patterns.mvc.view.View:
                       ('gtkmvc3_view', patch_gtkmvc3_classes_with_log, un_patch_gtkmvc3_classes_from_log),
-                  # gtkmvc3.ModelMT:
-                  #     ('gtkmvc3_model_mt', patch_gtkmvc3_classes_with_log, un_patch_gtkmvc3_classes_from_log),
-                  gtkmvc3.controller.Controller:
+                  rafcon.design_patterns.mvc.controller.Controller:
                       ('gtkmvc3_controller', patch_gtkmvc3_classes_with_log, un_patch_gtkmvc3_classes_from_log),
                   rafcon.gui.mygaphas.view.ExtendedGtkView:
                       ('gaphas_extended_view', patch_gaphas_classes_with_log, un_patch_gaphas_classes_from_log),
@@ -936,22 +865,14 @@ def test_simple_model_and_core_destruct_with_gui(gui):
     import rafcon.gui.mygaphas.items.state
     import rafcon.gui.mygaphas.items.connection
     import rafcon.gui.mygaphas.items.ports
-    import rafcon.gui.controllers.global_variable_manager
-    import gtkmvc3.view
-    import gtkmvc3.controller
-    import gtkmvc3.model_mt
+    import rafcon.design_patterns.mvc.view
+    import rafcon.design_patterns.mvc.controller
+    import rafcon.design_patterns.mvc.model
     import gi
     gi.require_version('Gtk', '3.0')
     from gi.repository import Gtk
 
-    # searched_class = rafcon.gui.controllers.global_variable_manager.GlobalVariableManagerController
-    # searched_class = rafcon.core.states.state.State
-    # searched_class = rafcon.core.states.execution_state.ExecutionState
-    # searched_class = rafcon.gui.controllers.state_editor.transitions.StateTransitionsListController
-    # searched_class = rafcon.gui.models.abstract_state.AbstractStateModel
     searched_class = rafcon.gui.models.container_state.ContainerStateModel
-    # searched_class = Gtk.Widget
-    # searched_class = Gtk.Window
 
     elements = [
                 (rafcon.core.states.state.State, True),
@@ -959,8 +880,8 @@ def test_simple_model_and_core_destruct_with_gui(gui):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc3.view.View, True),
-                (gtkmvc3.controller.Controller, True),
+                (rafcon.design_patterns.mvc.view.View, True),
+                (rafcon.design_patterns.mvc.controller.Controller, True),
                 (rafcon.gui.mygaphas.view.ExtendedGtkView, True),
                 (rafcon.gui.mygaphas.items.connection.ConnectionView, True),
                 (rafcon.gui.mygaphas.items.ports.PortView, True),
@@ -976,9 +897,9 @@ def test_simple_execution_model_and_core_destruct_with_gui(gui):
     import rafcon.gui.models.abstract_state
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
-    import gtkmvc3.view
-    import gtkmvc3.controller
-    import gtkmvc3.model_mt
+    import rafcon.design_patterns.mvc.view
+    import rafcon.design_patterns.mvc.controller
+    import rafcon.design_patterns.mvc.model
 
     searched_class = rafcon.core.states.execution_state.ExecutionState
 
@@ -988,9 +909,9 @@ def test_simple_execution_model_and_core_destruct_with_gui(gui):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc3.view.View, True),
+                (rafcon.design_patterns.mvc.view.View, True),
                 # (gtkmvc3.ModelMT, True),
-                (gtkmvc3.controller.Controller, True),
+                (rafcon.design_patterns.mvc.controller.Controller, True),
                 # (searched_class, False),
                 ]
     run_setup_gui_destruct(gui, elements, searched_class, run_simple_execution_controller_construction, expected_warnings=4)
@@ -1020,12 +941,10 @@ def test_model_and_core_modification_history_destruct_with_gui(gui):
     import rafcon.gui.mygaphas.items.state
     import rafcon.gui.mygaphas.items.connection
     import rafcon.gui.mygaphas.items.ports
-    import gtkmvc3.view
-    import gtkmvc3.controller
-    import gtkmvc3.model_mt
+    import rafcon.design_patterns.mvc.view
+    import rafcon.design_patterns.mvc.controller
+    import rafcon.design_patterns.mvc.model
 
-    searched_class = rafcon.core.states.hierarchy_state.HierarchyState
-    # searched_class = rafcon.core.states.execution_state.ExecutionState
     searched_class = rafcon.gui.models.container_state.ContainerStateModel
 
     elements = [
@@ -1034,8 +953,8 @@ def test_model_and_core_modification_history_destruct_with_gui(gui):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc3.view.View, True),
-                (gtkmvc3.controller.Controller, True),
+                (rafcon.design_patterns.mvc.view.View, True),
+                (rafcon.design_patterns.mvc.controller.Controller, True),
                 (rafcon.gui.mygaphas.view.ExtendedGtkView, False),
                 (rafcon.gui.mygaphas.items.connection.ConnectionView, False),
                 (rafcon.gui.mygaphas.items.ports.PortView, False),
@@ -1165,16 +1084,11 @@ def test_copy_paste_with_modification_history_destruct_with_gui(gui):
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
     import rafcon.core.states.hierarchy_state
-    import gtkmvc3.view
-    import gtkmvc3.controller
-    import gtkmvc3.model_mt
+    import rafcon.design_patterns.mvc.view
+    import rafcon.design_patterns.mvc.controller
+    import rafcon.design_patterns.mvc.model
 
-    # searched_class = rafcon.core.states.execution_state.ExecutionState
-    # searched_class = rafcon.gui.models.container_state.ContainerStateModel
     searched_class = rafcon.gui.models.state.AbstractStateModel
-    # searched_class = rafcon.core.state_elements.data_flow.DataFlow
-    # searched_class = rafcon.core.state_elements.transition.Transition
-    # searched_class = rafcon.gui.models.transition.TransitionModel
 
     elements = [
                 (rafcon.core.states.state.State, True),
@@ -1182,8 +1096,8 @@ def test_copy_paste_with_modification_history_destruct_with_gui(gui):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc3.view.View, True),
-                (gtkmvc3.controller.Controller, True),
+                (rafcon.design_patterns.mvc.view.View, True),
+                (rafcon.design_patterns.mvc.controller.Controller, True),
                 (searched_class, False),
                 ]
     run_setup_gui_destruct(gui, elements, searched_class, run_copy_cut_and_paste, expected_warnings=0)
@@ -1198,12 +1112,10 @@ def test_complex_model_and_core_destruct_with_gui(gui):
     import rafcon.gui.models.state_element
     import rafcon.gui.controllers.utils.extended_controller
     import rafcon.core.states.hierarchy_state
-    import rafcon.gui.models.container_state
-    import gtkmvc3.view
-    import gtkmvc3.controller
-    import gtkmvc3.model_mt
+    import rafcon.design_patterns.mvc.view
+    import rafcon.design_patterns.mvc.controller
+    import rafcon.design_patterns.mvc.model
 
-    # searched_class = rafcon.core.states.hierarchy_state.HierarchyState
     searched_class = rafcon.gui.models.container_state.ContainerStateModel
 
     elements = [
@@ -1212,8 +1124,8 @@ def test_complex_model_and_core_destruct_with_gui(gui):
                 (rafcon.gui.models.abstract_state.AbstractStateModel, True),
                 (rafcon.gui.models.state_element.StateElementModel, True),
                 (rafcon.gui.controllers.utils.extended_controller.ExtendedController, True),
-                (gtkmvc3.view.View, True),
-                (gtkmvc3.controller.Controller, True),
+                (rafcon.design_patterns.mvc.view.View, True),
+                (rafcon.design_patterns.mvc.controller.Controller, True),
                 (searched_class, False),
                 ]
     run_setup_gui_destruct(gui, elements, searched_class, run_complex_controller_construction, expected_warnings=4)

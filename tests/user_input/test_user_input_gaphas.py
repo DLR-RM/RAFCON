@@ -50,7 +50,7 @@ def resize_state(sm_model, sm_notebook_page, graphical_editor_controller):
     se_x, se_y = i2v.transform_point(state_view_for_root_state.handles()[SE].pos.x.value,
                                      state_view_for_root_state.handles()[SE].pos.y.value)
 
-    main_w = rafcon.gui.singleton.main_window_controller.view.get_top_widget()
+    main_w = rafcon.gui.singleton.main_window_controller.view.get_parent_widget()
     pos_main = main_w.get_position()
     rel_pos = sm_notebook_page.translate_coordinates(main_w, 0, 0)
     abs_pos_se = (pos_main[0] + rel_pos[0] + se_x, pos_main[1] + rel_pos[1] + se_y)

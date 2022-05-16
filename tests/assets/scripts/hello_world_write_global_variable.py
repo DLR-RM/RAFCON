@@ -1,4 +1,3 @@
-from __future__ import print_function
 import threading
 
 def execute(self, inputs, outputs, gvm):

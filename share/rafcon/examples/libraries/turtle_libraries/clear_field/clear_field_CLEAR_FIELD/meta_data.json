@@ -1,15 +1,24 @@
 {
     "gui": {
         "editor_gaphas": {
+            "background_color": {
+                "__jsonqualname__": "__builtin__.tuple",
+                "items": [
+                    0.0,
+                    0.0,
+                    0.0
+                ]
+            },
+            "custom_background_color": false,
             "income": {
                 "rel_pos": {
-                    "__jsonqualname__": "__builtin__.tuple", 
+                    "__jsonqualname__": "__builtin__.tuple",
                     "items": [
-                        0, 
+                        0,
                         12.5
                     ]
                 }
-            }, 
+            },
             "name": {
                 "rel_pos": {
                     "__jsonqualname__": "__builtin__.tuple", 
@@ -39,6 +48,19 @@
                     100, 
                     100
                 ]
+            }
+        }
+    }, 
+    "income": {
+        "gui": {
+            "editor_gaphas": {
+                "rel_pos": {
+                    "__jsonqualname__": "__builtin__.tuple", 
+                    "items": [
+                        0, 
+                        12.5
+                    ]
+                }
             }
         }
     }, 

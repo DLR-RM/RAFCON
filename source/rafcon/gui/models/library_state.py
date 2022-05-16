@@ -14,7 +14,7 @@
 
 from copy import deepcopy
 
-from gtkmvc3.model_mt import ModelMT
+from rafcon.design_patterns.mvc.model import ModelMT
 
 from rafcon.core.states.state import State
 from rafcon.core.states.library_state import LibraryState
@@ -48,10 +48,6 @@ class LibraryStateModel(AbstractStateModel):
         self.recursive_generate_models(load_meta_data)
 
     def recursive_generate_models(self, load_meta_data):
-        # TODO maybe find a different way to load the meta data of ports correctly
-        # at the moment the models of state_copy get initialized and the meta data taken from there if not found in
-        # state itself
-
         # regulate depth of library model generation to reduce resource consumption
         current_hierarchy_depth = self.state.library_hierarchy_depth
         min_temp_depth = 2
@@ -62,19 +58,13 @@ class LibraryStateModel(AbstractStateModel):
         no_fully_rec_lib_model = global_gui_config.get_config_value("NO_FULLY_RECURSIVE_LIBRARY_MODEL", False)
         recursive_model_generation = not (current_hierarchy_depth > max_hierarchy_depth) or not no_fully_rec_lib_model
         if recursive_model_generation:
-            # logger.debug("initialize state copy {0}".format(self))
             self.initiate_library_root_state_model()
-        else:
-            # logger.verbose("Do not initialize state copy {0}".format(self))
-            pass
-
         self._load_port_models()
 
         if load_meta_data:
             if not self.load_meta_data():
                 # TODO decide to scale here or still in the editor -> at the moment meta data is missing here
                 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
-                # gui_helper_meta_data.scale_library_ports_meta_data(self)
             else:
                 self.meta_data_was_scaled = True
 
@@ -110,19 +100,12 @@ class LibraryStateModel(AbstractStateModel):
                 if self.state_copy_initialized:
                     logger.verbose("Multiple calls of prepare destruction for {0}".format(self))
 
-            # The next lines are commented because not needed and create problems if used why it is an open to-do
-            # for port in self.input_data_ports[:] + self.output_data_ports[:] + self.outcomes[:]:
-            #     if port.core_element is not None:
-            #         # TODO setting data ports None in a Library state cause gtkmvc3 attribute getter problems why?
-            #         port.prepare_destruction()
-
         del self.input_data_ports[:]
         del self.output_data_ports[:]
         del self.outcomes[:]
         self.state = None
 
     def __eq__(self, other):
-        # logger.info("compare method")
         if isinstance(other, LibraryStateModel):
             return self.state == other.state and self.meta == other.meta
         else:

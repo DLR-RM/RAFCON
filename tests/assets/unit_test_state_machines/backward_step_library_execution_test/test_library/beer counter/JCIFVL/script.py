@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 def execute(self, inputs, outputs, gvm):
     self.logger.debug("count beers")
     outputs['counted beers'] = inputs['beers']

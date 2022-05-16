@@ -11,14 +11,13 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import str
 from copy import deepcopy
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.state_elements.scope import ScopedVariable
-from rafcon.core.id_generator import state_id_generator, generate_data_port_id
+from rafcon.core.id_generator import generate_data_port_id
 from rafcon.core.states.container_state import ContainerState
 
 from rafcon.gui.models.selection import Selection
@@ -33,10 +32,6 @@ logger = log.get_logger(__name__)
 
 def singular_form(name):
     return name[:-1] if name.endswith("s") else name
-
-
-def camel_case(name):
-    return ''.join(x for x in name.replace("_", " ").title() if not x.isspace())
 
 
 class Clipboard(Observable):
@@ -92,7 +87,6 @@ class Clipboard(Observable):
         assert isinstance(selection, Selection)
         self.__create_core_and_model_object_copies(selection, smart_selection_adaption)
 
-    # def cut(self, selection, smart_selection_adaption=True):
     def cut(self, selection, smart_selection_adaption=False):
         """Cuts all selected items and copy them to the clipboard using smart selection adaptation by default
 
@@ -273,8 +267,6 @@ class Clipboard(Observable):
         error_msg = "The model of the already existing state copy was not used."
         gui_helpers_state.negative_check_for_model_in_expected_future_models(target_state_m, orig_state_copy_m,
                                                                              msg=error_msg, with_logger=logger)
-
-        # new_state_copy_m.copy_meta_data_from_state_m(orig_state_copy_m)
         self.state_id_mapping_dict[old_state_id] = new_state_id
         return target_state_m.states[orig_state_copy.state_id]
 
@@ -331,21 +323,6 @@ class Clipboard(Observable):
     def _insert_scoped_variable(self, target_state_m, orig_data_port_copy_m):
         return self._insert_data_port(target_state_m, target_state_m.state.add_scoped_variable,
                                       orig_data_port_copy_m, ScopedVariable, target_state_m.state.scoped_variables)
-
-    def reset_clipboard(self):
-        """ Resets the clipboard, so that old elements do not pollute the new selection that is copied into the
-            clipboard.
-
-        :return:
-        """
-        # reset selections
-        for state_element_attr in ContainerState.state_element_attrs:
-            self.model_copies[state_element_attr] = []
-
-        # reset parent state_id the copied elements are taken from
-        self.copy_parent_state_id = None
-
-        self.reset_clipboard_mapping_dicts()
 
     def reset_clipboard_mapping_dicts(self):
         """ Reset mapping dictionaries """
@@ -500,10 +477,6 @@ class Clipboard(Observable):
         self.destroy_all_models_in_dict(self.model_copies)
         # copy all selected elements
         self.model_copies = deepcopy(selected_models_dict)
-
-        new_content_of_clipboard = ', '.join(["{0} {1}".format(
-            len(elements), (camel_case(element_name) if len(elements) > 1 else camel_case(singular_form(element_name)))
-        ) for element_name, elements in self.model_copies.items() if elements])
 
         return selected_models_dict, parent_m
 

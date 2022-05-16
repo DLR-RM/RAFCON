@@ -17,14 +17,11 @@
 
 """
 
-from builtins import str
-from builtins import range
 import string
 import random
 import uuid
 
 STATE_ID_LENGTH = 6
-RUN_ID_LENGTH = 10
 experiment_id = ''+str(uuid.uuid1())
 
 state_name_counter = 0
@@ -36,7 +33,6 @@ run_id_counter = 0
 history_item_id_counter = 0
 semantic_data_id_counter = 0
 
-used_run_ids = []
 used_global_variable_ids = []
 
 

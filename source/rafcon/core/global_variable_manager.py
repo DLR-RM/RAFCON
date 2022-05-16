@@ -20,19 +20,20 @@
 
 """
 
-from builtins import str
 import time
 import copy
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.singleton import Singleton
+from rafcon.design_patterns.observer.observable import Observable
 from threading import Lock, currentThread, RLock
 from rafcon.core.id_generator import *
 
 from rafcon.utils.type_helpers import type_inherits_of_type
 from rafcon.utils import log
-from rafcon.utils import type_helpers
+
 logger = log.get_logger(__name__)
 
 
+@Singleton
 class GlobalVariableManager(Observable):
     """A class for organizing all global variables of the state machine
 
@@ -145,7 +146,6 @@ class GlobalVariableManager(Observable):
                 self.unlock_variable(key, access_key)
             return return_value
         else:
-            # logger.warning("Global variable '{0}' not existing, returning default value".format(key))
             return default
 
     def variable_can_be_referenced(self, key):
@@ -308,18 +308,6 @@ class GlobalVariableManager(Observable):
 # Properties for all class fields that must be observed by gtkmvc3
 #########################################################################
 
-    @property
-    def global_variable_dictionary(self):
-        """Property for the _global_variable_dictionary field"""
-        dict_copy = {}
-        for key, value in self.__global_variable_dictionary.items():
-            if key in self.__variable_references and self.__variable_references[key]:
-                dict_copy[key] = value
-            else:
-                dict_copy[key] = copy.deepcopy(value)
-
-        return dict_copy
-
     def get_all_keys(self):
         """Returns all variable names in the GVM
 
@@ -348,7 +336,6 @@ class GlobalVariableManager(Observable):
         :return:
         """
         if value is not None and data_type is not type(None):
-            # if not isinstance(value, data_type):
             if not type_inherits_of_type(data_type, type(value)):
                 raise TypeError(
                     "Value: '{0}' is not of data type: '{1}', value type: {2}".format(value, data_type, type(value)))

@@ -21,14 +21,12 @@
 
 """
 
-from builtins import str
 import os
-from gi.repository import GLib
+
 from gi.repository import Gtk
 from gi.repository import Gdk
 from functools import partial
 
-import rafcon.core.singleton as core_singletons
 from rafcon.core.singleton import state_machine_manager, library_manager
 from rafcon.core.states.barrier_concurrency_state import BarrierConcurrencyState
 from rafcon.core.states.preemptive_concurrency_state import PreemptiveConcurrencyState
@@ -43,14 +41,13 @@ from rafcon.gui.utils.dialog import RAFCONButtonDialog
 from rafcon.gui.views.preferences_window import PreferencesWindowView
 from rafcon.gui.views.main_window import MainWindowView
 from rafcon.gui.views.utils.about_dialog import AboutDialogView
-import rafcon.gui.backup.session as backup_session
+from rafcon.utils import log
 
+import rafcon.gui.backup.session as backup_session
 import rafcon.gui.helpers.label as gui_helper_label
 import rafcon.gui.helpers.state_machine as gui_helper_state_machine
 import rafcon.gui.helpers.utility as gui_helper_utility
 
-from rafcon.utils import plugins
-from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
@@ -74,8 +71,6 @@ class MenuBarController(ExtendedController):
         self.observe_model(gui_singletons.core_config_model)
         self.observe_model(gui_singletons.gui_config_model)
         self.observe_model(gui_singletons.runtime_config_model)
-
-        self._destroyed = False
         self.handler_ids = {}
         self.registered_shortcut_callbacks = {}
         self.registered_view = False
@@ -84,12 +79,11 @@ class MenuBarController(ExtendedController):
         self.state_machine_execution_engine = sm_execution_engine
         self.full_screen_flag = False
         self.full_screen_window = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
-        self.main_position = None
         self.sm_notebook = self.main_window_view.state_machines_editor['notebook']
         self.full_screen_window.add_accel_group(self.shortcut_manager.accel_group)
-        self.main_window_view.right_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
-        self.main_window_view.left_bar_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
-        self.main_window_view.console_window.get_top_widget().add_accel_group(self.shortcut_manager.accel_group)
+        self.main_window_view.right_bar_window.get_parent_widget().add_accel_group(self.shortcut_manager.accel_group)
+        self.main_window_view.left_bar_window.get_parent_widget().add_accel_group(self.shortcut_manager.accel_group)
+        self.main_window_view.console_window.get_parent_widget().add_accel_group(self.shortcut_manager.accel_group)
 
     def destroy(self):
         super(MenuBarController, self).destroy()
@@ -113,6 +107,9 @@ class MenuBarController(ExtendedController):
 
         show_data_flows = global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
         view["show_data_flows"].set_active(show_data_flows)
+
+        show_transitions = global_runtime_config.get_config_value("SHOW_TRANSITIONS", True)
+        view["show_transitions"].set_active(show_transitions)
 
         show_data_values = global_runtime_config.get_config_value("SHOW_DATA_FLOW_VALUE_LABELS", True)
         view["show_data_values"].set_active(show_data_values)
@@ -152,6 +149,7 @@ class MenuBarController(ExtendedController):
 
         self.connect_button_to_function('data_flow_mode', 'toggled', self.on_data_flow_mode_toggled)
         self.connect_button_to_function('show_data_flows', 'toggled', self.on_show_data_flows_toggled)
+        self.connect_button_to_function('show_transitions', 'toggled', self.on_show_transitions_toggled)
         self.connect_button_to_function('show_data_values', 'toggled', self.on_show_data_values_toggled)
         self.connect_button_to_function('show_aborted_preempted', 'toggled', self.on_show_aborted_preempted_toggled)
         self.connect_button_to_function('expert_view', 'activate', self.on_expert_view_activate)
@@ -161,6 +159,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('start_from_selected', 'activate', self.on_start_from_selected_state_activate)
         self.connect_button_to_function('run_to_selected', 'activate', self.on_run_to_selected_state_activate)
         self.connect_button_to_function('run_selected', 'activate', self.on_run_selected_state_activate)
+        self.connect_button_to_function('only_run_selected', 'activate', self.on_run_only_selected_state_activate)
         self.connect_button_to_function('pause', 'activate', self.on_pause_activate)
         self.connect_button_to_function('stop', 'activate', self.on_stop_activate)
         self.connect_button_to_function('step_mode', 'activate', self.on_step_mode_activate)
@@ -272,12 +271,12 @@ class MenuBarController(ExtendedController):
         self.full_screen_window.add(self.main_window_view['central_vbox'])
 
         # Show fullscreen window undecorated in same screen as main window
-        position = self.main_window_view.get_top_widget().get_position()
+        position = self.main_window_view.get_parent_widget().get_position()
         self.full_screen_window.show()
         self.full_screen_window.move(position[0], position[1])
         self.full_screen_window.set_decorated(False)
         self.full_screen_window.fullscreen()
-        self.main_window_view.get_top_widget().iconify()
+        self.main_window_view.get_parent_widget().iconify()
 
     def on_full_screen_deactivate(self):
         # Move whole VBox back into main window
@@ -292,7 +291,7 @@ class MenuBarController(ExtendedController):
         if not self.main_window_view['central_v_pane'].get_child2():
             self.main_window_view['console_return_button'].show()
 
-        self.main_window_view.get_top_widget().present()
+        self.main_window_view.get_parent_widget().present()
         self.full_screen_window.hide()
 
     def connect_button_to_function(self, view_index, button_state, function):
@@ -355,7 +354,9 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('run_to_selected', partial(self.call_action_callback,
                                                                          "on_run_to_selected_state_activate"))
         self.add_callback_to_shortcut_manager('run_selected', partial(self.call_action_callback,
-                                                                         "on_run_selected_state_activate"))
+                                                                      "on_run_selected_state_activate"))
+        self.add_callback_to_shortcut_manager('only_run_selected', partial(self.call_action_callback,
+                                                                           "on_run_only_selected_state_activate"))
 
         self.add_callback_to_shortcut_manager('stop', partial(self.call_action_callback, "on_stop_activate"))
         self.add_callback_to_shortcut_manager('pause', partial(self.call_action_callback, "on_pause_activate"))
@@ -367,6 +368,7 @@ class MenuBarController(ExtendedController):
         self.add_callback_to_shortcut_manager('reload', partial(self.call_action_callback, "on_refresh_all_activate"))
 
         self.add_callback_to_shortcut_manager('show_data_flows', self.show_data_flows_toggled_shortcut)
+        self.add_callback_to_shortcut_manager('show_transitions', self.show_transitions_toggled_shortcut)
         self.add_callback_to_shortcut_manager('show_data_values', self.show_data_values_toggled_shortcut)
         self.add_callback_to_shortcut_manager('data_flow_mode', self.data_flow_mode_toggled_shortcut)
         self.add_callback_to_shortcut_manager('show_aborted_preempted', self.show_aborted_preempted)
@@ -400,17 +402,6 @@ class MenuBarController(ExtendedController):
         self.registered_shortcut_callbacks[action].append(callback)
         self.shortcut_manager.add_callback_for_action(action, callback)
 
-    def remove_all_callbacks(self):
-        """
-        Remove all callbacks registered to the shortcut manager
-        :return:
-        """
-        for action in self.registered_shortcut_callbacks.keys():
-            for callback in self.registered_shortcut_callbacks[action]:
-                self.shortcut_manager.remove_callback_for_action(action, callback)
-        # delete all registered shortcut callbacks
-        self.registered_shortcut_callbacks = {}
-
     ######################################################
     # menu bar functionality - File
     ######################################################
@@ -423,7 +414,7 @@ class MenuBarController(ExtendedController):
         return gui_helper_state_machine.open_state_machine(path=path, recent_opened_notification=True)
 
     @staticmethod
-    def on_open_library_state_separately_activate(widget, data=None):
+    def on_open_library_state_separately_activate(widget, data=None, cursor_position=None):
         gui_helper_state_machine.open_library_state_separately()
 
     def on_save_activate(self, widget, data=None, delete_old_state_machine=False):
@@ -469,7 +460,7 @@ class MenuBarController(ExtendedController):
                                                               gui_singletons.gui_config_model)
         gui_singletons.main_window_controller.add_controller('preferences_window_ctrl', preferences_window_ctrl)
         preferences_window_view.show()
-        preferences_window_view.get_top_widget().present()
+        preferences_window_view.get_parent_widget().present()
 
     def on_quit_activate(self, widget, data=None, force=False):
         global_runtime_config.prepare_recently_opened_state_machines_list_for_storage()
@@ -617,6 +608,12 @@ class MenuBarController(ExtendedController):
         else:
             self.view["show_data_flows"].set_active(True)
 
+    def show_transitions_toggled_shortcut(self, *args, **kwargs):
+        if self.view["show_transitions"].get_active():
+            self.view["show_transitions"].set_active(False)
+        else:
+            self.view["show_transitions"].set_active(True)
+
     def show_data_values_toggled_shortcut(self, *args, **kwargs):
         if self.view["show_data_values"].get_active():
             self.view["show_data_values"].set_active(False)
@@ -642,6 +639,13 @@ class MenuBarController(ExtendedController):
             global_runtime_config.set_config_value("SHOW_DATA_FLOWS", True)
         else:
             global_runtime_config.set_config_value("SHOW_DATA_FLOWS", False)
+
+    @staticmethod
+    def on_show_transitions_toggled(widget, data=None):
+        if widget.get_active():
+            global_runtime_config.set_config_value("SHOW_TRANSITIONS", True)
+        else:
+            global_runtime_config.set_config_value("SHOW_TRANSITIONS", False)
 
     @staticmethod
     def on_show_data_values_toggled(widget, data=None):
@@ -684,6 +688,17 @@ class MenuBarController(ExtendedController):
         else:
             self.state_machine_execution_engine.run_selected_state(selection.get_selected_state().state.get_path(),
                                                                    self.model.selected_state_machine_id)
+
+    def on_run_only_selected_state_activate(self, widget, data=None):
+        logger.debug("Only run selected state ...")
+        selection = gui_singletons.state_machine_manager_model.get_selected_state_machine_model().selection
+        if len(selection.states) is not 1:
+            logger.error("Exactly one state must be selected!")
+        else:
+            self.state_machine_execution_engine.run_only_selected_state(
+                selection.get_selected_state().state.get_path(),
+                self.model.selected_state_machine_id
+            )
 
     def on_pause_activate(self, widget, data=None):
         self.state_machine_execution_engine.pause()

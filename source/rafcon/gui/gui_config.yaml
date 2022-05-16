@@ -82,7 +82,7 @@ SHORTCUTS:
     add_barrier_state: <Control><Alt>B
     add_output: <Control><Alt>U
     add_input: <Control><Alt>N
-    add_outcome: <Control><Alt>T
+    add_outcome: <Control><Alt>O
     add_scoped_variable: <Control><Alt>V
     apply: <Control><Shift>E
     backward_step: F9
@@ -126,13 +126,15 @@ SHORTCUTS:
     save_as: <Control><Shift>S
     save_as_copy: <Control><Shift><Alt>S
     save_state_as: <Control><Alt>S
-    substitute_state: <Control><Shift><Alt>S
+    substitute_state: <Control><Shift><Alt>U
     show_aborted_preempted: <Control>P
     show_data_flows: <Control>D
+    show_transitions: <Control>T
     show_data_values: <Control>L
     start: F5
     start_from_selected: <Control>R
-    run_selected: <Shift>R
+    run_selected: <Control><Shift>I
+    only_run_selected: <Control><Shift>K
     step: F4
     step_mode: F6
     stop: F8

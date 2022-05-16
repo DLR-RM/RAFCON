@@ -13,7 +13,6 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from builtins import str, object
 from functools import partial
 
 from rafcon.gui.config import global_gui_config
@@ -61,14 +60,6 @@ class ShortcutManager(object):
         # If returning False, the shortcut is forwarded to GTK to be used for default actions (like copy and paste in
         #  a text field). If a controller wants to prevent this, it has to return True.
         return res
-
-    def __get_action_for_shortcut(self, lookup_shortcut):
-        for action in self.__action_to_shortcuts:
-            shortcuts = self.__action_to_shortcuts[action]
-            for shortcut in shortcuts:
-                if shortcut == lookup_shortcut:
-                    return action
-        return None
 
     def add_callback_for_action(self, action, callback):
         """Adds a callback function to an action
@@ -125,17 +116,6 @@ class ShortcutManager(object):
                     self.remove_callback_for_action(action, callback)
             del self.__controller_action_callbacks[controller]
 
-    def get_shortcut_for_action(self, action):
-        """Get the shortcut(s) for the specified action
-
-        :param str action: An action like 'add', 'copy', 'info'
-        :return: None, if no action is not valid or no shortcut is exiting, a single shortcut or a list of shortcuts
-            if one or more shortcuts are registered for that action.
-        """
-        if action in self.__action_to_shortcuts:
-            return self.__action_to_shortcuts[action]
-        return None
-
     def trigger_action(self, action, key_value, modifier_mask, **kwargs):
         """Calls the appropriate callback function(s) for the given action
 
@@ -178,5 +158,4 @@ class ShortcutManager(object):
 
         self.__action_to_callbacks.clear()
         # this deletes the shortcuts form the global gui config, which is unnecessary!
-        # self.__action_to_shortcuts.clear()
         self.__action_to_shortcuts = None

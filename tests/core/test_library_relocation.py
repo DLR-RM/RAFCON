@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
 import os
 import pytest
 from pytest import raises
@@ -23,7 +22,7 @@ logger = log.get_logger("start-no-gui")
 logger.info("initialize RAFCON ... ")
 
 
-def show_notice(query):
+def show_notice(query, custom_buttons=None):
     return ""  # just take note of the missing library
 
 

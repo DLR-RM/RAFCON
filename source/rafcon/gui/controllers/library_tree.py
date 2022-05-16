@@ -23,8 +23,6 @@
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Gdk
-from future.utils import string_types
-from builtins import str
 import os
 from functools import partial
 
@@ -201,21 +199,17 @@ class LibraryTreeController(ExtendedController):
         self.update()
 
     def store_expansion_state(self):
-        # print("\n\n store of state machine {0} \n\n".format(self.__my_selected_sm_id))
         try:
             act_expansion_library = {}
             for library_path, library_row_iter in self.library_row_iter_dict_by_library_path.items():
                 library_row_path = self.tree_store.get_path(library_row_iter)
                 act_expansion_library[library_path] = self.view.row_expanded(library_row_path)
-                # if act_expansion_library[library_path]:
-                #     print(library_path)
             self.__expansion_state = act_expansion_library
         except TypeError:
             logger.warning("expansion state of library could not be stored")
 
     def redo_expansion_state(self):
         if self.__expansion_state:
-            # print("\n\n redo of state machine {0} \n\n".format(self.__my_selected_sm_id))
             try:
                 for library_path, library_row_expanded in self.__expansion_state.items():
                     library_row_iter = self.library_row_iter_dict_by_library_path[library_path]
@@ -223,10 +217,8 @@ class LibraryTreeController(ExtendedController):
                         library_row_path = self.tree_store.get_path(library_row_iter)
                         if library_row_expanded:
                             self.view.expand_to_path(library_row_path)
-                            # print(library_path)
             except (TypeError, KeyError):
                 pass
-                # logger.warning("expansion state of library tree could not be re-done")
 
     def update(self):
         self.store_expansion_state()
@@ -267,7 +259,7 @@ class LibraryTreeController(ExtendedController):
                 return "[source]:\n{0}".format(tool_tip_with_only_sm_file_system_path_in)
 
         _library_key = self.convert_if_human_readable(library_key)
-        tool_tip = library_item if isinstance(library_item, string_types) else ''
+        tool_tip = library_item if isinstance(library_item, str) else ''
 
         if not tool_tip and parent is None:
             library_root_path = tool_tip = self.model.library_manager._library_root_paths.get(library_key, '')
@@ -331,16 +323,6 @@ class LibraryTreeController(ExtendedController):
         lib_tree_path = os.path.join(state_m.state.library_path, state_m.state.library_name)
         self.select_library_tree_element_of_lib_tree_path(lib_tree_path)
 
-    def select_open_state_machine_of_selected_library_element(self):
-        """Select respective state machine of selected library in state machine manager if already open """
-        (model, row_path) = self.view.get_selection().get_selected()
-        if row_path:
-            physical_library_path = model[row_path][self.ITEM_STORAGE_ID]
-            smm = gui_singletons.state_machine_manager_model.state_machine_manager
-            sm = smm.get_open_state_machine_of_file_system_path(physical_library_path)
-            if sm:
-                gui_singletons.state_machine_manager_model.selected_state_machine_id = sm.state_machine_id
-
     def open_button_clicked(self, widget):
         try:
             self.open_library_as_state_machine()
@@ -357,7 +339,7 @@ class LibraryTreeController(ExtendedController):
         import rafcon.gui.helpers.state_machine as gui_helper_state_machine
         (model, row) = self.view.get_selection().get_selected()
         physical_library_path = model[row][self.ITEM_STORAGE_ID]
-        assert isinstance(physical_library_path, string_types)
+        assert isinstance(physical_library_path, str)
 
         logger.debug("Opening library as state-machine from path '{0}'".format(physical_library_path))
         state_machine = gui_helper_state_machine.open_state_machine(physical_library_path)
@@ -448,7 +430,6 @@ class LibraryTreeController(ExtendedController):
             # Second confirmation to delete library
             tree_m_row = self.filter[path]
             library_os_path, library_path, library_name, item_key = self.extract_library_properties_from_selected_row()
-            # assert isinstance(tree_m_row[self.ITEM_STORAGE_ID], str)
             library_file_system_path = library_os_path
 
             if "root" in menu_item_text:
@@ -541,17 +522,18 @@ class LibraryTreeController(ExtendedController):
         gui_helper_state_machine.substitute_selected_state(self._get_selected_library_state(), as_template=True,
                                                            keep_name=keep_name)
 
-
     def extract_library_properties_from_selected_row(self):
         """ Extracts properties library_os_path, library_path, library_name and tree_item_key from tree store row """
         (model, row) = self.view.get_selection().get_selected()
+        if row is None:
+            return None, None, None, None
         tree_item_key = model[row][self.ID_STORAGE_ID]
         library_item = model[row][self.ITEM_STORAGE_ID]
         library_path = model[row][self.LIB_PATH_STORAGE_ID]
         if isinstance(library_item, dict):  # sub-tree
             os_path = model[row][self.OS_PATH_STORAGE_ID]
             return os_path, None, None, tree_item_key  # relevant elements of sub-tree
-        assert isinstance(library_item, string_types)
+        assert isinstance(library_item, str)
         library_os_path = library_item
 
         library_name = library_os_path.split(os.path.sep)[-1]

@@ -19,7 +19,7 @@
 """
 from collections import Iterable, Sized
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.execution.base_execution_history import BaseExecutionHistory
 from rafcon.utils import log

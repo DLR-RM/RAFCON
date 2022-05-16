@@ -15,7 +15,7 @@ import sys
 
 class NoHigherLevelFilter(logging.Filter):
     """Filter high log levels
-    
+
     A logging filter that filters out all logging records, whose level are smaller than the level specified in the
     constructor.
 
@@ -27,9 +27,9 @@ class NoHigherLevelFilter(logging.Filter):
 
     def filter(self, record):
         """Filter high log levels
-        
+
         Filters all records, whose logging level is smaller than the level specified in the constructor
-        
+
         :param record:
         :return:
         """
@@ -68,8 +68,7 @@ class LoggingViewHandler(logging.Handler):
         """
         try:
             # Shorten the source name of the record (remove rafcon.)
-            if sys.version_info >= (2, 7):
-                record.__setattr__("name", record.name.replace("rafcon.", ""))
+            record.__setattr__("name", record.name.replace("rafcon.", ""))
             msg = self.format(record)
             fs = "%s"
             try:

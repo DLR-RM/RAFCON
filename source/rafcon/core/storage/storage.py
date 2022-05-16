@@ -17,8 +17,6 @@
 """
 
 from weakref import ref
-from future.utils import string_types
-from builtins import str
 import os
 import re
 import math
@@ -37,7 +35,7 @@ from rafcon.utils import log
 from rafcon.utils.timer import measure_time
 from rafcon.utils.vividict import Vividict
 
-from rafcon.core.custom_exceptions import LibraryNotFoundException
+from rafcon.core.custom_exceptions import LibraryNotFoundException, LibraryNotFoundSkipException
 from rafcon.core.constants import DEFAULT_SCRIPT_PATH
 from rafcon.core.config import global_config
 from rafcon.core.state_machine import StateMachine
@@ -50,7 +48,6 @@ LIBRARY_NOT_FOUND_DUMMY_STATE_NAME = "LIBRARY NOT FOUND DUMMY STATE"
 
 #: File names for various purposes
 FILE_NAME_META_DATA = 'meta_data.json'
-FILE_NAME_META_DATA_OLD = 'gui_Gtk.json'
 FILE_NAME_CORE_DATA = 'core_data.json'
 FILE_NAME_CORE_DATA_OLD = 'meta.json'
 SCRIPT_FILE = 'script.py'
@@ -144,7 +141,6 @@ def clean_path(base_path):
     path_elements = base_path.split(os.path.sep)
     reduced_path_elements = [clean_path_element(elem, max_length=255) for elem in path_elements]
     if not all(path_elements[i] == elem for i, elem in enumerate(reduced_path_elements)):
-        # logger.info("State machine storage path is reduced")
         base_path = os.path.sep.join(reduced_path_elements)
     return base_path
 
@@ -176,16 +172,12 @@ def save_state_machine_to_path(state_machine, base_path, delete_old_state_machin
         if not os.path.exists(base_path):
             os.makedirs(base_path)
 
-        old_update_time = state_machine.last_update
-        state_machine.last_update = storage_utils.get_current_time_string()
         state_machine_dict = state_machine.to_dict()
         storage_utils.write_dict_to_json(state_machine_dict, os.path.join(base_path, STATEMACHINE_FILE))
 
         # set the file_system_path of the state machine
         if not as_copy:
             state_machine.file_system_path = copy.copy(base_path)
-        else:
-            state_machine.last_update = old_update_time
 
         # add root state recursively
         remove_obsolete_folders([root_state], base_path)
@@ -308,36 +300,13 @@ def load_state_machine_from_path(base_path, state_machine_id=None):
     if 'used_rafcon_version' in state_machine_dict:
         previously_used_rafcon_version = StrictVersion(state_machine_dict['used_rafcon_version']).version
         active_rafcon_version = StrictVersion(rafcon.__version__).version
-
-        rafcon_newer_than_sm_version = "You are trying to load a state machine that was stored with an older " \
-                                       "version of RAFCON ({0}) than the one you are using ({1}).".format(
-                                        state_machine_dict['used_rafcon_version'], rafcon.__version__)
         rafcon_older_than_sm_version = "You are trying to load a state machine that was stored with an newer " \
                                        "version of RAFCON ({0}) than the one you are using ({1}).".format(
             state_machine_dict['used_rafcon_version'], rafcon.__version__)
         note_about_possible_incompatibility = "The state machine will be loaded with no guarantee of success."
-
-        if active_rafcon_version[0] > previously_used_rafcon_version[0]:
-            # this is the default case
-            # for a list of breaking changes please see: doc/breaking_changes.rst
-            # logger.warning(rafcon_newer_than_sm_version)
-            # logger.warning(note_about_possible_incompatibility)
-            pass
-        if active_rafcon_version[0] == previously_used_rafcon_version[0]:
-            if active_rafcon_version[1] > previously_used_rafcon_version[1]:
-                # this is the default case
-                # for a list of breaking changes please see: doc/breaking_changes.rst
-                # logger.info(rafcon_newer_than_sm_version)
-                # logger.info(note_about_possible_incompatibility)
-                pass
-            elif active_rafcon_version[1] == previously_used_rafcon_version[1]:
-                # Major and minor version of RAFCON and the state machine match
-                # It should be safe to load the state machine, as the patch level does not change the format
-                pass
-            else:
-                logger.warning(rafcon_older_than_sm_version)
-                logger.warning(note_about_possible_incompatibility)
-        else:
+        if active_rafcon_version[0] < previously_used_rafcon_version[0] or \
+                (active_rafcon_version[0] == previously_used_rafcon_version[0] and
+                 active_rafcon_version[1] < previously_used_rafcon_version[1]):
             logger.warning(rafcon_older_than_sm_version)
             logger.warning(note_about_possible_incompatibility)
 
@@ -424,15 +393,6 @@ def reconnect_data_flow(state_machine):
             queue.extend(state.states.values())
 
 
-def load_state_from_path(state_path):
-    """Loads a state from a given path
-
-    :param state_path: The path of the state on the file system.
-    :return: the loaded state
-    """
-    return load_state_recursively(parent=None, state_path=state_path)
-
-
 def get_core_data_path(state_path):
     return os.path.join(state_path, FILE_NAME_CORE_DATA)
 
@@ -496,6 +456,8 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         else:
             dummy_state.parent = parent
         return dummy_state
+    except LibraryNotFoundSkipException:
+        return None
 
     # Transitions and data flows are not added when loading a state, as also states are not added.
     # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
@@ -525,8 +487,6 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     except Exception as e:
         # semantic data file does not have to be there
         pass
-
-    one_of_my_child_states_not_found = False
 
     # load child states
     for p in os.listdir(state_path):
@@ -587,7 +547,7 @@ def limit_text_max_length(text, max_length, separator='_'):
     :return: the shortened input string
     """
     if max_length is not None:
-        if isinstance(text, string_types) and len(text) > max_length:
+        if isinstance(text, str) and len(text) > max_length:
             max_length = int(max_length)
             half_length = float(max_length - 1) / 2
             return text[:int(math.ceil(half_length))] + separator + text[-int(math.floor(half_length)):]
@@ -637,7 +597,6 @@ def get_storage_id_for_state(state):
         max_length = global_config.get_config_value('MAX_LENGTH_FOR_STATE_NAME_IN_STORAGE_PATH')
 
         max_length_of_state_name_in_folder_name = 255 - len(ID_NAME_DELIMITER + state.state_id)
-        # TODO: should we allow "None" in config file?
         if max_length is None or max_length == "None" or max_length > max_length_of_state_name_in_folder_name:
             if max_length_of_state_name_in_folder_name < len(state.name):
                 logger.info("The storage folder name is forced to be maximal 255 characters in length.")

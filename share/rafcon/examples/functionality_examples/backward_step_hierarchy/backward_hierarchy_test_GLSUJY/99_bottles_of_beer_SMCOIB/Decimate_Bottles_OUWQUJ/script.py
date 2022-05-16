@@ -1,4 +1,3 @@
-from __future__ import print_function
 # State "Decimate bottles"
 def execute(self, inputs, outputs, gvm):
     import time

@@ -18,16 +18,13 @@
    :synopsis: A module that cares for the execution of the state machine
 
 """
-from future import standard_library
-standard_library.install_aliases()
 import copy
 import threading
-import time
 import queue
-from threading import Lock, RLock
-import sys
+from threading import Lock
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.singleton import Singleton
+from rafcon.design_patterns.observer.observable import Observable
 from rafcon.core.execution.execution_status import ExecutionStatus
 from rafcon.core.execution.execution_status import StateMachineExecutionStatus
 from rafcon.core.config import global_config
@@ -37,6 +34,7 @@ from rafcon.utils import plugins
 logger = log.get_logger(__name__)
 
 
+@Singleton
 class ExecutionEngine(Observable):
     """A class that cares for the execution of the state machine
 
@@ -67,8 +65,7 @@ class ExecutionEngine(Observable):
         self.state_counter = 0
         self.state_counter_lock = Lock()
         self.new_execution_command_handled = True
-        self.run_selected_done = False
-        self.run_selected_hierarchy_length = None
+        self.stop_state_machine_after_finishing_step = False
 
     @Observable.observed
     def pause(self):
@@ -224,7 +221,6 @@ class ExecutionEngine(Observable):
         self.__set_execution_mode_to_finished()
         self.state_machine_manager.active_state_machine_id = None
         plugins.run_on_state_machine_execution_finished()
-        # self.__set_execution_mode_to_stopped()
         self.state_machine_running = False
 
     def backward_step(self):
@@ -308,12 +304,24 @@ class ExecutionEngine(Observable):
             self.run_to_states.append(path)
             self._run_active_state_machine()
 
-    def run_selected_state(self, start_state_path=None, state_machine_id=None):
-        """Execute the selected state machine.
-        """
-        logger.debug("Run selected state")
+    def _prepare_run_selected_state(self, start_state_path=None, state_machine_id=None):
         if state_machine_id is not None:
             self.state_machine_manager.active_state_machine_id = state_machine_id
+
+        target_state_machine = self.state_machine_manager.state_machines[state_machine_id]
+        target_state = target_state_machine.get_state_by_path(start_state_path)
+
+        # in the case a child state of a concurrency state is selected:
+        # => run the whole concurrency state
+        from rafcon.core.states.concurrency_state import ConcurrencyState
+        state_machine_iterator = target_state
+        while not state_machine_iterator.is_root_state:
+            if state_machine_iterator.parent:
+                if isinstance(state_machine_iterator, ConcurrencyState):
+                    target_state = state_machine_iterator
+                    break
+                state_machine_iterator = state_machine_iterator.parent
+        parent_concurrency_id = target_state.core_element_id
 
         self.run_to_states = []
         # set appropriate start states
@@ -327,15 +335,37 @@ class ExecutionEngine(Observable):
                 else:
                     cur_path = cur_path + "/" + path
                 self.start_state_paths.append(cur_path)
+                if path == parent_concurrency_id:
+                    break
 
         # set target states when execution should stop
-        self.run_to_states.append(start_state_path)
+        self.run_to_states.append(cur_path)
+
+    def run_selected_state(self, start_state_path=None, state_machine_id=None):
+        """Execute the selected state.
+        """
+        logger.debug("Run selected state")
+        self._prepare_run_selected_state(start_state_path=start_state_path,
+                                         state_machine_id=state_machine_id)
 
         if self.finished_or_stopped():
             self.set_execution_mode(StateMachineExecutionStatus.RUN_SELECTED_STATE)
             self._run_active_state_machine()
         else:
             self.set_execution_mode(StateMachineExecutionStatus.RUN_SELECTED_STATE)
+
+    def run_only_selected_state(self, start_state_path=None, state_machine_id=None):
+        """Execute only the selected state.
+        """
+        logger.debug("Run only selected state")
+        self._prepare_run_selected_state(start_state_path=start_state_path,
+                                         state_machine_id=state_machine_id)
+
+        if self.finished_or_stopped():
+            self.set_execution_mode(StateMachineExecutionStatus.RUN_ONLY_SELECTED_STATE)
+            self._run_active_state_machine()
+        else:
+            self.set_execution_mode(StateMachineExecutionStatus.RUN_ONLY_SELECTED_STATE)
 
     def _wait_while_in_pause_or_in_step_mode(self):
         """ Waits as long as the execution_mode is in paused or step_mode
@@ -359,35 +389,35 @@ class ExecutionEngine(Observable):
         #    a) a step_over
         #    b) a step_out
         #    c) a run_until
+        #    c) a run-selected-state
         for state_path in copy.deepcopy(self.run_to_states):
             next_child_state_path = None
             # can be None in case of no transition given
             if next_child_state_to_execute:
                 next_child_state_path = next_child_state_to_execute.get_path()
             if state_path == container_state.get_path():
-                if self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE:
-                    # This is the very special case of having selected a direct hierarchy-child-state
-                    # of a concurrency state as the state for the "run-selected-state" operation
-                    # this basically means that we want to run the whole concurreny state
-                    self._status.execution_mode = StateMachineExecutionStatus.FORWARD_OUT
-                    self.run_to_states.remove(state_path)
-                    # the new target state, when the execution should pause, is the parent of the concurrency state
-                    self.run_to_states.append(container_state.parent.parent.get_path())
+                # the execution did a whole step_over inside hierarchy state "state" (case a) )
+                # or a whole step_out into the hierarchy state "state" (case b) )
+                # thus we delete its state path from self.run_to_states
+                # and wait for another step (of maybe different kind)
+                wait = True
+                self.run_to_states.remove(state_path)
+                if self.stop_state_machine_after_finishing_step:
                     wait = False
-                else:
-                    # the execution did a whole step_over inside hierarchy state "state" (case a) )
-                    # or a whole step_out into the hierarchy state "state" (case b) )
-                    # thus we delete its state path from self.run_to_states
-                    # and wait for another step (of maybe different kind)
-                    wait = True
-                    self.run_to_states.remove(state_path)
+                    self.stop()
+                    logger.debug("Execution engine stopped: run_only_selected_state for state"
+                                 " '{}' finished!".format(container_state.get_path(by_name=True)))
+                    self.stop_state_machine_after_finishing_step = False
                 break
             elif state_path == next_child_state_path:
                 # this is the case that execution has reached a specific state explicitly marked via
                 # run_to_selected_state() (case c) )
-                if self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE:
-                    # we now reached the state that we wanted to execute using the "run-selected-state" feature
-                    # now we just add one FORWARD_OVER step
+                if self._status.execution_mode is StateMachineExecutionStatus.RUN_SELECTED_STATE \
+                        or self._status.execution_mode is StateMachineExecutionStatus.RUN_ONLY_SELECTED_STATE:
+                    # we now reached the state that we wanted to execute using the
+                    # "run-(only)-selected-state" feature, now we just add one FORWARD_OVER step
+                    if self._status.execution_mode is StateMachineExecutionStatus.RUN_ONLY_SELECTED_STATE:
+                        self.stop_state_machine_after_finishing_step = True
                     self._status.execution_mode = StateMachineExecutionStatus.FORWARD_OVER
                     self.run_to_states.remove(state_path)
                     # add the container state to self.run_to_states
@@ -435,7 +465,6 @@ class ExecutionEngine(Observable):
         """
         with self.state_counter_lock:
             self.state_counter += 1
-            # logger.verbose("Increase state_counter!" + str(self.state_counter))
 
         woke_up_from_pause_or_step_mode = False
 
