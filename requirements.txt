@@ -20,5 +20,5 @@ setuptools==48.0.0
 simplegeneric==0.8.1
 sphinx==4.3.0
 tf==1.0.0
-Twisted==21.7.0
+Twisted==22.4.0
 yaml_configuration==0.2.5
