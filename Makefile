@@ -15,6 +15,7 @@ docs: build
 	# Don't use the source command since not all shells support it.
 	. venv/bin/activate;\
 	pip3 install -r requirements.txt;\
+	pip3 install sphinx==4.3.0 rst2pdf==0.98;\
 	sphinx-build -v -b html doc build/docs/html
 
 clean:

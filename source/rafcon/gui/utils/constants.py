@@ -19,7 +19,7 @@ from collections import OrderedDict
 from gi.repository import Gdk
 
 from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
-from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
+from rafcon.gui.design_config import global_design_config
 
 
 def get_glade_path(glade_file):
@@ -28,11 +28,7 @@ def get_glade_path(glade_file):
     return path.join(mvc_dir, "glade", glade_file)
 
 
-INTERFACE_FONT = "Source Sans Pro"
-if is_custom_design_enabled():
-    # this statement has no effect if the design_config is loaded after this module is imported the first time
-    INTERFACE_FONT = global_design_config.get_config_value("PRIMARY_FONT")
-
+INTERFACE_FONT = global_design_config.get_config_value("PRIMARY_FONT", "Source Sans Pro")
 ICON_FONT_FONTAWESOME = "FontAwesome5Free"
 ICON_FONT_RAFCON = "RAFCON"
 FONTS = [INTERFACE_FONT, ICON_FONT_FONTAWESOME, ICON_FONT_RAFCON]

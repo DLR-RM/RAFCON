@@ -15,8 +15,8 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gdk
-from gaphas.aspect import HandleFinder
-from gaphas.item import NW
+from gaphas.aspect import HandleFinder, InMotion
+from gaphas.item import NW, Item
 import gaphas.tool
 
 from rafcon.gui.controllers.right_click_menu.state import StateRightClickMenuGaphas
@@ -111,6 +111,22 @@ class MoveItemTool(gaphas.tool.ItemTool):
         self._item = None
         self._move_name_v = False
         self._old_selection = None
+
+    def movable_items(self):
+        """Filter selection
+
+        Filter items of selection that cannot be moved (i.e. are not instances of `Item`) and return the rest.
+        """
+        view = self.view
+
+        if self._move_name_v:
+            yield InMotion(self._item, view)
+        else:
+            selected_items = set(view.selected_items)
+            for item in selected_items:
+                if not isinstance(item, Item):
+                    continue
+                yield InMotion(item, view)
 
     def on_button_press(self, event):
         """Select items

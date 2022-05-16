@@ -30,6 +30,7 @@ import sys
 import logging
 
 import rafcon
+
 import tracemalloc
 
 from yaml_configuration.config import config_path
@@ -338,7 +339,6 @@ def main(optional_args=None):
     if user_input.memory_profiling:
         memory_profiling_args['stop'] = True
         memory_profiling_thread.join()
-
 
 if __name__ == '__main__':
     main()

@@ -53,6 +53,13 @@ class GlobalVariableManager(Observable):
         self.__access_keys = {}
         self.__variable_references = {}
 
+    def reset(self):
+        self.__global_variable_dictionary.clear()
+        self.__global_variable_type_dictionary.clear()
+        self.__variable_locks.clear()
+        self.__access_keys.clear()
+        self.__variable_references.clear()
+
     @Observable.observed
     def set_variable(self, key, value, per_reference=False, access_key=None, data_type=None):
         """Sets a global variable
