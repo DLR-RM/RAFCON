@@ -20,20 +20,14 @@
    :synopsis: A module to represent an abstract state in the state machine
 
 """
-
-from future import standard_library
-standard_library.install_aliases()
-from future.utils import string_types
 import queue
-import copy
 import os
 import threading
-from builtins import staticmethod
 from weakref import ref
 import copy
 
 from enum import Enum
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
@@ -43,10 +37,9 @@ from rafcon.core.state_elements.data_port import DataPort, InputDataPort, Output
 from rafcon.core.state_elements.logical_port import Income, Outcome
 from rafcon.core.state_elements.scope import ScopedData
 from rafcon.core.storage import storage
-from rafcon.core.config import global_config
 from rafcon.utils import classproperty
 from rafcon.utils import log
-from rafcon.utils import multi_event
+from rafcon.utils import multi_event, plugins
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
@@ -251,18 +244,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         }
         return dict_representation
 
-    @classmethod
-    def to_yaml(cls, dumper, state):
-        dict_representation = cls.state_to_dict(state)
-        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node, deep=True)
-        state = cls.from_dict(dict_representation)
-        return state
-
     @classproperty
     @classmethod
     def state_element_attrs(cls):
@@ -286,8 +267,15 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.execution_history = execution_history
         if generate_run_id:
             self._run_id = run_id_generator()
+
+        def run_wrapper():
+            try:
+                self.run()
+            finally:
+                plugins.run_hook('state_thread_joined')
+
         self.backward_execution = copy.copy(backward_execution)
-        self.thread = threading.Thread(target=self.run)
+        self.thread = threading.Thread(target=run_wrapper)
         self.thread.start()
 
     def generate_run_id(self):
@@ -299,7 +287,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         if self.thread:
             self.thread.join()
-            self.thread = None
         else:
             logger.debug("Cannot join {0}, as the state hasn't been started, yet or is already finished!".format(self))
 
@@ -381,7 +368,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 default = value.default_value
             # if the user sets the default value to a string starting with $, try to retrieve the value
             # from the global variable manager
-            if isinstance(default, string_types) and len(default) > 0 and default[0] == '$':
+            if isinstance(default, str) and len(default) > 0 and default[0] == '$':
                 from rafcon.core.singleton import global_variable_manager as gvm
                 var_name = default[1:]
                 if not gvm.variable_exist(var_name):
@@ -648,7 +635,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param str file_system_path:
         :return:
         """
-        if not isinstance(file_system_path, string_types):
+        if not isinstance(file_system_path, str):
             raise TypeError("file_system_path must be a string")
         self._file_system_path = file_system_path
 
@@ -980,7 +967,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param key: The key of the new entry.
         :return:
         """
-        assert isinstance(key, string_types)
+        assert isinstance(key, str)
         target_dict = self.get_semantic_data(path_as_list)
         target_dict[key] = value
         return path_as_list + [key]
@@ -1047,7 +1034,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 raise ValueError("Name must not include the \"" + PATH_SEPARATOR + "\" character")
             # if ID_NAME_DELIMITER in name:
             #     raise ValueError("Name must not include the \"" + ID_NAME_DELIMITER + "\" character")
-            if not isinstance(name, string_types):
+            if not isinstance(name, str):
                 raise TypeError("Name must be a string")
             if len(name) < 1:
                 raise ValueError("Name must have at least one character")
@@ -1271,7 +1258,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         # check that all old_outcomes are no more referencing self as there parent
         for old_outcome in old_outcomes.values():
-            if old_outcome not in iter(list(self._outcomes.values())) and old_outcome.parent is self:
+            if old_outcome not in self._outcomes.values() and old_outcome.parent is self:
                 old_outcome.parent = None
 
     @property
@@ -1283,7 +1270,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @input_data.setter
     @lock_state_machine
-    #@Observable.observed
     def input_data(self, input_data):
         if not isinstance(input_data, dict):
             raise TypeError("input_data must be of type dict")
@@ -1298,7 +1284,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @output_data.setter
     @lock_state_machine
-    #@Observable.observed
     def output_data(self, output_data):
         if not isinstance(output_data, dict):
             raise TypeError("output_data must be of type dict")
@@ -1379,7 +1364,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @concurrency_queue.setter
     @lock_state_machine
-    #@Observable.observed
     def concurrency_queue(self, concurrency_queue):
         if not isinstance(concurrency_queue, queue.Queue):
             if not concurrency_queue is None:
@@ -1398,7 +1382,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @final_outcome.setter
     @lock_state_machine
-    #@Observable.observed
     def final_outcome(self, final_outcome):
         if not isinstance(final_outcome, Outcome):
             raise TypeError("final_outcome must be of type Outcome")
@@ -1419,7 +1402,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self._description = None
             return
 
-        if not isinstance(description, string_types):
+        if not isinstance(description, str):
             raise TypeError("Description must be a string")
 
         self._description = description

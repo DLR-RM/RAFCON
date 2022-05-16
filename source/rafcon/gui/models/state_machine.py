@@ -18,9 +18,9 @@ import os
 import threading
 from copy import copy, deepcopy
 
-from gtkmvc3.model_mt import ModelMT
-from gtkmvc3.observable import Signal
-from gtkmvc3.observer import Observer
+from rafcon.design_patterns.mvc.model import ModelMT
+from rafcon.design_patterns.observer.observable import Signal
+from rafcon.design_patterns.observer.observer import Observer
 
 from rafcon.core.state_machine import StateMachine
 from rafcon.core.states.container_state import ContainerState
@@ -33,7 +33,7 @@ from rafcon.gui.models.selection import Selection
 from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.utils.notification_overview import NotificationOverview
 import rafcon.gui.utils.constants
-from rafcon.utils import log, constants
+from rafcon.utils import log
 from rafcon.utils import storage_utils
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
@@ -126,7 +126,6 @@ class StateMachineModel(MetaModel, Hashable):
         self.register_observer(self)
 
     def __eq__(self, other):
-        # logger.info("compare method")
         if isinstance(other, StateMachineModel):
             return self.root_state == other.root_state and self.meta == other.meta
         else:
@@ -236,20 +235,14 @@ class StateMachineModel(MetaModel, Hashable):
     @ModelMT.observe("action_signal", signal=True)
     def action_signal_triggered(self, model, prop_name, info):
         """When the action was performed, we have to set the dirty flag, as the changes are unsaved"""
-        # print("ACTION_signal_triggered state machine: ", model, prop_name, info)
         self.state_machine.marked_dirty = True
         msg = info.arg
         if model is not self and msg.action.startswith('sm_notification_'):  # Signal was caused by the root state
             # Emit state_action_signal to inform observing controllers about changes made to the state within the
             # state machine
-            # print("DONE1 S", self.state_machine.state_machine_id, msg, model)
             # -> removes mark of "sm_notification_"-prepend to mark root-state msg forwarded to state machine label
             msg = msg._replace(action=msg.action.replace('sm_notification_', '', 1))
             self.state_action_signal.emit(msg)
-            # print("FINISH DONE1 S", self.state_machine.state_machine_id, msg)
-        else:
-            # print("DONE2 S", self.state_machine.state_machine_id, msg)
-            pass
 
     @staticmethod
     def _list_modified(prop_name, info):
@@ -308,7 +301,6 @@ class StateMachineModel(MetaModel, Hashable):
         if self.suppress_new_root_state_model_one_time:
             self.suppress_new_root_state_model_one_time = False
             return
-        # print("ASSIGN ROOT_STATE", model, prop_name, info)
         try:
             self.root_state.unregister_observer(self)
         except KeyError:
@@ -336,9 +328,9 @@ class StateMachineModel(MetaModel, Hashable):
         cause = 'root_state_change'
         try:
             if 'before' in info:
-                self.state_machine._notify_method_before(self.state_machine, cause, (self.state_machine, ), info)
+                self.state_machine.notify_before(self.state_machine, cause, (self.state_machine, ), info)
             elif 'after' in info:
-                self.state_machine._notify_method_after(self.state_machine, cause, None, (self.state_machine, ), info)
+                self.state_machine.notify_after(self.state_machine, cause, None, (self.state_machine, ), info)
         except AssertionError as e:
             # This fixes an AssertionError raised by GTKMVC. It can probably occur, when a controller unregisters
             # itself from a model, while the notification chain still propagates upwards.

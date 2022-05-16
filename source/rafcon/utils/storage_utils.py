@@ -18,7 +18,7 @@
 
 import json
 import yaml
-from time import gmtime, strftime, strptime, mktime
+from time import gmtime, strftime
 
 from jsonconversion.decoder import JSONObjectDecoder
 from jsonconversion.encoder import JSONObjectEncoder
@@ -56,7 +56,6 @@ substitute_modules = {
     'rafcon.statemachine.states.library_state.LibraryState': 'rafcon.core.states.library_state.LibraryState',
     'rafcon.statemachine.states.preemptive_concurrency_state.PreemptiveConcurrencyState': 'rafcon.core.states.preemptive_concurrency_state.PreemptiveConcurrencyState',
     'rafcon.statemachine.states.state.State': 'rafcon.core.states.state.State',
-    # logical_port
     'rafcon.core.state_elements.outcome.Outcome': 'rafcon.core.state_elements.logical_port.Outcome'
 }
 
@@ -66,25 +65,6 @@ TIME_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 def get_current_time_string():
     return strftime(TIME_STRING_FORMAT, gmtime())
-
-
-def get_float_time_for_string(string):
-    return mktime(strptime(string, TIME_STRING_FORMAT))
-
-
-def get_time_string_for_float(seconds):
-    return strftime(TIME_STRING_FORMAT, gmtime(seconds))
-
-
-def write_dict_to_yaml(dictionary, path, **kwargs):
-    """
-    Writes a dictionary to a yaml file
-    :param dictionary:  the dictionary to be written
-    :param path: the absolute path of the target yaml file
-    :param kwargs: optional additional parameters for dumper
-    """
-    with open(path, 'w') as f:
-        yaml.dump(dictionary, f, indent=4, **kwargs)
 
 
 def load_dict_from_yaml(path):

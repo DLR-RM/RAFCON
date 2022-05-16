@@ -1,4 +1,3 @@
-from builtins import str
 def print_state_events(state):
     state.logger.debug("Value of preemted event: {0}".format(str(state.preempted)))
     state.logger.debug("Value of started event: {0}".format(str(state.started)))

@@ -10,7 +10,6 @@
 
 # example basictreeview.py
 
-from builtins import str
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GObject

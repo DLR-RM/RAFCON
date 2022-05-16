@@ -14,9 +14,8 @@
 from gi.repository import Gtk
 from gi.repository import GObject
 
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
-from gaphas import tool
 from gaphas import painter
 
 from rafcon.gui.mygaphas.view import ExtendedGtkView
@@ -24,7 +23,6 @@ from rafcon.gui.mygaphas.tools import HoverItemTool, ConnectionCreationTool, Con
     MoveItemTool, MultiSelectionTool, RightClickTool, MoveHandleTool, ZoomTool, PanTool, ToolChain
 from rafcon.gui.mygaphas.painter import HoveredItemPainter
 
-from rafcon.gui.config import global_gui_config
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
@@ -39,7 +37,7 @@ class GraphicalEditorView(View, GObject.GObject):
         functionality is GraphicalEditor
         """
         GObject.GObject.__init__(self)
-        View.__init__(self)
+        View.__init__(self, parent='main_frame')
 
         self.v_box = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.scroller = Gtk.ScrolledWindow()
@@ -64,7 +62,6 @@ class GraphicalEditorView(View, GObject.GObject):
         self.v_box.pack_end(self.scroller, True, True, 0)
 
         self['main_frame'] = self.v_box
-        self.top = 'main_frame'
 
     def setup_canvas(self, canvas, zoom):
         self.editor.canvas = canvas

@@ -16,8 +16,6 @@
 
 """
 
-from builtins import str
-
 from rafcon.core.state_elements.logical_port import Outcome
 from rafcon.core.states.concurrency_state import ConcurrencyState
 from rafcon.core.states.state import StateExecutionStatus
@@ -31,8 +29,6 @@ class PreemptiveConcurrencyState(ConcurrencyState):
     substates and finally returns self.
 
     """
-
-    yaml_tag = u'!PreemptiveConcurrencyState'
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None, states=None, transitions=None, data_flows=None, start_state_id=None,

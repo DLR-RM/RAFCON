@@ -15,14 +15,9 @@
    :synopsis: A module to represent a concurrency state for the state machine
 
 """
-from future import standard_library
-standard_library.install_aliases()
 import queue
 
-from gtkmvc3.observable import Observable
-
 import rafcon.core.singleton as singleton
-from rafcon.core.config import global_config
 from rafcon.core.states.container_state import ContainerState
 from rafcon.core.execution.execution_history_items import CallItem, ReturnItem, ConcurrencyItem, CallType
 from rafcon.core.states.state import StateExecutionStatus

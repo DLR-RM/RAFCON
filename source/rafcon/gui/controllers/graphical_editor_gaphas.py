@@ -23,7 +23,6 @@
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GLib
-from future.utils import string_types
 import time
 from functools import partial
 from gaphas.aspect import InMotion, ItemFinder
@@ -404,7 +403,7 @@ class GraphicalEditorController(ExtendedController):
                 return
 
             # The method causing the change raised an exception, thus nothing was changed
-            if (isinstance(result, string_types) and "CRASH" in result) or isinstance(result, Exception):
+            if (isinstance(result, str) and "CRASH" in result) or isinstance(result, Exception):
                 return
 
             # avoid to remove views of elements of states which parent state is destroyed recursively
@@ -792,11 +791,6 @@ class GraphicalEditorController(ExtendedController):
         # Draw state above data flows and NameView but beneath transitions
         num_data_flows = len(state_m.state.parent.data_flows) if isinstance(state_m.parent, ContainerStateModel) else 0
         index = 1 if not parent_v else num_data_flows + 1
-        # if self.model.root_state is state_m:
-        #     print("init root_state", state_m, state_v)
-        # else:
-        #     print("init state", state_m, state_v)
-        # print([hash(elem) for elem in state_m.state.outcomes.values()])
         self.canvas.add(state_v, parent_v, index=index)
         state_v.matrix.translate(*rel_pos)
 

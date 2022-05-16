@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import pytest
 
 import time
@@ -49,7 +47,6 @@ def create_models(*args, **kargs):
 
 
 @pytest.mark.unstable
-# @pytest.mark.unstable36  # runs for python 2.7
 @pytest.mark.parametrize('gui', [{"runtime_config": {
     'MAIN_WINDOW_MAXIMIZED': False,
     'MAIN_WINDOW_SIZE': (1500, 800),
@@ -128,14 +125,7 @@ def test_drag_and_drop_test(gui):
     print("insert state in state1")
     state_m = state_machine_m.root_state.states['State1']
     gui(state_machine_m.selection.set, [state_m])
-    # Selecting a state using the drag_motion event is too unreliable, as the exact position depends on the size of
-    # the editor. Therefore, it is now selected using the selection object directly
-    # if isinstance(graphical_editor_controller, GraphicalEditorGaphasController):
-    #     gui(graphical_editor_controller.on_drag_motion, None, None, 100, 100, None)
-    # else:
-    #     gui(graphical_editor_controller.on_drag_motion, None, None, 150, 150, None)
-    gui(library_tree_controller.on_drag_data_get, library_tree_controller.view, None, selection_data, 0,
-                      None)
+    gui(library_tree_controller.on_drag_data_get, library_tree_controller.view, None, selection_data, 0, None)
     gui(graphical_editor_controller.on_drag_data_received, None, None, 20, 20, selection_data, None, None)
     assert len(sm_manager_model.get_selected_state_machine_model().root_state.state.states['State1'].states) == 1
 

@@ -26,7 +26,6 @@ def call_gui_callback(callback, *args, **kwargs):
     :param callback: The callback method, e.g. on_open_activate
     :param args: The parameters to be passed to the callback method
     """
-    from future.utils import raise_
     from threading import Condition
     import sys
     from rafcon.utils import log
@@ -65,5 +64,5 @@ def call_gui_callback(callback, *args, **kwargs):
         condition.wait()
     if communication_dict["exception_info"]:
         e_class, e_instance, e_traceback = communication_dict["exception_info"]
-        raise_(e_instance, None, e_traceback)
+        raise e_instance.with_traceback(e_traceback)
     return communication_dict["result"]

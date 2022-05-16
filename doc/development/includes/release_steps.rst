@@ -51,7 +51,7 @@ institute):
 
   .. code:: bash
 
-     $ python setup.py build_sass
+     $ ./compile_scss.sh
      $ git add share/themes/RAFCON/gtk-3.0/*.css --force
 
 8. Apply the version number

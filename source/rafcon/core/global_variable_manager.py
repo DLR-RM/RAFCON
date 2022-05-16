@@ -20,19 +20,20 @@
 
 """
 
-from builtins import str
 import time
 import copy
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.singleton import Singleton
+from rafcon.design_patterns.observer.observable import Observable
 from threading import Lock, currentThread, RLock
 from rafcon.core.id_generator import *
 
 from rafcon.utils.type_helpers import type_inherits_of_type
 from rafcon.utils import log
-from rafcon.utils import type_helpers
+
 logger = log.get_logger(__name__)
 
 
+@Singleton
 class GlobalVariableManager(Observable):
     """A class for organizing all global variables of the state machine
 
@@ -51,6 +52,13 @@ class GlobalVariableManager(Observable):
         self.__global_lock = RLock()
         self.__access_keys = {}
         self.__variable_references = {}
+
+    def reset(self):
+        self.__global_variable_dictionary.clear()
+        self.__global_variable_type_dictionary.clear()
+        self.__variable_locks.clear()
+        self.__access_keys.clear()
+        self.__variable_references.clear()
 
     @Observable.observed
     def set_variable(self, key, value, per_reference=False, access_key=None, data_type=None):
@@ -145,7 +153,6 @@ class GlobalVariableManager(Observable):
                 self.unlock_variable(key, access_key)
             return return_value
         else:
-            # logger.warning("Global variable '{0}' not existing, returning default value".format(key))
             return default
 
     def variable_can_be_referenced(self, key):

@@ -1,4 +1,3 @@
-from __future__ import print_function
 # general tool elements
 from rafcon.utils import log
 

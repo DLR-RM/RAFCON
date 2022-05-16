@@ -1,4 +1,3 @@
-from builtins import str
 import sys
 import os
 from gi.repository import Gtk

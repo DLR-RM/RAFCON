@@ -16,8 +16,5 @@ from rafcon.gui import glade
 
 
 class ScopedVariablesListView(TreeView):
-    builder = glade.get_glade_path("scoped_variables_list_widget.glade")
-    top = 'scoped_variables_tree_view'
-
     def __init__(self):
-        super(ScopedVariablesListView, self).__init__()
+        super().__init__(builder_filename=glade.get_glade_path('scoped_variables_list_widget.glade'), parent='scoped_variables_tree_view')

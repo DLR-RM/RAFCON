@@ -15,7 +15,7 @@ import sys
 
 class NoHigherLevelFilter(logging.Filter):
     """Filter high log levels
-    
+
     A logging filter that filters out all logging records, whose level are smaller than the level specified in the
     constructor.
 
@@ -27,9 +27,9 @@ class NoHigherLevelFilter(logging.Filter):
 
     def filter(self, record):
         """Filter high log levels
-        
+
         Filters all records, whose logging level is smaller than the level specified in the constructor
-        
+
         :param record:
         :return:
         """

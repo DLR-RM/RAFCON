@@ -18,12 +18,7 @@
 
 """
 
-from gtkmvc3.model_mt import ModelMT
-
-from rafcon.core.states.execution_state import ExecutionState
-from rafcon.core.states.container_state import ContainerState
-from rafcon.core.states.library_state import LibraryState
-
+from rafcon.design_patterns.mvc.model import ModelMT
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.controllers.state_editor.io_data_port_list import InputPortListController, OutputPortListController
 from rafcon.gui.controllers.state_editor.scoped_variable_list import ScopedVariableListController

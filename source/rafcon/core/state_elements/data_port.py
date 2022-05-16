@@ -18,9 +18,7 @@
 
 """
 from weakref import ref
-from future.utils import string_types
-from enum import Enum
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.id_generator import generate_data_port_id
 from rafcon.core.state_elements.state_element import StateElement
@@ -73,8 +71,6 @@ class DataPort(StateElement):
         else:
             DataPort._unsafe_init(self, name, data_type, default_value, parent)
 
-        # logger.debug("DataPort with name %s initialized" % self.name)
-
     def _safe_init(self, name, data_type, default_value, parent):
         self.name = name
         if data_type is not None:
@@ -87,7 +83,7 @@ class DataPort(StateElement):
         self._name = name
         if data_type is not None:
             self._data_type = data_type
-        if isinstance(default_value, string_types):
+        if isinstance(default_value, str):
             self._default_value = type_helpers.convert_string_value_to_type_value(default_value, data_type)
         else:
             self._default_value = default_value
@@ -96,8 +92,6 @@ class DataPort(StateElement):
 
     def __str__(self):
         return "DataPort '{0}' [{1}] ({3} {2})".format(self.name, self.data_port_id, self.data_type, self.default_value)
-
-    yaml_tag = u'!DataPort'
 
     def __copy__(self):
         return self.__class__(self._name, self._data_type, self._default_value, self._data_port_id, None,
@@ -157,7 +151,7 @@ class DataPort(StateElement):
     @lock_state_machine
     @Observable.observed
     def name(self, name):
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError("Name must be a string")
 
         if len(name) < 1:
@@ -253,7 +247,7 @@ class DataPort(StateElement):
 
         if default_value is not None:
             # If the default value is passed as string, we have to convert it to the data type
-            if isinstance(default_value, string_types):
+            if isinstance(default_value, str):
                 if len(default_value) > 1 and default_value[0] == '$':
                     return default_value
                 if default_value == "None":
@@ -278,10 +272,8 @@ class DataPort(StateElement):
 
 
 class InputDataPort(DataPort):
-
-    yaml_tag = u'!InputDataPort'
+    pass
 
 
 class OutputDataPort(DataPort):
-
-    yaml_tag = u'!OutputDataPort'
+    pass

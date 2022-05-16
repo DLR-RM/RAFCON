@@ -61,7 +61,7 @@ def open_folder(query, default_path=None):
     # Allows confirming with Enter and double-click
     dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
-        dialog.set_transient_for(main_window_controller.view.get_top_widget())
+        dialog.set_transient_for(main_window_controller.view.get_parent_widget())
     dialog.set_current_folder(last_path)
     if selected_filename is not None:
         dialog.select_filename(selected_filename)
@@ -128,7 +128,7 @@ def create_folder(query, default_name=None, default_path=None):
     # Allows confirming with Enter and double-click
     dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
-        dialog.set_transient_for(main_window_controller.view.get_top_widget())
+        dialog.set_transient_for(main_window_controller.view.get_parent_widget())
     dialog.set_current_folder(last_path)
     if default_name:
         dialog.set_current_name(default_name)
@@ -195,7 +195,7 @@ def save_folder(query, default_name=None):
     # Allows confirming with Enter and double-click
     dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
-        dialog.set_transient_for(main_window_controller.view.get_top_widget())
+        dialog.set_transient_for(main_window_controller.view.get_parent_widget())
     dialog.set_current_folder(last_path)
     if default_name:
         dialog.set_current_name(default_name)
@@ -219,11 +219,6 @@ def save_folder(query, default_name=None):
     return path
 
 
-# overwrite the save_folder_func of the interface: thus the user input is now retrieved from a dialog box and not
-# from raw input any more
-core_interface.save_folder_func = save_folder
-
-
 def show_notice(query):
     from gi.repository import Gtk
     from rafcon.gui.helpers.label import set_button_children_size_request
@@ -231,7 +226,7 @@ def show_notice(query):
     from xml.sax.saxutils import escape
     dialog = Gtk.MessageDialog(flags=Gtk.DialogFlags.MODAL, type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK)
     if main_window_controller:
-        dialog.set_transient_for(main_window_controller.view.get_top_widget())
+        dialog.set_transient_for(main_window_controller.view.get_parent_widget())
     dialog.set_markup(escape(query))
     set_button_children_size_request(dialog)
     dialog.run()

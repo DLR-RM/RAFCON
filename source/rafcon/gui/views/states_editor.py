@@ -15,9 +15,7 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
-from gtkmvc3.view import View
-from builtins import range
-from rafcon.gui.utils import constants
+from rafcon.design_patterns.mvc.view import View
 
 GObject.signal_new("tab_close_event", Gtk.Notebook, GObject.SignalFlags.RUN_FIRST, None, (int,))
 
@@ -25,17 +23,14 @@ GObject.signal_new("tab_close_event", Gtk.Notebook, GObject.SignalFlags.RUN_FIRS
 class StatesEditorView(View):
 
     def __init__(self):
-        View.__init__(self)
+        super().__init__(parent='notebook')
         self.notebook = Gtk.Notebook()
         self.notebook.set_scrollable(True)
         self.notebook.set_name('states_editor_notebook')
         self.notebook.get_style_context().add_class("secondary")
         self.notebook.show()
-
         self.notebook.connect("button_press_event", self.button_released)
-
         self['notebook'] = self.notebook
-        self.top = 'notebook'
 
     def button_released(self, widget, event=None):
         x, y = event.x, event.y

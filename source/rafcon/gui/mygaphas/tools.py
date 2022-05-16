@@ -14,11 +14,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gi.repository import Gtk
 from gi.repository import Gdk
-from builtins import filter
-from builtins import next
-from enum import Enum
 from gaphas.aspect import HandleFinder, InMotion
 from gaphas.item import NW, Item
 import gaphas.tool
@@ -37,8 +33,6 @@ from rafcon.utils.decorators import avoid_parallel_execution
 from rafcon.gui.config import global_gui_config
 
 logger = log.get_logger(__name__)
-
-PortMoved = Enum('PORT', 'FROM TO')
 
 
 class ToolChain(gaphas.tool.ToolChain):

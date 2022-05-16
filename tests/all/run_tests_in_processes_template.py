@@ -1,5 +1,3 @@
-from __future__ import print_function
-from builtins import str
 import os
 import sys
 import pytest
@@ -57,12 +55,6 @@ def run_unit_tests_in_processes(path_with_test_modules):
 
     run_tests_in_path(os.path.join(test_path, path_with_test_modules))
 
-    # for process in process_list:
-    #     return_value = unit_test_message_queue.get()
-    #     # this assert checks if all unit tests executed successfully
-    #     assert return_value[1] == 0
-    #     process.join()
 
 if __name__ == '__main__':
-    # run_unit_tests_in_processes("network")
     run_unit_tests_in_processes("gui")

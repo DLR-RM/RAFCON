@@ -11,14 +11,13 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import str
 from copy import deepcopy
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
 from rafcon.core.state_elements.scope import ScopedVariable
-from rafcon.core.id_generator import state_id_generator, generate_data_port_id
+from rafcon.core.id_generator import generate_data_port_id
 from rafcon.core.states.container_state import ContainerState
 
 from rafcon.gui.models.selection import Selection

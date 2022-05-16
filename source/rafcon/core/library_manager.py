@@ -22,7 +22,8 @@ import shutil
 import copy
 import warnings
 from collections import OrderedDict
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.singleton import Singleton
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core import interface
 from rafcon.core.storage import storage
@@ -33,6 +34,7 @@ from rafcon.utils import log
 logger = log.get_logger(__name__)
 
 
+@Singleton
 class LibraryManager(Observable):
     """This class manages all libraries
 
@@ -332,16 +334,11 @@ class LibraryManager(Observable):
 
     def _get_library_root_key_for_os_path(self, path):
         """Return library root key if path is within library root paths"""
-        path = os.path.realpath(path)
-        library_root_key = None
+        path = os.path.abspath(path)
         for library_root_key, library_root_path in self._library_root_paths.items():
-            rel_path = os.path.relpath(path, library_root_path)
-            if rel_path.startswith('..'):
-                library_root_key = None
-                continue
-            else:
-                break
-        return library_root_key
+            if path.startswith(library_root_path):
+                return library_root_key
+        return None
 
     def is_os_path_within_library_root_paths(self, path):
         return True if self._get_library_root_key_for_os_path(path) is not None else False
@@ -360,7 +357,7 @@ class LibraryManager(Observable):
         :return: library path library name
         :rtype: str, str
         """
-        path = os.path.realpath(path)
+        path = os.path.abspath(path)
         library_path = None
         library_name = None
         library_root_key = self._get_library_root_key_for_os_path(path)
@@ -389,15 +386,10 @@ class LibraryManager(Observable):
         :return:
         """
 
-        # originally libraries were called like this; DO NOT DELETE; interesting for performance tests
-        # state_machine = storage.load_state_machine_from_path(lib_os_path)
-        # return state_machine.version, state_machine.root_state
-
         # TODO observe changes on file system and update data
         if lib_os_path in self._loaded_libraries:
             # this list can also be taken to open library state machines TODO -> implement it -> because faster
             state_machine = self._loaded_libraries[lib_os_path]
-            # logger.info("Take copy of {0}".format(lib_os_path))
             # as long as the a library state root state is never edited so the state first has to be copied here
             state_copy = copy.deepcopy(state_machine.root_state)
             return state_machine.version, state_copy

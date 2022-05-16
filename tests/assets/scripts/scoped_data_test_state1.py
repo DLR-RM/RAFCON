@@ -1,4 +1,3 @@
-from __future__ import print_function
 def execute(self, inputs, outputs, gvm):
     print("Executing scoped data test state 1 ...")
     print(inputs)

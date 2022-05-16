@@ -18,8 +18,7 @@
 
 """
 
-from gtkmvc3.controller import Controller
-from past.builtins import map
+from rafcon.design_patterns.mvc.controller import Controller
 
 from rafcon.gui.shortcut_manager import ShortcutManager
 from rafcon.utils import log
@@ -28,11 +27,10 @@ logger = log.get_logger(__name__)
 
 
 class ExtendedController(Controller):
-    def __init__(self, model, view, spurious=False):
-        # print("init extended controller", self.__class__.__name__, view, self  # model.core_element, model.core_element.get_path(), model.core_element.semantic_data  # id(model.core_element))
+    def __init__(self, model, view):
         self.__registered_models = set()
         self._view_initialized = False
-        super(ExtendedController, self).__init__(model, view, spurious=spurious)
+        super().__init__(model, view)
         self.__action_registered_controllers = []
         self.__child_controllers = dict()
         self.__shortcut_manager = None
@@ -75,7 +73,6 @@ class ExtendedController(Controller):
         """
         # Get name of controller
         if isinstance(controller, ExtendedController):
-            # print(self.__class__.__name__, " remove ", controller.__class__.__name__)
             for key, child_controller in self.__child_controllers.items():
                 if controller is child_controller:
                     break
@@ -83,16 +80,13 @@ class ExtendedController(Controller):
                 return False
         else:
             key = controller
-        # print(self.__class__.__name__, " remove key ", key, self.__child_controllers.keys())
         if key in self.__child_controllers:
             if self.__shortcut_manager is not None:
                 self.__action_registered_controllers.remove(self.__child_controllers[key])
                 self.__child_controllers[key].unregister_actions(self.__shortcut_manager)
             self.__child_controllers[key].destroy()
             del self.__child_controllers[key]
-            # print("removed", controller.__class__.__name__ if not isinstance(controller, str) else controller)
             return True
-        # print("do not remove", controller.__class__.__name__)
         return False
 
     def get_controller_by_path(self, ctrl_path, with_print=False):
@@ -158,7 +152,7 @@ class ExtendedController(Controller):
         assert isinstance(shortcut_manager, ShortcutManager)
         self.__shortcut_manager = shortcut_manager
 
-        for controller in list(self.__child_controllers.values()):
+        for controller in self.__child_controllers.values():
             if controller not in self.__action_registered_controllers:
                 try:
                     controller.register_actions(shortcut_manager)
@@ -167,16 +161,9 @@ class ExtendedController(Controller):
                 self.__action_registered_controllers.append(controller)
 
     def unregister_actions(self, shortcut_manager):
-        for controller in list(self.__child_controllers.values()):
+        for controller in self.__child_controllers.values():
             controller.unregister_actions(shortcut_manager)
         shortcut_manager.remove_callbacks_for_controller(self)
-
-    def __register_actions_of_child_controllers(self):
-        assert isinstance(self.__child_controllers, dict)
-        for controller in self.__child_controllers.values():
-            register_function = getattr(controller, "register_actions", None)
-            if callable(register_function):
-                register_function(self.__shortcut_manager)
 
     def connect_signal(self, widget, signal, callback):
         widget.connect(signal, callback)
@@ -184,7 +171,7 @@ class ExtendedController(Controller):
         self.__connected_signals["signal" + str(self.__signal_counter)] = (callback, widget)
 
     def disconnect_all_signals(self):
-        for signal_id, (callback, widget) in self.__connected_signals.items():
+        for (callback, widget) in self.__connected_signals.values():
             widget.disconnect_by_func(callback)
         self.__connected_signals.clear()
 
@@ -202,15 +189,9 @@ class ExtendedController(Controller):
         if self.parent:
             self.__parent = None
         if self._view_initialized:
-            # print(self.__class__.__name__, "destroy view", self.view, self)
-            self.view.get_top_widget().destroy()
+            self.view.get_parent_widget().destroy()
             self.view = None
-            self._Observer__PROP_TO_METHS.clear()  # prop name --> set of observing methods
-            self._Observer__METH_TO_PROPS.clear()  # method --> set of observed properties
-            self._Observer__PAT_TO_METHS.clear() # like __PROP_TO_METHS but only for pattern names (to optimize search)
-            self._Observer__METH_TO_PAT.clear()  # method --> pattern
-            self._Observer__PAT_METH_TO_KWARGS.clear()  # (pattern, method) --> info
-            self.observe = None
+            self.observable_to_methods.clear()
         else:
             logger.warning("The controller {0} seems to be destroyed before the view was fully initialized. {1} "
                            "Check if you maybe do not call {2} or there exist most likely threading problems."
@@ -241,10 +222,11 @@ class ExtendedController(Controller):
 
         The method uses the set of registered models to relieve them.
         """
-        map(self.relieve_model, list(self.__registered_models))
+        for registered_model in list(self.__registered_models):
+            self.relieve_model(registered_model)
         self.__registered_models.clear()
 
     def get_root_window(self):
         if self.__parent:
             return self.__parent.get_root_window()
-        return self.view.get_top_widget()
+        return self.view.get_parent_widget()

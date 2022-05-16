@@ -34,23 +34,13 @@ class RafconConan(ConanFile):
     default_channel = "stable"
 
     options = {
-        "python3": [True, False],
     }
 
     default_options = {
-        "python3": True,
     }
 
     settings = 'os', 'compiler', 'build_type', 'arch'
     exports_sources = "VERSION"
-
-    @property
-    def python_folder(self):
-        return "python3.6" if self.options.python3 else "python2.7"
-
-    @property
-    def python_exec(self):
-        return "python3" if self.options.python3 else "python2"
 
     def build(self):
         envd = dict(os.environ)
@@ -64,16 +54,11 @@ class RafconConan(ConanFile):
         # print("envd: {}".format(str(envd)))
         # print("Package folder: {}".format(str(self.package_folder)))
 
-        subprocess.run([self.python_exec, 'setup.py', 'sdist', 'bdist_wheel'], env=envd)
+        subprocess.run(["python3", 'setup.py', 'sdist', 'bdist_wheel'], env=envd)
 
-        print("Installing rafcon for {}".format(str(self.python_exec)))
+        print("Installing rafcon for python3")
 
-        if self.options.python3:
-            rafcon_target = './dist/rafcon-{}.tar.gz'.format(self.version)
-        else:
-            # using pip2 to install the tar.gz does not work unfortunately
-            # error: 'egg_base' must be a directory name (got `/tmp/pip-modern-metadata-S8oLCh`)
-            rafcon_target = './dist/rafcon-{}-py2.py3-none-any.whl'.format(self.version)
+        rafcon_target = './dist/rafcon-{}.tar.gz'.format(self.version)
 
         # print("Installing pip first")
         # subprocess.run(['python2.7', '-m', 'pip', 'install', '--user', '--upgrade', '--force', 'pip'], env=envd)
@@ -83,11 +68,11 @@ class RafconConan(ConanFile):
         # this is also true for the packages introduced by our local conan environment in /opt/conan/lib/python3.6/
         # https://stackoverflow.com/questions/51913361/difference-between-pip-install-options-ignore-installed-and-force-reinstall
         subprocess.run([
-            self.python_exec, '-m', 'pip', 'install', '--user', '--ignore-installed', rafcon_target
+            'python3', '-m', 'pip', 'install', '--user', '--ignore-installed', rafcon_target
         ], env=envd, check=True)
 
     def package_info(self):
-        site_packages = os.path.join(self.package_folder, "lib", self.python_folder, "site-packages")
+        site_packages = os.path.join(self.package_folder, "lib", "python3.6", "site-packages")
         self.env_info.PYTHONPATH.append(site_packages)
         self.env_info.XDG_DATA_HOME = os.path.join(self.package_folder, "share")
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))

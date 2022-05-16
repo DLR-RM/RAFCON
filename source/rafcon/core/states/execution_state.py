@@ -18,13 +18,12 @@
 
 """
 
-from builtins import str
 import traceback
 import sys
 import os
 from copy import copy, deepcopy
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.states.state import State
 from rafcon.core.decorators import lock_state_machine
@@ -34,7 +33,8 @@ from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.execution.execution_history_items import CallType
 from rafcon.core.config import global_config
 
-from rafcon.utils import log
+from rafcon.utils import log, plugins
+
 logger = log.get_logger(__name__)
 
 
@@ -43,8 +43,6 @@ class ExecutionState(State):
 
     This kind of state does not have any child states.
     """
-
-    yaml_tag = u'!ExecutionState'
     
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None, path=None, filename=None, check_path=True, safe_init=True):
@@ -106,10 +104,11 @@ class ExecutionState(State):
         return state
 
     def _execute(self, execute_inputs, execute_outputs, backward_execution=False):
-        """Calls the custom execute function of the script.py of the state
+        """Calls the custom execute function of the script.py of the state"""
 
-        """
+        plugins.run_hook('pre_script')
         outcome_item = self._script.execute(self, execute_inputs, execute_outputs, backward_execution)
+        plugins.run_hook('post_script')
 
         # in the case of backward execution the outcome is not relevant
         if backward_execution:

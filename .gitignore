@@ -142,3 +142,8 @@ tests/.idea
 # Profiler output
 *.prf
 
+# scss tmp files
+dart-sass
+dart-sass*
+*.css.map
+

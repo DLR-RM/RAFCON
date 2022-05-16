@@ -19,8 +19,6 @@ ActionSignalMsg = namedtuple('ActionSignalMsg', ['action', 'origin', 'action_par
                                                  'kwargs', 'result'])
 ActionSignalMsg.__new__.__defaults__ = ({}, None)
 
-StateTypeChangeSignalMsg = namedtuple('StateTypeChangeSignalMsg', ['new_state_m'])
-
 Notification = namedtuple('Notification', ['model', 'prop_name', 'info'])
 
 SelectionChangedSignalMsg = namedtuple('SelectionChangedSignalMsg', ['method_name', 'new_selection', 'old_selection',

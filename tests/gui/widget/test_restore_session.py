@@ -1,6 +1,4 @@
-from __future__ import print_function
 from copy import deepcopy
-from builtins import range
 from os.path import join, exists
 
 # general tool elements

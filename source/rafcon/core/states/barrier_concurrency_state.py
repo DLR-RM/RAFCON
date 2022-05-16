@@ -19,9 +19,7 @@
 
 """
 
-from builtins import str
-
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.custom_exceptions import RecoveryModeException
 from rafcon.core.state_elements.logical_port import Outcome
@@ -60,7 +58,6 @@ class BarrierConcurrencyState(ConcurrencyState):
         The decider state is not considered in the backward execution case.
 
     """
-    yaml_tag = u'!BarrierConcurrencyState'
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None,
                  income=None, outcomes=None, states=None, transitions=None, data_flows=None, start_state_id=None,
@@ -112,9 +109,6 @@ class BarrierConcurrencyState(ConcurrencyState):
         try:
             concurrency_history_item = self.setup_forward_or_backward_execution()
             self.start_child_states(concurrency_history_item, decider_state)
-
-            # print("bcs1")
-
             #######################################################
             # wait for all child threads to finish
             #######################################################
@@ -128,28 +122,17 @@ class BarrierConcurrencyState(ConcurrencyState):
                     if 'error' in state.output_data:
                         child_errors[state.state_id] = (state.name, state.output_data['error'])
                     final_outcomes_dict[state.state_id] = (state.name, state.final_outcome)
-
-            # print("bcs2")
-
             #######################################################
             # handle backward execution case
             #######################################################
             if self.backward_execution:
-                # print("bcs2.1.")
                 return self.finalize_backward_execution()
             else:
-                # print("bcs2.2.")
                 self.backward_execution = False
-
-            # print("bcs3")
-
             #######################################################
             # execute decider state
             #######################################################
             decider_state_error = self.run_decider_state(decider_state, child_errors, final_outcomes_dict)
-
-            # print("bcs4")
-
             #######################################################
             # handle no transition
             #######################################################
@@ -159,18 +142,12 @@ class BarrierConcurrencyState(ConcurrencyState):
                 transition = self.handle_no_transition(decider_state)
             # if the transition is still None, then the child_state was preempted or aborted, in this case return
             decider_state.state_execution_status = StateExecutionStatus.INACTIVE
-
-            # print("bcs5")
-
             if transition is None:
                 self.output_data["error"] = RuntimeError("state aborted")
             else:
                 if decider_state_error:
                     self.output_data["error"] = decider_state_error
                 self.final_outcome = self.outcomes[transition.to_outcome]
-
-            # print("bcs6")
-
             return self.finalize_concurrency_state(self.final_outcome)
 
         except Exception as e:
@@ -251,7 +228,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         state_id = super(BarrierConcurrencyState, self).add_state(state)
         if not storage_load and not self.__init_running and not state.state_id == UNIQUE_DECIDER_STATE_ID:
             # the transitions must only be created for the initial add_state call and not during each load procedure
-            for o_id, o in list(state.outcomes.items()):
+            for o_id, o in state.outcomes.items():
                 if not o_id == -1 and not o_id == -2:
                     self.add_transition(state.state_id, o_id, self.states[UNIQUE_DECIDER_STATE_ID].state_id, None)
         return state_id
@@ -266,8 +243,7 @@ class BarrierConcurrencyState(ConcurrencyState):
         :raises exceptions.TypeError: if the states parameter is not of type dict
         """
         # First safely remove all existing states (recursively!), as they will be replaced
-        state_ids = list(self.states.keys())
-        for state_id in state_ids:
+        for state_id in list(self.states.keys()):
             # Do not remove decider state, if teh new list of states doesn't contain an alternative one
             if state_id == UNIQUE_DECIDER_STATE_ID and UNIQUE_DECIDER_STATE_ID not in states:
                 continue
@@ -335,8 +311,6 @@ class DeciderState(ExecutionState):
     This type of ExecutionState has initial always the UNIQUE_DECIDER_STATE_ID.
 
     """
-
-    yaml_tag = u'!DeciderState'
 
     def __init__(self, name=None, state_id=None, input_data_ports=None, output_data_ports=None, income=None,
                  outcomes=None, path=None, filename=None, safe_init=True):

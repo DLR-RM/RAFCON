@@ -22,14 +22,13 @@
 
 from gi.repository import GObject
 from gi.repository import Gtk
-from builtins import str
 
 from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.helpers.meta_data import check_gaphas_state_machine_meta_data_consistency
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
-from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
+from rafcon.gui.models.signals import MetaSignalMsg, ActionSignalMsg
 from rafcon.gui.singleton import global_gui_config
 from rafcon.utils import log
 
@@ -81,19 +80,11 @@ class ModificationHistoryTreeController(ExtendedController):
         Change the state machine that is observed for new selected states to the selected state machine.
         :return:
         """
-        # logger.debug("StateMachineEditionChangeHistory register state_machine old/new sm_id %s/%s" %
-        #              (self.__my_selected_sm_id, self.model.selected_state_machine_id))
-
-        # relieve old models
         if self.__my_selected_sm_id is not None:  # no old models available
             self.relieve_model(self._selected_sm_model.history)
 
         if self.model.selected_state_machine_id is not None and global_gui_config.get_config_value('HISTORY_ENABLED'):
-
-            # set own selected state machine id
             self.__my_selected_sm_id = self.model.selected_state_machine_id
-
-            # observe new models
             self._selected_sm_model = self.model.state_machines[self.__my_selected_sm_id]
             if self._selected_sm_model.history:
                 self.observe_model(self._selected_sm_model.history)
@@ -223,7 +214,6 @@ class ModificationHistoryTreeController(ExtendedController):
         """ The method updates the history (a Gtk.TreeStore) which is the model of respective TreeView.
         It functionality is strongly depends on a consistent history-tree hold by a ChangeHistory-Class.
         """
-        # logger.debug("History changed %s\n%s\n%s" % (model, prop_name, info))
         if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):
             # request focus -> which has not have to be satisfied
             self.parent.focus_notebook_page_of_controller(self)

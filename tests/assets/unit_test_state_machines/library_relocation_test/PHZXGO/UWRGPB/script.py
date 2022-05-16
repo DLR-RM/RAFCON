@@ -1,5 +1,3 @@
-
-from builtins import str
 def execute(self, inputs, outputs, gvm):
     self.logger.debug("Hello world")
     outputs["out"] = inputs["in0"] + inputs["in1"]

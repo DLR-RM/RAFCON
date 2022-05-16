@@ -41,19 +41,13 @@ pages:
     BUILD_DIR: build
     CONAN_OPTIONS: ""
     MAKE_CMD_DOCS: "make docs"
+  only:
+    - master
+    - develop
+    - tags
   except:
     variables:
       - $AR_CI_DOCS_DISABLE == "true"
-
-test py2-tests:
-  <<: *only-default
-  stage: Test
-  tags:
-    - Agile_GUI_Docker
-  script:
-    - pip2 install --user --force "pytest>=3.5,<5" lazy-object-proxy==1.5.0 PyYAML==5.1 yaml-configuration==0.2.5
-    - pip2 install pytest-runner==5.2  # this is py2 compatible, ver 5.3 is not
-    - xvfb-run -as "-screen 0 1920x1200x24" python2 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
 
 test py3-tests:
   <<: *only-default

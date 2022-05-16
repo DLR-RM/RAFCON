@@ -5,8 +5,31 @@ Information about :ref:`RAFCON` changes in each release will be published here. 
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/develop>`__.
 
 
+1.0.0
+"""""""
+
+- Features:
+    - Not supporting Python 2 anymore
+    - Run this state
+    - Only run this state
+    - Add singleton pattern
+    - Add new hooks before and after running each state
+    - Add new memory profiling test to assert the memory leak during running sequential & concurrency state machines
+    - Update gaphas to 2.1.2
+    - Update libsass to the latest version of dart sass
+    - Replace gtkmvc3 with two separated mvc and observer patterns
+    - Run this state
+
+- Bug Fixes:
+    - Fix GUI freezing during keeping undo/redo shortcuts
+
+- Miscellaneous:
+    - Remove last update field to improve versioning control
+    - Remove a big amount of the dead codes and comments
+
+
 0.15.4
-""""""
+"""""""
 
 - Features:
     - last version with python2 support which is still supported by Agile Robots
