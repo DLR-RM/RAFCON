@@ -6,6 +6,10 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 
 Future Release
 """""""
+
+
+1.1.0
+"""""""
 - Features:
     - Add skip & skip all buttons in the dialog of the broken libraries during loading a broken session
     - Set the default directory of the dialog during saving a state machine in accordance with the chosen library in the library tree
