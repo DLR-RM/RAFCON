@@ -1,7 +1,7 @@
 TYPE: DESIGN_CONFIG
 USE_CUSTOM_DESIGN: False
 FONTS_FOLDER: $RELATIVE_PATH{../../../share/fonts}
-PRIMARY_FONT: "Source Sans Pro"
+PRIMARY_FONT: "SourceSansPro"
 THEMES_FOLDER: $RELATIVE_PATH{../../../share/themes}
 THEME_NAME: RAFCON
 SOURCE_VIEW_FOLDER: $RELATIVE_PATH{../../../share/gtksourceview-3.0}
