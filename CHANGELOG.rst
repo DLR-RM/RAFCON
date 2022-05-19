@@ -19,6 +19,12 @@ Future Release
     - Custom background color for states
 
 
+1.0.1
+"""""""
+    - Bug Fixes:
+        - Fix the default primary font name
+
+
 1.0.0
 """""""
 
