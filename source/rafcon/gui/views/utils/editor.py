@@ -12,6 +12,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+import os
+
 from gi.repository import Gtk
 from rafcon.design_patterns.mvc.view import View
 
@@ -94,6 +96,10 @@ class EditorView(View):
 
     def new_buffer(self):
         style_scheme_manager = GtkSource.StyleSchemeManager()
+        # This is only required when one wants to run rafcon from the repository.
+        # In installation mode, the content of the source view will be copied to the default places.
+        style_scheme_manager.prepend_search_path(
+            os.path.join(global_design_config.get_config_value("SOURCE_VIEW_FOLDER"), 'styles'))
         b = GtkSource.Buffer()
         b.set_language(self.language_manager.get_language(self.language))
         b.set_highlight_syntax(True)
