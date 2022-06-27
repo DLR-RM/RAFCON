@@ -289,7 +289,8 @@ class StateMachineRightClickMenu(object):
         from rafcon.gui.singleton import main_window_controller
         library_tree_controller = main_window_controller.get_controller('library_controller')
         library_tree_controller.select_library_tree_element_of_library_state_model(state_m)
-        library__usagestree_controller.select_library_tree_element_of_library_state_model(state_m)
+        library_usages_tree_controller = main_window_controller.get_controller('library_usages_controller')
+        library_usages_tree_controller.select_library_tree_element_of_library_state_model(state_m)
 
     def on_toggle_is_start_state(self, widget, data=None):
         self.shortcut_manager.trigger_action("is_start_state", None, None)
