@@ -6,13 +6,20 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 
 Future Release
 """""""
-- Features:
-    - Add skip & skip all buttons in the dialog of the broken libraries during loading a broken session
-    - Set the default directory of the dialog during saving a state machine in accordance with the chosen library in the library tree
-    - Create the data flows & data ports automatically in the nested states
-    - Create the data port automatically when the other state does not have one during connecting the data flows
-    - Support waypoints for data flows
-    - Custom background color for states
+
+
+1.1.0
+"""""""
+    - Features:
+        - Add skip & skip all buttons in the dialog of the broken libraries during loading a broken session
+        - Set the default directory of the dialog during saving a state machine in accordance with the chosen library in the library tree
+        - Create the data flows & data ports automatically in the nested states
+        - Create the data port automatically when the other state does not have one during connecting the data flows
+        - Support waypoints for data flows
+        - Custom background color for states
+
+    - Bug Fixes:
+        - Fix many minor GUI bugs
 
 
 1.0.1
