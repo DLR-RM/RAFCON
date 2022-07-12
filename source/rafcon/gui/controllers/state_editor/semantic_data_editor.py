@@ -377,8 +377,6 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         """ Implements the abstract method of the ExternalEditor class.
         """
         try:
-            # just create file with empty text first; this command also creates the whole path to the file
-            filesystem.write_file(os.path.join(path, storage.SCRIPT_FILE), "", create_full_path=True)
             storage_utils.write_dict_to_json(self.model.state.semantic_data, os.path.join(path, storage.SEMANTIC_DATA_FILE))
         except IOError as e:
             # Only happens if the file doesnt exist yet and would be written to the temp folder.
