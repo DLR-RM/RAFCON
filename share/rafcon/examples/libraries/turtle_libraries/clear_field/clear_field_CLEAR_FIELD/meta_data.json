@@ -1,24 +1,7 @@
 {
     "gui": {
         "editor_gaphas": {
-            "background_color": {
-                "__jsonqualname__": "__builtin__.tuple",
-                "items": [
-                    0.0,
-                    0.0,
-                    0.0
-                ]
-            },
-            "custom_background_color": false,
-            "income": {
-                "rel_pos": {
-                    "__jsonqualname__": "__builtin__.tuple",
-                    "items": [
-                        0,
-                        12.5
-                    ]
-                }
-            },
+            "background_color": false,
             "name": {
                 "rel_pos": {
                     "__jsonqualname__": "__builtin__.tuple", 

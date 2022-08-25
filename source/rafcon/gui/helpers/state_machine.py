@@ -1405,11 +1405,10 @@ def change_background_color(state_model):
     changed = False
     if response == -5:
         current_color = dialog.get_color_selection().get_current_color()
-        state_model.set_meta_data_editor('custom_background_color', True)
         state_model.set_meta_data_editor('background_color', (current_color.red_float, current_color.green_float, current_color.blue_float))
         changed = True
     elif response == default_button_response:
-        state_model.set_meta_data_editor('custom_background_color', False)
+        state_model.set_meta_data_editor('background_color', False)
         changed = True
     dialog.destroy()
     if changed:
