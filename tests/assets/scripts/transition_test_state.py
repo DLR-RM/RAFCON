@@ -1,4 +1,3 @@
-from __future__ import print_function
 from random import randint
 
 def execute(self, inputs, outputs, gvm):

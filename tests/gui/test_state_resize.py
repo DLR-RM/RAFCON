@@ -1,6 +1,3 @@
-from __future__ import print_function
-from builtins import range
-from builtins import zip
 import os
 import time
 import pytest
@@ -209,21 +206,5 @@ def test_simple_state_size_resize(gui, state_path, recursive, rel_size, monkeypa
 
 
 if __name__ == '__main__':
-    # if you wanna run this, replace monkeypatching via monkeypatch module above via manual assignments
-    # params = [
-    #     (state_path_root, False, (40, 40)),
-    #     (state_path_root, True, (40, 40)),
-    #     (state_path_P, False, (20, 20)),
-    #     (state_path_P, True, (20, 20)),
-    #     (state_path_Hi, False, (20, 20)),
-    #     (state_path_Hi, True, (20, 20)),
-    #     (state_path_Ex, False, (20, 20)),
-    #     (state_path_Ex, True, (20, 20)),
-    #     (state_path_PC, False, (10, 10)),
-    #     (state_path_PC, True, (10, 10))
-    # ]
-    # for elem in params:
-    #     state_path, recursive, rel_size = elem
-    #     test_simple_state_size_resize(state_path, recursive, rel_size, None, None)
     import pytest
     pytest.main([__file__, '-xs'])

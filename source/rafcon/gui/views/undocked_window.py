@@ -12,10 +12,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-import os
 from gi.repository import Gtk
-from gi.repository import Gdk
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.utils import constants
@@ -23,12 +21,8 @@ from rafcon.gui.helpers import label
 
 
 class UndockedWindowView(View):
-    builder = glade.get_glade_path("undocked_window.glade")
-    top = 'undock_window'
-
     def __init__(self, title):
-        View.__init__(self)
-
+        super().__init__(builder_filename=glade.get_glade_path('undocked_window.glade'), parent='undock_window')
         toolbar = Gtk.Toolbar()
         toolbar.props.show_arrow = False
         fullscreen_icon = label.create_button_label(constants.BUTTON_EXP)
@@ -40,12 +34,10 @@ class UndockedWindowView(View):
         self['redock_button'].set_tooltip_text("Redock")
         toolbar.insert(self['maximize_button'], 0)
         toolbar.insert(self['redock_button'], 1)
-
         self['headerbar'].props.title = title
         self['headerbar'].pack_end(toolbar)
         self['headerbar'].show_all()
-
-        self.get_top_widget().set_titlebar(self['headerbar'])
+        self.get_parent_widget().set_titlebar(self['headerbar'])
 
     def initialize_title(self, window_title):
         """Initialize the title of the un-docked window
@@ -62,7 +54,7 @@ class UndockedWindowView(View):
         :param title: The name of the newly selected tab
         :param notebook: string taking one of two values 'upper' or 'lower' indicating which notebook was changed
         """
-        current_title = self.get_top_widget().get_title()
+        current_title = self.get_parent_widget().get_title()
         upper_title = current_title.split('/')[0].strip()
         lower_title = current_title.split('/')[1].strip()
         if notebook_identifier == 'upper':

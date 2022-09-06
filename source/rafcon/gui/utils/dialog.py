@@ -13,7 +13,6 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
-from future.utils import string_types
 
 from rafcon.gui.utils import constants
 from rafcon.utils import log
@@ -68,7 +67,7 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
 
         self.set_default_size(width, height)
 
-        if isinstance(markup_text, string_types):
+        if isinstance(markup_text, str):
             from xml.sax.saxutils import escape
             self.set_markup(escape(str(markup_text)))
         else:
@@ -84,7 +83,6 @@ class RAFCONMessageDialog(Gtk.MessageDialog):
 
     def show_grab_focus_and_run(self, standalone=False):
         # TODO check if show all can be removed full -> at the moment it interferes grab focus -> dialog is not focused
-        # self.show_all()
         # Only grab focus in the highest class, the inheriting classes should have the focus as well because they all
         # execute the init of this class
         self.grab_focus()
@@ -172,7 +170,7 @@ class RAFCONInputDialog(RAFCONButtonDialog):
 
         self.checkbox = None
 
-        if isinstance(checkbox_text, string_types):
+        if isinstance(checkbox_text, str):
             # If a checkbox_text is specified by the caller, we can assume that one should be used.
             self.checkbox = Gtk.CheckButton(label=checkbox_text)
             hbox.pack_end(self.checkbox, False, True, 1)
@@ -188,6 +186,9 @@ class RAFCONInputDialog(RAFCONButtonDialog):
             return bool(self.checkbox.get_active())
         else:
             return False
+
+    def set_entry_text(self, text):
+        return self.entry.set_text(text)
 
 
 class RAFCONColumnCheckboxDialog(RAFCONButtonDialog):
@@ -280,12 +281,12 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
             toggled_callback = on_toggled
 
         # check if data is consistent
-        if not all(len(row) == len(table_header) or not isinstance(row[-1], (string_types, bool)) and
+        if not all(len(row) == len(table_header) or not isinstance(row[-1], (str, bool)) and
                 len(row) == 1 + len(table_header) for row in table_data):
             raise ValueError("All rows of the table_data list has to be the same length as the table_header list "
                              "(+1 data element), here length = {0}". format(len(table_header)))
 
-        if not all([isinstance(row_elem, (bool, string_types))
+        if not all([isinstance(row_elem, (bool, str))
                    for index, row_elem in enumerate(table_data[0]) if not index + 1 == len(table_data[0])]):
             raise TypeError("All row elements have to be of type boolean or string except of last one.")
 
@@ -308,7 +309,7 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
                     check_box_renderer.connect("toggled", toggled_callback, index)
                 checkbox_column = Gtk.TreeViewColumn(table_header[index], check_box_renderer, active=index)
                 self.tree_view.append_column(checkbox_column)
-            elif issubclass(column_type, string_types):
+            elif issubclass(column_type, str):
                 text_renderer = Gtk.CellRendererText()
                 text_column = Gtk.TreeViewColumn(table_header[index], text_renderer, text=index)
                 self.tree_view.append_column(text_column)
@@ -319,7 +320,7 @@ class RAFCONCheckBoxTableDialog(RAFCONButtonDialog):
 
         # correct last list element if not boolean or string and table data length is +1 compared to table header
         if first_row_data_types and len(first_row_data_types) == len(table_header) + 1 and \
-                not issubclass(first_row_data_types[-1], (bool, string_types)):
+                not issubclass(first_row_data_types[-1], (bool, str)):
             first_row_data_types[-1] = GObject.TYPE_PYOBJECT
 
         # fill list store

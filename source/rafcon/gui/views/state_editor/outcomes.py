@@ -13,7 +13,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 
 from rafcon.gui import glade
 from rafcon.gui.views.utils.tree import TreeView
@@ -22,17 +22,13 @@ from rafcon.gui.utils import constants
 
 
 class StateOutcomesTreeView(TreeView):
-    builder = glade.get_glade_path("outcome_list_widget.glade")
-    top = 'tree_view'
-
     def __init__(self):
-        super(StateOutcomesTreeView, self).__init__()
+        super().__init__(builder_filename=glade.get_glade_path('outcome_list_widget.glade'), parent='tree_view')
 
 
 class StateOutcomesEditorView(View):
-
     def __init__(self):
-        super(StateOutcomesEditorView, self).__init__()
+        super().__init__(parent='main_frame')
 
         self.vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
         self.treeView = StateOutcomesTreeView()
@@ -57,7 +53,7 @@ class StateOutcomesEditorView(View):
 
         scrollable = Gtk.ScrolledWindow()
         scrollable.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        scrollable.add(self.treeView.get_top_widget())
+        scrollable.add(self.treeView.get_parent_widget())
         self.treeView.scrollbar_widget = scrollable
 
         outcomes_widget_title = gui_helper_label.create_widget_title("OUTCOMES")
@@ -68,7 +64,3 @@ class StateOutcomesEditorView(View):
         self.vbox.show_all()
 
         self['main_frame'] = self.vbox
-        self.top = 'main_frame'
-
-    def get_top_widget(self):
-        return self.vbox

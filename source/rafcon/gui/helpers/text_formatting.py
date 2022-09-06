@@ -11,13 +11,10 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from future.utils import string_types
-
-
 def limit_string(text, max_length, separator="&#x2026;"):
     from xml.sax.saxutils import escape
     import math
-    if isinstance(text, string_types) and len(text) > max_length:
+    if isinstance(text, str) and len(text) > max_length:
         max_length = int(max_length)
         half_length = float(max_length - 1) / 2
         return escape(text[:int(math.ceil(half_length))]) + separator + escape(text[-int(math.floor(half_length)):])

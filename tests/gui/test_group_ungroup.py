@@ -1,4 +1,3 @@
-from __future__ import print_function
 from os.path import join
 
 from rafcon.utils import log
@@ -197,7 +196,7 @@ def test_bug_issue_574(gui):
     gui(menubar_ctrl.on_group_states_activate, None, None)
 
 
-@pytest.mark.timeout(20)
+@pytest.mark.timeout(60)
 @pytest.mark.parametrize('gui', [{"gui_config": {'HISTORY_ENABLED': True}}], indirect=True, ids=["with history"])
 def test_bug_issue_586(gui):
     from os.path import join

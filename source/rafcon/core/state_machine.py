@@ -22,27 +22,21 @@
 
 """
 
-from future.utils import string_types
-from builtins import range
 from contextlib import contextmanager
 from copy import copy
 from threading import RLock
-from datetime import datetime
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 from jsonconversion.jsonobject import JSONObject
 
 import rafcon
-from rafcon.core.execution.execution_history import ExecutionHistory, ExecutionHistoryStorage
+from rafcon.core.execution.execution_history_factory import ExecutionHistoryFactory
 from rafcon.core.id_generator import generate_state_machine_id, run_id_generator
 from rafcon.utils import log
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.storage_utils import get_current_time_string
-import time
 
-from rafcon.utils.constants import RAFCON_TEMP_PATH_BASE
 from rafcon.core.config import global_config
-import os
 
 logger = log.get_logger(__name__)
 
@@ -60,13 +54,11 @@ class StateMachine(Observable, JSONObject, Hashable):
     state_machine_id = None
     version = None
 
-    old_marked_dirty = True
-
     _root_state = None
     _marked_dirty = True
     _file_system_path = None
 
-    def __init__(self, root_state=None, version=None, creation_time=None, last_update=None, state_machine_id=None):
+    def __init__(self, root_state=None, version=None, creation_time=None, state_machine_id=None):
         Observable.__init__(self)
 
         self._modification_lock = RLock()
@@ -87,23 +79,13 @@ class StateMachine(Observable, JSONObject, Hashable):
         else:
             self.creation_time = get_current_time_string()
 
-        # this case happens if old state machines are loaded which do not have statemachine.json yet
-        if isinstance(last_update, datetime):
-            # see https://stackoverflow.com/questions/8022161/python-converting-from-datetime-datetime-to-time-time
-            last_update = time.mktime(last_update.timetuple()) + last_update.microsecond / 1E6
-
-        if last_update:
-            self.last_update = last_update
-        else:
-            self.last_update = get_current_time_string()
-
         self._execution_histories = []
 
         # specifies if this state machine supports saving states with state_name + state_id
         self._supports_saving_state_names = True
 
     def __copy__(self):
-        sm = self.__class__(copy(self._root_state), self.version, self.creation_time, self.last_update)
+        sm = self.__class__(copy(self._root_state), self.version, self.creation_time)
         sm._marked_dirty = self._marked_dirty
         return sm
 
@@ -114,8 +96,7 @@ class StateMachine(Observable, JSONObject, Hashable):
     def from_dict(cls, dictionary, state_machine_id=None):
         state_machine_version = dictionary['version'] if 'version' in dictionary else dictionary['state_machine_version']
         creation_time = dictionary['creation_time']
-        last_update = dictionary['last_update']
-        return cls(None, state_machine_version, creation_time, last_update, state_machine_id)
+        return cls(None, state_machine_version, creation_time, state_machine_id)
 
     def to_dict(self):
         return self.state_machine_to_dict(self)
@@ -131,7 +112,6 @@ class StateMachine(Observable, JSONObject, Hashable):
             'state_machine_version': state_machine.version,
             'used_rafcon_version': rafcon.__version__,
             'creation_time': state_machine.creation_time,
-            'last_update': state_machine.last_update,
         }
         return dict_representation
 
@@ -147,12 +127,20 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     def join(self):
         """Wait for root state to finish execution"""
+        from rafcon.core.states.concurrency_state import ConcurrencyState
         self._root_state.join()
-        # execution finished, close execution history log file (if present)
-        if len(self._execution_histories) > 0:
-            if self._execution_histories[-1].execution_history_storage is not None:
-                set_read_and_writable_for_all = global_config.get_config_value("EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL", False)
-                self._execution_histories[-1].execution_history_storage.close(set_read_and_writable_for_all)
+        if not global_config.get_config_value("IN_MEMORY_EXECUTION_HISTORY_ENABLE", False):
+            queue = [self.root_state]
+            while len(queue) > 0:
+                state = queue.pop(0)
+                if isinstance(state, ConcurrencyState):
+                    if state.concurrency_history_item is not None:
+                        state.concurrency_history_item.destroy()
+                        state.concurrency_history_item = None
+                elif hasattr(state, 'states'):
+                    queue.extend(state.states.values())
+        if len(self.execution_histories) > 0:
+            self.execution_histories[-1].shutdown()
         from rafcon.core.states.state import StateExecutionStatus
         self._root_state.state_execution_status = StateExecutionStatus.INACTIVE
 
@@ -170,7 +158,6 @@ class StateMachine(Observable, JSONObject, Hashable):
         finally:
             self.release_modification_lock()
 
-    # @Observable.observed
     def acquire_modification_lock(self, blocking=True):
         """Acquires the modification lock of the state machine
 
@@ -182,7 +169,6 @@ class StateMachine(Observable, JSONObject, Hashable):
         """
         return self._modification_lock.acquire(blocking)
 
-    # @Observable.observed
     def release_modification_lock(self):
         """Releases the acquired state machine modification lock.
         """
@@ -201,8 +187,6 @@ class StateMachine(Observable, JSONObject, Hashable):
     @root_state.setter
     @Observable.observed
     def root_state(self, root_state):
-        # if not isinstance(root_state, State):
-        #     raise AttributeError("root_state has to be of type State")
         if root_state is not None:
             from rafcon.core.states.state import State
             if not isinstance(root_state, State):
@@ -225,19 +209,7 @@ class StateMachine(Observable, JSONObject, Hashable):
 
     @Observable.observed
     def _add_new_execution_history(self):
-        new_execution_history = ExecutionHistory()
-
-        if global_config.get_config_value("EXECUTION_LOG_ENABLE", False):
-            base_dir = global_config.get_config_value("EXECUTION_LOG_PATH", "%RAFCON_TEMP_PATH_BASE/execution_logs")
-            if base_dir.startswith('%RAFCON_TEMP_PATH_BASE'):
-                base_dir = base_dir.replace('%RAFCON_TEMP_PATH_BASE', RAFCON_TEMP_PATH_BASE)
-            if not os.path.exists(base_dir):
-                os.makedirs(base_dir)
-            shelve_name = os.path.join(base_dir, '%s_rafcon_execution_log_%s.shelve' %
-                                       (time.strftime('%Y-%m-%d-%H:%M:%S', time.localtime()),
-                                        self.root_state.name.replace(' ', '-')))
-            execution_history_store = ExecutionHistoryStorage(shelve_name)
-            new_execution_history.set_execution_history_storage(execution_history_store)
+        new_execution_history = ExecutionHistoryFactory.get_execution_history(root_state_name=self.root_state.name)
         self._execution_histories.append(new_execution_history)
         return new_execution_history
 
@@ -250,7 +222,6 @@ class StateMachine(Observable, JSONObject, Hashable):
 
         new_state = create_new_state_from_state_with_type(state, new_state_class)
         assert new_state.state_id == state_id
-        # logger.info("ASSIGN NEW STATE")
         self.root_state = new_state  # Also sets the parent of root_state to self
 
         return new_state
@@ -264,10 +235,8 @@ class StateMachine(Observable, JSONObject, Hashable):
     @marked_dirty.setter
     @Observable.observed
     def marked_dirty(self, marked_dirty):
-        # print("sm-core: marked dirty changed from ", self._marked_dirty, " to ", marked_dirty)
         if not isinstance(marked_dirty, bool):
             raise AttributeError("marked_dirty has to be of type bool")
-        self.old_marked_dirty = self._marked_dirty
         self._marked_dirty = marked_dirty
 
     def get_state_by_path(self, path, as_check=False):
@@ -305,8 +274,8 @@ class StateMachine(Observable, JSONObject, Hashable):
     def get_last_execution_log_filename(self):
         if len(self._execution_histories) > 0:
             for i in range(len(self._execution_histories) - 1, -1, -1):
-                if self._execution_histories[i].execution_history_storage is not None:
-                    return self._execution_histories[i].execution_history_storage.filename
+                if self._execution_histories[i].consumer_manager.get_file_system_consumer_file_name() is not None:
+                    return self._execution_histories[i].consumer_manager.get_file_system_consumer_file_name()
             return None
         else:
             return None
@@ -320,7 +289,7 @@ class StateMachine(Observable, JSONObject, Hashable):
     @file_system_path.setter
     @Observable.observed
     def file_system_path(self, file_system_path):
-        if not isinstance(file_system_path, string_types):
+        if not isinstance(file_system_path, str):
             raise AttributeError("file_system_path has to be a string")
         self._file_system_path = file_system_path
 

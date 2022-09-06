@@ -11,15 +11,16 @@
 # Mahmoud Akl <mahmoud.akl@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc3.model_mt import ModelMT
-
+from rafcon.design_patterns.singleton import Singleton
+from rafcon.design_patterns.mvc.model import ModelMT
 from rafcon.core.singleton import global_variable_manager
-
 from rafcon.utils.vividict import Vividict
 from rafcon.utils import log
+
 logger = log.get_logger(__name__)
 
 
+@Singleton
 class GlobalVariableManagerModel(ModelMT):
     """This Model class manages the global variable manager."""
 

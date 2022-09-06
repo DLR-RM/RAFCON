@@ -16,14 +16,13 @@
 
 """
 
-from builtins import filter
 import functools
-import itertools
 
 
 def wraps_safely(obj, attr_names=functools.WRAPPER_ASSIGNMENTS):
     # Solves problem with missing attributes: http://stackoverflow.com/a/28752007
     return functools.wraps(obj, assigned=list(filter(functools.partial(hasattr, obj), attr_names)))
+
 
 global_lock_counter = 0
 
@@ -52,7 +51,6 @@ def lock_state_machine(func):
         try:
             return_value = func(*args, **kwargs)
         except Exception:
-            # logger.debug("Exception occurred during execution of function {0}. ".format(str(func)))
             raise
         finally:
             if target_state_machine:

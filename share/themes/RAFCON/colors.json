@@ -30,5 +30,6 @@
     "NAME_RESIZE_HANDLE_FILL": "#ddd",
     "NAME_RESIZE_HANDLE_BORDER": "#333",
     "STATE_MACHINE_ACTIVE": "#39af57",
-    "STATE_MACHINE_NOT_ACTIVE": "#fefefe"
+    "STATE_MACHINE_NOT_ACTIVE": "#fefefe",
+    "GUIDE_COLOR": "#00f"
 }

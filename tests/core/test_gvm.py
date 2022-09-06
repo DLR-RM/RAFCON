@@ -5,7 +5,8 @@ from pytest import raises
 
 
 def test_references(caplog):
-    gvm = GlobalVariableManager()
+    gvm = GlobalVariableManager.instance()
+    gvm.reset()
     d = {'a': 1, 'b': 2}
 
     # Test access by reference
@@ -42,25 +43,35 @@ def test_references(caplog):
 
 
 def test_locks(caplog):
-    gvm = GlobalVariableManager()
+    gvm = GlobalVariableManager.instance()
+    gvm.reset()
     gvm.set_variable('a', 1)
     a = gvm.get_variable('a')
     assert a == 1
 
+    assert (not gvm.is_locked("a"))
+
     access_key = gvm.lock_variable('a')
     gvm.lock_variable('a')
+    assert (gvm.is_locked("a"))
     a = gvm.get_variable('a', access_key=access_key)
     assert a == 1
     gvm.set_variable('a', 2, access_key=access_key)
     assert gvm.get_variable('a', access_key=access_key) == 2
+
+    gvm.set_locked_variable('a', access_key=access_key, value=4)
+    assert gvm.get_locked_variable('a', access_key=access_key) == 4
+
     gvm.unlock_variable('a', access_key)
     gvm.unlock_variable('a', access_key)
+    assert (not gvm.is_locked("a"))
     testing_utils.assert_logger_warnings_and_errors(caplog, expected_warnings=1, expected_errors=1)
 
 
 def test_type_check(caplog):
     # valid
-    gvm = GlobalVariableManager()
+    gvm = GlobalVariableManager.instance()
+    gvm.reset()
     gvm.set_variable("a", 1, data_type=int)
     a = gvm.get_variable("a")
     assert a == 1
@@ -123,9 +134,31 @@ def test_type_check(caplog):
     a = gvm.get_variable("a")
     assert a == 123
 
+    # If variable doesnt exist
+    var = gvm.get_variable("Fakevar", default=-1)
+    assert (var == -1)
+
+    # If variable exist
+    assert (gvm.data_type_exist("a"))
+
+
+def test_keys(caplog):
+    gvm = GlobalVariableManager.instance()
+    gvm.reset()
+    gvm.set_variable('a', 1)
+    gvm.set_variable('ab', 2)
+    gvm.set_variable('abc', 3)
+    gvm.set_variable('def', 4)
+
+    key_start_a = gvm.get_all_keys_starting_with('a')
+    assert (len(gvm.get_all_keys()) == 4)
+    assert (len(key_start_a) == 3)
+
+    testing_utils.assert_logger_warnings_and_errors(caplog)
+
 
 if __name__ == '__main__':
     test_locks(None)
-    # test_references(None)
-    # test_type_check(None)
-    # pytest.main([__file__])
+    test_references(None)
+    test_type_check(None)
+    pytest.main([__file__])

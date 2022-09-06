@@ -17,12 +17,11 @@
    :synopsis: A module to represent a library state in the state machine
 
 """
-from future.utils import string_types
-from builtins import str
+
 from weakref import ref
 from copy import copy, deepcopy
 
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 from rafcon.core.states.state import StateExecutionStatus
 from rafcon.core.singleton import library_manager
 from rafcon.core.states.state import State, PATH_SEPARATOR
@@ -30,7 +29,6 @@ from rafcon.core.decorators import lock_state_machine
 from rafcon.core.config import global_config
 from rafcon.utils import log
 from rafcon.utils import type_helpers
-from rafcon.utils.hashable import Hashable
 
 logger = log.get_logger(__name__)
 
@@ -57,8 +55,6 @@ class LibraryState(State):
     :ivar skip_runtime_data_initialization: flag to indicate if the runtime-data data structures have to be initialized,
                                             this is not needed e.g. in the case of a copy
     """
-
-    yaml_tag = u'!LibraryState'
 
     _library_path = None
     _library_name = None
@@ -87,6 +83,9 @@ class LibraryState(State):
         self.library_name = library_name
         self.version = version
 
+        if global_config.get_config_value("RAISE_ERROR_ON_MISSING_LIBRARY_STATES", False):
+            allow_user_interaction = False
+
         lib_os_path, new_library_path, new_library_name = \
             library_manager.get_os_path_to_library(library_path, library_name, allow_user_interaction)
         self.lib_os_path = lib_os_path
@@ -99,7 +98,6 @@ class LibraryState(State):
             logger.info("Old library name '{0}' was located at {1}".format(library_name, library_path))
             logger.info("New library name '{0}' is located at {1}".format(new_library_name, new_library_path))
 
-        # key = load_library_root_state_timer.start()
         lib_version, state_copy = library_manager.get_library_state_copy_instance(self.lib_os_path)
         if not str(lib_version) == version and not str(lib_version) == "None":
             raise AttributeError("Library does not have the correct version!")
@@ -158,7 +156,7 @@ class LibraryState(State):
                 self.input_data_port_runtime_values[data_port_id] = data_port.default_value
                 self.use_runtime_value_input_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
-            elif isinstance(self.input_data_port_runtime_values[data_port_id], string_types):
+            elif isinstance(self.input_data_port_runtime_values[data_port_id], str):
                 try:
                     self.input_data_port_runtime_values[data_port_id] = type_helpers.convert_string_value_to_type_value(
                         self.input_data_port_runtime_values[data_port_id], data_port.data_type)
@@ -186,7 +184,7 @@ class LibraryState(State):
                 self.output_data_port_runtime_values[data_port_id] = data_port.default_value
                 self.use_runtime_value_output_data_ports[data_port_id] = True
             # Ensure that str and unicode is correctly differentiated
-            elif isinstance(self.output_data_port_runtime_values[data_port_id], string_types):
+            elif isinstance(self.output_data_port_runtime_values[data_port_id], str):
                 try:
                     self.output_data_port_runtime_values[data_port_id] = \
                         type_helpers.convert_string_value_to_type_value(
@@ -248,7 +246,6 @@ class LibraryState(State):
         """
         self.state_execution_status = StateExecutionStatus.ACTIVE
         logger.debug("Entering library state '{0}' with name '{1}'".format(self.library_name, self.name))
-        # self.state_copy.parent = self.parent
         self.state_copy._run_id = self._run_id
         self.state_copy.input_data = self.input_data
         self.state_copy.output_data = self.output_data
@@ -463,7 +460,7 @@ class LibraryState(State):
     @lock_state_machine
     @Observable.observed
     def library_path(self, library_path):
-        if not isinstance(library_path, string_types):
+        if not isinstance(library_path, str):
             raise TypeError("library_path must be a string")
 
         self._library_path = library_path
@@ -479,7 +476,7 @@ class LibraryState(State):
     @lock_state_machine
     @Observable.observed
     def library_name(self, library_name):
-        if not isinstance(library_name, string_types):
+        if not isinstance(library_name, str):
             raise TypeError("library_name must be a string")
 
         self._library_name = library_name
@@ -495,7 +492,7 @@ class LibraryState(State):
     @lock_state_machine
     @Observable.observed
     def version(self, version):
-        if version is not None and not isinstance(version, (string_types, int, float)):
+        if version is not None and not isinstance(version, (str, int, float)):
             raise TypeError("version must be a string, got: {}, {}".format(type(version), version))
 
         self._version = str(version)
@@ -587,15 +584,6 @@ class LibraryState(State):
             if not isinstance(use_runtime_value_output_data_ports, dict):
                 raise TypeError("use_runtime_value_output_data_ports must be of type dict")
             self._use_runtime_value_output_data_ports = use_runtime_value_output_data_ports
-
-    @property
-    def child_execution(self):
-        """Property for the _child_execution field
-        """
-        if self.state_execution_status is StateExecutionStatus.EXECUTE_CHILDREN:
-            return True
-        else:
-            return False
 
     def get_storage_path(self, appendix=None):
         if appendix is None:

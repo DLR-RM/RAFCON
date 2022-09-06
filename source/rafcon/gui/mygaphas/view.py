@@ -13,14 +13,13 @@
 
 from contextlib import contextmanager
 from weakref import ref
-from gtkmvc3.observer import Observer
+from rafcon.design_patterns.observer.observer import Observer
 
 from gaphas.view import GtkView
 from gaphas.item import Element
 
-from rafcon.gui.mygaphas.painter import BoundingBoxPainter
+from rafcon.gui.mygaphas.items.state import StateView
 from rafcon.gui.mygaphas.utils.cache.value_cache import ValueCache
-
 
 
 class ExtendedGtkView(GtkView, Observer):
@@ -36,22 +35,13 @@ class ExtendedGtkView(GtkView, Observer):
         self.value_cache = ValueCache()
         self.observe_model(self._selection)
         self.observe_model(state_machine_m.root_state)
-        self._bounding_box_painter = BoundingBoxPainter(self)
         self._graphical_editor = ref(graphical_editor_v)
 
     def prepare_destruction(self):
         """Get rid of circular references"""
-        self._tool = None
-        self._painter = None
         self.relieve_model(self._selection)
         self._selection = None
-        # clear observer class attributes, also see ExtendenController.destroy()
-        self._Observer__PROP_TO_METHS.clear()
-        self._Observer__METH_TO_PROPS.clear()
-        self._Observer__PAT_TO_METHS.clear()
-        self._Observer__METH_TO_PAT.clear()
-        self._Observer__PAT_METH_TO_KWARGS.clear()
-
+        self.observable_to_methods.clear()
 
     @property
     def graphical_editor(self):
@@ -115,29 +105,14 @@ class ExtendedGtkView(GtkView, Observer):
 
         return item, port, glue_pos
 
-    def get_item_at_point_exclude(self, pos, selected=True, exclude=None):
-        """
-        Return the topmost item located at ``pos`` (x, y).
-
-        Parameters:
-         - selected: if False returns first non-selected item
-         - exclude: if specified don't check for these items
-        """
-        items = self._qtree.find_intersect((pos[0], pos[1], 1, 1))
-        for item in self._canvas.sort(items, reverse=True):
-            if not selected and item in self.selected_items:
-                continue  # skip selected items
-            if item in exclude:
-                continue
-
-            v2i = self.get_matrix_v2i(item)
-            ix, iy = v2i.transform_point(*pos)
-            if item.point((ix, iy)) < 0.5:
+    def get_state_at_point(self, vpos, distance=10):
+        vx, vy = vpos
+        rect = (vx - distance, vy - distance, distance * 2, distance * 2)
+        items = self.get_items_in_rectangle(rect, reverse=True)
+        for item in items:
+            if isinstance(item, StateView):
                 return item
         return None
-
-    def redraw_complete_screen(self):
-        self.queue_draw_area(0, 0, self.get_allocation().width, self.get_allocation().height)
 
     def get_zoom_factor(self):
         """Returns the current zoom factor of the view
@@ -147,19 +122,6 @@ class ExtendedGtkView(GtkView, Observer):
         :return: Current zoom factor
         """
         return self._matrix[0]
-
-    def pixel_to_cairo(self, pixel):
-        """Helper function to convert pixels to cairo units
-
-        The conversion is depending on the view. The critical parameter is the current zooming factor. The equation is:
-        cairo units = pixels / zoom factor
-
-        :param float pixel: Number of pixels to convert
-        :return: Number of cairo units corresponding to given number of pixels
-        :rtype: float
-        """
-        zoom = self.get_zoom_factor()
-        return pixel / zoom
 
     def queue_draw_item(self, *items):
         """Extends the base class method to allow Ports to be passed as item

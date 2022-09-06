@@ -1,4 +1,3 @@
-from __future__ import print_function
 import threading
 import shutil
 from os.path import join
@@ -239,7 +238,7 @@ def trigger_gui_signals(gui):
     gui(testing_utils.wait_for_gui)
     assert recently_opened_state_machines_paths == get_recently_opened_state_machines(gui)
     assert number_of_open_sm == len(sm_manager_model.state_machines) + 1
-    gui(auto_backup.recover_state_machine_from_backup, backup_path, None, None, True)
+    gui(auto_backup.recover_state_machine_from_backup, backup_path, None, None)
     assert recently_opened_state_machines_paths == get_recently_opened_state_machines(gui)
     assert number_of_open_sm == len(sm_manager_model.state_machines)
     check_order_and_consistency_of_menu(gui, menubar_ctrl)

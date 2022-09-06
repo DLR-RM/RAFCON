@@ -16,8 +16,6 @@
 
 """
 
-from future.utils import string_types, native_str
-from builtins import str
 from yaml import YAMLObject
 from jsonconversion.jsonobject import JSONObject
 
@@ -28,9 +26,6 @@ class Vividict(dict, YAMLObject, JSONObject):
     A class which inherits from dict and can store an element for an arbitrary nested key. The single elements of the
     key do not have to exist beforehand.
     """
-
-    #: Unique tag used for conversion to and from YAML objects
-    yaml_tag = u'!Vividict'
 
     def __init__(self, dictionary=None):
         super(Vividict, self).__init__()
@@ -43,13 +38,13 @@ class Vividict(dict, YAMLObject, JSONObject):
         :param key: the missing key for a value to be stored
         :return: the new value for the specified key
         """
-        assert isinstance(key, string_types), "Vividict keys must be strings"
+        assert isinstance(key, str), "Vividict keys must be strings"
         key = str(key)
         value = self[key] = type(self)()
         return value
 
     def __setitem__(self, key, value):
-        assert isinstance(key, string_types), "Vividict keys must be strings"
+        assert isinstance(key, str), "Vividict keys must be strings"
         key = str(key)
         if type(value) is dict:
             value = Vividict(value)
@@ -127,11 +122,6 @@ class Vividict(dict, YAMLObject, JSONObject):
             return np_val.item()  # Get the gloat/int etc value
 
         for key, value in vividict.items():
-            if native_strings:  # e.g. converts newstr to str
-                if isinstance(key, string_types):
-                    key = native_str(key)
-                if isinstance(value, string_types):
-                    value = native_str(value)
             # Convert numpy values to native Python values
             value = np_to_native(value)
 
@@ -141,19 +131,3 @@ class Vividict(dict, YAMLObject, JSONObject):
             dictionary[key] = value
 
         return dictionary
-
-    @classmethod
-    def to_yaml(cls, dumper, vividict):
-        """Implementation for the abstract method of the base class YAMLObject
-        """
-        dictionary = cls.vividict_to_dict(vividict, native_strings=True)
-        node = dumper.represent_mapping(cls.yaml_tag, dictionary)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        """Implementation for the abstract method of the base class YAMLObject
-        """
-        dict_representation = loader.construct_mapping(node, deep=True)
-        vividict = cls.from_dict(dict_representation)
-        return vividict

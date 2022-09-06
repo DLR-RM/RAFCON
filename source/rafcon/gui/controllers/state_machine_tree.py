@@ -22,7 +22,6 @@
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Gdk
-from builtins import range
 from functools import partial
 
 from rafcon.core.states.state import State
@@ -197,7 +196,6 @@ class StateMachineTreeController(TreeViewController):
 
     @TreeViewController.observe("state_action_signal", signal=True)
     def state_action_signal(self, model, prop_name, info):
-        # TODO check if this is the right way or only some of them
         if 'arg' in info and info['arg'].action in ['change_root_state_type', 'change_state_type', 'substitute_state',
                                                     'group_states', 'ungroup_state', 'paste', 'undo/redo']:
             if info['arg'].after is False:
@@ -209,24 +207,17 @@ class StateMachineTreeController(TreeViewController):
 
     @TreeViewController.observe("action_signal", signal=True)
     def action_signal(self, model, prop_name, info):
-        # TODO check why the expansion of tree is not recovered
         if not (isinstance(model, AbstractStateModel) and 'arg' in info and info['arg'].after):
             return
 
         action = info['arg'].action
-        if action in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'undo/redo']:
-            target_state_m = info['arg'].action_parent_m
-        elif action in ['change_state_type', 'change_root_state_type']:
-            target_state_m = info['arg'].affected_models[-1]
-        else:
+        if action not in ['substitute_state', 'group_states', 'ungroup_state', 'paste', 'undo/redo', 'change_state_type', 'change_root_state_type']:
             return
 
         self._ongoing_complex_actions.remove(action)
         if not self._ongoing_complex_actions:
             self.relieve_model(model)
-
-            # TODO check selection warnings if not all a the tree is recreated
-            self.update()  # if target_state_m.state.is_root_state else self.update(target_state_m.parent)
+            self.update()
 
     @TreeViewController.observe("root_state", assign=True)
     def state_machine_notification(self, model, property, info):
@@ -418,7 +409,6 @@ class StateMachineTreeController(TreeViewController):
 
         # if library root state is used instate of library state show both in type and state id
         _state_id = _state_model.state.state_id
-        # _state_id += '' if _state_model is state_model else '/' + state_model.state.state_id  TODO enable this line
         _state_type = type(_state_model.state).__name__
         _state_type += '' if _state_model is state_model else '/' + type(state_model.state).__name__
 
@@ -448,7 +438,6 @@ class StateMachineTreeController(TreeViewController):
                 self.insert_and_update_recursively(state_row_iter, child_state_model, with_expand=False)
 
         # - check if TOO MUCH children are in
-        # if state_model.state.get_library_root_state() is not None or isinstance(state_model, LibraryStateModel):
         for n in reversed(range(self.tree_store.iter_n_children(state_row_iter))):
             child_iter = self.tree_store.iter_nth_child(state_row_iter, n)
             child_state_path = self.tree_store.get_value(child_iter, self.STATE_PATH_STORAGE_ID)
@@ -483,7 +472,6 @@ class StateMachineTreeController(TreeViewController):
             if self.tree_store.iter_n_children(child_iter):
                 self.remove_tree_children(child_iter)
             del self.state_row_iter_dict_by_state_path[self.tree_store.get_value(child_iter, self.STATE_PATH_STORAGE_ID)]
-            # self.tree_store.remove(child_iter)
 
     def get_state_machine_selection(self):
         """Getter state machine selection

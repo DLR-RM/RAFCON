@@ -18,10 +18,10 @@
 .. module:: global_variable_manager
    :synopsis: A module that holds the controller to access the GlobalVariableManager by a GUI based on the
      GlobalVariableEditorView.
+   :noindex:
 
 """
 
-from builtins import str
 from gi.repository import Gtk
 from gi.repository import GObject
 
@@ -318,7 +318,6 @@ class GlobalVariableManagerController(ListViewController):
 
         Triggered after creation or deletion of a variable has taken place.
         """
-        # logger.info("update")
         self.list_store_iterators = {}
         self.list_store.clear()
         keys = self.model.global_variable_manager.get_all_keys()

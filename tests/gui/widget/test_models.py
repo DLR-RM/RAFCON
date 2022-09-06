@@ -1,6 +1,4 @@
-from __future__ import print_function
-from gtkmvc3.observer import Observer
-from builtins import str
+from rafcon.design_patterns.observer.observer import Observer
 
 import pytest
 from tests import utils as testing_utils
@@ -62,15 +60,8 @@ class StateNotificationLogObserver(NotificationLogObserver):
     @Observer.observe("data_flows", before=True)
     @Observer.observe("is_start", before=True)
     def notification_before(self, model, prop_name, info):
-        # print "parent call_notification - AFTER:\n-%s\n-%s\n-%s\n-%s\n" %\
-        #       (prop_name, info.instance, info.method_name, info.result)
-        #if info.method_name in self.method_list:
         if prop_name in self.log['before']:
             self.log['before'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
-            # if self.with_print:
-            #     print "++++++++ log BEFORE instance '%s' and property '%s' in state %s" % \
-            #           (info.instance, prop_name, self.observed_model.state.name)
-            #     print "observer: ", self
         else:
             if self.with_print:
                 print("!!!! NOT a prop_name '%s' to be observed in BEFORE %s %s" % (prop_name, model, info))
@@ -92,10 +83,6 @@ class StateNotificationLogObserver(NotificationLogObserver):
     def notification_after(self, model, prop_name, info):
         if prop_name in self.log['after']:
             self.log['after'][prop_name].append({'model': model, 'prop_name': prop_name, 'info': info})
-            # if self.with_print:
-            #     print "++++++++ log AFTER instance '%s' and property '%s' in state %s" % \
-            #           (info.instance, prop_name, self.observed_model.state.name)
-            #     print "observer: ", self
         else:
             if self.with_print:
                 print("!!!! NOT a prop_name '%s' to be observed in AFTER %s %s" % (prop_name, model, info))
@@ -134,7 +121,6 @@ class StateNotificationLogObserver(NotificationLogObserver):
                 set_dict(info, elem)
             else:
                 print(info)
-                from rafcon.gui.utils.notification_overview import NotificationOverview
                 print('NotificationLogger ---> assert !!! Type of notification not known')#\n{0}'.format(NotificationOverview(info))
                 assert True
             return elem
@@ -145,7 +131,6 @@ class StateNotificationLogObserver(NotificationLogObserver):
 
 
 def create_models(*args, **kargs):
-    import rafcon.core.singleton
     from rafcon.core.states.execution_state import ExecutionState
     from rafcon.core.states.hierarchy_state import HierarchyState
     from rafcon.core.state_machine import StateMachine
@@ -209,11 +194,7 @@ def create_models(*args, **kargs):
     sm = StateMachine(ctr_state)
 
     import rafcon.gui.models.state_machine
-    # for sm_in in rafcon.core.singleton.state_machine_manager.state_machines.values():
-    #     rafcon.core.singleton.state_machine_manager.remove_state_machine(sm_in.state_machine_id)
     sm_m = rafcon.gui.models.state_machine.StateMachineModel(sm)
-
-    # sm_m.history.fake = True
 
     return ctr_state, sm_m, state_dict
 
@@ -1106,16 +1087,7 @@ def test_state_property_models_consistency(caplog):
     # script(self, script) Script
     state_dict['Nested2'].script = Script(parent=state_dict['Nested2'])
     state_dict['Nested2'].script = Script(parent=state_dict['Nested2'])
-
-    # description(self, description) str
     state_dict['Nested'].description = "awesome"
-
-    # # active(self, active) bool
-    # state_dict['Nested'].active = True
-
-    # # child_execution(self, child_execution) bool
-    # state_dict['Nested'].child_execution = True
-    # TODO introduce state.execution_status and so on
 
     ############################################
     # Properties of ContainerState #############

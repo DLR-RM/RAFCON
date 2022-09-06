@@ -16,30 +16,26 @@
 """
 .. module:: modification_history
    :synopsis: A module that holds the controller to list and access the modification-history.
+   :noindex:
 
 """
 
 from gi.repository import GObject
 from gi.repository import Gtk
-from builtins import str
 
 from rafcon.gui import singleton as gui_singletons
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers.label import react_to_event
 from rafcon.gui.helpers.meta_data import check_gaphas_state_machine_meta_data_consistency
 from rafcon.gui.models.state_machine_manager import StateMachineManagerModel
-from rafcon.gui.models.signals import MetaSignalMsg, StateTypeChangeSignalMsg, ActionSignalMsg
+from rafcon.gui.models.signals import MetaSignalMsg, ActionSignalMsg
 from rafcon.gui.singleton import global_gui_config
 from rafcon.utils import log
 
 logger = log.get_logger(__name__)
 
-# TODO Comment
-
 
 class ModificationHistoryTreeController(ExtendedController):
-    string_substitution_dict = {}  # will be used to substitute strings for better and shorter tree columns
-
     def __init__(self, model, view):
         """Constructor
         :param model StateMachineModel should be exchangeable
@@ -59,14 +55,10 @@ class ModificationHistoryTreeController(ExtendedController):
             view['history_tree'].set_model(self.history_tree_store)
         view['history_tree'].set_tooltip_column(8)
 
-        # view.set_hover_expand(True)
-
         self.__my_selected_sm_id = None
         self._selected_sm_model = None
-
         self.doing_update = False
         self.no_cursor_observation = False
-        self.next_activity_focus_self = True
         self.on_toggle_mode_check_gaphas_view_is_meta_data_consistent = True
 
         self.register()
@@ -80,19 +72,11 @@ class ModificationHistoryTreeController(ExtendedController):
         Change the state machine that is observed for new selected states to the selected state machine.
         :return:
         """
-        # logger.debug("StateMachineEditionChangeHistory register state_machine old/new sm_id %s/%s" %
-        #              (self.__my_selected_sm_id, self.model.selected_state_machine_id))
-
-        # relieve old models
         if self.__my_selected_sm_id is not None:  # no old models available
             self.relieve_model(self._selected_sm_model.history)
 
         if self.model.selected_state_machine_id is not None and global_gui_config.get_config_value('HISTORY_ENABLED'):
-
-            # set own selected state machine id
             self.__my_selected_sm_id = self.model.selected_state_machine_id
-
-            # observe new models
             self._selected_sm_model = self.model.state_machines[self.__my_selected_sm_id]
             if self._selected_sm_model.history:
                 self.observe_model(self._selected_sm_model.history)
@@ -222,7 +206,6 @@ class ModificationHistoryTreeController(ExtendedController):
         """ The method updates the history (a Gtk.TreeStore) which is the model of respective TreeView.
         It functionality is strongly depends on a consistent history-tree hold by a ChangeHistory-Class.
         """
-        # logger.debug("History changed %s\n%s\n%s" % (model, prop_name, info))
         if self.parent is not None and hasattr(self.parent, "focus_notebook_page_of_controller"):
             # request focus -> which has not have to be satisfied
             self.parent.focus_notebook_page_of_controller(self)
@@ -368,12 +351,6 @@ class ModificationHistoryTreeController(ExtendedController):
 
     def new_change(self, model, method_name, instance, info, history_id, active, parent_tree_item, parameters,
                    tool_tip=None):
-        # Nr, Instance, Method, Details, model
-
-        # TODO may useful tooltip
-        trail_tip = "any modification-state of state machine can be reached by clicking on respective action"
-        branch_tip = "-> actions of old branches can be reached by clicking on respective action"
-
         # active-state based coloring
         foreground = self.get_color_active(active)
 

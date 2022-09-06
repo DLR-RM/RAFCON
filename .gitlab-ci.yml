@@ -1,5 +1,18 @@
-stages:
-    - test
+include:
+  - project: 'dev/sys/sopl/ar-dev'
+    # release branch
+    ref: 'release/3.x'
+    file:
+      - '/ci/templates/default.yml'
+
+variables:
+  AR_CI_CLANG_FORMAT_DISABLE: "true"
+  AR_CI_CLANG_TIDY_DISABLE: "true"
+  AR_CI_CPPCHECK_DISABLE: "true"
+  AR_CI_FLAKE8_DISABLE: "true"
+  AR_CI_YAPF_DISABLE: "true"
+  AR_CI_DOCS_DISABLE: "false"
+  AR_CI_DEPLOY_CONAN_DISABLE: "true"
 
 # From https://docs.gitlab.com/ee/ci/merge_request_pipelines/#excluding-certain-jobs
 .only-default: &only-default
@@ -15,24 +28,71 @@ stages:
     - tags
     - merge_requests
 
-test py2-tests:
-  <<: *only-default
-  stage: test
-  tags:
-    - Agile_GUI_Docker
-  script:
-    - pip2 install --user --upgrade pytest
-    - pip2 install pytest-runner==5.2  # this is py2 compatible, ver 5.3 is not
-    - xvfb-run -as "-screen 0 1920x1200x24" python2 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
+docs_test:
+  extends: .docs_test
+  variables:
+    BUILD_DIR: build
+    CONAN_OPTIONS: ""
+    MAKE_CMD_DOCS: "make docs"
+
+pages:
+  extends: .docs_pages
+  variables:
+    BUILD_DIR: build
+    CONAN_OPTIONS: ""
+    MAKE_CMD_DOCS: "make docs"
+  only:
+    - master
+    - develop
+    - tags
+  except:
+    variables:
+      - $AR_CI_DOCS_DISABLE == "true"
 
 test py3-tests:
   <<: *only-default
-  stage: test
+  stage: Test
   tags:
     - Agile_GUI_Docker
   script:
     - pip3 install tox
     - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e py36
+  coverage: /^TOTAL.+?(\d+\%)$/
+  artifacts:
+    expire_in: 7 days
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/coverage.xml
+
+test py3-tests-core:
+  <<: *only-default
+  stage: Test
+  tags:
+    - Agile_GUI_Docker
+  script:
+    - pip3 install tox
+    - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e core
+  coverage: /^TOTAL.+?(\d+\%)$/
+  artifacts:
+    expire_in: 7 days
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/coverage.xml
+
+test py3-memory-test-core:
+  <<: *only-default
+  stage: Test
+  tags:
+    - Agile_GUI_Docker
+  script:
+    - pip3 install tox
+    - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e memory_core
+  artifacts:
+    expire_in: 7 days
+
+
 # running pytest directly does not work
 # as the test_start_script.py test_start_script_valid_config always uses "python" to start "rafcon_core"
 # which fails if tests are run using python3 as the "python" always maps to python2 on Ubuntu 18.04

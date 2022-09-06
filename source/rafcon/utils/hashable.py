@@ -10,8 +10,6 @@
 # Michael Vilzmann <michael.vilzmann@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import object
-from builtins import str
 import sys
 import hashlib
 
@@ -65,6 +63,5 @@ class Hashable(object):
     @staticmethod
     def get_object_hash_string(object_):
         obj_hash_string = str(object_)
-        if sys.version_info >= (3,):
-            obj_hash_string = obj_hash_string.encode('utf-8')
+        obj_hash_string = obj_hash_string.encode('utf-8')
         return obj_hash_string

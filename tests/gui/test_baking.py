@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 # test environment elements
 import os
 from tests import utils as testing_utils

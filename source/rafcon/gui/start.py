@@ -18,17 +18,20 @@
 
 
 # default libraries
-from __future__ import print_function
 import os
 import sys
 import logging
 import threading
 import signal
+import tracemalloc
+import pathlib
+
 from yaml_configuration.config import config_path
 
 # gui
 import rafcon
 from rafcon.gui.config import global_gui_config
+from rafcon.gui.design_config import global_design_config
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils.splash_screen import SplashScreen
@@ -47,7 +50,7 @@ from rafcon.gui.utils import wait_for_gui
 import rafcon.utils.filesystem as filesystem
 from rafcon.utils import plugins, installation
 from rafcon.utils.i18n import setup_l10n
-from rafcon.utils import resources, log
+from rafcon.utils import resources, log, profiling
 
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -89,6 +92,8 @@ def setup_installation():
     force_check_installation = os.environ.get("RAFCON_CHECK_INSTALLATION", False) == "True"
     prevent_restart = os.environ.get("RAFCON_CHECK_INSTALLATION", True) == "False"
 
+    # TODO: design: install locally_required + fonts
+
     if not force_check_installation and data_files_version_up_to_date():
         return
 
@@ -98,7 +103,6 @@ def setup_installation():
     installation.install_fonts(restart=(not prevent_restart))
 
     update_data_files_version()
-
 
 
 def setup_gtkmvc3_logger():
@@ -171,7 +175,10 @@ def setup_argument_parser():
     :return: The parser object
     """
     default_config_path = filesystem.get_default_config_path()
+    default_log_path = filesystem.get_default_log_path()
+
     filesystem.create_path(default_config_path)
+    filesystem.create_path(default_log_path)
 
     parser = core_singletons.argument_parser
     parser.add_argument('-n', '--new', action='store_true', help=_("whether to create a new state-machine"))
@@ -189,19 +196,56 @@ def setup_argument_parser():
                         help=_("path to the configuration file gui_config.yaml. "
                                "Use 'None' to prevent the generation of a config file and use the default "
                                "configuration. Default: {0}").format(default_config_path))
+    parser.add_argument('-d', '--design_config', action='store', type=config_path, metavar='path',
+                        dest='design_config_path', default=str(pathlib.Path(__file__).parent.resolve()), nargs='?',
+                        const=default_config_path,
+                        help=_("path to the configuration file design_config.yaml. "
+                               "Use 'None' to prevent the generation of a config file and use the default "
+                               "configuration. Default: {0}").format(default_config_path))
+    parser.add_argument('-r', '--runtime_config', action='store', type=config_path, metavar='path', dest='runtime_config_path',
+                        default=default_config_path, nargs='?', const=default_config_path,
+                        help=_("path to the configuration file runtime_config.yaml. "
+                               "Use 'None' to prevent the generation of a config file and use the default "
+                               "configuration. Default: {0}").format(default_config_path))
     parser.add_argument('-ss', '--start_state_machine', dest='start_state_machine_flag', action='store_true',
                         help=_("a flag to specify if the first state machine of -o should be started after opening"))
     parser.add_argument('-s', '--start_state_path', metavar='path', dest='start_state_path', default=None, nargs='?',
                         help=_("path within a state machine to the state that should be launched which consists of "
                                "state ids e.g. QPOXGD/YVWJKZ where QPOXGD is the root state and YVWJKZ its child states"
-                               " to start from."))
+                               " to start from"))
     parser.add_argument('-q', '--quit', dest='quit_flag', action='store_true',
                         help=_("a flag to specify if the gui should quit after launching a state machine"))
+    parser.add_argument('-mp', '--memory-profiling', dest='memory_profiling', action='store_true',
+                        help=_("a flag to specify if the gui should enable memory profiling"))
+    parser.add_argument('-mpp', '--memory-profiling-path', action='store', type=config_path, metavar='path', dest='memory_profiling_path',
+                        default=default_log_path, nargs='?', const=default_log_path,
+                        help=_("path to the memory profiling log memoy_profiling.log").format(default_log_path))
+    parser.add_argument('-mpi', '--memory-profiling-interval', dest='memory_profiling_interval', action='store', default=10,
+                        help=_("The interval between snapshots creaton for memory profiling in seconds"))
+    parser.add_argument('-mppr', '--memory-profiling-print', dest='memory_profiling_print', action='store_true',
+                        help=_("a flag to specify if the memory profiling results should be printed"))
+
     return parser
 
 
-def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_path):
+def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_path, design_config):
+    """ Loads all configurations from disk
+
+    :param core_config_path: the path to the core configuration file
+    :param gui_config_path:  the path to the gui configuration file
+    :param runtime_config_path:  the path to the runtime configuration file
+    :param design_config:  the path to the design configuration file
+    :return:
+    """
     setup_configuration(core_config_path)
+    # the design config has to be loaded before loading the gui config as it is used by the gui config
+    if design_config or os.environ.get('RAFCON_CUSTOM_DESIGN'):
+        if not design_config:
+            design_config = os.environ.get('RAFCON_CUSTOM_DESIGN')
+        design_config_path, design_config_file = filesystem.separate_folder_path_and_file_name(design_config)
+        global_design_config.load(design_config_file, design_config_path)
+        from rafcon.gui.utils import constants
+        constants.INTERFACE_FONT = global_design_config.get_config_value('PRIMARY_FONT')
     gui_config_path, gui_config_file = filesystem.separate_folder_path_and_file_name(gui_config_path)
     global_gui_config.load(gui_config_file, gui_config_path)
     runtime_config_path, runtime_config_file = filesystem.separate_folder_path_and_file_name(runtime_config_path)
@@ -217,7 +261,7 @@ def setup_gui():
 
     # set the gravity of the main window controller to static to ignore window manager decorations and get
     # a correct position of the main window on the screen (else there are offsets for some window managers)
-    main_window_view.get_top_widget().set_gravity(Gdk.Gravity.STATIC)
+    main_window_view.get_parent_widget().set_gravity(Gdk.Gravity.STATIC)
 
     sm_manager_model = gui_singletons.state_machine_manager_model
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
@@ -325,6 +369,15 @@ def register_signal_handlers(callback):
         GLib.idle_add(install_glib_handler, signal_code, priority=GLib.PRIORITY_HIGH)
 
 
+def create_splash_screen():
+    splash_screen_width = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_WIDTH", 530)
+    splash_screen_height = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_HEIGHT", 350)
+    splash_screen = SplashScreen(contains_image=True, width=splash_screen_width, height=splash_screen_height)
+    splash_screen.rotate_image(random_=True)
+    splash_screen.set_text(_("Starting RAFCON..."))
+    return splash_screen
+
+
 def main():
 
     # check if all env variables are set
@@ -336,12 +389,29 @@ def main():
 
     setup_l10n(logger)
 
-    splash_screen = SplashScreen(contains_image=True, width=530, height=350)
-    splash_screen.rotate_image(random_=True)
-    splash_screen.set_text(_("Starting RAFCON..."))
+    parser = setup_argument_parser()
+    user_input = parser.parse_args()
+
+    if user_input.memory_profiling:
+        tracemalloc.start()
+        memory_profiling_args = {
+            'memory_profiling_path': user_input.memory_profiling_path,
+            'memory_profiling_interval': user_input.memory_profiling_interval,
+            'memory_profiling_print': user_input.memory_profiling_print,
+            'stop': False,
+        }
+        memory_profiling_thread = threading.Thread(target=profiling.memory_profiling, args=(memory_profiling_args,))
+        memory_profiling_thread.start()
+
+    setup_mvc_environment()
+    setup_mvc_configuration(user_input.config_path, user_input.gui_config_path,
+                            user_input.gui_config_path, user_input.design_config_path)
+
+    splash_screen = create_splash_screen()
     while Gtk.events_pending():
         Gtk.main_iteration()
 
+    splash_screen.set_text("Install missing resources ...")
     setup_installation()
 
     splash_screen.set_text("Setting up logger...")
@@ -351,13 +421,6 @@ def main():
     pre_setup_plugins()
 
     splash_screen.set_text("Setting up environment...")
-    setup_mvc_environment()
-
-    parser = setup_argument_parser()
-    user_input = parser.parse_args()
-
-    splash_screen.set_text("Loading configurations...")
-    setup_mvc_configuration(user_input.config_path, user_input.gui_config_path, user_input.gui_config_path)
 
     # create lock file -> keep behavior for hole instance
     if global_gui_config.get_config_value('AUTO_RECOVERY_LOCK_ENABLED'):
@@ -368,7 +431,6 @@ def main():
     # loading the state state machine
     splash_screen.set_text("Loading GUI...")
     setup_gui()
-
     wait_for_gui()
 
     post_setup_plugins(user_input)
@@ -409,6 +471,10 @@ def main():
 
     logger.info(_("Exiting ..."))
     logging.shutdown()
+
+    if user_input.memory_profiling:
+        memory_profiling_args['stop'] = True
+        memory_profiling_thread.join()
 
 
 if __name__ == '__main__':

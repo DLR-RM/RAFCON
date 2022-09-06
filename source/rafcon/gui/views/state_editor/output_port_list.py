@@ -16,8 +16,5 @@ from rafcon.gui import glade
 
 
 class OutputPortsListView(TreeView):
-    builder = glade.get_glade_path("output_ports_list_widget.glade")
-    top = 'output_ports_tree_view'
-
     def __init__(self):
-        super(OutputPortsListView, self).__init__()
+        super().__init__(builder_filename=glade.get_glade_path('output_ports_list_widget.glade'), parent='output_ports_tree_view')

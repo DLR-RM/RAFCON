@@ -13,10 +13,8 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from gtkmvc3.model_mt import ModelMT
-from gtkmvc3.observable import Signal
-from past.builtins import map
-from builtins import next, str
+from rafcon.design_patterns.mvc.model import ModelMT
+from rafcon.design_patterns.observer.observable import Signal
 
 from rafcon.core.states.state import State
 from rafcon.core.state_elements.logical_port import Income, Outcome
@@ -79,8 +77,10 @@ def updates_selection(update_selection):
         if len(affected_models) != 0:  # The selection was updated
             deselected_models = old_selection - new_selection
             selected_models = new_selection - old_selection
-            map(selection.relieve_model, deselected_models)
-            map(selection.observe_model, selected_models)
+            for deselected_model in deselected_models:
+                selection.relieve_model(deselected_model)
+            for selected_model in selected_models:
+                selection.observe_model(selected_model)
 
             # Maintain internal lists for fast access
             selection.update_core_element_lists()
@@ -297,7 +297,7 @@ class Selection(ModelMT):
         return item in self._selected
 
     def __getitem__(self, key):
-        return [s for s in self._selected][key]
+        return list(self._selected)[key]
 
     def update_core_element_lists(self):
         """ Maintains inner lists of selected elements with a specific core element class """

@@ -20,15 +20,13 @@ initialized with consistent arguments.
 This general Action (one procedure for all possible edition) procedure is expansive and complex, therefore it is aimed
 to define specific _-Action-Classes for simple/specific edit actions.
 """
-from future.utils import string_types
-from builtins import object
-from builtins import str
+
 import copy
 import json
 import difflib
 from collections import namedtuple
 
-from gtkmvc3.model_mt import ModelMT
+from rafcon.design_patterns.mvc.model import ModelMT
 from jsonconversion.decoder import JSONObjectDecoder
 from jsonconversion.encoder import JSONObjectEncoder
 
@@ -65,10 +63,10 @@ core_object_list = [Transition, DataFlow, Outcome, InputDataPort, OutputDataPort
                     DeciderState]
 
 DEBUG_META_REFERENCES = False
-HISTORY_DEBUG_LOG_FILE = RAFCON_TEMP_PATH_BASE + '/test_file.txt'
 
 StateImage = namedtuple('StateImage', ['core_data', 'meta_data', 'state_path', 'semantic_data', 'file_system_path', 'script_text', 'children'])
 StateImage.__new__.__defaults__ = (None, None, None, None, None, None, None)  # Make all optional
+
 
 def create_state_image(state_m):
     """ Generates a tuple that holds the state as yaml-strings and its meta data in a dictionary.
@@ -137,12 +135,9 @@ def create_state_from_image(state_image):
             state.script_text = state_image.script_text
         except:
             pass  # Tolerate script compilation errors
-    # print("------------- ", state)
     for child_state_id, child_state_tuple in state_image.children.items():
         child_state = create_state_from_image(child_state_tuple)
-        # do_storage_test(child_state)
 
-        # print("++++ new cild", child_state  # child_state_tuple, child_state)
         if not child_state.state_id == UNIQUE_DECIDER_STATE_ID:
             try:
                 state.add_state(child_state)
@@ -156,8 +151,6 @@ def create_state_from_image(state_image):
                 for state_id, child_state in state.states.items():
                     logger.verbose(child_state.get_path())
                     print_states(child_state)
-                    # print("got from tuple:")
-                    # print_states(state)
 
     # Child states were added, now we can add transitions and data flows
     if isinstance(state_info, tuple):
@@ -256,9 +249,6 @@ def check_state_model_for_is_start_state(state_model):
 
 
 def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=None):
-    # meta_dict = {'state': state_model.meta, 'data_flows': {}, 'transitions': {}, 'outcomes': {},
-    #              'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}}
-
     def missing_meta_data_log_msg(state_model, elem, meta_dict, dict_key, existing_model_list):
         logger.verbose("Storage Dict seems to miss Meta-Data of {5} in State: {0} {1} for {5}:"
                        " {2}\nreal: {3}\nstorage: {4}".format(state_model.state.state_id,
@@ -401,7 +391,6 @@ class CoreObjectIdentifier(object):
                 self._id = core_obj_or_cls.outcome_id
                 self._list_name = self.type_related_list_name_dict[self._type]
             elif self._type == 'StateMachine':
-                # self.__sm_id = core_obj_cls.state_machine_id
                 pass
             elif self._type == 'GlobalVariableManager':
                 pass
@@ -471,7 +460,6 @@ class MetaDataAction(AbstractAction):
 
         meta_str = json.dumps(overview.get_affected_model().meta, cls=JSONObjectEncoder,
                               indent=4, check_circular=False, sort_keys=True)
-        # print(meta_str)
         self.meta = json.loads(meta_str, cls=JSONObjectDecoder, substitute_modules=substitute_modules)
 
     def get_state_image(self):
@@ -490,12 +478,8 @@ class MetaDataAction(AbstractAction):
         if self.before_overview.get_signal_message().affects_children:
             insert_state_meta_data(meta_dict=self.before_state_image.meta_data, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", True))
-            # if state_m.state.is_root_state:
-            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
         else:
             insert_state_meta_data(meta_dict=self.before_state_image.meta_data, state_model=state_m)
-            # if state_m.state.is_root_state:
-            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
             state_m.meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
 
     def redo(self):
@@ -505,12 +489,8 @@ class MetaDataAction(AbstractAction):
         if self.before_overview.get_signal_message().affects_children:
             insert_state_meta_data(meta_dict=self.after_state_image.meta_data, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))
-            # if state_m.state.is_root_state:
-            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
         else:
             insert_state_meta_data(meta_dict=self.after_state_image.meta_data, state_model=state_m)
-            # if state_m.state.is_root_state:
-            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
 
 
@@ -531,9 +511,6 @@ class Action(ModelMT, AbstractAction):
     def get_state_changed(self):
         if not self.state_machine.get_state_by_path(self.parent_path) or \
                 not self.state_machine.get_state_by_path(self.parent_path).parent:
-            # if self.state_machine.get_state_by_path(self.parent_path).parent is None:
-            #     logger.info("state is root_state -> take root_state for undo")
-            # else:
             if self.state_machine.get_state_by_path(self.parent_path).parent is not None:
                 logger.warning("State machine could not get state by path -> take root_state for undo")
             state = self.state_machine.root_state
@@ -568,7 +545,6 @@ class Action(ModelMT, AbstractAction):
 
     def update_state_from_image(self, state, state_image):
         assert state.get_path() == state_image.state_path
-        # print(self.parent_path, self.parent_path.split('/'), len(self.parent_path.split('/')))
         path_of_state = state.get_path()
         state_from_image = create_state_from_image(state_image)
 
@@ -643,9 +619,6 @@ class Action(ModelMT, AbstractAction):
                 assert dp_id in state.input_data_ports
 
             for dp_id, dp in stored_state.output_data_ports.items():
-                scoped_str = str([])
-                if isinstance(state, ContainerState):
-                    scoped_str = str(list(state.scoped_variables.keys()))
                 state.add_output_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
                 assert dp_id in state.output_data_ports
 
@@ -685,7 +658,8 @@ class Action(ModelMT, AbstractAction):
             for df_id, df in stored_state.data_flows.items():
                 state.add_data_flow(df.from_state, df.from_key, df.to_state, df.to_key, df.data_flow_id)
 
-    def add_core_object_to_state(self, state, core_obj):
+    @staticmethod
+    def add_core_object_to_state(state, core_obj):
         if isinstance(core_obj, State):
             state.add_state(core_obj)
         elif isinstance(core_obj, Transition):
@@ -812,14 +786,7 @@ class AddObjectAction(Action):
 
     def __init__(self, parent_path, state_machine_model, overview):
         Action.__init__(self, parent_path, state_machine_model, overview)
-
-        self.changed_object = overview.get_affected_core_element()
-
-        self.parent_identifier = ''
         self.added_object_identifier = ''
-        self.added_object_args = ''
-
-        self.parent_identifier = self.parent_path
 
     def set_after(self, overview):
         Action.set_after(self, overview)
@@ -849,7 +816,7 @@ class AddObjectAction(Action):
                                                                              storage_path=state_image.state_path)
         list_name = self.action_type.replace('add_', '') + 's'
         core_obj = getattr(state_image_of_state, list_name)[self.added_object_identifier._id]
-        self.add_core_object_to_state(state, core_obj)
+        Action.add_core_object_to_state(state, core_obj)
 
         actual_state_model = self.state_machine_model.get_state_model_by_path(path_of_state)
         self.compare_models(previous_model, actual_state_model)
@@ -909,16 +876,7 @@ class RemoveObjectAction(Action):
         assert overview.get_affected_property() == 'state' and isinstance(overview.get_affected_core_element(), State)
 
         self.instance_path = overview.get_affected_core_element().get_path()
-        self.changed_object = self.changed_object = overview.get_affected_core_element()
-
-        self.parent_identifier = ''
         self.removed_object_identifier = ''
-        self.removed_object_args = ''
-
-        if "outcome" in overview.get_cause() or "data_port" in overview.get_cause():
-            pass
-        else:
-            self.parent_identifier = self.parent_path
         self.get_object_identifier()
         self.before_linkage = {'internal': {'transitions': [], 'data_flows': []},
                                'external': {'transitions': [], 'data_flows': []}}
@@ -977,7 +935,7 @@ class RemoveObjectAction(Action):
         core_obj = getattr(state_image_of_state, list_name)[self.removed_object_identifier._id]
 
         if self.action_type not in ['remove_transition', 'remove_data_flow']:
-            self.add_core_object_to_state(state, core_obj)
+            Action.add_core_object_to_state(state, core_obj)
 
         self.adjust_linkage()
 
@@ -1031,9 +989,8 @@ class RemoveObjectAction(Action):
         return state, state_image_of_state
 
     def store_related_elements(self, linkage_dict):
-
         state = self.state_machine.get_state_by_path(self.instance_path)
-        if isinstance(state, HierarchyState):
+        if isinstance(state, (HierarchyState, BarrierConcurrencyState)):
             for t in state.transitions.values():
                 t_dict = {'from_state': t.from_state, 'from_outcome': t.from_outcome,
                           'to_state': t.to_state, 'to_outcome': t.to_outcome, 'transition_id': t.transition_id}
@@ -1283,9 +1240,6 @@ class OutcomeAction(StateElementAction):
 
 class StateAction(Action):
 
-    not_possible_method_names = ['input_data', 'output_data', 'concurrency_queue', 'state_id',  # any not observed
-                                 'final_outcome', 'preempted', 'active', 'is_root_state',  # any not observed
-                                 'scoped_data'].extend(BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS)
     possible_method_names = ['parent',  # will be ignored
                              'name', 'description', 'script', 'script_text',  # State
                              'outcomes', 'input_data_ports', 'output_data_ports',  # State
@@ -1333,7 +1287,7 @@ class StateAction(Action):
             assert self.parent_path == self.object_identifier._path
         self.before_arguments = self.get_set_of_arguments(self.before_overview.get_affected_core_element())
         self.after_arguments = None
-        if self.action_type == 'script_text' and isinstance(self.before_overview.get_method_args()[-1][1], string_types):
+        if self.action_type == 'script_text' and isinstance(self.before_overview.get_method_args()[-1][1], str):
             d = difflib.Differ()
             diff = list(d.compare(self.before_overview.get_method_args()[0].script_text.split('\n'),
                                   self.before_overview.get_method_args()[1].split('\n')))
@@ -1415,13 +1369,3 @@ class StateAction(Action):
             setattr(s, property, copy.deepcopy(arguments[property]))
         else:
             assert False
-
-
-class Group(Action):
-    def __init__(self, *args, **kwargs):
-        Action.__init__(self, *args, **kwargs)
-
-
-class UnGroup(Action):
-    def __init__(self, *args, **kwargs):
-        Action.__init__(self, *args, **kwargs)

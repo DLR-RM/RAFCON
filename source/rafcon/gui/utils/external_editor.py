@@ -8,7 +8,6 @@
 # Contributors:
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from builtins import object
 import os
 
 from rafcon.gui.utils.shell_execution import execute_command_with_path_in_process
@@ -87,7 +86,7 @@ class AbstractExternalEditor(object):
             self.set_editor_lock(lock)
 
         if button.get_active():
-            # Get the specified "Editor" as in shell command from the gui config yaml
+            # Get the specified "Editor" as in the shell command from the gui config yaml
             external_editor = global_gui_config.get_config_value('DEFAULT_EXTERNAL_EDITOR', None)
 
             def open_file_in_editor(cmd_to_open_editor, test_command=False):
@@ -95,7 +94,7 @@ class AbstractExternalEditor(object):
                 script_file_path = os.path.join(file_system_path, self.get_file_name())
                 if not self.execute_shell_command_with_path(cmd_to_open_editor, script_file_path) and test_command:
                     # If a text field exists destroy it. Errors can occur with a specified editor as well
-                    # e.g Permission changes or sth.
+                    # e.g. Permission changes or sth.
                     global_gui_config.set_config_value('DEFAULT_EXTERNAL_EDITOR', None)
                     global_gui_config.save_configuration()
                     set_editor_lock_inline(False)

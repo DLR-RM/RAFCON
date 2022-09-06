@@ -1,6 +1,4 @@
-from __future__ import print_function
 from copy import deepcopy
-from builtins import range
 from os.path import join, exists
 
 # general tool elements
@@ -264,7 +262,7 @@ configuration = {
     }
 }
 
-@pytest.mark.timeout(20)
+@pytest.mark.timeout(60)
 @pytest.mark.parametrize('gui', [deepcopy(configuration)], indirect=True, ids=["with session restore, ros and turtle libraries"])
 def test_restore_session(gui):
     from rafcon.core.storage import storage

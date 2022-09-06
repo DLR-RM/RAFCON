@@ -1,15 +1,11 @@
 """Every test function of this module should later be improved in a separate module to secure all functionality of the 
 every respective feature."""
-from __future__ import print_function
-from builtins import str
-import threading
 
 # general tool elements
 from rafcon.utils import log
 
 # test environment elements
 from tests import utils as testing_utils
-from tests.utils import call_gui_callback
 import pytest
 
 logger = log.get_logger(__name__)

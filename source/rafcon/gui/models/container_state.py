@@ -12,11 +12,9 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-from future.utils import string_types
-
 from copy import deepcopy
 
-from gtkmvc3.model_mt import ModelMT
+from rafcon.design_patterns.mvc.model import ModelMT
 
 from rafcon.core.states.container_state import ContainerState
 from rafcon.gui.models.abstract_state import AbstractStateModel
@@ -59,7 +57,9 @@ class ContainerStateModel(StateModel):
 
         self.update_child_is_start()
 
-        if load_meta_data:
+        if container_state.missing_library_meta_data:
+            self.meta = container_state.missing_library_meta_data
+        elif load_meta_data:
             self.load_meta_data()
 
         # this class is an observer of its own properties:
@@ -125,7 +125,6 @@ class ContainerStateModel(StateModel):
         Recursively un-registers all observers and removes references to child models. Extends the destroy method of
         the base class by child elements of a container state.
         """
-        # logger.verbose("Prepare destruction container state ...")
         if recursive:
             for scoped_variable in self.scoped_variables:
                 scoped_variable.prepare_destruction()
@@ -168,16 +167,14 @@ class ContainerStateModel(StateModel):
         i.e. this state model) about the change by calling this method with the information about the change. This
         method recognizes that the model is of type StateModel and therefore triggers a notify on the list of state
         models.
-        "_notify_method_before" is used as trigger method when the changing function is entered and
-        "_notify_method_after" is used when the changing function returns. This changing function in the example
+        "notify_before" is used as trigger method when the changing function is entered and
+        "notify_after" is used when the changing function returns. This changing function in the example
         would be the setter of the property name.
         :param model: The model that was changed
         :param prop_name: The property that was changed
         :param info: Information about the change (e.g. the name of the changing function)
         """
         overview = NotificationOverview(info)
-        # if info.method_name == 'change_state_type':  # Handled in method 'change_state_type'
-        #     return
 
         # If this model has been changed (and not one of its child states), then we have to update all child models
         # This must be done before notifying anybody else, because other may relay on the updated models
@@ -255,10 +252,7 @@ class ContainerStateModel(StateModel):
             model_name = "state"
             # Defer state type from class type (Execution, Hierarchy, ...)
             model_class = None
-            # TODO this if cause is not working if keys are used for arguments
-            # if len(info.args) < 2:
-            #     print("XXXX", info)
-            if not isinstance(info.args[1], (string_types, dict)) and info.args[1] is not None:
+            if not isinstance(info.args[1], (str, dict)) and info.args[1] is not None:
                 model_class = get_state_model_class_for_state(info.args[1])
             model_key = "state_id"
         return model_list, data_list, model_name, model_class, model_key
@@ -326,7 +320,7 @@ class ContainerStateModel(StateModel):
                     notify_logger_method("Should only happen in ungroup - new model {0}".format(new_sv_m))
 
         if 'transitions' in source_models_dict:
-            for t_id, old_t_m in list(source_models_dict['transitions'].items()):
+            for t_id, old_t_m in source_models_dict['transitions'].items():
                 new_t_m = self.get_transition_m(t_id)
                 if new_t_m is None:
                     raise RuntimeError("transition model to set meta data could not be found"

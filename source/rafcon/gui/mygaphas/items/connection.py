@@ -35,12 +35,6 @@ class ConnectionView(PerpLine):
         elif handle is self.to_handle():
             self.reset_to_port()
 
-    def remove_connection_from_port(self, port):
-        if self._from_port and port is self._from_port:
-            self._from_port.remove_connected_handle(self._from_handle)
-        elif self._to_port and port is self._to_port:
-            self._to_port.remove_connected_handle(self._to_handle)
-
     def remove_connection_from_ports(self):
         if self._from_port:
             self._from_port.remove_connected_handle(self._from_handle)
@@ -52,6 +46,11 @@ class ConnectionView(PerpLine):
     def remove(self):
         self.remove_connection_from_ports()
         super(ConnectionView, self).remove()
+
+    def apply_meta_data(self):
+        self.remove_all_waypoints()
+        for waypoint_pos in self.model.get_meta_data_editor()['waypoints']:
+            self.add_waypoint(waypoint_pos)
 
 
 class ConnectionPlaceholderView(ConnectionView):
@@ -77,6 +76,7 @@ class TransitionView(ConnectionView):
         super(TransitionView, self).__init__(hierarchy_level)
         self._transition_m = None
         self.model = transition_m
+        self._line_color = None
 
     @property
     def model(self):
@@ -87,37 +87,26 @@ class TransitionView(ConnectionView):
         assert isinstance(transition_model, TransitionModel)
         self._transition_m = ref(transition_model)
 
+    @property
+    def show_connection(self):
+        return global_runtime_config.get_config_value("SHOW_TRANSITIONS", True)
+
     def draw(self, context):
-        # Do not draw if the core element has already been destroyed
-        if not self.model.core_element:
-            return
-
-        if context.selected:
-            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE_SELECTED'],
-                                                            self.parent.transparency)
-        else:
-            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE'],
-                                                            self.parent.transparency)
-        self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], self.parent.transparency)
-        super(TransitionView, self).draw(context)
-
-    def apply_meta_data(self):
-        # 1st remove all waypoints
-        self.remove_all_waypoints()
-
-        # 2nd recreate all waypoints from meta data
-        for waypoint_pos in self.model.get_meta_data_editor()['waypoints']:
-            self.add_waypoint(waypoint_pos)
+        if self.model.core_element and self.show_connection:
+            if context.selected:
+                self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE_SELECTED'], self.parent.transparency)
+            else:
+                self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['TRANSITION_LINE'], self.parent.transparency)
+            self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['LABEL'], self.parent.transparency)
+            super(TransitionView, self).draw(context)
 
 
 class DataFlowView(ConnectionView):
     def __init__(self, data_flow_m, hierarchy_level):
         super(DataFlowView, self).__init__(hierarchy_level)
-        assert isinstance(data_flow_m, DataFlowModel)
         self._data_flow_m = None
         self.model = data_flow_m
-
-        self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
+        self._line_color = None
         self._arrow_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_PORT'])
 
     @property
@@ -134,14 +123,9 @@ class DataFlowView(ConnectionView):
         return global_runtime_config.get_config_value("SHOW_DATA_FLOWS", True)
 
     def draw(self, context):
-        # Do not draw if the core element has already been destroyed
-        if not self.model.core_element:
-            return
-
-        if not self.show_connection:
-            return
-        if context.selected:
-            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE_SELECTED'])
-        else:
-            self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
-        super(DataFlowView, self).draw(context)
+        if self.model.core_element and self.show_connection:
+            if context.selected:
+                self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE_SELECTED'])
+            else:
+                self._line_color = gap_draw_helper.get_col_rgba(gui_config.gtk_colors['DATA_LINE'])
+            super(DataFlowView, self).draw(context)

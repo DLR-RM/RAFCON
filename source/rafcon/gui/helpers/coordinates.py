@@ -23,9 +23,9 @@ def main_window2graphical_editor(main_window_coordinates):
     :rtype: (float, float)
     """
     from rafcon.gui.singleton import main_window_controller
-    main_window = main_window_controller.view.get_top_widget()
+    main_window = main_window_controller.view.get_parent_widget()
     sm_controllers = main_window_controller.state_machines_editor_ctrl
-    sm_notebook_page = list(sm_controllers.tabs.items())[0][1]['page']
+    sm_notebook_page = next(iter(sm_controllers.tabs.items()))[1]['page']
     return main_window.translate_coordinates(sm_notebook_page, main_window_coordinates[0], main_window_coordinates[1])
 
 
@@ -39,9 +39,9 @@ def graphical_editor2main_window(ge_coordinates):
     :rtype: (float, float)
     """
     from rafcon.gui.singleton import main_window_controller
-    main_window = main_window_controller.view.get_top_widget()
+    main_window = main_window_controller.view.get_parent_widget()
     sm_controllers = main_window_controller.state_machines_editor_ctrl
-    sm_notebook_page = list(sm_controllers.tabs.items())[0][1]['page']
+    sm_notebook_page = next(iter(sm_controllers.tabs.items()))[1]['page']
     return sm_notebook_page.translate_coordinates(main_window, ge_coordinates[0], ge_coordinates[1])
 
 
@@ -101,7 +101,7 @@ def screen2main_window(screen_coordinates):
     :rtype: (float,float)
     """
     from rafcon.gui.singleton import main_window_controller
-    main_window = main_window_controller.view.get_top_widget()
+    main_window = main_window_controller.view.get_parent_widget()
     main_window_pos = main_window.get_position()
     return screen_coordinates[0] - main_window_pos[0], screen_coordinates[1] - main_window_pos[1]
 
@@ -114,6 +114,6 @@ def main_window2screen(main_window_coordinates):
     :rtype: (float, float)
     """
     from rafcon.gui.singleton import main_window_controller
-    main_window = main_window_controller.view.get_top_widget()
+    main_window = main_window_controller.view.get_parent_widget()
     main_window_pos = main_window.get_position()
     return main_window_pos[0] + main_window_coordinates[0], main_window_pos[1] + main_window_coordinates[1]

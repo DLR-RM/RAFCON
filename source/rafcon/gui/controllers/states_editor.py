@@ -136,7 +136,7 @@ class StatesEditorController(ExtendedController):
         ExtendedController.__init__(self, model, view)
         self.observe_model(gui_config_model)
 
-        for state_machine_m in list(self.model.state_machines.values()):
+        for state_machine_m in self.model.state_machines.values():
             self.observe_model(state_machine_m)
 
         # TODO: Workaround used for tab-close on middle click
@@ -175,8 +175,6 @@ class StatesEditorController(ExtendedController):
         :param dict info: Information e.g. about the changed config key
         """
         config_key = info['args'][1]
-        # config_value = info['args'][2]
-
         if config_key == "SOURCE_EDITOR_STYLE":
             self.reload_style()
 
@@ -185,7 +183,7 @@ class StatesEditorController(ExtendedController):
 
     def get_state_identifier_for_page(self, page):
         """Returns the state identifier for a given page"""
-        for identifier, page_info in list(self.tabs.items()):
+        for identifier, page_info in self.tabs.items():
             if page_info["page"] is page:  # reference comparison on purpose
                 return identifier
 
@@ -195,16 +193,10 @@ class StatesEditorController(ExtendedController):
         :param state_m: The state model to be searched
         :return: page containing the state and the state_identifier
         """
-        for state_identifier, page_info in list(self.tabs.items()):
+        for state_identifier, page_info in self.tabs.items():
             if page_info['state_m'] is state_m:
                 return page_info['page'], state_identifier
         return None, None
-
-    def get_state_tab_name(self, state_m):
-        state_machine_id = state_m.state.get_state_machine().state_machine_id
-        state_name = state_m.state.name
-        tab_name = "{0}|{1}".format(state_machine_id, state_name)
-        return tab_name
 
     def get_current_state_m(self):
         """Returns the state model of the currently open tab"""
@@ -287,7 +279,7 @@ class StatesEditorController(ExtendedController):
         # only once at the end of an complex action the ongoing complex actions dictionary is empty
         if not model.ongoing_complex_actions:
             # destroy pages of no more existing states
-            for state_identifier, tab_dict in list(chain(self.tabs.items(), self.closed_tabs.items())):
+            for state_identifier, tab_dict in chain(self.tabs.items(), self.closed_tabs.items()):
                 if tab_dict['state_m'].state is None:
                     self.close_page(state_identifier)
 
@@ -320,7 +312,7 @@ class StatesEditorController(ExtendedController):
                 # observe changed to set the mark dirty flag
                 handler_id = state_editor_view.source_view.get_buffer().connect('changed', self.script_text_changed,
                                                                                 state_m)
-                self.view.get_top_widget().connect('draw', state_editor_view.source_view.on_draw)
+                self.view.get_parent_widget().connect('draw', state_editor_view.source_view.on_draw)
             else:
                 handler_id = None
             source_code_view_is_dirty = False
@@ -329,10 +321,10 @@ class StatesEditorController(ExtendedController):
                                                               self.on_toggle_sticky_clicked, state_m)
         set_tab_label_texts(inner_label, state_m, source_code_view_is_dirty)
 
-        state_editor_view.get_top_widget().title_label = inner_label
-        state_editor_view.get_top_widget().sticky_button = sticky_button
+        state_editor_view.get_parent_widget().title_label = inner_label
+        state_editor_view.get_parent_widget().sticky_button = sticky_button
 
-        page_content = state_editor_view.get_top_widget()
+        page_content = state_editor_view.get_parent_widget()
         page_id = self.view.notebook.prepend_page(page_content, tab)
         page = self.view.notebook.get_nth_page(page_id)
         self.view.notebook.set_tab_reorderable(page, True)
@@ -479,19 +471,6 @@ class StatesEditorController(ExtendedController):
         This is disabled for now, as the might be irritating for the user
         """
         pass
-        # page = notebook.get_nth_page(page_num)
-        # # find state of selected tab
-        # for tab_info in list(self.tabs.values()):
-        #     if tab_info['page'] is page:
-        #         state_m = tab_info['state_m']
-        #         sm_id = state_m.state.get_state_machine().state_machine_id
-        #         selected_state_m = self.current_state_machine_m.selection.get_selected_state()
-        #
-        #         # If the state of the selected tab is not in the selection, set it there
-        #         if selected_state_m is not state_m and sm_id in self.model.state_machine_manager.state_machines:
-        #             self.model.selected_state_machine_id = sm_id
-        #             self.current_state_machine_m.selection.set(state_m)
-        #         return
 
     def activate_state_tab(self, state_m):
         """Opens the tab for the specified state model
@@ -517,7 +496,7 @@ class StatesEditorController(ExtendedController):
 
             states_to_be_closed = []
             # Iterate over all tabs
-            for state_identifier, tab_info in list(self.tabs.items()):
+            for state_identifier, tab_info in self.tabs.items():
                 # If the tab is currently open, keep it open
                 if current_state_identifier == state_identifier:
                     continue

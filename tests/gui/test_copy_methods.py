@@ -1,5 +1,3 @@
-from __future__ import print_function
-from builtins import str
 import os
 from os.path import join
 import copy
@@ -257,38 +255,6 @@ def equal_check_state(origin_state, target_state):
 def equal_check_state_model(origin_state_m, target_state_m):
     print('EQUAL STATE MODEL TEST')
     assert origin_state_m == target_state_m
-    # # print type(state_m)
-    # def diff_of_list_elements(origin_list_of_elements, target_list_of_elements, name):
-    #     origin_dict = {}
-    #     id_name = name + '_id' if 'scope' not in name else 'data_port_id'
-    #     for elem in origin_list_of_elements:
-    #         origin_dict[getattr(getattr(elem, name), id_name)] = elem
-    #     for elem in target_list_of_elements:
-    #         # print "{0}: {1} {2}".format(elem.__class__.__name__, elem.meta, origin_meta[getattr(getattr(elem, name), id_name)])
-    #         assert str(elem.meta) == str(origin_dict[getattr(getattr(elem, name), id_name)].meta)
-    #         # assert elem == origin_dict[getattr(getattr(elem, name), id_name)]
-    #         del origin_dict[getattr(getattr(elem, name), id_name)]
-    #
-    # # check all meta of state
-    # # print "{3} {0}: {1} {2}".format(origin_state_m.__class__.__name__, origin_state_m.meta, target_state_m.meta, origin_state_m.state.get_path())
-    # assert str(origin_state_m.meta) == str(target_state_m.meta)
-    #
-    # # check all meta for, io-ports, outcomes
-    # diff_of_list_elements(origin_state_m.input_data_ports, target_state_m.input_data_ports, 'data_port')
-    # diff_of_list_elements(origin_state_m.output_data_ports, target_state_m.output_data_ports, 'data_port')
-    # diff_of_list_elements(origin_state_m.outcomes, target_state_m.outcomes, 'outcome')
-    #
-    # if isinstance(origin_state_m.state, ContainerState):
-    #     diff_of_list_elements(origin_state_m.data_flows, target_state_m.data_flows, 'data_flow')
-    #     diff_of_list_elements(origin_state_m.transitions, target_state_m.transitions, 'transition')
-    #     diff_of_list_elements(origin_state_m.scoped_variables, target_state_m.scoped_variables, 'scoped_variable')
-    #     for elem_id, elem in origin_state_m.states.items():
-    #         # if elem_id not in target_state_m.states:
-    #         #     print "XXX ", target_state_m.state.get_path(), target_state_m.state.name, elem_id
-    #         #     print "\n".join([str((elem, elem_id)) for elem, elem_id in origin_state_m.states.items()])
-    #         #     print "XXX ", elem.state.get_path(), elem.state.name
-    #         equal_check_state_model(elem, target_state_m.states[elem_id])
-
 
 def run_copy_test(sm_m, with_gui=False):
     """Run general test that """

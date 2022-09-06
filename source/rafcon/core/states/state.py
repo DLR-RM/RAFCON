@@ -20,20 +20,14 @@
    :synopsis: A module to represent an abstract state in the state machine
 
 """
-
-from future import standard_library
-standard_library.install_aliases()
-from future.utils import string_types
 import queue
-import copy
 import os
 import threading
-from builtins import staticmethod
 from weakref import ref
 import copy
 
 from enum import Enum
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 from jsonconversion.jsonobject import JSONObject
 from yaml import YAMLObject
 
@@ -43,10 +37,9 @@ from rafcon.core.state_elements.data_port import DataPort, InputDataPort, Output
 from rafcon.core.state_elements.logical_port import Income, Outcome
 from rafcon.core.state_elements.scope import ScopedData
 from rafcon.core.storage import storage
-from rafcon.core.config import global_config
 from rafcon.utils import classproperty
 from rafcon.utils import log
-from rafcon.utils import multi_event
+from rafcon.utils import multi_event, plugins
 from rafcon.utils.constants import RAFCON_TEMP_PATH_STORAGE
 from rafcon.utils.hashable import Hashable
 from rafcon.utils.vividict import Vividict
@@ -125,11 +118,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self._state_id = state_id
 
         self.state_execution_status = StateExecutionStatus.INACTIVE
-
-        self.edited_since_last_execution = False
         self.execution_history = None
         self.backward_execution = False
-
         self.marked_dirty = False
 
         if safe_init:
@@ -251,18 +241,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         }
         return dict_representation
 
-    @classmethod
-    def to_yaml(cls, dumper, state):
-        dict_representation = cls.state_to_dict(state)
-        node = dumper.represent_mapping(cls.yaml_tag, dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        dict_representation = loader.construct_mapping(node, deep=True)
-        state = cls.from_dict(dict_representation)
-        return state
-
     @classproperty
     @classmethod
     def state_element_attrs(cls):
@@ -286,8 +264,15 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         self.execution_history = execution_history
         if generate_run_id:
             self._run_id = run_id_generator()
+
+        def run_wrapper():
+            try:
+                self.run()
+            finally:
+                plugins.run_hook('state_thread_joined')
+
         self.backward_execution = copy.copy(backward_execution)
-        self.thread = threading.Thread(target=self.run)
+        self.thread = threading.Thread(target=run_wrapper)
         self.thread.start()
 
     def generate_run_id(self):
@@ -299,7 +284,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         if self.thread:
             self.thread.join()
-            self.thread = None
         else:
             logger.debug("Cannot join {0}, as the state hasn't been started, yet or is already finished!".format(self))
 
@@ -352,7 +336,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         :return: The last state in the execution history
         """
-        return self.execution_history.get_last_history_item().prev.state_reference
+        previous_state = self.execution_history.get_last_history_item().prev.state_reference
+        if not previous_state:
+            logger.warning(
+                "The In-Memory-Execution-History is disabled. "
+                "Thus, then previously executed state cannot be retrieved.")
+        return previous_state
 
     # ---------------------------------------------------------------------------------------------
     # ------------------------------- input/output data handling ----------------------------------
@@ -376,7 +365,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                 default = value.default_value
             # if the user sets the default value to a string starting with $, try to retrieve the value
             # from the global variable manager
-            if isinstance(default, string_types) and len(default) > 0 and default[0] == '$':
+            if isinstance(default, str) and len(default) > 0 and default[0] == '$':
                 from rafcon.core.singleton import global_variable_manager as gvm
                 var_name = default[1:]
                 if not gvm.variable_exist(var_name):
@@ -517,11 +506,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
 
-    def get_io_data_port_id_from_name_and_type(self, name, data_port_type):
+    def get_io_data_port_id_from_name_and_type(self, name, data_port_type, throw_exception=True):
         """Returns the data_port_id of a data_port with a certain name and data port type
 
         :param name: the name of the target data_port
         :param data_port_type: the data port type of the target data port
+        :param throw_exception: throw an exception when the data port does not exist
         :return: the data port specified by the name and the type
         :raises exceptions.AttributeError: if the specified data port does not exist in the input or output data ports
         """
@@ -529,7 +519,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             for ip_id, output_port in self.input_data_ports.items():
                 if output_port.name == name:
                     return ip_id
-            raise AttributeError("Name '{0}' is not in input_data_ports".format(name))
+            if throw_exception:
+                raise AttributeError("Name '{0}' is not in input_data_ports".format(name))
+            else:
+                return False
         elif data_port_type is OutputDataPort:
             for op_id, output_port in self.output_data_ports.items():
                 if output_port.name == name:
@@ -537,7 +530,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             # 'error' is an automatically generated output port in case of errors and exception and doesn't have an id
             if name == "error":
                 return
-            raise AttributeError("Name '{0}' is not in output_data_ports".format(name))
+            if throw_exception:
+                raise AttributeError("Name '{0}' is not in output_data_ports".format(name))
+            else:
+                return False
+        if throw_exception is False:
+            return True
 
     def get_data_port_by_id(self, data_port_id):
         """Search for the given data port id in the data ports of the state
@@ -643,7 +641,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param str file_system_path:
         :return:
         """
-        if not isinstance(file_system_path, string_types):
+        if not isinstance(file_system_path, str):
             raise TypeError("file_system_path must be a string")
         self._file_system_path = file_system_path
 
@@ -763,21 +761,20 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         # Check type of child and call appropriate validity test
         if isinstance(child, Income):
-            return self._check_income_validity(child)
+            return self._check_income_validity()
         if isinstance(child, Outcome):
             return self._check_outcome_validity(child)
         if isinstance(child, DataPort):
             return self._check_data_port_validity(child)
         if isinstance(child, ScopedData):
-            return self._check_scoped_data_validity(child)
+            return self._check_scoped_data_validity()
         return False, "Invalid state element for state of type {}".format(self.__class__.__name__)
 
-    def _check_income_validity(self, check_income):
+    def _check_income_validity(self):
         """Checks the validity of an income
 
         Currently, an income cannot be invalid
 
-        :param Income check_income: Income to check for validity
         :return: Validity of Income
         :rtype: bool
         """
@@ -901,7 +898,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                                                          type(self.output_data[data_port.name]).__name__,
                                                          self.output_data[data_port.name]))
 
-    def _check_scoped_data_validity(self, check_scoped_data):
+    def _check_scoped_data_validity(self):
         return True, "valid"  # no validity checks, yet
 
     # ---------------------------------------------------------------------------------------------
@@ -975,7 +972,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         :param key: The key of the new entry.
         :return:
         """
-        assert isinstance(key, string_types)
+        assert isinstance(key, str)
         target_dict = self.get_semantic_data(path_as_list)
         target_dict[key] = value
         return path_as_list + [key]
@@ -1040,9 +1037,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if name is not None:
             if PATH_SEPARATOR in name:
                 raise ValueError("Name must not include the \"" + PATH_SEPARATOR + "\" character")
-            # if ID_NAME_DELIMITER in name:
-            #     raise ValueError("Name must not include the \"" + ID_NAME_DELIMITER + "\" character")
-            if not isinstance(name, string_types):
+            if not isinstance(name, str):
                 raise TypeError("Name must be a string")
             if len(name) < 1:
                 raise ValueError("Name must have at least one character")
@@ -1266,7 +1261,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
         # check that all old_outcomes are no more referencing self as there parent
         for old_outcome in old_outcomes.values():
-            if old_outcome not in iter(list(self._outcomes.values())) and old_outcome.parent is self:
+            if old_outcome not in self._outcomes.values() and old_outcome.parent is self:
                 old_outcome.parent = None
 
     @property
@@ -1278,7 +1273,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @input_data.setter
     @lock_state_machine
-    #@Observable.observed
     def input_data(self, input_data):
         if not isinstance(input_data, dict):
             raise TypeError("input_data must be of type dict")
@@ -1293,7 +1287,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @output_data.setter
     @lock_state_machine
-    #@Observable.observed
     def output_data(self, output_data):
         if not isinstance(output_data, dict):
             raise TypeError("output_data must be of type dict")
@@ -1374,7 +1367,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @concurrency_queue.setter
     @lock_state_machine
-    #@Observable.observed
     def concurrency_queue(self, concurrency_queue):
         if not isinstance(concurrency_queue, queue.Queue):
             if not concurrency_queue is None:
@@ -1393,7 +1385,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
 
     @final_outcome.setter
     @lock_state_machine
-    #@Observable.observed
     def final_outcome(self, final_outcome):
         if not isinstance(final_outcome, Outcome):
             raise TypeError("final_outcome must be of type Outcome")
@@ -1414,7 +1405,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self._description = None
             return
 
-        if not isinstance(description, string_types):
+        if not isinstance(description, str):
             raise TypeError("Description must be a string")
 
         self._description = description

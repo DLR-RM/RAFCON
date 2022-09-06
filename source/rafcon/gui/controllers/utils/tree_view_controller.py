@@ -14,8 +14,6 @@
 from gi.repository import GLib
 from gi.repository import Gtk
 from gi.repository import Gdk
-from builtins import range
-from builtins import str
 
 from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
@@ -65,21 +63,9 @@ class AbstractTreeViewController(ExtendedController):
 
     def destroy(self):
         super(AbstractTreeViewController, self).destroy()
-        # self.tree_view.destroy() # does not help
-        # self._tree_selection.destroy() # creates problems with selection update notification
-        # print("disconnect in", self.__class__.__name__, self.signal_handlers)
         for widget, handler_id in self.signal_handlers:
-            # print("disconnect", widget, handler_id)
             widget.disconnect(handler_id)
-            # widget.destroy() # creates problems with selection update notification
         self.signal_handlers = []
-        # GTK Todo: check if necessary and search for replacement
-        # for column in self.widget_columns:
-        #     renderers = column.get_cells()
-        #     for r in renderers:
-        #         r.ctrl = None
-        #         r.destroy()
-        # delete reference to the controllers of renderers
         for renderer in self.__attached_renderers:
             renderer.ctrl = None
         del self.__attached_renderers[:]
@@ -89,11 +75,8 @@ class AbstractTreeViewController(ExtendedController):
         super(AbstractTreeViewController, self).register_view(view)
         self.signal_handlers.append((self._tree_selection,
                                      self._tree_selection.connect('changed', self.selection_changed)))
-        # self.handler_ids.append((self.tree_view,
-        #                          self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)))
         self.tree_view.connect('key-release-event', self.on_key_release_event)
         self.tree_view.connect('button-release-event', self.tree_view_keypress_callback)
-        # key press is needed for tab motion but needs to be registered already here TODO why?
         self.tree_view.connect('key-press-event', self.tree_view_keypress_callback)
         self._tree_selection.set_mode(Gtk.SelectionMode.MULTIPLE)
         self.update_selection_sm_prior()
@@ -149,7 +132,6 @@ class AbstractTreeViewController(ExtendedController):
 
     def selection_changed(self, widget, event=None):
         """Notify state machine about tree view selection"""
-        # print("self prior", type(self).__name__, self._do_selection_update, "select changed", widget, event, self)
         self.update_selection_self_prior()
 
     def on_right_click_menu(self):
@@ -359,17 +341,7 @@ class AbstractTreeViewController(ExtendedController):
         :param Gdk.Event event: The key press event
         :return:
         """
-        current_row_path, current_focused_column = self.tree_view.get_cursor()
-        # print(current_row_path, current_focused_column)
-        if isinstance(widget, Gtk.TreeView) and not self.active_entry_widget:  # avoid jumps for active entry widget
-            pass
-            # cursor motion/selection changes (e.g. also by button release event)
-            # if current_row_path is not None and len(current_row_path) == 1 and isinstance(current_row_path[0], int):
-            #     self.tree_view.scroll_to_cell(current_row_path[0], current_focused_column, use_align=True)
-            # # else:
-            # #     self._logger.debug("A ListViewController aspects a current_row_path of dimension 1 with integer but"
-            # #                        " it is {0} and column is {1}".format(current_row_path, current_focused_column))
-        elif isinstance(widget, Gtk.Entry) and self.view.scrollbar_widget is not None:
+        if isinstance(widget, Gtk.Entry) and self.view.scrollbar_widget is not None:
             # calculate the position of the scrollbar to be always centered with the entry widget cursor
             # TODO check how to get sufficient the scroll-offset in the entry widget -> some times zero when not
             # TODO the scrollbar is one step behind cursor -> so jump from pos1 to end works not perfect
@@ -382,8 +354,6 @@ class AbstractTreeViewController(ExtendedController):
             if horizontal_scroll_bar is not None and float(entry_widget_text_length) > 0:
                 adjustment = horizontal_scroll_bar.get_adjustment()
                 layout_pixel_width = widget.get_layout().get_pixel_size()[0]
-                # print("rel_pos pices", cell_rect_of_entry_widget.x,)
-                #     int(layout_pixel_width*float(entry_widget_cursor_position)/float(entry_widget_text_length))
                 rel_pos = cell_rect_of_entry_widget.x - entry_widget_scroll_offset + \
                     int(layout_pixel_width*float(entry_widget_cursor_position)/float(entry_widget_text_length))
 
@@ -428,7 +398,6 @@ class AbstractTreeViewController(ExtendedController):
 
     def on_key_release_event(self, widget, event):
         self.expose_event_count_after_key_release = 0
-        # self.tree_view_keypress_callback(widget, event)
 
     def on_entry_widget_draw_event(self, widget, event):
         # take three signals because sometimes expose events come before cursor is set
@@ -514,14 +483,9 @@ class ListViewController(AbstractTreeViewController):
                     event.type == Gdk.EventType.BUTTON_PRESS and event.get_button()[1] == 3:
                 if pthinfo is not None:
                     model, paths = self._tree_selection.get_selected_rows()
-                    # print(paths)
                     if pthinfo[0] not in paths:
-                        # self._logger.info("force single selection for right click")
                         self.tree_view.set_cursor(pthinfo[0])
                         self._last_path_selection = pthinfo[0]
-                    else:
-                        # self._logger.info("single- or multi-selection for right click")
-                        pass
                     self.on_right_click_menu()
                     return True
 
@@ -532,35 +496,24 @@ class ListViewController(AbstractTreeViewController):
 
             if not bool(event.get_state() & Gdk.ModifierType.SHIFT_MASK) and event.get_button()[1] == 1:
                 if pthinfo is not None:
-                    # self._logger.info("last select row {}".format(pthinfo[0]))
                     self._last_path_selection = pthinfo[0]
-                # else:
-                #     self._logger.info("deselect rows")
-                #     self.tree_selection.unselect_all()
 
             if bool(event.get_state() & Gdk.ModifierType.SHIFT_MASK) and event.get_button()[1] == 1:
-                # self._logger.info("SHIFT adjust selection range")
                 model, paths = self._tree_selection.get_selected_rows()
-                # print(model, paths, pthinfo[0])
                 if paths and pthinfo and pthinfo[0]:
                     if self._last_path_selection[0] <= pthinfo[0][0]:
                         new_row_ids_selected = list(range(self._last_path_selection[0], pthinfo[0][0]+1))
                     else:
                         new_row_ids_selected = list(range(self._last_path_selection[0], pthinfo[0][0]-1, -1))
-                    # self._logger.info("range to select {0}, {1}".format(new_row_ids_selected, model))
                     self._tree_selection.unselect_all()
                     for path in new_row_ids_selected:
                         self._tree_selection.select_path(path)
                     return True
-                else:
-                    # self._logger.info("nothing selected {}".format(model))
-                    if pthinfo and pthinfo[0]:
-                        self._last_path_selection = pthinfo[0]
+                elif pthinfo and pthinfo[0]:
+                    self._last_path_selection = pthinfo[0]
 
             if bool(event.get_state() & Gdk.ModifierType.CONTROL_MASK) and event.get_button()[1] == 1:
-                # self._logger.info("CONTROL adjust selection range")
                 model, paths = self._tree_selection.get_selected_rows()
-                # print(model, paths, pthinfo[0])
                 if paths and pthinfo and pthinfo[0]:
                     if pthinfo[0] in paths:
                         self._tree_selection.unselect_path(pthinfo[0])
@@ -660,7 +613,6 @@ class ListViewController(AbstractTreeViewController):
         :param Gdk.Event event: The key press event
         :return:
         """
-        # self._logger.info("key_value: " + str(event.keyval if event is not None else ''))
         if event and "GDK_KEY_PRESS" == event.type.value_name \
                 and (event.keyval == Gdk.KEY_Tab or event.keyval == Gdk.KEY_ISO_Left_Tab):
             [path, focus_column] = self.tree_view.get_cursor()
@@ -677,10 +629,8 @@ class ListViewController(AbstractTreeViewController):
             # row could be updated by other call_backs caused by emitting 'edited' signal but selection stays an editable neighbor
             path = self.get_path_for_core_element(self.tree_view_keypress_callback.__func__.core_element_id)
             if event.keyval == Gdk.KEY_Tab:
-                # logger.info("move right")
                 direction = +1
             else:
-                # logger.info("move left")
                 direction = -1
 
             # get next row_id for focus
@@ -711,9 +661,6 @@ class ListViewController(AbstractTreeViewController):
                 return False
 
             del self.tree_view_keypress_callback.__func__.core_element_id
-            # self._logger.info("self.tree_view.scroll_to_cell(next_row={0}, self.widget_columns[{1}] , use_align={2})"
-            #              "".format(next_row, next_focus_column_id, False))
-            # self.tree_view.scroll_to_cell(next_row, self.widget_columns[next_focus_column_id], use_align=False)
             self.tree_view.set_cursor_on_cell(Gtk.TreePath.new_from_indices([next_row]), self.widget_columns[
                 next_focus_column_id], focus_cell=None, start_editing=True)
             return True
@@ -744,7 +691,6 @@ class TreeViewController(AbstractTreeViewController):
     def register_view(self, view):
         """Register callbacks for button press events and selection changed"""
         super(TreeViewController, self).register_view(view)
-        # self.tree_view.connect('button_press_event', self.mouse_click)
 
     def get_path_for_core_element(self, core_element_id):
         """Get path to the row representing core element described by handed core_element_id
@@ -834,10 +780,7 @@ class TreeViewController(AbstractTreeViewController):
         self._do_selection_update = True
         tree_selection, selected_model_list, sm_selection, sm_selected_model_list = self.get_selections()
         if tree_selection is not None:
-            # self._logger.info("SM SELECTION IS: {2}\n{0}, \n{1}".format(selected_model_list, sm_selected_model_list,
-            #                                                             tree_selection.get_mode()))
-            self.iter_tree_with_handed_function(self.update_selection_sm_prior_condition,
-                                                selected_model_list, sm_selected_model_list)
+            self.iter_tree_with_handed_function(self.update_selection_sm_prior_condition, selected_model_list, sm_selected_model_list)
             self.check_selection_consistency()
         self._do_selection_update = False
 
@@ -876,25 +819,19 @@ class TreeViewController(AbstractTreeViewController):
         :param Gdk.Event event: The key press event
         :return:
         """
-        # self._logger.info("key_value: " + str(event.keyval if event is not None else ''))
         # TODO works for root level or other single level of tree view but not for switching in between levels
         if event and "GDK_KEY_PRESS" == event.type.value_name \
                 and (event.keyval == Gdk.KEY_Tab or event.keyval == Gdk.KEY_ISO_Left_Tab):
             [path, focus_column] = self.tree_view.get_cursor()
-            # print("cursor ", path, focus_column)
             model, paths = self.tree_view.get_selection().get_selected_rows()
             if paths:
                 path = paths[0]
-                # print("tree selection", path, focus_column, paths)
             if not path:
                 return False
             self.tree_view_keypress_callback.__func__.core_element_id = self.store[path][self.ID_STORAGE_ID]
-            # print("core id", self.store[path][self.ID_STORAGE_ID], path, type(path))
-            # finish active edit process
             if self.active_entry_widget is not None:
                 text = self.active_entry_widget.get_buffer().get_text()
                 if focus_column in self.widget_columns:
-                    # print("path", ':'.join([str(elem) for elem in path]))
                     focus_column.get_cells()[0].emit('edited', ':'.join([str(elem) for elem in path]), text)
 
             # row could be updated by other call_backs caused by emitting 'edited' signal but selection stays an editable neighbor
@@ -903,10 +840,8 @@ class TreeViewController(AbstractTreeViewController):
                 self.tree_view_keypress_callback.__func__.core_element_id = self._changed_id_to[core_element_id]
             path = self.get_path_for_core_element(self.tree_view_keypress_callback.__func__.core_element_id)
             if event.keyval == Gdk.KEY_Tab:
-                # logger.info("move right")
                 direction = +1
             else:
-                # logger.info("move left")
                 direction = -1
 
             if len(path) > 1:
@@ -922,8 +857,6 @@ class TreeViewController(AbstractTreeViewController):
                     return False
             else:
                 next_row = path[-1]
-            new_path = tuple(list(path[:-1]) + [next_row])
-            # print("new path", new_path, path[:-1])
             # get next column_id for focus
             focus_column_id = self.widget_columns.index(focus_column)
             if focus_column_id is not None:
@@ -942,11 +875,7 @@ class TreeViewController(AbstractTreeViewController):
             else:
                 return False
             new_path = tuple(list(path[:-1]) + [next_row])
-            # print("nnew path", new_path)
             del self.tree_view_keypress_callback.__func__.core_element_id
-            # self._logger.info("self.tree_view.scroll_to_cell(next_row={0}, self.widget_columns[{1}] , use_align={2})"
-            #              "".format(next_row, next_focus_column_id, False))
-            # self.tree_view.scroll_to_cell(new_path, self.widget_columns[next_focus_column_id], use_align=False)
             self.tree_view.set_cursor_on_cell(Gtk.TreePath.new_from_indices([new_path]), self.widget_columns[
                 next_focus_column_id], focus_cell=None, start_editing=True)
             return True

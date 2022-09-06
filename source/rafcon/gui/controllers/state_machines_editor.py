@@ -21,8 +21,6 @@
 
 """
 
-from builtins import range
-from builtins import str
 import collections
 import copy
 from gi.repository import Gtk
@@ -115,7 +113,7 @@ class StateMachinesEditorController(ExtendedController):
     def __init__(self, state_machine_manager_model, view):
         assert isinstance(state_machine_manager_model, StateMachineManagerModel)
         assert isinstance(view, StateMachinesEditorView)
-        ExtendedController.__init__(self, state_machine_manager_model, view, spurious=True)
+        ExtendedController.__init__(self, state_machine_manager_model, view)
 
         self.tabs = {}
         self.last_focused_state_machine_ids = collections.deque(maxlen=10)
@@ -143,16 +141,6 @@ class StateMachinesEditorController(ExtendedController):
         # Call register_action of parent in order to register actions for child controllers
         super(StateMachinesEditorController, self).register_actions(shortcut_manager)
 
-    def close_state_machine(self, widget, page_number, event=None):
-        """Triggered when the close button in the tab is clicked
-        """
-        page = widget.get_nth_page(page_number)
-        for tab_info in self.tabs.values():
-            if tab_info['page'] is page:
-                state_machine_m = tab_info['state_machine_m']
-                self.on_close_clicked(event, state_machine_m, None, force=False)
-                return
-
     def on_close_shortcut(self, *args, **kwargs):
         """Close selected state machine (triggered by shortcut)"""
         state_machine_m = self.model.get_selected_state_machine_model()
@@ -173,7 +161,7 @@ class StateMachinesEditorController(ExtendedController):
                 if self.model.selected_state_machine_id != new_sm_id:
                     self.model.selected_state_machine_id = new_sm_id
                 if self.last_focused_state_machine_ids and \
-                        self.last_focused_state_machine_ids[len(self.last_focused_state_machine_ids) - 1] != new_sm_id:
+                        self.last_focused_state_machine_ids[-1] != new_sm_id:
                     self.last_focused_state_machine_ids.append(new_sm_id)
                 return page
 
@@ -253,8 +241,6 @@ class StateMachinesEditorController(ExtendedController):
         for p in range(number_of_pages):
             page = self.view["notebook"].get_nth_page(p)
             label = self.view["notebook"].get_tab_label(page).get_child().get_children()[0]
-
-            # old_label_colors[p] = label.get_style().fg[Gtk.StateType.NORMAL]
             old_label_colors[p] = label.get_style_context().get_color(Gtk.StateType.NORMAL)
 
         if not self.view.notebook.get_current_page() == page_id:
@@ -264,10 +250,6 @@ class StateMachinesEditorController(ExtendedController):
         for p in range(number_of_pages):
             page = self.view["notebook"].get_nth_page(p)
             label = self.view["notebook"].get_tab_label(page).get_child().get_children()[0]
-            # Gtk TODO
-            style = label.get_style_context()
-            # label.modify_fg(Gtk.StateType.ACTIVE, old_label_colors[p])
-            # label.modify_fg(Gtk.StateType.INSENSITIVE, old_label_colors[p])
 
     def set_active_state_machine(self, state_machine_id):
         page_num = self.get_page_num(state_machine_id)
@@ -335,6 +317,9 @@ class StateMachinesEditorController(ExtendedController):
                                          callback=self.on_close_clicked,
                                          callback_args=[state_machine_m, None])
             menu.append(menu_item)
+        menu_item = create_menu_item("Close All State Machines", constants.BUTTON_CLOSE,
+                                     callback=self.on_close_all_clicked)
+        menu.append(menu_item)
 
         menu.show_all()
         menu.popup(None, None, None, None, event.get_button()[1], event.time)
@@ -413,6 +398,9 @@ class StateMachinesEditorController(ExtendedController):
             remove_state_machine_m()
             return True
 
+    def on_close_all_clicked(self, event):
+        self.close_all_pages(force=False)
+
     def remove_state_machine_tab(self, state_machine_m):
         """
 
@@ -433,7 +421,7 @@ class StateMachinesEditorController(ExtendedController):
         self.last_focused_state_machine_ids = copy_of_last_opened_state_machines
 
         # Open tab with next state machine
-        sm_keys = list(self.model.state_machine_manager.state_machines.keys())
+        sm_keys = self.model.state_machine_manager.state_machines.keys()
 
         if len(sm_keys) > 0:
             sm_id = -1
@@ -441,17 +429,17 @@ class StateMachinesEditorController(ExtendedController):
                 if len(self.last_focused_state_machine_ids) > 0:
                     sm_id = self.last_focused_state_machine_ids.pop()
                 else:
-                    sm_id = self.model.state_machine_manager.state_machines[sm_keys[0]].state_machine_id
+                    sm_id = self.model.state_machine_manager.state_machines[next(iter(sm_keys))].state_machine_id
 
             self.model.selected_state_machine_id = sm_id
         else:
             self.model.selected_state_machine_id = None
 
-    def close_all_pages(self):
+    def close_all_pages(self, force=True):
         """Closes all tabs of the state machines editor."""
         state_machine_m_list = [tab['state_machine_m'] for tab in self.tabs.values()]
         for state_machine_m in state_machine_m_list:
-            self.on_close_clicked(None, state_machine_m, None, force=True)
+            self.on_close_clicked(None, state_machine_m, None, force)
 
     def refresh_state_machines(self, state_machine_ids):
         """ Refresh list af state machine tabs

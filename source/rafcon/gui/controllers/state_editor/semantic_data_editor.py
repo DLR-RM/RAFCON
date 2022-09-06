@@ -12,12 +12,11 @@
 
 from gi.repository import Gtk
 from gi.repository import GObject
-from future.utils import string_types
 import copy
 import os
 from functools import partial
 
-from gtkmvc3.model_mt import ModelMT
+from rafcon.design_patterns.mvc.model import ModelMT
 
 from rafcon.core.id_generator import generate_semantic_data_key
 from rafcon.core.states.library_state import LibraryState
@@ -67,8 +66,6 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
                                     view["semantic_data_tree_view"], tree_store, logger)
         AbstractExternalEditor.__init__(self)
 
-        self.semantic_data_counter = 0
-
     def register_view(self, view):
         """Called when the View was registered
 
@@ -98,7 +95,6 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         self.view['new_entry'].set_sensitive(not locked)
         self.view['new_dict_entry'].set_sensitive(not locked)
         self.view['delete_entry'].set_sensitive(not locked)
-        # self.view['open_externally'].set_sensitive(not locked)
 
         for current_column in self.view['semantic_data_tree_view'].get_columns():
             current_column.get_cells()[0].set_property('editable', not locked)
@@ -142,7 +138,6 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         :param bool new_dict: A flag to indicate if the new value is of type dict
         :return:
         """
-        self.semantic_data_counter += 1
         treeiter, path = self.get_selected_object()
 
         value = dict() if new_dict else "New Value"
@@ -157,7 +152,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
 
         # generate key
         target_dict = self.model.state.get_semantic_data(target_dict_path_as_list)
-        new_key_string = generate_semantic_data_key(list(target_dict.keys()))
+        new_key_string = generate_semantic_data_key(target_dict.keys())
         self.model.state.add_semantic_data(target_dict_path_as_list, value, new_key_string)
 
         self.reload_tree_store_data()
@@ -197,7 +192,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         try:
             self.select_entry(self.tree_store[path][self.ID_STORAGE_ID])
         except IndexError:
-            if len(self.tree_store):
+            if self.tree_store:
                 if len(path) > 1:
                     possible_before_path = tuple(list(path[:-1]) + [path[-1] - 1])
                     if possible_before_path[-1] > -1:
@@ -312,7 +307,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         :param str new_key_str: The new value of the target cell
         :return:
         """
-        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, string_types) else path
+        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, str) else path
         if self.tree_store[tree_store_path][self.KEY_STORAGE_ID] == new_key_str:
             return
 
@@ -324,7 +319,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
             target_dict = self.model.state.semantic_data
             for element in dict_path[0:-1]:
                 target_dict = target_dict[element]
-            new_key_str = generate_semantic_data_key(list(target_dict.keys()))
+            new_key_str = generate_semantic_data_key(target_dict.keys())
 
         new_dict_path = self.model.state.add_semantic_data(dict_path[0:-1], old_value, key=new_key_str)
         self._changed_id_to = {':'.join(dict_path): new_dict_path}  # use hashable key (workaround for tree view ctrl)
@@ -337,7 +332,7 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         :param str new_value_str: The new value of the target cell
         :return:
         """
-        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, string_types) else path
+        tree_store_path = self.create_tree_store_path_from_key_string(path) if isinstance(path, str) else path
         if self.tree_store[tree_store_path][self.VALUE_STORAGE_ID] == new_value_str:
             return
 
@@ -382,8 +377,6 @@ class SemanticDataEditorController(TreeViewController, AbstractExternalEditor):
         """ Implements the abstract method of the ExternalEditor class.
         """
         try:
-            # just create file with empty text first; this command also creates the whole path to the file
-            filesystem.write_file(os.path.join(path, storage.SCRIPT_FILE), "", create_full_path=True)
             storage_utils.write_dict_to_json(self.model.state.semantic_data, os.path.join(path, storage.SEMANTIC_DATA_FILE))
         except IOError as e:
             # Only happens if the file doesnt exist yet and would be written to the temp folder.

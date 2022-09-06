@@ -1,4 +1,3 @@
-from __future__ import print_function
 import time
 
 # general tool elements
@@ -181,8 +180,6 @@ def store_state_elements(state, state_m, return_list=None):
         state_m_elements['states_meta'] = {}
         print(state_m.states.keys())
         for s_m_id, s_m in state_m.states.items():
-            # if not hasattr(s_m, "state"):
-            #     print s_m
             assert s_m_id == s_m.state.state_id
             assert s_m_id in state_elements['states']
             assert s_m.state.state_id in state_elements['states']
@@ -369,8 +366,6 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
         # - check if the right models are there and only those
         model_id_store = []
         for s_m_id, s_m in state_m.states.items():
-            # if not hasattr(s_m, "state"):
-            #     print s_m
             assert s_m_id == s_m.state.state_id
             if not s_m_id == UNIQUE_DECIDER_STATE_ID:
                 if not s_m_id in stored_state_elements['states']:
@@ -386,10 +381,7 @@ def check_state_elements(check_list, state, state_m, stored_state_elements, stor
             if not s_id == UNIQUE_DECIDER_STATE_ID:
                 assert s_id in model_id_store
     else:
-        # if isinstance(state, ContainerState):
-        #     print state, state.states
         assert not isinstance(state, ContainerState)
-    # exit(0)
 
     # check scoped_variables
     # TODO last element of condition has to be deleted again:

@@ -11,8 +11,7 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from gi.repository import GObject
-from gtkmvc3.view import View
+from rafcon.design_patterns.mvc.view import View
 from rafcon.gui.utils import constants
 from rafcon.gui.helpers import label
 
@@ -20,7 +19,7 @@ from rafcon.gui.helpers import label
 class HistoryTreeView(View, Gtk.TreeView):
 
     def __init__(self):
-        View.__init__(self)
+        View.__init__(self, parent='history_treeview')
         Gtk.TreeView.__init__(self)
 
         foreground = 5
@@ -43,13 +42,11 @@ class HistoryTreeView(View, Gtk.TreeView):
         self.append_column(tvcolumn)
 
         self['history_treeview'] = self
-        self.top = 'history_treeview'
 
 
 class ModificationHistoryView(View, Gtk.ScrolledWindow):
-
     def __init__(self):
-        View.__init__(self)
+        View.__init__(self, parent='history_vbox')
         Gtk.ScrolledWindow.__init__(self)
 
         history_tree = HistoryTreeView()
@@ -96,4 +93,3 @@ class ModificationHistoryView(View, Gtk.ScrolledWindow):
         self['reset_button'] = reset_button
         self['branch_checkbox'] = branch_checkbox
         self['folded_checkbox'] = folded_checkbox
-        self.top = 'history_vbox'

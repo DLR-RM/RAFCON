@@ -10,9 +10,7 @@
 # Matthias Buettner <matthias.buettner@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-# from cairo import Antialias
 from cairo import Matrix
-from builtins import zip
 
 from rafcon.gui.config import global_gui_config as gui_config
 from rafcon.gui.utils import constants
@@ -20,14 +18,9 @@ from rafcon.gui.utils import constants
 import gaphas.painter
 
 from rafcon.gui.mygaphas.aspect import PaintHovered, ItemPaintHovered
-from rafcon.gui.mygaphas.items.connection import ConnectionView, TransitionView
+from rafcon.gui.mygaphas.items.connection import ConnectionView
 from rafcon.gui.mygaphas.items.state import StateView, NameView
 from rafcon.gui.mygaphas.utils.gap_draw_helper import get_col_rgba, get_side_length_of_resize_handle
-
-
-# Use this to verify the calculated bounding boxes
-# from gaphas import painter
-# painter.DEBUG_DRAW_BOUNDING_BOX = True
 
 
 class CornerHandlePainter(ItemPaintHovered):
@@ -56,7 +49,6 @@ class CornerHandlePainter(ItemPaintHovered):
                 break
             # Reset the current transformation
             cairo.identity_matrix()
-            #cairo.set_antialias(Antialias.NONE)
             # Move to center of handle
             cairo.translate(*i2v.transform_point(*handle.pos))
             cairo.rectangle(-side_length / 2., -side_length / 2., side_length, side_length)
@@ -82,8 +74,11 @@ class CornerHandlePainter(ItemPaintHovered):
 
         cr.save()
         try:
-            cr.set_line_width(1)
-            cr.set_source_rgba(0.0, 0.0, 1.0, 0.6)
+            # a width of 1 is hardly visible when using dashed lines
+            cr.set_line_width(2)
+            cr.set_dash([4], 1)
+            guide_color = gui_config.gtk_colors['GUIDE_COLOR']
+            cr.set_source_rgba(*get_col_rgba(guide_color, 0.6))
             for g in guides.vertical():
                 cr.move_to(g, 0)
                 cr.line_to(g, h)
@@ -99,7 +94,7 @@ class CornerHandlePainter(ItemPaintHovered):
         if selected:
             self._draw_handles(self.item, context.cairo)
         else:
-            # Draw nice opaque handles when hovering an non-selected item:
+            # Draw nice opaque handles when hovering a non-selected item:
             self._draw_handles(self.item, context.cairo, opacity=.25)
 
         self._paint_guides(context)
@@ -121,7 +116,7 @@ class NameCornerHandlePainter(CornerHandlePainter):
     border_color = gui_config.gtk_colors['NAME_RESIZE_HANDLE_BORDER']
 
 
-@PaintHovered.when_type(TransitionView)
+@PaintHovered.when_type(ConnectionView)
 class LineSegmentPainter(ItemPaintHovered):
     """
     This painter draws pseudo-handles on gaphas.item.Line objects. Each
@@ -149,8 +144,6 @@ class LineSegmentPainter(ItemPaintHovered):
             cr.set_line_width(self.view.get_zoom_factor() / 4.)
             cr.identity_matrix()
             m = Matrix(*view.get_matrix_i2v(item))
-
-            # cr.set_antialias(Antialias.NONE)
             cr.translate(*m.transform_point(cx, cy))
             cr.rectangle(-side_length / 2., -side_length / 2., side_length, side_length)
             cr.set_source_rgba(*get_col_rgba(self.fill_color))
@@ -159,38 +152,6 @@ class LineSegmentPainter(ItemPaintHovered):
             cr.set_line_width(1)
             cr.stroke()
             cr.restore()
-
-
-class BoundingBoxPainter(gaphas.painter.BoundingBoxPainter):
-    """
-    This specific case of an ItemPainter is used to calculate the bounding
-    boxes (in canvas coordinates) for the items.
-    """
-
-    draw_all = True
-
-    def _draw_item(self, item, cairo, area=None):
-        cairo = gaphas.painter.CairoBoundingBoxContext(cairo)
-        super(gaphas.painter.BoundingBoxPainter, self)._draw_item(item, cairo)
-        bounds = cairo.get_bounds()
-
-        view = self.view
-        if isinstance(item, (StateView, NameView)):
-            i2v = view.get_matrix_i2v(item).transform_point
-            for index, handle in enumerate(item.handles()):
-                if index >= 4:
-                    break
-                side_length = get_side_length_of_resize_handle(view, item)
-                cx, cy = i2v(*handle.pos)
-                bounds += (cx - side_length / 2, cy - side_length / 2, side_length, side_length)
-        elif isinstance(item, ConnectionView):
-            i2v = view.get_matrix_i2v(item).transform_point
-            for h in item.handles():
-                cx, cy = i2v(*h.pos)
-                bounds += (cx, cy, 1, 1)
-
-        bounds.expand(1)
-        view.set_item_bounding_box(item, bounds)
 
 
 class HoveredItemPainter(gaphas.painter.Painter):

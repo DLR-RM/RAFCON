@@ -21,7 +21,6 @@
 
 """
 
-from builtins import str
 import os
 import logging
 from gi.repository import Gtk
@@ -87,6 +86,8 @@ class MainWindowController(ExtendedController):
         # shortcut manager
         self.shortcut_manager = ShortcutManager(view['main_window'])
 
+        self.upper_notebook = view['upper_notebook']
+
         ######################################################
         # debug console
         ######################################################
@@ -100,6 +101,13 @@ class MainWindowController(ExtendedController):
         self.library_manager_model = gui_singletons.library_manager_model
         library_controller = LibraryTreeController(self.library_manager_model, view.library_tree)
         self.add_controller('library_controller', library_controller)
+
+        ######################################################
+        # library usages tree
+        ######################################################
+        library_usages_controller = LibraryTreeController(self.library_manager_model, view.library_usages_tree, True)
+        self.add_controller('library_usages_controller', library_usages_controller)
+
 
         ######################################################
         # state icons
@@ -222,12 +230,20 @@ class MainWindowController(ExtendedController):
     def update_widget_runtime_config(widget, event, name):
         global_runtime_config.store_widget_properties(widget, name)
 
+    def update_search_bar_visibility(self, widget, event):
+        state_machine_search = self.view['state_machine_search']
+        state_machine_search.set_visible(widget.get_active())
+        if widget.get_active():
+            state_machine_search.grab_focus()
+        else:
+            state_machine_search.set_text('')
+
     def register_view(self, view):
         super(MainWindowController, self).register_view(view)
         self.register_actions(self.shortcut_manager)
 
-        self.view.get_top_widget().connect("key-press-event", self._on_key_press)
-        self.view.get_top_widget().connect("key-release-event", self._on_key_release)
+        self.view.get_parent_widget().connect("key-press-event", self._on_key_press)
+        self.view.get_parent_widget().connect("key-release-event", self._on_key_release)
 
         # using helper function to connect functions to GUI elements to be able to access the handler id later on
 
@@ -257,6 +273,10 @@ class MainWindowController(ExtendedController):
         self.connect_button_to_function('button_start_shortcut', "toggled", self.on_button_start_shortcut_toggled)
         self.connect_button_to_function('button_stop_shortcut', "clicked", self.on_button_stop_shortcut_clicked)
         self.connect_button_to_function('button_pause_shortcut', "toggled", self.on_button_pause_shortcut_toggled)
+        self.connect_button_to_function('button_run_this_state_shortcut', "clicked",
+                                        self.on_button_start_this_state_shortcut_clicked)
+        self.connect_button_to_function('button_run_only_this_state_shortcut', "clicked",
+                                        self.on_button_start_only_this_state_shortcut_clicked)
         self.connect_button_to_function('button_start_from_shortcut', "clicked",
                                         self.on_button_start_from_shortcut_clicked)
         self.connect_button_to_function('button_run_to_shortcut', "clicked",
@@ -277,20 +297,24 @@ class MainWindowController(ExtendedController):
                                         "clicked",
                                         self.on_button_step_backward_shortcut_clicked)
 
+        view['state_machine_search'].connect("search_changed", self.state_machine_search_changed)
+
+
         view['upper_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['upper_notebook_title'],
                                        view.left_bar_window, 'upper')
         view['lower_notebook'].connect('switch-page', self.on_notebook_tab_switch, view['lower_notebook_title'],
                                        view.left_bar_window, 'lower')
 
-        view.get_top_widget().connect("configure-event", self.update_widget_runtime_config, "MAIN_WINDOW")
-        view.left_bar_window.get_top_widget().connect("configure-event", self.update_widget_runtime_config, "LEFT_BAR_WINDOW")
-        view.right_bar_window.get_top_widget().connect("configure-event", self.update_widget_runtime_config, "RIGHT_BAR_WINDOW")
-        view.console_window.get_top_widget().connect("configure-event", self.update_widget_runtime_config, "CONSOLE_WINDOW")
+        view.get_parent_widget().connect("configure-event", self.update_widget_runtime_config, "MAIN_WINDOW")
+        view.left_bar_window.get_parent_widget().connect("configure-event", self.update_widget_runtime_config, "LEFT_BAR_WINDOW")
+        view.right_bar_window.get_parent_widget().connect("configure-event", self.update_widget_runtime_config, "RIGHT_BAR_WINDOW")
+        view.console_window.get_parent_widget().connect("configure-event", self.update_widget_runtime_config, "CONSOLE_WINDOW")
 
         # save pane positions in the runtime config on every change
         view['top_level_h_pane'].connect("button-release-event", self.update_widget_runtime_config, "LEFT_BAR_DOCKED")
         view['right_h_pane'].connect("button-release-event", self.update_widget_runtime_config, "RIGHT_BAR_DOCKED")
         view['central_v_pane'].connect("button-release-event", self.update_widget_runtime_config, "CONSOLE_DOCKED")
+        view['show_search_bar'].connect("toggled", self.update_search_bar_visibility, "TOGGLED")
 
         # hide not usable buttons
         self.view['step_buttons'].hide()
@@ -298,8 +322,8 @@ class MainWindowController(ExtendedController):
 
         # Initializing Main Window Size & Position
         # secure un maximize in initial condition to restore correct position and size
-        view.get_top_widget().unmaximize()
-        gui_helper_label.set_window_size_and_position(view.get_top_widget(), 'MAIN')
+        view.get_parent_widget().unmaximize()
+        gui_helper_label.set_window_size_and_position(view.get_parent_widget(), 'MAIN')
 
         wait_for_gui()
 
@@ -318,7 +342,7 @@ class MainWindowController(ExtendedController):
         # secure maximized state
         if global_runtime_config.get_config_value("MAIN_WINDOW_MAXIMIZED"):
             wait_for_gui()
-            view.get_top_widget().maximize()
+            view.get_parent_widget().maximize()
 
         # Restore position of Gtk.Paned widgets
         first_pane_id = next(iter(constants.PANE_ID.values()))
@@ -391,7 +415,6 @@ class MainWindowController(ExtendedController):
         state machine.
         """
 
-        # TODO: find nice solution
         # this in only required if the GUI is terminated via Ctrl+C signal
         if not self.view:
             # this means that the main window is currently under destruction
@@ -445,10 +468,8 @@ class MainWindowController(ExtendedController):
 
         :param controller The controller which request to be focused.
         """
-        # TODO think about to may substitute Controller- by View-objects it is may the better design
         if controller not in self.get_child_controllers():
             return
-        # logger.info("focus controller {0}".format(controller))
         if not self.modification_history_was_focused and isinstance(controller, ModificationHistoryTreeController) and \
                 self.view is not None:
             self.view.bring_tab_to_the_top('history')
@@ -508,7 +529,7 @@ class MainWindowController(ExtendedController):
         undocked_window_name = window_key.lower() + '_window'
         widget_name = window_key.lower()
         undocked_window_view = getattr(self.view, undocked_window_name)
-        undocked_window = undocked_window_view.get_top_widget()
+        undocked_window = undocked_window_view.get_parent_widget()
         if os.getenv("RAFCON_START_MINIMIZED", False):
             undocked_window.iconify()
 
@@ -520,7 +541,7 @@ class MainWindowController(ExtendedController):
         getattr(self, 'on_{}_hide_clicked'.format(widget_name))(None)
         self.view['{}_return_button'.format(widget_name)].hide()
 
-        main_window = self.view.get_top_widget()
+        main_window = self.view.get_parent_widget()
         state_handler = main_window.connect('window-state-event', self.undock_window_callback, undocked_window)
         self.handler_ids[undocked_window_name] = {"state": state_handler}
         undocked_window.set_transient_for(main_window)
@@ -578,6 +599,12 @@ class MainWindowController(ExtendedController):
         if self.view['button_pause_shortcut'].get_active():
             self.get_controller('menu_bar_controller').on_pause_activate(None)
 
+    def on_button_start_this_state_shortcut_clicked(self, widget, event=None):
+        self.get_controller('menu_bar_controller').on_run_selected_state_activate(None)
+
+    def on_button_start_only_this_state_shortcut_clicked(self, widget, event=None):
+        self.get_controller('menu_bar_controller').on_run_only_selected_state_activate(None)
+
     def on_button_start_from_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_start_from_selected_state_activate(None)
 
@@ -599,6 +626,12 @@ class MainWindowController(ExtendedController):
 
     def on_button_step_backward_shortcut_clicked(self, widget, event=None):
         self.get_controller('menu_bar_controller').on_backward_step_activate(None)
+
+    def state_machine_search_changed(self, search):
+        library_controller = self.get_controller('library_controller')
+        library_controller.view.collapse_all()
+        library_controller.filter_value = search.get_text().lower()
+        library_controller.filter.refilter()
 
     def on_notebook_tab_switch(self, notebook, page, page_num, title_label, window, notebook_identifier):
         """Triggered whenever a left-bar notebook tab is changed.
@@ -625,6 +658,10 @@ class MainWindowController(ExtendedController):
             self.view["collapse_tree_button"].show()
         else:
             self.view["collapse_tree_button"].hide()
+        if upper_notebook_title == 'LIBRARIES':
+            self.view["show_search_bar"].show()
+        else:
+            self.view["show_search_bar"].hide()
 
     def on_collapse_button_clicked(self, button):
         upper_page_num = self.view['upper_notebook'].get_current_page()
@@ -695,19 +732,6 @@ class MainWindowController(ExtendedController):
         self.get_controller('states_editor_ctrl').prepare_destruction()  # avoid new state editor TODO tbd (deleted)
         rafcon.core.singleton.state_machine_manager.delete_all_state_machines()
         rafcon.core.singleton.library_manager.prepare_destruction()
-
-        # gtkmvc installs a global glade custom handler that holds a reference to the last created View class,
-        # preventing it from being destructed. By installing a dummy callback handler, after all views have been
-        # created, the old handler is being removed and with it the reference, allowing all Views to be destructed.
-
-        # Gtk TODO: check if necessary and search for replacement
-        # try:
-        #     from gtk import glade
-        #     def dummy(*args, **kwargs):
-        #         pass
-        #     glade.set_custom_handler(dummy)
-        # except ImportError:
-        #     pass
 
         # Recursively destroys the main window
         self.destroy()
