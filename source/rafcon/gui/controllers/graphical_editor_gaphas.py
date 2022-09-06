@@ -775,14 +775,8 @@ class GraphicalEditorController(ExtendedController):
         size = state_meta['size']
 
         # Use default values if no size information is stored
-        if not state_meta['custom_background_color']:
-            state_meta = state_m.set_meta_data_editor('custom_background_color', False)
-
-        custom_background_color = state_meta['custom_background_color']
-
-        # Use default values if no size information is stored
         if not state_meta['background_color']:
-            state_meta = state_m.set_meta_data_editor('background_color', (0.0, 0.0, 0.0))
+            state_meta = state_m.set_meta_data_editor('background_color', False)
 
         background_color = state_meta['background_color']
 
@@ -796,7 +790,7 @@ class GraphicalEditorController(ExtendedController):
             if not state_m.meta_data_was_scaled:
                 gui_helper_meta_data.scale_library_ports_meta_data(state_m, gaphas_editor=True)
 
-        state_v = StateView(state_m, size, custom_background_color, background_color, hierarchy_level)
+        state_v = StateView(state_m, size, background_color, hierarchy_level)
 
         # Draw state above data flows and NameView but beneath transitions
         num_data_flows = len(state_m.state.parent.data_flows) if isinstance(state_m.parent, ContainerStateModel) else 0
