@@ -18,6 +18,7 @@
      is-start-state flag and state-type.
 
 """
+
 from gi.repository import GLib
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -41,7 +42,7 @@ logger = log.get_logger(__name__)
 class StateOverviewController(ExtendedController):
     """Controller handling the view of properties/attributes of the ContainerStateModel
 
-    This :class:`gtkmvc3.Controller` class is the interface between the GTK widget view
+    This :class:`design_patterns.mvc.controller.Controller` class is the interface between the GTK widget view
     :class:`gui.views.source_editor.SourceEditorView` and the properties of the
     :class:`gui.models.state.StateModel`. Changes made in
     the GUI are written back to the model and vice versa.
@@ -51,8 +52,6 @@ class StateOverviewController(ExtendedController):
     """
 
     def __init__(self, model, view, with_is_start_state_check_box=False):
-        """Constructor
-        """
         assert isinstance(model, AbstractStateModel)
         assert isinstance(view, StateOverviewView)
         super(StateOverviewController, self).__init__(model, view)
@@ -131,7 +130,7 @@ class StateOverviewController(ExtendedController):
         if isinstance(self.model.state, DeciderState):
             combo.set_sensitive(False)
 
-        # in case the state is inside of a library
+        # in case the state is inside a library
         if self.model.state.get_next_upper_library_root_state():
             view['entry_name'].set_editable(False)
             combo.set_sensitive(False)
@@ -144,7 +143,6 @@ class StateOverviewController(ExtendedController):
 
     def on_toggle_is_start_state(self, button):
         if not button.get_active() == self.model.is_start:
-            # from rafcon.gui.helpers import state_machine as state_machine
             gui_helper_state_machine.selected_state_toggle_is_start_state()
 
     def on_toggle_show_content(self, checkbox):
@@ -173,10 +171,6 @@ class StateOverviewController(ExtendedController):
             self.view['entry_name'].set_text(self.model.state.name)
 
     def on_focus_out(self, entry, event):
-        # Originally we had to use idle_add to prevent core dumps:
-        # https://mail.gnome.org/archives/gtk-perl-list/2005-September/msg00143.html
-        # GLib.idle_add(self.change_name, entry.get_text())
-        # Gtk TODO: use idle_add if problems occur
         self.change_name(entry.get_text())
 
     def change_name(self, new_name):

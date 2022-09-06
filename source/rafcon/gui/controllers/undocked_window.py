@@ -39,6 +39,3 @@ class UndockedWindowController(ExtendedController):
 
     def hide_window(self):
         self.view['undock_window'].hide()
-
-    def show_window(self):
-        self.view['undock_window'].show()

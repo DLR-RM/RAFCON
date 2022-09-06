@@ -441,7 +441,6 @@ def _resize_connection_models_list(connection_models, factor, gaphas_editor=True
         for waypoint in old_waypoints:
             new_waypoints.append(mult_two_vectors(factor, waypoint))
         connection_m.set_meta_data_editor('waypoints', new_waypoints, from_gaphas=gaphas_editor)
-    #     print("new_waypoints", connection_m.get_meta_data_editor(for_gaphas=gaphas_editor), connection_m.core_element)
 
 
 def resize_income_of_state_m(state_m, factor, gaphas_editor=True):

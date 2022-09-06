@@ -43,6 +43,7 @@ from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
 from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateModel, LibraryStateModel, TransitionModel, \
     DataFlowModel, DataPortModel, OutcomeModel, StateMachineModel
+from rafcon.gui.models.signals import MetaSignalMsg
 from rafcon.gui.singleton import global_config, library_manager_model
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
 from rafcon.utils.filesystem import make_tarfile, copy_file_or_folder, create_path, make_file_executable
@@ -576,6 +577,8 @@ def save_state_machine_as(path=None, recent_opened_notification=False, as_copy=F
     :rtype bool:
     """
 
+    library_ctrl = rafcon.gui.singleton.main_window_controller.get_controller('library_controller')
+
     state_machine_manager_model = rafcon.gui.singleton.state_machine_manager_model
     selected_state_machine_model = state_machine_manager_model.get_selected_state_machine_model()
     if selected_state_machine_model is None:
@@ -587,9 +590,13 @@ def save_state_machine_as(path=None, recent_opened_notification=False, as_copy=F
             logger.error("No function defined for creating a folder")
             return False
         folder_name = selected_state_machine_model.state_machine.root_state.name
+        library_os_path, _, _, _ = library_ctrl.extract_library_properties_from_selected_row()
+        if library_os_path is not None and library_os_path.startswith('[source]:\n'):
+            library_os_path = library_os_path.rsplit('\n', 1)[1]
         path = interface.create_folder_func("Please choose a root folder and a folder name for the state-machine. "
                                             "The default folder name is the name of the root state.",
-                                            format_default_folder_name(folder_name))
+                                            format_default_folder_name(folder_name),
+                                            current_folder=library_os_path)
         if path is None:
             logger.warning("No valid path specified")
             return False
@@ -764,7 +771,6 @@ def replace_all_libraries_by_template(state_model):
 
 def save_all_libraries(target_path):
     for library_key, library_root_path in library_manager.library_root_paths.items():
-        # lib_target_path = os.path.join(target_path, os.path.split(library_root_path)[1])
         lib_target_path = os.path.join(target_path, library_key)
         copy_file_or_folder(library_root_path, lib_target_path)
 
@@ -1294,7 +1300,6 @@ def substitute_selected_state_and_use_choice_dialog():
         root_window = rafcon.gui.singleton.main_window_controller.get_root_window()
         x, y = root_window.get_position()
         _width, _height = root_window.get_size()
-        # print("x, y, width, height, bit_depth", x, y, width, height)
         pos = (x + _width/4, y + _height/6)
         StateSubstituteChooseLibraryDialog(rafcon.gui.singleton.library_manager_model, width=450, height=550, pos=pos,
                                            parent=root_window)
@@ -1311,7 +1316,6 @@ def substitute_selected_state(state, as_template=False, keep_name=False):
     :param bool as_template: The flag determines if a handed the state of type LibraryState is insert as template
     :return:
     """
-    # print("substitute_selected_state", state, as_template)
     assert isinstance(state, State)
     from rafcon.core.states.barrier_concurrency_state import DeciderState
     if isinstance(state, DeciderState):
@@ -1340,10 +1344,8 @@ def substitute_selected_library_state_with_template(keep_name=True):
     selection = rafcon.gui.singleton.state_machine_manager_model.get_selected_state_machine_model().selection
     selected_state_m = selection.get_selected_state()
     if len(selection.states) == 1 and isinstance(selected_state_m, LibraryStateModel):
-        # print("start substitute library state with template")
         # TODO optimize this to not generate one more library state and model
         lib_state = copy.deepcopy(selected_state_m.state)
-        # lib_state_m = copy.deepcopy(selected_states[0].state)
         substitute_selected_state(lib_state, as_template=True, keep_name=keep_name)
         # TODO think about to use as return value the inserted state
         return True
@@ -1392,6 +1394,31 @@ def ungroup_selected_state():
             return
         selection.remove(selected_state_m)
         return gui_helper_state.ungroup_state(selected_state_m)
+
+
+def change_background_color(state_model):
+    from rafcon.gui.utils.dialog import get_root_window
+    dialog = Gtk.ColorSelectionDialog('Change Background Color', parent=get_root_window())
+    default_button_response = -7
+    dialog.add_button('Set to Default', default_button_response)
+    response = dialog.run()
+    changed = False
+    if response == -5:
+        current_color = dialog.get_color_selection().get_current_color()
+        state_model.set_meta_data_editor('background_color', (current_color.red_float, current_color.green_float, current_color.blue_float))
+        changed = True
+    elif response == default_button_response:
+        state_model.set_meta_data_editor('background_color', False)
+        changed = True
+    dialog.destroy()
+    if changed:
+        state_model.meta_signal.emit(MetaSignalMsg('change_background_color_action', 'all', True))
+        from rafcon.gui.singleton import main_window_controller
+        from rafcon.gui.singleton import state_machine_manager_model
+        state_machines_editor_ctrl = main_window_controller.get_controller('state_machines_editor_ctrl')
+        graphical_editor_ctrl = state_machines_editor_ctrl.get_controller(state_machine_manager_model.selected_state_machine_id)
+        graphical_editor_ctrl.update_item(state_model)
+        graphical_editor_ctrl.view.editor.unselect_all()
 
 
 def get_root_state_file_path(sm_file_system_path):

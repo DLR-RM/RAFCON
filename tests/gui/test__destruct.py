@@ -683,7 +683,7 @@ def patch_gaphas_classes_with_log():
                                                       self.__kind, self.__gen_time_stamp))
         old_gaphas_extended_view_init(self, graphical_editor_v, state_machine_m, *args)
 
-    def gaphas_state_view_init(self, state_m, size, hierarchy_level):
+    def gaphas_state_view_init(self, state_m, size, background_color, hierarchy_level):
         self.__gen_time_stamp = int(round(time.time() * 1000))
         self.__kind = 'gaphas_state_view'
         self.__gen_log_file = os.path.join(RAFCON_TEMP_PATH_BASE, '{0}_{1}'.format(self.__kind,
@@ -691,7 +691,7 @@ def patch_gaphas_classes_with_log():
         with open(self.__gen_log_file, 'a+') as f:
             f.write("RUN {2} of {0} {3} {1}\n".format(super(self.__class__, self).__str__(), id(self),
                                                       self.__kind, self.__gen_time_stamp))
-        old_gaphas_state_view_init(self, state_m, size, hierarchy_level)
+        old_gaphas_state_view_init(self, state_m, size, background_color, hierarchy_level)
 
     def gaphas_port_view_init(self, in_port, name=None, parent=None, side=SnappedSide.RIGHT):
         self.__gen_time_stamp = int(round(time.time() * 1000))

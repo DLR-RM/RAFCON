@@ -61,8 +61,6 @@ class StateElement(Observable, YAMLObject, JSONObject, Hashable):
         raise NotImplementedError("__deepcopy__ method of class StateElement has to be implemented")
 
     def _safe_init(self, parent):
-        # uncomment this line when using LOAD_SM_WITH_CHECKS to check if unsafe_init triggers safe_init
-        # raise Exception("Must not be executed during unsafe init")
         self.parent = parent
 
     def _unsafe_init(self, parent):

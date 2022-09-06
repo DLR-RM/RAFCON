@@ -54,7 +54,7 @@ class SplashScreen(Gtk.Window):
             self.label.set_yalign(0.5)
             main_vbox.pack_start(self.label, False, True, 10)
             main_vbox.set_spacing(0)
-            label_height = global_design_config.get_config_value("SPLASH_SCREEN_LABEL_HEIGHT", 40)
+            label_height = global_design_config.get_config_value("SPLASH_SCREEN_LABEL_HEIGHT", 0)
             self.label.set_size_request(-1, label_height)
 
         if not os.getenv("RAFCON_START_MINIMIZED", False):

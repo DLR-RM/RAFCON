@@ -62,7 +62,7 @@ def install_fonts(restart=False):
 
     font_installed = False
     try:
-        for font_name in font_names_to_be_installed:
+        for font_name in set(font_names_to_be_installed):
             # A font is a folder one or more font faces
             rel_font_folder = join("type1", font_name)
             fonts_folder = resources.get_data_file_path("fonts", rel_font_folder)

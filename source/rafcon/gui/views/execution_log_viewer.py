@@ -5,22 +5,12 @@ from rafcon.design_patterns.mvc.view import View
 class ExecutionLogTreeView(View):
     def __init__(self):
         super().__init__(parent='execution_log_paned')
-        # Create a new window
-        # self.get_window() = Gtk.Window(Gtk.WindowType.TOPLEVEL)
-
-        # self.get_window().set_title("Execution Log Viewer")
-
-        # self.get_window().set_default_size(1024, 786)
-
-        # self.get_window().connect("delete_event", self.delete_event)
 
         # Setting up the self.grid in which the elements are to be positioned
         self.paned = Gtk.HPaned()
-        # self.get_window().add(self.paned)
 
         # setting up the layout, putting the tree_view in a scrollwindow, and the buttons in a row
         self.scrollable_treelist = Gtk.ScrolledWindow()
-        # self.scrollable_treelist.set_expand(True)
         self.paned.add1(self.scrollable_treelist)
 
         # setting up text view

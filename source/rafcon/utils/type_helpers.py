@@ -38,10 +38,7 @@ def convert_string_to_type(string_value):
 
     # Get object associated with string
     # First check whether we are having a built in type (int, str, etc)
-    if sys.version_info >= (3,):
-        import builtins as builtins23
-    else:
-        import __builtin__ as builtins23
+    import builtins as builtins23
     if hasattr(builtins23, string_value):
         obj = getattr(builtins23, string_value)
         if type(obj) is type:

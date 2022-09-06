@@ -95,7 +95,7 @@ def move_dirty_lock_file(dirty_lock_file, sm_path):
         os.rename(dirty_lock_file, os.path.join(sm_path, dirty_lock_file.split(os.sep)[-1]))
 
 
-def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=None, with_gui_wait=False):
+def recover_state_machine_from_backup(sm_path, pid=None, full_path_dirty_lock=None):
 
     if full_path_dirty_lock is None:
         full_path_dirty_lock = find_dirty_lock_file_for_state_machine_path(sm_path)
@@ -384,7 +384,6 @@ class AutoBackupModel(ModelMT):
 
     def update_last_sm_origin_meta_data(self):
         """Update the auto backup meta data with information of the state machine origin"""
-        # TODO finally maybe remove this when all backup features are integrated into one backup-structure
         # data also used e.g. to backup tabs
         self.meta['last_saved']['file_system_path'] = self.state_machine_model.state_machine.file_system_path
 
@@ -476,7 +475,6 @@ class AutoBackupModel(ModelMT):
             if not self.only_fix_interval or self.marked_dirty:
                 thread = threading.Thread(target=self.perform_temp_storage)
                 thread.start()
-                # self.last_backup_time = current_time  # used as 'last-backup' time
             if self.only_fix_interval:
                 self.set_timed_thread(self.force_temp_storage_interval, self.check_for_auto_backup)
         else:

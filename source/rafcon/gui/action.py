@@ -249,9 +249,6 @@ def check_state_model_for_is_start_state(state_model):
 
 
 def insert_state_meta_data(meta_dict, state_model, with_verbose=False, level=None):
-    # meta_dict = {'state': state_model.meta, 'data_flows': {}, 'transitions': {}, 'outcomes': {},
-    #              'input_data_ports': {}, 'output_data_ports': {}, 'scoped_variables': {}}
-
     def missing_meta_data_log_msg(state_model, elem, meta_dict, dict_key, existing_model_list):
         logger.verbose("Storage Dict seems to miss Meta-Data of {5} in State: {0} {1} for {5}:"
                        " {2}\nreal: {3}\nstorage: {4}".format(state_model.state.state_id,
@@ -394,7 +391,6 @@ class CoreObjectIdentifier(object):
                 self._id = core_obj_or_cls.outcome_id
                 self._list_name = self.type_related_list_name_dict[self._type]
             elif self._type == 'StateMachine':
-                # self.__sm_id = core_obj_cls.state_machine_id
                 pass
             elif self._type == 'GlobalVariableManager':
                 pass
@@ -482,12 +478,8 @@ class MetaDataAction(AbstractAction):
         if self.before_overview.get_signal_message().affects_children:
             insert_state_meta_data(meta_dict=self.before_state_image.meta_data, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", True))
-            # if state_m.state.is_root_state:
-            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
         else:
             insert_state_meta_data(meta_dict=self.before_state_image.meta_data, state_model=state_m)
-            # if state_m.state.is_root_state:
-            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
             state_m.meta_signal.emit(MetaSignalMsg("undo_meta_action", "all", False))
 
     def redo(self):
@@ -497,12 +489,8 @@ class MetaDataAction(AbstractAction):
         if self.before_overview.get_signal_message().affects_children:
             insert_state_meta_data(meta_dict=self.after_state_image.meta_data, state_model=state_m)
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", True))
-            # if state_m.state.is_root_state:
-            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
         else:
             insert_state_meta_data(meta_dict=self.after_state_image.meta_data, state_model=state_m)
-            # if state_m.state.is_root_state:
-            #     self.state_machine_model.state_meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
             state_m.meta_signal.emit(MetaSignalMsg("redo_meta_action", "all", False))
 
 
@@ -631,9 +619,6 @@ class Action(ModelMT, AbstractAction):
                 assert dp_id in state.input_data_ports
 
             for dp_id, dp in stored_state.output_data_ports.items():
-                scoped_str = str([])
-                if isinstance(state, ContainerState):
-                    scoped_str = str(list(state.scoped_variables.keys()))
                 state.add_output_data_port(dp.name, dp.data_type, dp.default_value, dp.data_port_id)
                 assert dp_id in state.output_data_ports
 
@@ -801,14 +786,7 @@ class AddObjectAction(Action):
 
     def __init__(self, parent_path, state_machine_model, overview):
         Action.__init__(self, parent_path, state_machine_model, overview)
-
-        self.changed_object = overview.get_affected_core_element()
-
-        self.parent_identifier = ''
         self.added_object_identifier = ''
-        self.added_object_args = ''
-
-        self.parent_identifier = self.parent_path
 
     def set_after(self, overview):
         Action.set_after(self, overview)
@@ -898,16 +876,7 @@ class RemoveObjectAction(Action):
         assert overview.get_affected_property() == 'state' and isinstance(overview.get_affected_core_element(), State)
 
         self.instance_path = overview.get_affected_core_element().get_path()
-        self.changed_object = self.changed_object = overview.get_affected_core_element()
-
-        self.parent_identifier = ''
         self.removed_object_identifier = ''
-        self.removed_object_args = ''
-
-        if "outcome" in overview.get_cause() or "data_port" in overview.get_cause():
-            pass
-        else:
-            self.parent_identifier = self.parent_path
         self.get_object_identifier()
         self.before_linkage = {'internal': {'transitions': [], 'data_flows': []},
                                'external': {'transitions': [], 'data_flows': []}}
@@ -1271,9 +1240,6 @@ class OutcomeAction(StateElementAction):
 
 class StateAction(Action):
 
-    not_possible_method_names = ['input_data', 'output_data', 'concurrency_queue', 'state_id',  # any not observed
-                                 'final_outcome', 'preempted', 'active', 'is_root_state',  # any not observed
-                                 'scoped_data'].extend(BY_EXECUTION_TRIGGERED_OBSERVABLE_STATE_METHODS)
     possible_method_names = ['parent',  # will be ignored
                              'name', 'description', 'script', 'script_text',  # State
                              'outcomes', 'input_data_ports', 'output_data_ports',  # State
@@ -1403,13 +1369,3 @@ class StateAction(Action):
             setattr(s, property, copy.deepcopy(arguments[property]))
         else:
             assert False
-
-
-class Group(Action):
-    def __init__(self, *args, **kwargs):
-        Action.__init__(self, *args, **kwargs)
-
-
-class UnGroup(Action):
-    def __init__(self, *args, **kwargs):
-        Action.__init__(self, *args, **kwargs)

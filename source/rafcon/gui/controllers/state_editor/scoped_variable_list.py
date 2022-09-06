@@ -56,10 +56,6 @@ class ScopedVariableListController(ListViewController):
         """Constructor"""
         super(ScopedVariableListController, self).__init__(model, view, view.get_parent_widget(),
                                                            self.get_new_list_store(), logger)
-
-        self.next_focus_column = {}
-        self.prev_focus_column = {}
-
         if self.model.get_state_machine_m() is not None:
             self.observe_model(self.model.get_state_machine_m())
         else:

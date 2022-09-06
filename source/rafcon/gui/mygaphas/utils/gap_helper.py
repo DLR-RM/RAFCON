@@ -12,6 +12,7 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
+from rafcon.core.state_machine import StateMachine
 from rafcon.gui.mygaphas.items.connection import ConnectionView
 from rafcon.utils import log
 from rafcon.utils.dict_operations import check_if_dict_contains_object_reference_in_values
@@ -104,6 +105,8 @@ def create_new_connection(from_port_m, to_port_m):
     elif isinstance(from_port_m, (DataPortModel, ScopedVariableModel)) and \
             isinstance(to_port_m, (DataPortModel, ScopedVariableModel)):
         return add_data_flow_to_state(from_port_m, to_port_m)
+    elif isinstance(from_port_m, (DataPortModel, ScopedVariableModel)) and not isinstance(to_port_m, (DataPortModel, ScopedVariableModel)):
+        return add_data_flow_to_state(from_port_m, to_port_m, add_data_port=True)
     # Both ports are not None
     elif from_port_m and to_port_m:
         logger.error("Connection of non-compatible ports: {0} and {1}".format(type(from_port_m), type(to_port_m)))
@@ -111,7 +114,7 @@ def create_new_connection(from_port_m, to_port_m):
     return False
 
 
-def add_data_flow_to_state(from_port_m, to_port_m):
+def add_data_flow_to_state(from_port_m, to_port_m, add_data_port=False):
     """Interface method between Gaphas and RAFCON core for adding data flows
 
     The method checks the types of the given ports and their relation. From this the necessary parameters for the
@@ -119,27 +122,44 @@ def add_data_flow_to_state(from_port_m, to_port_m):
 
     :param from_port_m: Port model from which the data flow starts
     :param to_port_m: Port model to which the data flow goes to
+    :param add_data_port: Boolean add the data port automatically
     :return: True if a data flow was added, False if an error occurred
     """
+    from rafcon.core.states.library_state import LibraryState
+    from rafcon.core.states.execution_state import ExecutionState
     from rafcon.gui.models.data_port import DataPortModel
     from rafcon.gui.models.scoped_variable import ScopedVariableModel
-    from rafcon.core.state_elements.data_port import OutputDataPort
+    from rafcon.core.state_elements.data_port import InputDataPort, OutputDataPort
     from rafcon.gui.models.container_state import ContainerStateModel
 
     from_state_m = from_port_m.parent
-    to_state_m = to_port_m.parent
+    to_state_m = to_port_m if add_data_port else to_port_m.parent
 
     from_state_id = from_state_m.state.state_id
     to_state_id = to_state_m.state.state_id
 
     from_port_id = from_port_m.core_element.state_element_id
-    to_port_id = to_port_m.core_element.state_element_id
+    to_port_id = None if add_data_port else to_port_m.core_element.state_element_id
 
     if not isinstance(from_port_m, (DataPortModel, ScopedVariableModel)) or \
             not isinstance(from_port_m, (DataPortModel, ScopedVariableModel)):
         logger.error("Data flows only exist between data ports (input, output, scope). Given: {0} and {1}".format(type(
             from_port_m), type(to_port_m)))
         return False
+
+    descendant_states = []
+
+    def is_descendant(parent, descendant):
+        node = descendant
+        while node is not None and isinstance(node, StateMachine) is False:
+            descendant_states.append(node)
+            if parent.state_id == node.state_id:
+                return True
+            node = node.parent
+        descendant_states.clear()
+        return False
+
+    data_port_type = isinstance(from_port_m.core_element, InputDataPort)  # True: InputDataPort, False: OutputDataPort
 
     # from parent to child
     if isinstance(from_state_m, ContainerStateModel) and \
@@ -152,17 +172,55 @@ def add_data_flow_to_state(from_port_m, to_port_m):
     # from parent to parent (input/scope to output/scope
     elif isinstance(from_state_m, ContainerStateModel) and from_state_m.state is to_state_m.state \
             and not isinstance(from_port_m.core_element, OutputDataPort):
-        responsible_parent_m = from_state_m  # == to_state_m
+        responsible_parent_m = from_state_m
+        data_port_type = not data_port_type
     # child state to child state
     elif not from_state_m.state.is_root_state and not to_state_m.state.is_root_state \
             and from_state_m.parent.state.state_id and to_state_m.parent.state.state_id:
         responsible_parent_m = from_state_m.parent
+        data_port_type = not data_port_type
+    # from parent to descendant
+    elif isinstance(from_state_m, ContainerStateModel) and is_descendant(from_state_m.state, to_state_m.state):
+        responsible_parent_m = descendant_states
+    # from descendant to parent
+    elif isinstance(to_state_m, ContainerStateModel) and is_descendant(to_state_m.state, from_state_m.state):
+        responsible_parent_m = descendant_states
     else:
         raise ValueError("Trying to connect data ports that cannot be connected: {} with {}".format(from_port_m,
                                                                                                     to_port_m))
 
+    if isinstance(from_port_m, ScopedVariableModel):
+        data_port_type = True
+
+    if add_data_port and (not isinstance(from_state_m.state, ExecutionState) or from_state_m.state.core_element_id != to_state_m.state.core_element_id):
+        try:
+            if isinstance(to_state_m.state, LibraryState):
+                logger.error("Data port couldn't be added automatically to: {0}".format(to_state_m.state.name))
+            elif data_port_type:
+                to_port_id = to_state_m.state.add_input_data_port(from_port_m.core_element.name, from_port_m.core_element.data_type, from_port_m.core_element.default_value)
+            else:
+                to_port_id = to_state_m.state.add_output_data_port(from_port_m.core_element.name, from_port_m.core_element.data_type, from_port_m.core_element.default_value)
+        except (ValueError, AttributeError, TypeError) as e:
+            to_port_id = to_state_m.state.get_io_data_port_id_from_name_and_type(from_port_m.core_element.name, InputDataPort if data_port_type else OutputDataPort)
     try:
-        responsible_parent_m.state.add_data_flow(from_state_id, from_port_id, to_state_id, to_port_id)
+        if isinstance(responsible_parent_m, list):
+            previous_data_port_id = from_port_id
+            for i in range(len(responsible_parent_m) - 2, -1, -1):
+                current_data_port_id = responsible_parent_m[i].get_io_data_port_id_from_name_and_type(to_port_m.core_element.name, type(to_port_m.core_element), throw_exception=False)
+                if i == 0:
+                    current_data_port_id = to_port_id
+                elif current_data_port_id is False:
+                    if isinstance(to_port_m.core_element, InputDataPort):
+                        current_data_port_id = responsible_parent_m[i].add_input_data_port(to_port_m.core_element.name, to_port_m.core_element.data_type, to_port_m.core_element.default_value)
+                    elif isinstance(to_port_m.core_element, OutputDataPort):
+                        current_data_port_id = responsible_parent_m[i].add_output_data_port(to_port_m.core_element.name, to_port_m.core_element.data_type, to_port_m.core_element.default_value)
+                if isinstance(to_port_m.core_element, InputDataPort):
+                    responsible_parent_m[i + 1].add_data_flow(responsible_parent_m[i + 1].state_id, previous_data_port_id, responsible_parent_m[i].state_id, current_data_port_id)
+                else:
+                    responsible_parent_m[i + 1].add_data_flow(responsible_parent_m[i].state_id, current_data_port_id, responsible_parent_m[i + 1].state_id, previous_data_port_id)
+                previous_data_port_id = current_data_port_id
+        else:
+            responsible_parent_m.state.add_data_flow(from_state_id, from_port_id, to_state_id, to_port_id)
         return True
     except (ValueError, AttributeError, TypeError) as e:
         logger.error("Data flow couldn't be added: {0}".format(e))
@@ -237,7 +295,6 @@ def add_transition_to_state(from_port_m, to_port_m):
 def get_relative_positions_of_waypoints(transition_v):
     """This method takes the waypoints of a connection and returns all relative positions of these waypoints.
 
-    :param canvas: Canvas to check relative position in
     :param transition_v: Transition view to extract all relative waypoint positions
     :return: List with all relative positions of the given transition
     """
@@ -251,28 +308,28 @@ def get_relative_positions_of_waypoints(transition_v):
     return rel_pos_list
 
 
-def update_meta_data_for_transition_waypoints(graphical_editor_view, transition_v, last_waypoint_list, publish=True):
-    """This method updates the relative position meta data of the transitions waypoints if they changed
+def update_meta_data_for_connection_waypoints(graphical_editor_view, connection_v, last_waypoint_list, publish=True):
+    """This method updates the relative position metadata of the connections waypoints if they changed
 
     :param graphical_editor_view: Graphical Editor the change occurred in
-    :param transition_v: Transition that changed
+    :param connection_v: Transition/Data Flow that changed
     :param last_waypoint_list: List of waypoints before change
     :param bool publish: Whether to publish the changes using the meta signal
     """
 
     from rafcon.gui.mygaphas.items.connection import TransitionView
-    assert isinstance(transition_v, TransitionView)
+    assert isinstance(connection_v, ConnectionView)
 
-    transition_m = transition_v.model
-    waypoint_list = get_relative_positions_of_waypoints(transition_v)
+    connection_m = connection_v.model
+    waypoint_list = get_relative_positions_of_waypoints(connection_v)
     if waypoint_list != last_waypoint_list:
-        transition_m.set_meta_data_editor('waypoints', waypoint_list)
+        connection_m.set_meta_data_editor('waypoints', waypoint_list)
         if publish:
-            graphical_editor_view.emit('meta_data_changed', transition_m, "waypoints", False)
+            graphical_editor_view.emit('meta_data_changed', connection_m, "waypoints", False)
 
 
 def update_meta_data_for_port(graphical_editor_view, item, handle):
-    """This method updates the meta data of the states ports if they changed.
+    """This method updates the metadata of the states ports if they changed.
 
     :param graphical_editor_view: Graphical Editor the change occurred in
     :param item: State the port was moved in
@@ -299,7 +356,7 @@ def update_meta_data_for_port(graphical_editor_view, item, handle):
 
 
 def update_meta_data_for_name_view(graphical_editor_view, name_v, publish=True):
-    """This method updates the meta data of a name view.
+    """This method updates the metadata of a name view.
 
     :param graphical_editor_view: Graphical Editor view the change occurred in
     :param name_v: The name view which has been changed/moved
@@ -318,22 +375,21 @@ def update_meta_data_for_name_view(graphical_editor_view, name_v, publish=True):
 
 
 def update_meta_data_for_state_view(graphical_editor_view, state_v, affects_children=False, publish=True):
-    """This method updates the meta data of a state view
+    """This method updates the metadata of a state view
 
     :param graphical_editor_view: Graphical Editor view the change occurred in
     :param state_v: The state view which has been changed/moved
     :param affects_children: Whether the children of the state view have been resized or not
-    :param publish: Whether to publish the changes of the meta data
+    :param publish: Whether to publish the changes of the metadata
     """
     from gaphas.item import NW
 
-    # Update all port meta data to match with new position and size of parent
     update_meta_data_for_port(graphical_editor_view, state_v, None)
 
     if affects_children:
         update_meta_data_for_name_view(graphical_editor_view, state_v.name_view, publish=False)
         for transition_v in state_v.get_transitions():
-            update_meta_data_for_transition_waypoints(graphical_editor_view, transition_v, None, publish=False)
+            update_meta_data_for_connection_waypoints(graphical_editor_view, transition_v, None, publish=False)
         for child_state_v in state_v.child_state_views():
             update_meta_data_for_state_view(graphical_editor_view, child_state_v, True, publish=False)
 

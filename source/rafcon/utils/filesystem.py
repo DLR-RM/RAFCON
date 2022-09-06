@@ -112,10 +112,12 @@ def make_tarfile(output_filename, source_dir):
 def copy_file_or_folder(src, dst):
     try:
         shutil.copytree(src, dst)
-    except OSError as exc: # python >2.5
+    except OSError as exc:
         if exc.errno == errno.ENOTDIR:
             shutil.copy(src, dst)
-        else: raise
+        else:
+            raise
+
 
 def make_file_executable(filename):
     st = os.stat(filename)
