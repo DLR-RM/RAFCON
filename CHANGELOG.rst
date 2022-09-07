@@ -8,6 +8,11 @@ Future Release
 """""""
 
 
+1.2.0
+"""""""
+    - Features:
+        Support python 3.10
+
 1.1.0
 """""""
     - Features:
