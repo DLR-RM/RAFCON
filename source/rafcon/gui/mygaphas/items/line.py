@@ -31,9 +31,11 @@ from rafcon.gui.mygaphas.utils.cache.image_cache import ImageCache
 
 class PerpLine(Line):
     def __init__(self, hierarchy_level):
+        from rafcon.gui.mygaphas.segment import Segment
         super(PerpLine, self).__init__()
         self._from_handle = self.handles()[0]
         self._to_handle = self.handles()[1]
+        self._segment = Segment(self, view=self.canvas)
         self.hierarchy_level = hierarchy_level
         self._from_port = None
         self._from_waypoint = None

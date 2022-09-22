@@ -4,6 +4,11 @@ Changelog
 Information about :ref:`RAFCON` changes in each release will be published here. More
 details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/commits/develop>`__.
 
+1.1.1
+"""""""
+- Bug Fixes:
+    - Fix a few GUI bugs
+
 
 1.0.0
 """""""
