@@ -28,6 +28,19 @@ class LibraryNotFoundException(Exception):
         super(LibraryNotFoundException, self).__init__(message)
 
 
+class LibraryNotFoundSkipException(Exception):
+
+    def __init__(self, message):
+        """ A custom exception for the case when a library is not found and user decided to skip loading the broken state machine
+
+        :param message: the error message for the exception
+        :return:
+        """
+
+        # Call the base class constructor with the parameters it needs
+        super(LibraryNotFoundSkipException, self).__init__(message)
+
+
 class RecoveryModeException(ValueError):
 
     def __init__(self, message, do_delete_item):

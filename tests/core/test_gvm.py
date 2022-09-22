@@ -6,6 +6,7 @@ from pytest import raises
 
 def test_references(caplog):
     gvm = GlobalVariableManager.instance()
+    gvm.reset()
     d = {'a': 1, 'b': 2}
 
     # Test access by reference
@@ -43,6 +44,7 @@ def test_references(caplog):
 
 def test_locks(caplog):
     gvm = GlobalVariableManager.instance()
+    gvm.reset()
     gvm.set_variable('a', 1)
     a = gvm.get_variable('a')
     assert a == 1
@@ -69,6 +71,7 @@ def test_locks(caplog):
 def test_type_check(caplog):
     # valid
     gvm = GlobalVariableManager.instance()
+    gvm.reset()
     gvm.set_variable("a", 1, data_type=int)
     a = gvm.get_variable("a")
     assert a == 1
@@ -141,14 +144,15 @@ def test_type_check(caplog):
 
 def test_keys(caplog):
     gvm = GlobalVariableManager.instance()
+    gvm.reset()
     gvm.set_variable('a', 1)
     gvm.set_variable('ab', 2)
     gvm.set_variable('abc', 3)
     gvm.set_variable('def', 4)
 
     key_start_a = gvm.get_all_keys_starting_with('a')
-    assert (len(gvm.get_all_keys()) == 33)
-    assert (len(key_start_a) == 20)
+    assert (len(gvm.get_all_keys()) == 4)
+    assert (len(key_start_a) == 3)
 
     testing_utils.assert_logger_warnings_and_errors(caplog)
 

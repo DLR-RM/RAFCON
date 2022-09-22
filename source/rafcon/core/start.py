@@ -31,8 +31,7 @@ import logging
 
 import rafcon
 
-if sys.version_info >= (3, ):
-    import tracemalloc
+import tracemalloc
 
 from yaml_configuration.config import config_path
 import rafcon.utils.filesystem as filesystem
@@ -81,10 +80,7 @@ def setup_environment():
                 "env var RAFCON_LIB_PATH")
 
     # Install dummy _ builtin function in case i18.setup_l10n() is not called
-    if sys.version_info >= (3, ):
-        import builtins as builtins23
-    else:
-        import __builtin__ as builtins23
+    import builtins as builtins23
     if "_" not in builtins23.__dict__:
         builtins23.__dict__["_"] = lambda s: s
 
@@ -300,7 +296,7 @@ def main(optional_args=None):
         logger.error("You have to specify a valid state machine path")
         exit(-1)
 
-    if user_input.memory_profiling and sys.version_info >= (3, ):
+    if user_input.memory_profiling:
         tracemalloc.start()
         memory_profiling_args = {
             'memory_profiling_path': user_input.memory_profiling_path,
@@ -340,7 +336,7 @@ def main(optional_args=None):
     plugins.run_hook("post_destruction")
     logging.shutdown()
 
-    if user_input.memory_profiling and sys.version_info >= (3, ):
+    if user_input.memory_profiling:
         memory_profiling_args['stop'] = True
         memory_profiling_thread.join()
 

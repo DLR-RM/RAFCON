@@ -79,11 +79,6 @@ class StateMachineManager(Observable):
                 return True
         return False
 
-    def reset_dirty_flags(self):
-        """Set all marked_dirty flags of the state machine to false."""
-        for sm_id, sm in self.state_machines.items():
-            sm.marked_dirty = False
-
     def is_state_machine_open(self, file_system_path):
         for loaded_sm in self._state_machines.values():
             if loaded_sm.file_system_path == file_system_path:

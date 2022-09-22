@@ -53,6 +53,13 @@ class GlobalVariableManager(Observable):
         self.__access_keys = {}
         self.__variable_references = {}
 
+    def reset(self):
+        self.__global_variable_dictionary.clear()
+        self.__global_variable_type_dictionary.clear()
+        self.__variable_locks.clear()
+        self.__access_keys.clear()
+        self.__variable_references.clear()
+
     @Observable.observed
     def set_variable(self, key, value, per_reference=False, access_key=None, data_type=None):
         """Sets a global variable
@@ -308,18 +315,6 @@ class GlobalVariableManager(Observable):
 # Properties for all class fields that must be observed by gtkmvc3
 #########################################################################
 
-    @property
-    def global_variable_dictionary(self):
-        """Property for the _global_variable_dictionary field"""
-        dict_copy = {}
-        for key, value in self.__global_variable_dictionary.items():
-            if key in self.__variable_references and self.__variable_references[key]:
-                dict_copy[key] = value
-            else:
-                dict_copy[key] = copy.deepcopy(value)
-
-        return dict_copy
-
     def get_all_keys(self):
         """Returns all variable names in the GVM
 
@@ -348,7 +343,6 @@ class GlobalVariableManager(Observable):
         :return:
         """
         if value is not None and data_type is not type(None):
-            # if not isinstance(value, data_type):
             if not type_inherits_of_type(data_type, type(value)):
                 raise TypeError(
                     "Value: '{0}' is not of data type: '{1}', value type: {2}".format(value, data_type, type(value)))

@@ -106,7 +106,6 @@ class LinkageListController(ListViewController):
         if 'after' in info and isinstance(overview.get_result(), Exception):
             self.no_update = False
             self.no_update_state_destruction = False
-            # self.no_update_self_or_parent_state_destruction = False
             return
 
         if overview.get_cause() in ['group_states', 'ungroup_state', "change_state_type",

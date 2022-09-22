@@ -37,15 +37,6 @@ def generate_time_stamp():
     return int(round(time.time() * 1000000))
 
 
-def get_human_readable_time(timestamp):
-    """
-    Converts a timestamp to a human readable format.
-    :param timestamp: the timestamp to be converted
-    :return: the converted timestamp
-    """
-    return datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
-
-
 class ScopedVariable(DataPort):
     """A class for representing a scoped variable in a container state
 

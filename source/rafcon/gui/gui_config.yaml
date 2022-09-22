@@ -129,6 +129,7 @@ SHORTCUTS:
     substitute_state: <Control><Shift><Alt>U
     show_aborted_preempted: <Control>P
     show_data_flows: <Control>D
+    show_transitions: <Control>T
     show_data_values: <Control>L
     start: F5
     start_from_selected: <Control>R

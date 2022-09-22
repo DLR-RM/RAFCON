@@ -59,6 +59,7 @@ class MenuBarView(View):
         # -----------------------------------------------
         'data_flow_mode':       None,
         'show_data_flows':      None,
+        'show_transitions':     None,
         'show_data_values':     None,
         'show_aborted_preempted': None,
         'expert_view':          constants.BUTTON_VIEW,

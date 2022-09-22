@@ -57,7 +57,6 @@ class MyCanvas(gaphas.canvas.Canvas):
         from rafcon.gui.mygaphas.items.connection import ConnectionView, ConnectionPlaceholderView, DataFlowView
         if isinstance(item, (StateView, ConnectionView)) and not isinstance(item, ConnectionPlaceholderView):
             self._remove_view_maps(item)
-
         # Gtk TODO: fix destruct of gaphas
         try:
             super(MyCanvas, self).remove(item)

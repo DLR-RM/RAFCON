@@ -43,25 +43,3 @@ class SingleWidgetWindowController(ExtendedController):
         self.register_actions(self.shortcut_manager)
 
         view['main_window'].connect('destroy', Gtk.main_quit)
-
-
-# Example
-# from rafcon.gui.controllers.utils.single_widget_window import SingleWidgetWindowController
-# import rafcon.gui.singleton
-# from rafcon.gui.views.utils.single_widget_window import SingleWidgetWindowView
-# from rafcon.gui.views.library_tree import LibraryTreeView
-# from rafcon.gui.controllers.library_tree import LibraryTreeController
-#
-# from rafcon.gui.start import filesystem, setup_mvc_configuration
-# default_config_path = filesystem.get_default_config_path()
-# filesystem.create_path(default_config_path)
-# setup_mvc_configuration(default_config_path, default_config_path, default_config_path)
-#
-# single_view = SingleWidgetWindowView(LibraryTreeView)
-# # LibraryTreeController(rafcon.gui.singleton.library_manager_model, single_view.widget_view)
-#
-# single_view.top = 'library_tree_view'
-# single_view['library_tree_view'] = single_view.widget_view['library_tree_view']
-# SingleWidgetWindowController(rafcon.gui.singleton.library_manager_model, single_view, LibraryTreeController)
-#
-# Gtk.main()

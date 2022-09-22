@@ -238,9 +238,6 @@ class PerpLine(Line):
                     angle -= pi
             else:
                 angle = 0
-
-        # c.set_antialias(Antialias.GOOD)
-
         parameters = {
             'name': self.name,
             'line_width': self.line_width,
@@ -319,10 +316,6 @@ class PerpLine(Line):
         handles = self._handles
         for h1, h2 in zip(handles[:-1], handles[1:]):
             self._ports.append(self._create_port(h1.pos, h2.pos))
-
-    def _reversible_insert_handle(self, index, handle):
-        super(PerpLine, self)._reversible_insert_handle(index, handle)
-        self._keep_handle_in_parent_state(handle)
 
     def add_waypoint(self, pos):
         pos = self.canvas.get_matrix_i2i(self.parent, self).transform_point(*pos)

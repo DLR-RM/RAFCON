@@ -118,11 +118,8 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             self._state_id = state_id
 
         self.state_execution_status = StateExecutionStatus.INACTIVE
-
-        self.edited_since_last_execution = False
         self.execution_history = None
         self.backward_execution = False
-
         self.marked_dirty = False
 
         if safe_init:
@@ -509,11 +506,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         else:
             raise AttributeError("output data port with name %s does not exit", data_port_id)
 
-    def get_io_data_port_id_from_name_and_type(self, name, data_port_type):
+    def get_io_data_port_id_from_name_and_type(self, name, data_port_type, throw_exception=True):
         """Returns the data_port_id of a data_port with a certain name and data port type
 
         :param name: the name of the target data_port
         :param data_port_type: the data port type of the target data port
+        :param throw_exception: throw an exception when the data port does not exist
         :return: the data port specified by the name and the type
         :raises exceptions.AttributeError: if the specified data port does not exist in the input or output data ports
         """
@@ -521,7 +519,10 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             for ip_id, output_port in self.input_data_ports.items():
                 if output_port.name == name:
                     return ip_id
-            raise AttributeError("Name '{0}' is not in input_data_ports".format(name))
+            if throw_exception:
+                raise AttributeError("Name '{0}' is not in input_data_ports".format(name))
+            else:
+                return False
         elif data_port_type is OutputDataPort:
             for op_id, output_port in self.output_data_ports.items():
                 if output_port.name == name:
@@ -529,7 +530,12 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
             # 'error' is an automatically generated output port in case of errors and exception and doesn't have an id
             if name == "error":
                 return
-            raise AttributeError("Name '{0}' is not in output_data_ports".format(name))
+            if throw_exception:
+                raise AttributeError("Name '{0}' is not in output_data_ports".format(name))
+            else:
+                return False
+        if throw_exception is False:
+            return True
 
     def get_data_port_by_id(self, data_port_id):
         """Search for the given data port id in the data ports of the state
@@ -755,21 +761,20 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         """
         # Check type of child and call appropriate validity test
         if isinstance(child, Income):
-            return self._check_income_validity(child)
+            return self._check_income_validity()
         if isinstance(child, Outcome):
             return self._check_outcome_validity(child)
         if isinstance(child, DataPort):
             return self._check_data_port_validity(child)
         if isinstance(child, ScopedData):
-            return self._check_scoped_data_validity(child)
+            return self._check_scoped_data_validity()
         return False, "Invalid state element for state of type {}".format(self.__class__.__name__)
 
-    def _check_income_validity(self, check_income):
+    def _check_income_validity(self):
         """Checks the validity of an income
 
         Currently, an income cannot be invalid
 
-        :param Income check_income: Income to check for validity
         :return: Validity of Income
         :rtype: bool
         """
@@ -893,7 +898,7 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
                                                          type(self.output_data[data_port.name]).__name__,
                                                          self.output_data[data_port.name]))
 
-    def _check_scoped_data_validity(self, check_scoped_data):
+    def _check_scoped_data_validity(self):
         return True, "valid"  # no validity checks, yet
 
     # ---------------------------------------------------------------------------------------------
@@ -1032,8 +1037,6 @@ class State(Observable, YAMLObject, JSONObject, Hashable):
         if name is not None:
             if PATH_SEPARATOR in name:
                 raise ValueError("Name must not include the \"" + PATH_SEPARATOR + "\" character")
-            # if ID_NAME_DELIMITER in name:
-            #     raise ValueError("Name must not include the \"" + ID_NAME_DELIMITER + "\" character")
             if not isinstance(name, str):
                 raise TypeError("Name must be a string")
             if len(name) < 1:

@@ -65,7 +65,6 @@ class LibraryStateModel(AbstractStateModel):
             if not self.load_meta_data():
                 # TODO decide to scale here or still in the editor -> at the moment meta data is missing here
                 import rafcon.gui.helpers.meta_data as gui_helper_meta_data
-                # gui_helper_meta_data.scale_library_ports_meta_data(self)
             else:
                 self.meta_data_was_scaled = True
 

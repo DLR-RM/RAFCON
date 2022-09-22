@@ -23,14 +23,15 @@ import sys
 import logging
 import threading
 import signal
-if sys.version_info >= (3, ):
-    import tracemalloc
+import tracemalloc
+import pathlib
+
 from yaml_configuration.config import config_path
 
 # gui
 import rafcon
 from rafcon.gui.config import global_gui_config
-from rafcon.gui.design_config import global_design_config, is_custom_design_enabled
+from rafcon.gui.design_config import global_design_config
 import rafcon.gui.singleton as gui_singletons
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.utils.splash_screen import SplashScreen
@@ -196,7 +197,8 @@ def setup_argument_parser():
                                "Use 'None' to prevent the generation of a config file and use the default "
                                "configuration. Default: {0}").format(default_config_path))
     parser.add_argument('-d', '--design_config', action='store', type=config_path, metavar='path',
-                        dest='design_config_path', default=None, nargs='?', const=default_config_path,
+                        dest='design_config_path', default=str(pathlib.Path(__file__).parent.resolve()), nargs='?',
+                        const=default_config_path,
                         help=_("path to the configuration file design_config.yaml. "
                                "Use 'None' to prevent the generation of a config file and use the default "
                                "configuration. Default: {0}").format(default_config_path))
@@ -237,19 +239,13 @@ def setup_mvc_configuration(core_config_path, gui_config_path, runtime_config_pa
     """
     setup_configuration(core_config_path)
     # the design config has to be loaded before loading the gui config as it is used by the gui config
-    if design_config:
+    if design_config or os.environ.get('RAFCON_CUSTOM_DESIGN'):
+        if not design_config:
+            design_config = os.environ.get('RAFCON_CUSTOM_DESIGN')
         design_config_path, design_config_file = filesystem.separate_folder_path_and_file_name(design_config)
         global_design_config.load(design_config_file, design_config_path)
-        # the constant has to be overwritten here,
-        # as the singleton was already loaded that hus the wrong INTERFACE_FONT was chosen
         from rafcon.gui.utils import constants
-        constants.INTERFACE_FONT = global_design_config.get_config_value("PRIMARY_FONT")
-    else:
-        # no design config file specified => check environment variable
-        if os.environ.get('RAFCON_CUSTOM_DESIGN'):
-            design_config = os.environ.get('RAFCON_CUSTOM_DESIGN')
-            design_config_path, design_config_file = filesystem.separate_folder_path_and_file_name(design_config)
-            global_design_config.load(design_config_file, design_config_path)
+        constants.INTERFACE_FONT = global_design_config.get_config_value('PRIMARY_FONT')
     gui_config_path, gui_config_file = filesystem.separate_folder_path_and_file_name(gui_config_path)
     global_gui_config.load(gui_config_file, gui_config_path)
     runtime_config_path, runtime_config_file = filesystem.separate_folder_path_and_file_name(runtime_config_path)
@@ -374,12 +370,8 @@ def register_signal_handlers(callback):
 
 
 def create_splash_screen():
-    if is_custom_design_enabled:
-        splash_screen_width = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_WIDTH")
-        splash_screen_height = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_HEIGHT")
-    else:
-        splash_screen_width = 530
-        splash_screen_height = 350
+    splash_screen_width = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_WIDTH", 530)
+    splash_screen_height = global_design_config.get_config_value("SPLASH_SCREEN_RESOLUTION_HEIGHT", 350)
     splash_screen = SplashScreen(contains_image=True, width=splash_screen_width, height=splash_screen_height)
     splash_screen.rotate_image(random_=True)
     splash_screen.set_text(_("Starting RAFCON..."))
@@ -400,7 +392,7 @@ def main():
     parser = setup_argument_parser()
     user_input = parser.parse_args()
 
-    if user_input.memory_profiling and sys.version_info >= (3, ):
+    if user_input.memory_profiling:
         tracemalloc.start()
         memory_profiling_args = {
             'memory_profiling_path': user_input.memory_profiling_path,
@@ -480,7 +472,7 @@ def main():
     logger.info(_("Exiting ..."))
     logging.shutdown()
 
-    if user_input.memory_profiling and sys.version_info >= (3, ):
+    if user_input.memory_profiling:
         memory_profiling_args['stop'] = True
         memory_profiling_thread.join()
 

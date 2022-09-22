@@ -35,7 +35,7 @@ from rafcon.utils import log
 from rafcon.utils.timer import measure_time
 from rafcon.utils.vividict import Vividict
 
-from rafcon.core.custom_exceptions import LibraryNotFoundException
+from rafcon.core.custom_exceptions import LibraryNotFoundException, LibraryNotFoundSkipException
 from rafcon.core.constants import DEFAULT_SCRIPT_PATH
 from rafcon.core.config import global_config
 from rafcon.core.state_machine import StateMachine
@@ -48,7 +48,6 @@ LIBRARY_NOT_FOUND_DUMMY_STATE_NAME = "LIBRARY NOT FOUND DUMMY STATE"
 
 #: File names for various purposes
 FILE_NAME_META_DATA = 'meta_data.json'
-FILE_NAME_META_DATA_OLD = 'gui_Gtk.json'
 FILE_NAME_CORE_DATA = 'core_data.json'
 FILE_NAME_CORE_DATA_OLD = 'meta.json'
 SCRIPT_FILE = 'script.py'
@@ -394,15 +393,6 @@ def reconnect_data_flow(state_machine):
             queue.extend(state.states.values())
 
 
-def load_state_from_path(state_path):
-    """Loads a state from a given path
-
-    :param state_path: The path of the state on the file system.
-    :return: the loaded state
-    """
-    return load_state_recursively(parent=None, state_path=state_path)
-
-
 def get_core_data_path(state_path):
     return os.path.join(state_path, FILE_NAME_CORE_DATA)
 
@@ -466,6 +456,8 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
         else:
             dummy_state.parent = parent
         return dummy_state
+    except LibraryNotFoundSkipException:
+        return None
 
     # Transitions and data flows are not added when loading a state, as also states are not added.
     # We have to wait until the child states are loaded, before adding transitions and data flows, as otherwise the
@@ -495,8 +487,6 @@ def load_state_recursively(parent, state_path=None, dirty_states=[]):
     except Exception as e:
         # semantic data file does not have to be there
         pass
-
-    one_of_my_child_states_not_found = False
 
     # load child states
     for p in os.listdir(state_path):
@@ -607,7 +597,6 @@ def get_storage_id_for_state(state):
         max_length = global_config.get_config_value('MAX_LENGTH_FOR_STATE_NAME_IN_STORAGE_PATH')
 
         max_length_of_state_name_in_folder_name = 255 - len(ID_NAME_DELIMITER + state.state_id)
-        # TODO: should we allow "None" in config file?
         if max_length is None or max_length == "None" or max_length > max_length_of_state_name_in_folder_name:
             if max_length_of_state_name_in_folder_name < len(state.name):
                 logger.info("The storage folder name is forced to be maximal 255 characters in length.")
