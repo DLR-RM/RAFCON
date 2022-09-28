@@ -165,6 +165,8 @@ class Transition(StateElement):
         old_to_state = self.to_state
         old_to_outcome = self.to_outcome
         self._to_state = to_state
+        if hasattr(self.parent, "states") and isinstance(self.parent.states, dict) and to_state in self.parent.states:
+            to_outcome = None
         self._to_outcome = to_outcome
 
         valid, message = self._check_validity()
