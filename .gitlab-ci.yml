@@ -49,7 +49,7 @@ pages:
     variables:
       - $AR_CI_DOCS_DISABLE == "true"
 
-test py3-tests:
+test py3-tests: &test-py3-tests
   <<: *only-default
   stage: Test
   tags:
@@ -96,4 +96,11 @@ test py3-memory-test-core:
 # running pytest directly does not work
 # as the test_start_script.py test_start_script_valid_config always uses "python" to start "rafcon_core"
 # which fails if tests are run using python3 as the "python" always maps to python2 on Ubuntu 18.04
-#    - xvfb-run -as "-screen 0 1920x1200x24" python3 setup.py pytest --addopts '-vx -m "(core or gui) and not unstable and not user_input"'
+#    - xvfb-run -as "-screen 0 1920x1200x24" python3 setup.py pytest --addopts '-vx -m "(core or guqi) and not unstable and not user_input"'
+
+Test Python Upcoming:
+  <<: *test-py3-tests
+  image: artifactory.ar.int:5000/ar-ci-ubuntu:22.04
+  script:
+    - pip3 install tox
+    - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e py310

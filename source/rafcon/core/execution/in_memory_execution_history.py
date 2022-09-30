@@ -17,7 +17,7 @@
    :synopsis: A module for the history of one thread during state machine execution
 
 """
-from collections import Iterable, Sized
+from collections.abc import Iterable, Sized
 
 from rafcon.design_patterns.observer.observable import Observable
 
