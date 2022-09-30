@@ -7,16 +7,15 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Future Release
 """""""
 
-1.1.1
-"""""""
-- Bug Fixes:
-    - Fix a few GUI bugs
-
-
 1.2.0
 """""""
     - Features:
         Support python 3.10
+
+1.1.1
+"""""""
+- Bug Fixes:
+    - Fix a few GUI bugs
 
 1.1.0
 """""""
