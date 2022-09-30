@@ -176,7 +176,7 @@ class ExecutionEngine(Observable):
                 # signal handlers won't work if timeout is None and the thread is joined
                 while True:
                     self.__wait_for_finishing_thread.join(0.5)
-                    if not self.__wait_for_finishing_thread.isAlive():
+                    if not self.__wait_for_finishing_thread.is_alive():
                         break
             else:
                 self.__wait_for_finishing_thread.join(timeout)
