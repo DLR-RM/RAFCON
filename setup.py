@@ -94,8 +94,6 @@ class BuildMOFiles(Command):
         sys.path.pop()
 
 
-sys.executable = '/usr/bin/env python3'
-
 setup(
     name='rafcon',
     version=version,
