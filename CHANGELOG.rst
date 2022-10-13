@@ -7,6 +7,11 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Future Release
 """""""
 
+1.2.1
+"""""""
+    - Features:
+        Add __main__.py
+
 1.2.0
 """""""
     - Features:
