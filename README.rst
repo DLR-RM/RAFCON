@@ -99,6 +99,12 @@ No matter which installation option you choose, RAFCON can be started from any l
 
    rafcon
 
+On a multi-python setup start rafcon using:
+
+.. code-block:: bash
+
+   python<your-version> -m rafcon
+
 
 Uninstallation
 --------------
