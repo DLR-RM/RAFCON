@@ -51,7 +51,8 @@ def get_data_files():
 
 
 # read version from VERSION file
-# this might throw Exceptions, which are purposefully not caught as the version is a prerequisite for installing rafcon
+# this might throw Exceptions, which are purposefully not caught as the version is a prerequisite
+# for installing rafcon
 version_file_path = os.path.join(".", "VERSION")
 with open(version_file_path, "r") as f:
     content = f.read().splitlines()
