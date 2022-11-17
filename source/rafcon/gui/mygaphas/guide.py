@@ -32,9 +32,14 @@ class GuidedStateMixin(GuideMixin):
             return 0, ()
 
         states_v = self._get_siblings_and_parent()
+
+        try:
+            guides = list(map(Guide, states_v))
+        except TypeError:
+            guides = []
+
         vedges = set()
-        for state_v in states_v:
-            g = Guide(state_v)
+        for g in guides:
             for x in g.vertical():
                 vedges.add(self.view.get_matrix_i2v(g.item).transform_point(x, 0)[0])
         dx, edges_x = self.find_closest(item_vedges, vedges)
@@ -47,9 +52,14 @@ class GuidedStateMixin(GuideMixin):
             return 0, ()
 
         states_v = self._get_siblings_and_parent()
+
+        try:
+            guides = list(map(Guide, states_v))
+        except TypeError:
+            guides = []
+
         hedges = set()
-        for state_v in states_v:
-            g = Guide(state_v)
+        for g in guides:
             for y in g.horizontal():
                 hedges.add(self.view.get_matrix_i2v(g.item).transform_point(0, y)[1])
 
@@ -101,7 +111,7 @@ class GuidedNameInMotion(GuidedItemInMotion):
 
 @HandleInMotion.when_type(StateView)
 class GuidedStateHandleInMotion(GuidedStateMixin, GuidedItemHandleInMotion):
-
+    
     def glue(self, pos, distance=None):
         distance = distance if distance else self.GLUE_DISTANCE
         super(GuidedStateHandleInMotion, self).glue(pos, distance)

@@ -7,6 +7,20 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Future Release
 """""""
 
+1.2.1
+"""""""
+    - Features:
+        Add __main__.py
+
+1.2.0
+"""""""
+    - Features:
+        Support python 3.10
+
+1.1.1
+"""""""
+- Bug Fixes:
+    - Fix a few GUI bugs
 
 1.1.0
 """""""
@@ -54,9 +68,8 @@ Future Release
 0.15.4
 """""""
 
-- Features:
-    - last version with python2 support which is still supported by Agile Robots
-    - passes testing pipeline for both python2 and python3 inside the CI pipeline of AR
+- Bug Fixes:
+    - Support custom design
 
 
 0.15.3
