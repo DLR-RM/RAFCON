@@ -179,6 +179,30 @@
       </packing>
     </child>
     <child>
+      <object class="GtkToolButton" id="button_layout_state_machine">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="is_important">True</property>
+        <property name="label" translatable="yes">Auto Layout</property>
+        <property name="use_underline">True</property>
+        <property name="stock_id">gtk-refresh</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparatorToolItem" id="separatortoolitem8">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">False</property>
+      </packing>
+    </child>
+    <child>
       <object class="GtkToolItem" id="custom_toolbar_element">
         <property name="visible">True</property>
         <property name="can_focus">False</property>

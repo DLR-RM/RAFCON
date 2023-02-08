@@ -39,6 +39,7 @@ class MenuBarView(View):
         'refresh_all':          constants.BUTTON_REFR,
         'refresh_libraries':    constants.BUTTON_REFR,
         'bake_state_machine':   constants.BUTTON_BAKE,
+        'layout_state_machine': constants.BUTTON_LAYOUT,
         'quit':                 constants.BUTTON_QUIT,
         # -----------------------------------------------
         # Edit
