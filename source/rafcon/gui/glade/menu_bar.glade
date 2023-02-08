@@ -102,6 +102,13 @@
               </object>
             </child>
             <child>
+              <object class="GtkMenuItem" id="layout_state_machine">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label">Auto Layout</property>
+              </object>
+            </child>
+            <child>
               <object class="GtkSeparatorMenuItem" id="menu_file_sep2">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
