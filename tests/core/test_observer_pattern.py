@@ -78,7 +78,7 @@ class TestObserver(Observer):
 
 
 def test_observer(caplog):
-    testing_utils.dummy_gui(None)
+    # testing_utils.dummy_gui(None)
     observer_test = ObserverTest()
     observer_test.test_observable.first_var = 20.0
     assert observer_test.test_value == 20
