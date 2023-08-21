@@ -11,6 +11,10 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from pkg_resources import get_distribution, DistributionNotFound
+from importlib.metadata import PackageNotFoundError, version
+from rafcon.utils import log
+
+
 
 try:
     __version__ = get_distribution("rafcon").version
@@ -27,9 +31,16 @@ except DistributionNotFound:
             # a1 is used as e.g. dev1 is not supported by the StrictVersion class
             __version__ = content[0] + "a1"
     except Exception as e:
-        from rafcon.utils import log
         logger = log.get_logger(__name__)
         logger.error(str(e))
         logger.error("Setting the rafcon version to 'unknown' ... ")
         # this case must not happen, else state machines cannot be loaded from the file system
         __version__ = "unknown"
+
+try:
+    if __version__ == "unknown":
+        __version__ = version("rafcon-core")
+except PackageNotFoundError as error:
+    logger = log.get_logger(__name__)
+    logger.info(f"Not running rafcon core, please check your rafcon installation again: {str(error)}")
+    __version__ = "unknown"

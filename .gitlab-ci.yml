@@ -123,8 +123,9 @@ Test Rafcon Core Python Wheel:
   dependencies: [ "Pip::build pure" ]
   image: artifactory.ar.int:5000/ar-ci-ubuntu:22.04
   script:
-    - python3 -m pip install -U pip
+    - python3 -m pip install -U pip pytest pytest-timeout
     - python3 -m pip install wheels/*.whl
+    - python3 -m pytest tests/core
 
 Test Rafcon Core Python Wheel Windows:
   stage: Test
@@ -134,5 +135,6 @@ Test Rafcon Core Python Wheel Windows:
   tags:
     - Agile_Windows_Managed
   script:
-    - python3 -m pip install -U pip
+    - python3 -m pip install -U pip pytest pytest-timeout
     - python3 -m pip install (Get-ChildItem '.\wheels\' -Filter *.whl).fullname
+    - python3 -m pytest tests/core
