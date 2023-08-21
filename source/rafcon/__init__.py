@@ -11,7 +11,6 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from pkg_resources import get_distribution, DistributionNotFound
-from importlib.metadata import PackageNotFoundError, version
 
 
 try:
@@ -37,6 +36,7 @@ except DistributionNotFound:
         __version__ = "unknown"
 
 try:
+    from importlib.metadata import PackageNotFoundError, version
     if __version__ == "unknown":
         __version__ = version("rafcon-core")
 except PackageNotFoundError as error:

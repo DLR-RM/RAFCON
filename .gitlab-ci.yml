@@ -137,4 +137,4 @@ Test Rafcon Core Python Wheel Windows:
   script:
     - python3 -m pip install -U pip pytest pytest-timeout
     - python3 -m pip install (Get-ChildItem '.\wheels\' -Filter *.whl).fullname
-    - python3 -m pytest tests/core
+    - python3 -m pytest tests\core
