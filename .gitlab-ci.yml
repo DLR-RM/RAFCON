@@ -116,7 +116,7 @@ Pip::build pure:
     matrix:
       - AR_PYTHON_PACKAGE_ROOT_DIR_SUFFIX: ["source"]
 
-Test Python Wheel:
+Test Rafcon Core Python Wheel:
   stage: Test
   <<: *only-default
   needs: [ "Pip::build pure" ]
@@ -126,7 +126,7 @@ Test Python Wheel:
     - python3 -m pip install -U pip
     - python3 -m pip install wheels/*.whl
 
-Test Python Wheel Windows:
+Test Rafcon Core Python Wheel Windows:
   stage: Test
   <<: *only-default
   needs: [ "Pip::build pure" ]
