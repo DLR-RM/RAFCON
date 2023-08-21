@@ -40,7 +40,7 @@ try:
     from importlib.metadata import PackageNotFoundError, version
     if __version__ == "unknown":
         __version__ = version("rafcon-core")
-except PackageNotFoundError as error:
+except Exception as error:
     from rafcon.utils import log
     logger = log.get_logger(__name__)
     logger.info(f"Isolated rafcon core installation failed, please check your rafcon installation again: {str(error)}")
