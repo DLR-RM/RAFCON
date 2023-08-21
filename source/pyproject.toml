@@ -1,0 +1,63 @@
+[tool.poetry]
+name = "rafcon-core"
+version = "1.2.1"
+description = "Develop your robotic tasks with hierarchical state machines"
+authors = [
+    'Sebastian Brunner <sebastian.brunner@dlr.de>',
+    'Rico Belder <rico.belder@dlr.de>',
+    'Franz Steinmetz <franz.steinmetz@dlr.de'
+]
+license = "EPL-1.0"
+packages = [{include = "rafcon"}]
+exclude = [
+    "rafcon/gui",
+    "rafcon/locale",
+    "rafcon/__main__.py",
+    "pylintrc"
+]
+documentation = "https://rafcon.readthedocs.io/en/latest/index.html"
+keywords = ["state machine", "robotic", "FSM", "development", "GUI", "visual programming"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Framework :: Robot Framework",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Manufacturing",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Eclipse Public License 1.0 (EPL-1.0)",
+    "Natural Language :: English",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3.6",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+]
+
+[tool.poetry.urls]
+Homepage = "https://github.com/DLR-RM/RAFCON"
+Changelog = "https://github.com/DLR-RM/RAFCON/blob/master/CONTRIBUTING.md"
+Contributing = "https://github.com/DLR-RM/RAFCON/blob/master/CONTRIBUTING.md"
+
+[tool.poetry.scripts]
+rafcon_core = "rafcon.core.start:main"
+
+[tool.poetry.dependencies]
+python = "^3.6.1"
+yaml-configuration = "^0.2.5"
+numpy = [
+    { version = "1.19.5", python = "< 3.7" },
+    { version = "1.21.6", python = "3.7" },
+    { version = "^1.22.4", python = ">=3.8,<4.0" },
+]
+pandas = [
+    { version = "1.1.5", python = "<3.7.1"},
+    { version = "^1.2.0", python = ">=3.7.1"},
+]
+simplegeneric = ">=0.5.0,<1.0.0"
+psutil= ">=5.0.0,<6.0.0"
+jsonconversion = "^0.2.13"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
