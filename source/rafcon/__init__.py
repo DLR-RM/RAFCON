@@ -36,12 +36,12 @@ except DistributionNotFound:
         __version__ = "unknown"
 
 # If the version is unset try to use importlib as this case is only accessed on only rafcon-core installation
-try:
-    from importlib.metadata import PackageNotFoundError, version
-    if __version__ == "unknown":
+if __version__ == "unknown":
+    try:
+        from importlib.metadata import PackageNotFoundError, version
         __version__ = version("rafcon-core")
-except Exception as error:
-    from rafcon.utils import log
-    logger = log.get_logger(__name__)
-    logger.info(f"Isolated rafcon core installation failed, please check your rafcon installation again: {str(error)}")
-    __version__ = "unknown"
+    except Exception as error:
+        from rafcon.utils import log
+        logger = log.get_logger(__name__)
+        logger.info(f"Isolated rafcon core installation failed, please check your rafcon installation again: {str(error)}")
+        __version__ = "unknown"

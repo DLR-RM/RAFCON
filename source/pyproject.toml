@@ -15,7 +15,7 @@ exclude = [
     "pylintrc"
 ]
 documentation = "https://rafcon.readthedocs.io/en/latest/index.html"
-keywords = ["state machine", "robotic", "FSM", "development"]
+keywords = ["state machine", "robotics", "FSM", "development"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
