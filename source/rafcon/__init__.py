@@ -40,6 +40,7 @@ if __version__ == "unknown":
     try:
         from importlib.metadata import PackageNotFoundError, version
         __version__ = version("rafcon-core")
+        logger.info(f"rafcon-core version is: {__version__}")
     except Exception as error:
         from rafcon.utils import log
         logger = log.get_logger(__name__)
