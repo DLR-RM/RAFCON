@@ -73,7 +73,8 @@ else:
     pytest = 'pytest>=5.0.0,<6.0.0'
 test_requirements = [pytest, 'pytest-timeout<2', 'pytest-mock>=1.9.0,<3', 'pytest-faulthandler~=1.6.0',
                      'graphviz==0.18.2', 'pyuserinput', 'profiling==0.1.3', 'pykeyboard==0.1.2', 'pymouse==1.0',
-                     'monitoring==0.9.12', 'matplotlib==2.1.1', 'objgraph==3.5.0']
+                     'monitoring==0.9.12', 'matplotlib==2.1.1', 'objgraph==3.5.0', 'attrs==22.2.0',
+                     'more_itertools==8.14.0']
 setup_requirements = ['pytest-runner>=4.0.0,<7.0.0', 'libsass >= 0.15.0']
 
 test_requirements += global_requirements
