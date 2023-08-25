@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rafcon-core"
-version = "1.2.1"
+version = "1.3.0"
 description = "Develop your robotic tasks with hierarchical state machines"
 authors = [
     'Sebastian Brunner <sebastian.brunner@dlr.de>',
