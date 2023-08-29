@@ -7,6 +7,11 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Future Release
 """""""
 
+1.3.0
+"""""""
+    - Features:
+        Add possibility to only release rafcon-core
+
 1.2.1
 """""""
     - Features:

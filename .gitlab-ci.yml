@@ -4,6 +4,7 @@ include:
     ref: 'release/3.x'
     file:
       - '/ci/templates/default.yml'
+      - '/ci/templates/python/default.yml'
 
 variables:
   AR_CI_CLANG_FORMAT_DISABLE: "true"
@@ -104,3 +105,28 @@ Test Python Upcoming:
   script:
     - pip3 install tox
     - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e py310
+
+Pip::build pure:
+  variables:
+    AR_PYTHON_PACKAGE_WHEEL_DIR: "${CI_PROJECT_DIR}/wheels"
+  before_script:
+    - python3 -m pip install -U pip
+    - export AR_PYTHON_PACKAGE_ROOT_DIR="${CI_PROJECT_DIR}/${AR_PYTHON_PACKAGE_ROOT_DIR_SUFFIX}"
+  parallel:
+    matrix:
+      - AR_PYTHON_PACKAGE_ROOT_DIR_SUFFIX: ["source"]
+
+Test Rafcon Core Python Wheel:
+  stage: Test
+  <<: *only-default
+  needs: [ "Pip::build pure" ]
+  dependencies: [ "Pip::build pure" ]
+  image: artifactory.ar.int:5000/ar-ci-ubuntu:22.04
+  script:
+    - python3 -m pip install -U pip pytest pytest-timeout
+    - python3 -m pip install wheels/*.whl
+    - python3 -m pytest tests/core
+
+Pip::test on Windows:
+  rules:
+    - when: never
