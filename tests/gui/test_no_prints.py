@@ -19,12 +19,12 @@ def search_for_print_statements_in_python_files(path):
 
 
 def test_number_of_whitespaces():
-    # gui_print_lines = search_for_print_statements_in_python_files("gui")
+    gui_print_lines = search_for_print_statements_in_python_files("gui")
     core_print_lines = search_for_print_statements_in_python_files("core")
     utils_print_lines = search_for_print_statements_in_python_files("utils")
-    # print("\n".join([str(line) for line in gui_print_lines]))
-    # print(len(gui_print_lines))
-    # assert len(gui_print_lines) == 1
+    print("\n".join([str(line) for line in gui_print_lines]))
+    print(len(gui_print_lines))
+    assert len(gui_print_lines) == 1
     print("\n".join([str(line) for line in core_print_lines]))
     print(len(core_print_lines))
     assert len(core_print_lines) == 0
