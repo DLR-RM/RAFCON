@@ -38,6 +38,7 @@ docs_test:
     MAKE_CMD_DOCS: "make docs"
 
 pages:
+  image: artifactory.ar.int:5000/ar-ci-ubuntu:22.04
   extends: .docs_pages
   variables:
     BUILD_DIR: build
