@@ -1,7 +1,8 @@
-from conans import ConanFile, CMake, tools
 import os
 import subprocess
-import arpm
+import sys
+
+from conans import CMake, ConanFile, tools
 
 
 def get_version():
@@ -42,6 +43,14 @@ class RafconConan(ConanFile):
     settings = 'os', 'compiler', 'build_type', 'arch'
     exports_sources = "VERSION"
 
+    def system_requirements(self):
+        import pip
+        if hasattr(pip, "main"):
+            pip.main(["install", "pdm"])
+        else:
+            from pip._internal import main
+            main(['install', "pdm"])
+
     def build(self):
         envd = dict(os.environ)
         # Check if a virtual environment is active or a PYTHONPATH is set
@@ -54,14 +63,12 @@ class RafconConan(ConanFile):
         # print("envd: {}".format(str(envd)))
         # print("Package folder: {}".format(str(self.package_folder)))
 
-        subprocess.run(["python3", 'setup.py', 'sdist', 'bdist_wheel'], env=envd)
+        self.run("pdm install --no-editable")
+        self.run("pdm build")
 
         print("Installing rafcon for python3")
 
         rafcon_target = './dist/rafcon-{}.tar.gz'.format(self.version)
-
-        # print("Installing pip first")
-        # subprocess.run(['python2.7', '-m', 'pip', 'install', '--user', '--upgrade', '--force', 'pip'], env=envd)
 
         # --ignore-installed is required as otherwise already installed packages
         # would prevent pip from installing required dependencies
@@ -72,8 +79,9 @@ class RafconConan(ConanFile):
         ], env=envd, check=True)
 
     def package_info(self):
-        site_packages = os.path.join(self.package_folder, "lib", "python3.6", "site-packages")
+        site_packages = os.path.join(self.package_folder, "lib", "python3.10", "site-packages")
         self.env_info.PYTHONPATH.append(site_packages)
-        self.env_info.XDG_DATA_HOME = os.path.join(self.package_folder, "share")
+        python_version = sys.version_info
+        self.env_info.XDG_DATA_HOME = os.path.join(self.package_folder, "lib", f"python{python_version.major}.{python_version.minor}", "site-packages", "rafcon", "share")
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
         self.env_info.RAFCON_ROOT_DIRECTORY = self.package_folder

@@ -16,7 +16,7 @@ from pkg_resources import get_distribution, DistributionNotFound
 try:
     __version__ = get_distribution("rafcon").version
 except DistributionNotFound:
-    # the version cannot be found via pip which means rafcon was not installed yet on the system via the setup.py or pip
+    # the version cannot be found via pip which means rafcon was not installed yet on the system.
     # thus try to parse it from the version.py file directly
 
     import os

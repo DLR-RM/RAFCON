@@ -31,6 +31,7 @@ variables:
 
 docs_test:
   extends: .docs_test
+  image: artifactory.ar.int:5000/ar-ci-ubuntu:22.04
   variables:
     BUILD_DIR: build
     CONAN_OPTIONS: ""
@@ -53,11 +54,12 @@ pages:
 test py3-tests: &test-py3-tests
   <<: *only-default
   stage: Test
+  image: artifactory.ar.int:5000/ar-ci-ubuntu:22.04
   tags:
     - Agile_GUI_Docker
   script:
-    - pip3 install tox
-    - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e py36
+    - pip3 install tox pdm
+    - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e py310
   coverage: /^TOTAL.+?(\d+\%)$/
   artifacts:
     expire_in: 7 days
@@ -69,10 +71,11 @@ test py3-tests: &test-py3-tests
 test py3-tests-core:
   <<: *only-default
   stage: Test
+  image: artifactory.ar.int:5000/ar-ci-ubuntu:22.04
   tags:
     - Agile_GUI_Docker
   script:
-    - pip3 install tox
+    - pip3 install tox pdm
     - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e core
   coverage: /^TOTAL.+?(\d+\%)$/
   artifacts:
@@ -85,26 +88,15 @@ test py3-tests-core:
 test py3-memory-test-core:
   <<: *only-default
   stage: Test
+  image: artifactory.ar.int:5000/ar-ci-ubuntu:22.04
   tags:
     - Agile_GUI_Docker
   script:
-    - pip3 install tox
+    - pip3 install tox pdm
+    - pdm install --dev --no-editable
     - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e memory_core
   artifacts:
-    expire_in: 7 days
-
-
-# running pytest directly does not work
-# as the test_start_script.py test_start_script_valid_config always uses "python" to start "rafcon_core"
-# which fails if tests are run using python3 as the "python" always maps to python2 on Ubuntu 18.04
-#    - xvfb-run -as "-screen 0 1920x1200x24" python3 setup.py pytest --addopts '-vx -m "(core or guqi) and not unstable and not user_input"'
-
-Test Python Upcoming:
-  <<: *test-py3-tests
-  image: artifactory.ar.int:5000/ar-ci-ubuntu:22.04
-  script:
-    - pip3 install tox
-    - xvfb-run -as "-screen 0 1920x1200x24" tox -r -c tox_external.ini -e py310
+    expire_in: 7 days 
 
 Pip::build pure:
   variables:
@@ -114,7 +106,7 @@ Pip::build pure:
     - export AR_PYTHON_PACKAGE_ROOT_DIR="${CI_PROJECT_DIR}/${AR_PYTHON_PACKAGE_ROOT_DIR_SUFFIX}"
   parallel:
     matrix:
-      - AR_PYTHON_PACKAGE_ROOT_DIR_SUFFIX: ["source"]
+      - AR_PYTHON_PACKAGE_ROOT_DIR_SUFFIX: [".", "source"]
 
 Test Rafcon Core Python Wheel:
   stage: Test
@@ -124,9 +116,32 @@ Test Rafcon Core Python Wheel:
   image: artifactory.ar.int:5000/ar-ci-ubuntu:22.04
   script:
     - python3 -m pip install -U pip pytest pytest-timeout
-    - python3 -m pip install wheels/*.whl
+    - python3 -m pip install wheels/rafcon_core*.whl
     - python3 -m pytest tests/core
+
+Pip::test on Linux:
+  before_script:
+    # These apt packages are needed by the rafcon pip package for installation
+    - apt update && apt install -y libcairo2 libcairo2-dev build-essential libgirepository1.0-dev
+  parallel:
+    matrix:
+      - PYTHON_IMAGE:
+          - artifactory.ar.int:5000/ar-python-slim:3.7.16
+          - artifactory.ar.int:5000/ar-python-slim:3.8.16
+          - artifactory.ar.int:5000/ar-python-slim:3.9.16
+          - artifactory.ar.int:5000/ar-python-slim:3.10.10
 
 Pip::test on Windows:
   rules:
     - when: never
+
+Version Test:
+  <<: *only-default
+  stage: Test
+  image: artifactory.ar.int:5000/ar-ci-ubuntu:22.04
+  script:
+    # Check if it is possible to bump version
+    # e.g. all versions in files are the same and eq
+    # to version in .bumpversion.cfg
+    - pip install pdm
+    - make version_test

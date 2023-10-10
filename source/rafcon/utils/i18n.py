@@ -42,7 +42,6 @@ def setup_l10n(logger=None):
 
 
 def create_mo_files(logger):
-    assert "setup.py" in os.listdir(os.curdir)
     import subprocess
     domain = "rafcon"
     rel_localedir = join('source', 'rafcon', 'locale')
