@@ -116,13 +116,13 @@ def run_turtle_demo():
     global_gui_config.load()
     # set the test_libraries path temporarily to the correct value
     library_paths = rafcon.core.config.global_config.get_config_value("LIBRARY_PATHS")
-    if os.path.exists(str(os.path.sep).join([rafcon.__path__[0], '..', '..', '..', 'share', 'rafcon', 'libraries'])):  # rm-pkg
-        os.environ['RAFCON_LIB_PATH'] = os.path.join(rafcon.__path__[0], '..', '..', '..', 'share', 'rafcon', 'libraries')
-        library_paths["ros_libraries"] = os.path.join(rafcon.__path__[0], '..', '..', '..',
+    if os.path.exists(str(os.path.sep).join([rafcon.__path__[0], '..', 'share', 'rafcon', 'libraries'])):  # rm-pkg
+        os.environ['RAFCON_LIB_PATH'] = os.path.join(rafcon.__path__[0],'..', 'share', 'rafcon', 'libraries')
+        library_paths["ros_libraries"] = os.path.join(rafcon.__path__[0],'..',
                                                       'share', 'rafcon', 'examples', 'libraries', 'ros_libraries')
-        library_paths["turtle_libraries"] = os.path.join(rafcon.__path__[0], '..', '..', '..',
+        library_paths["turtle_libraries"] = os.path.join(rafcon.__path__[0], '..',
                                                          'share', 'rafcon', 'examples', 'libraries', 'turtle_libraries')
-        example_path = os.path.join(rafcon.__path__[0], os.pardir, '..', '..', 'share', 'examples', "tutorials")
+        example_path = os.path.join(rafcon.__path__[0], os.pardir, 'share', 'examples', "tutorials")
     else:  # git repo
         os.environ['RAFCON_LIB_PATH'] = os.path.join(dirname(abspath(__file__)), '..', '..', '..', 'libraries')
         library_paths["ros_libraries"] = os.path.join(dirname(abspath(__file__)), '..', '..', 'libraries', 'ros_libraries')
