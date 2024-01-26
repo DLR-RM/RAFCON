@@ -1,2 +1,0 @@
-include AUTHORS Changelog.rst LICENSE.md README.rst VERSION requirements.txt
-include pyproject.toml

@@ -12,10 +12,11 @@
 
 from pkg_resources import get_distribution, DistributionNotFound
 
+
 try:
     __version__ = get_distribution("rafcon").version
 except DistributionNotFound:
-    # the version cannot be found via pip which means rafcon was not installed yet on the system via the setup.py or pip
+    # the version cannot be found via pip which means rafcon was not installed yet on the system.
     # thus try to parse it from the version.py file directly
 
     import os
@@ -32,4 +33,16 @@ except DistributionNotFound:
         logger.error(str(e))
         logger.error("Setting the rafcon version to 'unknown' ... ")
         # this case must not happen, else state machines cannot be loaded from the file system
+        __version__ = "unknown"
+
+# If the version is unset try to use importlib as this case is only accessed on only rafcon-core installation
+if __version__ == "unknown":
+    try:
+        from importlib.metadata import PackageNotFoundError, version
+        __version__ = version("rafcon-core")
+        logger.info(f"rafcon-core version is: {__version__}")
+    except Exception as error:
+        from rafcon.utils import log
+        logger = log.get_logger(__name__)
+        logger.info(f"Isolated rafcon core installation failed, please check your rafcon installation again: {str(error)}")
         __version__ = "unknown"

@@ -479,14 +479,6 @@ Probably RAFCON cannot find its fonts. If you installed RAFCON via pip, uninstal
 If you checked out RAFCON's git repo, reinstall the fonts. See the :ref:`Getting Started <install_fonts>` page for
 that.
 
-**Alternatively:**
-Open a new terminal, run the following command and restart RAFCON.
-
-.. code:: bash
-
-    $ fdir="$HOME/.local/share/fonts" && mkdir -p $fdir && find "$(dirname $(which rafcon))/../share/fonts" -type f -name "*.otf" -exec cp -t $fdir {} + && unset fdir
-
-This will copy the RAFCON font files from the install location to your local user, so the RAFCON GUI can load them.
 
 Known Issues
 """"""""""""
