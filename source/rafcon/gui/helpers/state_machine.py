@@ -1462,8 +1462,4 @@ def auto_layout_state_machine():
         logger.warning("Can not 'auto layout' because no state machine is selected.")
         return
     StateMachineLayouter(state_machine_m.root_state).layout_state_machine()
-    save_state_machine(
-        delete_old_state_machine=False,
-        recent_opened_notification=True
-    )
-    refresh_selected_state_machine()
+    state_machine_m.root_state.meta_signal.emit(MetaSignalMsg('change_state_layout_action', 'all', True))
