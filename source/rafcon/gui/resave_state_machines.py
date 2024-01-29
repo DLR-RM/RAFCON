@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # Copyright (C) 2016-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
@@ -9,8 +10,6 @@
 # Franz Steinmetz <franz.steinmetz@dlr.de>
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
-
-#!/usr/bin/python
 
 import os
 from os.path import join, expanduser
