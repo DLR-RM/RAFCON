@@ -12,6 +12,7 @@ Future Release
     - Features:
         - Switch from setup.py to pyproject.toml and pdm for the python package management
         - Add bump2version to avoid human errors when updating the rafcon version
+        - Added auto-layout functionality (as a first version)
 
 1.3.0
 """""""
