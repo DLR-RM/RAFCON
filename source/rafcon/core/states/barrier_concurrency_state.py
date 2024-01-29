@@ -129,25 +129,27 @@ class BarrierConcurrencyState(ConcurrencyState):
                 return self.finalize_backward_execution()
             else:
                 self.backward_execution = False
-            #######################################################
-            # execute decider state
-            #######################################################
-            decider_state_error = self.run_decider_state(decider_state, child_errors, final_outcomes_dict)
-            #######################################################
-            # handle no transition
-            #######################################################
-            transition = self.get_transition_for_outcome(decider_state, decider_state.final_outcome)
-            if transition is None:
-                # final outcome is set here
-                transition = self.handle_no_transition(decider_state)
-            # if the transition is still None, then the child_state was preempted or aborted, in this case return
-            decider_state.state_execution_status = StateExecutionStatus.INACTIVE
-            if transition is None:
-                self.output_data["error"] = RuntimeError("state aborted")
-            else:
-                if decider_state_error:
-                    self.output_data["error"] = decider_state_error
-                self.final_outcome = self.outcomes[transition.to_outcome]
+            # Run only if it wasn't preempted by a higher level concurrency state
+            if not self.preempted:
+                #######################################################
+                # execute decider state
+                #######################################################
+                decider_state_error = self.run_decider_state(decider_state, child_errors, final_outcomes_dict)
+                #######################################################
+                # handle no transition
+                #######################################################
+                transition = self.get_transition_for_outcome(decider_state, decider_state.final_outcome)
+                if transition is None:
+                    # final outcome is set here
+                    transition = self.handle_no_transition(decider_state)
+                # if the transition is still None, then the child_state was preempted or aborted, in this case return
+                decider_state.state_execution_status = StateExecutionStatus.INACTIVE
+                if transition is None:
+                    self.output_data["error"] = RuntimeError("state aborted")
+                else:
+                    if decider_state_error:
+                        self.output_data["error"] = decider_state_error
+                    self.final_outcome = self.outcomes[transition.to_outcome]
             return self.finalize_concurrency_state(self.final_outcome)
 
         except Exception as e:
