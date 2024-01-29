@@ -53,11 +53,11 @@ def test_gui(gui):
 
     gui(gvm_controller.on_add, view)
     gui(run_gvm_method0, gvm.get_all_keys, return_list)
-    assert len(return_list[-1]) is 2
+    assert len(return_list[-1]) == 2
 
     gui(gvm_controller.remove_core_element, 'changed_global_0')
     gui(run_gvm_method0, gvm.get_all_keys, return_list)
-    assert len(return_list[-1]) is 1
+    assert len(return_list[-1]) == 1
 
 
 if __name__ == '__main__':
