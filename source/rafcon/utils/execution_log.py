@@ -263,6 +263,13 @@ def log_to_collapsed_structure(execution_history_items, throw_on_pickle_error=Tr
                             except Exception as e:
                                 if throw_on_pickle_error:
                                     raise
+                                # Ensure compatibility when loading log data recorded by python2
+                                elif 'a bytes-like object is required' in str(e):   
+                                    v = bytes(v, 'ascii')
+                                    try:
+                                        r[k] = pickle.loads(v, encoding='ascii')
+                                    except (UnicodeDecodeError, TypeError) as e:
+                                        r['!' + k] = (str(e), v)
                                 elif include_erroneous_data_ports:
                                     r['!' + k] = (str(e), v)
                                 else:
