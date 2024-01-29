@@ -183,6 +183,12 @@ class StateOverviewController(ExtendedController):
             self.view['entry_name'].set_text(self.model.state.name)
 
     def change_type(self, widget, model=None, info=None):
+        # Define global variable for usage in extended_controller
+        # (hacky soloution for a GTK segmentation fault error)
+        global on_change
+        on_change = True
+
+        # Get the desired type and change it
         state_class_name = widget.get_active_text()
         for state_class in self.allowed_state_classes:
             if state_class.__name__ == state_class_name:
@@ -191,6 +197,8 @@ class StateOverviewController(ExtendedController):
             logger.error("The desired state type does not exist")
 
         gui_helper_state_machine.change_state_type_with_error_handling_and_logger_messages(self.model, state_class)
+
+        del on_change
 
     def check_for_enter(self, entry, event):
         key_name = Gdk.keyval_name(event.keyval)
