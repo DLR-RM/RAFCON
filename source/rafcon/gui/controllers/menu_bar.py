@@ -130,6 +130,7 @@ class MenuBarController(ExtendedController):
         self.connect_button_to_function('refresh_all', 'activate', self.on_refresh_all_activate)
         self.connect_button_to_function('refresh_libraries', 'activate', self.on_refresh_libraries_activate)
         self.connect_button_to_function('bake_state_machine', 'activate', self.on_bake_state_machine_activate)
+        self.connect_button_to_function('layout_state_machine', 'activate', self.on_layout_state_machine)
         self.connect_button_to_function('quit', 'activate', self.on_quit_activate)
 
         self.connect_button_to_function('cut', 'activate', self.on_cut_selection_activate)
@@ -439,6 +440,10 @@ class MenuBarController(ExtendedController):
 
     def on_refresh_selected_activate(self, widget, data=None, force=False):
         gui_helper_state_machine.refresh_selected_state_machine()
+
+    @staticmethod
+    def on_layout_state_machine(*args, **kwargs):
+        gui_helper_state_machine.auto_layout_state_machine()
 
     @staticmethod
     def on_substitute_selected_state_activate(widget=None, data=None, path=None):

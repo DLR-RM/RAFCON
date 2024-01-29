@@ -1,5 +1,90 @@
-[build-system]
-requires = [
-  "setuptools==48.0.0"
+[project]
+name = "rafcon"
+version = "2.0.0" # Handled by bump2version
+description = "Develop your robotic tasks with hierarchical state machines using an intuitive graphical user interface"
+keywords = ["state machine", "robotic", "FSM", "development", "GUI", "visual programming"]
+readme = "README.rst"
+authors = [
+    {name = "Sebastian Brunner", email = "sebastian.brunner@dlr.de"},
+    {name = "Rico Belder", email = "rico.belder@dlr.de"},
+    {name = "Franz Steinmetz", email = "franz.steinmetz@dlr.de"}
 ]
-build-backend = "setuptools.build_meta"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Environment :: X11 Applications :: GTK",
+    "Framework :: Robot Framework",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Manufacturing",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Eclipse Public License 1.0 (EPL-1.0)",
+    "Natural Language :: English",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3.6",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "PyGObject==3.42.0",
+    "astroid>=2.0.0,<2.9.0",
+    "gaphas>=2.1.0,<2.2.0",
+    "jsonconversion>=0.2.2,<0.3.0",
+    "psutil>=5.0.0,<6.0.0",
+    "pycairo>=1.11.0,<1.21.0",
+    "pylint>=2.11.0,<2.12.0",
+    "simplegeneric>=0.5.0,<1.0.0",
+    "yaml_configuration>=0.2.5,<0.3.0",
+    "numpy==1.21.6; python_version >= \"3.7\" and python_full_version < \"3.7.1\"",
+    "numpy<2.0.0,>=1.22.4; python_version >= \"3.8\" and python_version < \"4.0\"",
+    "pandas==1.1.5; python_full_version < \"3.7.1\"",
+    "pandas<2.0.0,>=1.2.0; python_full_version >= \"3.7.1\"",
+]
+license = {text = "EPL"}
+requires-python = ">=3.7"
+
+[project.urls]
+Homepage = "https://github.com/DLR-RM/RAFCON"
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "attrs==22.2.0",
+    "graphviz==0.18.2",
+    "matplotlib==2.1.1",
+    "monitoring==0.9.12",
+    "objgraph==3.5.0",
+    "profiling==0.1.3",
+    "pykeyboard==0.1.2",
+    "pymouse==1.0",
+    "pytest-faulthandler~=1.6.0",
+    "pytest-mock>=1.9.0,<3",
+    "pytest-timeout",
+    "pytest>=6.0.0,<7.0.0",
+    "pyuserinput",
+    "libsass",
+    "coverage",
+    "tox>=3.28.0",
+    "bump2version>=1.0.1",
+]
+
+[tool.pdm.build]
+package-dir = "source"
+includes = ["source/rafcon"]
+excludes = ["source/rafcon/share/ln", "source/rafcon/share/themes/RAFCON/templates", "tests"]
+
+[tool.pdm.scripts]
+pre_build.shell = """
+python3 pre_build.py
+"""
+
+[project.scripts]
+rafcon_core = "rafcon.core.start:main"
+
+[project.gui-scripts]
+rafcon = "rafcon.gui.start:main"
+rafcon_execution_log_viewer = "rafcon.gui.execution_log_viewer:main"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"

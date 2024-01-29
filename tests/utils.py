@@ -36,16 +36,16 @@ TESTS_PATH = dirname(abspath(__file__))
 RAFCON_PATH = realpath(rafcon.__path__[0])
 RAFCON_ROOT_PATH = dirname(TESTS_PATH)
 RAFCON_BIN_PATH = join(TESTS_PATH, '..', 'bin')
-LIBRARY_SM_PATH = join(TESTS_PATH, '..', 'share', 'rafcon', 'libraries')
-EXAMPLES_PATH = join(TESTS_PATH, '..', 'share', 'rafcon', 'examples')
+LIBRARY_SM_PATH = join(TESTS_PATH, '..', 'source', 'rafcon', 'share', 'rafcon', 'libraries')
+EXAMPLES_PATH = join(TESTS_PATH, '..', 'source', 'rafcon', 'share', 'rafcon', 'examples')
 TEST_ASSETS_PATH = join(TESTS_PATH, 'assets')
 TEST_SCRIPT_PATH = join(TESTS_PATH, 'assets', 'scripts')
-TUTORIAL_PATH = join(TESTS_PATH, "..", "share", 'rafcon', "examples", "tutorials")
-ROS_PATH = join(TESTS_PATH, "..", "share", 'rafcon', "examples", "libraries", "ros_libraries")
-TURTLE_PATH = join(TESTS_PATH, "..", "share", 'rafcon', "examples", "libraries", "turtle_libraries")
+TUTORIAL_PATH = join(TESTS_PATH, "..", 'source', 'rafcon', "share", 'rafcon', "examples", "tutorials")
+ROS_PATH = join(TESTS_PATH, "..", 'source', 'rafcon', "share", 'rafcon', "examples", "libraries", "ros_libraries")
+TURTLE_PATH = join(TESTS_PATH, "..", 'source', 'rafcon', "share", 'rafcon', "examples", "libraries", "turtle_libraries")
 TEST_STATE_MACHINES_PATH = join(TESTS_PATH, "assets", "unit_test_state_machines")
 DEEP_LIBRARIES_PATH = join(TESTS_PATH, "assets", "unit_test_state_machines", 'deep_libraries')
-RAFCON_SHARED_LIBRARY_PATH = environ.get("RAFCON_LIB_PATH", join(RAFCON_ROOT_PATH, 'share', 'rafcon', 'libraries'))
+RAFCON_SHARED_LIBRARY_PATH = environ.get("RAFCON_LIB_PATH", join(RAFCON_ROOT_PATH, 'source', 'rafcon', 'share', 'rafcon', 'libraries'))
 GENERIC_PATH = join(RAFCON_SHARED_LIBRARY_PATH, 'generic')
 print("LIBRARY_SM_PATH", LIBRARY_SM_PATH)
 print("RAFCON_SHARED_LIBRARY_PATH", RAFCON_SHARED_LIBRARY_PATH)
@@ -303,6 +303,10 @@ def wait_for_gui():
 
 
 def run_gui_thread(gui_config=None, runtime_config=None):
+    import gi
+    gi.require_version("Gtk", "3.0")
+    gi.require_version("Gdk", "3.0")
+
     from gi.repository import GLib
     from gi.repository import Gdk
     from rafcon.core.start import reactor_required

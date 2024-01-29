@@ -7,6 +7,18 @@ details can be found in the `GIT commit log <https://github.com/DLR-RM/RAFCON/co
 Future Release
 """""""
 
+2.0.0
+""""""
+    - Features:
+        - Switch from setup.py to pyproject.toml and pdm for the python package management
+        - Add bump2version to avoid human errors when updating the rafcon version
+        - Added auto-layout functionality (as a first version)
+
+1.3.0
+"""""""
+    - Features:
+        Add possibility to only release rafcon-core
+
 1.2.1
 """""""
     - Features:

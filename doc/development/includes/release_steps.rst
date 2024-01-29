@@ -56,8 +56,8 @@ institute):
 
 8. Apply the version number
 
-  1. Update the version number in ``[project directory]/VERSION``.
-  2. Update the ``version`` in ``[project directory]/CITATION.cff``.
+  1. If the dev dependencies have not yet been installed via pdm, then run ``pdm install --dev --no-editable``
+  2. Update the version number by running ``pdm run bump2version [major / minor / or patch]``
   3. Update the ``date-released`` in ``[project directory]/CITATION.cff``.
   4. Run ``cffconvert --ignore-suspect-keys --outputformat zenodo --outfile .zenodo.json`` (see `"Making software citable" <https://guide.esciencecenter.nl/citable_software/making_software_citable.html>`__, requires Python 3)
   5. Commit and push your changes.
@@ -92,7 +92,7 @@ institute):
   .. code:: bash
 
      $ rm dist/*
-     $ python3 setup.py sdist bdist_wheel
+     $ pdm build
      $ twine upload dist/*
 
 12. Publish to GitHub

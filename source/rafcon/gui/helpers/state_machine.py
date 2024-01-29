@@ -41,10 +41,11 @@ from rafcon.gui.clipboard import global_clipboard
 from rafcon.gui.config import global_gui_config
 from rafcon.gui.runtime_config import global_runtime_config
 from rafcon.gui.controllers.state_substitute import StateSubstituteChooseLibraryDialog
+from rafcon.gui.layouter import StateMachineLayouter
 from rafcon.gui.models import AbstractStateModel, StateModel, ContainerStateModel, LibraryStateModel, TransitionModel, \
     DataFlowModel, DataPortModel, OutcomeModel, StateMachineModel
 from rafcon.gui.models.signals import MetaSignalMsg
-from rafcon.gui.singleton import global_config, library_manager_model
+from rafcon.gui.singleton import global_config, library_manager_model, state_machine_manager_model
 from rafcon.gui.utils.dialog import RAFCONButtonDialog, RAFCONCheckBoxTableDialog
 from rafcon.utils.filesystem import make_tarfile, copy_file_or_folder, create_path, make_file_executable
 from rafcon.utils import log, storage_utils
@@ -1449,3 +1450,16 @@ def get_root_state_description_of_sm_file_system_path(file_system_path):
         if 'description' in state_dict:
             return state_dict['description']
         return
+
+
+def auto_layout_state_machine():
+    selected_sm_id = state_machine_manager_model.selected_state_machine_id
+    if selected_sm_id is None:
+        logger.warning("Can not 'auto layout' because no state machine id.")
+        return
+    state_machine_m = state_machine_manager_model.state_machines[selected_sm_id]
+    if state_machine_m is None:
+        logger.warning("Can not 'auto layout' because no state machine is selected.")
+        return
+    StateMachineLayouter(state_machine_m.root_state).layout_state_machine()
+    state_machine_m.root_state.meta_signal.emit(MetaSignalMsg('change_state_layout_action', 'all', True))

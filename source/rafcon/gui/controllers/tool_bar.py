@@ -48,6 +48,7 @@ class ToolBarController(ExtendedController):
         self.view['button_refresh_selected'].connect('clicked', self.on_button_refresh_selected_clicked)
         self.view['button_refresh_libs'].connect('clicked', self.on_button_refresh_libs_clicked)
         self.view['button_bake_state_machine'].connect('clicked', self.on_button_bake_state_machine_clicked)
+        self.view['button_layout_state_machine'].connect('clicked', self.on_button_layout_state_machine)
 
     def register_actions(self, shortcut_manager):
         """Register callback methods for triggered actions
@@ -76,3 +77,6 @@ class ToolBarController(ExtendedController):
 
     def on_button_bake_state_machine_clicked(self, widget, data=None):
         self.menu_bar_ctrl.on_bake_state_machine_activate(widget, data)
+
+    def on_button_layout_state_machine(self, widget, data=None):
+        self.menu_bar_ctrl.on_layout_state_machine(widget, data=None)

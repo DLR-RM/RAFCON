@@ -43,11 +43,11 @@ Collaborative working
 Installation preparations
 -------------------------
 
-Before installing RAFCON, Python >=3.6, pip and setuptools are required on your system. Most of the other dependencies
+Before installing RAFCON, Python >=3.7, pip and setuptools are required on your system. Most of the other dependencies
 are automatically resolved by pip/setuptools, but not all of them. Those need be be installed manually, too:
 
-Installation requirements for Ubuntu 18.04
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Installation requirements
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
@@ -58,11 +58,9 @@ Installation requirements for Ubuntu 18.04
 General requirements
 ^^^^^^^^^^^^^^^^^^^^
 
-If you are not using Ubuntu 18.04, please make sure that the following packages are installed:
-
-* Python >=3.6
-* pip (recent version required: v18 known to be working)
-* python-setuptools (recent version required: v40 known to be working)
+* Python >=3.7
+* pip (recent version required: v23 known to be working)
+* pdm (recent version required: v2.9.3 known to be working)
 
 
 Installing RAFCON
