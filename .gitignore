@@ -154,3 +154,6 @@ requirements.txt
 
 # do not ignore bump2version config
 !.bumpversion.cfg
+
+# Vscode
+.vscode/
